@@ -104,19 +104,23 @@ public class PersistenceContextImpl implements PersistenceContext {
 
 		Map<Object, Object> mapEntities = getEntityMap(entityClass, managedEntities);
 		entityInstance = mapEntities.get(primaryKey);
-		if (entityInstance == null) {
-			EntityDelegate.getInstance().setIgnoreChanges(true);
-			try {
-				entityInstance = new JdbcRunner().findById(entity, primaryKey, persistenceUnitInfo);
-			} finally {
-				EntityDelegate.getInstance().setIgnoreChanges(false);
-			}
+		if (entityInstance != null)
+			return entityInstance;
 
-			if (entityInstance != null)
-				persistentEntitiesMap.put(primaryKey, entityInstance);
+		JdbcRunner jdbcRunner = new JdbcRunner();
+		JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(entity, primaryKey, persistenceUnitInfo);
+		if (attributeValues == null)
+			return null;
+
+		try {
+			EntityDelegate.getInstance().addIgnoreEntityInstance(attributeValues.entityInstance);
+			jdbcRunner.callWriteMethods(entity, attributeValues, primaryKey);
+			persistentEntitiesMap.put(primaryKey, attributeValues.entityInstance);
+		} finally {
+			EntityDelegate.getInstance().removeIgnoreEntityInstance(attributeValues.entityInstance);
 		}
 
-		return entityInstance;
+		return attributeValues.entityInstance;
 	}
 
 	public boolean isPersistentOnDb(Object entityInstance) throws IllegalAccessException, InvocationTargetException {

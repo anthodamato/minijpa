@@ -17,7 +17,9 @@ public class ConnectionProvider {
 		Properties connectionProps = new Properties();
 		connectionProps.put("user", persistenceUnitInfo.getProperties().get("javax.persistence.jdbc.user"));
 		connectionProps.put("password", persistenceUnitInfo.getProperties().get("javax.persistence.jdbc.password"));
-		return DriverManager.getConnection(
+		Connection connection = DriverManager.getConnection(
 				persistenceUnitInfo.getProperties().get("javax.persistence.jdbc.url").toString(), connectionProps);
+		connection.setAutoCommit(false);
+		return connection;
 	}
 }

@@ -2,6 +2,8 @@ package org.tinyjpa.jdbc;
 
 import java.lang.reflect.Method;
 
+import org.tinyjpa.metadata.GeneratedValue;
+
 public class Attribute {
 	private String name;
 	private String columnName;
@@ -10,9 +12,10 @@ public class Attribute {
 	private Method writeMethod;
 	private boolean id;
 	private Integer sqlType;
+	private GeneratedValue generatedValue;
 
 	public Attribute(String name, String columnName, Class<?> type, Method readMethod, Method writeMethod, boolean id,
-			Integer sqlType) {
+			Integer sqlType, GeneratedValue generatedValue) {
 		super();
 		this.name = name;
 		this.columnName = columnName;
@@ -21,6 +24,7 @@ public class Attribute {
 		this.writeMethod = writeMethod;
 		this.id = id;
 		this.sqlType = sqlType;
+		this.generatedValue = generatedValue;
 	}
 
 	public String getName() {
@@ -49,6 +53,10 @@ public class Attribute {
 
 	public Integer getSqlType() {
 		return sqlType;
+	}
+
+	public GeneratedValue getGeneratedValue() {
+		return generatedValue;
 	}
 
 }

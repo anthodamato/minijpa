@@ -11,8 +11,10 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +62,17 @@ public class Parser {
 			try {
 				String columnName = pd.getName();
 				Field field = c.getDeclaredField(pd.getName());
+
+				// checks if transient
+				Transient transientAnnotation = field.getAnnotation(Transient.class);
+				if (transientAnnotation == null) {
+					Method readMethod = pd.getReadMethod();
+					transientAnnotation = readMethod.getAnnotation(Transient.class);
+				}
+
+				if (transientAnnotation != null)
+					continue;
+
 				Column column = field.getAnnotation(Column.class);
 				if (column == null) {
 					Method readMethod = pd.getReadMethod();
@@ -73,12 +86,23 @@ public class Parser {
 				}
 
 				Id id = field.getAnnotation(Id.class);
-				Attribute attribute = new Attribute(pd.getName(), columnName, pd.getPropertyType(), pd.getReadMethod(),
-						pd.getWriteMethod(), id != null, JdbcTypes.sqlTypeFromClass(pd.getPropertyType()));
-				if (id == null)
+				if (id == null) {
+					Attribute attribute = new Attribute(pd.getName(), columnName, pd.getPropertyType(),
+							pd.getReadMethod(), pd.getWriteMethod(), id != null,
+							JdbcTypes.sqlTypeFromClass(pd.getPropertyType()), null);
 					attributes.add(attribute);
-				else
+				} else {
+					GeneratedValue generatedValue = field.getAnnotation(GeneratedValue.class);
+					org.tinyjpa.metadata.GeneratedValue gv = null;
+					if (generatedValue != null)
+						gv = new org.tinyjpa.metadata.GeneratedValue(generatedValue.strategy(),
+								generatedValue.generator());
+
+					Attribute attribute = new Attribute(pd.getName(), columnName, pd.getPropertyType(),
+							pd.getReadMethod(), pd.getWriteMethod(), id != null,
+							JdbcTypes.sqlTypeFromClass(pd.getPropertyType()), gv);
 					attributes.add(0, attribute);
+				}
 			} catch (Exception e) {
 				LOG.error(e.getClass().getName());
 				LOG.error(e.getMessage());

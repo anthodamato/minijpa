@@ -22,6 +22,9 @@ public class FindTest {
 	@Test
 	public void find() throws Exception {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
+
+		Persistence.generateSchema("citizens", null);
+
 		final EntityManager em = emf.createEntityManager();
 		try {
 			final EntityTransaction tx = em.getTransaction();

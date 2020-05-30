@@ -23,7 +23,7 @@ public class EntityEnhancer {
 		LOG.info("Enhancing: " + className);
 
 		CtClass ct = pool.get(className);
-		
+
 //		CtMethod m = CtNewMethod.make("public void print() { System.out.println(\"Hello!!!\"); }", ct);
 //		ct.addMethod(m);
 
@@ -39,6 +39,7 @@ public class EntityEnhancer {
 		modifyGetterSetterMethods(ct);
 
 		ct.toClass();
+//		ct.toClass(entity.getClazz().getClassLoader(), entity.getClazz().getProtectionDomain());
 
 //		Class<?> c = cl.loadClass(className);
 //		Object entity = c.newInstance();
@@ -61,6 +62,9 @@ public class EntityEnhancer {
 	private void modifyGetterSetterMethods(CtClass ctClass) throws CannotCompileException, NotFoundException {
 		CtField[] ctFields = ctClass.getDeclaredFields();
 		for (CtField ctField : ctFields) {
+			if (ctField.getName().equals("entityDelegate"))
+				continue;
+
 			LOG.info("modifyGetterSetterMethods: ctField.getName()=" + ctField.getName());
 			LOG.info("modifyGetterSetterMethods: ctField.getModifiers()=" + ctField.getModifiers());
 			if (ctField.getModifiers() != Modifier.PRIVATE)
@@ -79,23 +83,41 @@ public class EntityEnhancer {
 		}
 	}
 
-	private String buildGetMethodName(String attrName) {
+	private String buildMethodName(String methodType, String attrName) {
 		if (attrName.length() > 1)
-			return "get" + Character.toUpperCase(attrName.charAt(0)) + attrName.substring(1);
+			return methodType + Character.toUpperCase(attrName.charAt(0)) + attrName.substring(1);
 		else
-			return "get" + Character.toUpperCase(attrName.charAt(0));
+			return methodType + Character.toUpperCase(attrName.charAt(0));
 	}
 
-	private String buildSetMethodName(String attrName) {
-		if (attrName.length() > 1)
-			return "set" + Character.toUpperCase(attrName.charAt(0)) + attrName.substring(1);
-		else
-			return "set" + Character.toUpperCase(attrName.charAt(0));
+	private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws NotFoundException {
+		try {
+			LOG.info("findIsGetMethod: ctField.getName()=" + ctField.getName());
+//			LOG.info("findIsGetMethod: ctField.getType()=" + ctField.getType());
+			LOG.info("findIsGetMethod: ctField.getType().getName()=" + ctField.getType().getName());
+			LOG.info("findIsGetMethod: ctField.getType().isPrimitive()=" + ctField.getType().isPrimitive());
+
+			String methodName = buildMethodName("get", ctField.getName());
+			LOG.info("findIsGetMethod: methodName=" + methodName);
+			return ctClass.getDeclaredMethod(methodName);
+		} catch (NotFoundException e) {
+			if (ctField.getType().getName().equals("java.lang.Boolean")
+					|| ctField.getType().getName().equals("boolean")) {
+				return ctClass.getDeclaredMethod(buildMethodName("is", ctField.getName()));
+			}
+		}
+
+		return null;
 	}
 
 	private Optional<CtMethod> findGetMethod(CtClass ctClass, CtField ctField) {
 		try {
-			CtMethod getMethod = ctClass.getDeclaredMethod(buildGetMethodName(ctField.getName()));
+			LOG.info("findGetMethod: ctField.getName()=" + ctField.getName());
+			CtMethod getMethod = findIsGetMethod(ctClass, ctField);
+//			CtMethod getMethod = ctClass.getDeclaredMethod(buildMethodName("get", ctField.getName()));
+			if (getMethod == null)
+				return Optional.empty();
+
 			LOG.info("findGetMethod: getMethod.getName()=" + getMethod.getName());
 			CtClass[] params = getMethod.getParameterTypes();
 			LOG.info("findGetMethod: params.length=" + params.length);
@@ -109,14 +131,14 @@ public class EntityEnhancer {
 
 			LOG.info("findGetMethod: subtypeOf=true");
 			return Optional.of(getMethod);
-		} catch (NotFoundException e) {
+		} catch (Exception e) {
 			return Optional.empty();
 		}
 	}
 
 	private Optional<CtMethod> findSetMethod(CtClass ctClass, CtField ctField) {
 		try {
-			CtMethod setMethod = ctClass.getDeclaredMethod(buildSetMethodName(ctField.getName()));
+			CtMethod setMethod = ctClass.getDeclaredMethod(buildMethodName("set", ctField.getName()));
 			LOG.info("findSetMethod: setMethod.getName()=" + setMethod.getName());
 			CtClass[] params = setMethod.getParameterTypes();
 			LOG.info("findSetMethod: params.length=" + params.length);
