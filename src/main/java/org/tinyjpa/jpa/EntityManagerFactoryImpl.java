@@ -2,6 +2,7 @@ package org.tinyjpa.jpa;
 
 import java.beans.IntrospectionException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Cache;
@@ -17,6 +18,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.metadata.EnhEntity;
 import org.tinyjpa.metadata.Entity;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityEnhancer;
@@ -40,20 +42,16 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		this.map = map;
 	}
 
-	private synchronized Map<String, Entity> createEntities() throws ClassNotFoundException, IntrospectionException {
+	private synchronized Map<String, Entity> createEntities() throws ClassNotFoundException, IntrospectionException,
+			InstantiationException, IllegalAccessException, NotFoundException, CannotCompileException {
+		List<EnhEntity> enhancedClasses = new EntityEnhancer().enhance(persistenceUnitInfo.getManagedClassNames());
+
 		Parser parser = new Parser();
 		Map<String, Entity> entities = new HashMap<>();
-		for (String className : persistenceUnitInfo.getManagedClassNames()) {
-			try {
-				new EntityEnhancer().enhance(className);
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NotFoundException
-					| CannotCompileException e) {
-				LOG.error(e.getMessage());
-			}
-
-			Entity entity = parser.parse(className);
+		for (EnhEntity enhEntity : enhancedClasses) {
+			Entity entity = parser.parse(enhEntity);
 			if (entity != null)
-				entities.put(className, entity);
+				entities.put(enhEntity.getClassName(), entity);
 		}
 
 		EntityDelegate.getInstance().setEntities(entities);

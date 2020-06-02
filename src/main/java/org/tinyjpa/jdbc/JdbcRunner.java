@@ -55,8 +55,7 @@ public class JdbcRunner {
 		}
 	}
 
-	public Object persist(SqlStatement sqlStatement, Connection connection)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException {
+	public Object persist(SqlStatement sqlStatement, Connection connection) throws SQLException {
 		LOG.info("persist: sqlStatement.sql=" + sqlStatement.getSql());
 		LOG.info("persist: attrValues.size()=" + sqlStatement.getAttrValues().size());
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement.getSql(),
