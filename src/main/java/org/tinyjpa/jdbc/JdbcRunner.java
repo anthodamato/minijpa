@@ -48,8 +48,9 @@ public class JdbcRunner {
 			throws SQLException {
 		int index = 1;
 		for (int i = sqlStatement.getStartIndex(); i < sqlStatement.getAttrValues().size(); ++i) {
-//		for (AttrValue attrValue : attrValues) {
 			AttrValue attrValue = sqlStatement.getAttrValues().get(i);
+			LOG.info("setPreparedStatementValues: columnName=" + attrValue.getAttribute().getColumnName() + "; type="
+					+ attrValue.getAttribute().getType().getName() + "; value=" + attrValue.getValue());
 			setPreparedStatementValue(preparedStatement, index, attrValue.getAttribute(), attrValue.getValue());
 			++index;
 		}

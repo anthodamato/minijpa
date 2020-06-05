@@ -1,49 +1,39 @@
 package org.tinyjpa.metadata;
 
 public class EnhAttribute {
-	private String attributeName;
-	private String attributeClassName;
+	private String name;
+	private String className;
+	private boolean primitiveType;
 	private String getMethod;
 	private String setMethod;
 
-	public EnhAttribute(String attribute, String attributeClassName, String getMethod, String setMethod) {
+	public EnhAttribute(String name, String className, boolean primitiveType, String getMethod, String setMethod) {
 		super();
-		this.attributeName = attribute;
-		this.attributeClassName = attributeClassName;
+		this.name = name;
+		this.className = className;
+		this.primitiveType = primitiveType;
 		this.getMethod = getMethod;
 		this.setMethod = setMethod;
 	}
 
-	public String getAttributeName() {
-		return attributeName;
+	public String getName() {
+		return name;
 	}
 
-	public void setAttributeName(String attribute) {
-		this.attributeName = attribute;
+	public String getClassName() {
+		return className;
 	}
 
-	public String getAttributeClassName() {
-		return attributeClassName;
-	}
-
-	public void setAttributeClassName(String attributeClassName) {
-		this.attributeClassName = attributeClassName;
+	public boolean isPrimitiveType() {
+		return primitiveType;
 	}
 
 	public String getGetMethod() {
 		return getMethod;
 	}
 
-	public void setGetMethod(String getMethod) {
-		this.getMethod = getMethod;
-	}
-
 	public String getSetMethod() {
 		return setMethod;
-	}
-
-	public void setSetMethod(String setMethod) {
-		this.setMethod = setMethod;
 	}
 
 }

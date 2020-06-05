@@ -23,19 +23,22 @@ public class FindTest {
 	public void find() throws Exception {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
 
-		Persistence.generateSchema("citizens", null);
+//		Persistence.generateSchema("citizens", null);
 
 		final EntityManager em = emf.createEntityManager();
 		try {
-			final EntityTransaction tx = em.getTransaction();
+			EntityTransaction tx = em.getTransaction();
 			tx.begin();
+			Citizen citizen = new Citizen();
+			citizen.setName("Anthony");
+			em.persist(citizen);
 
-			Citizen citizen = em.find(Citizen.class, 1L);
-			Assertions.assertNotNull(citizen);
-			Assertions.assertEquals(1L, citizen.getId());
-			Assertions.assertEquals("Marc", citizen.getName());
-
+			Assertions.assertNotNull(citizen.getId());
 			tx.commit();
+
+			Citizen c = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(c);
+			Assertions.assertEquals("Anthony", c.getName());
 
 		} finally {
 			em.close();

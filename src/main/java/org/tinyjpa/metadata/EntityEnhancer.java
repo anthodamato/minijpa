@@ -33,17 +33,21 @@ public class EntityEnhancer {
 
 	private void enhance(String className, List<EnhEntity> enhancedClasses) throws NotFoundException,
 			CannotCompileException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-		// already done
+		// already enhanced
 		for (EnhEntity enhEntity : enhancedClasses) {
 			if (enhEntity.getClassName().equals(className))
 				return;
 		}
 
 		ClassPool pool = ClassPool.getDefault();
-//		Loader cl = new Loader(pool);
 		LOG.info("Enhancing: " + className);
 
 		CtClass ct = pool.get(className);
+		// mapped superclasses are enhanced finding the entity superclasses
+		Object mappedSuperclassAnnotation = ct.getAnnotation(MappedSuperclass.class);
+		if (mappedSuperclassAnnotation != null)
+			return;
+
 		Object entityAnnotation = ct.getAnnotation(javax.persistence.Entity.class);
 		if (entityAnnotation == null) {
 			LOG.error("@Entity annotation not found: " + ct.getName());
@@ -125,7 +129,8 @@ public class EntityEnhancer {
 			modifyGetMethod(property.getMethod, property.ctField);
 			modifySetMethod(property.setMethod, property.ctField);
 			EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(),
-					property.ctField.getType().getName(), property.getMethod.getName(), property.setMethod.getName());
+					property.ctField.getType().getName(), property.ctField.getType().isPrimitive(),
+					property.getMethod.getName(), property.setMethod.getName());
 			attributes.add(enhAttribute);
 		}
 

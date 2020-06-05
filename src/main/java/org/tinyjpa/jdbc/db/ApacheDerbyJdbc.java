@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -11,7 +12,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.AttrValue;
-import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.SqlStatement;
 import org.tinyjpa.metadata.Entity;
 
@@ -47,32 +47,30 @@ public class ApacheDerbyJdbc extends AbstractDbJdbc {
 			List<AttrValue> attrValues) throws SQLException {
 		Long idValue = generateSequenceNextValue(connection, entity);
 		LOG.info("generateInsertSequenceStrategy: idValue=" + idValue);
+
+		List<AttrValue> attrValuesWithId = new ArrayList<>();
+		Optional<AttrValue> optional = attrValues.stream().filter(a -> a.getAttribute().isId()).findFirst();
+		if (optional.isPresent()) {
+			optional.get().setValue(idValue);
+		} else {
+			AttrValue attrValue = new AttrValue(entity.getId(), idValue);
+			attrValuesWithId.add(attrValue);
+		}
+
+		attrValuesWithId.addAll(attrValues);
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("insert into ");
 		sb.append(entity.getTableName());
 		sb.append(" (");
-		Attribute id = entity.getId();
-		sb.append(id.getColumnName());
-		sb.append(",");
-		String cols = attrValues.stream().filter(a -> !a.getAttribute().isId())
-				.map(a -> a.getAttribute().getColumnName()).collect(Collectors.joining(","));
+		String cols = attrValuesWithId.stream().map(a -> a.getAttribute().getColumnName())
+				.collect(Collectors.joining(","));
 		sb.append(cols);
 		sb.append(") values (");
 
 		int indexStart = 0;
-		Object[] values;
-		Optional<AttrValue> optional = attrValues.stream().filter(a -> a.getAttribute().isId()).findFirst();
-		if (optional.isPresent()) {
-			values = new Object[attrValues.size()];
-			optional.get().setValue(idValue);
-		} else {
-			values = new Object[attrValues.size() + 1];
-			values[0] = idValue;
-			indexStart = 1;
-			sb.append("?");
-		}
-
-		for (AttrValue attrValue : attrValues) {
+		Object[] values = new Object[attrValuesWithId.size()];
+		for (AttrValue attrValue : attrValuesWithId) {
 			if (indexStart > 0)
 				sb.append(",");
 
@@ -83,7 +81,7 @@ public class ApacheDerbyJdbc extends AbstractDbJdbc {
 
 		sb.append(")");
 		String sql = sb.toString();
-		return new SqlStatement(sql, values, attrValues, 0, idValue);
+		return new SqlStatement(sql, values, attrValuesWithId, 0, idValue);
 	}
 
 }

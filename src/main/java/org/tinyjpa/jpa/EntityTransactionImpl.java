@@ -1,6 +1,5 @@
 package org.tinyjpa.jpa;
 
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -8,38 +7,42 @@ import javax.persistence.EntityTransaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.ConnectionProvider;
-import org.tinyjpa.metadata.EntityDelegate;
 
 public class EntityTransactionImpl implements EntityTransaction {
 	private Logger LOG = LoggerFactory.getLogger(EntityTransactionImpl.class);
-	private PersistenceContext persistenceContext;
+	private AbstractEntityManager abstractEntityManager;
+	private boolean active = false;
+	private boolean rollbackOnly = false;
+	private Connection connection;
 
-	public EntityTransactionImpl(PersistenceContext persistenceContext) {
+	public EntityTransactionImpl(AbstractEntityManager abstractEntityManager) {
 		super();
-		this.persistenceContext = persistenceContext;
+		this.abstractEntityManager = abstractEntityManager;
 	}
 
 	@Override
 	public void begin() {
-//		abstractEntityManager.beginTransaction();
-	}
+		if (active)
+			throw new IllegalStateException("Transaction already active");
 
-	@Override
-	public void commit() {
-		Connection connection = null;
 		try {
-			connection = new ConnectionProvider().getConnection(persistenceContext.getPersistenceUnitInfo());
+			connection = abstractEntityManager.createConnection();
 		} catch (SQLException e) {
 			LOG.error(e.getMessage());
 			return;
 		}
 
+		this.active = true;
+	}
+
+	@Override
+	public void commit() {
+		if (!active)
+			throw new IllegalStateException("Transaction not active");
+
 		try {
-			new PersistenceHelper(persistenceContext).persist(connection, EntityDelegate.getInstance().getChanges(),
-					persistenceContext.getPersistenceUnitInfo());
 			connection.commit();
-		} catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException | SQLException e) {
+		} catch (SQLException e) {
 			LOG.error(e.getMessage());
 			try {
 				connection.rollback();
@@ -57,26 +60,40 @@ public class EntityTransactionImpl implements EntityTransaction {
 
 	@Override
 	public void rollback() {
-		// TODO Auto-generated method stub
+		if (!active)
+			throw new IllegalStateException("Transaction not active");
 
+		try {
+			connection.rollback();
+		} catch (SQLException e) {
+			LOG.error(e.getMessage());
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				LOG.error(e1.getMessage());
+			}
+		}
+
+		try {
+			connection.close();
+		} catch (SQLException e) {
+			LOG.error(e.getMessage());
+		}
 	}
 
 	@Override
 	public void setRollbackOnly() {
-		// TODO Auto-generated method stub
-
+		this.rollbackOnly = true;
 	}
 
 	@Override
 	public boolean getRollbackOnly() {
-		// TODO Auto-generated method stub
-		return false;
+		return rollbackOnly;
 	}
 
 	@Override
 	public boolean isActive() {
-		// TODO Auto-generated method stub
-		return false;
+		return active;
 	}
 
 }

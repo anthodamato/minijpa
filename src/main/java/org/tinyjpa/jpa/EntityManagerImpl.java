@@ -24,6 +24,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.metadata.Entity;
+import org.tinyjpa.metadata.EntityDelegate;
 
 public class EntityManagerImpl extends AbstractEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(EntityManagerImpl.class);
@@ -47,7 +48,27 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public void persist(Object entity) {
+		if (entityTransaction == null || !entityTransaction.isActive())
+			throw new IllegalStateException("Transaction not active");
+
 		persistenceContext.persist(entity);
+		try {
+			new PersistenceHelper(persistenceContext).persist(connection, EntityDelegate.getInstance().getChanges(),
+					persistenceContext.getPersistenceUnitInfo());
+		} catch (IllegalAccessException e) {
+			LOG.error(e.getClass().getName());
+			LOG.error(e.getMessage());
+		} catch (InvocationTargetException e) {
+			LOG.error(e.getClass().getName());
+			LOG.error(e.getMessage());
+		} catch (IllegalArgumentException e) {
+			LOG.error(e.getClass().getName());
+			LOG.error(e.getMessage());
+		} catch (SQLException e) {
+			LOG.error(e.getClass().getName());
+			LOG.error(e.getMessage());
+			entityTransaction.rollback();
+		}
 	}
 
 	@Override
@@ -312,7 +333,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	@Override
 	public EntityTransaction getTransaction() {
 		if (entityTransaction == null)
-			entityTransaction = new EntityTransactionImpl(persistenceContext);
+			entityTransaction = new EntityTransactionImpl(this);
 
 		return entityTransaction;
 	}

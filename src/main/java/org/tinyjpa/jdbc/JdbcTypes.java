@@ -4,8 +4,15 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class JdbcTypes {
+	private static Logger LOG = LoggerFactory.getLogger(JdbcTypes.class);
+
 	public static Integer sqlTypeFromClass(Class<?> c) {
+//		LOG.info("sqlTypeFromClass: c=" + c + "; c.getName()=" + c.getName() + "; c.isPrimitive()=" + c.isPrimitive());
+
 		if (c == BigDecimal.class)
 			return Types.DECIMAL;
 
@@ -29,6 +36,35 @@ public class JdbcTypes {
 
 		if (c == String.class)
 			return Types.VARCHAR;
+
+		if (c == Character.class)
+			return Types.CHAR;
+
+		if (c.isPrimitive()) {
+			if (c.getName().equals("byte"))
+				return Types.INTEGER;
+
+			if (c.getName().equals("short"))
+				return Types.INTEGER;
+
+			if (c.getName().equals("int"))
+				return Types.INTEGER;
+
+			if (c.getName().equals("long"))
+				return Types.INTEGER;
+
+			if (c.getName().equals("float"))
+				return Types.FLOAT;
+
+			if (c.getName().equals("double"))
+				return Types.DOUBLE;
+
+			if (c.getName().equals("boolean"))
+				return Types.BOOLEAN;
+
+			if (c.getName().equals("char"))
+				return Types.CHAR;
+		}
 
 		return null;
 	}

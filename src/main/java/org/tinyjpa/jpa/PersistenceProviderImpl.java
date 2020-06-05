@@ -1,5 +1,7 @@
 package org.tinyjpa.jpa;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
@@ -15,47 +17,75 @@ import org.tinyjpa.jdbc.ConnectionProvider;
 import org.tinyjpa.jdbc.DbMetaData;
 import org.tinyjpa.jpa.db.DbConfiguration;
 import org.tinyjpa.jpa.db.DbConfigurationList;
+import org.tinyjpa.jpa.db.PersistenceUnitPropertyActions;
 
 public class PersistenceProviderImpl implements PersistenceProvider {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceProviderImpl.class);
 
-	private void findDbConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws SQLException {
-		Connection connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
-		DbMetaData dbMetaData = new DbMetaData();
-		dbMetaData.find(connection);
-		DbConfiguration dbConfiguration = new DbMetaData().createDbConfiguration(connection);
-		DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo, dbConfiguration);
+	private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws SQLException, URISyntaxException,
+			IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+		LOG.info("processConfiguration: 0");
+
+		new ConnectionProvider().initDriver(persistenceUnitInfo);
+
+		Connection connection = null;
+		try {
+			connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
+			LOG.info("processConfiguration: 1");
+			DbMetaData dbMetaData = new DbMetaData();
+			dbMetaData.find(connection);
+			LOG.info("processConfiguration: 2");
+			DbConfiguration dbConfiguration = new DbMetaData().createDbConfiguration(connection);
+			DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo, dbConfiguration);
+		} catch (Exception e) {
+			LOG.info("processConfiguration: Exception " + e.getClass());
+			if (connection != null)
+				connection.rollback();
+		} finally {
+			if (connection != null)
+				connection.close();
+		}
+
+		LOG.info("processConfiguration: ...");
+		new PersistenceUnitPropertyActions().analyze(persistenceUnitInfo);
 	}
 
 	public EntityManagerFactory createEntityManagerFactory(String emName, @SuppressWarnings("rawtypes") Map map) {
-		PersistenceUnitInfo persistenceUnitInfo;
+		PersistenceUnitInfo persistenceUnitInfo = null;
 		try {
 			persistenceUnitInfo = new PersistenceProviderHelper().parseXml("/META-INF/persistence.xml", emName);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
-			return null;
+			LOG.info("createEntityManagerFactory(String emName");
 		}
+
+		if (persistenceUnitInfo == null)
+			return null;
 
 		try {
-			findDbConfiguration(persistenceUnitInfo);
+			processConfiguration(persistenceUnitInfo);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
-			return null;
+			LOG.info("createEntityManagerFactory(String emName: processConfiguration: " + e.getClass().getName());
 		}
 
-		return createContainerEntityManagerFactory(persistenceUnitInfo, map);
+		return new EntityManagerFactoryImpl(persistenceUnitInfo, map);
 	}
 
-	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info,
+	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo,
 			@SuppressWarnings("rawtypes") Map map) {
+		if (persistenceUnitInfo == null)
+			return null;
+
 		try {
-			findDbConfiguration(info);
+			processConfiguration(persistenceUnitInfo);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
-			return null;
+			LOG.info("createEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo: processConfiguration: "
+					+ e.getClass().getName());
 		}
 
-		return new EntityManagerFactoryImpl(info, map);
+		return new EntityManagerFactoryImpl(persistenceUnitInfo, map);
 	}
 
 	public void generateSchema(PersistenceUnitInfo info, @SuppressWarnings("rawtypes") Map map) {
@@ -66,9 +96,10 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 		try {
 			persistenceUnitInfo = new PersistenceProviderHelper().parseXml("/META-INF/persistence.xml",
 					persistenceUnitName);
-			findDbConfiguration(persistenceUnitInfo);
+			processConfiguration(persistenceUnitInfo);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
+			LOG.error("generateSchema: e.getClass()=" + e.getClass());
 			return false;
 		}
 

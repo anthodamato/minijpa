@@ -34,7 +34,7 @@ public class EntityEnhancerTest {
 
 		List<EnhAttribute> enhAttributes = optional.get().getEnhAttributes();
 		Assertions.assertEquals(4, enhAttributes.size());
-		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getAttributeName()).collect(Collectors.toList()),
+		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
 				Matchers.containsInAnyOrder("prop1", "eS1", "N", "Ns"));
 
 		checkMappedSuperclass(optional);
@@ -45,7 +45,7 @@ public class EntityEnhancerTest {
 
 		enhAttributes = optional.get().getEnhAttributes();
 		Assertions.assertEquals(3, enhAttributes.size());
-		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getAttributeName()).collect(Collectors.toList()),
+		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
 				Matchers.containsInAnyOrder("attribute", "eS", "URL"));
 
 		checkMappedSuperclass(optional);
@@ -56,7 +56,7 @@ public class EntityEnhancerTest {
 		EnhEntity mappedSuperclass = optional.get().getMappedSuperclass();
 		List<EnhAttribute> enhAttributes = mappedSuperclass.getEnhAttributes();
 		Assertions.assertEquals(2, enhAttributes.size());
-		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getAttributeName()).collect(Collectors.toList()),
+		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
 				Matchers.containsInAnyOrder("id", "superProperty1"));
 	}
 }

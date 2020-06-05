@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Fri Jun 05 16:56:52 CEST 2020:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.15.2.0 - (1873585): instance a816c00e-0172-84fc-14a8-00000f676400 
+on database directory memory:/Users/adamato/workspaces/workspace_openjpa_jdk8/tinyjpa/citizens with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@4b85612c 
+Loaded from file:/Users/adamato/.m2/repository/org/apache/derby/derby/10.15.2.0/derby-10.15.2.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=11.0.6+8-LTS
+user.dir=/Users/adamato/workspaces/workspace_openjpa_jdk8/tinyjpa
+os.name=Mac OS X
+os.arch=x86_64
+os.version=10.15.5
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

@@ -24,10 +24,10 @@ public class PersistTest {
 			tx.begin();
 
 			Citizen citizen = new Citizen();
-			citizen.setId(3L);
 			citizen.setName("Marc");
-			LOG.info("citizen.getClass().getClassLoader()=" + citizen.getClass().getClassLoader());
 			em.persist(citizen);
+
+			Assertions.assertNotNull(citizen.getId());
 
 			Address address = new Address();
 			address.setId(2L);
@@ -41,7 +41,7 @@ public class PersistTest {
 			Citizen c = em.find(Citizen.class, citizen.getId());
 			Assertions.assertNotNull(c);
 
-//			Assertions.assertEquals(2L, address.getId());
+			Assertions.assertNotNull(address.getId());
 			c = em.find(Citizen.class, address.getId());
 			Assertions.assertNull(c);
 		} finally {
