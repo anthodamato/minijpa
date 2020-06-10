@@ -20,10 +20,10 @@ public class PersistenceContextImpl implements PersistenceContext {
 	private Map<String, Entity> entityDescriptors;
 	private PersistenceUnitInfo persistenceUnitInfo;
 
-	/**
-	 * Managed entities. They are no persistent on db.
-	 */
-	private Map<Class<?>, Map<Object, Object>> managedEntities = new HashMap<>();
+//	/**
+//	 * Managed entities. They are no persistent on db.
+//	 */
+//	private Map<Class<?>, Map<Object, Object>> managedEntities = new HashMap<>();
 	/**
 	 * Managed entities. They are persistent on db.
 	 */
@@ -81,10 +81,11 @@ public class PersistenceContextImpl implements PersistenceContext {
 		if (mapEntities.get(idValue) != null)
 			return;
 
-		mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
-		if (mapEntities.get(idValue) != null)
-			return;
+//		mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
+//		if (mapEntities.get(idValue) != null)
+//			return;
 
+		LOG.info("Instance " + entityInstance + " saved in the PC pk=" + idValue);
 		mapEntities.put(idValue, entityInstance);
 	}
 
@@ -102,10 +103,10 @@ public class PersistenceContextImpl implements PersistenceContext {
 		if (entityInstance != null)
 			return entityInstance;
 
-		Map<Object, Object> mapEntities = getEntityMap(entityClass, managedEntities);
-		entityInstance = mapEntities.get(primaryKey);
-		if (entityInstance != null)
-			return entityInstance;
+//		Map<Object, Object> mapEntities = getEntityMap(entityClass, managedEntities);
+//		entityInstance = mapEntities.get(primaryKey);
+//		if (entityInstance != null)
+//			return entityInstance;
 
 		JdbcRunner jdbcRunner = new JdbcRunner();
 		JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(entity, primaryKey, persistenceUnitInfo);
@@ -137,6 +138,32 @@ public class PersistenceContextImpl implements PersistenceContext {
 			return false;
 
 		return true;
+	}
+
+	public void detach(Object entityInstance) {
+		Entity e = entityDescriptors.get(entityInstance.getClass().getName());
+		if (e == null)
+			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
+
+		Object idValue = null;
+		try {
+			idValue = entityHelper.getIdValue(e, entityInstance);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+			LOG.error(ex.getMessage());
+			return;
+		}
+
+		if (isEntityDetached(entityInstance, idValue))
+			return;
+
+		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), persistentEntities);
+		mapEntities.remove(idValue, entityInstance);
+
+		mapEntities = getEntityMap(entityInstance.getClass(), detachedEntities);
+		if (mapEntities.get(idValue) != null)
+			return;
+
+		mapEntities.put(idValue, entityInstance);
 	}
 
 	public PersistenceUnitInfo getPersistenceUnitInfo() {

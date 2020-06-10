@@ -51,20 +51,11 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		if (entityTransaction == null || !entityTransaction.isActive())
 			throw new IllegalStateException("Transaction not active");
 
-		persistenceContext.persist(entity);
 		try {
 			new PersistenceHelper(persistenceContext).persist(connection, EntityDelegate.getInstance().getChanges(),
 					persistenceContext.getPersistenceUnitInfo());
-		} catch (IllegalAccessException e) {
-			LOG.error(e.getClass().getName());
-			LOG.error(e.getMessage());
-		} catch (InvocationTargetException e) {
-			LOG.error(e.getClass().getName());
-			LOG.error(e.getMessage());
-		} catch (IllegalArgumentException e) {
-			LOG.error(e.getClass().getName());
-			LOG.error(e.getMessage());
-		} catch (SQLException e) {
+			persistenceContext.persist(entity);
+		} catch (Exception e) {
 			LOG.error(e.getClass().getName());
 			LOG.error(e.getMessage());
 			entityTransaction.rollback();
@@ -182,8 +173,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public void detach(Object entity) {
-		// TODO Auto-generated method stub
-
+		persistenceContext.detach(entity);
 	}
 
 	@Override

@@ -17,9 +17,17 @@ public final class EntityDelegate implements EntityListener {
 	private static EntityDelegate entityDelegate = new EntityDelegate();
 	private Map<String, Entity> entities;
 	/**
-	 * (key, value) is (Entity, Map<entity instance, AttrValue>)
+	 * (key, value) is (Entity, Map<entity instance, List<AttrValue>>>)
+	 * 
+	 * Collects entity attributes changes.
 	 */
 	private Map<Entity, Map<Object, List<AttrValue>>> changes = new HashMap<>();
+	/**
+	 * (key, value) is (Map<embedded instance, List<AttrValue>>>)
+	 * 
+	 * Collects embedded attributes changes.
+	 */
+	private Map<Object, List<AttrValue>> embeddedChanges = new HashMap<>();
 	private List<Object> ignoreEntityInstances = new ArrayList<Object>();
 
 	public static EntityDelegate getInstance() {
@@ -34,6 +42,30 @@ public final class EntityDelegate implements EntityListener {
 		}
 
 		Entity entity = entities.get(entityInstance.getClass().getName());
+		LOG.info("set: entityInstance=" + entityInstance);
+		if (entity == null) {
+			// it's an embedded attribute
+			List<AttrValue> instanceAttrs = embeddedChanges.get(entityInstance);
+			if (instanceAttrs == null) {
+				instanceAttrs = new ArrayList<>();
+				embeddedChanges.put(entityInstance, instanceAttrs);
+			}
+
+			Attribute parentAttribute = findEmbeddedAttribute(entityInstance.getClass().getName());
+			Attribute attribute = parentAttribute.findChildByName(attributeName);
+			Optional<AttrValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
+					.findFirst();
+			if (optional.isPresent()) {
+				AttrValue attrValue = optional.get();
+				attrValue.setValue(value);
+			} else {
+				AttrValue attrValue = new AttrValue(attribute, value);
+				instanceAttrs.add(attrValue);
+			}
+
+			return;
+		}
+
 		Map<Object, List<AttrValue>> map = changes.get(entity);
 		if (map == null) {
 			map = new HashMap<>();
@@ -56,6 +88,45 @@ public final class EntityDelegate implements EntityListener {
 			AttrValue attrValue = new AttrValue(attribute, value);
 			instanceAttrs.add(attrValue);
 		}
+	}
+
+	private Attribute findEmbeddedAttribute(String className) {
+		for (Map.Entry<String, Entity> entry : entities.entrySet()) {
+			Entity entity = entry.getValue();
+			Attribute attribute = findEmbeddedAttribute(className, entity.getAttributes());
+			if (attribute != null)
+				return attribute;
+		}
+
+		return null;
+	}
+
+	private Attribute findEmbeddedAttribute(String className, List<Attribute> attributes) {
+		for (Attribute attribute : attributes) {
+			if (attribute.isEmbedded()) {
+				if (attribute.getType().getName().equals(className)) {
+					return attribute;
+				}
+
+				Attribute a = findEmbeddedAttribute(className, attribute.getEmbeddedAttributes());
+				if (a != null)
+					return a;
+			}
+		}
+
+		return null;
+	}
+
+	public Optional<List<AttrValue>> findEmbeddedAttrValues(Object embeddedInstance) {
+		for (Map.Entry<Object, List<AttrValue>> entry : embeddedChanges.entrySet()) {
+			LOG.info("findEmbeddedAttrValues: entry.getKey()=" + entry.getKey());
+		}
+
+		List<AttrValue> attrValues = embeddedChanges.get(embeddedInstance);
+		if (attrValues == null)
+			return Optional.empty();
+
+		return Optional.of(attrValues);
 	}
 
 	@Override

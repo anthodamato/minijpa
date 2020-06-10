@@ -1,5 +1,6 @@
 package org.tinyjpa.metadata;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.tinyjpa.jdbc.Attribute;
@@ -44,6 +45,15 @@ public class Entity {
 
 	public Attribute getId() {
 		return id;
+	}
+
+	public List<Attribute> expandAttributes() {
+		List<Attribute> list = new ArrayList<>();
+		for (Attribute a : attributes) {
+			list.addAll(a.expandAttribute());
+		}
+
+		return list;
 	}
 
 }

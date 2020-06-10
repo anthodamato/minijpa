@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
@@ -40,12 +44,17 @@ public class EntityEnhancer {
 		}
 
 		ClassPool pool = ClassPool.getDefault();
-		LOG.info("Enhancing: " + className);
+//		LOG.info("Enhancing: " + className);
 
 		CtClass ct = pool.get(className);
 		// mapped superclasses are enhanced finding the entity superclasses
 		Object mappedSuperclassAnnotation = ct.getAnnotation(MappedSuperclass.class);
 		if (mappedSuperclassAnnotation != null)
+			return;
+
+		// skip embeddable classes
+		Object embeddableAnnotation = ct.getAnnotation(Embeddable.class);
+		if (embeddableAnnotation != null)
 			return;
 
 		Object entityAnnotation = ct.getAnnotation(javax.persistence.Entity.class);
@@ -61,7 +70,9 @@ public class EntityEnhancer {
 		if (optional.isPresent())
 			enhEntity.setMappedSuperclass(optional.get());
 
-		List<EnhAttribute> attrs = enhance(ct);
+		List<Property> properties = findAttributes(ct);
+		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
+		List<EnhAttribute> attrs = enhance(ct, properties);
 		enhEntity.setEnhAttributes(attrs);
 		if (!attrs.isEmpty() || enhEntity.getMappedSuperclass() != null) {
 			enhancedClasses.add(enhEntity);
@@ -90,7 +101,9 @@ public class EntityEnhancer {
 		if (mappedSuperclassEnhEntity != null)
 			return Optional.of(mappedSuperclassEnhEntity);
 
-		List<EnhAttribute> attrs = enhance(superClass);
+		List<Property> properties = findAttributes(superClass);
+		LOG.info("Found " + properties.size() + " attributes in '" + superClass.getName() + "'");
+		List<EnhAttribute> attrs = enhance(superClass, properties);
 		LOG.info("attrs.size()=" + attrs.size());
 		if (attrs.isEmpty())
 			return Optional.empty();
@@ -111,31 +124,62 @@ public class EntityEnhancer {
 		return null;
 	}
 
-	private List<EnhAttribute> enhance(CtClass ct) throws NotFoundException, CannotCompileException,
-			ClassNotFoundException, InstantiationException, IllegalAccessException {
-		List<Property> attrs = modifyGetterSetterMethods(ct);
+	private List<EnhAttribute> enhance(CtClass ct, List<Property> properties) throws NotFoundException,
+			CannotCompileException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+//		List<Property> properties = findAttributes(ct);
+//		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
 		List<EnhAttribute> attributes = new ArrayList<>();
 		// nothing to do if there are no persistent attributes
-		if (attrs.isEmpty())
+		if (properties.isEmpty())
 			return attributes;
 
-		ClassPool pool = ClassPool.getDefault();
-		Class<?> delegateClass = EntityDelegate.class;
-		pool.importPackage(delegateClass.getPackage().getName());
-		CtField f = CtField.make("private EntityDelegate entityDelegate = EntityDelegate.getInstance();", ct);
-		ct.addField(f);
+		if (countAttributesToEnhance(properties) == 0)
+			return attributes;
 
-		for (Property property : attrs) {
-			modifyGetMethod(property.getMethod, property.ctField);
-			modifySetMethod(property.setMethod, property.ctField);
-			EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(),
-					property.ctField.getType().getName(), property.ctField.getType().isPrimitive(),
-					property.getMethod.getName(), property.setMethod.getName());
+		LOG.info("Enhancing: " + ct.getName());
+		addEntityDelegateField(ct);
+
+		for (Property property : properties) {
+			EnhAttribute enhAttribute = createAttributeFromProperty(property, false);
 			attributes.add(enhAttribute);
 		}
 
 		ct.toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
 		return attributes;
+	}
+
+	private void addEntityDelegateField(CtClass ct) throws CannotCompileException {
+		LOG.info("addEntityDelegateField: ct.getName()=" + ct.getName());
+		ClassPool pool = ClassPool.getDefault();
+		Class<?> delegateClass = EntityDelegate.class;
+		pool.importPackage(delegateClass.getPackage().getName());
+		CtField f = CtField.make("private EntityDelegate entityDelegate = EntityDelegate.getInstance();", ct);
+		ct.addField(f);
+	}
+
+	private long countAttributesToEnhance(List<Property> properties) {
+		return properties.stream().filter(p -> !p.id).count();
+	}
+
+	private EnhAttribute createAttributeFromProperty(Property property, boolean parentIsEmbeddable)
+			throws CannotCompileException, NotFoundException, ClassNotFoundException, InstantiationException,
+			IllegalAccessException {
+		LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
+				+ "; property.embedded=" + property.embedded);
+		List<EnhAttribute> embeddedAttributes = null;
+		if (property.embedded) {
+			embeddedAttributes = enhance(property.ctField.getType(), property.embeddedProperties);
+		}
+
+		if (!property.id) {
+			modifyGetMethod(property.getMethod, property.ctField);
+			modifySetMethod(property.setMethod, property.ctField);
+		}
+
+		EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(), property.ctField.getType().getName(),
+				property.ctField.getType().isPrimitive(), property.getMethod.getName(), property.setMethod.getName(),
+				property.embedded, embeddedAttributes);
+		return enhAttribute;
 	}
 
 	private void modifyGetMethod(CtMethod ctMethod, CtField ctField) throws CannotCompileException, NotFoundException {
@@ -151,16 +195,13 @@ public class EntityEnhancer {
 		ctMethod.insertBefore(mc);
 	}
 
-	private List<Property> modifyGetterSetterMethods(CtClass ctClass)
+	private List<Property> findAttributes(CtClass ctClass)
 			throws CannotCompileException, NotFoundException, ClassNotFoundException {
 		CtField[] ctFields = ctClass.getDeclaredFields();
 		List<Property> attrs = new ArrayList<>();
 		for (CtField ctField : ctFields) {
-			if (ctField.getName().equals("entityDelegate"))
-				continue;
-
-			LOG.info("modifyGetterSetterMethods: ctField.getName()=" + ctField.getName());
-			LOG.info("modifyGetterSetterMethods: ctField.getModifiers()=" + ctField.getModifiers());
+			LOG.info("findAttributes: ctField.getName()=" + ctField.getName());
+			LOG.info("findAttributes: ctField.getModifiers()=" + ctField.getModifiers());
 			int modifier = ctField.getModifiers();
 			if (!Modifier.isPrivate(modifier) && !Modifier.isProtected(modifier) && !Modifier.isPackage(modifier))
 				continue;
@@ -177,9 +218,24 @@ public class EntityEnhancer {
 			if (!setMethod.isPresent())
 				continue;
 
-//			modifyGetMethod(getMethod.get(), ctField);
-//			modifySetMethod(setMethod.get(), ctField);
-			Property property = new Property(getMethod.get(), setMethod.get(), ctField);
+			Object idAnnotation = ctField.getAnnotation(Id.class);
+			Object embeddedIdAnnotation = ctField.getAnnotation(EmbeddedId.class);
+			boolean id = idAnnotation != null || embeddedIdAnnotation != null;
+
+			boolean embedded = false;
+			List<Property> embeddedProperties = null;
+			Object embeddedAnnotation = ctField.getAnnotation(Embedded.class);
+			if (embeddedAnnotation != null || embeddedIdAnnotation != null) {
+				embedded = true;
+				embeddedProperties = findAttributes(ctField.getType());
+				if (embeddedProperties.isEmpty()) {
+					embeddedProperties = null;
+					embedded = false;
+				}
+			}
+
+			Property property = new Property(id, getMethod.get(), setMethod.get(), ctField, embedded,
+					embeddedProperties);
 			attrs.add(property);
 		}
 
@@ -256,15 +312,22 @@ public class EntityEnhancer {
 	}
 
 	private class Property {
+		private boolean id;
 		private CtMethod getMethod;
 		private CtMethod setMethod;
 		private CtField ctField;
+		private boolean embedded;
+		private List<Property> embeddedProperties;
 
-		public Property(CtMethod getMethod, CtMethod setMethod, CtField ctField) {
+		public Property(boolean id, CtMethod getMethod, CtMethod setMethod, CtField ctField, boolean embedded,
+				List<Property> embeddedProperties) {
 			super();
+			this.id = id;
 			this.getMethod = getMethod;
 			this.setMethod = setMethod;
 			this.ctField = ctField;
+			this.embedded = embedded;
+			this.embeddedProperties = embeddedProperties;
 		}
 
 	}

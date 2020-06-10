@@ -3,8 +3,10 @@ package org.tinyjpa.jpa;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
@@ -43,16 +45,15 @@ public class PersistenceHelper {
 
 			SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateInsert(connection, entityInstance, entity,
 					attrValues);
-//			SqlStatement sqlStatement = new SqlCode().generateInsert(entityInstance, entity, attrValues);
 			Object pk = new JdbcRunner().persist(sqlStatement, connection);
 			LOG.info("persist: pk=" + pk);
 
-			try {
-				EntityDelegate.getInstance().addIgnoreEntityInstance(entityInstance);
-				entity.getId().getWriteMethod().invoke(entityInstance, pk);
-			} finally {
-				EntityDelegate.getInstance().removeIgnoreEntityInstance(entityInstance);
-			}
+//			try {
+//				EntityDelegate.getInstance().addIgnoreEntityInstance(entityInstance);
+			entity.getId().getWriteMethod().invoke(entityInstance, pk);
+//			} finally {
+//				EntityDelegate.getInstance().removeIgnoreEntityInstance(entityInstance);
+//			}
 		}
 	}
 
@@ -69,9 +70,41 @@ public class PersistenceHelper {
 				Object entityInstance = e.getKey();
 				LOG.info("persist: entityInstance=" + entityInstance);
 				List<AttrValue> attrValues = e.getValue();
-				persist(entity, entityInstance, attrValues, connection,
+
+				List<AttrValue> values = new ArrayList<>();
+				for (AttrValue attrValue : attrValues) {
+					LOG.info("persist: attrValue.getAttribute().getName()=" + attrValue.getAttribute().getName());
+					LOG.info("persist: attrValue.getAttribute().isEmbedded()=" + attrValue.getAttribute().isEmbedded());
+					if (attrValue.getAttribute().isEmbedded()) {
+						values.addAll(expandEmbedded(attrValue));
+					} else
+						values.add(attrValue);
+				}
+
+				persist(entity, entityInstance, values, connection,
 						DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo));
 			}
 		}
+	}
+
+	private List<AttrValue> expandEmbedded(AttrValue attrValue) {
+		List<AttrValue> attrValues = new ArrayList<>();
+		if (!attrValue.getAttribute().isEmbedded()) {
+			attrValues.add(attrValue);
+			return attrValues;
+		}
+
+		Optional<List<AttrValue>> optional = EntityDelegate.getInstance().findEmbeddedAttrValues(attrValue.getValue());
+		LOG.info("expandEmbedded: optional.isPresent()=" + optional.isPresent());
+		if (optional.isPresent()) {
+			List<AttrValue> list = optional.get();
+			for (AttrValue av : list) {
+				LOG.info("expandEmbedded: av.getAttribute().getName()=" + av.getAttribute().getName());
+				List<AttrValue> attrValueList = expandEmbedded(av);
+				attrValues.addAll(attrValueList);
+			}
+		}
+
+		return attrValues;
 	}
 }

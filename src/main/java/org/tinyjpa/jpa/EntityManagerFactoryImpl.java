@@ -42,8 +42,9 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		this.map = map;
 	}
 
-	private synchronized Map<String, Entity> createEntities() throws ClassNotFoundException, IntrospectionException,
-			InstantiationException, IllegalAccessException, NotFoundException, CannotCompileException {
+	private synchronized Map<String, Entity> createEntities()
+			throws ClassNotFoundException, IntrospectionException, InstantiationException, IllegalAccessException,
+			NotFoundException, CannotCompileException, NoSuchFieldException, SecurityException, NoSuchMethodException {
 		List<EnhEntity> enhancedClasses = new EntityEnhancer().enhance(persistenceUnitInfo.getManagedClassNames());
 
 		Parser parser = new Parser();

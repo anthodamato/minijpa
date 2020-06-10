@@ -16,8 +16,9 @@ public class ParserTest {
 	private Parser parser = new Parser();
 
 	@Test
-	public void parse() throws ClassNotFoundException, IntrospectionException, InstantiationException,
-			IllegalAccessException, NotFoundException, CannotCompileException {
+	public void parse()
+			throws ClassNotFoundException, IntrospectionException, InstantiationException, IllegalAccessException,
+			NotFoundException, CannotCompileException, NoSuchFieldException, SecurityException, NoSuchMethodException {
 		List<String> classNames = new ArrayList<>();
 		classNames.add("org.tinyjpa.jpa.model.Citizen");
 		EntityEnhancer entityEnhancer = new EntityEnhancer();

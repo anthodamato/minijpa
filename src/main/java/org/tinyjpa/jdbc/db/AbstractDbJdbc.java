@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.GenerationType;
@@ -50,20 +49,21 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		else if (strategyClass == PkIdentityStrategy.class)
 			return generateInsertIdentityStrategy(entityInstance, entity, attrValues);
 
-		Optional<AttrValue> optional = attrValues.stream().filter(a -> a.getAttribute().isId()).findFirst();
+//		Optional<AttrValue> optional = attrValues.stream().filter(a -> a.getAttribute().isId()).findFirst();
 
 		Object[] values = new Object[attrValues.size()];
 		StringBuilder sb = new StringBuilder();
 		sb.append("insert into ");
 		sb.append(entity.getTableName());
 		sb.append(" (");
-		if (optional.isPresent()) {
-			sb.append(id.getColumnName());
-			sb.append(",");
-		}
+//		if (optional.isPresent()) {
+		sb.append(id.getColumnName());
+		sb.append(",");
+//		}
 
-		String cols = attrValues.stream().filter(a -> !a.getAttribute().isId())
-				.map(a -> a.getAttribute().getColumnName()).collect(Collectors.joining(","));
+//		String cols = attrValues.stream().filter(a -> !a.getAttribute().isId())
+//				.map(a -> a.getAttribute().getColumnName()).collect(Collectors.joining(","));
+		String cols = attrValues.stream().map(a -> a.getAttribute().getColumnName()).collect(Collectors.joining(","));
 		sb.append(cols);
 		sb.append(") values (");
 
@@ -73,8 +73,8 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 		int i = 1;
 		for (AttrValue attrValue : attrValues) {
-			if (attrValue.getAttribute().isId())
-				continue;
+//			if (attrValue.getAttribute().isId())
+//				continue;
 
 			Object attributeValue = attrValue.getValue();
 			sb.append(",?");
@@ -94,28 +94,23 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 	protected SqlStatement generateInsertIdentityStrategy(Object entityInstance, Entity entity,
 			List<AttrValue> attrValues) {
+		List<AttrValue> attributeValues = attrValues;
+//		List<AttrValue> attributeValues = attrValues.stream()
+//				.filter(a -> !a.getAttribute().isId() && !a.getAttribute().isEmbedded()).collect(Collectors.toList());
 		StringBuilder sb = new StringBuilder();
 		sb.append("insert into ");
 		sb.append(entity.getTableName());
 		sb.append(" (");
-		String cols = attrValues.stream().filter(a -> !a.getAttribute().isId())
-				.map(a -> a.getAttribute().getColumnName()).collect(Collectors.joining(","));
+		List<Attribute> attributes = attributeValues.stream().map(a -> a.getAttribute()).collect(Collectors.toList());
+		String cols = attributes.stream().map(a -> a.getColumnName()).collect(Collectors.joining(","));
 		sb.append(cols);
 		sb.append(") values (");
 
 		int indexStart = 0;
-		Object[] values = new Object[attrValues.size()];
-		long pkCount = attrValues.stream().filter(a -> a.getAttribute().isId()).count();
-		if (pkCount > 0) {
-			values = new Object[attrValues.size() - 1];
-			indexStart = 1;
-		}
+		Object[] values = new Object[attributes.size()];
 
 		int i = 0;
-		for (AttrValue attrValue : attrValues) {
-			if (attrValue.getAttribute().isId())
-				continue;
-
+		for (AttrValue attrValue : attributeValues) {
 			if (i > 0)
 				sb.append(",");
 
@@ -127,7 +122,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 		sb.append(")");
 		String sql = sb.toString();
-		return new SqlStatement(sql, values, attrValues, indexStart, null);
+		return new SqlStatement(sql, values, attributeValues, indexStart, null);
 	}
 
 }

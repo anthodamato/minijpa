@@ -16,6 +16,7 @@ public class Citizen {
 	@Column(name = "first_name")
 	private String name;
 
+	@Column(name = "last_name")
 	private String lastName;
 
 	public Long getId() {

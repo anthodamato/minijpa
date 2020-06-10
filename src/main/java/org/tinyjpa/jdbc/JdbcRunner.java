@@ -23,6 +23,7 @@ public class JdbcRunner {
 
 	private void setPreparedStatementValue(PreparedStatement preparedStatement, int index, Attribute attribute,
 			Object value) throws SQLException {
+		LOG.info("setPreparedStatementValue: value=" + value + "; attribute: " + attribute);
 		if (value == null) {
 			preparedStatement.setNull(index, attribute.getSqlType());
 			return;
@@ -46,6 +47,7 @@ public class JdbcRunner {
 
 	private void setPreparedStatementValues(PreparedStatement preparedStatement, SqlStatement sqlStatement)
 			throws SQLException {
+		LOG.info("setPreparedStatementValues: sqlStatement.getStartIndex()=" + sqlStatement.getStartIndex());
 		int index = 1;
 		for (int i = sqlStatement.getStartIndex(); i < sqlStatement.getAttrValues().size(); ++i) {
 			AttrValue attrValue = sqlStatement.getAttrValues().get(i);
@@ -87,6 +89,7 @@ public class JdbcRunner {
 		PreparedStatement preparedStatement = null;
 		try {
 			SqlStatement sqlStatement = new SqlCode().generateSelectById(entity, idValue);
+			LOG.info("findById: sql=" + sqlStatement.getSql());
 			connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
 			preparedStatement = connection.prepareStatement(sqlStatement.getSql());
 			setPreparedStatementValue(preparedStatement, 1, entity.getId(), idValue);
@@ -101,13 +104,11 @@ public class JdbcRunner {
 
 			int i = 1;
 			for (Attribute attribute : sqlStatement.getAttributes()) {
-//				attribute.getWriteMethod().invoke(entityInstance, rs.getObject(i));
 				attributeValues.attributes.add(attribute);
 				attributeValues.values.add(rs.getObject(i));
 				++i;
 			}
 
-//			entity.getId().getWriteMethod().invoke(entityInstance, idValue);
 			return attributeValues;
 		} finally {
 			preparedStatement.close();
@@ -117,14 +118,56 @@ public class JdbcRunner {
 	}
 
 	public void callWriteMethods(Entity entity, AttributeValues attributeValues, Object idValue)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
 		int i = 0;
+//		for (Attribute attribute : attributeValues.attributes) {
+//			attribute.getWriteMethod().invoke(attributeValues.entityInstance, attributeValues.values.get(i));
+//			++i;
+//		}
+
 		for (Attribute attribute : attributeValues.attributes) {
-			attribute.getWriteMethod().invoke(attributeValues.entityInstance, attributeValues.values.get(i));
+			LOG.info("callWriteMethods: attribute.getName()=" + attribute.getName());
+			findAndSetAttributeValue(entity.getClazz(), attributeValues.entityInstance, entity.getAttributes(),
+					attribute, attributeValues.values.get(i));
+//			attribute.getWriteMethod().invoke(attributeValues.entityInstance, attributeValues.values.get(i));
 			++i;
 		}
 
 		entity.getId().getWriteMethod().invoke(attributeValues.entityInstance, idValue);
+	}
+
+	private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, List<Attribute> attributes,
+			Attribute attribute, Object value)
+			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
+		for (Attribute a : attributes) {
+			LOG.info("findAndSetAttributeValue: a.getName()=" + a.getName());
+			if (a == attribute) {
+				Object parent = parentInstance;
+				if (parent == null)
+					parent = parentClass.newInstance();
+
+				LOG.info("findAndSetAttributeValue: parent=" + parent + ";n a.getWriteMethod()=" + a.getWriteMethod());
+				attribute.getWriteMethod().invoke(parent, value);
+				return parent;
+			}
+		}
+
+		for (Attribute a : attributes) {
+			if (!a.isEmbedded())
+				continue;
+
+			Object aInstance = findAndSetAttributeValue(a.getType(), null, a.getEmbeddedAttributes(), attribute, value);
+			if (aInstance != null) {
+				Object parent = parentInstance;
+				if (parent == null)
+					parent = parentClass.newInstance();
+
+				a.getWriteMethod().invoke(parent, aInstance);
+				return parent;
+			}
+		}
+
+		return null;
 	}
 
 	public class AttributeValues {

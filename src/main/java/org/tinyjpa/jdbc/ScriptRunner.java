@@ -56,6 +56,9 @@ public class ScriptRunner {
 			StringBuilder sb = new StringBuilder();
 			String line = null;
 			while ((line = bufferedReader.readLine()) != null) {
+				if (line.trim().startsWith("--"))
+					continue;
+
 				sb.append(" ");
 				sb.append(line);
 				if (line.trim().endsWith(";")) {

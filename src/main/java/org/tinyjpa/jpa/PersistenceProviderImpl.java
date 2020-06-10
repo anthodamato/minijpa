@@ -51,16 +51,19 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 	}
 
 	public EntityManagerFactory createEntityManagerFactory(String emName, @SuppressWarnings("rawtypes") Map map) {
+		return createEntityManagerFactory("/META-INF/persistence.xml", emName, map);
+	}
+
+	public EntityManagerFactory createEntityManagerFactory(String path, String emName,
+			@SuppressWarnings("rawtypes") Map map) {
 		PersistenceUnitInfo persistenceUnitInfo = null;
 		try {
-			persistenceUnitInfo = new PersistenceProviderHelper().parseXml("/META-INF/persistence.xml", emName);
+			persistenceUnitInfo = new PersistenceProviderHelper().parseXml(path, emName);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
 			LOG.info("createEntityManagerFactory(String emName");
-		}
-
-		if (persistenceUnitInfo == null)
 			return null;
+		}
 
 		try {
 			processConfiguration(persistenceUnitInfo);

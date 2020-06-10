@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -49,13 +48,12 @@ public class ApacheDerbyJdbc extends AbstractDbJdbc {
 		LOG.info("generateInsertSequenceStrategy: idValue=" + idValue);
 
 		List<AttrValue> attrValuesWithId = new ArrayList<>();
-		Optional<AttrValue> optional = attrValues.stream().filter(a -> a.getAttribute().isId()).findFirst();
-		if (optional.isPresent()) {
-			optional.get().setValue(idValue);
-		} else {
-			AttrValue attrValue = new AttrValue(entity.getId(), idValue);
-			attrValuesWithId.add(attrValue);
-		}
+//		Optional<AttrValue> optional = attrValues.stream().filter(a -> a.getAttribute().isId()).findFirst();
+//		if (optional.isPresent()) {
+//			optional.get().setValue(idValue);
+//		} else {
+		attrValuesWithId.add(new AttrValue(entity.getId(), idValue));
+//		}
 
 		attrValuesWithId.addAll(attrValues);
 
