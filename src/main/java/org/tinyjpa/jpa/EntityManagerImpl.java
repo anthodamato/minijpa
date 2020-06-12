@@ -1,7 +1,5 @@
 package org.tinyjpa.jpa;
 
-import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +21,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.metadata.Entity;
+import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.metadata.EntityDelegate;
 
 public class EntityManagerImpl extends AbstractEntityManager {
@@ -58,7 +56,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		} catch (Exception e) {
 			LOG.error(e.getClass().getName());
 			LOG.error(e.getMessage());
-			entityTransaction.rollback();
+			entityTransaction.setRollbackOnly();
 		}
 	}
 
@@ -79,8 +77,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
 		try {
 			return (T) persistenceContext.find(entityClass, primaryKey);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | InstantiationException
-				| SQLException e) {
+		} catch (Exception e) {
 			LOG.error(e.getMessage());
 		}
 

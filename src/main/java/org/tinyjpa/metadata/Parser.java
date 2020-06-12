@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -16,6 +17,7 @@ import javax.persistence.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcTypes;
 
 public class Parser {
@@ -104,9 +106,9 @@ public class Parser {
 				columnName = cn;
 		}
 
-		Id id = field.getAnnotation(Id.class);
+		Id idAnnotation = field.getAnnotation(Id.class);
 		Attribute attribute = null;
-		if (id == null) {
+		if (idAnnotation == null) {
 			List<Attribute> embeddedAttributes = null;
 			boolean embedded = enhAttribute.isEmbedded();
 			if (embedded) {
@@ -118,10 +120,11 @@ public class Parser {
 				}
 			}
 
+			boolean id = field.getAnnotation(EmbeddedId.class) != null;
 //			LOG.info("readAttribute: enhAttribute.getName()=" + enhAttribute.getName());
 //			LOG.info("readAttribute: embedded=" + embedded);
-			attribute = new Attribute(enhAttribute.getName(), columnName, attributeClass, readMethod, writeMethod,
-					id != null, JdbcTypes.sqlTypeFromClass(attributeClass), null, embedded, embeddedAttributes);
+			attribute = new Attribute(enhAttribute.getName(), columnName, attributeClass, readMethod, writeMethod, id,
+					JdbcTypes.sqlTypeFromClass(attributeClass), null, embedded, embeddedAttributes);
 			LOG.info("readAttribute: attribute: " + attribute);
 		} else {
 			GeneratedValue generatedValue = field.getAnnotation(GeneratedValue.class);
@@ -130,7 +133,7 @@ public class Parser {
 				gv = new org.tinyjpa.metadata.GeneratedValue(generatedValue.strategy(), generatedValue.generator());
 
 			attribute = new Attribute(enhAttribute.getName(), columnName, attributeClass, readMethod, writeMethod,
-					id != null, JdbcTypes.sqlTypeFromClass(attributeClass), gv, false, null);
+					idAnnotation != null, JdbcTypes.sqlTypeFromClass(attributeClass), gv, false, null);
 		}
 
 		return attribute;

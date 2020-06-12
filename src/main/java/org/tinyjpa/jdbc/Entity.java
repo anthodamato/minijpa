@@ -1,9 +1,7 @@
-package org.tinyjpa.metadata;
+package org.tinyjpa.jdbc;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.tinyjpa.jdbc.Attribute;
 
 public class Entity {
 	private Class<?> clazz;

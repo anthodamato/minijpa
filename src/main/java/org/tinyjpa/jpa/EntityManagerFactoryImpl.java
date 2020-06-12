@@ -18,8 +18,8 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.metadata.EnhEntity;
-import org.tinyjpa.metadata.Entity;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityEnhancer;
 import org.tinyjpa.metadata.Parser;

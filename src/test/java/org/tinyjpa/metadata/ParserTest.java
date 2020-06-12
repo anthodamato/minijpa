@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jpa.model.Citizen;
 
 import javassist.CannotCompileException;

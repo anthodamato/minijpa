@@ -8,8 +8,9 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.AttrValue;
+import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.Entity;
 
 public final class EntityDelegate implements EntityListener {
 	protected Logger LOG = LoggerFactory.getLogger(EntityDelegate.class);
@@ -21,13 +22,13 @@ public final class EntityDelegate implements EntityListener {
 	 * 
 	 * Collects entity attributes changes.
 	 */
-	private Map<Entity, Map<Object, List<AttrValue>>> changes = new HashMap<>();
+	private Map<Entity, Map<Object, List<AttributeValue>>> changes = new HashMap<>();
 	/**
 	 * (key, value) is (Map<embedded instance, List<AttrValue>>>)
 	 * 
 	 * Collects embedded attributes changes.
 	 */
-	private Map<Object, List<AttrValue>> embeddedChanges = new HashMap<>();
+	private Map<Object, List<AttributeValue>> embeddedChanges = new HashMap<>();
 	private List<Object> ignoreEntityInstances = new ArrayList<Object>();
 
 	public static EntityDelegate getInstance() {
@@ -45,7 +46,7 @@ public final class EntityDelegate implements EntityListener {
 		LOG.info("set: entityInstance=" + entityInstance);
 		if (entity == null) {
 			// it's an embedded attribute
-			List<AttrValue> instanceAttrs = embeddedChanges.get(entityInstance);
+			List<AttributeValue> instanceAttrs = embeddedChanges.get(entityInstance);
 			if (instanceAttrs == null) {
 				instanceAttrs = new ArrayList<>();
 				embeddedChanges.put(entityInstance, instanceAttrs);
@@ -53,26 +54,26 @@ public final class EntityDelegate implements EntityListener {
 
 			Attribute parentAttribute = findEmbeddedAttribute(entityInstance.getClass().getName());
 			Attribute attribute = parentAttribute.findChildByName(attributeName);
-			Optional<AttrValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
+			Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
 					.findFirst();
 			if (optional.isPresent()) {
-				AttrValue attrValue = optional.get();
+				AttributeValue attrValue = optional.get();
 				attrValue.setValue(value);
 			} else {
-				AttrValue attrValue = new AttrValue(attribute, value);
+				AttributeValue attrValue = new AttributeValue(attribute, value);
 				instanceAttrs.add(attrValue);
 			}
 
 			return;
 		}
 
-		Map<Object, List<AttrValue>> map = changes.get(entity);
+		Map<Object, List<AttributeValue>> map = changes.get(entity);
 		if (map == null) {
 			map = new HashMap<>();
 			changes.put(entity, map);
 		}
 
-		List<AttrValue> instanceAttrs = map.get(entityInstance);
+		List<AttributeValue> instanceAttrs = map.get(entityInstance);
 		if (instanceAttrs == null) {
 			instanceAttrs = new ArrayList<>();
 			map.put(entityInstance, instanceAttrs);
@@ -80,12 +81,12 @@ public final class EntityDelegate implements EntityListener {
 
 		Attribute attribute = entity.getAttribute(attributeName);
 //		LOG.info("set: attributeName=" + attributeName + "; attribute=" + attribute);
-		Optional<AttrValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute).findFirst();
+		Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute).findFirst();
 		if (optional.isPresent()) {
-			AttrValue attrValue = optional.get();
+			AttributeValue attrValue = optional.get();
 			attrValue.setValue(value);
 		} else {
-			AttrValue attrValue = new AttrValue(attribute, value);
+			AttributeValue attrValue = new AttributeValue(attribute, value);
 			instanceAttrs.add(attrValue);
 		}
 	}
@@ -117,12 +118,12 @@ public final class EntityDelegate implements EntityListener {
 		return null;
 	}
 
-	public Optional<List<AttrValue>> findEmbeddedAttrValues(Object embeddedInstance) {
-		for (Map.Entry<Object, List<AttrValue>> entry : embeddedChanges.entrySet()) {
+	public Optional<List<AttributeValue>> findEmbeddedAttrValues(Object embeddedInstance) {
+		for (Map.Entry<Object, List<AttributeValue>> entry : embeddedChanges.entrySet()) {
 			LOG.info("findEmbeddedAttrValues: entry.getKey()=" + entry.getKey());
 		}
 
-		List<AttrValue> attrValues = embeddedChanges.get(embeddedInstance);
+		List<AttributeValue> attrValues = embeddedChanges.get(embeddedInstance);
 		if (attrValues == null)
 			return Optional.empty();
 
@@ -218,7 +219,7 @@ public final class EntityDelegate implements EntityListener {
 		this.entities = entities;
 	}
 
-	public Map<Entity, Map<Object, List<AttrValue>>> getChanges() {
+	public Map<Entity, Map<Object, List<AttributeValue>>> getChanges() {
 		return changes;
 	}
 

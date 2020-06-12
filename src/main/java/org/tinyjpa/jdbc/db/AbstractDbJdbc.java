@@ -3,6 +3,7 @@ package org.tinyjpa.jdbc.db;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,17 +11,20 @@ import javax.persistence.GenerationType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.AttrValue;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.AttributeValue;
+import org.tinyjpa.jdbc.AttributeValueConverter;
+import org.tinyjpa.jdbc.EmbeddedIdAttributeValueConverter;
+import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.SqlStatement;
 import org.tinyjpa.jpa.pk.PkIdentityStrategy;
 import org.tinyjpa.jpa.pk.PkSequenceStrategy;
 import org.tinyjpa.jpa.pk.PkStrategy;
-import org.tinyjpa.metadata.Entity;
 import org.tinyjpa.metadata.GeneratedValue;
 
 public abstract class AbstractDbJdbc implements DbJdbc {
 	private Logger LOG = LoggerFactory.getLogger(AbstractDbJdbc.class);
+	private AttributeValueConverter embeddedIdAttributeValueConverter = new EmbeddedIdAttributeValueConverter();
 
 	@Override
 	public Class<? extends PkStrategy> getPkStrategy(GeneratedValue generatedValue) {
@@ -39,90 +43,93 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 	@Override
 	public SqlStatement generateInsert(Connection connection, Object entityInstance, Entity entity,
-			List<AttrValue> attrValues)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException {
+			List<AttributeValue> attrValues)
+			throws Exception {
 		Attribute id = entity.getId();
 		Class<? extends PkStrategy> strategyClass = getPkStrategy(id.getGeneratedValue());
 		LOG.info("generateInsert: strategyClass=" + strategyClass);
 		if (strategyClass == PkSequenceStrategy.class)
-			return generateInsertSequenceStrategy(connection, entityInstance, entity, attrValues);
+			return generateInsertSequenceStrategy(connection, entity, attrValues);
 		else if (strategyClass == PkIdentityStrategy.class)
-			return generateInsertIdentityStrategy(entityInstance, entity, attrValues);
+			return generateInsertIdentityStrategy(entity, attrValues);
 
-//		Optional<AttrValue> optional = attrValues.stream().filter(a -> a.getAttribute().isId()).findFirst();
-
-		Object[] values = new Object[attrValues.size()];
-		StringBuilder sb = new StringBuilder();
-		sb.append("insert into ");
-		sb.append(entity.getTableName());
-		sb.append(" (");
-//		if (optional.isPresent()) {
-		sb.append(id.getColumnName());
-		sb.append(",");
-//		}
-
-//		String cols = attrValues.stream().filter(a -> !a.getAttribute().isId())
-//				.map(a -> a.getAttribute().getColumnName()).collect(Collectors.joining(","));
-		String cols = attrValues.stream().map(a -> a.getAttribute().getColumnName()).collect(Collectors.joining(","));
-		sb.append(cols);
-		sb.append(") values (");
-
-		sb.append("?");
 		Object idValue = id.getReadMethod().invoke(entityInstance);
+		List<AttributeValue> attrValuesWithId = new ArrayList<>();
+		AttributeValue attrValueId = new AttributeValue(id, idValue);
+		attrValuesWithId.addAll(embeddedIdAttributeValueConverter.convert(attrValueId));
+		attrValuesWithId.addAll(attrValues);
+
+		Object[] values = new Object[attrValuesWithId.size()];
 		values[0] = idValue;
 
 		int i = 1;
-		for (AttrValue attrValue : attrValues) {
-//			if (attrValue.getAttribute().isId())
-//				continue;
-
-			Object attributeValue = attrValue.getValue();
-			sb.append(",?");
-			values[i] = attributeValue;
+		for (AttributeValue attrValue : attrValues) {
+			values[i] = attrValue.getValue();
 			++i;
 		}
 
-		sb.append(")");
-		String sql = sb.toString();
-		return new SqlStatement(sql, values, attrValues, 0, idValue);
+		String sql = generateInsertStatement(entity, attrValuesWithId);
+		return new SqlStatement(sql, values, attrValuesWithId, 0, idValue);
 	}
 
 	protected abstract Long generateSequenceNextValue(Connection connection, Entity entity) throws SQLException;
 
-	protected abstract SqlStatement generateInsertSequenceStrategy(Connection connection, Object entityInstance,
-			Entity entity, List<AttrValue> attrValues) throws SQLException;
+	protected SqlStatement generateInsertSequenceStrategy(Connection connection, Entity entity,
+			List<AttributeValue> attrValues) throws SQLException {
+		Long idValue = generateSequenceNextValue(connection, entity);
+		LOG.info("generateInsertSequenceStrategy: idValue=" + idValue);
 
-	protected SqlStatement generateInsertIdentityStrategy(Object entityInstance, Entity entity,
-			List<AttrValue> attrValues) {
-		List<AttrValue> attributeValues = attrValues;
-//		List<AttrValue> attributeValues = attrValues.stream()
-//				.filter(a -> !a.getAttribute().isId() && !a.getAttribute().isEmbedded()).collect(Collectors.toList());
+		List<AttributeValue> attrValuesWithId = new ArrayList<>();
+		attrValuesWithId.add(new AttributeValue(entity.getId(), idValue));
+		attrValuesWithId.addAll(attrValues);
+
+		int i = 0;
+		Object[] values = new Object[attrValuesWithId.size()];
+		for (AttributeValue attrValue : attrValuesWithId) {
+			values[i] = attrValue.getValue();
+			++i;
+		}
+
+		String sql = generateInsertStatement(entity, attrValuesWithId);
+		return new SqlStatement(sql, values, attrValuesWithId, 0, idValue);
+	}
+
+	protected SqlStatement generateInsertIdentityStrategy(Entity entity, List<AttributeValue> attrValues) {
+		List<AttributeValue> attributeValues = attrValues;
+
+		Object[] values = new Object[attributeValues.size()];
+		int i = 0;
+		for (AttributeValue attrValue : attributeValues) {
+			values[i] = attrValue.getValue();
+			++i;
+		}
+
+		String sql = generateInsertStatement(entity, attributeValues);
+		return new SqlStatement(sql, values, attributeValues, 0, null);
+	}
+
+	protected String generateInsertStatement(Entity entity, List<AttributeValue> attrValues) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("insert into ");
 		sb.append(entity.getTableName());
 		sb.append(" (");
-		List<Attribute> attributes = attributeValues.stream().map(a -> a.getAttribute()).collect(Collectors.toList());
-		String cols = attributes.stream().map(a -> a.getColumnName()).collect(Collectors.joining(","));
+		String cols = attrValues.stream().map(a -> a.getAttribute().getColumnName()).collect(Collectors.joining(","));
 		sb.append(cols);
 		sb.append(") values (");
 
-		int indexStart = 0;
-		Object[] values = new Object[attributes.size()];
+		Object[] values = new Object[attrValues.size()];
 
 		int i = 0;
-		for (AttrValue attrValue : attributeValues) {
+		for (AttributeValue attrValue : attrValues) {
 			if (i > 0)
 				sb.append(",");
 
-			Object attributeValue = attrValue.getValue();
 			sb.append("?");
-			values[i] = attributeValue;
+			values[i] = attrValue.getValue();
 			++i;
 		}
 
 		sb.append(")");
-		String sql = sb.toString();
-		return new SqlStatement(sql, values, attributeValues, indexStart, null);
+		return sb.toString();
 	}
-
 }

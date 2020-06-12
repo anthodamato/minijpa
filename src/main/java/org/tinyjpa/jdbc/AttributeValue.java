@@ -1,10 +1,10 @@
 package org.tinyjpa.jdbc;
 
-public class AttrValue {
+public class AttributeValue {
 	private Attribute attribute;
 	private Object value;
 
-	public AttrValue(Attribute attribute, Object value) {
+	public AttributeValue(Attribute attribute, Object value) {
 		super();
 		this.attribute = attribute;
 		this.value = value;

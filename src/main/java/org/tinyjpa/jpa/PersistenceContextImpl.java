@@ -1,7 +1,6 @@
 package org.tinyjpa.jpa;
 
 import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,8 +9,8 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcRunner;
-import org.tinyjpa.metadata.Entity;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityHelper;
 
@@ -89,8 +88,7 @@ public class PersistenceContextImpl implements PersistenceContext {
 		mapEntities.put(idValue, entityInstance);
 	}
 
-	public Object find(Class<?> entityClass, Object primaryKey)
-			throws IllegalAccessException, InvocationTargetException, InstantiationException, SQLException {
+	public Object find(Class<?> entityClass, Object primaryKey) throws Exception {
 		Entity entity = entityDescriptors.get(entityClass.getName());
 		if (entity == null)
 			throw new IllegalArgumentException("Instance of class '" + entityClass.getName() + "' is not an entity");

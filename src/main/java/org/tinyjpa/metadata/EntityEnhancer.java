@@ -72,7 +72,7 @@ public class EntityEnhancer {
 
 		List<Property> properties = findAttributes(ct);
 		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
-		List<EnhAttribute> attrs = enhance(ct, properties);
+		List<EnhAttribute> attrs = enhance(ct, properties, false);
 		enhEntity.setEnhAttributes(attrs);
 		if (!attrs.isEmpty() || enhEntity.getMappedSuperclass() != null) {
 			enhancedClasses.add(enhEntity);
@@ -103,7 +103,7 @@ public class EntityEnhancer {
 
 		List<Property> properties = findAttributes(superClass);
 		LOG.info("Found " + properties.size() + " attributes in '" + superClass.getName() + "'");
-		List<EnhAttribute> attrs = enhance(superClass, properties);
+		List<EnhAttribute> attrs = enhance(superClass, properties, false);
 		LOG.info("attrs.size()=" + attrs.size());
 		if (attrs.isEmpty())
 			return Optional.empty();
@@ -124,8 +124,9 @@ public class EntityEnhancer {
 		return null;
 	}
 
-	private List<EnhAttribute> enhance(CtClass ct, List<Property> properties) throws NotFoundException,
-			CannotCompileException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+	private List<EnhAttribute> enhance(CtClass ct, List<Property> properties, boolean embeddedId)
+			throws NotFoundException, CannotCompileException, ClassNotFoundException, InstantiationException,
+			IllegalAccessException {
 //		List<Property> properties = findAttributes(ct);
 //		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
 		List<EnhAttribute> attributes = new ArrayList<>();
@@ -136,11 +137,13 @@ public class EntityEnhancer {
 		if (countAttributesToEnhance(properties) == 0)
 			return attributes;
 
-		LOG.info("Enhancing: " + ct.getName());
-		addEntityDelegateField(ct);
+		if (!embeddedId) {
+			LOG.info("Enhancing: " + ct.getName());
+			addEntityDelegateField(ct);
+		}
 
 		for (Property property : properties) {
-			EnhAttribute enhAttribute = createAttributeFromProperty(property, false);
+			EnhAttribute enhAttribute = createAttributeFromProperty(property, embeddedId);
 			attributes.add(enhAttribute);
 		}
 
@@ -161,17 +164,17 @@ public class EntityEnhancer {
 		return properties.stream().filter(p -> !p.id).count();
 	}
 
-	private EnhAttribute createAttributeFromProperty(Property property, boolean parentIsEmbeddable)
+	private EnhAttribute createAttributeFromProperty(Property property, boolean parentIsEmbeddedId)
 			throws CannotCompileException, NotFoundException, ClassNotFoundException, InstantiationException,
 			IllegalAccessException {
 		LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
 				+ "; property.embedded=" + property.embedded);
 		List<EnhAttribute> embeddedAttributes = null;
 		if (property.embedded) {
-			embeddedAttributes = enhance(property.ctField.getType(), property.embeddedProperties);
+			embeddedAttributes = enhance(property.ctField.getType(), property.embeddedProperties, property.id);
 		}
 
-		if (!property.id) {
+		if (!property.id && !parentIsEmbeddedId) {
 			modifyGetMethod(property.getMethod, property.ctField);
 			modifySetMethod(property.setMethod, property.ctField);
 		}

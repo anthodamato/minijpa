@@ -6,11 +6,11 @@ public class SqlStatement {
 	private String sql;
 	private Object[] values;
 	private List<Attribute> attributes;
-	private List<AttrValue> attrValues;
+	private List<AttributeValue> attrValues;
 	private int startIndex;
 	private Object idValue;
 
-	public SqlStatement(String sql, Object[] values, List<AttrValue> attrValues, int startIndex, Object idValue) {
+	public SqlStatement(String sql, Object[] values, List<AttributeValue> attrValues, int startIndex, Object idValue) {
 		super();
 		this.sql = sql;
 		this.values = values;
@@ -19,7 +19,7 @@ public class SqlStatement {
 		this.idValue = idValue;
 	}
 
-	public SqlStatement(String sql, Object[] values, List<Attribute> attributes, List<AttrValue> attrValues,
+	public SqlStatement(String sql, Object[] values, List<Attribute> attributes, List<AttributeValue> attrValues,
 			int startIndex) {
 		super();
 		this.sql = sql;
@@ -41,7 +41,7 @@ public class SqlStatement {
 		return attributes;
 	}
 
-	public List<AttrValue> getAttrValues() {
+	public List<AttributeValue> getAttrValues() {
 		return attrValues;
 	}
 

@@ -1,8 +1,8 @@
 package org.tinyjpa.jdbc;
 
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,7 +14,6 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.metadata.Entity;
 import org.tinyjpa.metadata.EntityHelper;
 
 public class JdbcRunner {
@@ -43,6 +42,8 @@ public class JdbcRunner {
 			preparedStatement.setLong(index, (Long) value);
 		else if (attribute.getType() == String.class)
 			preparedStatement.setString(index, (String) value);
+		else if (attribute.getType() == Date.class)
+			preparedStatement.setDate(index, (Date) value);
 	}
 
 	private void setPreparedStatementValues(PreparedStatement preparedStatement, SqlStatement sqlStatement)
@@ -50,7 +51,7 @@ public class JdbcRunner {
 		LOG.info("setPreparedStatementValues: sqlStatement.getStartIndex()=" + sqlStatement.getStartIndex());
 		int index = 1;
 		for (int i = sqlStatement.getStartIndex(); i < sqlStatement.getAttrValues().size(); ++i) {
-			AttrValue attrValue = sqlStatement.getAttrValues().get(i);
+			AttributeValue attrValue = sqlStatement.getAttrValues().get(i);
 			LOG.info("setPreparedStatementValues: columnName=" + attrValue.getAttribute().getColumnName() + "; type="
 					+ attrValue.getAttribute().getType().getName() + "; value=" + attrValue.getValue());
 			setPreparedStatementValue(preparedStatement, index, attrValue.getAttribute(), attrValue.getValue());
@@ -83,8 +84,7 @@ public class JdbcRunner {
 	}
 
 	public AttributeValues findById(Entity entity, Object idValue, PersistenceUnitInfo persistenceUnitInfo)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException,
-			InstantiationException {
+			throws Exception {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		try {
@@ -92,7 +92,8 @@ public class JdbcRunner {
 			LOG.info("findById: sql=" + sqlStatement.getSql());
 			connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
 			preparedStatement = connection.prepareStatement(sqlStatement.getSql());
-			setPreparedStatementValue(preparedStatement, 1, entity.getId(), idValue);
+//			setPreparedStatementValue(preparedStatement, 1, entity.getId(), sqlStatement.getValues()[0]);
+			setPreparedStatementValues(preparedStatement, sqlStatement);
 
 			ResultSet rs = preparedStatement.executeQuery();
 			if (!rs.next())
@@ -105,7 +106,7 @@ public class JdbcRunner {
 			int i = 1;
 			for (Attribute attribute : sqlStatement.getAttributes()) {
 				attributeValues.attributes.add(attribute);
-				attributeValues.values.add(rs.getObject(i));
+				attributeValues.values.add(rs.getObject(i, attribute.getType()));
 				++i;
 			}
 
@@ -117,8 +118,7 @@ public class JdbcRunner {
 		}
 	}
 
-	public void callWriteMethods(Entity entity, AttributeValues attributeValues, Object idValue)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
+	public void callWriteMethods(Entity entity, AttributeValues attributeValues, Object idValue) throws Exception {
 		int i = 0;
 //		for (Attribute attribute : attributeValues.attributes) {
 //			attribute.getWriteMethod().invoke(attributeValues.entityInstance, attributeValues.values.get(i));
@@ -137,11 +137,13 @@ public class JdbcRunner {
 	}
 
 	private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, List<Attribute> attributes,
-			Attribute attribute, Object value)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
+			Attribute attribute, Object value) throws Exception {
+		LOG.info("findAndSetAttributeValue: value=" + value + "; value.getClass().getName()="
+				+ value.getClass().getName());
 		for (Attribute a : attributes) {
-			LOG.info("findAndSetAttributeValue: a.getName()=" + a.getName());
 			if (a == attribute) {
+				LOG.info("findAndSetAttributeValue: a.getName()=" + a.getName() + "; a.getType().getName()="
+						+ a.getType().getName());
 				Object parent = parentInstance;
 				if (parent == null)
 					parent = parentClass.newInstance();

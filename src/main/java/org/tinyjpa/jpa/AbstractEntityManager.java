@@ -11,7 +11,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.ConnectionProvider;
-import org.tinyjpa.metadata.Entity;
+import org.tinyjpa.jdbc.Entity;
 
 public abstract class AbstractEntityManager implements EntityManager {
 	private Logger LOG = LoggerFactory.getLogger(getClass());

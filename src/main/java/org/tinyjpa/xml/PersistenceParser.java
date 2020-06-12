@@ -48,9 +48,10 @@ public class PersistenceParser extends DefaultHandler {
 			if (persistentUnitName == null || persistentUnitName.equals(""))
 				LOG.warn("Persistent unit name not set");
 			else {
-				if (persistentUnitName != null && persistentUnitName.trim().length() > 0)
+				if (persistentUnitName != null && persistentUnitName.trim().length() > 0) {
 					persistenceUnitMetaData = new PersistenceUnitInfoImpl(persistentUnitName,
-							Collections.unmodifiableList(managedClassNames));
+							Collections.unmodifiableList(new ArrayList<>(managedClassNames)));
+				}
 
 				for (Map.Entry<String, String> entry : properties.entrySet()) {
 					persistenceUnitMetaData.getProperties().setProperty(entry.getKey(), entry.getValue());
@@ -62,6 +63,7 @@ public class PersistenceParser extends DefaultHandler {
 			properties = new HashMap<>();
 			persistentUnitName = null;
 			persistenceUnitMetaData = null;
+			managedClassNames.clear();
 		}
 
 		if (qName.equals("persistence")) {

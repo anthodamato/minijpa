@@ -40,6 +40,17 @@ public class EntityTransactionImpl implements EntityTransaction {
 		if (!active)
 			throw new IllegalStateException("Transaction not active");
 
+		if (getRollbackOnly()) {
+			LOG.warn("Rollback transaction event");
+			try {
+				connection.rollback();
+				return;
+			} catch (SQLException e1) {
+				LOG.error(e1.getMessage());
+				return;
+			}
+		}
+
 		try {
 			connection.commit();
 		} catch (SQLException e) {

@@ -1,16 +1,17 @@
 package org.tinyjpa.jdbc;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.metadata.Entity;
 
 public class SqlCode {
 	private Logger LOG = LoggerFactory.getLogger(SqlCode.class);
+	private AttributeValueConverter embeddedIdAttributeValueConverter = new EmbeddedIdAttributeValueConverter();
 
-	public SqlStatement generateUpdate(Object entityInstance, Entity entity, List<AttrValue> attrValues)
+	public SqlStatement generateUpdate(Object entityInstance, Entity entity, List<AttributeValue> attrValues)
 			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		LOG.info("generateUpdate: attrValues=" + attrValues);
 		StringBuilder sb = new StringBuilder();
@@ -27,7 +28,7 @@ public class SqlCode {
 		sb.append(entity.getTableName());
 		sb.append(" set ");
 		int i = 0;
-		for (AttrValue attrValue : attrValues) {
+		for (AttributeValue attrValue : attrValues) {
 			if (attrValue.getAttribute().isId())
 				continue;
 
@@ -57,11 +58,23 @@ public class SqlCode {
 		return new SqlStatement(sql, values, attrValues, 0, null);
 	}
 
-	public SqlStatement generateSelectById(Entity entity, Object idValue)
-			throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	public SqlStatement generateSelectById(Entity entity, Object idValue) throws Exception {
+//		AttributeValue attributeValue = new AttributeValue(entity.getId(), idValue);
+//		List<AttributeValue> attributeValues = new ArrayList<>();
+//		attributeValues.add(attributeValue);
+
+		List<AttributeValue> idAttributeValues = new ArrayList<>();
+		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
+		idAttributeValues.addAll(embeddedIdAttributeValueConverter.convert(attrValueId));
+
+		Object[] values = new Object[idAttributeValues.size()];
+		int k = 0;
+		for (AttributeValue a : idAttributeValues) {
+			values[k] = a.getValue();
+			++k;
+		}
+
 		StringBuilder sb = new StringBuilder();
-		Object[] values = new Object[1];
-		values[0] = idValue;
 		sb.append("select ");
 		int i = 0;
 		List<Attribute> expandedAttributes = entity.expandAttributes();
@@ -77,10 +90,19 @@ public class SqlCode {
 		sb.append(" from ");
 		sb.append(entity.getTableName());
 		sb.append(" where ");
-		sb.append(entity.getId().getColumnName());
-		sb.append(" = ?");
+
+		i = 0;
+		for (AttributeValue a : idAttributeValues) {
+			if (i > 0)
+				sb.append(" and ");
+
+			sb.append(a.getAttribute().getColumnName());
+			sb.append(" = ?");
+			++i;
+		}
+
 		String sql = sb.toString();
-		return new SqlStatement(sql, values, expandedAttributes, null, -1);
+		return new SqlStatement(sql, values, expandedAttributes, idAttributeValues, 0);
 	}
 
 }
