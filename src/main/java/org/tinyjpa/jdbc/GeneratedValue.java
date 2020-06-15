@@ -1,22 +1,20 @@
-package org.tinyjpa.metadata;
-
-import javax.persistence.GenerationType;
+package org.tinyjpa.jdbc;
 
 public class GeneratedValue {
-	private GenerationType strategy = GenerationType.AUTO;
+	private PkGenerationType strategy = PkGenerationType.AUTO;
 	private String generator;
 
 	public GeneratedValue() {
 		super();
 	}
 
-	public GeneratedValue(GenerationType strategy, String generator) {
+	public GeneratedValue(PkGenerationType strategy, String generator) {
 		super();
 		this.strategy = strategy;
 		this.generator = generator;
 	}
 
-	public GenerationType getStrategy() {
+	public PkGenerationType getStrategy() {
 		return strategy;
 	}
 

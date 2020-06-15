@@ -12,7 +12,6 @@ import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.AttributeValueConverter;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcRunner;
-import org.tinyjpa.jdbc.SqlCode;
 import org.tinyjpa.jdbc.SqlStatement;
 import org.tinyjpa.jpa.db.DbConfiguration;
 import org.tinyjpa.jpa.db.DbConfigurationList;
@@ -35,7 +34,7 @@ public class PersistenceHelper {
 		if (persistenceContext.isPersistentOnDb(entityInstance)) {
 			Object idValue = entityHelper.getIdValue(entity, entityInstance);
 			LOG.info("persist: idValue=" + idValue);
-			SqlStatement sqlStatement = new SqlCode().generateUpdate(entityInstance, entity, attrValues);
+			SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateUpdate(entityInstance, entity, attrValues);
 			new JdbcRunner().persist(sqlStatement, connection);
 		} else {
 			LOG.info("persist: dbConfiguration=" + dbConfiguration);
@@ -63,41 +62,10 @@ public class PersistenceHelper {
 				List<AttributeValue> attrValues = e.getValue();
 
 				List<AttributeValue> values = attributeValueConverter.convert(attrValues);
-//				List<AttributeValue> values = new ArrayList<>();
-//				for (AttributeValue attrValue : attrValues) {
-//					LOG.info("persist: attrValue.getAttribute().getName()=" + attrValue.getAttribute().getName());
-//					LOG.info("persist: attrValue.getAttribute().isEmbedded()=" + attrValue.getAttribute().isEmbedded());
-//					if (attrValue.getAttribute().isEmbedded()) {
-//						values.addAll(expandEmbedded(attrValue));
-//					} else
-//						values.add(attrValue);
-//				}
-
 				persist(entity, entityInstance, values, connection,
 						DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo));
 			}
 		}
 	}
 
-//	private List<AttributeValue> expandEmbedded(AttributeValue attrValue) {
-//		List<AttributeValue> attrValues = new ArrayList<>();
-//		if (!attrValue.getAttribute().isEmbedded()) {
-//			attrValues.add(attrValue);
-//			return attrValues;
-//		}
-//
-//		Optional<List<AttributeValue>> optional = EntityDelegate.getInstance()
-//				.findEmbeddedAttrValues(attrValue.getValue());
-//		LOG.info("expandEmbedded: optional.isPresent()=" + optional.isPresent());
-//		if (optional.isPresent()) {
-//			List<AttributeValue> list = optional.get();
-//			for (AttributeValue av : list) {
-//				LOG.info("expandEmbedded: av.getAttribute().getName()=" + av.getAttribute().getName());
-//				List<AttributeValue> attrValueList = expandEmbedded(av);
-//				attrValues.addAll(attrValueList);
-//			}
-//		}
-//
-//		return attrValues;
-//	}
 }

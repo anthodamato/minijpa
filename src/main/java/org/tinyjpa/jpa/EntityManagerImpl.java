@@ -53,6 +53,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 			new PersistenceHelper(persistenceContext).persist(connection, EntityDelegate.getInstance().getChanges(),
 					persistenceContext.getPersistenceUnitInfo());
 			persistenceContext.persist(entity);
+			EntityDelegate.getInstance().removeChanges(entity);
 		} catch (Exception e) {
 			LOG.error(e.getClass().getName());
 			LOG.error(e.getMessage());

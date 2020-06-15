@@ -83,16 +83,14 @@ public class JdbcRunner {
 		return pk;
 	}
 
-	public AttributeValues findById(Entity entity, Object idValue, PersistenceUnitInfo persistenceUnitInfo)
+	public AttributeValues findById(SqlStatement sqlStatement, Entity entity, PersistenceUnitInfo persistenceUnitInfo)
 			throws Exception {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		try {
-			SqlStatement sqlStatement = new SqlCode().generateSelectById(entity, idValue);
 			LOG.info("findById: sql=" + sqlStatement.getSql());
 			connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
 			preparedStatement = connection.prepareStatement(sqlStatement.getSql());
-//			setPreparedStatementValue(preparedStatement, 1, entity.getId(), sqlStatement.getValues()[0]);
 			setPreparedStatementValues(preparedStatement, sqlStatement);
 
 			ResultSet rs = preparedStatement.executeQuery();
@@ -120,16 +118,10 @@ public class JdbcRunner {
 
 	public void callWriteMethods(Entity entity, AttributeValues attributeValues, Object idValue) throws Exception {
 		int i = 0;
-//		for (Attribute attribute : attributeValues.attributes) {
-//			attribute.getWriteMethod().invoke(attributeValues.entityInstance, attributeValues.values.get(i));
-//			++i;
-//		}
-
 		for (Attribute attribute : attributeValues.attributes) {
 			LOG.info("callWriteMethods: attribute.getName()=" + attribute.getName());
 			findAndSetAttributeValue(entity.getClazz(), attributeValues.entityInstance, entity.getAttributes(),
 					attribute, attributeValues.values.get(i));
-//			attribute.getWriteMethod().invoke(attributeValues.entityInstance, attributeValues.values.get(i));
 			++i;
 		}
 

@@ -11,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcRunner;
+import org.tinyjpa.jdbc.SqlStatement;
+import org.tinyjpa.jpa.db.DbConfiguration;
+import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityHelper;
 
@@ -98,6 +101,7 @@ public class PersistenceContextImpl implements PersistenceContext {
 
 		Map<Object, Object> persistentEntitiesMap = getEntityMap(entityClass, persistentEntities);
 		Object entityInstance = persistentEntitiesMap.get(primaryKey);
+		LOG.info("find: entityInstance=" + entityInstance);
 		if (entityInstance != null)
 			return entityInstance;
 
@@ -106,11 +110,14 @@ public class PersistenceContextImpl implements PersistenceContext {
 //		if (entityInstance != null)
 //			return entityInstance;
 
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+		SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectById(entity, primaryKey);
 		JdbcRunner jdbcRunner = new JdbcRunner();
-		JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(entity, primaryKey, persistenceUnitInfo);
+		JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(sqlStatement, entity, persistenceUnitInfo);
 		if (attributeValues == null)
 			return null;
 
+		LOG.info("find: done attributeValues.entityInstance=" + attributeValues.entityInstance);
 		try {
 			EntityDelegate.getInstance().addIgnoreEntityInstance(attributeValues.entityInstance);
 			jdbcRunner.callWriteMethods(entity, attributeValues, primaryKey);
@@ -119,6 +126,7 @@ public class PersistenceContextImpl implements PersistenceContext {
 			EntityDelegate.getInstance().removeIgnoreEntityInstance(attributeValues.entityInstance);
 		}
 
+		LOG.info("find: done 2");
 		return attributeValues.entityInstance;
 	}
 

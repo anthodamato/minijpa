@@ -11,6 +11,7 @@ import java.util.Optional;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcTypes;
+import org.tinyjpa.jdbc.PkGenerationType;
 
 public class Parser {
 	private Logger LOG = LoggerFactory.getLogger(Parser.class);
@@ -128,14 +130,32 @@ public class Parser {
 			LOG.info("readAttribute: attribute: " + attribute);
 		} else {
 			GeneratedValue generatedValue = field.getAnnotation(GeneratedValue.class);
-			org.tinyjpa.metadata.GeneratedValue gv = null;
-			if (generatedValue != null)
-				gv = new org.tinyjpa.metadata.GeneratedValue(generatedValue.strategy(), generatedValue.generator());
+			org.tinyjpa.jdbc.GeneratedValue gv = null;
+			if (generatedValue != null) {
+				PkGenerationType pkGenerationType = decodePkGenerationType(generatedValue.strategy());
+				gv = new org.tinyjpa.jdbc.GeneratedValue(pkGenerationType, generatedValue.generator());
+			}
 
 			attribute = new Attribute(enhAttribute.getName(), columnName, attributeClass, readMethod, writeMethod,
 					idAnnotation != null, JdbcTypes.sqlTypeFromClass(attributeClass), gv, false, null);
 		}
 
 		return attribute;
+	}
+
+	private PkGenerationType decodePkGenerationType(GenerationType generationType) {
+		if (generationType == GenerationType.AUTO)
+			return PkGenerationType.AUTO;
+
+		if (generationType == GenerationType.IDENTITY)
+			return PkGenerationType.IDENTITY;
+
+		if (generationType == GenerationType.SEQUENCE)
+			return PkGenerationType.SEQUENCE;
+
+		if (generationType == GenerationType.TABLE)
+			return PkGenerationType.TABLE;
+
+		return null;
 	}
 }

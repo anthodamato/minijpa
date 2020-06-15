@@ -8,8 +8,8 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
 
 public final class EntityDelegate implements EntityListener {
@@ -81,7 +81,8 @@ public final class EntityDelegate implements EntityListener {
 
 		Attribute attribute = entity.getAttribute(attributeName);
 //		LOG.info("set: attributeName=" + attributeName + "; attribute=" + attribute);
-		Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute).findFirst();
+		Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
+				.findFirst();
 		if (optional.isPresent()) {
 			AttributeValue attrValue = optional.get();
 			attrValue.setValue(value);
@@ -128,6 +129,38 @@ public final class EntityDelegate implements EntityListener {
 			return Optional.empty();
 
 		return Optional.of(attrValues);
+	}
+
+	public void removeChanges(Object entityInstance) {
+		// TODO embeddable object changes should be removed as well
+		Entity entity = entities.get(entityInstance.getClass().getName());
+		if (entity == null)
+			return;
+
+		removeEmbeddedChanges(entity.getAttributes(), entityInstance);
+		Map<Object, List<AttributeValue>> map = changes.get(entity);
+		if (map == null)
+			return;
+
+		map.remove(entityInstance);
+	}
+
+	private void removeEmbeddedChanges(List<Attribute> attributes, Object entityInstance) {
+		for (Attribute attribute : attributes) {
+			if (attribute.isId() || !attribute.isEmbedded())
+				continue;
+
+			Object value = null;
+			try {
+				value = attribute.getReadMethod().invoke(entityInstance);
+			} catch (Exception e) {
+				LOG.error(e.getMessage());
+				continue;
+			}
+
+			embeddedChanges.remove(value);
+			removeEmbeddedChanges(attribute.getEmbeddedAttributes(), value);
+		}
 	}
 
 	@Override

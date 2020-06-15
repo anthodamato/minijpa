@@ -4,8 +4,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.tinyjpa.metadata.GeneratedValue;
-
 public class Attribute {
 //	private Logger LOG = LoggerFactory.getLogger(Attribute.class);
 	private String name;

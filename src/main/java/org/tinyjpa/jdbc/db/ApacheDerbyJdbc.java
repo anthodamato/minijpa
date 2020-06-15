@@ -12,14 +12,6 @@ import org.tinyjpa.jdbc.Entity;
 public class ApacheDerbyJdbc extends AbstractDbJdbc {
 	private Logger LOG = LoggerFactory.getLogger(ApacheDerbyJdbc.class);
 
-//	@Override
-//	public Class<? extends PkStrategy> getPkStrategy(GeneratedValue generatedValue) {
-//		if (generatedValue.getStrategy() == GenerationType.SEQUENCE)
-//			return PkSequenceStrategy.class;
-//
-//		return PkSequenceStrategy.class;
-//	}
-
 	@Override
 	protected Long generateSequenceNextValue(Connection connection, Entity entity) throws SQLException {
 		String sql = "VALUES (NEXT VALUE FOR " + entity.getTableName().toUpperCase() + "_PK_SEQ)";

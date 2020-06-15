@@ -28,6 +28,8 @@ public class PersistTest {
 			em.persist(citizen);
 
 			Assertions.assertNotNull(citizen.getId());
+			Citizen c = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(c);
 
 			Address address = new Address();
 			address.setId(2L);
@@ -38,7 +40,7 @@ public class PersistTest {
 
 			LOG.info("persist: address.getId()=" + address.getId());
 			LOG.info("persist: citizen.getId()=" + citizen.getId());
-			Citizen c = em.find(Citizen.class, citizen.getId());
+			c = em.find(Citizen.class, citizen.getId());
 			Assertions.assertNotNull(c);
 
 			Assertions.assertNotNull(address.getId());
