@@ -2,6 +2,7 @@ package org.tinyjpa.jpa;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
@@ -21,12 +22,21 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.JdbcRunner;
+import org.tinyjpa.jdbc.SqlStatement;
+import org.tinyjpa.jpa.db.DbConfiguration;
+import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EntityDelegate;
+import org.tinyjpa.metadata.EntityDelegateInstanceBuilder;
+import org.tinyjpa.metadata.EntityHelper;
+import org.tinyjpa.metadata.EntityInstanceBuilder;
 
 public class EntityManagerImpl extends AbstractEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(EntityManagerImpl.class);
 	private EntityTransaction entityTransaction;
+	private EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
 
 	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, Map<String, Entity> entities) {
 		super();
@@ -49,14 +59,22 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		if (entityTransaction == null || !entityTransaction.isActive())
 			throw new IllegalStateException("Transaction not active");
 
+		Entity e = entities.get(entity.getClass().getName());
+		if (e == null)
+			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
+
+		Optional<List<AttributeValue>> optional = EntityDelegate.getInstance().getChanges(e, entity);
+		if (!optional.isPresent())
+			return;
+
 		try {
-			new PersistenceHelper(persistenceContext).persist(connection, EntityDelegate.getInstance().getChanges(),
+			new PersistenceHelper(persistenceContext).persist(connection, e, entity, optional.get(),
 					persistenceContext.getPersistenceUnitInfo());
 			persistenceContext.persist(entity);
 			EntityDelegate.getInstance().removeChanges(entity);
-		} catch (Exception e) {
-			LOG.error(e.getClass().getName());
-			LOG.error(e.getMessage());
+		} catch (Exception ex) {
+			LOG.error(ex.getClass().getName());
+			LOG.error(ex.getMessage());
 			entityTransaction.setRollbackOnly();
 		}
 	}
@@ -69,15 +87,58 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public void remove(Object entity) {
-		// TODO Auto-generated method stub
+		if (entityTransaction == null || !entityTransaction.isActive())
+			throw new IllegalStateException("Transaction not active");
 
+		Entity e = entities.get(entity.getClass().getName());
+		if (e == null)
+			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
+
+		try {
+			if (persistenceContext.isPersistentOnDb(entity)) {
+				LOG.info("Instance " + entity + " is in the persistence context");
+				new PersistenceHelper(persistenceContext).remove(connection, entity, e, persistenceUnitInfo);
+				Object idValue = new EntityHelper().getIdValue(e, entity);
+				persistenceContext.remove(entity, idValue);
+//				EntityDelegate.getInstance().removeChanges(entity);
+			} else {
+				LOG.info("Instance " + entity + " not found in the persistence context");
+				Object idValue = new EntityHelper().getIdValue(e, entity);
+				if (idValue == null)
+					return;
+
+				new PersistenceHelper(persistenceContext).remove(connection, entity, e, persistenceUnitInfo);
+			}
+		} catch (Exception ex) {
+			LOG.error(ex.getClass().getName());
+			LOG.error(ex.getMessage());
+			entityTransaction.setRollbackOnly();
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
 		try {
-			return (T) persistenceContext.find(entityClass, primaryKey);
+			T entityInstance = (T) persistenceContext.find(entityClass, primaryKey);
+			if (entityInstance != null)
+				return entityInstance;
+
+			Entity entity = entities.get(entityClass.getName());
+
+			DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+			SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectById(entity, primaryKey);
+			JdbcRunner jdbcRunner = new JdbcRunner();
+			JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(connection, sqlStatement, entity,
+					persistenceUnitInfo);
+			if (attributeValues == null)
+				return null;
+
+			Object entityObject = entityInstanceBuilder.build(entity, attributeValues.attributes,
+					attributeValues.values, primaryKey);
+			persistenceContext.add(entityObject, primaryKey);
+			LOG.info("find: entityObject=" + entityObject);
+			return (T) entityObject;
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
 		}
@@ -171,7 +232,12 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public void detach(Object entity) {
-		persistenceContext.detach(entity);
+		try {
+			persistenceContext.detach(entity);
+		} catch (Exception e) {
+			LOG.error(e.getClass().getName());
+			LOG.error(e.getMessage());
+		}
 	}
 
 	@Override

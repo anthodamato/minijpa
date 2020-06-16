@@ -35,7 +35,6 @@ public class Citizen {
 		this.name = name;
 	}
 
-	@Column(name = "last_name")
 	public String getLastName() {
 		return lastName;
 	}

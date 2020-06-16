@@ -83,23 +83,29 @@ public class JdbcRunner {
 		return pk;
 	}
 
-	public AttributeValues findById(SqlStatement sqlStatement, Entity entity, PersistenceUnitInfo persistenceUnitInfo)
-			throws Exception {
-		Connection connection = null;
+	public void delete(SqlStatement sqlStatement, Connection connection) throws SQLException {
+		LOG.info("delete: sqlStatement.sql=" + sqlStatement.getSql());
+		LOG.info("delete: attrValues.size()=" + sqlStatement.getAttrValues().size());
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement.getSql());
+		setPreparedStatementValues(preparedStatement, sqlStatement);
+		preparedStatement.execute();
+		preparedStatement.close();
+	}
+
+	public AttributeValues findById(Connection connection, SqlStatement sqlStatement, Entity entity,
+			PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 		PreparedStatement preparedStatement = null;
 		try {
 			LOG.info("findById: sql=" + sqlStatement.getSql());
-			connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
 			preparedStatement = connection.prepareStatement(sqlStatement.getSql());
 			setPreparedStatementValues(preparedStatement, sqlStatement);
 
 			ResultSet rs = preparedStatement.executeQuery();
-			if (!rs.next())
+			boolean next = rs.next();
+			if (!next)
 				return null;
 
 			AttributeValues attributeValues = new AttributeValues();
-			Object entityInstance = entity.getClazz().newInstance();
-			attributeValues.entityInstance = entityInstance;
 
 			int i = 1;
 			for (Attribute attribute : sqlStatement.getAttributes()) {
@@ -112,60 +118,10 @@ public class JdbcRunner {
 		} finally {
 			preparedStatement.close();
 			connection.rollback();
-			connection.close();
 		}
-	}
-
-	public void callWriteMethods(Entity entity, AttributeValues attributeValues, Object idValue) throws Exception {
-		int i = 0;
-		for (Attribute attribute : attributeValues.attributes) {
-			LOG.info("callWriteMethods: attribute.getName()=" + attribute.getName());
-			findAndSetAttributeValue(entity.getClazz(), attributeValues.entityInstance, entity.getAttributes(),
-					attribute, attributeValues.values.get(i));
-			++i;
-		}
-
-		entity.getId().getWriteMethod().invoke(attributeValues.entityInstance, idValue);
-	}
-
-	private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, List<Attribute> attributes,
-			Attribute attribute, Object value) throws Exception {
-		LOG.info("findAndSetAttributeValue: value=" + value + "; value.getClass().getName()="
-				+ value.getClass().getName());
-		for (Attribute a : attributes) {
-			if (a == attribute) {
-				LOG.info("findAndSetAttributeValue: a.getName()=" + a.getName() + "; a.getType().getName()="
-						+ a.getType().getName());
-				Object parent = parentInstance;
-				if (parent == null)
-					parent = parentClass.newInstance();
-
-				LOG.info("findAndSetAttributeValue: parent=" + parent + ";n a.getWriteMethod()=" + a.getWriteMethod());
-				attribute.getWriteMethod().invoke(parent, value);
-				return parent;
-			}
-		}
-
-		for (Attribute a : attributes) {
-			if (!a.isEmbedded())
-				continue;
-
-			Object aInstance = findAndSetAttributeValue(a.getType(), null, a.getEmbeddedAttributes(), attribute, value);
-			if (aInstance != null) {
-				Object parent = parentInstance;
-				if (parent == null)
-					parent = parentClass.newInstance();
-
-				a.getWriteMethod().invoke(parent, aInstance);
-				return parent;
-			}
-		}
-
-		return null;
 	}
 
 	public class AttributeValues {
-		public Object entityInstance;
 		public List<Object> values = new ArrayList<>();
 		public List<Attribute> attributes = new ArrayList<>();
 	}

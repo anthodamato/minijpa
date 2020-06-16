@@ -132,7 +132,6 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	public void removeChanges(Object entityInstance) {
-		// TODO embeddable object changes should be removed as well
 		Entity entity = entities.get(entityInstance.getClass().getName());
 		if (entity == null)
 			return;
@@ -161,6 +160,18 @@ public final class EntityDelegate implements EntityListener {
 			embeddedChanges.remove(value);
 			removeEmbeddedChanges(attribute.getEmbeddedAttributes(), value);
 		}
+	}
+
+	public Optional<List<AttributeValue>> getChanges(Entity entity, Object entityInstance) {
+		Map<Object, List<AttributeValue>> map = changes.get(entity);
+		if (map == null)
+			return Optional.empty();
+
+		List<AttributeValue> instanceAttrs = map.get(entityInstance);
+		if (instanceAttrs == null)
+			return Optional.empty();
+
+		return Optional.of(instanceAttrs);
 	}
 
 	@Override

@@ -16,4 +16,6 @@ public interface DbJdbc {
 	public SqlStatement generateUpdate(Object entityInstance, Entity entity, List<AttributeValue> attrValues)
 			throws Exception;
 
+	public SqlStatement generateDeleteById(Entity entity, Object idValue) throws Exception;
+
 }

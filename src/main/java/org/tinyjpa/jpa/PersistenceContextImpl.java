@@ -1,6 +1,5 @@
 package org.tinyjpa.jpa;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,16 +9,11 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Entity;
-import org.tinyjpa.jdbc.JdbcRunner;
-import org.tinyjpa.jdbc.SqlStatement;
-import org.tinyjpa.jpa.db.DbConfiguration;
-import org.tinyjpa.jpa.db.DbConfigurationList;
-import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityHelper;
 
 public class PersistenceContextImpl implements PersistenceContext {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceContextImpl.class);
-	private Map<String, Entity> entityDescriptors;
+	private Map<String, Entity> entities;
 	private PersistenceUnitInfo persistenceUnitInfo;
 
 //	/**
@@ -38,7 +32,7 @@ public class PersistenceContextImpl implements PersistenceContext {
 
 	public PersistenceContextImpl(Map<String, Entity> entities, PersistenceUnitInfo persistenceUnitInfo) {
 		super();
-		this.entityDescriptors = entities;
+		this.entities = entities;
 		this.persistenceUnitInfo = persistenceUnitInfo;
 	}
 
@@ -63,18 +57,20 @@ public class PersistenceContextImpl implements PersistenceContext {
 		return true;
 	}
 
-	public void persist(Object entityInstance) {
-		Entity e = entityDescriptors.get(entityInstance.getClass().getName());
+	@Override
+	public void add(Object entityInstance, Object primaryKey) {
+		Class<?> entityClass = entityInstance.getClass();
+		Map<Object, Object> persistentEntitiesMap = getEntityMap(entityClass, persistentEntities);
+		persistentEntitiesMap.put(primaryKey, entityInstance);
+	}
+
+	@Override
+	public void persist(Object entityInstance) throws Exception {
+		Entity e = entities.get(entityInstance.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
-		Object idValue = null;
-		try {
-			idValue = entityHelper.getIdValue(e, entityInstance);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-			LOG.error(ex.getMessage());
-			return;
-		}
+		Object idValue = entityHelper.getIdValue(e, entityInstance);
 
 		if (isEntityDetached(entityInstance, idValue))
 			throw new EntityExistsException("Entity: '" + entityInstance + "' is detached");
@@ -91,8 +87,9 @@ public class PersistenceContextImpl implements PersistenceContext {
 		mapEntities.put(idValue, entityInstance);
 	}
 
+	@Override
 	public Object find(Class<?> entityClass, Object primaryKey) throws Exception {
-		Entity entity = entityDescriptors.get(entityClass.getName());
+		Entity entity = entities.get(entityClass.getName());
 		if (entity == null)
 			throw new IllegalArgumentException("Instance of class '" + entityClass.getName() + "' is not an entity");
 
@@ -102,62 +99,45 @@ public class PersistenceContextImpl implements PersistenceContext {
 		Map<Object, Object> persistentEntitiesMap = getEntityMap(entityClass, persistentEntities);
 		Object entityInstance = persistentEntitiesMap.get(primaryKey);
 		LOG.info("find: entityInstance=" + entityInstance);
-		if (entityInstance != null)
-			return entityInstance;
-
-//		Map<Object, Object> mapEntities = getEntityMap(entityClass, managedEntities);
-//		entityInstance = mapEntities.get(primaryKey);
-//		if (entityInstance != null)
-//			return entityInstance;
-
-		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
-		SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectById(entity, primaryKey);
-		JdbcRunner jdbcRunner = new JdbcRunner();
-		JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(sqlStatement, entity, persistenceUnitInfo);
-		if (attributeValues == null)
-			return null;
-
-		LOG.info("find: done attributeValues.entityInstance=" + attributeValues.entityInstance);
-		try {
-			EntityDelegate.getInstance().addIgnoreEntityInstance(attributeValues.entityInstance);
-			jdbcRunner.callWriteMethods(entity, attributeValues, primaryKey);
-			persistentEntitiesMap.put(primaryKey, attributeValues.entityInstance);
-		} finally {
-			EntityDelegate.getInstance().removeIgnoreEntityInstance(attributeValues.entityInstance);
-		}
-
-		LOG.info("find: done 2");
-		return attributeValues.entityInstance;
+		return entityInstance;
 	}
 
-	public boolean isPersistentOnDb(Object entityInstance) throws IllegalAccessException, InvocationTargetException {
+	@Override
+	public boolean isPersistentOnDb(Object entityInstance) throws Exception {
 		Map<Object, Object> mapEntities = persistentEntities.get(entityInstance.getClass());
 		if (mapEntities == null)
 			return false;
 
-		Entity e = entityDescriptors.get(entityInstance.getClass().getName());
+		LOG.info("isPersistentOnDb: mapEntities=" + mapEntities);
+		Entity e = entities.get(entityInstance.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
 		Object idValue = entityHelper.getIdValue(e, entityInstance);
-		if (persistentEntities.get(idValue) == null)
+		if (mapEntities.get(idValue) == null)
 			return false;
 
+		LOG.info("isPersistentOnDb: true");
 		return true;
 	}
 
-	public void detach(Object entityInstance) {
-		Entity e = entityDescriptors.get(entityInstance.getClass().getName());
+	@Override
+	public void remove(Object entityInstance, Object primaryKey) {
+		Map<Object, Object> mapEntities = persistentEntities.get(entityInstance.getClass());
+		if (mapEntities == null)
+			return;
+
+		mapEntities.remove(primaryKey);
+		LOG.info("remove: entityInstance '" + entityInstance + "' removed from persistence context");
+	}
+
+	@Override
+	public void detach(Object entityInstance) throws Exception {
+		Entity e = entities.get(entityInstance.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
-		Object idValue = null;
-		try {
-			idValue = entityHelper.getIdValue(e, entityInstance);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-			LOG.error(ex.getMessage());
-			return;
-		}
+		Object idValue = entityHelper.getIdValue(e, entityInstance);
 
 		if (isEntityDetached(entityInstance, idValue))
 			return;

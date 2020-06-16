@@ -226,4 +226,36 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		return new SqlStatement(sql, values, attrValues, 0, null);
 	}
 
+	@Override
+	public SqlStatement generateDeleteById(Entity entity, Object idValue) throws Exception {
+		List<AttributeValue> idAttributeValues = new ArrayList<>();
+		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
+		idAttributeValues.addAll(embeddedIdAttributeValueConverter.convert(attrValueId));
+
+		Object[] values = new Object[idAttributeValues.size()];
+		int k = 0;
+		for (AttributeValue a : idAttributeValues) {
+			values[k] = a.getValue();
+			++k;
+		}
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("delete from ");
+		sb.append(entity.getTableName());
+		sb.append(" where ");
+
+		int i = 0;
+		for (AttributeValue a : idAttributeValues) {
+			if (i > 0)
+				sb.append(" and ");
+
+			sb.append(a.getAttribute().getColumnName());
+			sb.append(" = ?");
+			++i;
+		}
+
+		String sql = sb.toString();
+		return new SqlStatement(sql, values, null, idAttributeValues, 0);
+	}
+
 }

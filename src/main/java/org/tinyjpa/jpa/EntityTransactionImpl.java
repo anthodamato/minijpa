@@ -62,11 +62,11 @@ public class EntityTransactionImpl implements EntityTransaction {
 			}
 		}
 
-		try {
-			connection.close();
-		} catch (SQLException e) {
-			LOG.error(e.getMessage());
-		}
+//		try {
+//			connection.close();
+//		} catch (SQLException e) {
+//			LOG.error(e.getMessage());
+//		}
 	}
 
 	@Override
