@@ -1,7 +1,4 @@
-package org.tinyjpa.jpa.db;
-
-import org.tinyjpa.jdbc.db.DbJdbc;
-import org.tinyjpa.jdbc.db.DefaultDbJdbc;
+package org.tinyjpa.jdbc.db;
 
 public class DefaultDbConfiguration implements DbConfiguration {
 

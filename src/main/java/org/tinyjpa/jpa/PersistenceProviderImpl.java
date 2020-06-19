@@ -1,9 +1,6 @@
 package org.tinyjpa.jpa;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Map;
 
 import javax.persistence.EntityManagerFactory;
@@ -15,15 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.ConnectionProvider;
 import org.tinyjpa.jdbc.DbMetaData;
-import org.tinyjpa.jpa.db.DbConfiguration;
+import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.jpa.db.PersistenceUnitPropertyActions;
 
 public class PersistenceProviderImpl implements PersistenceProvider {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceProviderImpl.class);
 
-	private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws SQLException, URISyntaxException,
-			IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+	private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 		LOG.info("processConfiguration: 0");
 
 		new ConnectionProvider().initDriver(persistenceUnitInfo);
@@ -59,6 +55,10 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 		PersistenceUnitInfo persistenceUnitInfo = null;
 		try {
 			persistenceUnitInfo = new PersistenceProviderHelper().parseXml(path, emName);
+			if (persistenceUnitInfo == null) {
+				LOG.error("Persistence Unit '" + emName + "' not found");
+				return null;
+			}
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
 			LOG.info("createEntityManagerFactory(String emName");

@@ -1,11 +1,11 @@
 package org.tinyjpa.metadata;
 
-import java.beans.IntrospectionException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.persistence.Column;
@@ -13,6 +13,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 
 import org.slf4j.Logger;
@@ -21,12 +22,24 @@ import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcTypes;
 import org.tinyjpa.jdbc.PkGenerationType;
+import org.tinyjpa.jdbc.relationship.OneToOne;
 
 public class Parser {
 	private Logger LOG = LoggerFactory.getLogger(Parser.class);
 
-	public Entity parse(EnhEntity enhEntity) throws ClassNotFoundException, IntrospectionException,
-			NoSuchFieldException, SecurityException, NoSuchMethodException {
+	public Map<String, Entity> parse(List<EnhEntity> enhancedClasses) throws Exception {
+		Map<String, Entity> entities = new HashMap<>();
+		for (EnhEntity enhEntity : enhancedClasses) {
+			Entity entity = parse(enhEntity);
+			if (entity != null)
+				entities.put(enhEntity.getClassName(), entity);
+		}
+
+		finalizeRelationships(entities);
+		return entities;
+	}
+
+	private Entity parse(EnhEntity enhEntity) throws Exception {
 		Class<?> c = Class.forName(enhEntity.getClassName());
 		javax.persistence.Entity ec = c.getAnnotation(javax.persistence.Entity.class);
 		if (ec == null) {
@@ -56,11 +69,10 @@ public class Parser {
 		if (table != null && table.name() != null && table.name().trim().length() > 0)
 			tableName = table.name();
 
-		return new Entity(c, tableName, id, Collections.unmodifiableList(attributes));
+		return new Entity(c, tableName, id, attributes);
 	}
 
-	private List<Attribute> readAttributes(EnhEntity enhEntity) throws IntrospectionException, ClassNotFoundException,
-			NoSuchFieldException, SecurityException, NoSuchMethodException {
+	private List<Attribute> readAttributes(EnhEntity enhEntity) throws Exception {
 		List<Attribute> attributes = new ArrayList<>();
 		for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
 			Attribute attribute = readAttribute(enhEntity.getClassName(), enhAttribute);
@@ -70,9 +82,7 @@ public class Parser {
 		return attributes;
 	}
 
-	private List<Attribute> readAttributes(List<EnhAttribute> enhAttributes, String parentClassName)
-			throws IntrospectionException, ClassNotFoundException, NoSuchFieldException, SecurityException,
-			NoSuchMethodException {
+	private List<Attribute> readAttributes(List<EnhAttribute> enhAttributes, String parentClassName) throws Exception {
 		List<Attribute> attributes = new ArrayList<>();
 		for (EnhAttribute enhAttribute : enhAttributes) {
 			Attribute attribute = readAttribute(parentClassName, enhAttribute);
@@ -82,8 +92,7 @@ public class Parser {
 		return attributes;
 	}
 
-	private Attribute readAttribute(String parentClassName, EnhAttribute enhAttribute) throws IntrospectionException,
-			ClassNotFoundException, NoSuchFieldException, SecurityException, NoSuchMethodException {
+	private Attribute readAttribute(String parentClassName, EnhAttribute enhAttribute) throws Exception {
 		String columnName = enhAttribute.getName();
 		Class<?> c = Class.forName(parentClassName);
 		LOG.info("readAttribute: columnName=" + columnName);
@@ -125,8 +134,18 @@ public class Parser {
 			boolean id = field.getAnnotation(EmbeddedId.class) != null;
 //			LOG.info("readAttribute: enhAttribute.getName()=" + enhAttribute.getName());
 //			LOG.info("readAttribute: embedded=" + embedded);
-			attribute = new Attribute(enhAttribute.getName(), columnName, attributeClass, readMethod, writeMethod, id,
-					JdbcTypes.sqlTypeFromClass(attributeClass), null, embedded, embeddedAttributes);
+			javax.persistence.OneToOne oneToOne = field.getAnnotation(javax.persistence.OneToOne.class);
+
+			Attribute.Builder builder = new Attribute.Builder(enhAttribute.getName()).withColumnName(columnName)
+					.withType(attributeClass).withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id)
+					.withSqlType(JdbcTypes.sqlTypeFromClass(attributeClass)).isEmbedded(embedded)
+					.withEmbeddedAttributes(embeddedAttributes);
+			if (oneToOne != null) {
+				JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
+				builder.withOneToOne(createOneToOne(oneToOne, joinColumn, null));
+			}
+
+			attribute = builder.build();
 			LOG.info("readAttribute: attribute: " + attribute);
 		} else {
 			GeneratedValue generatedValue = field.getAnnotation(GeneratedValue.class);
@@ -136,8 +155,9 @@ public class Parser {
 				gv = new org.tinyjpa.jdbc.GeneratedValue(pkGenerationType, generatedValue.generator());
 			}
 
-			attribute = new Attribute(enhAttribute.getName(), columnName, attributeClass, readMethod, writeMethod,
-					idAnnotation != null, JdbcTypes.sqlTypeFromClass(attributeClass), gv, false, null);
+			attribute = new Attribute.Builder(enhAttribute.getName()).withColumnName(columnName)
+					.withType(attributeClass).withReadMethod(readMethod).withWriteMethod(writeMethod).isId(true)
+					.withSqlType(JdbcTypes.sqlTypeFromClass(attributeClass)).withGeneratedValue(gv).build();
 		}
 
 		return attribute;
@@ -157,5 +177,55 @@ public class Parser {
 			return PkGenerationType.TABLE;
 
 		return null;
+	}
+
+	private OneToOne createOneToOne(javax.persistence.OneToOne oneToOne, JoinColumn joinColumn, String joinColumnName) {
+		OneToOne oto = null;
+		if (joinColumn != null)
+			oto = new OneToOne.Builder().withJoinColumn(joinColumn.name()).build();
+		else
+			oto = new OneToOne();
+
+		return oto;
+	}
+
+	private String createDefaultJoinColumn(Attribute owningAttribute, Entity toEntity) {
+		return owningAttribute.getName() + "_" + toEntity.getId().getColumnName();
+	}
+
+	private void finalizeRelationships(Map<String, Entity> entities) {
+		for (Map.Entry<String, Entity> entry : entities.entrySet()) {
+			Entity entity = entry.getValue();
+			List<Attribute> attributes = entity.getAttributes();
+			for (int i = 0; i < attributes.size(); ++i) {
+				Attribute a = attributes.get(i);
+//				LOG.info("finalizeRelationships: a.isOneToOne()=" + a.isOneToOne());
+				if (a.isOneToOne() && a.getOneToOne().getJoinColumn() == null) {
+					Entity toEntity = entities.get(a.getType().getName());
+					LOG.info("finalizeRelationships: toEntity=" + toEntity);
+					if (toEntity == null)
+						throw new IllegalArgumentException(
+								"One to One entity not found (" + a.getType().getName() + ")");
+
+					String joinColumnName = createDefaultJoinColumn(a, toEntity);
+//					LOG.info("finalizeRelationships: joinColumnName=" + joinColumnName);
+					OneToOne oneToOne = clone(a.getOneToOne(), joinColumnName);
+					Attribute clonedAttribute = clone(a, oneToOne, toEntity);
+					attributes.set(i, clonedAttribute);
+				}
+			}
+		}
+	}
+
+	private Attribute clone(Attribute a, OneToOne oneToOne, Entity toEntity) {
+		return new Attribute.Builder(a.getName()).withColumnName(a.getColumnName()).withType(a.getType())
+				.withReadMethod(a.getReadMethod()).withWriteMethod(a.getWriteMethod()).isId(a.isId())
+				.withSqlType(a.getSqlType()).withGeneratedValue(a.getGeneratedValue()).withOneToOne(oneToOne)
+				.isEmbedded(a.isEmbedded()).withEmbeddedAttributes(a.getEmbeddedAttributes()).isEntity(toEntity)
+				.build();
+	}
+
+	private OneToOne clone(OneToOne o, String joinColumnName) {
+		return new OneToOne.Builder().withJoinColumn(joinColumnName).build();
 	}
 }

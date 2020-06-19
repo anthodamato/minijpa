@@ -10,51 +10,50 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.spi.PersistenceUnitInfo;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.metadata.EntityHelper;
 
 public class JdbcRunner {
 	private Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
-	private EntityHelper entityHelper = new EntityHelper();
 
-	private void setPreparedStatementValue(PreparedStatement preparedStatement, int index, Attribute attribute,
-			Object value) throws SQLException {
-		LOG.info("setPreparedStatementValue: value=" + value + "; attribute: " + attribute);
+	private void setPreparedStatementValue(PreparedStatement preparedStatement, int index, Class<?> type,
+			Integer sqlType, Object value) throws SQLException {
+		LOG.info("setPreparedStatementValue: value=" + value + "; index=" + index + "; type=" + type + "; sqlType="
+				+ sqlType + "; value=" + value);
 		if (value == null) {
-			preparedStatement.setNull(index, attribute.getSqlType());
+			preparedStatement.setNull(index, sqlType);
 			return;
 		}
 
-		if (attribute.getType() == BigDecimal.class)
+		if (type == BigDecimal.class)
 			preparedStatement.setBigDecimal(index, (BigDecimal) value);
-		else if (attribute.getType() == Boolean.class)
+		else if (type == Boolean.class)
 			preparedStatement.setBoolean(index, (Boolean) value);
-		else if (attribute.getType() == Double.class)
+		else if (type == Double.class)
 			preparedStatement.setDouble(index, (Double) value);
-		else if (attribute.getType() == Float.class)
+		else if (type == Float.class)
 			preparedStatement.setFloat(index, (Float) value);
-		else if (attribute.getType() == Integer.class)
+		else if (type == Integer.class)
 			preparedStatement.setInt(index, (Integer) value);
-		else if (attribute.getType() == Long.class)
+		else if (type == Long.class)
 			preparedStatement.setLong(index, (Long) value);
-		else if (attribute.getType() == String.class)
+		else if (type == String.class)
 			preparedStatement.setString(index, (String) value);
-		else if (attribute.getType() == Date.class)
+		else if (type == Date.class)
 			preparedStatement.setDate(index, (Date) value);
 	}
 
 	private void setPreparedStatementValues(PreparedStatement preparedStatement, SqlStatement sqlStatement)
 			throws SQLException {
-		LOG.info("setPreparedStatementValues: sqlStatement.getStartIndex()=" + sqlStatement.getStartIndex());
+//		LOG.info("setPreparedStatementValues: sqlStatement.getStartIndex()=" + sqlStatement.getStartIndex());
 		int index = 1;
-		for (int i = sqlStatement.getStartIndex(); i < sqlStatement.getAttrValues().size(); ++i) {
-			AttributeValue attrValue = sqlStatement.getAttrValues().get(i);
-			LOG.info("setPreparedStatementValues: columnName=" + attrValue.getAttribute().getColumnName() + "; type="
-					+ attrValue.getAttribute().getType().getName() + "; value=" + attrValue.getValue());
-			setPreparedStatementValue(preparedStatement, index, attrValue.getAttribute(), attrValue.getValue());
+		for (int i = sqlStatement.getStartIndex(); i < sqlStatement.getColumnNameValues().size(); ++i) {
+//			AttributeValue attrValue = sqlStatement.getAttrValues().get(i);
+			ColumnNameValue columnNameValue = sqlStatement.getColumnNameValues().get(i);
+			LOG.info("setPreparedStatementValues: columnName=" + columnNameValue.getColumnName() + "; type="
+					+ columnNameValue.getType().getName() + "; value=" + columnNameValue.getValue());
+			setPreparedStatementValue(preparedStatement, index, columnNameValue.getType(), columnNameValue.getSqlType(),
+					columnNameValue.getValue());
 			++index;
 		}
 	}
@@ -92,8 +91,7 @@ public class JdbcRunner {
 		preparedStatement.close();
 	}
 
-	public AttributeValues findById(Connection connection, SqlStatement sqlStatement, Entity entity,
-			PersistenceUnitInfo persistenceUnitInfo) throws Exception {
+	public AttributeValues findById(Connection connection, SqlStatement sqlStatement, Entity entity) throws Exception {
 		PreparedStatement preparedStatement = null;
 		try {
 			LOG.info("findById: sql=" + sqlStatement.getSql());
@@ -102,15 +100,22 @@ public class JdbcRunner {
 
 			ResultSet rs = preparedStatement.executeQuery();
 			boolean next = rs.next();
+			LOG.info("findById: next=" + next);
 			if (!next)
 				return null;
 
 			AttributeValues attributeValues = new AttributeValues();
 
 			int i = 1;
-			for (Attribute attribute : sqlStatement.getAttributes()) {
-				attributeValues.attributes.add(attribute);
-				attributeValues.values.add(rs.getObject(i, attribute.getType()));
+			for (ColumnNameValue cnv : sqlStatement.getFetchColumnNameValues()) {
+				if (cnv.getForeignKeyAttribute() != null) {
+					attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
+					attributeValues.relationshipValues.add(rs.getObject(i, cnv.getType()));
+				} else {
+					attributeValues.attributes.add(cnv.getAttribute());
+					attributeValues.values.add(rs.getObject(i, cnv.getAttribute().getType()));
+				}
+
 				++i;
 			}
 
@@ -124,5 +129,7 @@ public class JdbcRunner {
 	public class AttributeValues {
 		public List<Object> values = new ArrayList<>();
 		public List<Attribute> attributes = new ArrayList<>();
+		public List<Object> relationshipValues = new ArrayList<>();
+		public List<Attribute> relationshipAttributes = new ArrayList<>();
 	}
 }

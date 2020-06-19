@@ -27,7 +27,7 @@ public abstract class AbstractEntityManager implements EntityManager {
 	}
 
 	public Connection createConnection() throws SQLException {
-		connection = new ConnectionProvider().getConnection(persistenceContext.getPersistenceUnitInfo());
+		connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
 		return connection;
 	}
 }

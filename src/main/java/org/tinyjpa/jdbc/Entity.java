@@ -54,4 +54,9 @@ public class Entity {
 		return list;
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getName() + "@ Class: " + clazz.getName() + "; tableName: " + tableName;
+	}
+
 }

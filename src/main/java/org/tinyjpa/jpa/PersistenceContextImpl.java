@@ -1,25 +1,25 @@
 package org.tinyjpa.jpa;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityExistsException;
-import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.db.EntityContainer;
+import org.tinyjpa.metadata.EntityDelegateInstanceBuilder;
 import org.tinyjpa.metadata.EntityHelper;
+import org.tinyjpa.metadata.EntityInstanceBuilder;
 
-public class PersistenceContextImpl implements PersistenceContext {
+public class PersistenceContextImpl implements EntityContainer {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceContextImpl.class);
 	private Map<String, Entity> entities;
-	private PersistenceUnitInfo persistenceUnitInfo;
+	private EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
 
-//	/**
-//	 * Managed entities. They are no persistent on db.
-//	 */
-//	private Map<Class<?>, Map<Object, Object>> managedEntities = new HashMap<>();
 	/**
 	 * Managed entities. They are persistent on db.
 	 */
@@ -28,12 +28,19 @@ public class PersistenceContextImpl implements PersistenceContext {
 	 * Detached entities.
 	 */
 	private Map<Class<?>, Map<Object, Object>> detachedEntities = new HashMap<>();
+
+	/**
+	 * Foreign key values
+	 * 
+	 * (Entity instance, Map<Attribute,foreign key value>)
+	 */
+	private Map<Object, Map<Attribute, Object>> foreignKeyValues = new HashMap<>();
+
 	private EntityHelper entityHelper = new EntityHelper();
 
-	public PersistenceContextImpl(Map<String, Entity> entities, PersistenceUnitInfo persistenceUnitInfo) {
+	public PersistenceContextImpl(Map<String, Entity> entities) {
 		super();
 		this.entities = entities;
-		this.persistenceUnitInfo = persistenceUnitInfo;
 	}
 
 	private Map<Object, Object> getEntityMap(Class<?> clazz, Map<Class<?>, Map<Object, Object>> entities) {
@@ -57,15 +64,38 @@ public class PersistenceContextImpl implements PersistenceContext {
 		return true;
 	}
 
-	@Override
-	public void add(Object entityInstance, Object primaryKey) {
-		Class<?> entityClass = entityInstance.getClass();
-		Map<Object, Object> persistentEntitiesMap = getEntityMap(entityClass, persistentEntities);
-		persistentEntitiesMap.put(primaryKey, entityInstance);
+	private void saveForeignkeys(List<Attribute> attributes, Object parentInstance) throws Exception {
+		for (Attribute a : attributes) {
+			if (a.isOneToOne()) {
+				Object instance = entityInstanceBuilder.getAttributeValue(parentInstance, a);
+				if (instance == null)
+					continue;
+
+				Entity e = entities.get(instance.getClass().getName());
+				Object fkv = e.getId().getReadMethod().invoke(instance);
+				saveForeignKey(parentInstance, a, fkv);
+				saveForeignkeys(e.getAttributes(), instance);
+			} else if (a.isEmbedded()) {
+				saveForeignkeys(a.getEmbeddedAttributes(), parentInstance);
+			}
+		}
 	}
 
 	@Override
-	public void persist(Object entityInstance) throws Exception {
+	public void save(Object entityInstance, Object idValue) throws Exception {
+		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), persistentEntities);
+		if (mapEntities.get(idValue) != null)
+			return;
+
+		LOG.info("Instance " + entityInstance + " saved in the PC pk=" + idValue);
+		mapEntities.put(idValue, entityInstance);
+
+		Entity e = entities.get(entityInstance.getClass().getName());
+//		saveForeignkeys(e.getAttributes(), entityInstance);
+	}
+
+	@Override
+	public void save(Object entityInstance) throws Exception {
 		Entity e = entities.get(entityInstance.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
@@ -75,16 +105,7 @@ public class PersistenceContextImpl implements PersistenceContext {
 		if (isEntityDetached(entityInstance, idValue))
 			throw new EntityExistsException("Entity: '" + entityInstance + "' is detached");
 
-		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), persistentEntities);
-		if (mapEntities.get(idValue) != null)
-			return;
-
-//		mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
-//		if (mapEntities.get(idValue) != null)
-//			return;
-
-		LOG.info("Instance " + entityInstance + " saved in the PC pk=" + idValue);
-		mapEntities.put(idValue, entityInstance);
+		save(entityInstance, idValue);
 	}
 
 	@Override
@@ -103,7 +124,7 @@ public class PersistenceContextImpl implements PersistenceContext {
 	}
 
 	@Override
-	public boolean isPersistentOnDb(Object entityInstance) throws Exception {
+	public boolean isSaved(Object entityInstance) throws Exception {
 		Map<Object, Object> mapEntities = persistentEntities.get(entityInstance.getClass());
 		if (mapEntities == null)
 			return false;
@@ -152,8 +173,24 @@ public class PersistenceContextImpl implements PersistenceContext {
 		mapEntities.put(idValue, entityInstance);
 	}
 
-	public PersistenceUnitInfo getPersistenceUnitInfo() {
-		return persistenceUnitInfo;
+	@Override
+	public void saveForeignKey(Object entityInstance, Attribute attribute, Object value) {
+		Map<Attribute, Object> map = foreignKeyValues.get(entityInstance);
+		if (map == null) {
+			map = new HashMap<>();
+			foreignKeyValues.put(entityInstance, map);
+		}
+
+		map.put(attribute, value);
+	}
+
+	@Override
+	public Object getForeignKeyValue(Object entityInstance, Attribute attribute) {
+		Map<Attribute, Object> map = foreignKeyValues.get(entityInstance);
+		if (map == null)
+			return null;
+
+		return map.get(attribute);
 	}
 
 	/**

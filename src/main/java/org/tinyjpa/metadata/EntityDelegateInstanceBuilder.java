@@ -27,27 +27,44 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 		return entityInstance;
 	}
 
+	@Override
+	public Object setAttributeValue(Object parentInstance, Class<?> parentClass, Attribute attribute, Object value)
+			throws Exception {
+		Object parent = parentInstance;
+		if (parent == null)
+			parent = parentClass.newInstance();
+
+		LOG.info("setAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
+		try {
+			EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
+			attribute.getWriteMethod().invoke(parent, value);
+		} finally {
+			EntityDelegate.getInstance().removeIgnoreEntityInstance(parent);
+		}
+
+		return parent;
+	}
+
+	@Override
+	public Object getAttributeValue(Object parentInstance, Attribute attribute) throws Exception {
+		LOG.info("getAttributeValue: parent=" + parentInstance + "; a.getReadMethod()=" + attribute.getReadMethod());
+		try {
+//			EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
+			return attribute.getReadMethod().invoke(parentInstance);
+		} finally {
+//			EntityDelegate.getInstance().removeIgnoreEntityInstance(parent);
+		}
+
+//		return parent;
+	}
+
 	private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, List<Attribute> attributes,
 			Attribute attribute, Object value) throws Exception {
 		LOG.info("findAndSetAttributeValue: value=" + value + "; value.getClass().getName()="
 				+ value.getClass().getName());
 		for (Attribute a : attributes) {
 			if (a == attribute) {
-				LOG.info("findAndSetAttributeValue: a.getName()=" + a.getName() + "; a.getType().getName()="
-						+ a.getType().getName());
-				Object parent = parentInstance;
-				if (parent == null)
-					parent = parentClass.newInstance();
-
-				LOG.info("findAndSetAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + a.getWriteMethod());
-				try {
-					EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
-					attribute.getWriteMethod().invoke(parent, value);
-				} finally {
-					EntityDelegate.getInstance().removeIgnoreEntityInstance(parent);
-				}
-
-				return parent;
+				return setAttributeValue(parentInstance, parentClass, attribute, value);
 			}
 		}
 
@@ -58,18 +75,7 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 
 			Object aInstance = findAndSetAttributeValue(a.getType(), null, a.getEmbeddedAttributes(), attribute, value);
 			if (aInstance != null) {
-				Object parent = parentInstance;
-				if (parent == null)
-					parent = parentClass.newInstance();
-
-				try {
-					EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
-					a.getWriteMethod().invoke(parent, aInstance);
-				} finally {
-					EntityDelegate.getInstance().removeIgnoreEntityInstance(parent);
-				}
-
-				return parent;
+				return setAttributeValue(parentInstance, parentClass, a, aInstance);
 			}
 		}
 

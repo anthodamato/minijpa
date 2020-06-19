@@ -7,9 +7,9 @@ import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jpa.db.ApacheDerbyConfiguration;
-import org.tinyjpa.jpa.db.DbConfiguration;
-import org.tinyjpa.jpa.db.DefaultDbConfiguration;
+import org.tinyjpa.jdbc.db.ApacheDerbyConfiguration;
+import org.tinyjpa.jdbc.db.DbConfiguration;
+import org.tinyjpa.jdbc.db.DefaultDbConfiguration;
 
 public class DbMetaData {
 	private Logger LOG = LoggerFactory.getLogger(DbMetaData.class);

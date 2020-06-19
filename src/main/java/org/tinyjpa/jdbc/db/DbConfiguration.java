@@ -1,6 +1,4 @@
-package org.tinyjpa.jpa.db;
-
-import org.tinyjpa.jdbc.db.DbJdbc;
+package org.tinyjpa.jdbc.db;
 
 public interface DbConfiguration {
 	public DbJdbc getDbJdbc();

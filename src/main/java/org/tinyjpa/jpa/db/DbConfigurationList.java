@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
+import org.tinyjpa.jdbc.db.DbConfiguration;
+
 public class DbConfigurationList {
 	private static DbConfigurationList dbConfiguration = new DbConfigurationList();
 

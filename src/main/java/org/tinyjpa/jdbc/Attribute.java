@@ -4,6 +4,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.tinyjpa.jdbc.relationship.OneToOne;
+
 public class Attribute {
 //	private Logger LOG = LoggerFactory.getLogger(Attribute.class);
 	private String name;
@@ -16,21 +18,8 @@ public class Attribute {
 	private GeneratedValue generatedValue;
 	private boolean embedded;
 	private List<Attribute> embeddedAttributes;
-
-	public Attribute(String name, String columnName, Class<?> type, Method readMethod, Method writeMethod, boolean id,
-			Integer sqlType, GeneratedValue generatedValue, boolean embedded, List<Attribute> embeddedAttributes) {
-		super();
-		this.name = name;
-		this.columnName = columnName;
-		this.type = type;
-		this.readMethod = readMethod;
-		this.writeMethod = writeMethod;
-		this.id = id;
-		this.sqlType = sqlType;
-		this.generatedValue = generatedValue;
-		this.embedded = embedded;
-		this.embeddedAttributes = embeddedAttributes;
-	}
+	private OneToOne oneToOne;
+	private Entity entity;
 
 	public String getName() {
 		return name;
@@ -72,6 +61,18 @@ public class Attribute {
 		return embeddedAttributes;
 	}
 
+	public OneToOne getOneToOne() {
+		return oneToOne;
+	}
+
+	public boolean isOneToOne() {
+		return oneToOne != null;
+	}
+
+	public Entity getEntity() {
+		return entity;
+	}
+
 	public Attribute findChildByName(String attributeName) {
 		if (getEmbeddedAttributes() == null)
 			return null;
@@ -91,7 +92,7 @@ public class Attribute {
 			for (Attribute a : embeddedAttributes) {
 				list.addAll(a.expandAttribute());
 			}
-		} else
+		} else // if (!isOneToOne())
 			list.add(this);
 
 		return list;
@@ -99,7 +100,99 @@ public class Attribute {
 
 	@Override
 	public String toString() {
-		return "Name=" + name + "; columnName=" + columnName + "; embedded=" + embedded;
+		return "(Name=" + name + "; columnName=" + columnName + "; embedded=" + embedded + ")";
 	}
 
+	public static class Builder {
+		private String name;
+		private String columnName;
+		private Class<?> type;
+		private Method readMethod;
+		private Method writeMethod;
+		private boolean id;
+		private Integer sqlType;
+		private GeneratedValue generatedValue;
+		private boolean embedded;
+		private List<Attribute> embeddedAttributes;
+		private OneToOne oneToOne;
+		private Entity entity;
+
+		public Builder(String name) {
+			super();
+			this.name = name;
+			this.columnName = name;
+		}
+
+		public Builder withColumnName(String columnName) {
+			this.columnName = columnName;
+			return this;
+		}
+
+		public Builder withType(Class<?> type) {
+			this.type = type;
+			return this;
+		}
+
+		public Builder withReadMethod(Method readMethod) {
+			this.readMethod = readMethod;
+			return this;
+		}
+
+		public Builder withWriteMethod(Method writeMethod) {
+			this.writeMethod = writeMethod;
+			return this;
+		}
+
+		public Builder isId(boolean id) {
+			this.id = id;
+			return this;
+		}
+
+		public Builder withSqlType(Integer sqlType) {
+			this.sqlType = sqlType;
+			return this;
+		}
+
+		public Builder withGeneratedValue(GeneratedValue generatedValue) {
+			this.generatedValue = generatedValue;
+			return this;
+		}
+
+		public Builder isEmbedded(boolean embedded) {
+			this.embedded = embedded;
+			return this;
+		}
+
+		public Builder withEmbeddedAttributes(List<Attribute> embeddedAttributes) {
+			this.embeddedAttributes = embeddedAttributes;
+			return this;
+		}
+
+		public Builder withOneToOne(OneToOne oneToOne) {
+			this.oneToOne = oneToOne;
+			return this;
+		}
+
+		public Builder isEntity(Entity entity) {
+			this.entity = entity;
+			return this;
+		}
+
+		public Attribute build() {
+			Attribute attribute = new Attribute();
+			attribute.name = name;
+			attribute.columnName = columnName;
+			attribute.type = type;
+			attribute.readMethod = readMethod;
+			attribute.writeMethod = writeMethod;
+			attribute.id = id;
+			attribute.sqlType = sqlType;
+			attribute.generatedValue = generatedValue;
+			attribute.embedded = embedded;
+			attribute.embeddedAttributes = embeddedAttributes;
+			attribute.oneToOne = oneToOne;
+			attribute.entity = entity;
+			return attribute;
+		}
+	}
 }

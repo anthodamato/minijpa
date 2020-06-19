@@ -10,6 +10,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContextType;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TypedQuery;
@@ -24,9 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
-import org.tinyjpa.jdbc.JdbcRunner;
-import org.tinyjpa.jdbc.SqlStatement;
-import org.tinyjpa.jpa.db.DbConfiguration;
+import org.tinyjpa.jdbc.db.DbConfiguration;
+import org.tinyjpa.jdbc.db.JdbcEntityManager;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityDelegateInstanceBuilder;
@@ -37,19 +37,22 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(EntityManagerImpl.class);
 	private EntityTransaction entityTransaction;
 	private EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
+	private DbConfiguration dbConfiguration;
 
 	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, Map<String, Entity> entities) {
 		super();
 		this.persistenceUnitInfo = persistenceUnitInfo;
 		this.entities = entities;
-		this.persistenceContext = new PersistenceContextImpl(entities, persistenceUnitInfo);
+		this.persistenceContext = new PersistenceContextImpl(entities);
+		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 	}
 
 	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, PersistenceContextType persistenceContextType,
 			Map<String, Entity> entities) {
 		this(persistenceUnitInfo, entities);
 		this.persistenceContextType = persistenceContextType;
-		this.persistenceContext = new PersistenceContextImpl(entities, persistenceUnitInfo);
+		this.persistenceContext = new PersistenceContextImpl(entities);
+		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 //		if (persistenceContextType.equals(PersistenceContextType.EXTENDED))
 //			persistenceContext = new ExtendedPersistenceContext();
 	}
@@ -69,13 +72,14 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 		try {
 			new PersistenceHelper(persistenceContext).persist(connection, e, entity, optional.get(),
-					persistenceContext.getPersistenceUnitInfo());
-			persistenceContext.persist(entity);
+					persistenceUnitInfo);
+			persistenceContext.save(entity);
 			EntityDelegate.getInstance().removeChanges(entity);
 		} catch (Exception ex) {
 			LOG.error(ex.getClass().getName());
 			LOG.error(ex.getMessage());
 			entityTransaction.setRollbackOnly();
+			throw new PersistenceException(ex.getMessage());
 		}
 	}
 
@@ -95,7 +99,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
 		try {
-			if (persistenceContext.isPersistentOnDb(entity)) {
+			if (persistenceContext.isSaved(entity)) {
 				LOG.info("Instance " + entity + " is in the persistence context");
 				new PersistenceHelper(persistenceContext).remove(connection, entity, e, persistenceUnitInfo);
 				Object idValue = new EntityHelper().getIdValue(e, entity);
@@ -113,6 +117,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 			LOG.error(ex.getClass().getName());
 			LOG.error(ex.getMessage());
 			entityTransaction.setRollbackOnly();
+			throw new PersistenceException(ex.getMessage());
 		}
 	}
 
@@ -126,24 +131,27 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 			Entity entity = entities.get(entityClass.getName());
 
-			DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
-			SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectById(entity, primaryKey);
-			JdbcRunner jdbcRunner = new JdbcRunner();
-			JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(connection, sqlStatement, entity,
-					persistenceUnitInfo);
-			if (attributeValues == null)
+//			DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+//			SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectById(entity, primaryKey);
+//			JdbcRunner jdbcRunner = new JdbcRunner();
+//			JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(connection, sqlStatement, entity);
+//			if (attributeValues == null)
+//				return null;
+//
+//			Object entityObject = entityInstanceBuilder.build(entity, attributeValues.attributes,
+//					attributeValues.values, primaryKey);
+			Object entityObject = new JdbcEntityManager(dbConfiguration, entities, persistenceContext).findById(entity,
+					primaryKey, entityInstanceBuilder, connection);
+			if (entityObject == null)
 				return null;
 
-			Object entityObject = entityInstanceBuilder.build(entity, attributeValues.attributes,
-					attributeValues.values, primaryKey);
-			persistenceContext.add(entityObject, primaryKey);
+			persistenceContext.save(entityObject, primaryKey);
 			LOG.info("find: entityObject=" + entityObject);
 			return (T) entityObject;
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
 		}
-
-		return null;
 	}
 
 	@Override
@@ -234,9 +242,11 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	public void detach(Object entity) {
 		try {
 			persistenceContext.detach(entity);
+			LOG.info("Entity " + entity + " detached");
 		} catch (Exception e) {
 			LOG.error(e.getClass().getName());
 			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
 		}
 	}
 

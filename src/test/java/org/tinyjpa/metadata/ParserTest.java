@@ -1,8 +1,8 @@
 package org.tinyjpa.metadata;
 
-import java.beans.IntrospectionException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -10,16 +10,11 @@ import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jpa.model.Citizen;
 
-import javassist.CannotCompileException;
-import javassist.NotFoundException;
-
 public class ParserTest {
 	private Parser parser = new Parser();
 
 	@Test
-	public void parse()
-			throws ClassNotFoundException, IntrospectionException, InstantiationException, IllegalAccessException,
-			NotFoundException, CannotCompileException, NoSuchFieldException, SecurityException, NoSuchMethodException {
+	public void parse() throws Exception {
 		List<String> classNames = new ArrayList<>();
 		classNames.add("org.tinyjpa.jpa.model.Citizen");
 		EntityEnhancer entityEnhancer = new EntityEnhancer();
@@ -30,7 +25,8 @@ public class ParserTest {
 		EnhEntity enhEntity = enhEntities.get(0);
 		Assertions.assertNotNull(enhEntity.getClassName());
 
-		Entity entity = parser.parse(enhEntity);
+		Map<String, Entity> entities = parser.parse(enhEntities);
+		Entity entity = entities.get("org.tinyjpa.jpa.model.Citizen");
 		Assertions.assertNotNull(entity);
 		Assertions.assertNotNull(entity.getClazz());
 		Assertions.assertEquals(Citizen.class, entity.getClazz());
