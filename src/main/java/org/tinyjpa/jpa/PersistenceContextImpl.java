@@ -1,5 +1,6 @@
 package org.tinyjpa.jpa;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,15 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.EntityHelper;
 import org.tinyjpa.jdbc.db.EntityContainer;
-import org.tinyjpa.metadata.EntityDelegateInstanceBuilder;
-import org.tinyjpa.metadata.EntityHelper;
-import org.tinyjpa.metadata.EntityInstanceBuilder;
 
 public class PersistenceContextImpl implements EntityContainer {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceContextImpl.class);
 	private Map<String, Entity> entities;
-	private EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
+//	private EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
 
 	/**
 	 * Managed entities. They are persistent on db.
@@ -28,6 +27,18 @@ public class PersistenceContextImpl implements EntityContainer {
 	 * Detached entities.
 	 */
 	private Map<Class<?>, Map<Object, Object>> detachedEntities = new HashMap<>();
+
+	/**
+	 * New entities not ready to be inserted on db. The pk could be missing, so the
+	 * structure is: Map<entity class name, Map<entity instance ref, entity instance
+	 * ref>>
+	 */
+	private Map<Class<?>, Map<Object, Object>> pendingNewEntities = new HashMap<>();
+
+	/**
+	 * Entities not ready to be updated on db.
+	 */
+	private Map<Class<?>, Map<Object, Object>> pendingUpdates = new HashMap<>();
 
 	/**
 	 * Foreign key values
@@ -64,23 +75,6 @@ public class PersistenceContextImpl implements EntityContainer {
 		return true;
 	}
 
-	private void saveForeignkeys(List<Attribute> attributes, Object parentInstance) throws Exception {
-		for (Attribute a : attributes) {
-			if (a.isOneToOne()) {
-				Object instance = entityInstanceBuilder.getAttributeValue(parentInstance, a);
-				if (instance == null)
-					continue;
-
-				Entity e = entities.get(instance.getClass().getName());
-				Object fkv = e.getId().getReadMethod().invoke(instance);
-				saveForeignKey(parentInstance, a, fkv);
-				saveForeignkeys(e.getAttributes(), instance);
-			} else if (a.isEmbedded()) {
-				saveForeignkeys(a.getEmbeddedAttributes(), parentInstance);
-			}
-		}
-	}
-
 	@Override
 	public void save(Object entityInstance, Object idValue) throws Exception {
 		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), persistentEntities);
@@ -89,14 +83,13 @@ public class PersistenceContextImpl implements EntityContainer {
 
 		LOG.info("Instance " + entityInstance + " saved in the PC pk=" + idValue);
 		mapEntities.put(idValue, entityInstance);
-
-		Entity e = entities.get(entityInstance.getClass().getName());
-//		saveForeignkeys(e.getAttributes(), entityInstance);
 	}
 
 	@Override
 	public void save(Object entityInstance) throws Exception {
 		Entity e = entities.get(entityInstance.getClass().getName());
+		LOG.info("save: entityInstance.getClass().getName()=" + entityInstance.getClass().getName());
+		LOG.info("save: e=" + e);
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
@@ -196,7 +189,37 @@ public class PersistenceContextImpl implements EntityContainer {
 	/**
 	 * Ends this persistence context.
 	 */
+	@Override
 	public void end() {
 
 	}
+
+	@Override
+	public void addToPendingNew(Object entityInstance) throws Exception {
+		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), pendingNewEntities);
+		if (mapEntities.get(entityInstance) != null)
+			return;
+
+		mapEntities.put(entityInstance, entityInstance);
+	}
+
+	@Override
+	public List<Object> getPendingNew() {
+		List<Object> list = new ArrayList<>();
+		for (Map.Entry<Class<?>, Map<Object, Object>> entry : pendingNewEntities.entrySet()) {
+			Map<Object, Object> map = entry.getValue();
+			for (Map.Entry<Object, Object> e : map.entrySet()) {
+				list.add(e.getValue());
+			}
+		}
+
+		return list;
+	}
+
+	@Override
+	public void removePendingNew(Object entityInstance) {
+		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), pendingNewEntities);
+		mapEntities.remove(entityInstance);
+	}
+
 }

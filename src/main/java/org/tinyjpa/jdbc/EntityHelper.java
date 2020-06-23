@@ -1,7 +1,4 @@
-package org.tinyjpa.metadata;
-
-import org.tinyjpa.jdbc.Attribute;
-import org.tinyjpa.jdbc.Entity;
+package org.tinyjpa.jdbc;
 
 public class EntityHelper {
 	public Object getIdValue(Entity entity, Object entityInstance) throws Exception {

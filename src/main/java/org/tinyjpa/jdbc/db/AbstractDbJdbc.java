@@ -58,24 +58,14 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		Object idValue = id.getReadMethod().invoke(entityInstance);
 		List<AttributeValue> attrValuesWithId = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(id, idValue);
-//		attrValuesWithId.addAll(embeddedIdAttributeValueConverter.convert(attrValueId));
 		attrValuesWithId.add(attrValueId);
 		attrValuesWithId.addAll(attrValues);
 
-		Object[] values = new Object[attrValuesWithId.size()];
-
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValuesWithId);
 
-		int i = 0;
-		for (AttributeValue attrValue : attrValuesWithId) {
-			values[i] = attrValue.getValue();
-			++i;
-		}
-
 		String sql = generateInsertStatement(entity, columnNameValues);
-		return new SqlStatement.Builder().withSql(sql).withValues(values).withAttributeValues(attrValuesWithId)
-				.withIdValue(idValue).withColumnNameValues(columnNameValues).build();
-//		return new SqlStatement(sql, values, attrValuesWithId, 0, idValue);
+		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValuesWithId).withIdValue(idValue)
+				.withColumnNameValues(columnNameValues).build();
 	}
 
 	protected abstract Long generateSequenceNextValue(Connection connection, Entity entity) throws SQLException;
@@ -89,37 +79,21 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		attrValuesWithId.add(new AttributeValue(entity.getId(), idValue));
 		attrValuesWithId.addAll(attrValues);
 
-		int i = 0;
-		Object[] values = new Object[attrValuesWithId.size()];
-		for (AttributeValue attrValue : attrValuesWithId) {
-			values[i] = attrValue.getValue();
-			++i;
-		}
-
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValuesWithId);
+		LOG.info("generateInsertSequenceStrategy: columnNameValues.size()=" + columnNameValues.size());
 		String sql = generateInsertStatement(entity, columnNameValues);
-		return new SqlStatement.Builder().withSql(sql).withValues(values).withAttributeValues(attrValuesWithId)
-				.withIdValue(idValue).withColumnNameValues(columnNameValues).build();
-//		return new SqlStatement(sql, values, attrValuesWithId, 0, idValue);
+		LOG.info("generateInsertSequenceStrategy: sql=" + sql);
+		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValuesWithId).withIdValue(idValue)
+				.withColumnNameValues(columnNameValues).build();
 	}
 
 	protected SqlStatement generateInsertIdentityStrategy(Entity entity, List<AttributeValue> attrValues)
 			throws Exception {
 		List<AttributeValue> attributeValues = attrValues;
-
-		Object[] values = new Object[attributeValues.size()];
-		int i = 0;
-		for (AttributeValue attrValue : attributeValues) {
-			values[i] = attrValue.getValue();
-			++i;
-		}
-
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
 		String sql = generateInsertStatement(entity, columnNameValues);
-		return new SqlStatement.Builder().withSql(sql).withValues(values).withAttributeValues(attributeValues)
+		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attributeValues)
 				.withColumnNameValues(columnNameValues).build();
-
-//		return new SqlStatement(sql, values, attributeValues, 0, null);
 	}
 
 	protected String generateInsertStatement(Entity entity, List<ColumnNameValue> attrValues) {
@@ -131,16 +105,11 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		sb.append(cols);
 		sb.append(") values (");
 
-//		Object[] values = new Object[attrValues.size()];
-
-		int i = 0;
-		for (ColumnNameValue attrValue : attrValues) {
+		for (int i = 0; i < attrValues.size(); ++i) {
 			if (i > 0)
 				sb.append(",");
 
 			sb.append("?");
-//			values[i] = attrValue.getValue();
-			++i;
 		}
 
 		sb.append(")");
@@ -150,23 +119,27 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 	private List<ColumnNameValue> convertAttributeValues(List<AttributeValue> attributeValues) throws Exception {
 		List<ColumnNameValue> list = new ArrayList<>();
 		for (AttributeValue av : attributeValues) {
-			if (av.getAttribute().isEmbedded() && av.getAttribute().isId()) {
+			Attribute attribute = av.getAttribute();
+			if (attribute.isEmbedded() && attribute.isId()) {
 				List<AttributeValue> idav = embeddedIdAttributeValueConverter.convert(av);
 				list.addAll(convertAttributeValues(idav));
 				continue;
 			}
 
 			ColumnNameValue columnNameValue = null;
-			if (av.getAttribute().isOneToOne() && av.getAttribute().getOneToOne().isOwner()) {
-				Object idValue = av.getAttribute().getEntity().getId().getReadMethod().invoke(av.getValue());
-				columnNameValue = new ColumnNameValue(av.getAttribute().getOneToOne().getJoinColumn(), idValue,
-						av.getAttribute().getEntity().getId().getType(),
-						av.getAttribute().getEntity().getId().getSqlType(), av.getAttribute(), null);
+			if (attribute.isEntity()) {
+				if (attribute.isOneToOne() && attribute.getOneToOne().isOwner()) {
+					LOG.info("convertAttributeValues: oneToOne=" + attribute.getOneToOne());
+					Object idValue = attribute.getEntity().getId().getReadMethod().invoke(av.getValue());
+					columnNameValue = new ColumnNameValue(attribute.getOneToOne().getJoinColumn(), idValue,
+							attribute.getEntity().getId().getType(), attribute.getEntity().getId().getSqlType(),
+							attribute, null);
+					list.add(columnNameValue);
+				}
 			} else {
 				columnNameValue = ColumnNameValue.build(av);
+				list.add(columnNameValue);
 			}
-
-			list.add(columnNameValue);
 		}
 
 		return list;
@@ -206,27 +179,17 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 	public SqlStatement generateSelectById(Entity entity, Object idValue) throws Exception {
 		List<AttributeValue> idAttributeValues = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
-//		idAttributeValues.addAll(embeddedIdAttributeValueConverter.convert(attrValueId));
 		idAttributeValues.add(attrValueId);
-
-		Object[] values = new Object[idAttributeValues.size()];
-		int k = 0;
-		for (AttributeValue a : idAttributeValues) {
-			values[k] = a.getValue();
-			++k;
-		}
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
 		int i = 0;
 		List<Attribute> expandedAttributes = entity.expandAttributes();
-//		List<ColumnNameValue> columnNameValues = convertAttributes(expandedAttributes);
 		List<String> columns = createColumns(expandedAttributes);
 		for (String c : columns) {
 			if (i > 0)
 				sb.append(", ");
 
-			LOG.info("generateSelectById: column=" + c);
 			sb.append(c);
 			++i;
 		}
@@ -248,7 +211,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
 		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withValues(values).withAttributes(expandedAttributes)
+		return new SqlStatement.Builder().withSql(sql).withAttributes(expandedAttributes)
 				.withColumnNameValues(columnNameValues).withFetchColumnNameValues(fetchColumnNameValues).build();
 	}
 
@@ -258,16 +221,12 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		LOG.info("generateUpdate: attrValues=" + attrValues);
 		StringBuilder sb = new StringBuilder();
 		Attribute id = entity.getId();
-		Object idValue = id.getReadMethod().invoke(entityInstance);
 		if (entity.getAttributes().isEmpty()) {
 			String sql = sb.toString();
-//			return new SqlStatement(sql, new Object[0], attrValues, 0, null);
 			return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValues).build();
 		}
 
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
-		Object[] values = new Object[attrValues.size()];
-		LOG.info("generateUpdate: values=" + values);
 		sb.append("update ");
 		sb.append(entity.getTableName());
 		sb.append(" set ");
@@ -281,26 +240,18 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 			LOG.info("generateUpdate: attrValue=" + attrValue);
 			LOG.info("generateUpdate: attrValue.getAttribute()=" + attrValue.getAttribute());
-			Object attributeValue = attrValue.getValue();
 			sb.append(attrValue.getAttribute().getColumnName());
 			sb.append(" = ?");
-			values[i] = attributeValue;
 			++i;
 		}
 
 		sb.append(" where ");
 		sb.append(id.getColumnName());
 		sb.append("= ?");
-		values[i] = idValue;
 		String sql = sb.toString();
-		for (Object object : values) {
-			LOG.info("generateUpdate: values.object=" + object);
-		}
 
-		LOG.info("generateUpdate: values.length=" + values.length);
 		LOG.info("generateUpdate: sql=" + sql);
-//		return new SqlStatement(sql, values, attrValues, 0, null);
-		return new SqlStatement.Builder().withSql(sql).withValues(values).withAttributeValues(attrValues)
+		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValues)
 				.withColumnNameValues(columnNameValues).build();
 	}
 
@@ -309,14 +260,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		List<AttributeValue> idAttributeValues = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
 		idAttributeValues.add(attrValueId);
-//		idAttributeValues.addAll(embeddedIdAttributeValueConverter.convert(attrValueId));
-
-		Object[] values = new Object[idAttributeValues.size()];
-		int k = 0;
-		for (AttributeValue a : idAttributeValues) {
-			values[k] = a.getValue();
-			++k;
-		}
 
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(idAttributeValues);
 
@@ -336,8 +279,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		}
 
 		String sql = sb.toString();
-//		return new SqlStatement(sql, values, null, idAttributeValues, 0);
-		return new SqlStatement.Builder().withSql(sql).withValues(values).withAttributeValues(idAttributeValues)
+		return new SqlStatement.Builder().withSql(sql).withAttributeValues(idAttributeValues)
 				.withColumnNameValues(columnNameValues).build();
 	}
 

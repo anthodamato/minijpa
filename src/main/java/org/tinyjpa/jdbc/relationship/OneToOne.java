@@ -25,6 +25,19 @@ public class OneToOne {
 		return mappedBy == null || mappedBy.isEmpty();
 	}
 
+	public OneToOne copyWithJoinColumn(String joinColumnName) {
+		OneToOne oto = new OneToOne();
+		oto.joinColumn = joinColumnName;
+		oto.mappedBy = mappedBy;
+		oto.fetchType = fetchType;
+		return oto;
+	}
+
+	@Override
+	public String toString() {
+		return OneToOne.class.getName() + ": joinColumn=" + joinColumn + "; mappedBy=" + mappedBy;
+	}
+
 	public static class Builder {
 		private String joinColumn;
 		private String mappedBy;

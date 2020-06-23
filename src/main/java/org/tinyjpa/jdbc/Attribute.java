@@ -19,6 +19,10 @@ public class Attribute {
 	private boolean embedded;
 	private List<Attribute> embeddedAttributes;
 	private OneToOne oneToOne;
+	/**
+	 * if this attribute represents an entity, for a one to one relationship for
+	 * example, then this field will be that entity.
+	 */
 	private Entity entity;
 
 	public String getName() {
@@ -73,6 +77,10 @@ public class Attribute {
 		return entity;
 	}
 
+	public boolean isEntity() {
+		return entity != null;
+	}
+
 	public Attribute findChildByName(String attributeName) {
 		if (getEmbeddedAttributes() == null)
 			return null;
@@ -92,10 +100,28 @@ public class Attribute {
 			for (Attribute a : embeddedAttributes) {
 				list.addAll(a.expandAttribute());
 			}
-		} else // if (!isOneToOne())
+		} else if (!isEntity() || (isEntity() && isOneToOne() && getOneToOne().isOwner())) {
 			list.add(this);
+		}
 
 		return list;
+	}
+
+	public Attribute copyWithOneToOne(OneToOne oneToOne, Entity toEntity) {
+		Attribute a = new Attribute();
+		a.name = name;
+		a.columnName = columnName;
+		a.type = type;
+		a.readMethod = readMethod;
+		a.writeMethod = writeMethod;
+		a.id = id;
+		a.sqlType = sqlType;
+		a.generatedValue = generatedValue;
+		a.oneToOne = oneToOne;
+		a.embedded = embedded;
+		a.embeddedAttributes = embeddedAttributes;
+		a.entity = toEntity;
+		return a;
 	}
 
 	@Override

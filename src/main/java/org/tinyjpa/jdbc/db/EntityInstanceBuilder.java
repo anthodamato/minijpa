@@ -1,8 +1,10 @@
-package org.tinyjpa.metadata;
+package org.tinyjpa.jdbc.db;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
 
 public interface EntityInstanceBuilder {
@@ -13,5 +15,9 @@ public interface EntityInstanceBuilder {
 			throws Exception;
 
 	public Object getAttributeValue(Object parentInstance, Attribute attribute) throws Exception;
+
+	public Optional<List<AttributeValue>> getChanges(Entity entity, Object entityInstance);
+
+	public void removeChanges(Object entityInstance);
 
 }

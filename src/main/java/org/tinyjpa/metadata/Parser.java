@@ -180,19 +180,27 @@ public class Parser {
 	}
 
 	private OneToOne createOneToOne(javax.persistence.OneToOne oneToOne, JoinColumn joinColumn, String joinColumnName) {
-		OneToOne oto = null;
+		OneToOne.Builder builder = new OneToOne.Builder();
 		if (joinColumn != null)
-			oto = new OneToOne.Builder().withJoinColumn(joinColumn.name()).build();
-		else
-			oto = new OneToOne();
+			builder = builder.withJoinColumn(joinColumn.name());
 
-		return oto;
+		LOG.info("createOneToOne: oneToOne.mappedBy()=" + oneToOne.mappedBy());
+		if (oneToOne.mappedBy() != null && !oneToOne.mappedBy().isEmpty())
+			builder = builder.withMappedby(oneToOne.mappedBy());
+
+		return builder.build();
 	}
 
 	private String createDefaultJoinColumn(Attribute owningAttribute, Entity toEntity) {
 		return owningAttribute.getName() + "_" + toEntity.getId().getColumnName();
 	}
 
+	/**
+	 * It's a post-processing step needed to complete entity data. For example,
+	 * filling out the 'join column' one to one relationships if missing.
+	 * 
+	 * @param entities the list of all entities
+	 */
 	private void finalizeRelationships(Map<String, Entity> entities) {
 		for (Map.Entry<String, Entity> entry : entities.entrySet()) {
 			Entity entity = entry.getValue();
@@ -200,32 +208,24 @@ public class Parser {
 			for (int i = 0; i < attributes.size(); ++i) {
 				Attribute a = attributes.get(i);
 //				LOG.info("finalizeRelationships: a.isOneToOne()=" + a.isOneToOne());
-				if (a.isOneToOne() && a.getOneToOne().getJoinColumn() == null) {
+				if (a.isOneToOne()) {
 					Entity toEntity = entities.get(a.getType().getName());
 					LOG.info("finalizeRelationships: toEntity=" + toEntity);
 					if (toEntity == null)
 						throw new IllegalArgumentException(
 								"One to One entity not found (" + a.getType().getName() + ")");
 
-					String joinColumnName = createDefaultJoinColumn(a, toEntity);
-//					LOG.info("finalizeRelationships: joinColumnName=" + joinColumnName);
-					OneToOne oneToOne = clone(a.getOneToOne(), joinColumnName);
-					Attribute clonedAttribute = clone(a, oneToOne, toEntity);
+					OneToOne oneToOne = a.getOneToOne();
+					if (a.getOneToOne().isOwner() && a.getOneToOne().getJoinColumn() == null) {
+						String joinColumnName = createDefaultJoinColumn(a, toEntity);
+						oneToOne = a.getOneToOne().copyWithJoinColumn(joinColumnName);
+					}
+
+					Attribute clonedAttribute = a.copyWithOneToOne(oneToOne, toEntity);
 					attributes.set(i, clonedAttribute);
 				}
 			}
 		}
 	}
 
-	private Attribute clone(Attribute a, OneToOne oneToOne, Entity toEntity) {
-		return new Attribute.Builder(a.getName()).withColumnName(a.getColumnName()).withType(a.getType())
-				.withReadMethod(a.getReadMethod()).withWriteMethod(a.getWriteMethod()).isId(a.isId())
-				.withSqlType(a.getSqlType()).withGeneratedValue(a.getGeneratedValue()).withOneToOne(oneToOne)
-				.isEmbedded(a.isEmbedded()).withEmbeddedAttributes(a.getEmbeddedAttributes()).isEntity(toEntity)
-				.build();
-	}
-
-	private OneToOne clone(OneToOne o, String joinColumnName) {
-		return new OneToOne.Builder().withJoinColumn(joinColumnName).build();
-	}
 }

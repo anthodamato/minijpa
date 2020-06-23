@@ -1,11 +1,14 @@
 package org.tinyjpa.metadata;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.db.EntityInstanceBuilder;
 
 public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	private Logger LOG = LoggerFactory.getLogger(EntityDelegateInstanceBuilder.class);
@@ -80,6 +83,16 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 		}
 
 		return null;
+	}
+
+	@Override
+	public Optional<List<AttributeValue>> getChanges(Entity entity, Object entityInstance) {
+		return EntityDelegate.getInstance().getChanges(entity, entityInstance);
+	}
+
+	@Override
+	public void removeChanges(Object entityInstance) {
+		EntityDelegate.getInstance().removeChanges(entityInstance);
 	}
 
 }

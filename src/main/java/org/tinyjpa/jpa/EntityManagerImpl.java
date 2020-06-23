@@ -2,7 +2,6 @@ package org.tinyjpa.jpa;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
@@ -23,21 +22,18 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jdbc.db.JdbcEntityManager;
 import org.tinyjpa.jpa.db.DbConfigurationList;
-import org.tinyjpa.metadata.EntityDelegate;
+import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
 import org.tinyjpa.metadata.EntityDelegateInstanceBuilder;
-import org.tinyjpa.metadata.EntityHelper;
-import org.tinyjpa.metadata.EntityInstanceBuilder;
 
 public class EntityManagerImpl extends AbstractEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(EntityManagerImpl.class);
 	private EntityTransaction entityTransaction;
-	private EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
 	private DbConfiguration dbConfiguration;
+	private JdbcEntityManager jdbcEntityManager;
 
 	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, Map<String, Entity> entities) {
 		super();
@@ -45,6 +41,8 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		this.entities = entities;
 		this.persistenceContext = new PersistenceContextImpl(entities);
 		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+		this.jdbcEntityManager = new JdbcEntityManager(dbConfiguration, entities, persistenceContext,
+				new EntityDelegateInstanceBuilder(), new EmbeddedAttributeValueConverter());
 	}
 
 	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, PersistenceContextType persistenceContextType,
@@ -66,15 +64,8 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		if (e == null)
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
-		Optional<List<AttributeValue>> optional = EntityDelegate.getInstance().getChanges(e, entity);
-		if (!optional.isPresent())
-			return;
-
 		try {
-			new PersistenceHelper(persistenceContext).persist(connection, e, entity, optional.get(),
-					persistenceUnitInfo);
-			persistenceContext.save(entity);
-			EntityDelegate.getInstance().removeChanges(entity);
+			jdbcEntityManager.persist(connection, e, entity);
 		} catch (Exception ex) {
 			LOG.error(ex.getClass().getName());
 			LOG.error(ex.getMessage());
@@ -99,20 +90,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
 		try {
-			if (persistenceContext.isSaved(entity)) {
-				LOG.info("Instance " + entity + " is in the persistence context");
-				new PersistenceHelper(persistenceContext).remove(connection, entity, e, persistenceUnitInfo);
-				Object idValue = new EntityHelper().getIdValue(e, entity);
-				persistenceContext.remove(entity, idValue);
-//				EntityDelegate.getInstance().removeChanges(entity);
-			} else {
-				LOG.info("Instance " + entity + " not found in the persistence context");
-				Object idValue = new EntityHelper().getIdValue(e, entity);
-				if (idValue == null)
-					return;
-
-				new PersistenceHelper(persistenceContext).remove(connection, entity, e, persistenceUnitInfo);
-			}
+			jdbcEntityManager.remove(connection, entity);
 		} catch (Exception ex) {
 			LOG.error(ex.getClass().getName());
 			LOG.error(ex.getMessage());
@@ -125,27 +103,10 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
 		try {
-			T entityInstance = (T) persistenceContext.find(entityClass, primaryKey);
-			if (entityInstance != null)
-				return entityInstance;
-
-			Entity entity = entities.get(entityClass.getName());
-
-//			DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
-//			SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectById(entity, primaryKey);
-//			JdbcRunner jdbcRunner = new JdbcRunner();
-//			JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(connection, sqlStatement, entity);
-//			if (attributeValues == null)
-//				return null;
-//
-//			Object entityObject = entityInstanceBuilder.build(entity, attributeValues.attributes,
-//					attributeValues.values, primaryKey);
-			Object entityObject = new JdbcEntityManager(dbConfiguration, entities, persistenceContext).findById(entity,
-					primaryKey, entityInstanceBuilder, connection);
+			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, connection);
 			if (entityObject == null)
 				return null;
 
-			persistenceContext.save(entityObject, primaryKey);
 			LOG.info("find: entityObject=" + entityObject);
 			return (T) entityObject;
 		} catch (Exception e) {
