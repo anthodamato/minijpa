@@ -10,7 +10,7 @@ import javax.persistence.spi.ProviderUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.ConnectionProvider;
+import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.DbMetaData;
 import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jpa.db.DbConfigurationList;
@@ -22,11 +22,11 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 	private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 		LOG.info("processConfiguration: 0");
 
-		new ConnectionProvider().initDriver(persistenceUnitInfo);
+		new ConnectionProviderImpl(persistenceUnitInfo).init();
 
 		Connection connection = null;
 		try {
-			connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
+			connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
 			LOG.info("processConfiguration: 1");
 			DbMetaData dbMetaData = new DbMetaData();
 			dbMetaData.find(connection);

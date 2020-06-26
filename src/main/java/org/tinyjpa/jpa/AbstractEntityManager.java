@@ -1,7 +1,5 @@
 package org.tinyjpa.jpa;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -10,7 +8,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.ConnectionProvider;
+import org.tinyjpa.jdbc.ConnectionHolder;
 import org.tinyjpa.jdbc.Entity;
 
 public abstract class AbstractEntityManager implements EntityManager {
@@ -20,14 +18,18 @@ public abstract class AbstractEntityManager implements EntityManager {
 	protected PersistenceUnitInfo persistenceUnitInfo;
 	protected PersistenceContextImpl persistenceContext;
 	protected PersistenceContextType persistenceContextType = PersistenceContextType.TRANSACTION;
-	protected Connection connection;
+	protected ConnectionHolder connectionHolder;
 
 	public PersistenceContextImpl getPersistenceContext() {
 		return persistenceContext;
 	}
 
-	public Connection createConnection() throws SQLException {
-		connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
-		return connection;
+	public ConnectionHolder getConnectionHolder() {
+		return connectionHolder;
 	}
+
+//	public Connection createConnection() throws SQLException {
+//		connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
+//		return connection;
+//	}
 }

@@ -22,11 +22,14 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.ConnectionHolderImpl;
+import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jdbc.db.JdbcEntityManager;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
+import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityDelegateInstanceBuilder;
 
 public class EntityManagerImpl extends AbstractEntityManager {
@@ -41,8 +44,10 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		this.entities = entities;
 		this.persistenceContext = new PersistenceContextImpl(entities);
 		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 		this.jdbcEntityManager = new JdbcEntityManager(dbConfiguration, entities, persistenceContext,
-				new EntityDelegateInstanceBuilder(), new EmbeddedAttributeValueConverter());
+				new EntityDelegateInstanceBuilder(), new EmbeddedAttributeValueConverter(), connectionHolder);
+		EntityDelegate.getInstance().addAttributeLoader(persistenceUnitInfo, jdbcEntityManager);
 	}
 
 	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, PersistenceContextType persistenceContextType,
@@ -65,7 +70,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
 		try {
-			jdbcEntityManager.persist(connection, e, entity);
+			jdbcEntityManager.persist(e, entity);
 		} catch (Exception ex) {
 			LOG.error(ex.getClass().getName());
 			LOG.error(ex.getMessage());
@@ -90,7 +95,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
 		try {
-			jdbcEntityManager.remove(connection, entity);
+			jdbcEntityManager.remove(entity);
 		} catch (Exception ex) {
 			LOG.error(ex.getClass().getName());
 			LOG.error(ex.getMessage());
@@ -103,7 +108,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
 		try {
-			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, connection);
+			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
 			if (entityObject == null)
 				return null;
 

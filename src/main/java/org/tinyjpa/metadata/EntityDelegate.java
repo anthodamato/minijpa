@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.persistence.spi.PersistenceUnitInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.db.AttributeLoader;
 
 public final class EntityDelegate implements EntityListener {
 	protected Logger LOG = LoggerFactory.getLogger(EntityDelegate.class);
@@ -30,6 +33,8 @@ public final class EntityDelegate implements EntityListener {
 	 */
 	private Map<Object, List<AttributeValue>> embeddedChanges = new HashMap<>();
 	private List<Object> ignoreEntityInstances = new ArrayList<Object>();
+
+	private Map<PersistenceUnitInfo, AttributeLoader> attributeLoaders = new HashMap<>();
 
 	public static EntityDelegate getInstance() {
 		return entityDelegate;
@@ -216,6 +221,23 @@ public final class EntityDelegate implements EntityListener {
 
 	@Override
 	public Object get(Object value, String attributeName, Object entityInstance) {
+		if (value != null)
+			return value;
+
+		Entity entity = entities.get(entityInstance.getClass().getName());
+		Attribute a = entity.getAttribute(attributeName);
+		LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy() + "; entityInstance=" + entityInstance);
+		if (a.isLazy()) {
+			AttributeLoader attributeLoader = findAttributeLoader(entityInstance);
+			if (attributeLoader != null) {
+				try {
+					value = attributeLoader.load(entityInstance, a);
+				} catch (Exception e) {
+					LOG.error(e.getMessage());
+				}
+			}
+		}
+
 		return value;
 	}
 
@@ -273,5 +295,28 @@ public final class EntityDelegate implements EntityListener {
 
 	public void removeIgnoreEntityInstance(Object object) {
 		ignoreEntityInstances.remove(object);
+	}
+
+	public void addAttributeLoader(PersistenceUnitInfo persistenceUnitInfo, AttributeLoader attributeLoader) {
+		attributeLoaders.put(persistenceUnitInfo, attributeLoader);
+	}
+
+	private AttributeLoader findAttributeLoader(Object entityInstance) {
+		if (attributeLoaders.isEmpty())
+			return null;
+
+		if (attributeLoaders.size() == 1) {
+			for (Map.Entry<PersistenceUnitInfo, AttributeLoader> entry : attributeLoaders.entrySet()) {
+				return entry.getValue();
+			}
+		}
+
+		for (Map.Entry<PersistenceUnitInfo, AttributeLoader> entry : attributeLoaders.entrySet()) {
+			PersistenceUnitInfo persistenceUnitInfo = entry.getKey();
+			if (persistenceUnitInfo.getManagedClassNames().contains(entityInstance.getClass().getName()))
+				return entry.getValue();
+		}
+
+		return null;
 	}
 }

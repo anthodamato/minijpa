@@ -13,6 +13,7 @@ import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.EntityHelper;
 import org.tinyjpa.jdbc.db.EntityContainer;
+import org.tinyjpa.jdbc.relationship.OneToOne;
 
 public class PersistenceContextImpl implements EntityContainer {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceContextImpl.class);
@@ -43,9 +44,11 @@ public class PersistenceContextImpl implements EntityContainer {
 	/**
 	 * Foreign key values
 	 * 
-	 * (Entity instance, Map<Attribute,foreign key value>)
+	 * Map<parent entity class name, Map<parent instance, Map<Attribute,foreign key
+	 * value>>>
 	 */
-	private Map<Object, Map<Attribute, Object>> foreignKeyValues = new HashMap<>();
+//	private Map<Object, Map<Attribute, Object>> foreignKeyValues = new HashMap<>();
+	private Map<Class<?>, Map<Object, Map<Attribute, Object>>> foreignKeyValues = new HashMap<>();
 
 	private EntityHelper entityHelper = new EntityHelper();
 
@@ -167,24 +170,40 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public void saveForeignKey(Object entityInstance, Attribute attribute, Object value) {
-		Map<Attribute, Object> map = foreignKeyValues.get(entityInstance);
+	public void saveForeignKey(Object parentInstance, Attribute attribute, Object value) {
+		Map<Object, Map<Attribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
 		if (map == null) {
 			map = new HashMap<>();
-			foreignKeyValues.put(entityInstance, map);
+			foreignKeyValues.put(parentInstance.getClass(), map);
 		}
 
-		map.put(attribute, value);
+		Map<Attribute, Object> parentMap = map.get(parentInstance);
+		if (parentMap == null) {
+			parentMap = new HashMap<>();
+			map.put(parentInstance, parentMap);
+		}
+
+		parentMap.put(attribute, value);
 	}
 
 	@Override
-	public Object getForeignKeyValue(Object entityInstance, Attribute attribute) {
-		Map<Attribute, Object> map = foreignKeyValues.get(entityInstance);
+	public Object getForeignKeyValue(Object parentInstance, Attribute attribute) {
+		Map<Object, Map<Attribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
 		if (map == null)
 			return null;
 
-		return map.get(attribute);
+		Map<Attribute, Object> parentMap = map.get(parentInstance);
+		if (parentMap == null)
+			return null;
+
+		return parentMap.get(attribute);
 	}
+
+//	public Object getOwningForeignKeyValue(Object parentInstance, Attribute attribute) {
+//		OneToOne oneToOne = attribute.getOneToOne();
+//		Entity e = oneToOne.getOwningEntity();
+//		e.getClazz()
+//	}
 
 	/**
 	 * Ends this persistence context.

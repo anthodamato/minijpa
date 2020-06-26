@@ -11,7 +11,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.ConnectionProvider;
+import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.ScriptRunner;
 
 public class PersistenceUnitPropertyActions {
@@ -36,7 +36,7 @@ public class PersistenceUnitPropertyActions {
 					File file = Paths.get(getClass().getResource(filePath).toURI()).toFile();
 					Connection connection = null;
 					try {
-						connection = new ConnectionProvider().getConnection(persistenceUnitInfo);
+						connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
 						new ScriptRunner().run(file, connection);
 					} catch (Exception e) {
 						LOG.error(e.getMessage());

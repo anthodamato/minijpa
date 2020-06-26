@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -186,7 +187,14 @@ public class Parser {
 
 		LOG.info("createOneToOne: oneToOne.mappedBy()=" + oneToOne.mappedBy());
 		if (oneToOne.mappedBy() != null && !oneToOne.mappedBy().isEmpty())
-			builder = builder.withMappedby(oneToOne.mappedBy());
+			builder = builder.withMappedBy(oneToOne.mappedBy());
+
+		if (oneToOne.fetch() != null) {
+			if (oneToOne.fetch() == FetchType.EAGER)
+				builder = builder.withFetchType(org.tinyjpa.jdbc.relationship.FetchType.EAGER);
+			else if (oneToOne.fetch() == FetchType.LAZY)
+				builder = builder.withFetchType(org.tinyjpa.jdbc.relationship.FetchType.LAZY);
+		}
 
 		return builder.build();
 	}
@@ -219,6 +227,13 @@ public class Parser {
 					if (a.getOneToOne().isOwner() && a.getOneToOne().getJoinColumn() == null) {
 						String joinColumnName = createDefaultJoinColumn(a, toEntity);
 						oneToOne = a.getOneToOne().copyWithJoinColumn(joinColumnName);
+					}
+
+					if (!a.getOneToOne().isOwner()) {
+						oneToOne = a.getOneToOne().copyWithOwningEntity(toEntity);
+						oneToOne = oneToOne
+								.copyWithOwningOneToOne(toEntity.getAttribute(oneToOne.getMappedBy()).getOneToOne());
+						oneToOne = oneToOne.copyWithOwningAttribute(toEntity.getAttribute(oneToOne.getMappedBy()));
 					}
 
 					Attribute clonedAttribute = a.copyWithOneToOne(oneToOne, toEntity);

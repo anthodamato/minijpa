@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.OneToOne;
 
 public class Attribute {
@@ -105,6 +106,20 @@ public class Attribute {
 		}
 
 		return list;
+	}
+
+	public boolean isEager() {
+		if (isOneToOne() && getOneToOne().getFetchType() == FetchType.EAGER)
+			return true;
+
+		return false;
+	}
+
+	public boolean isLazy() {
+		if (isOneToOne() && getOneToOne().getFetchType() == FetchType.LAZY)
+			return true;
+
+		return false;
 	}
 
 	public Attribute copyWithOneToOne(OneToOne oneToOne, Entity toEntity) {

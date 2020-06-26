@@ -26,7 +26,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 			throw new IllegalStateException("Transaction already active");
 
 		try {
-			connection = abstractEntityManager.createConnection();
+			connection = abstractEntityManager.connectionHolder.getConnection();
 		} catch (SQLException e) {
 			LOG.error(e.getMessage());
 			return;

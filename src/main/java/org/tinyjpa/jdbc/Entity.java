@@ -54,6 +54,15 @@ public class Entity {
 		return list;
 	}
 
+	public Attribute findAttributeWithMappedBy(String mappedBy) {
+		for (Attribute attribute : attributes) {
+			if (attribute.isOneToOne() && mappedBy.equals(attribute.getOneToOne().getMappedBy()))
+				return attribute;
+		}
+
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return getClass().getName() + "@ Class: " + clazz.getName() + "; tableName: " + tableName;
