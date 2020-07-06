@@ -28,4 +28,10 @@ public interface EntityContainer {
 	public List<Object> getPendingNew();
 
 	public void removePendingNew(Object entityInstance);
+
+	public void setLoadedFromDb(Object entityInstance);
+
+	public void removeLoadedFromDb(Object entityInstance);
+
+	public boolean isLoadedFromDb(Object entityInstance);
 }

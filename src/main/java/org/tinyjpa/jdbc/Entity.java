@@ -48,7 +48,7 @@ public class Entity {
 	public List<Attribute> expandAttributes() {
 		List<Attribute> list = new ArrayList<>();
 		for (Attribute a : attributes) {
-			list.addAll(a.expandAttribute());
+			list.addAll(a.expand());
 		}
 
 		return list;

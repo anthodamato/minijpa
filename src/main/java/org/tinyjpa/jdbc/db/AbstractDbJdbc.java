@@ -119,21 +119,33 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 	private List<ColumnNameValue> convertAttributeValues(List<AttributeValue> attributeValues) throws Exception {
 		List<ColumnNameValue> list = new ArrayList<>();
 		for (AttributeValue av : attributeValues) {
-			Attribute attribute = av.getAttribute();
-			if (attribute.isEmbedded() && attribute.isId()) {
+			Attribute a = av.getAttribute();
+			if (a.isEmbedded() && a.isId()) {
 				List<AttributeValue> idav = embeddedIdAttributeValueConverter.convert(av);
 				list.addAll(convertAttributeValues(idav));
 				continue;
 			}
 
 			ColumnNameValue columnNameValue = null;
-			if (attribute.isEntity()) {
-				if (attribute.isOneToOne() && attribute.getOneToOne().isOwner()) {
-					LOG.info("convertAttributeValues: oneToOne=" + attribute.getOneToOne());
-					Object idValue = attribute.getEntity().getId().getReadMethod().invoke(av.getValue());
-					columnNameValue = new ColumnNameValue(attribute.getOneToOne().getJoinColumn(), idValue,
-							attribute.getEntity().getId().getType(), attribute.getEntity().getId().getSqlType(),
-							attribute, null);
+			if (a.getManyToOne() != null)
+				LOG.info("convertAttributeValues: attribute.getManyToOne()=" + a.getManyToOne()
+						+ "; attribute.getManyToOne().isOwner()=" + a.getManyToOne().isOwner()
+						+ "; attribute.isEntity()=" + a.isEntity());
+
+			if (a.isEntity()) {
+				if (a.isOneToOne() && a.getOneToOne().isOwner()) {
+					LOG.info("convertAttributeValues: oneToOne=" + a.getOneToOne());
+					Object idValue = a.getEntity().getId().getReadMethod().invoke(av.getValue());
+					columnNameValue = new ColumnNameValue(a.getOneToOne().getJoinColumn(), idValue,
+							a.getEntity().getId().getType(), a.getEntity().getId().getSqlType(), a, null);
+					list.add(columnNameValue);
+				} else if (a.isManyToOne() && a.getManyToOne().isOwner()) {
+					LOG.info("convertAttributeValues: manyToOne=" + a.getManyToOne());
+					Object idValue = a.getEntity().getId().getReadMethod().invoke(av.getValue());
+					LOG.info("convertAttributeValues: idValue=" + idValue);
+					columnNameValue = new ColumnNameValue(a.getManyToOne().getJoinColumn(), idValue,
+							a.getEntity().getId().getType(), a.getEntity().getId().getSqlType(), a, null);
+					LOG.info("convertAttributeValues: columnNameValue=" + columnNameValue);
 					list.add(columnNameValue);
 				}
 			} else {
@@ -152,6 +164,9 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			if (av.isOneToOne() && av.getOneToOne().isOwner()) {
 				columnNameValue = new ColumnNameValue(av.getOneToOne().getJoinColumn(), null,
 						av.getEntity().getId().getType(), av.getEntity().getId().getSqlType(), av, null);
+			} else if (av.isManyToOne() && av.getManyToOne().isOwner()) {
+				columnNameValue = new ColumnNameValue(av.getManyToOne().getJoinColumn(), null,
+						av.getEntity().getId().getType(), av.getEntity().getId().getSqlType(), av, null);
 			} else {
 				columnNameValue = ColumnNameValue.build(av);
 			}
@@ -167,6 +182,8 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		for (Attribute a : attributes) {
 			if (a.isOneToOne() && a.getOneToOne().isOwner()) {
 				list.add(a.getOneToOne().getJoinColumn());
+			} else if (a.isManyToOne() && a.getManyToOne().isOwner()) {
+				list.add(a.getManyToOne().getJoinColumn());
 			} else {
 				list.add(a.getColumnName());
 			}
@@ -199,6 +216,53 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		sb.append(" where ");
 
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(idAttributeValues);
+		i = 0;
+		for (ColumnNameValue cnv : columnNameValues) {
+			if (i > 0)
+				sb.append(" and ");
+
+			sb.append(cnv.getColumnName());
+			sb.append(" = ?");
+			++i;
+		}
+
+		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
+		String sql = sb.toString();
+		return new SqlStatement.Builder().withSql(sql).withAttributes(expandedAttributes)
+				.withColumnNameValues(columnNameValues).withFetchColumnNameValues(fetchColumnNameValues).build();
+	}
+
+	@Override
+	public SqlStatement generateSelectByForeignKey(Entity entity, Attribute foreignKeyAttribute,
+			Object foreignKeyInstance) throws Exception {
+		List<AttributeValue> attributeValues = new ArrayList<>();
+		AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKeyInstance);
+		LOG.info("generateSelectByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute);
+		if (foreignKeyAttribute.isManyToOne())
+			LOG.info("generateSelectByForeignKey: foreignKeyAttribute.getManyToOne()="
+					+ foreignKeyAttribute.getManyToOne());
+
+		attributeValues.add(attrValue);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("select ");
+		int i = 0;
+		List<Attribute> expandedAttributes = entity.getId().expand();
+		expandedAttributes.addAll(entity.expandAttributes());
+		List<String> columns = createColumns(expandedAttributes);
+		for (String c : columns) {
+			if (i > 0)
+				sb.append(", ");
+
+			sb.append(c);
+			++i;
+		}
+
+		sb.append(" from ");
+		sb.append(entity.getTableName());
+		sb.append(" where ");
+
+		List<ColumnNameValue> columnNameValues = convertAttributeValues(attributeValues);
 		i = 0;
 		for (ColumnNameValue cnv : columnNameValues) {
 			if (i > 0)

@@ -3,12 +3,12 @@ package org.tinyjpa.jdbc.relationship;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 
-public final class OneToOne extends AbstractToOne {
+public final class OneToMany extends AbstractRelationship {
 	private String mappedBy;
-	// for bidirectional relationships
-//	private OneToOne owningOneToOne;
+	private Class<?> collectionClass;
+	private Class<?> targetEntity;
 
-	public OneToOne() {
+	public OneToMany() {
 		super();
 	}
 
@@ -16,28 +16,29 @@ public final class OneToOne extends AbstractToOne {
 		return mappedBy;
 	}
 
-//	public Attribute getOwningAttribute() {
-//		return owningAttribute;
-//	}
-
 	@Override
 	public boolean isOwner() {
 		return mappedBy == null || mappedBy.isEmpty();
 	}
 
+	public Class<?> getTargetEntity() {
+		return targetEntity;
+	}
+
 	@Override
 	public String toString() {
-		return OneToOne.class.getName() + ": joinColumn=" + joinColumn + "; mappedBy=" + mappedBy + "; fetchType="
+		return OneToMany.class.getName() + ": joinColumn=" + joinColumn + "; mappedBy=" + mappedBy + "; fetchType="
 				+ fetchType;
 	}
 
 	public static class Builder {
 		private String joinColumn;
 		private String mappedBy;
-		private FetchType fetchType = FetchType.EAGER;
+		private FetchType fetchType = FetchType.LAZY;
 		private Entity owningEntity;
-//		private OneToOne owningOneToOne;
 		private Attribute owningAttribute;
+		private Class<?> collectionClass;
+		private Class<?> targetEntity;
 
 		public Builder() {
 		}
@@ -62,33 +63,41 @@ public final class OneToOne extends AbstractToOne {
 			return this;
 		}
 
-//		public Builder withOwningOneToOne(OneToOne oneToOne) {
-//			this.owningOneToOne = oneToOne;
-//			return this;
-//		}
-
 		public Builder withOwningAttribute(Attribute attribute) {
 			this.owningAttribute = attribute;
 			return this;
 		}
 
-		public Builder with(OneToOne oneToOne) {
-			this.joinColumn = oneToOne.joinColumn;
-			this.mappedBy = oneToOne.mappedBy;
-			this.fetchType = oneToOne.fetchType;
-			this.owningEntity = oneToOne.owningEntity;
-			this.owningAttribute = oneToOne.owningAttribute;
+		public Builder withCollectionClass(Class<?> collectionClass) {
+			this.collectionClass = collectionClass;
 			return this;
 		}
 
-		public OneToOne build() {
-			OneToOne oto = new OneToOne();
+		public Builder withTargetEntity(Class<?> targetEntity) {
+			this.targetEntity = targetEntity;
+			return this;
+		}
+
+		public Builder with(OneToMany oneToMany) {
+			this.joinColumn = oneToMany.joinColumn;
+			this.mappedBy = oneToMany.mappedBy;
+			this.fetchType = oneToMany.fetchType;
+			this.owningEntity = oneToMany.owningEntity;
+			this.owningAttribute = oneToMany.owningAttribute;
+			this.collectionClass = oneToMany.collectionClass;
+			this.targetEntity = oneToMany.targetEntity;
+			return this;
+		}
+
+		public OneToMany build() {
+			OneToMany oto = new OneToMany();
 			oto.joinColumn = joinColumn;
 			oto.mappedBy = mappedBy;
 			oto.fetchType = fetchType;
 			oto.owningEntity = owningEntity;
-//			oto.owningOneToOne = owningOneToOne;
 			oto.owningAttribute = owningAttribute;
+			oto.collectionClass = collectionClass;
+			oto.targetEntity = targetEntity;
 			return oto;
 		}
 	}

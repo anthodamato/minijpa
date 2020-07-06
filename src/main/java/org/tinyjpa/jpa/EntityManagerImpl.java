@@ -26,7 +26,7 @@ import org.tinyjpa.jdbc.ConnectionHolderImpl;
 import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
-import org.tinyjpa.jdbc.db.JdbcEntityManager;
+import org.tinyjpa.jdbc.db.JdbcEntityManagerImpl;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
 import org.tinyjpa.metadata.EntityDelegate;
@@ -36,7 +36,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(EntityManagerImpl.class);
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
-	private JdbcEntityManager jdbcEntityManager;
+	private JdbcEntityManagerImpl jdbcEntityManager;
 
 	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, Map<String, Entity> entities) {
 		super();
@@ -45,17 +45,18 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		this.persistenceContext = new PersistenceContextImpl(entities);
 		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
-		this.jdbcEntityManager = new JdbcEntityManager(dbConfiguration, entities, persistenceContext,
+		this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, entities, persistenceContext,
 				new EntityDelegateInstanceBuilder(), new EmbeddedAttributeValueConverter(), connectionHolder);
 		EntityDelegate.getInstance().addAttributeLoader(persistenceUnitInfo, jdbcEntityManager);
+		EntityDelegate.getInstance().setEntityContainer(persistenceContext);
 	}
 
 	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, PersistenceContextType persistenceContextType,
 			Map<String, Entity> entities) {
 		this(persistenceUnitInfo, entities);
 		this.persistenceContextType = persistenceContextType;
-		this.persistenceContext = new PersistenceContextImpl(entities);
-		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+//		this.persistenceContext = new PersistenceContextImpl(entities);
+//		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 //		if (persistenceContextType.equals(PersistenceContextType.EXTENDED))
 //			persistenceContext = new ExtendedPersistenceContext();
 	}

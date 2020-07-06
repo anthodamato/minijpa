@@ -1,0 +1,57 @@
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+	version="2.2">
+
+	<persistence-unit name="onetoone_bid_lazy">
+		<description>Cities</description>
+		<class>org.tinyjpa.jpa.model.onetoone.lazy.State</class>
+		<class>org.tinyjpa.jpa.model.onetoone.lazy.Capital</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="org/tinyjpa/jpa/onetoone/create_onetoone_bid_lazy_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="manytoone_bid">
+		<description>Cities</description>
+		<class>org.tinyjpa.jpa.model.manytoone.Employee</class>
+		<class>org.tinyjpa.jpa.model.manytoone.Department</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="org/tinyjpa/jpa/manytoone/create_manytoone_bid_db.sql" />
+		</properties>
+	</persistence-unit>
+
+</persistence>

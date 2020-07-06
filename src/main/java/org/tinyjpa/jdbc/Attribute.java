@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.tinyjpa.jdbc.relationship.FetchType;
+import org.tinyjpa.jdbc.relationship.ManyToOne;
+import org.tinyjpa.jdbc.relationship.OneToMany;
 import org.tinyjpa.jdbc.relationship.OneToOne;
 
 public class Attribute {
@@ -20,6 +22,8 @@ public class Attribute {
 	private boolean embedded;
 	private List<Attribute> embeddedAttributes;
 	private OneToOne oneToOne;
+	private ManyToOne manyToOne;
+	private OneToMany oneToMany;
 	/**
 	 * if this attribute represents an entity, for a one to one relationship for
 	 * example, then this field will be that entity.
@@ -74,12 +78,44 @@ public class Attribute {
 		return oneToOne != null;
 	}
 
+	public ManyToOne getManyToOne() {
+		return manyToOne;
+	}
+
+	public boolean isManyToOne() {
+		return manyToOne != null;
+	}
+
+	public OneToMany getOneToMany() {
+		return oneToMany;
+	}
+
+	public boolean isOneToMany() {
+		return oneToMany != null;
+	}
+
 	public Entity getEntity() {
 		return entity;
 	}
 
 	public boolean isEntity() {
 		return entity != null;
+	}
+
+	public void setOneToOne(OneToOne oneToOne) {
+		this.oneToOne = oneToOne;
+	}
+
+	public void setManyToOne(ManyToOne manyToOne) {
+		this.manyToOne = manyToOne;
+	}
+
+	public void setOneToMany(OneToMany oneToMany) {
+		this.oneToMany = oneToMany;
+	}
+
+	public void setEntity(Entity entity) {
+		this.entity = entity;
 	}
 
 	public Attribute findChildByName(String attributeName) {
@@ -94,14 +130,30 @@ public class Attribute {
 		return null;
 	}
 
-	public List<Attribute> expandAttribute() {
+	protected boolean expandRelationship() {
+		if (!isEntity() && !isOneToMany())
+			return true;
+
+		if (isOneToOne() && getOneToOne().isOwner())
+			return true;
+
+		if (isManyToOne())
+			return true;
+
+//		if (isOneToMany() && getOneToMany().isOwner())
+//			return true;
+
+		return false;
+	}
+
+	public List<Attribute> expand() {
 		List<Attribute> list = new ArrayList<>();
 //		LOG.info("expandAttribute: embedded=" + embedded + "; name=" + name);
 		if (embedded) {
 			for (Attribute a : embeddedAttributes) {
-				list.addAll(a.expandAttribute());
+				list.addAll(a.expand());
 			}
-		} else if (!isEntity() || (isEntity() && isOneToOne() && getOneToOne().isOwner())) {
+		} else if (expandRelationship()) {
 			list.add(this);
 		}
 
@@ -112,6 +164,12 @@ public class Attribute {
 		if (isOneToOne() && getOneToOne().getFetchType() == FetchType.EAGER)
 			return true;
 
+		if (isManyToOne() && getManyToOne().getFetchType() == FetchType.EAGER)
+			return true;
+
+		if (isOneToMany() && getOneToMany().getFetchType() == FetchType.EAGER)
+			return true;
+
 		return false;
 	}
 
@@ -119,24 +177,13 @@ public class Attribute {
 		if (isOneToOne() && getOneToOne().getFetchType() == FetchType.LAZY)
 			return true;
 
-		return false;
-	}
+		if (isManyToOne() && getManyToOne().getFetchType() == FetchType.LAZY)
+			return true;
 
-	public Attribute copyWithOneToOne(OneToOne oneToOne, Entity toEntity) {
-		Attribute a = new Attribute();
-		a.name = name;
-		a.columnName = columnName;
-		a.type = type;
-		a.readMethod = readMethod;
-		a.writeMethod = writeMethod;
-		a.id = id;
-		a.sqlType = sqlType;
-		a.generatedValue = generatedValue;
-		a.oneToOne = oneToOne;
-		a.embedded = embedded;
-		a.embeddedAttributes = embeddedAttributes;
-		a.entity = toEntity;
-		return a;
+		if (isOneToMany() && getOneToMany().getFetchType() == FetchType.LAZY)
+			return true;
+
+		return false;
 	}
 
 	@Override
@@ -156,6 +203,8 @@ public class Attribute {
 		private boolean embedded;
 		private List<Attribute> embeddedAttributes;
 		private OneToOne oneToOne;
+		private ManyToOne manyToOne;
+		private OneToMany oneToMany;
 		private Entity entity;
 
 		public Builder(String name) {
@@ -214,10 +263,38 @@ public class Attribute {
 			return this;
 		}
 
+		public Builder withManyToOne(ManyToOne manyToOne) {
+			this.manyToOne = manyToOne;
+			return this;
+		}
+
+		public Builder withOneToMany(OneToMany oneToMany) {
+			this.oneToMany = oneToMany;
+			return this;
+		}
+
 		public Builder isEntity(Entity entity) {
 			this.entity = entity;
 			return this;
 		}
+
+//		public Builder with(Attribute attribute) {
+//			this.name = attribute.name;
+//			this.columnName = attribute.columnName;
+//			this.type = attribute.type;
+//			this.readMethod = attribute.readMethod;
+//			this.writeMethod = attribute.writeMethod;
+//			this.id = attribute.id;
+//			this.sqlType = attribute.sqlType;
+//			this.generatedValue = attribute.generatedValue;
+//			this.embedded = attribute.embedded;
+//			this.embeddedAttributes = attribute.embeddedAttributes;
+//			this.oneToOne = attribute.oneToOne;
+//			this.manyToOne = attribute.manyToOne;
+//			this.oneToMany = attribute.oneToMany;
+//			this.entity = attribute.entity;
+//			return this;
+//		}
 
 		public Attribute build() {
 			Attribute attribute = new Attribute();
@@ -232,6 +309,8 @@ public class Attribute {
 			attribute.embedded = embedded;
 			attribute.embeddedAttributes = embeddedAttributes;
 			attribute.oneToOne = oneToOne;
+			attribute.manyToOne = manyToOne;
+			attribute.oneToMany = oneToMany;
 			attribute.entity = entity;
 			return attribute;
 		}

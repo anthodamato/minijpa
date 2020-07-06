@@ -2,9 +2,11 @@ package org.tinyjpa.metadata;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
@@ -14,12 +16,14 @@ import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.db.AttributeLoader;
+import org.tinyjpa.jdbc.db.EntityContainer;
 
 public final class EntityDelegate implements EntityListener {
 	protected Logger LOG = LoggerFactory.getLogger(EntityDelegate.class);
 
 	private static EntityDelegate entityDelegate = new EntityDelegate();
 	private Map<String, Entity> entities;
+	private EntityContainer entityContainer;
 	/**
 	 * (key, value) is (Entity, Map<entity instance, List<AttrValue>>>)
 	 * 
@@ -35,6 +39,13 @@ public final class EntityDelegate implements EntityListener {
 	private List<Object> ignoreEntityInstances = new ArrayList<Object>();
 
 	private Map<PersistenceUnitInfo, AttributeLoader> attributeLoaders = new HashMap<>();
+
+	/**
+	 * The loaded lazy attributes. <br>
+	 * (key, value) is (Map<owner entity instance class, Map<owner entity instance,
+	 * Set<Attribute>>>)
+	 */
+	private Map<Class<?>, Map<Object, Set<Attribute>>> loadedLazyAttributes = new HashMap<>();
 
 	public static EntityDelegate getInstance() {
 		return entityDelegate;
@@ -221,24 +232,70 @@ public final class EntityDelegate implements EntityListener {
 
 	@Override
 	public Object get(Object value, String attributeName, Object entityInstance) {
-		if (value != null)
+		LOG.info("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName);
+		if (entityContainer == null || !entityContainer.isLoadedFromDb(entityInstance))
 			return value;
 
 		Entity entity = entities.get(entityInstance.getClass().getName());
 		Attribute a = entity.getAttribute(attributeName);
-		LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy() + "; entityInstance=" + entityInstance);
-		if (a.isLazy()) {
+		LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
+		if (a.isLazy() && !isLazyAttributeLoaded(entityInstance, a)) {
 			AttributeLoader attributeLoader = findAttributeLoader(entityInstance);
-			if (attributeLoader != null) {
-				try {
-					value = attributeLoader.load(entityInstance, a);
-				} catch (Exception e) {
-					LOG.error(e.getMessage());
-				}
+			try {
+				value = attributeLoader.load(entityInstance, a);
+				setLazyAttributeLoaded(entityInstance, a);
+			} catch (Exception e) {
+				LOG.error(e.getMessage());
+				throw new IllegalArgumentException(e.getMessage());
 			}
 		}
 
 		return value;
+	}
+
+	private boolean isLazyAttributeLoaded(Object entityInstance, Attribute a) {
+		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
+		if (map == null)
+			return false;
+
+		Set<Attribute> attributes = map.get(entityInstance);
+		if (attributes == null)
+			return false;
+
+		return attributes.contains(a);
+	}
+
+	public void setLazyAttributeLoaded(Object entityInstance, Attribute a) {
+		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
+		if (map == null) {
+			map = new HashMap<>();
+			loadedLazyAttributes.put(entityInstance.getClass(), map);
+		}
+
+		Set<Attribute> attributes = map.get(entityInstance);
+		if (attributes == null) {
+			attributes = new HashSet<>();
+			map.put(entityInstance, attributes);
+		}
+
+		attributes.add(a);
+	}
+
+	public void removeLazyAttributeLoaded(Object entityInstance, Attribute a) {
+		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
+		if (map == null)
+			return;
+
+		Set<Attribute> attributes = map.get(entityInstance);
+		if (attributes == null)
+			return;
+
+		attributes.remove(a);
+		if (attributes.isEmpty()) {
+			map.remove(entityInstance);
+			if (map.isEmpty())
+				loadedLazyAttributes.remove(entityInstance.getClass());
+		}
 	}
 
 	@Override
@@ -285,6 +342,10 @@ public final class EntityDelegate implements EntityListener {
 		this.entities = entities;
 	}
 
+	public void setEntityContainer(EntityContainer entityContainer) {
+		this.entityContainer = entityContainer;
+	}
+
 	public Map<Entity, Map<Object, List<AttributeValue>>> getChanges() {
 		return changes;
 	}
@@ -319,4 +380,16 @@ public final class EntityDelegate implements EntityListener {
 
 		return null;
 	}
+
+//	private boolean isNewInstance(Object entityInstance) throws Exception {
+//		if (entities == null)
+//			return true;
+//
+//		Entity entity = entities.get(entityInstance.getClass().getName());
+//		Object pk = AttributeUtil.getIdValue(entity, entityInstance);
+//		if (pk == null)
+//			return true;
+//
+//		return !entityContainer.isSaved(entityInstance);
+//	}
 }

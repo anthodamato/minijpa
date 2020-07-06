@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.db.JdbcEntityManager;
 
 public class JdbcRunner {
 	private Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
@@ -122,11 +123,58 @@ public class JdbcRunner {
 			return attributeValues;
 		} finally {
 			preparedStatement.close();
-			connection.rollback();
 		}
 	}
 
+	public List<Object> findCollectionById(Connection connection, SqlStatement sqlStatement, Entity entity,
+			JdbcEntityManager jdbcEntityManager) throws Exception {
+		PreparedStatement preparedStatement = null;
+		try {
+			LOG.info("findCollectionById: sql=" + sqlStatement.getSql());
+			preparedStatement = connection.prepareStatement(sqlStatement.getSql());
+			setPreparedStatementValues(preparedStatement, sqlStatement);
+
+			List<Object> objects = new ArrayList<>();
+			ResultSet rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				AttributeValues attributeValues = createAttributeValuesFromResultSet(
+						sqlStatement.getFetchColumnNameValues(), rs);
+
+				LOG.info("findCollectionById: attributeValues=" + attributeValues);
+				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity);
+				objects.add(instance);
+			}
+
+			return objects;
+		} finally {
+			preparedStatement.close();
+		}
+	}
+
+	private AttributeValues createAttributeValuesFromResultSet(List<ColumnNameValue> columnNameValues, ResultSet rs)
+			throws Exception {
+		AttributeValues attributeValues = new AttributeValues();
+		int i = 1;
+		for (ColumnNameValue cnv : columnNameValues) {
+			LOG.info(
+					"createAttributeValuesFromResultSet: cnv.getForeignKeyAttribute()=" + cnv.getForeignKeyAttribute());
+			if (cnv.getForeignKeyAttribute() != null) {
+				attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
+				attributeValues.relationshipValues.add(rs.getObject(i, cnv.getType()));
+				LOG.info("createAttributeValuesFromResultSet: cnv.getType()=" + cnv.getType());
+			} else {
+				attributeValues.attributes.add(cnv.getAttribute());
+				attributeValues.values.add(rs.getObject(i, cnv.getAttribute().getType()));
+			}
+
+			++i;
+		}
+
+		return attributeValues;
+	}
+
 	public class AttributeValues {
+		public Object entityInstance;
 		public List<Object> values = new ArrayList<>();
 		public List<Attribute> attributes = new ArrayList<>();
 		public List<Object> relationshipValues = new ArrayList<>();

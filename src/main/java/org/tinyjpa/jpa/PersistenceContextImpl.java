@@ -2,23 +2,23 @@ package org.tinyjpa.jpa;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityExistsException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.Entity;
-import org.tinyjpa.jdbc.EntityHelper;
 import org.tinyjpa.jdbc.db.EntityContainer;
-import org.tinyjpa.jdbc.relationship.OneToOne;
 
 public class PersistenceContextImpl implements EntityContainer {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceContextImpl.class);
 	private Map<String, Entity> entities;
-//	private EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
 
 	/**
 	 * Managed entities. They are persistent on db.
@@ -36,21 +36,25 @@ public class PersistenceContextImpl implements EntityContainer {
 	 */
 	private Map<Class<?>, Map<Object, Object>> pendingNewEntities = new HashMap<>();
 
-	/**
-	 * Entities not ready to be updated on db.
-	 */
-	private Map<Class<?>, Map<Object, Object>> pendingUpdates = new HashMap<>();
+//	/**
+//	 * Entities not ready to be updated on db.
+//	 */
+//	private Map<Class<?>, Map<Object, Object>> pendingUpdates = new HashMap<>();
 
+	/**
+	 * Set of entity instances loaded from Db. If an instance is created then made
+	 * persistent using the 'EntityManager.persist' method then that instance is not
+	 * loaded from Db. If the instance is loaded, for example, using the
+	 * 'EntityManager.find' method then the instance is loaded from Db.
+	 */
+	private Map<Class<?>, Set<Object>> loadedFromDb = new HashMap<>();
 	/**
 	 * Foreign key values
 	 * 
 	 * Map<parent entity class name, Map<parent instance, Map<Attribute,foreign key
 	 * value>>>
 	 */
-//	private Map<Object, Map<Attribute, Object>> foreignKeyValues = new HashMap<>();
 	private Map<Class<?>, Map<Object, Map<Attribute, Object>>> foreignKeyValues = new HashMap<>();
-
-	private EntityHelper entityHelper = new EntityHelper();
 
 	public PersistenceContextImpl(Map<String, Entity> entities) {
 		super();
@@ -96,7 +100,7 @@ public class PersistenceContextImpl implements EntityContainer {
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
-		Object idValue = entityHelper.getIdValue(e, entityInstance);
+		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 
 		if (isEntityDetached(entityInstance, idValue))
 			throw new EntityExistsException("Entity: '" + entityInstance + "' is detached");
@@ -130,7 +134,7 @@ public class PersistenceContextImpl implements EntityContainer {
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
-		Object idValue = entityHelper.getIdValue(e, entityInstance);
+		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 		if (mapEntities.get(idValue) == null)
 			return false;
 
@@ -154,7 +158,7 @@ public class PersistenceContextImpl implements EntityContainer {
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
-		Object idValue = entityHelper.getIdValue(e, entityInstance);
+		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 
 		if (isEntityDetached(entityInstance, idValue))
 			return;
@@ -167,6 +171,7 @@ public class PersistenceContextImpl implements EntityContainer {
 			return;
 
 		mapEntities.put(idValue, entityInstance);
+		removePendingNew(entityInstance);
 	}
 
 	@Override
@@ -198,12 +203,6 @@ public class PersistenceContextImpl implements EntityContainer {
 
 		return parentMap.get(attribute);
 	}
-
-//	public Object getOwningForeignKeyValue(Object parentInstance, Attribute attribute) {
-//		OneToOne oneToOne = attribute.getOneToOne();
-//		Entity e = oneToOne.getOwningEntity();
-//		e.getClazz()
-//	}
 
 	/**
 	 * Ends this persistence context.
@@ -239,6 +238,35 @@ public class PersistenceContextImpl implements EntityContainer {
 	public void removePendingNew(Object entityInstance) {
 		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), pendingNewEntities);
 		mapEntities.remove(entityInstance);
+	}
+
+	@Override
+	public void setLoadedFromDb(Object entityInstance) {
+		Set<Object> objects = loadedFromDb.get(entityInstance.getClass());
+		if (objects == null) {
+			objects = new HashSet<>();
+			loadedFromDb.put(entityInstance.getClass(), objects);
+		}
+
+		objects.add(entityInstance);
+	}
+
+	@Override
+	public void removeLoadedFromDb(Object entityInstance) {
+		Set<Object> objects = loadedFromDb.get(entityInstance.getClass());
+		if (objects == null)
+			return;
+
+		objects.remove(entityInstance);
+	}
+
+	@Override
+	public boolean isLoadedFromDb(Object entityInstance) {
+		Set<Object> objects = loadedFromDb.get(entityInstance.getClass());
+		if (objects == null)
+			return false;
+
+		return objects.contains(entityInstance);
 	}
 
 }

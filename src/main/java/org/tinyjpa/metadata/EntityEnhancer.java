@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
+import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
@@ -200,11 +201,20 @@ public class EntityEnhancer {
 
 	private List<Property> findAttributes(CtClass ctClass)
 			throws CannotCompileException, NotFoundException, ClassNotFoundException {
+//		CtBehavior[] ctBehaviors = ctClass.getDeclaredBehaviors();
+//		for(CtBehavior ctBehavior:ctBehaviors) {
+//			LOG.info("findAttributes: ctField.getName()=" + ctBehavior.);
+//		}
+		
 		CtField[] ctFields = ctClass.getDeclaredFields();
 		List<Property> attrs = new ArrayList<>();
 		for (CtField ctField : ctFields) {
 			LOG.info("findAttributes: ctField.getName()=" + ctField.getName());
 			LOG.info("findAttributes: ctField.getModifiers()=" + ctField.getModifiers());
+			LOG.info("findAttributes: ctField.getType().getName()=" + ctField.getType().getName());
+			LOG.info("findAttributes: ctField.getSignature()=" + ctField.getSignature());
+			LOG.info("findAttributes: ctField.getFieldInfo()=" + ctField.getFieldInfo());
+			LOG.info("findAttributes: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());
 			int modifier = ctField.getModifiers();
 			if (!Modifier.isPrivate(modifier) && !Modifier.isProtected(modifier) && !Modifier.isPackage(modifier))
 				continue;

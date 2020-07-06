@@ -3,10 +3,13 @@ package org.tinyjpa.metadata;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
@@ -23,6 +26,8 @@ import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcTypes;
 import org.tinyjpa.jdbc.PkGenerationType;
+import org.tinyjpa.jdbc.relationship.ManyToOne;
+import org.tinyjpa.jdbc.relationship.OneToMany;
 import org.tinyjpa.jdbc.relationship.OneToOne;
 
 public class Parser {
@@ -37,6 +42,7 @@ public class Parser {
 		}
 
 		finalizeRelationships(entities);
+		printAttributes(entities);
 		return entities;
 	}
 
@@ -135,15 +141,31 @@ public class Parser {
 			boolean id = field.getAnnotation(EmbeddedId.class) != null;
 //			LOG.info("readAttribute: enhAttribute.getName()=" + enhAttribute.getName());
 //			LOG.info("readAttribute: embedded=" + embedded);
-			javax.persistence.OneToOne oneToOne = field.getAnnotation(javax.persistence.OneToOne.class);
 
 			Attribute.Builder builder = new Attribute.Builder(enhAttribute.getName()).withColumnName(columnName)
 					.withType(attributeClass).withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id)
 					.withSqlType(JdbcTypes.sqlTypeFromClass(attributeClass)).isEmbedded(embedded)
 					.withEmbeddedAttributes(embeddedAttributes);
+			javax.persistence.OneToOne oneToOne = field.getAnnotation(javax.persistence.OneToOne.class);
+			javax.persistence.ManyToOne manyToOne = field.getAnnotation(javax.persistence.ManyToOne.class);
+			javax.persistence.OneToMany oneToMany = field.getAnnotation(javax.persistence.OneToMany.class);
+			JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
 			if (oneToOne != null) {
-				JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
 				builder.withOneToOne(createOneToOne(oneToOne, joinColumn, null));
+			} else if (manyToOne != null) {
+				builder.withManyToOne(createManyToOne(manyToOne, joinColumn, null));
+			} else if (oneToMany != null) {
+				Class<?> collectionClass = findAttributeImpl(c, readMethod);
+				if (collectionClass == null) {
+					collectionClass = findImplementationClass(attributeClass);
+				}
+
+				Class<?> targetEntity = oneToMany.targetEntity();
+				if (targetEntity == null || targetEntity == Void.TYPE) {
+					targetEntity = ReflectionUtil.findTargetEntity(field);
+				}
+
+				builder.withOneToMany(createOneToMany(oneToMany, joinColumn, null, collectionClass, targetEntity));
 			}
 
 			attribute = builder.build();
@@ -199,6 +221,45 @@ public class Parser {
 		return builder.build();
 	}
 
+	private ManyToOne createManyToOne(javax.persistence.ManyToOne manyToOne, JoinColumn joinColumn,
+			String joinColumnName) {
+		ManyToOne.Builder builder = new ManyToOne.Builder();
+		if (joinColumn != null)
+			builder = builder.withJoinColumn(joinColumn.name());
+
+		if (manyToOne.fetch() != null) {
+			if (manyToOne.fetch() == FetchType.EAGER)
+				builder = builder.withFetchType(org.tinyjpa.jdbc.relationship.FetchType.EAGER);
+			else if (manyToOne.fetch() == FetchType.LAZY)
+				builder = builder.withFetchType(org.tinyjpa.jdbc.relationship.FetchType.LAZY);
+		}
+
+		return builder.build();
+	}
+
+	private OneToMany createOneToMany(javax.persistence.OneToMany oneToMany, JoinColumn joinColumn,
+			String joinColumnName, Class<?> collectionClass, Class<?> targetEntity) {
+		OneToMany.Builder builder = new OneToMany.Builder();
+		if (joinColumn != null)
+			builder = builder.withJoinColumn(joinColumn.name());
+
+		LOG.info("createOneToMany: oneToMany.mappedBy()=" + oneToMany.mappedBy() + "; oneToMany.fetch()="
+				+ oneToMany.fetch());
+		if (oneToMany.mappedBy() != null && !oneToMany.mappedBy().isEmpty())
+			builder = builder.withMappedBy(oneToMany.mappedBy());
+
+		if (oneToMany.fetch() != null) {
+			if (oneToMany.fetch() == FetchType.EAGER)
+				builder = builder.withFetchType(org.tinyjpa.jdbc.relationship.FetchType.EAGER);
+			else if (oneToMany.fetch() == FetchType.LAZY)
+				builder = builder.withFetchType(org.tinyjpa.jdbc.relationship.FetchType.LAZY);
+		}
+
+		builder = builder.withCollectionClass(collectionClass);
+		builder = builder.withTargetEntity(targetEntity);
+		return builder.build();
+	}
+
 	private String createDefaultJoinColumn(Attribute owningAttribute, Entity toEntity) {
 		return owningAttribute.getName() + "_" + toEntity.getId().getColumnName();
 	}
@@ -215,10 +276,10 @@ public class Parser {
 			List<Attribute> attributes = entity.getAttributes();
 			for (int i = 0; i < attributes.size(); ++i) {
 				Attribute a = attributes.get(i);
-//				LOG.info("finalizeRelationships: a.isOneToOne()=" + a.isOneToOne());
+				LOG.info("finalizeRelationships: a=" + a);
 				if (a.isOneToOne()) {
 					Entity toEntity = entities.get(a.getType().getName());
-					LOG.info("finalizeRelationships: toEntity=" + toEntity);
+					LOG.info("finalizeRelationships: OneToOne toEntity=" + toEntity);
 					if (toEntity == null)
 						throw new IllegalArgumentException(
 								"One to One entity not found (" + a.getType().getName() + ")");
@@ -226,21 +287,135 @@ public class Parser {
 					OneToOne oneToOne = a.getOneToOne();
 					if (a.getOneToOne().isOwner() && a.getOneToOne().getJoinColumn() == null) {
 						String joinColumnName = createDefaultJoinColumn(a, toEntity);
-						oneToOne = a.getOneToOne().copyWithJoinColumn(joinColumnName);
+						oneToOne = new OneToOne.Builder().with(a.getOneToOne()).withJoinColumn(joinColumnName).build();
 					}
 
 					if (!a.getOneToOne().isOwner()) {
-						oneToOne = a.getOneToOne().copyWithOwningEntity(toEntity);
-						oneToOne = oneToOne
-								.copyWithOwningOneToOne(toEntity.getAttribute(oneToOne.getMappedBy()).getOneToOne());
-						oneToOne = oneToOne.copyWithOwningAttribute(toEntity.getAttribute(oneToOne.getMappedBy()));
+						oneToOne = new OneToOne.Builder().with(a.getOneToOne()).withOwningEntity(toEntity).build();
+//						oneToOne = oneToOne
+//								.copyWithOwningOneToOne(toEntity.getAttribute(oneToOne.getMappedBy()).getOneToOne());
+						oneToOne = new OneToOne.Builder().with(oneToOne)
+								.withOwningAttribute(toEntity.getAttribute(oneToOne.getMappedBy())).build();
 					}
 
-					Attribute clonedAttribute = a.copyWithOneToOne(oneToOne, toEntity);
-					attributes.set(i, clonedAttribute);
+//					Attribute clonedAttribute = new Attribute.Builder(a.getName()).with(a).withOneToOne(oneToOne)
+//							.isEntity(toEntity).build();
+//					attributes.set(i, clonedAttribute);
+					a.setOneToOne(oneToOne);
+					a.setEntity(toEntity);
+				} else if (a.isManyToOne()) {
+					Entity toEntity = entities.get(a.getType().getName());
+					LOG.info("finalizeRelationships: ManyToOne toEntity=" + toEntity);
+					if (toEntity == null)
+						throw new IllegalArgumentException(
+								"Many to One entity not found (" + a.getType().getName() + ")");
+
+					ManyToOne manyToOne = a.getManyToOne();
+					if (a.getManyToOne().isOwner() && a.getManyToOne().getJoinColumn() == null) {
+						String joinColumnName = createDefaultJoinColumn(a, toEntity);
+						LOG.info("finalizeRelationships: ManyToOne joinColumnName=" + joinColumnName);
+						manyToOne = new ManyToOne.Builder().with(a.getManyToOne()).withJoinColumn(joinColumnName)
+								.build();
+					}
+
+					LOG.info("finalizeRelationships: ManyToOne manyToOne=" + manyToOne);
+//					Attribute clonedAttribute = new Attribute.Builder(a.getName()).with(a).withManyToOne(manyToOne)
+//							.isEntity(toEntity).build();
+					a.setManyToOne(manyToOne);
+					a.setEntity(toEntity);
+//					LOG.info("finalizeRelationships: ManyToOne clonedAttribute.getManyToOne()="
+//							+ clonedAttribute.getManyToOne());
+//					attributes.set(i, clonedAttribute);
+				} else if (a.isOneToMany()) {
+					OneToMany oneToMany = a.getOneToMany();
+					Entity toEntity = entities.get(oneToMany.getTargetEntity().getName());
+					LOG.info("finalizeRelationships: OneToMany toEntity=" + toEntity + "; a.getType().getName()="
+							+ a.getType().getName());
+					if (toEntity == null)
+						throw new IllegalArgumentException(
+								"One to Many target entity not found (" + oneToMany.getTargetEntity().getName() + ")");
+
+//					if (a.getOneToMany().isOwner() && a.getOneToMany().getJoinColumn() == null) {
+//						String joinColumnName = createDefaultJoinColumn(a, toEntity);
+//						oneToMany = new OneToMany.Builder().with(a.getOneToMany()).withJoinColumn(joinColumnName)
+//								.build();
+//					}
+
+					if (!a.getOneToMany().isOwner()) {
+						oneToMany = new OneToMany.Builder().with(a.getOneToMany()).withOwningEntity(toEntity).build();
+						oneToMany = new OneToMany.Builder().with(oneToMany)
+								.withOwningAttribute(toEntity.getAttribute(oneToMany.getMappedBy())).build();
+					}
+
+//					Attribute clonedAttribute = new Attribute.Builder(a.getName()).with(a).withOneToMany(oneToMany)
+//							.build();
+//					attributes.set(i, clonedAttribute);
+					a.setOneToMany(oneToMany);
 				}
 			}
 		}
+	}
+
+	private void printAttributes(Map<String, Entity> entities) {
+		for (Map.Entry<String, Entity> entry : entities.entrySet()) {
+			Entity entity = entry.getValue();
+			List<Attribute> attributes = entity.getAttributes();
+			for (int i = 0; i < attributes.size(); ++i) {
+				Attribute a = attributes.get(i);
+				LOG.info("printAttributes: a=" + a);
+				if (a.isManyToOne()) {
+					LOG.info("printAttributes: a.getManyToOne()=" + a.getManyToOne());
+				}
+			}
+		}
+	}
+
+	/**
+	 * @TODO Should be read using the bytecode manipulation tool. This is the case
+	 *       of attribute type already set. For example: <code>
+	 * &#64;OneToMany(mappedBy = "department") private Collection<Employee> employees =
+	 *                     new HashSet<>();
+	 * </code>
+	 * 
+	 * @param parentClass the entity class
+	 * @param readMethod  attribute get method
+	 * @return the get method return class
+	 * @throws Exception
+	 */
+	private Class<?> findAttributeImpl(Class<?> parentClass, Method readMethod) throws Exception {
+		Object object = parentClass.newInstance();
+
+		Map<Class<?>, Map<Object, Object>> pendingNewEntities = new HashMap<>();
+		Map<Object, Object> map = new HashMap<>();
+		map.put(object, object);
+		pendingNewEntities.put(parentClass, map);
+		Object getResult = readMethod.invoke(object);
+
+		if (getResult != null)
+			return getResult.getClass();
+
+		return null;
+	}
+
+	/**
+	 * Given an attribute class declared as interface, this method returns an
+	 * implementation class to use in the lazy attributes.
+	 * 
+	 * @param attributeClass
+	 * @return
+	 */
+	private Class<?> findImplementationClass(Class<?> attributeClass) {
+		LOG.info("findImplementationClass: attributeClass.getName()=" + attributeClass.getName());
+		if (attributeClass == Collection.class || attributeClass == Set.class)
+			return HashSet.class;
+
+		if (attributeClass == List.class)
+			return ArrayList.class;
+
+		if (attributeClass == Map.class)
+			return HashMap.class;
+
+		return null;
 	}
 
 }
