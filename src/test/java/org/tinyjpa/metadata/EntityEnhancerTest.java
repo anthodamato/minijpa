@@ -10,13 +10,9 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javassist.CannotCompileException;
-import javassist.NotFoundException;
-
 public class EntityEnhancerTest {
 	@Test
-	public void mappedSuperclassEnhancement() throws ClassNotFoundException, InstantiationException,
-			IllegalAccessException, NotFoundException, CannotCompileException {
+	public void mappedSuperclassEnhancement() throws Exception {
 		List<String> classNames = new ArrayList<>();
 		classNames.add("org.tinyjpa.metadata.MappedSuperclassEntity");
 		classNames.add("org.tinyjpa.metadata.MappedSuperclassSecondEntity");

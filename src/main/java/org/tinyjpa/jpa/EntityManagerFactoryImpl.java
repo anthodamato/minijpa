@@ -56,7 +56,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 				}
 		}
 
-		return new EntityManagerImpl(persistenceUnitInfo, entities);
+		return new EntityManagerImpl(this, persistenceUnitInfo, entities);
 	}
 
 	public EntityManager createEntityManager(@SuppressWarnings("rawtypes") Map map) {
@@ -69,7 +69,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 				}
 		}
 
-		return new EntityManagerImpl(persistenceUnitInfo, entities);
+		return new EntityManagerImpl(this, persistenceUnitInfo, entities);
 	}
 
 	public EntityManager createEntityManager(SynchronizationType synchronizationType) {

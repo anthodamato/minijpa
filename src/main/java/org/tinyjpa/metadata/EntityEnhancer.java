@@ -14,9 +14,7 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javassist.CannotCompileException;
 import javassist.ClassPool;
-import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.CtMethod;
@@ -26,8 +24,7 @@ import javassist.NotFoundException;
 public class EntityEnhancer {
 	private Logger LOG = LoggerFactory.getLogger(EntityEnhancer.class);
 
-	public List<EnhEntity> enhance(List<String> classNames) throws ClassNotFoundException, InstantiationException,
-			IllegalAccessException, NotFoundException, CannotCompileException {
+	public List<EnhEntity> enhance(List<String> classNames) throws Exception {
 		List<EnhEntity> enhancedClasses = new ArrayList<>();
 		for (String className : classNames) {
 			enhance(className, enhancedClasses);
@@ -36,8 +33,7 @@ public class EntityEnhancer {
 		return enhancedClasses;
 	}
 
-	private void enhance(String className, List<EnhEntity> enhancedClasses) throws NotFoundException,
-			CannotCompileException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+	private void enhance(String className, List<EnhEntity> enhancedClasses) throws Exception {
 		// already enhanced
 		for (EnhEntity enhEntity : enhancedClasses) {
 			if (enhEntity.getClassName().equals(className))
@@ -80,9 +76,7 @@ public class EntityEnhancer {
 		}
 	}
 
-	private Optional<EnhEntity> findMappedSuperclass(CtClass ct, List<EnhEntity> enhancedClasses)
-			throws NotFoundException, ClassNotFoundException, InstantiationException, IllegalAccessException,
-			CannotCompileException {
+	private Optional<EnhEntity> findMappedSuperclass(CtClass ct, List<EnhEntity> enhancedClasses) throws Exception {
 		CtClass superClass = ct.getSuperclass();
 		if (superClass == null)
 			return Optional.empty();
@@ -125,9 +119,7 @@ public class EntityEnhancer {
 		return null;
 	}
 
-	private List<EnhAttribute> enhance(CtClass ct, List<Property> properties, boolean embeddedId)
-			throws NotFoundException, CannotCompileException, ClassNotFoundException, InstantiationException,
-			IllegalAccessException {
+	private List<EnhAttribute> enhance(CtClass ct, List<Property> properties, boolean embeddedId) throws Exception {
 //		List<Property> properties = findAttributes(ct);
 //		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
 		List<EnhAttribute> attributes = new ArrayList<>();
@@ -152,7 +144,7 @@ public class EntityEnhancer {
 		return attributes;
 	}
 
-	private void addEntityDelegateField(CtClass ct) throws CannotCompileException {
+	private void addEntityDelegateField(CtClass ct) throws Exception {
 		LOG.info("addEntityDelegateField: ct.getName()=" + ct.getName());
 		ClassPool pool = ClassPool.getDefault();
 		Class<?> delegateClass = EntityDelegate.class;
@@ -165,9 +157,7 @@ public class EntityEnhancer {
 		return properties.stream().filter(p -> !p.id).count();
 	}
 
-	private EnhAttribute createAttributeFromProperty(Property property, boolean parentIsEmbeddedId)
-			throws CannotCompileException, NotFoundException, ClassNotFoundException, InstantiationException,
-			IllegalAccessException {
+	private EnhAttribute createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
 		LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
 				+ "; property.embedded=" + property.embedded);
 		List<EnhAttribute> embeddedAttributes = null;
@@ -176,8 +166,11 @@ public class EntityEnhancer {
 		}
 
 		if (!property.id && !parentIsEmbeddedId) {
-			modifyGetMethod(property.getMethod, property.ctField);
-			modifySetMethod(property.setMethod, property.ctField);
+			if (property.enhanceGet)
+				modifyGetMethod(property.getMethod, property.ctField);
+
+			if (property.enhanceSet)
+				modifySetMethod(property.setMethod, property.ctField);
 		}
 
 		EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(), property.ctField.getType().getName(),
@@ -186,26 +179,25 @@ public class EntityEnhancer {
 		return enhAttribute;
 	}
 
-	private void modifyGetMethod(CtMethod ctMethod, CtField ctField) throws CannotCompileException, NotFoundException {
+	private void modifyGetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
 		String mc = ctField.getName() + " = (" + ctMethod.getReturnType().getName() + ") entityDelegate.get("
 				+ ctField.getName() + ",\"" + ctField.getName() + "\", this);";
 //		LOG.info("modifyGetMethod: mc=" + mc);
 		ctMethod.insertBefore(mc);
 	}
 
-	private void modifySetMethod(CtMethod ctMethod, CtField ctField) throws CannotCompileException, NotFoundException {
+	private void modifySetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
 		String mc = "entityDelegate.set(" + ctField.getName() + ",\"" + ctField.getName() + "\", this);";
 //		LOG.info("modifySetMethod: mc=" + mc);
 		ctMethod.insertBefore(mc);
 	}
 
-	private List<Property> findAttributes(CtClass ctClass)
-			throws CannotCompileException, NotFoundException, ClassNotFoundException {
+	private List<Property> findAttributes(CtClass ctClass) throws Exception {
 //		CtBehavior[] ctBehaviors = ctClass.getDeclaredBehaviors();
 //		for(CtBehavior ctBehavior:ctBehaviors) {
 //			LOG.info("findAttributes: ctField.getName()=" + ctBehavior.);
 //		}
-		
+
 		CtField[] ctFields = ctClass.getDeclaredFields();
 		List<Property> attrs = new ArrayList<>();
 		for (CtField ctField : ctFields) {
@@ -223,12 +215,12 @@ public class EntityEnhancer {
 			if (transientAnnotation != null)
 				continue;
 
-			Optional<CtMethod> getMethod = findGetMethod(ctClass, ctField);
-			if (!getMethod.isPresent())
+			PropertyMethod getPropertyMethod = findGetMethod(ctClass, ctField);
+			if (!getPropertyMethod.method.isPresent())
 				continue;
 
-			Optional<CtMethod> setMethod = findSetMethod(ctClass, ctField);
-			if (!setMethod.isPresent())
+			PropertyMethod setPropertyMethod = findSetMethod(ctClass, ctField);
+			if (!setPropertyMethod.method.isPresent())
 				continue;
 
 			Object idAnnotation = ctField.getAnnotation(Id.class);
@@ -247,15 +239,15 @@ public class EntityEnhancer {
 				}
 			}
 
-			Property property = new Property(id, getMethod.get(), setMethod.get(), ctField, embedded,
-					embeddedProperties);
+			Property property = new Property(id, getPropertyMethod.method.get(), setPropertyMethod.method.get(),
+					ctField, embedded, embeddedProperties, getPropertyMethod.enhance, setPropertyMethod.enhance);
 			attrs.add(property);
 		}
 
 		return attrs;
 	}
 
-	private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws NotFoundException {
+	private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws Exception {
 		try {
 //			LOG.info("findIsGetMethod: ctField.getName()=" + ctField.getName());
 //			LOG.info("findIsGetMethod: ctField.getType()=" + ctField.getType());
@@ -275,53 +267,45 @@ public class EntityEnhancer {
 		return null;
 	}
 
-	private Optional<CtMethod> findGetMethod(CtClass ctClass, CtField ctField) {
-		try {
+	private PropertyMethod findGetMethod(CtClass ctClass, CtField ctField) throws Exception {
 //			LOG.info("findGetMethod: ctField.getName()=" + ctField.getName());
-			CtMethod getMethod = findIsGetMethod(ctClass, ctField);
+		CtMethod getMethod = findIsGetMethod(ctClass, ctField);
 //			CtMethod getMethod = ctClass.getDeclaredMethod(buildMethodName("get", ctField.getName()));
-			if (getMethod == null)
-				return Optional.empty();
+		if (getMethod == null)
+			return new PropertyMethod();
 
 //			LOG.info("findGetMethod: getMethod.getName()=" + getMethod.getName());
-			CtClass[] params = getMethod.getParameterTypes();
+		CtClass[] params = getMethod.getParameterTypes();
 //			LOG.info("findGetMethod: params.length=" + params.length);
-			if (params.length != 0)
-				return Optional.empty();
+		if (params.length != 0)
+			return new PropertyMethod();
 
 //			LOG.info("findGetMethod: ctField.getType().getName()=" + ctField.getType().getName());
 //			LOG.info("findGetMethod: getMethod.getReturnType().getName()=" + getMethod.getReturnType().getName());
-			if (!getMethod.getReturnType().subtypeOf(ctField.getType()))
-				return Optional.empty();
+		if (!getMethod.getReturnType().subtypeOf(ctField.getType()))
+			return new PropertyMethod();
 
 //			LOG.info("findGetMethod: subtypeOf=true");
-			return Optional.of(getMethod);
-		} catch (Exception e) {
-			return Optional.empty();
-		}
+		return new PropertyMethod(Optional.of(getMethod), true);
 	}
 
-	private Optional<CtMethod> findSetMethod(CtClass ctClass, CtField ctField) {
-		try {
-			CtMethod setMethod = ctClass.getDeclaredMethod("set" + BeanUtil.capitalize(ctField.getName()));
+	private PropertyMethod findSetMethod(CtClass ctClass, CtField ctField) throws Exception {
+		CtMethod setMethod = ctClass.getDeclaredMethod("set" + BeanUtil.capitalize(ctField.getName()));
 //			LOG.info("findSetMethod: setMethod.getName()=" + setMethod.getName());
-			CtClass[] params = setMethod.getParameterTypes();
+		CtClass[] params = setMethod.getParameterTypes();
 //			LOG.info("findSetMethod: params.length=" + params.length);
-			if (params.length != 1)
-				return Optional.empty();
+		if (params.length != 1)
+			return new PropertyMethod();
 
-			if (!ctField.getType().subtypeOf(params[0]))
-				return Optional.empty();
+		if (!ctField.getType().subtypeOf(params[0]))
+			return new PropertyMethod();
 
 //			LOG.info("findSetMethod: setMethod.getReturnType().getName()=" + setMethod.getReturnType().getName());
-			if (!setMethod.getReturnType().getName().equals("void")) // void type
-				return Optional.empty();
+		if (!setMethod.getReturnType().getName().equals(Void.TYPE.getName())) // void type
+			return new PropertyMethod();
 
 //			LOG.info("findSetMethod: subtypeOf=true");
-			return Optional.of(setMethod);
-		} catch (NotFoundException e) {
-			return Optional.empty();
-		}
+		return new PropertyMethod(Optional.of(setMethod), true);
 	}
 
 	private class Property {
@@ -331,9 +315,11 @@ public class EntityEnhancer {
 		private CtField ctField;
 		private boolean embedded;
 		private List<Property> embeddedProperties;
+		private boolean enhanceGet;
+		private boolean enhanceSet;
 
 		public Property(boolean id, CtMethod getMethod, CtMethod setMethod, CtField ctField, boolean embedded,
-				List<Property> embeddedProperties) {
+				List<Property> embeddedProperties, boolean enhanceGet, boolean enhanceSet) {
 			super();
 			this.id = id;
 			this.getMethod = getMethod;
@@ -341,6 +327,21 @@ public class EntityEnhancer {
 			this.ctField = ctField;
 			this.embedded = embedded;
 			this.embeddedProperties = embeddedProperties;
+			this.enhanceGet = enhanceGet;
+			this.enhanceSet = enhanceSet;
+		}
+	}
+
+	private class PropertyMethod {
+		private Optional<CtMethod> method = Optional.empty();
+		private boolean enhance = true;
+
+		public PropertyMethod() {
+		}
+
+		public PropertyMethod(Optional<CtMethod> method, boolean enhance) {
+			this.method = method;
+			this.enhance = enhance;
 		}
 
 	}

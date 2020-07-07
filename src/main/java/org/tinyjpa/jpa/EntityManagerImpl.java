@@ -8,7 +8,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
-import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.StoredProcedureQuery;
@@ -34,12 +33,15 @@ import org.tinyjpa.metadata.EntityDelegateInstanceBuilder;
 
 public class EntityManagerImpl extends AbstractEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(EntityManagerImpl.class);
+	private EntityManagerFactory entityManagerFactory;
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
 	private JdbcEntityManagerImpl jdbcEntityManager;
 
-	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, Map<String, Entity> entities) {
+	public EntityManagerImpl(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
+			Map<String, Entity> entities) {
 		super();
+		this.entityManagerFactory = entityManagerFactory;
 		this.persistenceUnitInfo = persistenceUnitInfo;
 		this.entities = entities;
 		this.persistenceContext = new PersistenceContextImpl(entities);
@@ -51,15 +53,15 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		EntityDelegate.getInstance().setEntityContainer(persistenceContext);
 	}
 
-	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, PersistenceContextType persistenceContextType,
-			Map<String, Entity> entities) {
-		this(persistenceUnitInfo, entities);
-		this.persistenceContextType = persistenceContextType;
-//		this.persistenceContext = new PersistenceContextImpl(entities);
-//		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
-//		if (persistenceContextType.equals(PersistenceContextType.EXTENDED))
-//			persistenceContext = new ExtendedPersistenceContext();
-	}
+//	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, PersistenceContextType persistenceContextType,
+//			Map<String, Entity> entities) {
+//		this(persistenceUnitInfo, entities);
+//		this.persistenceContextType = persistenceContextType;
+////		this.persistenceContext = new PersistenceContextImpl(entities);
+////		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+////		if (persistenceContextType.equals(PersistenceContextType.EXTENDED))
+////			persistenceContext = new ExtendedPersistenceContext();
+//	}
 
 	@Override
 	public void persist(Object entity) {
@@ -371,8 +373,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public EntityManagerFactory getEntityManagerFactory() {
-		// TODO Auto-generated method stub
-		return null;
+		return entityManagerFactory;
 	}
 
 	@Override
