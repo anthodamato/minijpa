@@ -28,6 +28,7 @@ import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jdbc.db.JdbcEntityManagerImpl;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
+import org.tinyjpa.metadata.EntityContainerContext;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityDelegateInstanceBuilder;
 
@@ -49,8 +50,10 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 		this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, entities, persistenceContext,
 				new EntityDelegateInstanceBuilder(), new EmbeddedAttributeValueConverter(), connectionHolder);
-		EntityDelegate.getInstance().addAttributeLoader(persistenceUnitInfo, jdbcEntityManager);
-		EntityDelegate.getInstance().setEntityContainer(persistenceContext);
+//		EntityDelegate.getInstance().addAttributeLoader(persistenceUnitInfo, jdbcEntityManager);
+//		EntityDelegate.getInstance().setEntityContainer(persistenceContext);
+		EntityDelegate.getInstance()
+				.addEntityManagerContext(new EntityContainerContext(entities, persistenceContext, jdbcEntityManager));
 	}
 
 //	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, PersistenceContextType persistenceContextType,

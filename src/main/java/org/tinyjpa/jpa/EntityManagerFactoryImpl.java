@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.metadata.EnhEntity;
+import org.tinyjpa.metadata.EntityContext;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.EntityEnhancer;
 import org.tinyjpa.metadata.Parser;
@@ -42,7 +43,8 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 
 		Parser parser = new Parser();
 		Map<String, Entity> entities = parser.parse(enhancedClasses);
-		EntityDelegate.getInstance().setEntities(entities);
+//		EntityDelegate.getInstance().setEntities(entities);
+		EntityDelegate.getInstance().addEntityContext(new EntityContext(entities));
 		return entities;
 	}
 

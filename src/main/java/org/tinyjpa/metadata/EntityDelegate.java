@@ -8,22 +8,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.persistence.spi.PersistenceUnitInfo;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.db.AttributeLoader;
-import org.tinyjpa.jdbc.db.EntityContainer;
 
 public final class EntityDelegate implements EntityListener {
 	protected Logger LOG = LoggerFactory.getLogger(EntityDelegate.class);
 
 	private static EntityDelegate entityDelegate = new EntityDelegate();
-	private Map<String, Entity> entities;
-	private EntityContainer entityContainer;
+
+	private EntityContextManager entityContextManager = new EntityContextManager();
+	private EntityContainerContextManager entityContainerContextManager = new EntityContainerContextManager();
+
 	/**
 	 * (key, value) is (Entity, Map<entity instance, List<AttrValue>>>)
 	 * 
@@ -37,8 +36,6 @@ public final class EntityDelegate implements EntityListener {
 	 */
 	private Map<Object, List<AttributeValue>> embeddedChanges = new HashMap<>();
 	private List<Object> ignoreEntityInstances = new ArrayList<Object>();
-
-	private Map<PersistenceUnitInfo, AttributeLoader> attributeLoaders = new HashMap<>();
 
 	/**
 	 * The loaded lazy attributes. <br>
@@ -58,7 +55,7 @@ public final class EntityDelegate implements EntityListener {
 				return;
 		}
 
-		Entity entity = entities.get(entityInstance.getClass().getName());
+		Entity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
 		LOG.info("set: entityInstance=" + entityInstance);
 		if (entity == null) {
 			// it's an embedded attribute
@@ -68,7 +65,7 @@ public final class EntityDelegate implements EntityListener {
 				embeddedChanges.put(entityInstance, instanceAttrs);
 			}
 
-			Attribute parentAttribute = findEmbeddedAttribute(entityInstance.getClass().getName());
+			Attribute parentAttribute = entityContextManager.findEmbeddedAttribute(entityInstance.getClass().getName());
 			Attribute attribute = parentAttribute.findChildByName(attributeName);
 			Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
 					.findFirst();
@@ -108,33 +105,6 @@ public final class EntityDelegate implements EntityListener {
 		}
 	}
 
-	private Attribute findEmbeddedAttribute(String className) {
-		for (Map.Entry<String, Entity> entry : entities.entrySet()) {
-			Entity entity = entry.getValue();
-			Attribute attribute = findEmbeddedAttribute(className, entity.getAttributes());
-			if (attribute != null)
-				return attribute;
-		}
-
-		return null;
-	}
-
-	private Attribute findEmbeddedAttribute(String className, List<Attribute> attributes) {
-		for (Attribute attribute : attributes) {
-			if (attribute.isEmbedded()) {
-				if (attribute.getType().getName().equals(className)) {
-					return attribute;
-				}
-
-				Attribute a = findEmbeddedAttribute(className, attribute.getEmbeddedAttributes());
-				if (a != null)
-					return a;
-			}
-		}
-
-		return null;
-	}
-
 	public Optional<List<AttributeValue>> findEmbeddedAttrValues(Object embeddedInstance) {
 		for (Map.Entry<Object, List<AttributeValue>> entry : embeddedChanges.entrySet()) {
 			LOG.info("findEmbeddedAttrValues: entry.getKey()=" + entry.getKey());
@@ -148,7 +118,7 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	public void removeChanges(Object entityInstance) {
-		Entity entity = entities.get(entityInstance.getClass().getName());
+		Entity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
 		if (entity == null)
 			return;
 
@@ -233,14 +203,15 @@ public final class EntityDelegate implements EntityListener {
 	@Override
 	public Object get(Object value, String attributeName, Object entityInstance) {
 		LOG.info("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName);
-		if (entityContainer == null || !entityContainer.isLoadedFromDb(entityInstance))
+		if (entityContainerContextManager.isEmpty() || !entityContainerContextManager.isLoadedFromDb(entityInstance))
 			return value;
 
-		Entity entity = entities.get(entityInstance.getClass().getName());
+		Entity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
 		Attribute a = entity.getAttribute(attributeName);
 		LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
 		if (a.isLazy() && !isLazyAttributeLoaded(entityInstance, a)) {
-			AttributeLoader attributeLoader = findAttributeLoader(entityInstance);
+			AttributeLoader attributeLoader = entityContainerContextManager
+					.findByEntity(entityInstance.getClass().getName());
 			try {
 				value = attributeLoader.load(entityInstance, a);
 				setLazyAttributeLoaded(entityInstance, a);
@@ -298,14 +269,6 @@ public final class EntityDelegate implements EntityListener {
 		}
 	}
 
-	public void setEntities(Map<String, Entity> entities) {
-		this.entities = entities;
-	}
-
-	public void setEntityContainer(EntityContainer entityContainer) {
-		this.entityContainer = entityContainer;
-	}
-
 	public Map<Entity, Map<Object, List<AttributeValue>>> getChanges() {
 		return changes;
 	}
@@ -316,29 +279,6 @@ public final class EntityDelegate implements EntityListener {
 
 	public void removeIgnoreEntityInstance(Object object) {
 		ignoreEntityInstances.remove(object);
-	}
-
-	public void addAttributeLoader(PersistenceUnitInfo persistenceUnitInfo, AttributeLoader attributeLoader) {
-		attributeLoaders.put(persistenceUnitInfo, attributeLoader);
-	}
-
-	private AttributeLoader findAttributeLoader(Object entityInstance) {
-		if (attributeLoaders.isEmpty())
-			return null;
-
-		if (attributeLoaders.size() == 1) {
-			for (Map.Entry<PersistenceUnitInfo, AttributeLoader> entry : attributeLoaders.entrySet()) {
-				return entry.getValue();
-			}
-		}
-
-		for (Map.Entry<PersistenceUnitInfo, AttributeLoader> entry : attributeLoaders.entrySet()) {
-			PersistenceUnitInfo persistenceUnitInfo = entry.getKey();
-			if (persistenceUnitInfo.getManagedClassNames().contains(entityInstance.getClass().getName()))
-				return entry.getValue();
-		}
-
-		return null;
 	}
 
 //	private boolean isNewInstance(Object entityInstance) throws Exception {
@@ -352,4 +292,71 @@ public final class EntityDelegate implements EntityListener {
 //
 //		return !entityContainer.isSaved(entityInstance);
 //	}
+
+	private class EntityContextManager {
+		private List<EntityContext> entityContexts = new ArrayList<>();
+
+		public void add(EntityContext entityContext) {
+			entityContexts.add(entityContext);
+		}
+
+		public Entity getEntity(String entityClassName) {
+			for (EntityContext entityContext : entityContexts) {
+				Entity entity = entityContext.getEntity(entityClassName);
+				if (entity != null)
+					return entity;
+			}
+
+			return null;
+		}
+
+		public Attribute findEmbeddedAttribute(String className) {
+			for (EntityContext entityContext : entityContexts) {
+				Attribute attribute = entityContext.findEmbeddedAttribute(className);
+				if (attribute != null)
+					return attribute;
+			}
+
+			return null;
+		}
+	}
+
+	public void addEntityContext(EntityContext entityContext) {
+		entityContextManager.add(entityContext);
+	}
+
+	private class EntityContainerContextManager {
+		private List<EntityContainerContext> entityContainerContexts = new ArrayList<>();
+
+		public void add(EntityContainerContext entityManagerContext) {
+			entityContainerContexts.add(entityManagerContext);
+		}
+
+		public AttributeLoader findByEntity(String className) {
+			for (EntityContainerContext entityContainerContext : entityContainerContexts) {
+				Entity entity = entityContainerContext.getEntity(className);
+				if (entity != null)
+					return entityContainerContext.getAttributeLoader();
+			}
+
+			return null;
+		}
+
+		public boolean isEmpty() {
+			return entityContainerContexts.isEmpty();
+		}
+
+		public boolean isLoadedFromDb(Object entityInstance) {
+			for (EntityContainerContext entityContainerContext : entityContainerContexts) {
+				if (entityContainerContext.getEntityContainer().isLoadedFromDb(entityInstance))
+					return true;
+			}
+
+			return false;
+		}
+	}
+
+	public void addEntityManagerContext(EntityContainerContext entityManagerContext) {
+		entityContainerContextManager.add(entityManagerContext);
+	}
 }
