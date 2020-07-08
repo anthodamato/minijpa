@@ -298,46 +298,6 @@ public final class EntityDelegate implements EntityListener {
 		}
 	}
 
-	@Override
-	public byte get(byte value, String attributeName, Object entityInstance) {
-		return value;
-	}
-
-	@Override
-	public short get(short value, String attributeName, Object entityInstance) {
-		return value;
-	}
-
-	@Override
-	public int get(int value, String attributeName, Object entityInstance) {
-		return value;
-	}
-
-	@Override
-	public long get(long value, String attributeName, Object entityInstance) {
-		return value;
-	}
-
-	@Override
-	public float get(float value, String attributeName, Object entityInstance) {
-		return value;
-	}
-
-	@Override
-	public double get(double value, String attributeName, Object entityInstance) {
-		return value;
-	}
-
-	@Override
-	public char get(char value, String attributeName, Object entityInstance) {
-		return value;
-	}
-
-	@Override
-	public boolean get(boolean value, String attributeName, Object entityInstance) {
-		return value;
-	}
-
 	public void setEntities(Map<String, Entity> entities) {
 		this.entities = entities;
 	}

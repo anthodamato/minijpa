@@ -7,6 +7,7 @@ import java.util.Optional;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
@@ -24,19 +25,126 @@ import javassist.NotFoundException;
 public class EntityEnhancer {
 	private Logger LOG = LoggerFactory.getLogger(EntityEnhancer.class);
 
-	public List<EnhEntity> enhance(List<String> classNames) throws Exception {
-		List<EnhEntity> enhancedClasses = new ArrayList<>();
-		for (String className : classNames) {
-			enhance(className, enhancedClasses);
-		}
+	private List<String> classNames;
+	private List<DataEntity> enhancedDataEntities = new ArrayList<>();
+	private List<DataEntity> dataEntities;
 
-		return enhancedClasses;
+	public EntityEnhancer(List<String> classNames) {
+		super();
+		this.classNames = classNames;
 	}
 
-	private void enhance(String className, List<EnhEntity> enhancedClasses) throws Exception {
+	public List<EnhEntity> enhance() throws Exception {
+		dataEntities = inspect();
+		List<EnhEntity> enhEntities = new ArrayList<>();
+		for (DataEntity dataEntity : dataEntities) {
+			EnhEntity enhMappedSuperclassEntity = null;
+			LOG.info("enhance: dataEntity.mappedSuperclass=" + dataEntity.mappedSuperclass);
+			if (dataEntity.mappedSuperclass != null) {
+				LOG.info("enhance: dataEntity.mappedSuperclass.className=" + dataEntity.mappedSuperclass.className);
+				enhMappedSuperclassEntity = enhance(dataEntity.mappedSuperclass);
+			}
+
+			EnhEntity enhEntity = enhance(dataEntity);
+			enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
+			enhEntities.add(enhEntity);
+		}
+
+		return enhEntities;
+	}
+
+	private EnhEntity enhance(DataEntity dataEntity) throws Exception {
+		LOG.info("enhance: dataEntity.className=" + dataEntity.className);
+		EnhEntity enhEntity = new EnhEntity();
+		enhEntity.setClassName(dataEntity.className);
+		List<EnhAttribute> enhAttributes = enhance(dataEntity.ct, dataEntity.dataAttributes, dataEntity);
+		LOG.info("enhance: attributes created for " + dataEntity.className);
+		enhEntity.setEnhAttributes(enhAttributes);
+		return enhEntity;
+	}
+
+	private boolean toEnhance(List<DataAttribute> dataAttributes) throws Exception {
+		for (DataAttribute dataAttribute : dataAttributes) {
+			if (toEnhance(dataAttribute))
+				return true;
+		}
+
+		return false;
+	}
+
+	private List<EnhAttribute> enhance(CtClass ct, List<DataAttribute> dataAttributes, DataEntity dataEntity)
+			throws Exception {
+		LOG.info("enhance: ct.getName()=" + ct.getName());
+		if (!enhancedDataEntities.contains(dataEntity)) {
+			if (toEnhance(dataAttributes)) {
+				LOG.info("Enhancing: " + ct.getName());
+				addEntityDelegateField(ct);
+			} else {
+				LOG.info("Enhancing: " + ct.getName() + " not necessary");
+			}
+		}
+
+		List<EnhAttribute> enhAttributes = new ArrayList<>();
+		for (DataAttribute dataAttribute : dataAttributes) {
+			Property property = dataAttribute.property;
+			LOG.info("enhance: Enhancing attribute '" + property.ctField.getName() + "'");
+			if (toEnhance(dataAttribute) && !enhancedDataEntities.contains(dataEntity)) {
+				if (property.enhanceGet) {
+					if (isLazyOrEntityType(property.getMethod.getReturnType()))
+						modifyGetMethod(property.getMethod, property.ctField);
+				}
+
+				if (property.enhanceSet)
+					modifySetMethod(property.setMethod, property.ctField);
+			}
+
+			List<EnhAttribute> enhEmbeddedAttributes = null;
+			if (dataAttribute.embeddedAttributes != null)
+				enhEmbeddedAttributes = enhance(dataAttribute.embeddedCtClass, dataAttribute.embeddedAttributes, null);
+
+			EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(),
+					property.ctField.getType().getName(), property.ctField.getType().isPrimitive(),
+					property.getMethod.getName(), property.setMethod.getName(), property.embedded,
+					enhEmbeddedAttributes);
+			enhAttributes.add(enhAttribute);
+		}
+
+		if (!enhancedDataEntities.contains(dataEntity)) {
+			ct.toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
+		}
+
+		if (dataEntity != null)
+			enhancedDataEntities.add(dataEntity);
+
+		return enhAttributes;
+	}
+
+	private boolean toEnhance(DataAttribute dataAttribute) {
+		if (dataAttribute.property.id)
+			return false;
+
+		if (dataAttribute.parentIsEmbeddedId)
+			return false;
+
+		if (!dataAttribute.property.enhanceGet && !dataAttribute.property.enhanceSet)
+			return false;
+
+		return true;
+	}
+
+	private List<DataEntity> inspect() throws Exception {
+		List<DataEntity> dataEntities = new ArrayList<>();
+		for (String className : classNames) {
+			inspect(className, dataEntities);
+		}
+
+		return dataEntities;
+	}
+
+	private void inspect(String className, List<DataEntity> dataEntities) throws Exception {
 		// already enhanced
-		for (EnhEntity enhEntity : enhancedClasses) {
-			if (enhEntity.getClassName().equals(className))
+		for (DataEntity enhEntity : dataEntities) {
+			if (enhEntity.className.equals(className))
 				return;
 		}
 
@@ -54,29 +162,30 @@ public class EntityEnhancer {
 		if (embeddableAnnotation != null)
 			return;
 
-		Object entityAnnotation = ct.getAnnotation(javax.persistence.Entity.class);
+		Object entityAnnotation = ct.getAnnotation(Entity.class);
 		if (entityAnnotation == null) {
 			LOG.error("@Entity annotation not found: " + ct.getName());
 			return;
 		}
 
-		EnhEntity enhEntity = new EnhEntity();
-		enhEntity.setClassName(className);
+		DataEntity dataEntity = new DataEntity();
+		dataEntity.className = className;
 
-		Optional<EnhEntity> optional = findMappedSuperclass(ct, enhancedClasses);
+		Optional<DataEntity> optional = findMappedSuperclass(ct, dataEntities);
 		if (optional.isPresent())
-			enhEntity.setMappedSuperclass(optional.get());
+			dataEntity.mappedSuperclass = optional.get();
 
 		List<Property> properties = findAttributes(ct);
 		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
-		List<EnhAttribute> attrs = enhance(ct, properties, false);
-		enhEntity.setEnhAttributes(attrs);
-		if (!attrs.isEmpty() || enhEntity.getMappedSuperclass() != null) {
-			enhancedClasses.add(enhEntity);
+		List<DataAttribute> attrs = findAttributes(ct, properties, false);
+		dataEntity.dataAttributes = attrs;
+		dataEntity.ct = ct;
+		if (!attrs.isEmpty() || dataEntity.mappedSuperclass != null) {
+			dataEntities.add(dataEntity);
 		}
 	}
 
-	private Optional<EnhEntity> findMappedSuperclass(CtClass ct, List<EnhEntity> enhancedClasses) throws Exception {
+	private Optional<DataEntity> findMappedSuperclass(CtClass ct, List<DataEntity> enhancedClasses) throws Exception {
 		CtClass superClass = ct.getSuperclass();
 		if (superClass == null)
 			return Optional.empty();
@@ -89,40 +198,40 @@ public class EntityEnhancer {
 		if (mappedSuperclassAnnotation == null)
 			return Optional.empty();
 
-		LOG.info("mappedSuperclassAnnotation=" + mappedSuperclassAnnotation);
+//		LOG.info("mappedSuperclassAnnotation=" + mappedSuperclassAnnotation);
 		// checks if the mapped superclass id already enhanced
-		EnhEntity mappedSuperclassEnhEntity = findEnhancedMappedSuperclass(enhancedClasses, superClass.getName());
+		DataEntity mappedSuperclassEnhEntity = findEnhancedMappedSuperclass(enhancedClasses, superClass.getName());
 		LOG.info("mappedSuperclassEnhEntity=" + mappedSuperclassEnhEntity);
 		if (mappedSuperclassEnhEntity != null)
 			return Optional.of(mappedSuperclassEnhEntity);
 
 		List<Property> properties = findAttributes(superClass);
 		LOG.info("Found " + properties.size() + " attributes in '" + superClass.getName() + "'");
-		List<EnhAttribute> attrs = enhance(superClass, properties, false);
+		List<DataAttribute> attrs = findAttributes(superClass, properties, false);
 		LOG.info("attrs.size()=" + attrs.size());
 		if (attrs.isEmpty())
 			return Optional.empty();
 
-		EnhEntity mappedSuperclass = new EnhEntity();
-		mappedSuperclass.setClassName(superClass.getName());
-		mappedSuperclass.setEnhAttributes(attrs);
+		DataEntity mappedSuperclass = new DataEntity();
+		mappedSuperclass.className = superClass.getName();
+		mappedSuperclass.dataAttributes = attrs;
+		mappedSuperclass.ct = superClass;
 		return Optional.of(mappedSuperclass);
 	}
 
-	private EnhEntity findEnhancedMappedSuperclass(List<EnhEntity> enhancedClasses, String superclassName) {
-		for (EnhEntity enhEntity : enhancedClasses) {
-			EnhEntity mappedSuperclassEnhEntity = enhEntity.getMappedSuperclass();
-			if (mappedSuperclassEnhEntity != null && mappedSuperclassEnhEntity.getClassName().equals(superclassName))
+	private DataEntity findEnhancedMappedSuperclass(List<DataEntity> enhancedClasses, String superclassName) {
+		for (DataEntity enhEntity : enhancedClasses) {
+			DataEntity mappedSuperclassEnhEntity = enhEntity.mappedSuperclass;
+			if (mappedSuperclassEnhEntity != null && mappedSuperclassEnhEntity.className.equals(superclassName))
 				return mappedSuperclassEnhEntity;
 		}
 
 		return null;
 	}
 
-	private List<EnhAttribute> enhance(CtClass ct, List<Property> properties, boolean embeddedId) throws Exception {
-//		List<Property> properties = findAttributes(ct);
-//		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
-		List<EnhAttribute> attributes = new ArrayList<>();
+	private List<DataAttribute> findAttributes(CtClass ct, List<Property> properties, boolean embeddedId)
+			throws Exception {
+		List<DataAttribute> attributes = new ArrayList<>();
 		// nothing to do if there are no persistent attributes
 		if (properties.isEmpty())
 			return attributes;
@@ -130,17 +239,11 @@ public class EntityEnhancer {
 		if (countAttributesToEnhance(properties) == 0)
 			return attributes;
 
-		if (!embeddedId) {
-			LOG.info("Enhancing: " + ct.getName());
-			addEntityDelegateField(ct);
-		}
-
 		for (Property property : properties) {
-			EnhAttribute enhAttribute = createAttributeFromProperty(property, embeddedId);
-			attributes.add(enhAttribute);
+			DataAttribute dataAttribute = createAttributeFromProperty(property, embeddedId);
+			attributes.add(dataAttribute);
 		}
 
-		ct.toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
 		return attributes;
 	}
 
@@ -157,26 +260,19 @@ public class EntityEnhancer {
 		return properties.stream().filter(p -> !p.id).count();
 	}
 
-	private EnhAttribute createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
+	private DataAttribute createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
 		LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
 				+ "; property.embedded=" + property.embedded);
-		List<EnhAttribute> embeddedAttributes = null;
+		List<DataAttribute> embeddedAttributes = null;
+		CtClass embeddedCtClass = null;
 		if (property.embedded) {
-			embeddedAttributes = enhance(property.ctField.getType(), property.embeddedProperties, property.id);
+			embeddedAttributes = findAttributes(property.ctField.getType(), property.embeddedProperties, property.id);
+			embeddedCtClass = property.ctField.getType();
 		}
 
-		if (!property.id && !parentIsEmbeddedId) {
-			if (property.enhanceGet)
-				modifyGetMethod(property.getMethod, property.ctField);
-
-			if (property.enhanceSet)
-				modifySetMethod(property.setMethod, property.ctField);
-		}
-
-		EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(), property.ctField.getType().getName(),
-				property.ctField.getType().isPrimitive(), property.getMethod.getName(), property.setMethod.getName(),
-				property.embedded, embeddedAttributes);
-		return enhAttribute;
+		DataAttribute dataAttribute = new DataAttribute(property, embeddedAttributes, parentIsEmbeddedId,
+				embeddedCtClass);
+		return dataAttribute;
 	}
 
 	private void modifyGetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
@@ -247,15 +343,9 @@ public class EntityEnhancer {
 		return attrs;
 	}
 
-	private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws Exception {
+	private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws NotFoundException {
 		try {
-//			LOG.info("findIsGetMethod: ctField.getName()=" + ctField.getName());
-//			LOG.info("findIsGetMethod: ctField.getType()=" + ctField.getType());
-//			LOG.info("findIsGetMethod: ctField.getType().getName()=" + ctField.getType().getName());
-//			LOG.info("findIsGetMethod: ctField.getType().isPrimitive()=" + ctField.getType().isPrimitive());
-
 			String methodName = "get" + BeanUtil.capitalize(ctField.getName());
-//			LOG.info("findIsGetMethod: methodName=" + methodName);
 			return ctClass.getDeclaredMethod(methodName);
 		} catch (NotFoundException e) {
 			if (ctField.getType().getName().equals("java.lang.Boolean")
@@ -267,10 +357,44 @@ public class EntityEnhancer {
 		return null;
 	}
 
+	/**
+	 * Returns true if the input type can be a lazy attribute.
+	 * 
+	 * @param ctClass
+	 * @return true if the input type can be a lazy attribute
+	 */
+	private boolean isLazyOrEntityType(CtClass ctClass) {
+		String name = ctClass.getName();
+		if (isEntityName(name))
+			return true;
+
+		if (name.equals("java.util.Collection"))
+			return true;
+
+		if (name.equals("java.util.Map") || name.equals("java.util.HashMap"))
+			return true;
+
+		if (name.equals("java.util.List"))
+			return true;
+
+		if (name.equals("java.util.Set") || name.equals("java.util.HashSet"))
+			return true;
+
+		return false;
+	}
+
+	private boolean isEntityName(String name) {
+		return dataEntities.stream().filter(d -> d.className.equals(name)).findFirst().isPresent();
+	}
+
 	private PropertyMethod findGetMethod(CtClass ctClass, CtField ctField) throws Exception {
-//			LOG.info("findGetMethod: ctField.getName()=" + ctField.getName());
-		CtMethod getMethod = findIsGetMethod(ctClass, ctField);
-//			CtMethod getMethod = ctClass.getDeclaredMethod(buildMethodName("get", ctField.getName()));
+		CtMethod getMethod = null;
+		try {
+			getMethod = findIsGetMethod(ctClass, ctField);
+		} catch (NotFoundException e) {
+			return new PropertyMethod();
+		}
+
 		if (getMethod == null)
 			return new PropertyMethod();
 
@@ -285,12 +409,17 @@ public class EntityEnhancer {
 		if (!getMethod.getReturnType().subtypeOf(ctField.getType()))
 			return new PropertyMethod();
 
-//			LOG.info("findGetMethod: subtypeOf=true");
 		return new PropertyMethod(Optional.of(getMethod), true);
 	}
 
 	private PropertyMethod findSetMethod(CtClass ctClass, CtField ctField) throws Exception {
-		CtMethod setMethod = ctClass.getDeclaredMethod("set" + BeanUtil.capitalize(ctField.getName()));
+		CtMethod setMethod = null;
+		try {
+			setMethod = ctClass.getDeclaredMethod("set" + BeanUtil.capitalize(ctField.getName()));
+		} catch (NotFoundException e) {
+			return new PropertyMethod();
+		}
+
 //			LOG.info("findSetMethod: setMethod.getName()=" + setMethod.getName());
 		CtClass[] params = setMethod.getParameterTypes();
 //			LOG.info("findSetMethod: params.length=" + params.length);
@@ -343,6 +472,29 @@ public class EntityEnhancer {
 			this.method = method;
 			this.enhance = enhance;
 		}
+	}
 
+	private class DataAttribute {
+		private Property property;
+		private List<DataAttribute> embeddedAttributes;
+		private boolean parentIsEmbeddedId = false;
+		// only for embedded attributes
+		private CtClass embeddedCtClass;
+
+		public DataAttribute(Property property, List<DataAttribute> embeddedProperties, boolean parentIsEmbeddedId,
+				CtClass embeddedCtClass) {
+			super();
+			this.property = property;
+			this.embeddedAttributes = embeddedProperties;
+			this.parentIsEmbeddedId = parentIsEmbeddedId;
+			this.embeddedCtClass = embeddedCtClass;
+		}
+	}
+
+	private class DataEntity {
+		private String className;
+		private List<DataAttribute> dataAttributes = new ArrayList<>();
+		private DataEntity mappedSuperclass;
+		private CtClass ct;
 	}
 }

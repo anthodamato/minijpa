@@ -16,8 +16,8 @@ public class EntityEnhancerTest {
 		List<String> classNames = new ArrayList<>();
 		classNames.add("org.tinyjpa.metadata.MappedSuperclassEntity");
 		classNames.add("org.tinyjpa.metadata.MappedSuperclassSecondEntity");
-		EntityEnhancer entityEnhancer = new EntityEnhancer();
-		List<EnhEntity> enhEntities = entityEnhancer.enhance(classNames);
+		EntityEnhancer entityEnhancer = new EntityEnhancer(classNames);
+		List<EnhEntity> enhEntities = entityEnhancer.enhance();
 		Assertions.assertEquals(2, enhEntities.size());
 
 		Optional<EnhEntity> optional = enhEntities.stream()

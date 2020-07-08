@@ -38,7 +38,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	}
 
 	private synchronized Map<String, Entity> createEntities() throws Exception {
-		List<EnhEntity> enhancedClasses = new EntityEnhancer().enhance(persistenceUnitInfo.getManagedClassNames());
+		List<EnhEntity> enhancedClasses = new EntityEnhancer(persistenceUnitInfo.getManagedClassNames()).enhance();
 
 		Parser parser = new Parser();
 		Map<String, Entity> entities = parser.parse(enhancedClasses);
