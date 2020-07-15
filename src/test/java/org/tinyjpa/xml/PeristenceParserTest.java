@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
+import javax.persistence.spi.PersistenceUnitInfo;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.PersistenceUnitInfoImpl;
 import org.tinyjpa.metadata.PersistenceMetaData;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -29,7 +29,7 @@ public class PeristenceParserTest {
 		xmlReader.parse(file.getAbsolutePath());
 		PersistenceMetaData persistenceMetaData = persistenceParser.getPersistenceMetaData();
 		Assertions.assertNotNull(persistenceMetaData);
-		PersistenceUnitInfoImpl persistenceUnitMetaData = persistenceMetaData.getPersistenceUnitMetaData("citizens");
+		PersistenceUnitInfo persistenceUnitMetaData = persistenceMetaData.getPersistenceUnitMetaData("citizens");
 		Assertions.assertNotNull(persistenceUnitMetaData);
 		Assertions.assertTrue(persistenceUnitMetaData.getManagedClassNames().size() > 0);
 

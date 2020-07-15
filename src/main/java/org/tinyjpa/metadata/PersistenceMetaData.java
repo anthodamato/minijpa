@@ -2,21 +2,21 @@ package org.tinyjpa.metadata;
 
 import java.util.Map;
 
-import org.tinyjpa.jpa.PersistenceUnitInfoImpl;
+import javax.persistence.spi.PersistenceUnitInfo;
 
 public class PersistenceMetaData {
-	private Map<String, PersistenceUnitInfoImpl> persistenceUnitMetaDatas;
+	private Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas;
 
-	public PersistenceMetaData(Map<String, PersistenceUnitInfoImpl> persistenceUnitMetaDatas) {
+	public PersistenceMetaData(Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas) {
 		super();
 		this.persistenceUnitMetaDatas = persistenceUnitMetaDatas;
 	}
 
-	public Map<String, PersistenceUnitInfoImpl> getPersistenceUnitMetaDatas() {
+	public Map<String, PersistenceUnitInfo> getPersistenceUnitMetaDatas() {
 		return persistenceUnitMetaDatas;
 	}
 
-	public PersistenceUnitInfoImpl getPersistenceUnitMetaData(String name) {
+	public PersistenceUnitInfo getPersistenceUnitMetaData(String name) {
 		return persistenceUnitMetaDatas.get(name);
 	}
 }

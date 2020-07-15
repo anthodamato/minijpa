@@ -197,20 +197,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	private List<Object> loadAttributeValues(Object parentInstance, Class<?> targetEntity,
 			Attribute foreignKeyAttribute, Attribute childAttribute, Object childAttributeValue) throws Exception {
 		LOG.info("loadAttributeValues: parentInstance=" + parentInstance);
-//		Entity entity = entities.get(parentInstance.getClass().getName());
-//		Object foreignKey = AttributeUtil.getIdValue(entity, parentInstance);
-
 		List<Object> objects = findCollectionByForeignKey(targetEntity, parentInstance, foreignKeyAttribute,
 				childAttribute, childAttributeValue);
-
-//		Object foreignKey = entityContainer.getForeignKeyValue(parentInstance, a);
-//		LOG.info("loadAttributeValues: a=" + a + "; oneToOne=" + a.getOneToOne() + "; foreignKey=" + foreignKey);
-//		Object foreignKeyInstance = findById(a.getType(), foreignKey, childAttribute, childAttributeValue);
-//		LOG.info("loadAttributeValues: foreignKeyInstance=" + foreignKeyInstance);
-//		if (foreignKeyInstance != null) {
-//			entityContainer.save(foreignKeyInstance, foreignKey);
-//			entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, foreignKeyInstance);
-//		}
 
 		return objects;
 	}

@@ -15,10 +15,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	private String name;
 	private Properties properties = new Properties();
 	private List<String> managedClassNames;
+	private DataSource jtaDataSource;
+	private DataSource nonJtaDataSource;
 
-	public PersistenceUnitInfoImpl(String name, List<String> managedClassNames) {
+	public PersistenceUnitInfoImpl() {
 		super();
-		this.managedClassNames = managedClassNames;
 	}
 
 	public String getName() {
@@ -49,14 +50,12 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
 	@Override
 	public DataSource getJtaDataSource() {
-		// TODO Auto-generated method stub
-		return null;
+		return jtaDataSource;
 	}
 
 	@Override
 	public DataSource getNonJtaDataSource() {
-		// TODO Auto-generated method stub
-		return null;
+		return nonJtaDataSource;
 	}
 
 	@Override
@@ -124,4 +123,42 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return null;
 	}
 
+	public static class Builder {
+		private String name;
+		private List<String> managedClassNames;
+		private DataSource jtaDataSource;
+		private DataSource nonJtaDataSource;
+
+		public Builder() {
+		}
+
+		public Builder withName(String name) {
+			this.name = name;
+			return this;
+		}
+
+		public Builder withManagedClassNames(List<String> managedClassNames) {
+			this.managedClassNames = managedClassNames;
+			return this;
+		}
+
+		public Builder withJtaDataSource(DataSource jtaDataSource) {
+			this.jtaDataSource = jtaDataSource;
+			return this;
+		}
+
+		public Builder withNonJtaDataSource(DataSource nonJtaDataSource) {
+			this.nonJtaDataSource = nonJtaDataSource;
+			return this;
+		}
+
+		public PersistenceUnitInfo build() {
+			PersistenceUnitInfoImpl impl = new PersistenceUnitInfoImpl();
+			impl.name = name;
+			impl.managedClassNames = managedClassNames;
+			impl.jtaDataSource = jtaDataSource;
+			impl.nonJtaDataSource = nonJtaDataSource;
+			return impl;
+		}
+	}
 }

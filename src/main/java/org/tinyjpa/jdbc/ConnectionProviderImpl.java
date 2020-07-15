@@ -21,6 +21,10 @@ public class ConnectionProviderImpl implements ConnectionProvider {
 		if (dataSource != null)
 			return dataSource.getConnection();
 
+		dataSource = persistenceUnitInfo.getJtaDataSource();
+		if (dataSource != null)
+			return dataSource.getConnection();
+
 		Properties connectionProps = new Properties();
 		Properties properties = persistenceUnitInfo.getProperties();
 		String user = (String) properties.get("javax.persistence.jdbc.user");
@@ -38,6 +42,10 @@ public class ConnectionProviderImpl implements ConnectionProvider {
 
 	public void init() throws Exception {
 		DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
+		if (dataSource != null)
+			return;
+
+		dataSource = persistenceUnitInfo.getJtaDataSource();
 		if (dataSource != null)
 			return;
 

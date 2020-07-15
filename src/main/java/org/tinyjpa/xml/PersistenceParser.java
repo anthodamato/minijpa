@@ -6,6 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.persistence.spi.PersistenceUnitInfo;
+import javax.sql.DataSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jpa.PersistenceUnitInfoImpl;
@@ -17,12 +22,16 @@ import org.xml.sax.helpers.DefaultHandler;
 public class PersistenceParser extends DefaultHandler {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceParser.class);
 	private PersistenceMetaData persistenceMetaData;
-	private Map<String, PersistenceUnitInfoImpl> persistenceUnitMetaDatas = new HashMap<>();
+	private Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas = new HashMap<>();
 	private Map<String, String> properties;
 	private String persistentUnitName;
-	private PersistenceUnitInfoImpl persistenceUnitMetaData;
+	private PersistenceUnitInfo persistenceUnitMetaData;
 	private List<String> managedClassNames = new ArrayList<>();
 	private boolean startClass;
+	private boolean startJtaDataSource;
+	private String jtaDataSource;
+	private boolean startNonJtaDataSource;
+	private String nonJtaDataSource;
 
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
@@ -37,9 +46,14 @@ public class PersistenceParser extends DefaultHandler {
 			readPropertyAttrs(attributes, properties);
 		}
 
-		if (qName.equals("class")) {
+		if (qName.equals("class"))
 			startClass = true;
-		}
+
+		if (qName.equals("jta-data-source"))
+			startJtaDataSource = true;
+
+		if (qName.equals("non-jta-data-source"))
+			startNonJtaDataSource = true;
 	}
 
 	@Override
@@ -49,8 +63,19 @@ public class PersistenceParser extends DefaultHandler {
 				LOG.warn("Persistent unit name not set");
 			else {
 				if (persistentUnitName != null && persistentUnitName.trim().length() > 0) {
-					persistenceUnitMetaData = new PersistenceUnitInfoImpl(persistentUnitName,
-							Collections.unmodifiableList(new ArrayList<>(managedClassNames)));
+					DataSource jtaDs = null;
+					if (jtaDataSource != null && !jtaDataSource.isEmpty()) {
+						jtaDs = findDataSource(jtaDataSource);
+					}
+
+					DataSource nonJtaDs = null;
+					if (nonJtaDataSource != null && !nonJtaDataSource.isEmpty()) {
+						nonJtaDs = findDataSource(nonJtaDataSource);
+					}
+
+					persistenceUnitMetaData = new PersistenceUnitInfoImpl.Builder().withName(persistentUnitName)
+							.withManagedClassNames(Collections.unmodifiableList(new ArrayList<>(managedClassNames)))
+							.withJtaDataSource(jtaDs).withNonJtaDataSource(nonJtaDs).build();
 				}
 
 				for (Map.Entry<String, String> entry : properties.entrySet()) {
@@ -70,15 +95,26 @@ public class PersistenceParser extends DefaultHandler {
 			persistenceMetaData = new PersistenceMetaData(Collections.unmodifiableMap(persistenceUnitMetaDatas));
 		}
 
-		if (qName.equals("class")) {
+		if (qName.equals("class"))
 			startClass = false;
-		}
+
+		if (qName.equals("jta-data-source"))
+			startJtaDataSource = false;
+
+		if (qName.equals("non-jta-data-source"))
+			startNonJtaDataSource = false;
 	}
 
 	@Override
 	public void characters(char[] ch, int start, int length) throws SAXException {
 		if (startClass)
 			managedClassNames.add(new String(ch, start, length));
+
+		if (startJtaDataSource)
+			jtaDataSource = new String(ch, start, length);
+
+		if (startNonJtaDataSource)
+			nonJtaDataSource = new String(ch, start, length);
 	}
 
 	private void readPropertyAttrs(Attributes attributes, Map<String, String> props) {
@@ -116,4 +152,16 @@ public class PersistenceParser extends DefaultHandler {
 		return persistenceMetaData;
 	}
 
+	private DataSource findDataSource(String dss) throws SAXException {
+		try {
+			Context initCtx = new InitialContext();
+			Context envCtx = (Context) initCtx.lookup("java:comp/env");
+			DataSource ds = (DataSource) envCtx.lookup(dss);
+			initCtx.close();
+			envCtx.close();
+			return ds;
+		} catch (Exception e) {
+			throw new SAXException(e);
+		}
+	}
 }

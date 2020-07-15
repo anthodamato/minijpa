@@ -34,9 +34,9 @@ public class PersistenceProviderHelper {
 			LOG.error("'persistence' element not found, file path: " + filePath);
 		}
 
-		PersistenceUnitInfoImpl persistenceUnitMetaData = persistenceMetaData
+		PersistenceUnitInfo persistenceUnitInfoImpl = persistenceMetaData
 				.getPersistenceUnitMetaData(persistenceUnitName);
-		return persistenceUnitMetaData;
+		return persistenceUnitInfoImpl;
 	}
 
 }
