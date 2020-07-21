@@ -3,8 +3,7 @@ package org.tinyjpa.jdbc.relationship;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 
-public final class ManyToOne extends AbstractToOne {
-
+public final class ManyToOne extends Relationship {
 	public ManyToOne() {
 		super();
 	}
@@ -24,6 +23,7 @@ public final class ManyToOne extends AbstractToOne {
 		private FetchType fetchType = FetchType.EAGER;
 		private Entity owningEntity;
 		private Attribute owningAttribute;
+		private Entity attributeType;
 
 		public Builder() {
 		}
@@ -48,21 +48,28 @@ public final class ManyToOne extends AbstractToOne {
 			return this;
 		}
 
+		public Builder withAttributeType(Entity attributeType) {
+			this.attributeType = attributeType;
+			return this;
+		}
+
 		public Builder with(ManyToOne manyToOne) {
 			this.joinColumn = manyToOne.joinColumn;
 			this.fetchType = manyToOne.fetchType;
 			this.owningEntity = manyToOne.owningEntity;
 			this.owningAttribute = manyToOne.owningAttribute;
+			this.attributeType = manyToOne.attributeType;
 			return this;
 		}
 
 		public ManyToOne build() {
-			ManyToOne oto = new ManyToOne();
-			oto.joinColumn = joinColumn;
-			oto.fetchType = fetchType;
-			oto.owningEntity = owningEntity;
-			oto.owningAttribute = owningAttribute;
-			return oto;
+			ManyToOne r = new ManyToOne();
+			r.joinColumn = joinColumn;
+			r.fetchType = fetchType;
+			r.owningEntity = owningEntity;
+			r.owningAttribute = owningAttribute;
+			r.attributeType = attributeType;
+			return r;
 		}
 	}
 }

@@ -127,7 +127,8 @@ public class JdbcRunner {
 	}
 
 	public List<Object> findCollectionById(Connection connection, SqlStatement sqlStatement, Entity entity,
-			JdbcEntityManager jdbcEntityManager) throws Exception {
+			JdbcEntityManager jdbcEntityManager, Attribute childAttribute, Object childAttributeValue)
+			throws Exception {
 		PreparedStatement preparedStatement = null;
 		try {
 			LOG.info("findCollectionById: sql=" + sqlStatement.getSql());
@@ -141,7 +142,8 @@ public class JdbcRunner {
 						sqlStatement.getFetchColumnNameValues(), rs);
 
 				LOG.info("findCollectionById: attributeValues=" + attributeValues);
-				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity);
+				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
+						childAttributeValue);
 				objects.add(instance);
 			}
 

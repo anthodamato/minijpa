@@ -3,17 +3,12 @@ package org.tinyjpa.jdbc.relationship;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 
-public final class OneToMany extends AbstractRelationship {
-	private String mappedBy;
+public final class OneToMany extends Relationship {
 	private Class<?> collectionClass;
 	private Class<?> targetEntity;
 
 	public OneToMany() {
 		super();
-	}
-
-	public String getMappedBy() {
-		return mappedBy;
 	}
 
 	@Override
@@ -39,6 +34,7 @@ public final class OneToMany extends AbstractRelationship {
 		private Attribute owningAttribute;
 		private Class<?> collectionClass;
 		private Class<?> targetEntity;
+		private Attribute targetAttribute;
 
 		public Builder() {
 		}
@@ -78,6 +74,11 @@ public final class OneToMany extends AbstractRelationship {
 			return this;
 		}
 
+		public Builder withTargetAttribute(Attribute targetAttribute) {
+			this.targetAttribute = targetAttribute;
+			return this;
+		}
+
 		public Builder with(OneToMany oneToMany) {
 			this.joinColumn = oneToMany.joinColumn;
 			this.mappedBy = oneToMany.mappedBy;
@@ -86,6 +87,7 @@ public final class OneToMany extends AbstractRelationship {
 			this.owningAttribute = oneToMany.owningAttribute;
 			this.collectionClass = oneToMany.collectionClass;
 			this.targetEntity = oneToMany.targetEntity;
+			this.targetAttribute = oneToMany.targetAttribute;
 			return this;
 		}
 
@@ -98,6 +100,7 @@ public final class OneToMany extends AbstractRelationship {
 			oto.owningAttribute = owningAttribute;
 			oto.collectionClass = collectionClass;
 			oto.targetEntity = targetEntity;
+			oto.targetAttribute = targetAttribute;
 			return oto;
 		}
 	}

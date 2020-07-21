@@ -15,6 +15,7 @@ import org.tinyjpa.jdbc.ColumnNameValueUtil;
 import org.tinyjpa.jdbc.ConnectionHolder;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcRunner;
+import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.SqlStatement;
 import org.tinyjpa.jdbc.relationship.FetchType;
 
@@ -103,12 +104,13 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectByForeignKey(entity, foreignKeyAttribute,
 				foreignKey);
 		JdbcRunner jdbcRunner = new JdbcRunner();
-		return jdbcRunner.findCollectionById(connectionHolder.getConnection(), sqlStatement, entity, this);
+		return jdbcRunner.findCollectionById(connectionHolder.getConnection(), sqlStatement, entity, this,
+				childAttribute, childAttributeValue);
 	}
 
 	@Override
-	public Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, Entity entity)
-			throws Exception {
+	public Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, Entity entity,
+			Attribute childAttribute, Object childAttributeValue) throws Exception {
 		LOG.info("createAndSaveEntityInstance: entity=" + entity);
 		Object primaryKey = AttributeUtil.createPK(entity, attributeValues);
 		Object entityObject = entityInstanceBuilder.build(entity, attributeValues.attributes, attributeValues.values,
@@ -124,7 +126,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			entityContainer.saveForeignKey(entityObject, c.getForeignKeyAttribute(), c.getValue());
 		});
 
-		loadRelationshipAttributes(entityObject, entity.getAttributes(), null, null);
+		loadRelationshipAttributes(entityObject, entity.getAttributes(), childAttribute, childAttributeValue);
 		entityContainer.save(entityObject, primaryKey);
 		entityContainer.setLoadedFromDb(entityObject);
 		return entityObject;
@@ -144,6 +146,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	private void loadRelationshipAttributes(Object parentInstance, List<Attribute> attributes, Attribute childAttribute,
 			Object childAttributeValue) throws Exception {
+		LOG.info("loadRelationshipAttributes: childAttribute=" + childAttribute);
 		for (Attribute a : attributes) {
 			LOG.info("loadRelationshipAttributes: a=" + a);
 			if (childAttribute != null && a == childAttribute) {
@@ -156,8 +159,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	private void loadRelationshipAttribute(Object parentInstance, Attribute a) throws Exception {
 		LOG.info("loadRelationshipAttribute: a.isEager()=" + a.isEager() + "; a.isOneToMany()=" + a.isOneToMany());
-		if (a.isOneToMany())
-			LOG.info("loadRelationshipAttribute: a.getOneToMany().getFetchType()=" + a.getOneToMany().getFetchType());
+//		if (a.isOneToMany())
+//			LOG.info("loadRelationshipAttribute: a.getOneToMany().getFetchType()=" + a.getOneToMany().getFetchType());
 
 		if (a.isEager()) {
 			loadAttributeValue(parentInstance, a, null, null);
@@ -213,17 +216,18 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	@Override
 	public Object load(Object parentInstance, Attribute a) throws Exception {
 		LOG.info("load (lazy): parentInstance=" + parentInstance + "; a=" + a);
-		Attribute owningAttribute = null;
+		Attribute targetAttribute = null;
+		if (a.getRelationship() != null)
+			targetAttribute = a.getRelationship().getTargetAttribute();
+
 		if (a.isOneToMany()) {
+			LOG.info("load (lazy): oneToMany targetAttribute=" + targetAttribute);
 			return loadAttributeValues(parentInstance, a.getOneToMany().getTargetEntity(),
-					a.getOneToMany().getOwningAttribute(), owningAttribute, parentInstance);
+					a.getOneToMany().getOwningAttribute(), targetAttribute, parentInstance);
 		}
 
-		if (a.isOneToOne() && a.isEntity())
-			owningAttribute = a.getEntity().findAttributeWithMappedBy(a.getName());
-
-		LOG.info("load (lazy): owningAttribute=" + owningAttribute);
-		return loadAttributeValue(parentInstance, a, owningAttribute, parentInstance);
+		LOG.info("load (lazy): owningAttribute=" + targetAttribute);
+		return loadAttributeValue(parentInstance, a, targetAttribute, parentInstance);
 	}
 
 	/**
@@ -237,27 +241,20 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 */
 	protected boolean canPersistOnDb(Object entityInstance) throws Exception {
 		Entity entity = entities.get(entityInstance.getClass().getName());
-		for (Attribute a : entity.getAttributes()) {
-			if (a.isOneToOne() && a.getOneToOne().isOwner() && a.getOneToOne().getFetchType() == FetchType.EAGER) {
-				Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
-				if (attributeInstance == null || !entityContainer.isSaved(attributeInstance))
-					return false;
-			} else if (a.isManyToOne() && a.getManyToOne().getFetchType() == FetchType.EAGER) {
-				Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
-				if (attributeInstance == null || !entityContainer.isSaved(attributeInstance))
-					return false;
-			} else if (a.isOneToMany() && a.getOneToMany().getFetchType() == FetchType.EAGER) {
-				Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
-				if (attributeInstance == null || !entityContainer.isSaved(attributeInstance))
-					return false;
-			}
+		for (JoinColumnAttribute joinColumnAttribute : entity.getJoinColumnAttributes()) {
+			Attribute a = joinColumnAttribute.getForeignKeyAttribute();
+			if (a.getRelationship().getFetchType() != FetchType.EAGER)
+				continue;
+
+			Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
+			if (attributeInstance == null || !entityContainer.isSaved(attributeInstance))
+				return false;
 		}
 
 		return true;
 	}
 
-	private void persist(Entity entity, Object entityInstance, List<AttributeValue> attrValues,
-			DbConfiguration dbConfiguration) throws Exception {
+	private void persist(Entity entity, Object entityInstance, List<AttributeValue> attrValues) throws Exception {
 		if (entityContainer.isSaved(entityInstance)) {
 			Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 			LOG.info("persist: idValue=" + idValue);
@@ -288,21 +285,19 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		completePendings();
 	}
 
-	public boolean persistOnDb(Entity entity, Object entityInstance, List<AttributeValue> changes) throws Exception {
+	private boolean persistOnDb(Entity entity, Object entityInstance, List<AttributeValue> changes) throws Exception {
 		boolean persistOnDb = canPersistOnDb(entityInstance);
 		LOG.info("persist: persistOnDb=" + persistOnDb + "; entityInstance=" + entityInstance);
-		if (persistOnDb) {
-//			List<AttributeValue> changes = optional.get();
-			LOG.info("persist: changes.size()=" + changes.size());
-			LOG.info("persist: entityInstance=" + entityInstance);
-			List<AttributeValue> values = attributeValueConverter.convert(changes);
-			persist(entity, entityInstance, values, dbConfiguration);
-			entityContainer.save(entityInstance);
-			entityInstanceBuilder.removeChanges(entityInstance);
-			return true;
-		}
+		if (!persistOnDb)
+			return false;
 
-		return false;
+		LOG.info("persist: changes.size()=" + changes.size());
+		LOG.info("persist: entityInstance=" + entityInstance);
+		List<AttributeValue> values = attributeValueConverter.convert(changes);
+		persist(entity, entityInstance, values);
+		entityContainer.save(entityInstance);
+		entityInstanceBuilder.removeChanges(entityInstance);
+		return true;
 	}
 
 	private void remove(Object entityInstance, Entity e) throws Exception {

@@ -1,7 +1,9 @@
 package org.tinyjpa.metadata;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
@@ -45,4 +47,7 @@ public class EntityContext {
 		return null;
 	}
 
+	public Set<Entity> getEntities() {
+		return new HashSet<>(entities.values());
+	}
 }

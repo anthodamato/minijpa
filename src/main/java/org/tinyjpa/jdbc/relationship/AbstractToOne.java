@@ -1,6 +1,6 @@
 package org.tinyjpa.jdbc.relationship;
 
-public class AbstractToOne extends AbstractRelationship {
+public abstract class AbstractToOne extends Relationship {
 	public AbstractToOne() {
 		super();
 	}

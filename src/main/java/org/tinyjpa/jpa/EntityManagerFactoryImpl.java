@@ -43,7 +43,6 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 
 		Parser parser = new Parser();
 		Map<String, Entity> entities = parser.parse(enhancedClasses);
-//		EntityDelegate.getInstance().setEntities(entities);
 		EntityDelegate.getInstance().addEntityContext(new EntityContext(entities));
 		return entities;
 	}

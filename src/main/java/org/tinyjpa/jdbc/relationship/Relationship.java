@@ -3,14 +3,18 @@ package org.tinyjpa.jdbc.relationship;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 
-public class AbstractRelationship {
+public abstract class Relationship {
 	protected FetchType fetchType = FetchType.EAGER;
 	protected String joinColumn;
 	protected Entity owningEntity;
 	// for bidirectional relationships
 	protected Attribute owningAttribute;
+	protected Entity attributeType;
+	// for bidirectional relationships
+	protected Attribute targetAttribute;
+	protected String mappedBy;
 
-	public AbstractRelationship() {
+	public Relationship() {
 		super();
 	}
 
@@ -30,13 +34,25 @@ public class AbstractRelationship {
 		return owningAttribute;
 	}
 
+	public Entity getAttributeType() {
+		return attributeType;
+	}
+
+	public Attribute getTargetAttribute() {
+		return targetAttribute;
+	}
+
+	public String getMappedBy() {
+		return mappedBy;
+	}
+
 	public boolean isOwner() {
 		return false;
 	}
 
 	@Override
 	public String toString() {
-		return AbstractRelationship.class.getName() + ": fetchType=" + fetchType + "; joinColumn=" + joinColumn;
+		return Relationship.class.getName() + ": fetchType=" + fetchType + "; joinColumn=" + joinColumn;
 	}
 
 }

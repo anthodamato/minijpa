@@ -4,38 +4,28 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.tinyjpa.jdbc.relationship.Relationship;
 import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.ManyToOne;
 import org.tinyjpa.jdbc.relationship.OneToMany;
 import org.tinyjpa.jdbc.relationship.OneToOne;
 
-public class Attribute {
+public class Attribute extends AbstractAttribute {
 //	private Logger LOG = LoggerFactory.getLogger(Attribute.class);
 	private String name;
-	private String columnName;
-	private Class<?> type;
 	private Method readMethod;
 	private Method writeMethod;
 	private boolean id;
-	private Integer sqlType;
 	private GeneratedValue generatedValue;
 	private boolean embedded;
 	private List<Attribute> embeddedAttributes;
 	private OneToOne oneToOne;
 	private ManyToOne manyToOne;
 	private OneToMany oneToMany;
-	/**
-	 * if this attribute represents an entity, for a one to one relationship for
-	 * example, then this field will be that entity.
-	 */
-	private Entity entity;
+	private Relationship relationship;
 
 	public String getName() {
 		return name;
-	}
-
-	public String getColumnName() {
-		return columnName;
 	}
 
 	public Method getReadMethod() {
@@ -46,16 +36,8 @@ public class Attribute {
 		return writeMethod;
 	}
 
-	public Class<?> getType() {
-		return type;
-	}
-
 	public boolean isId() {
 		return id;
-	}
-
-	public Integer getSqlType() {
-		return sqlType;
 	}
 
 	public GeneratedValue getGeneratedValue() {
@@ -94,14 +76,6 @@ public class Attribute {
 		return oneToMany != null;
 	}
 
-	public Entity getEntity() {
-		return entity;
-	}
-
-	public boolean isEntity() {
-		return entity != null;
-	}
-
 	public void setOneToOne(OneToOne oneToOne) {
 		this.oneToOne = oneToOne;
 	}
@@ -114,8 +88,12 @@ public class Attribute {
 		this.oneToMany = oneToMany;
 	}
 
-	public void setEntity(Entity entity) {
-		this.entity = entity;
+	public Relationship getRelationship() {
+		return relationship;
+	}
+
+	public void setRelationship(Relationship relationship) {
+		this.relationship = relationship;
 	}
 
 	public Attribute findChildByName(String attributeName) {
@@ -131,17 +109,8 @@ public class Attribute {
 	}
 
 	protected boolean expandRelationship() {
-		if (!isEntity() && !isOneToMany())
+		if (relationship == null)
 			return true;
-
-		if (isOneToOne() && getOneToOne().isOwner())
-			return true;
-
-		if (isManyToOne())
-			return true;
-
-//		if (isOneToMany() && getOneToMany().isOwner())
-//			return true;
 
 		return false;
 	}
@@ -161,29 +130,17 @@ public class Attribute {
 	}
 
 	public boolean isEager() {
-		if (isOneToOne() && getOneToOne().getFetchType() == FetchType.EAGER)
-			return true;
+		if (relationship == null)
+			return false;
 
-		if (isManyToOne() && getManyToOne().getFetchType() == FetchType.EAGER)
-			return true;
-
-		if (isOneToMany() && getOneToMany().getFetchType() == FetchType.EAGER)
-			return true;
-
-		return false;
+		return relationship.getFetchType() == FetchType.EAGER;
 	}
 
 	public boolean isLazy() {
-		if (isOneToOne() && getOneToOne().getFetchType() == FetchType.LAZY)
-			return true;
+		if (relationship == null)
+			return false;
 
-		if (isManyToOne() && getManyToOne().getFetchType() == FetchType.LAZY)
-			return true;
-
-		if (isOneToMany() && getOneToMany().getFetchType() == FetchType.LAZY)
-			return true;
-
-		return false;
+		return relationship.getFetchType() == FetchType.LAZY;
 	}
 
 	@Override
@@ -205,7 +162,7 @@ public class Attribute {
 		private OneToOne oneToOne;
 		private ManyToOne manyToOne;
 		private OneToMany oneToMany;
-		private Entity entity;
+		private Relationship relationship;
 
 		public Builder(String name) {
 			super();
@@ -273,11 +230,10 @@ public class Attribute {
 			return this;
 		}
 
-		public Builder isEntity(Entity entity) {
-			this.entity = entity;
+		public Builder withRelationship(Relationship relationship) {
+			this.relationship = relationship;
 			return this;
 		}
-
 //		public Builder with(Attribute attribute) {
 //			this.name = attribute.name;
 //			this.columnName = attribute.columnName;
@@ -311,7 +267,7 @@ public class Attribute {
 			attribute.oneToOne = oneToOne;
 			attribute.manyToOne = manyToOne;
 			attribute.oneToMany = oneToMany;
-			attribute.entity = entity;
+			attribute.relationship = relationship;
 			return attribute;
 		}
 	}

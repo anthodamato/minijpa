@@ -48,6 +48,31 @@ public final class EntityDelegate implements EntityListener {
 		return entityDelegate;
 	}
 
+	/**
+	 * This method is called just one time to setup the data structures. If the
+	 * related data structures are created dynamically and multiple entity managers
+	 * are used race conditions can occur.
+	 * 
+	 * @param entities
+	 */
+	private synchronized void initDataStructures(Set<Entity> entities) {
+		for (Entity entity : entities) {
+			Map<Object, List<AttributeValue>> map = changes.get(entity);
+			if (map == null) {
+				map = new HashMap<>();
+				changes.put(entity, map);
+			}
+		}
+
+		for (Entity entity : entities) {
+			Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entity.getClazz());
+			if (map == null) {
+				map = new HashMap<>();
+				loadedLazyAttributes.put(entity.getClazz(), map);
+			}
+		}
+	}
+
 	@Override
 	public void set(Object value, String attributeName, Object entityInstance) {
 		for (Object object : ignoreEntityInstances) {
@@ -81,10 +106,10 @@ public final class EntityDelegate implements EntityListener {
 		}
 
 		Map<Object, List<AttributeValue>> map = changes.get(entity);
-		if (map == null) {
-			map = new HashMap<>();
-			changes.put(entity, map);
-		}
+//		if (map == null) {
+//			map = new HashMap<>();
+//			changes.put(entity, map);
+//		}
 
 		List<AttributeValue> instanceAttrs = map.get(entityInstance);
 		if (instanceAttrs == null) {
@@ -124,8 +149,8 @@ public final class EntityDelegate implements EntityListener {
 
 		removeEmbeddedChanges(entity.getAttributes(), entityInstance);
 		Map<Object, List<AttributeValue>> map = changes.get(entity);
-		if (map == null)
-			return;
+//		if (map == null)
+//			return;
 
 		map.remove(entityInstance);
 	}
@@ -150,8 +175,8 @@ public final class EntityDelegate implements EntityListener {
 
 	public Optional<List<AttributeValue>> getChanges(Entity entity, Object entityInstance) {
 		Map<Object, List<AttributeValue>> map = changes.get(entity);
-		if (map == null)
-			return Optional.empty();
+//		if (map == null)
+//			return Optional.empty();
 
 		List<AttributeValue> instanceAttrs = map.get(entityInstance);
 		if (instanceAttrs == null)
@@ -226,8 +251,8 @@ public final class EntityDelegate implements EntityListener {
 
 	private boolean isLazyAttributeLoaded(Object entityInstance, Attribute a) {
 		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-		if (map == null)
-			return false;
+//		if (map == null)
+//			return false;
 
 		Set<Attribute> attributes = map.get(entityInstance);
 		if (attributes == null)
@@ -238,10 +263,10 @@ public final class EntityDelegate implements EntityListener {
 
 	public void setLazyAttributeLoaded(Object entityInstance, Attribute a) {
 		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-		if (map == null) {
-			map = new HashMap<>();
-			loadedLazyAttributes.put(entityInstance.getClass(), map);
-		}
+//		if (map == null) {
+//			map = new HashMap<>();
+//			loadedLazyAttributes.put(entityInstance.getClass(), map);
+//		}
 
 		Set<Attribute> attributes = map.get(entityInstance);
 		if (attributes == null) {
@@ -254,8 +279,8 @@ public final class EntityDelegate implements EntityListener {
 
 	public void removeLazyAttributeLoaded(Object entityInstance, Attribute a) {
 		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-		if (map == null)
-			return;
+//		if (map == null)
+//			return;
 
 		Set<Attribute> attributes = map.get(entityInstance);
 		if (attributes == null)
@@ -264,8 +289,8 @@ public final class EntityDelegate implements EntityListener {
 		attributes.remove(a);
 		if (attributes.isEmpty()) {
 			map.remove(entityInstance);
-			if (map.isEmpty())
-				loadedLazyAttributes.remove(entityInstance.getClass());
+//			if (map.isEmpty())
+//				loadedLazyAttributes.remove(entityInstance.getClass());
 		}
 	}
 
@@ -323,6 +348,7 @@ public final class EntityDelegate implements EntityListener {
 
 	public void addEntityContext(EntityContext entityContext) {
 		entityContextManager.add(entityContext);
+		initDataStructures(entityContext.getEntities());
 	}
 
 	private class EntityContainerContextManager {

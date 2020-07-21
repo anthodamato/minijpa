@@ -3,22 +3,10 @@ package org.tinyjpa.jdbc.relationship;
 import org.tinyjpa.jdbc.Attribute;
 import org.tinyjpa.jdbc.Entity;
 
-public final class OneToOne extends AbstractToOne {
-	private String mappedBy;
-	// for bidirectional relationships
-//	private OneToOne owningOneToOne;
-
+public final class OneToOne extends Relationship {
 	public OneToOne() {
 		super();
 	}
-
-	public String getMappedBy() {
-		return mappedBy;
-	}
-
-//	public Attribute getOwningAttribute() {
-//		return owningAttribute;
-//	}
 
 	@Override
 	public boolean isOwner() {
@@ -36,8 +24,9 @@ public final class OneToOne extends AbstractToOne {
 		private String mappedBy;
 		private FetchType fetchType = FetchType.EAGER;
 		private Entity owningEntity;
-//		private OneToOne owningOneToOne;
+		private Attribute targetAttribute;
 		private Attribute owningAttribute;
+		private Entity attributeType;
 
 		public Builder() {
 		}
@@ -62,13 +51,18 @@ public final class OneToOne extends AbstractToOne {
 			return this;
 		}
 
-//		public Builder withOwningOneToOne(OneToOne oneToOne) {
-//			this.owningOneToOne = oneToOne;
-//			return this;
-//		}
+		public Builder withTargetAttribute(Attribute targetAttribute) {
+			this.targetAttribute = targetAttribute;
+			return this;
+		}
 
 		public Builder withOwningAttribute(Attribute attribute) {
 			this.owningAttribute = attribute;
+			return this;
+		}
+
+		public Builder withAttributeType(Entity attributeType) {
+			this.attributeType = attributeType;
 			return this;
 		}
 
@@ -78,6 +72,8 @@ public final class OneToOne extends AbstractToOne {
 			this.fetchType = oneToOne.fetchType;
 			this.owningEntity = oneToOne.owningEntity;
 			this.owningAttribute = oneToOne.owningAttribute;
+			this.targetAttribute = oneToOne.targetAttribute;
+			this.attributeType = oneToOne.attributeType;
 			return this;
 		}
 
@@ -87,8 +83,9 @@ public final class OneToOne extends AbstractToOne {
 			oto.mappedBy = mappedBy;
 			oto.fetchType = fetchType;
 			oto.owningEntity = owningEntity;
-//			oto.owningOneToOne = owningOneToOne;
+			oto.targetAttribute = targetAttribute;
 			oto.owningAttribute = owningAttribute;
+			oto.attributeType = attributeType;
 			return oto;
 		}
 	}

@@ -20,17 +20,13 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceProviderImpl.class);
 
 	private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
-		LOG.info("processConfiguration: 0");
-
 		new ConnectionProviderImpl(persistenceUnitInfo).init();
 
 		Connection connection = null;
 		try {
 			connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
-			LOG.info("processConfiguration: 1");
 			DbMetaData dbMetaData = new DbMetaData();
 			dbMetaData.find(connection);
-			LOG.info("processConfiguration: 2");
 			DbConfiguration dbConfiguration = new DbMetaData().createDbConfiguration(connection);
 			DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo, dbConfiguration);
 		} catch (Exception e) {

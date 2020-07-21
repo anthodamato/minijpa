@@ -8,6 +8,8 @@ public class Entity {
 	private String tableName;
 	private Attribute id;
 	private List<Attribute> attributes;
+	private List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
+	private List<Attribute> relationshipAttributes = new ArrayList<>();
 
 	public Entity(Class<?> clazz, String tableName, Attribute id, List<Attribute> attributes) {
 		super();
@@ -56,11 +58,19 @@ public class Entity {
 
 	public Attribute findAttributeWithMappedBy(String mappedBy) {
 		for (Attribute attribute : attributes) {
-			if (attribute.isOneToOne() && mappedBy.equals(attribute.getOneToOne().getMappedBy()))
+			if (attribute.getRelationship() != null && mappedBy.equals(attribute.getRelationship().getMappedBy()))
 				return attribute;
 		}
 
 		return null;
+	}
+
+	public List<JoinColumnAttribute> getJoinColumnAttributes() {
+		return joinColumnAttributes;
+	}
+
+	public List<Attribute> getRelationshipAttributes() {
+		return relationshipAttributes;
 	}
 
 	@Override
