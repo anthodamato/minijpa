@@ -26,4 +26,27 @@
 				value="org/tinyjpa/jpa/onetomany/create_onetomany_uni_db.sql" />
 		</properties>
 	</persistence-unit>
+
+	<persistence-unit name="otm_emb_booking">
+		<description>Unidirectional One to Many</description>
+		<class>org.tinyjpa.jpa.model.onetomany.HotelBookingDetail</class>
+		<class>org.tinyjpa.jpa.model.onetomany.HotelCustomer</class>
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="org/tinyjpa/jpa/onetomany/create_otm_emb_booking_db.sql" />
+		</properties>
+	</persistence-unit>
 </persistence>
