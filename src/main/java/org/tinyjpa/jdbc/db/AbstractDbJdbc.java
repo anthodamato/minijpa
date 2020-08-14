@@ -9,20 +9,30 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.AttributeValueConverter;
 import org.tinyjpa.jdbc.ColumnNameValue;
+import org.tinyjpa.jdbc.DefaultNameTranslator;
 import org.tinyjpa.jdbc.EmbeddedIdAttributeValueConverter;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.GeneratedValue;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
+import org.tinyjpa.jdbc.NameTranslator;
 import org.tinyjpa.jdbc.PkGenerationType;
 import org.tinyjpa.jdbc.PkStrategy;
 import org.tinyjpa.jdbc.SqlStatement;
+import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 
 public abstract class AbstractDbJdbc implements DbJdbc {
 	private Logger LOG = LoggerFactory.getLogger(AbstractDbJdbc.class);
 	private AttributeValueConverter embeddedIdAttributeValueConverter = new EmbeddedIdAttributeValueConverter();
+	private NameTranslator nameTranslator = new DefaultNameTranslator();
+
+	@Override
+	public NameTranslator getNameTranslator() {
+		return nameTranslator;
+	}
 
 	protected PkStrategy findPkStrategy(GeneratedValue generatedValue) {
 		if (generatedValue == null)
@@ -44,17 +54,17 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		Attribute id = entity.getId();
 		PkStrategy pkStrategy = findPkStrategy(id.getGeneratedValue());
 
-		LOG.info("generateInsert: strategyClass=" + pkStrategy);
+		LOG.info("generateInsert: pkStrategy=" + pkStrategy);
 		if (pkStrategy == PkStrategy.SEQUENCE)
 			return generateInsertSequenceStrategy(connection, entity, attrValues);
 		else if (pkStrategy == PkStrategy.IDENTITY)
 			return generateInsertIdentityStrategy(entity, attrValues);
 
-		return generatePlainInsert(connection, entityInstance, entity, attrValues);
+		return generatePlainInsert(entityInstance, entity, attrValues);
 	}
 
-	protected SqlStatement generatePlainInsert(Connection connection, Object entityInstance, Entity entity,
-			List<AttributeValue> attrValues) throws Exception {
+	protected SqlStatement generatePlainInsert(Object entityInstance, Entity entity, List<AttributeValue> attrValues)
+			throws Exception {
 		Attribute id = entity.getId();
 		Object idValue = id.getReadMethod().invoke(entityInstance);
 		List<AttributeValue> attrValuesWithId = new ArrayList<>();
@@ -64,7 +74,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValuesWithId);
 
-		String sql = generateInsertStatement(entity, columnNameValues);
+		String sql = generateInsertStatement(entity.getTableName(), columnNameValues);
 		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValuesWithId).withIdValue(idValue)
 				.withColumnNameValues(columnNameValues).build();
 	}
@@ -82,7 +92,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValuesWithId);
 		LOG.info("generateInsertSequenceStrategy: columnNameValues.size()=" + columnNameValues.size());
-		String sql = generateInsertStatement(entity, columnNameValues);
+		String sql = generateInsertStatement(entity.getTableName(), columnNameValues);
 		LOG.info("generateInsertSequenceStrategy: sql=" + sql);
 		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValuesWithId).withIdValue(idValue)
 				.withColumnNameValues(columnNameValues).build();
@@ -92,21 +102,21 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			throws Exception {
 		List<AttributeValue> attributeValues = attrValues;
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
-		String sql = generateInsertStatement(entity, columnNameValues);
+		String sql = generateInsertStatement(entity.getTableName(), columnNameValues);
 		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attributeValues)
 				.withColumnNameValues(columnNameValues).build();
 	}
 
-	protected String generateInsertStatement(Entity entity, List<ColumnNameValue> attrValues) {
+	protected String generateInsertStatement(String tableName, List<ColumnNameValue> columnNameValues) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("insert into ");
-		sb.append(entity.getTableName());
+		sb.append(tableName);
 		sb.append(" (");
-		String cols = attrValues.stream().map(a -> a.getColumnName()).collect(Collectors.joining(","));
+		String cols = columnNameValues.stream().map(a -> a.getColumnName()).collect(Collectors.joining(","));
 		sb.append(cols);
 		sb.append(") values (");
 
-		for (int i = 0; i < attrValues.size(); ++i) {
+		for (int i = 0; i < columnNameValues.size(); ++i) {
 			if (i > 0)
 				sb.append(",");
 
@@ -141,28 +151,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 							attributeType.getId().getSqlType(), a, null);
 					list.add(columnNameValue);
 				}
-
-//				if (a.isOneToOne()) {
-//					if (a.getOneToOne().isOwner()) {
-//						LOG.info("convertAttributeValues: oneToOne=" + a.getOneToOne());
-//						OneToOne oneToOne = a.getOneToOne();
-//						Entity entity = oneToOne.getAttributeType();
-//						Object idValue = entity.getId().getReadMethod().invoke(av.getValue());
-//						columnNameValue = new ColumnNameValue(oneToOne.getJoinColumn(), idValue,
-//								entity.getId().getType(), entity.getId().getSqlType(), a, null);
-//						list.add(columnNameValue);
-//					}
-//				} else if (a.isManyToOne() && a.getManyToOne().isOwner()) {
-//					LOG.info("convertAttributeValues: manyToOne=" + a.getManyToOne());
-//					ManyToOne manyToOne = a.getManyToOne();
-//					Entity entity = manyToOne.getAttributeType();
-//					Object idValue = entity.getId().getReadMethod().invoke(av.getValue());
-//					LOG.info("convertAttributeValues: idValue=" + idValue);
-//					columnNameValue = new ColumnNameValue(manyToOne.getJoinColumn(), idValue, entity.getId().getType(),
-//							entity.getId().getSqlType(), a, null);
-//					LOG.info("convertAttributeValues: columnNameValue=" + columnNameValue);
-//					list.add(columnNameValue);
-//				}
 			} else {
 				columnNameValue = ColumnNameValue.build(av);
 				list.add(columnNameValue);
@@ -176,20 +164,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		List<ColumnNameValue> list = new ArrayList<>();
 		for (Attribute a : attributes) {
 			ColumnNameValue columnNameValue = null;
-//			if (a.isOneToOne() && a.getOneToOne().isOwner()) {
-//				OneToOne oneToOne = a.getOneToOne();
-//				Entity entity = oneToOne.getAttributeType();
-//				columnNameValue = new ColumnNameValue(oneToOne.getJoinColumn(), null, entity.getId().getType(),
-//						entity.getId().getSqlType(), a, null);
-//			} else if (a.isManyToOne() && a.getManyToOne().isOwner()) {
-//				ManyToOne manyToOne = a.getManyToOne();
-//				Entity entity = manyToOne.getAttributeType();
-//				columnNameValue = new ColumnNameValue(manyToOne.getJoinColumn(), null, entity.getId().getType(),
-//						entity.getId().getSqlType(), a, null);
-//			} else {
 			columnNameValue = ColumnNameValue.build(a);
-//			}
-
 			list.add(columnNameValue);
 		}
 
@@ -262,8 +237,8 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
 		fetchColumnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
 		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withAttributes(expandedAttributes)
-				.withColumnNameValues(columnNameValues).withFetchColumnNameValues(fetchColumnNameValues).build();
+		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues)
+				.withFetchColumnNameValues(fetchColumnNameValues).build();
 	}
 
 	@Override
@@ -272,9 +247,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		List<AttributeValue> attributeValues = new ArrayList<>();
 		AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKeyInstance);
 		LOG.info("generateSelectByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute);
-//		if (foreignKeyAttribute.isManyToOne())
-//			LOG.info("generateSelectByForeignKey: foreignKeyAttribute.getManyToOne()="
-//					+ foreignKeyAttribute.getManyToOne());
 
 		attributeValues.add(attrValue);
 
@@ -313,8 +285,121 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
 		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withAttributes(expandedAttributes)
-				.withColumnNameValues(columnNameValues).withFetchColumnNameValues(fetchColumnNameValues).build();
+		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues)
+				.withFetchColumnNameValues(fetchColumnNameValues).build();
+	}
+
+	@Override
+	public SqlStatement generateSelectByJoinTable(Entity entity, Attribute owningId, Object joinTableForeignKey,
+			RelationshipJoinTable joinTable) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		sb.append("select ");
+		int i = 0;
+		List<Attribute> expandedAttributes = entity.getId().expand();
+		List<Attribute> idAttributes = new ArrayList<>(expandedAttributes);
+		expandedAttributes.addAll(entity.expandAttributes());
+		List<String> columns = createColumns(expandedAttributes);
+		List<String> joinColumnNames = entity.getJoinColumnAttributes().stream().map(c -> c.getColumnName())
+				.collect(Collectors.toList());
+		columns.addAll(joinColumnNames);
+		for (String c : columns) {
+			if (i > 0)
+				sb.append(", ");
+
+			sb.append(getNameTranslator().toColumnName(entity.getAlias(), c));
+			++i;
+		}
+
+		// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
+		// where j.t2=fk
+		sb.append(" from ");
+		sb.append(entity.getTableName());
+		sb.append(" ");
+		sb.append(entity.getAlias());
+		sb.append(" inner join ");
+		sb.append(joinTable.getTableName());
+		sb.append(" ");
+		sb.append(joinTable.getAlias());
+		sb.append(" on ");
+
+		// deal with multiple column pk
+		List<JoinColumnAttribute> joinColumnTargetAttributes = joinTable.getJoinColumnTargetAttributes();
+		int index = -1;
+		for (int k = 0; k < idAttributes.size(); ++k) {
+			if (k > 0)
+				sb.append(" and ");
+
+			sb.append(getNameTranslator().toColumnName(entity.getAlias(), idAttributes.get(k).getColumnName()));
+			sb.append(" = ");
+			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnTargetAttributes, idAttributes.get(k));
+			LOG.info("generateSelectByJoinTable: index=" + index);
+			JoinColumnAttribute joinColumnAttribute = joinColumnTargetAttributes.get(index);
+			sb.append(getNameTranslator().toColumnName(joinTable.getAlias(), joinColumnAttribute.getColumnName()));
+		}
+
+		sb.append(" where ");
+
+		List<JoinColumnAttribute> joinColumnOwningAttributes = joinTable.getJoinColumnOwningAttributes();
+		List<AttributeValue> owningIdAttributeValues = embeddedIdAttributeValueConverter
+				.convert(new AttributeValue(owningId, joinTableForeignKey));
+
+		List<AttributeValue> attributeValues = new ArrayList<>();
+		i = 0;
+		for (AttributeValue av : owningIdAttributeValues) {
+			if (i > 0)
+				sb.append(" and ");
+
+			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnOwningAttributes, av.getAttribute());
+			LOG.info("generateSelectByJoinTable: 2 index=" + index);
+			attributeValues.add(
+					new AttributeValue(joinColumnOwningAttributes.get(index).getForeignKeyAttribute(), av.getValue()));
+			sb.append(getNameTranslator().toColumnName(joinTable.getAlias(),
+					joinColumnOwningAttributes.get(index).getColumnName()));
+			sb.append(" = ?");
+			++i;
+		}
+
+		List<ColumnNameValue> columnNameValues = convertAttributeValues(attributeValues);
+		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
+		String sql = sb.toString();
+		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues)
+				.withFetchColumnNameValues(fetchColumnNameValues).build();
+	}
+
+	private List<ColumnNameValue> createJoinColumnAVS(List<JoinColumnAttribute> joinColumnAttributes,
+			Attribute owningId, Object joinTableForeignKey) throws Exception {
+		List<AttributeValue> idAttributeValues = embeddedIdAttributeValueConverter
+				.convert(new AttributeValue(owningId, joinTableForeignKey));
+
+		int index = -1;
+		List<ColumnNameValue> columnNameValues = new ArrayList<>();
+		for (AttributeValue av : idAttributeValues) {
+			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, av.getAttribute());
+			AttributeValue avn = new AttributeValue(joinColumnAttributes.get(index).getForeignKeyAttribute(),
+					av.getValue());
+
+			ColumnNameValue cnv = new ColumnNameValue(joinColumnAttributes.get(index).getColumnName(), avn.getValue(),
+					avn.getAttribute().getType(), avn.getAttribute().getSqlType(), null, avn.getAttribute());
+			columnNameValues.add(cnv);
+		}
+
+		return columnNameValues;
+	}
+
+	@Override
+	public SqlStatement generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, Object owningInstance,
+			Object targetInstance) throws Exception {
+		LOG.info("generateJoinTableInsert: owningInstance=" + owningInstance);
+		LOG.info("generateJoinTableInsert: targetInstance=" + targetInstance);
+		List<ColumnNameValue> columnNameValues = new ArrayList<>();
+		Attribute owningId = relationshipJoinTable.getOwningAttribute();
+		columnNameValues.addAll(createJoinColumnAVS(relationshipJoinTable.getJoinColumnOwningAttributes(), owningId,
+				AttributeUtil.getIdValue(owningId, owningInstance)));
+		Attribute targetId = relationshipJoinTable.getTargetAttribute();
+		columnNameValues.addAll(createJoinColumnAVS(relationshipJoinTable.getJoinColumnTargetAttributes(), targetId,
+				AttributeUtil.getIdValue(targetId, targetInstance)));
+		String sql = generateInsertStatement(relationshipJoinTable.getTableName(), columnNameValues);
+		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
 	}
 
 	@Override

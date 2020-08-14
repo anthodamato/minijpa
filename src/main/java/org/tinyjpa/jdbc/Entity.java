@@ -2,19 +2,21 @@ package org.tinyjpa.jdbc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Entity {
 	private Class<?> clazz;
 	private String tableName;
+	private String alias;
 	private Attribute id;
 	private List<Attribute> attributes;
 	private List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
-	private List<Attribute> relationshipAttributes = new ArrayList<>();
 
-	public Entity(Class<?> clazz, String tableName, Attribute id, List<Attribute> attributes) {
+	public Entity(Class<?> clazz, String tableName, String alias, Attribute id, List<Attribute> attributes) {
 		super();
 		this.clazz = clazz;
 		this.tableName = tableName;
+		this.alias = alias;
 		this.id = id;
 		this.attributes = attributes;
 	}
@@ -25,6 +27,10 @@ public class Entity {
 
 	public String getTableName() {
 		return tableName;
+	}
+
+	public String getAlias() {
+		return alias;
 	}
 
 	public List<Attribute> getAttributes() {
@@ -70,7 +76,7 @@ public class Entity {
 	}
 
 	public List<Attribute> getRelationshipAttributes() {
-		return relationshipAttributes;
+		return attributes.stream().filter(a -> a.getRelationship() != null).collect(Collectors.toList());
 	}
 
 	@Override

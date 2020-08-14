@@ -44,13 +44,10 @@ public class JdbcRunner {
 			preparedStatement.setDate(index, (Date) value);
 	}
 
-	private void setPreparedStatementValues(PreparedStatement preparedStatement, SqlStatement sqlStatement)
+	private void setPreparedStatementValues(PreparedStatement preparedStatement, List<ColumnNameValue> columnNameValues)
 			throws SQLException {
-//		LOG.info("setPreparedStatementValues: sqlStatement.getStartIndex()=" + sqlStatement.getStartIndex());
 		int index = 1;
-		for (int i = sqlStatement.getStartIndex(); i < sqlStatement.getColumnNameValues().size(); ++i) {
-//			AttributeValue attrValue = sqlStatement.getAttrValues().get(i);
-			ColumnNameValue columnNameValue = sqlStatement.getColumnNameValues().get(i);
+		for (ColumnNameValue columnNameValue : columnNameValues) {
 			LOG.info("setPreparedStatementValues: columnName=" + columnNameValue.getColumnName() + "; type="
 					+ columnNameValue.getType().getName() + "; value=" + columnNameValue.getValue());
 			setPreparedStatementValue(preparedStatement, index, columnNameValue.getType(), columnNameValue.getSqlType(),
@@ -61,10 +58,9 @@ public class JdbcRunner {
 
 	public Object persist(SqlStatement sqlStatement, Connection connection) throws SQLException {
 		LOG.info("persist: sqlStatement.sql=" + sqlStatement.getSql());
-		LOG.info("persist: attrValues.size()=" + sqlStatement.getAttrValues().size());
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement.getSql(),
 				Statement.RETURN_GENERATED_KEYS);
-		setPreparedStatementValues(preparedStatement, sqlStatement);
+		setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
 		preparedStatement.execute();
 		if (sqlStatement.getIdValue() != null) {
 			preparedStatement.close();
@@ -87,7 +83,7 @@ public class JdbcRunner {
 		LOG.info("delete: sqlStatement.sql=" + sqlStatement.getSql());
 		LOG.info("delete: attrValues.size()=" + sqlStatement.getAttrValues().size());
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement.getSql());
-		setPreparedStatementValues(preparedStatement, sqlStatement);
+		setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
 		preparedStatement.execute();
 		preparedStatement.close();
 	}
@@ -97,7 +93,7 @@ public class JdbcRunner {
 		try {
 			LOG.info("findById: sql=" + sqlStatement.getSql());
 			preparedStatement = connection.prepareStatement(sqlStatement.getSql());
-			setPreparedStatementValues(preparedStatement, sqlStatement);
+			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
 
 			ResultSet rs = preparedStatement.executeQuery();
 			boolean next = rs.next();
@@ -131,9 +127,14 @@ public class JdbcRunner {
 			throws Exception {
 		PreparedStatement preparedStatement = null;
 		try {
-			LOG.info("findCollectionById: sql=" + sqlStatement.getSql());
-			preparedStatement = connection.prepareStatement(sqlStatement.getSql());
-			setPreparedStatementValues(preparedStatement, sqlStatement);
+			String sql = sqlStatement.getSql();
+			LOG.info("findCollectionById: sql=`" + sql + "`");
+			LOG.info("findCollectionById: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
+			LOG.info("findCollectionById: sqlStatement=" + sqlStatement);
+//			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
+			preparedStatement = connection.prepareStatement(sql);
+			LOG.info("findCollectionById: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
+			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
 
 			List<Object> objects = new ArrayList<>();
 			ResultSet rs = preparedStatement.executeQuery();
@@ -176,7 +177,6 @@ public class JdbcRunner {
 	}
 
 	public class AttributeValues {
-		public Object entityInstance;
 		public List<Object> values = new ArrayList<>();
 		public List<Attribute> attributes = new ArrayList<>();
 		public List<Object> relationshipValues = new ArrayList<>();

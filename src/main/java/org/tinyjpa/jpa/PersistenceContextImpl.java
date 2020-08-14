@@ -36,6 +36,16 @@ public class PersistenceContextImpl implements EntityContainer {
 	 */
 	private Map<Class<?>, Map<Object, Object>> pendingNewEntities = new HashMap<>();
 
+	/**
+	 * New attributes not ready to be inserted on db. For example, they can be
+	 * attributes that require a join table. The default 'one to many' relationship
+	 * requires a join table. If the 'one to many' collection entities have not been
+	 * inserted on db (associated to the persistence context) then the attribute is
+	 * marked as pending new. The structure is: Map<attribute, Map<entity instance,
+	 * List<target entity instance>>>.
+	 */
+	private Map<Attribute, Map<Object, List<Object>>> pendingNewAttributes = new HashMap<>();
+
 //	/**
 //	 * Entities not ready to be updated on db.
 //	 */
@@ -61,11 +71,11 @@ public class PersistenceContextImpl implements EntityContainer {
 		this.entities = entities;
 	}
 
-	private Map<Object, Object> getEntityMap(Class<?> clazz, Map<Class<?>, Map<Object, Object>> entities) {
-		Map<Object, Object> mapEntities = entities.get(clazz);
+	private Map<Object, Object> getEntityMap(Class<?> c, Map<Class<?>, Map<Object, Object>> entities) {
+		Map<Object, Object> mapEntities = entities.get(c);
 		if (mapEntities == null) {
 			mapEntities = new HashMap<>();
-			entities.put(clazz, mapEntities);
+			entities.put(c, mapEntities);
 		}
 
 		return mapEntities;
@@ -143,6 +153,16 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
+	public boolean isSaved(List<Object> entityInstanceList) throws Exception {
+		for (Object instance : entityInstanceList) {
+			if (!isSaved(instance))
+				return false;
+		}
+
+		return true;
+	}
+
+	@Override
 	public void remove(Object entityInstance, Object primaryKey) {
 		Map<Object, Object> mapEntities = persistentEntities.get(entityInstance.getClass());
 		if (mapEntities == null)
@@ -213,7 +233,7 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public void addToPendingNew(Object entityInstance) throws Exception {
+	public void addToPendingNew(Object entityInstance) {
 		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), pendingNewEntities);
 		if (mapEntities.get(entityInstance) != null)
 			return;
@@ -238,6 +258,44 @@ public class PersistenceContextImpl implements EntityContainer {
 	public void removePendingNew(Object entityInstance) {
 		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), pendingNewEntities);
 		mapEntities.remove(entityInstance);
+	}
+
+	private Map<Object, List<Object>> getAttributeMap(Map<Attribute, Map<Object, List<Object>>> attributeInstances,
+			Attribute attribute) {
+		Map<Object, List<Object>> mapEntities = attributeInstances.get(attribute);
+		if (mapEntities == null) {
+			mapEntities = new HashMap<>();
+			attributeInstances.put(attribute, mapEntities);
+		}
+
+		return mapEntities;
+	}
+
+	@Override
+	public void addToPendingNewAttributes(Attribute attribute, Object entityInstance, List<Object> objects) {
+		Map<Object, List<Object>> map = getAttributeMap(pendingNewAttributes, attribute);
+		if (map.get(entityInstance) != null)
+			return;
+
+		map.put(entityInstance, objects);
+	}
+
+	@Override
+	public List<Attribute> getPendingNewAttributes() {
+		List<Attribute> attributes = new ArrayList<>();
+		pendingNewAttributes.forEach((k, v) -> attributes.add(k));
+		return attributes;
+	}
+
+	@Override
+	public void removePendingNewAttribute(Attribute attribute, Object entityInstance) {
+		Map<Object, List<Object>> map = getAttributeMap(pendingNewAttributes, attribute);
+		map.remove(entityInstance);
+	}
+
+	@Override
+	public Map<Object, List<Object>> getPendingNewAttributeValue(Attribute attribute) {
+		return pendingNewAttributes.get(attribute);
 	}
 
 	@Override

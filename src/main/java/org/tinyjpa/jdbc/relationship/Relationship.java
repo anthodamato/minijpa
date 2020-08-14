@@ -9,10 +9,15 @@ public abstract class Relationship {
 	protected Entity owningEntity;
 	// for bidirectional relationships
 	protected Attribute owningAttribute;
+
+	/**
+	 * This is the target entity.
+	 */
 	protected Entity attributeType;
 	// for bidirectional relationships
 	protected Attribute targetAttribute;
 	protected String mappedBy;
+	protected RelationshipJoinTable joinTable;
 
 	public Relationship() {
 		super();
@@ -48,6 +53,10 @@ public abstract class Relationship {
 
 	public boolean isOwner() {
 		return false;
+	}
+
+	public RelationshipJoinTable getJoinTable() {
+		return joinTable;
 	}
 
 	@Override

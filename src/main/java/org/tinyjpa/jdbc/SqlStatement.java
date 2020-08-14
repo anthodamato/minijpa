@@ -4,8 +4,6 @@ import java.util.List;
 
 public class SqlStatement {
 	private String sql;
-//	private Object[] values;
-	private List<Attribute> attributes;
 	private List<AttributeValue> attrValues;
 	private int startIndex = 0;
 	private Object idValue;
@@ -17,14 +15,6 @@ public class SqlStatement {
 
 	public String getSql() {
 		return sql;
-	}
-
-//	public Object[] getValues() {
-//		return values;
-//	}
-
-	public List<Attribute> getAttributes() {
-		return attributes;
 	}
 
 	public List<AttributeValue> getAttrValues() {
@@ -49,8 +39,6 @@ public class SqlStatement {
 
 	public static class Builder {
 		private String sql;
-//		private Object[] values;
-		private List<Attribute> attributes;
 		private List<AttributeValue> attrValues;
 		private Object idValue;
 		private List<ColumnNameValue> columnNameValues;
@@ -61,16 +49,6 @@ public class SqlStatement {
 
 		public Builder withSql(String sql) {
 			this.sql = sql;
-			return this;
-		}
-
-//		public Builder withValues(Object[] values) {
-//			this.values = values;
-//			return this;
-//		}
-
-		public Builder withAttributes(List<Attribute> attributes) {
-			this.attributes = attributes;
 			return this;
 		}
 
@@ -97,8 +75,6 @@ public class SqlStatement {
 		public SqlStatement build() {
 			SqlStatement sqlStatement = new SqlStatement();
 			sqlStatement.sql = sql;
-//			sqlStatement.values = values;
-			sqlStatement.attributes = attributes;
 			sqlStatement.attrValues = attrValues;
 			sqlStatement.idValue = idValue;
 			sqlStatement.columnNameValues = columnNameValues;

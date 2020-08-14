@@ -5,11 +5,9 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
@@ -23,6 +21,7 @@ import javax.persistence.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.Entity;
 import org.tinyjpa.jdbc.JdbcTypes;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
@@ -30,14 +29,16 @@ import org.tinyjpa.jdbc.PkGenerationType;
 import org.tinyjpa.jdbc.relationship.ManyToOne;
 import org.tinyjpa.jdbc.relationship.OneToMany;
 import org.tinyjpa.jdbc.relationship.OneToOne;
+import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 
 public class Parser {
 	private Logger LOG = LoggerFactory.getLogger(Parser.class);
+	private AliasGenerator aliasGenerator = new AliasGenerator();
 
 	public Map<String, Entity> parse(List<EnhEntity> enhancedClasses) throws Exception {
 		Map<String, Entity> entities = new HashMap<>();
 		for (EnhEntity enhEntity : enhancedClasses) {
-			Entity entity = parse(enhEntity);
+			Entity entity = parse(enhEntity, entities.values());
 			if (entity != null)
 				entities.put(enhEntity.getClassName(), entity);
 		}
@@ -47,7 +48,7 @@ public class Parser {
 		return entities;
 	}
 
-	private Entity parse(EnhEntity enhEntity) throws Exception {
+	private Entity parse(EnhEntity enhEntity, Collection<Entity> parsedEntities) throws Exception {
 		Class<?> c = Class.forName(enhEntity.getClassName());
 		javax.persistence.Entity ec = c.getAnnotation(javax.persistence.Entity.class);
 		if (ec == null) {
@@ -77,7 +78,8 @@ public class Parser {
 		if (table != null && table.name() != null && table.name().trim().length() > 0)
 			tableName = table.name();
 
-		return new Entity(c, tableName, id, attributes);
+		String alias = aliasGenerator.calculateAlias(tableName, parsedEntities);
+		return new Entity(c, tableName, alias, id, attributes);
 	}
 
 	private List<Attribute> readAttributes(EnhEntity enhEntity) throws Exception {
@@ -156,7 +158,7 @@ public class Parser {
 			} else if (oneToMany != null) {
 				Class<?> collectionClass = findAttributeImpl(c, readMethod);
 				if (collectionClass == null) {
-					collectionClass = findImplementationClass(attributeClass);
+					collectionClass = AttributeUtil.findImplementationClass(attributeClass);
 				}
 
 				Class<?> targetEntity = oneToMany.targetEntity();
@@ -256,12 +258,65 @@ public class Parser {
 		}
 
 		builder = builder.withCollectionClass(collectionClass);
-		builder = builder.withTargetEntity(targetEntity);
+		builder = builder.withTargetEntityClass(targetEntity);
 		return builder.build();
 	}
 
 	private String createDefaultJoinColumn(Attribute owningAttribute, Entity toEntity) {
 		return owningAttribute.getName() + "_" + toEntity.getId().getColumnName();
+	}
+
+	private String createDefaultOneToManyOwnerJoinColumn(Entity entity, Attribute attribute) {
+		return entity.getTableName() + "_" + attribute.getColumnName();
+	}
+
+	private JoinColumnAttribute createJoinColumnOwningAttribute(Entity entity, Attribute attribute, String joinColumn) {
+		String jc = joinColumn;
+		if (jc == null)
+			jc = createDefaultOneToManyOwnerJoinColumn(entity, attribute);
+
+		return new JoinColumnAttribute.Builder().withColumnName(jc).withType(attribute.getType())
+				.withSqlType(attribute.getSqlType()).withForeignKeyAttribute(attribute).build();
+	}
+
+	private List<JoinColumnAttribute> createJoinColumnOwningAttributes(Entity entity) {
+		List<Attribute> attributes = entity.getId().expand();
+		List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
+		for (Attribute a : attributes) {
+			JoinColumnAttribute joinColumnAttribute = createJoinColumnOwningAttribute(entity, a, null);
+			joinColumnAttributes.add(joinColumnAttribute);
+		}
+
+		return joinColumnAttributes;
+	}
+
+	private String createDefaultOneToManyJoinColumn(Attribute relationshipAttribute, Attribute id) {
+		return relationshipAttribute.getName() + "_" + id.getColumnName();
+	}
+
+	private JoinColumnAttribute createJoinColumnTargetAttribute(Attribute id, Attribute relationshipAttribute,
+			String joinColumn) {
+		String jc = joinColumn;
+		if (jc == null)
+			jc = createDefaultOneToManyJoinColumn(relationshipAttribute, id);
+
+		return new JoinColumnAttribute.Builder().withColumnName(jc).withType(id.getType()).withSqlType(id.getSqlType())
+				.withForeignKeyAttribute(id).build();
+	}
+
+	private List<JoinColumnAttribute> createJoinColumnTargetAttributes(Entity entity, Attribute relationshipAttribute) {
+		List<Attribute> attributes = entity.getId().expand();
+		List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
+		for (Attribute a : attributes) {
+			JoinColumnAttribute joinColumnAttribute = createJoinColumnTargetAttribute(a, relationshipAttribute, null);
+			joinColumnAttributes.add(joinColumnAttribute);
+		}
+
+		return joinColumnAttributes;
+	}
+
+	private String createDefaultOneToManyJoinTable(Entity owner, Entity target) {
+		return owner.getTableName() + "_" + target.getTableName();
 	}
 
 	private void finalizeRelationships(Entity entity, Map<String, Entity> entities, List<Attribute> attributes) {
@@ -327,21 +382,36 @@ public class Parser {
 				a.setRelationship(builder.build());
 			} else if (a.isOneToMany()) {
 				OneToMany oneToMany = a.getOneToMany();
-				Entity toEntity = entities.get(oneToMany.getTargetEntity().getName());
+				Entity toEntity = entities.get(oneToMany.getTargetEntityClass().getName());
 				LOG.info("finalizeRelationships: OneToMany toEntity=" + toEntity + "; a.getType().getName()="
 						+ a.getType().getName());
 				if (toEntity == null)
 					throw new IllegalArgumentException(
-							"One to Many target entity not found (" + oneToMany.getTargetEntity().getName() + ")");
-
-//				if (a.getOneToMany().isOwner() && a.getOneToMany().getJoinColumn() == null) {
-//					String joinColumnName = createDefaultJoinColumn(a, toEntity);
-//					oneToMany = new OneToMany.Builder().with(a.getOneToMany()).withJoinColumn(joinColumnName)
-//							.build();
-//				}
+							"One to Many target entity not found (" + oneToMany.getTargetEntityClass().getName() + ")");
 
 				OneToMany.Builder builder = new OneToMany.Builder().with(a.getOneToMany());
-				if (!a.getOneToMany().isOwner()) {
+				builder = builder.withAttributeType(toEntity);
+				if (oneToMany.isOwner()) {
+					if (oneToMany.getJoinColumn() == null) {
+						String joinTableName = createDefaultOneToManyJoinTable(entity, toEntity);
+						String joinTableAlias = aliasGenerator.calculateAlias(joinTableName, entities.values());
+						List<JoinColumnAttribute> joinColumnOwningAttributes = createJoinColumnOwningAttributes(entity);
+						List<JoinColumnAttribute> joinColumnTargetAttributes = createJoinColumnTargetAttributes(
+								toEntity, a);
+						RelationshipJoinTable relationshipJoinTable = new RelationshipJoinTable(joinTableName,
+								joinTableAlias, joinColumnOwningAttributes, joinColumnTargetAttributes, entity.getId(),
+								toEntity.getId());
+						builder = builder.withJoinTable(relationshipJoinTable);
+					} else {
+						// TODO: current implemented with just one join column, more columns could be
+						// used
+						JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
+								.withColumnName(oneToMany.getJoinColumn()).withType(entity.getId().getType())
+								.withSqlType(entity.getId().getSqlType()).withForeignKeyAttribute(entity.getId())
+								.build();
+						toEntity.getJoinColumnAttributes().add(joinColumnAttribute);
+					}
+				} else {
 					builder = builder.withOwningEntity(toEntity);
 					builder = builder.withOwningAttribute(toEntity.getAttribute(oneToMany.getMappedBy()));
 					Attribute attribute = toEntity.getAttribute(oneToMany.getMappedBy());
@@ -410,26 +480,4 @@ public class Parser {
 
 		return null;
 	}
-
-	/**
-	 * Given an attribute class declared as interface, this method returns an
-	 * implementation class to use in the lazy attributes.
-	 * 
-	 * @param attributeClass
-	 * @return
-	 */
-	private Class<?> findImplementationClass(Class<?> attributeClass) {
-		LOG.info("findImplementationClass: attributeClass.getName()=" + attributeClass.getName());
-		if (attributeClass == Collection.class || attributeClass == Set.class)
-			return HashSet.class;
-
-		if (attributeClass == List.class)
-			return ArrayList.class;
-
-		if (attributeClass == Map.class)
-			return HashMap.class;
-
-		return null;
-	}
-
 }

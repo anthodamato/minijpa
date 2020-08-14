@@ -5,7 +5,7 @@ import org.tinyjpa.jdbc.Entity;
 
 public final class OneToMany extends Relationship {
 	private Class<?> collectionClass;
-	private Class<?> targetEntity;
+	private Class<?> targetEntityClass;
 
 	public OneToMany() {
 		super();
@@ -16,8 +16,8 @@ public final class OneToMany extends Relationship {
 		return mappedBy == null || mappedBy.isEmpty();
 	}
 
-	public Class<?> getTargetEntity() {
-		return targetEntity;
+	public Class<?> getTargetEntityClass() {
+		return targetEntityClass;
 	}
 
 	@Override
@@ -33,8 +33,10 @@ public final class OneToMany extends Relationship {
 		private Entity owningEntity;
 		private Attribute owningAttribute;
 		private Class<?> collectionClass;
-		private Class<?> targetEntity;
+		private Class<?> targetEntityClass;
 		private Attribute targetAttribute;
+		private RelationshipJoinTable joinTable;
+		private Entity attributeType;
 
 		public Builder() {
 		}
@@ -69,13 +71,23 @@ public final class OneToMany extends Relationship {
 			return this;
 		}
 
-		public Builder withTargetEntity(Class<?> targetEntity) {
-			this.targetEntity = targetEntity;
+		public Builder withTargetEntityClass(Class<?> targetEntityClass) {
+			this.targetEntityClass = targetEntityClass;
 			return this;
 		}
 
 		public Builder withTargetAttribute(Attribute targetAttribute) {
 			this.targetAttribute = targetAttribute;
+			return this;
+		}
+
+		public Builder withJoinTable(RelationshipJoinTable joinTable) {
+			this.joinTable = joinTable;
+			return this;
+		}
+
+		public Builder withAttributeType(Entity attributeType) {
+			this.attributeType = attributeType;
 			return this;
 		}
 
@@ -86,8 +98,10 @@ public final class OneToMany extends Relationship {
 			this.owningEntity = oneToMany.owningEntity;
 			this.owningAttribute = oneToMany.owningAttribute;
 			this.collectionClass = oneToMany.collectionClass;
-			this.targetEntity = oneToMany.targetEntity;
+			this.targetEntityClass = oneToMany.targetEntityClass;
 			this.targetAttribute = oneToMany.targetAttribute;
+			this.joinTable = oneToMany.joinTable;
+			this.attributeType = oneToMany.attributeType;
 			return this;
 		}
 
@@ -99,8 +113,10 @@ public final class OneToMany extends Relationship {
 			oto.owningEntity = owningEntity;
 			oto.owningAttribute = owningAttribute;
 			oto.collectionClass = collectionClass;
-			oto.targetEntity = targetEntity;
+			oto.targetEntityClass = targetEntityClass;
 			oto.targetAttribute = targetAttribute;
+			oto.joinTable = joinTable;
+			oto.attributeType = attributeType;
 			return oto;
 		}
 	}

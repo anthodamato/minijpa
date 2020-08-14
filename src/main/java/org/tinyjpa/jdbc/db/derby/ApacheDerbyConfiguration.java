@@ -1,4 +1,7 @@
-package org.tinyjpa.jdbc.db;
+package org.tinyjpa.jdbc.db.derby;
+
+import org.tinyjpa.jdbc.db.DbConfiguration;
+import org.tinyjpa.jdbc.db.DbJdbc;
 
 public class ApacheDerbyConfiguration implements DbConfiguration {
 
