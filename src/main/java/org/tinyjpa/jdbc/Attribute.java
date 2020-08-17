@@ -4,11 +4,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.tinyjpa.jdbc.relationship.Relationship;
 import org.tinyjpa.jdbc.relationship.FetchType;
-import org.tinyjpa.jdbc.relationship.ManyToOne;
-import org.tinyjpa.jdbc.relationship.OneToMany;
-import org.tinyjpa.jdbc.relationship.OneToOne;
+import org.tinyjpa.jdbc.relationship.Relationship;
 
 public class Attribute extends AbstractAttribute {
 //	private Logger LOG = LoggerFactory.getLogger(Attribute.class);
@@ -19,9 +16,6 @@ public class Attribute extends AbstractAttribute {
 	private GeneratedValue generatedValue;
 	private boolean embedded;
 	private List<Attribute> embeddedAttributes;
-	private OneToOne oneToOne;
-	private ManyToOne manyToOne;
-	private OneToMany oneToMany;
 	private Relationship relationship;
 
 	public String getName() {
@@ -50,42 +44,6 @@ public class Attribute extends AbstractAttribute {
 
 	public List<Attribute> getEmbeddedAttributes() {
 		return embeddedAttributes;
-	}
-
-	public OneToOne getOneToOne() {
-		return oneToOne;
-	}
-
-	public boolean isOneToOne() {
-		return oneToOne != null;
-	}
-
-	public ManyToOne getManyToOne() {
-		return manyToOne;
-	}
-
-	public boolean isManyToOne() {
-		return manyToOne != null;
-	}
-
-	public OneToMany getOneToMany() {
-		return oneToMany;
-	}
-
-	public boolean isOneToMany() {
-		return oneToMany != null;
-	}
-
-	public void setOneToOne(OneToOne oneToOne) {
-		this.oneToOne = oneToOne;
-	}
-
-	public void setManyToOne(ManyToOne manyToOne) {
-		this.manyToOne = manyToOne;
-	}
-
-	public void setOneToMany(OneToMany oneToMany) {
-		this.oneToMany = oneToMany;
 	}
 
 	public Relationship getRelationship() {
@@ -159,9 +117,6 @@ public class Attribute extends AbstractAttribute {
 		private GeneratedValue generatedValue;
 		private boolean embedded;
 		private List<Attribute> embeddedAttributes;
-		private OneToOne oneToOne;
-		private ManyToOne manyToOne;
-		private OneToMany oneToMany;
 		private Relationship relationship;
 
 		public Builder(String name) {
@@ -215,25 +170,11 @@ public class Attribute extends AbstractAttribute {
 			return this;
 		}
 
-		public Builder withOneToOne(OneToOne oneToOne) {
-			this.oneToOne = oneToOne;
-			return this;
-		}
-
-		public Builder withManyToOne(ManyToOne manyToOne) {
-			this.manyToOne = manyToOne;
-			return this;
-		}
-
-		public Builder withOneToMany(OneToMany oneToMany) {
-			this.oneToMany = oneToMany;
-			return this;
-		}
-
 		public Builder withRelationship(Relationship relationship) {
 			this.relationship = relationship;
 			return this;
 		}
+
 //		public Builder with(Attribute attribute) {
 //			this.name = attribute.name;
 //			this.columnName = attribute.columnName;
@@ -245,9 +186,6 @@ public class Attribute extends AbstractAttribute {
 //			this.generatedValue = attribute.generatedValue;
 //			this.embedded = attribute.embedded;
 //			this.embeddedAttributes = attribute.embeddedAttributes;
-//			this.oneToOne = attribute.oneToOne;
-//			this.manyToOne = attribute.manyToOne;
-//			this.oneToMany = attribute.oneToMany;
 //			this.entity = attribute.entity;
 //			return this;
 //		}
@@ -264,9 +202,6 @@ public class Attribute extends AbstractAttribute {
 			attribute.generatedValue = generatedValue;
 			attribute.embedded = embedded;
 			attribute.embeddedAttributes = embeddedAttributes;
-			attribute.oneToOne = oneToOne;
-			attribute.manyToOne = manyToOne;
-			attribute.oneToMany = oneToMany;
 			attribute.relationship = relationship;
 			return attribute;
 		}

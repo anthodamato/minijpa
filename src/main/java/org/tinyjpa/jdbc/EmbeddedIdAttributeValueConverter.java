@@ -9,7 +9,7 @@ public class EmbeddedIdAttributeValueConverter implements AttributeValueConverte
 	public List<AttributeValue> convert(AttributeValue attrValue) throws Exception {
 		List<AttributeValue> attrValues = new ArrayList<>();
 		if (!attrValue.getAttribute().isEmbedded()) {
-			if (attrValue.getAttribute().isOneToOne())
+			if (attrValue.getAttribute().getRelationship() != null)
 				return attrValues;
 
 			attrValues.add(attrValue);

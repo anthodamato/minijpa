@@ -19,6 +19,7 @@ import org.tinyjpa.jdbc.JdbcRunner;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.SqlStatement;
 import org.tinyjpa.jdbc.relationship.FetchType;
+import org.tinyjpa.jdbc.relationship.Relationship;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 
 public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager {
@@ -168,7 +169,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			Object childAttributeValue) throws Exception {
 		LOG.info("loadAttributeValue: parentInstance=" + parentInstance);
 		Object foreignKey = entityContainer.getForeignKeyValue(parentInstance, a);
-		LOG.info("loadAttributeValue: a=" + a + "; oneToOne=" + a.getOneToOne() + "; foreignKey=" + foreignKey);
+//		LOG.info("loadAttributeValue: a=" + a + "; oneToOne=" + a.getOneToOne() + "; foreignKey=" + foreignKey);
 		Object foreignKeyInstance = findById(a.getType(), foreignKey, childAttribute, childAttributeValue);
 		LOG.info("loadAttributeValue: foreignKeyInstance=" + foreignKeyInstance);
 		if (foreignKeyInstance != null) {
@@ -213,12 +214,13 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	public Object load(Object parentInstance, Attribute a) throws Exception {
 		LOG.info("load (lazy): parentInstance=" + parentInstance + "; a=" + a);
 		Attribute targetAttribute = null;
-		if (a.getRelationship() != null)
-			targetAttribute = a.getRelationship().getTargetAttribute();
+		Relationship relationship = a.getRelationship();
+		if (relationship != null)
+			targetAttribute = relationship.getTargetAttribute();
 
-		if (a.isOneToMany()) {
+		if (relationship != null && relationship.toMany()) {
 			LOG.info("load (lazy): oneToMany targetAttribute=" + targetAttribute);
-			if (a.getOneToMany().getJoinTable() != null) {
+			if (relationship.getJoinTable() != null) {
 				Entity entity = a.getRelationship().getAttributeType();
 				Entity e = entities.get(parentInstance.getClass().getName());
 				Object pk = AttributeUtil.getIdValue(e, parentInstance);
@@ -230,8 +232,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				return objects;
 			}
 
-			return loadAttributeValues(parentInstance, a.getOneToMany().getTargetEntityClass(),
-					a.getOneToMany().getOwningAttribute(), targetAttribute, parentInstance);
+			return loadAttributeValues(parentInstance, relationship.getTargetEntityClass(),
+					relationship.getOwningAttribute(), targetAttribute, parentInstance);
 		}
 
 		LOG.info("load (lazy): owningAttribute=" + targetAttribute);

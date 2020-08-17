@@ -5,7 +5,6 @@ import org.tinyjpa.jdbc.Entity;
 
 public final class OneToMany extends Relationship {
 	private Class<?> collectionClass;
-	private Class<?> targetEntityClass;
 
 	public OneToMany() {
 		super();
@@ -16,8 +15,9 @@ public final class OneToMany extends Relationship {
 		return mappedBy == null || mappedBy.isEmpty();
 	}
 
-	public Class<?> getTargetEntityClass() {
-		return targetEntityClass;
+	@Override
+	public boolean toMany() {
+		return true;
 	}
 
 	@Override

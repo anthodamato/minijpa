@@ -18,6 +18,7 @@ public abstract class Relationship {
 	protected Attribute targetAttribute;
 	protected String mappedBy;
 	protected RelationshipJoinTable joinTable;
+	protected Class<?> targetEntityClass;
 
 	public Relationship() {
 		super();
@@ -57,6 +58,14 @@ public abstract class Relationship {
 
 	public RelationshipJoinTable getJoinTable() {
 		return joinTable;
+	}
+
+	public boolean toMany() {
+		return false;
+	}
+
+	public Class<?> getTargetEntityClass() {
+		return targetEntityClass;
 	}
 
 	@Override

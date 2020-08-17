@@ -29,6 +29,7 @@ import org.tinyjpa.jdbc.PkGenerationType;
 import org.tinyjpa.jdbc.relationship.ManyToOne;
 import org.tinyjpa.jdbc.relationship.OneToMany;
 import org.tinyjpa.jdbc.relationship.OneToOne;
+import org.tinyjpa.jdbc.relationship.Relationship;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 
 public class Parser {
@@ -150,10 +151,8 @@ public class Parser {
 			javax.persistence.OneToMany oneToMany = field.getAnnotation(javax.persistence.OneToMany.class);
 			JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
 			if (oneToOne != null) {
-				builder.withOneToOne(createOneToOne(oneToOne, joinColumn, null));
 				builder.withRelationship(createOneToOne(oneToOne, joinColumn, null));
 			} else if (manyToOne != null) {
-				builder.withManyToOne(createManyToOne(manyToOne, joinColumn, null));
 				builder.withRelationship(createManyToOne(manyToOne, joinColumn, null));
 			} else if (oneToMany != null) {
 				Class<?> collectionClass = findAttributeImpl(c, readMethod);
@@ -166,7 +165,6 @@ public class Parser {
 					targetEntity = ReflectionUtil.findTargetEntity(field);
 				}
 
-				builder.withOneToMany(createOneToMany(oneToMany, joinColumn, null, collectionClass, targetEntity));
 				builder.withRelationship(createOneToMany(oneToMany, joinColumn, null, collectionClass, targetEntity));
 			}
 
@@ -327,17 +325,21 @@ public class Parser {
 				return;
 			}
 
-			if (a.isOneToOne()) {
+			Relationship relationship = a.getRelationship();
+			if (relationship == null)
+				continue;
+
+			if (relationship instanceof OneToOne) {
 				Entity toEntity = entities.get(a.getType().getName());
 				LOG.info("finalizeRelationships: OneToOne toEntity=" + toEntity);
 				if (toEntity == null)
 					throw new IllegalArgumentException("One to One entity not found (" + a.getType().getName() + ")");
 
-				OneToOne oneToOne = a.getOneToOne();
+				OneToOne oneToOne = (OneToOne) relationship;
 				OneToOne.Builder builder = new OneToOne.Builder().with(oneToOne);
-				if (oneToOne.isOwner()) {
-					String joinColumnName = oneToOne.getJoinColumn();
-					if (oneToOne.getJoinColumn() == null) {
+				if (relationship.isOwner()) {
+					String joinColumnName = relationship.getJoinColumn();
+					if (relationship.getJoinColumn() == null) {
 						joinColumnName = createDefaultJoinColumn(a, toEntity);
 						builder = builder.withJoinColumn(joinColumnName);
 					}
@@ -349,23 +351,22 @@ public class Parser {
 					builder = builder.withTargetAttribute(toEntity.findAttributeWithMappedBy(a.getName()));
 				}
 
-				if (!a.getOneToOne().isOwner()) {
+				if (!relationship.isOwner()) {
 					builder = builder.withOwningEntity(toEntity);
-					builder = builder.withOwningAttribute(toEntity.getAttribute(oneToOne.getMappedBy()));
+					builder = builder.withOwningAttribute(toEntity.getAttribute(relationship.getMappedBy()));
 				}
 
 				builder.withAttributeType(toEntity);
-				a.setOneToOne(builder.build());
 				a.setRelationship(builder.build());
-			} else if (a.isManyToOne()) {
+			} else if (relationship instanceof ManyToOne) {
 				Entity toEntity = entities.get(a.getType().getName());
 				LOG.info("finalizeRelationships: ManyToOne toEntity=" + toEntity);
 				if (toEntity == null)
 					throw new IllegalArgumentException("Many to One entity not found (" + a.getType().getName() + ")");
 
-				ManyToOne manyToOne = a.getManyToOne();
+				ManyToOne manyToOne = (ManyToOne) relationship;
 				ManyToOne.Builder builder = new ManyToOne.Builder().with(manyToOne);
-				if (a.getManyToOne().isOwner() && a.getManyToOne().getJoinColumn() == null) {
+				if (relationship.isOwner() && relationship.getJoinColumn() == null) {
 					String joinColumnName = createDefaultJoinColumn(a, toEntity);
 					LOG.info("finalizeRelationships: ManyToOne joinColumnName=" + joinColumnName);
 					builder = builder.withJoinColumn(joinColumnName);
@@ -376,23 +377,22 @@ public class Parser {
 					entity.getJoinColumnAttributes().add(joinColumnAttribute);
 				}
 
-				LOG.info("finalizeRelationships: ManyToOne manyToOne=" + manyToOne);
+				LOG.info("finalizeRelationships: ManyToOne manyToOne=" + relationship);
 				builder = builder.withAttributeType(toEntity);
-				a.setManyToOne(builder.build());
 				a.setRelationship(builder.build());
-			} else if (a.isOneToMany()) {
-				OneToMany oneToMany = a.getOneToMany();
-				Entity toEntity = entities.get(oneToMany.getTargetEntityClass().getName());
+			} else if (relationship instanceof OneToMany) {
+				Entity toEntity = entities.get(relationship.getTargetEntityClass().getName());
 				LOG.info("finalizeRelationships: OneToMany toEntity=" + toEntity + "; a.getType().getName()="
 						+ a.getType().getName());
 				if (toEntity == null)
-					throw new IllegalArgumentException(
-							"One to Many target entity not found (" + oneToMany.getTargetEntityClass().getName() + ")");
+					throw new IllegalArgumentException("One to Many target entity not found ("
+							+ relationship.getTargetEntityClass().getName() + ")");
 
-				OneToMany.Builder builder = new OneToMany.Builder().with(a.getOneToMany());
+				OneToMany oneToMany = (OneToMany) relationship;
+				OneToMany.Builder builder = new OneToMany.Builder().with(oneToMany);
 				builder = builder.withAttributeType(toEntity);
-				if (oneToMany.isOwner()) {
-					if (oneToMany.getJoinColumn() == null) {
+				if (relationship.isOwner()) {
+					if (relationship.getJoinColumn() == null) {
 						String joinTableName = createDefaultOneToManyJoinTable(entity, toEntity);
 						String joinTableAlias = aliasGenerator.calculateAlias(joinTableName, entities.values());
 						List<JoinColumnAttribute> joinColumnOwningAttributes = createJoinColumnOwningAttributes(entity);
@@ -406,21 +406,20 @@ public class Parser {
 						// TODO: current implemented with just one join column, more columns could be
 						// used
 						JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
-								.withColumnName(oneToMany.getJoinColumn()).withType(entity.getId().getType())
+								.withColumnName(relationship.getJoinColumn()).withType(entity.getId().getType())
 								.withSqlType(entity.getId().getSqlType()).withForeignKeyAttribute(entity.getId())
 								.build();
 						toEntity.getJoinColumnAttributes().add(joinColumnAttribute);
 					}
 				} else {
 					builder = builder.withOwningEntity(toEntity);
-					builder = builder.withOwningAttribute(toEntity.getAttribute(oneToMany.getMappedBy()));
-					Attribute attribute = toEntity.getAttribute(oneToMany.getMappedBy());
+					builder = builder.withOwningAttribute(toEntity.getAttribute(relationship.getMappedBy()));
+					Attribute attribute = toEntity.getAttribute(relationship.getMappedBy());
 					LOG.info("finalizeRelationships: OneToMany targetAttribute=" + attribute);
 					builder = builder.withTargetAttribute(attribute);
 				}
 
 				OneToMany otm = builder.build();
-				a.setOneToMany(otm);
 				a.setRelationship(otm);
 			}
 		}
@@ -447,8 +446,8 @@ public class Parser {
 			for (int i = 0; i < attributes.size(); ++i) {
 				Attribute a = attributes.get(i);
 				LOG.info("printAttributes: a=" + a);
-				if (a.isManyToOne()) {
-					LOG.info("printAttributes: a.getManyToOne()=" + a.getManyToOne());
+				if (a.getRelationship() != null) {
+					LOG.info("printAttributes: a.getRelationship()=" + a.getRelationship());
 				}
 			}
 		}
