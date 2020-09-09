@@ -16,6 +16,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 
 import org.slf4j.Logger;
@@ -59,8 +60,20 @@ public class Parser {
 
 		LOG.info("Reading attributes...");
 		List<Attribute> attributes = readAttributes(enhEntity);
+		Entity mappedSuperclassEntity = null;
 		if (enhEntity.getMappedSuperclass() != null) {
-			List<Attribute> msAttributes = readAttributes(enhEntity.getMappedSuperclass());
+			Optional<Entity> optional = parsedEntities.stream().filter(e -> e.getMappedSuperclassEntity() != null)
+					.filter(e -> e.getMappedSuperclassEntity().getClazz().getName()
+							.equals(enhEntity.getMappedSuperclass().getClassName()))
+					.findFirst();
+
+			if (optional.isPresent())
+				mappedSuperclassEntity = optional.get().getMappedSuperclassEntity();
+			else
+				mappedSuperclassEntity = parseMappedSuperclass(enhEntity.getMappedSuperclass(), parsedEntities);
+
+//			List<Attribute> msAttributes = readAttributes(enhEntity.getMappedSuperclass());
+			List<Attribute> msAttributes = mappedSuperclassEntity.getAttributes();
 			attributes.addAll(msAttributes);
 		}
 
@@ -80,7 +93,20 @@ public class Parser {
 			tableName = table.name();
 
 		String alias = aliasGenerator.calculateAlias(tableName, parsedEntities);
-		return new Entity(c, tableName, alias, id, attributes);
+		return new Entity(c, tableName, alias, id, attributes, mappedSuperclassEntity);
+	}
+
+	private Entity parseMappedSuperclass(EnhEntity enhEntity, Collection<Entity> parsedEntities) throws Exception {
+		Class<?> c = Class.forName(enhEntity.getClassName());
+		MappedSuperclass ec = c.getAnnotation(MappedSuperclass.class);
+		if (ec == null) {
+			LOG.warn("@MappedSuperclass annotation not found");
+			return null;
+		}
+
+		LOG.info("Reading mapped superclass attributes...");
+		List<Attribute> attributes = readAttributes(enhEntity);
+		return new Entity(c, null, null, null, attributes, null);
 	}
 
 	private List<Attribute> readAttributes(EnhEntity enhEntity) throws Exception {

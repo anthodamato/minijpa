@@ -11,14 +11,19 @@ public class Entity {
 	private Attribute id;
 	private List<Attribute> attributes;
 	private List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
+	// used to build the metamodel. The 'attributes' field contains the
+	// MappedSuperclass attributes
+	private Entity mappedSuperclassEntity;
 
-	public Entity(Class<?> clazz, String tableName, String alias, Attribute id, List<Attribute> attributes) {
+	public Entity(Class<?> clazz, String tableName, String alias, Attribute id, List<Attribute> attributes,
+			Entity mappedSuperclassEntity) {
 		super();
 		this.clazz = clazz;
 		this.tableName = tableName;
 		this.alias = alias;
 		this.id = id;
 		this.attributes = attributes;
+		this.mappedSuperclassEntity = mappedSuperclassEntity;
 	}
 
 	public Class<?> getClazz() {
@@ -77,6 +82,10 @@ public class Entity {
 
 	public List<Attribute> getRelationshipAttributes() {
 		return attributes.stream().filter(a -> a.getRelationship() != null).collect(Collectors.toList());
+	}
+
+	public Entity getMappedSuperclassEntity() {
+		return mappedSuperclassEntity;
 	}
 
 	@Override
