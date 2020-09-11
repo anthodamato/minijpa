@@ -3,7 +3,7 @@ package org.tinyjpa.jdbc.db;
 import java.util.List;
 import java.util.Map;
 
-import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.MetaAttribute;
 
 public interface EntityContainer {
 	public void save(Object entityInstance) throws Exception;
@@ -22,9 +22,9 @@ public interface EntityContainer {
 
 	public void detach(Object entityInstance) throws Exception;
 
-	public void saveForeignKey(Object entityInstance, Attribute attribute, Object value);
+	public void saveForeignKey(Object entityInstance, MetaAttribute attribute, Object value);
 
-	public Object getForeignKeyValue(Object entityInstance, Attribute attribute);
+	public Object getForeignKeyValue(Object entityInstance, MetaAttribute attribute);
 
 	public void addToPendingNew(Object entityInstance);
 
@@ -32,13 +32,13 @@ public interface EntityContainer {
 
 	public void removePendingNew(Object entityInstance);
 
-	public void addToPendingNewAttributes(Attribute attribute, Object entityInstance, List<Object> objects);
+	public void addToPendingNewAttributes(MetaAttribute attribute, Object entityInstance, List<Object> objects);
 
-	public List<Attribute> getPendingNewAttributes();
+	public List<MetaAttribute> getPendingNewAttributes();
 
-	public Map<Object, List<Object>> getPendingNewAttributeValue(Attribute attribute);
+	public Map<Object, List<Object>> getPendingNewAttributeValue(MetaAttribute attribute);
 
-	public void removePendingNewAttribute(Attribute attribute, Object entityInstance);
+	public void removePendingNewAttribute(MetaAttribute attribute, Object entityInstance);
 
 	public void setLoadedFromDb(Object entityInstance);
 

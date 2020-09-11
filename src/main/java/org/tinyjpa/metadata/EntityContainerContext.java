@@ -2,16 +2,16 @@ package org.tinyjpa.metadata;
 
 import java.util.Map;
 
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.AttributeLoader;
 import org.tinyjpa.jdbc.db.EntityContainer;
 
 public class EntityContainerContext {
-	private Map<String, Entity> entities;
+	private Map<String, MetaEntity> entities;
 	private EntityContainer entityContainer;
 	private AttributeLoader attributeLoader;
 
-	public EntityContainerContext(Map<String, Entity> entities, EntityContainer entityContainer,
+	public EntityContainerContext(Map<String, MetaEntity> entities, EntityContainer entityContainer,
 			AttributeLoader attributeLoader) {
 		super();
 		this.entities = entities;
@@ -19,7 +19,7 @@ public class EntityContainerContext {
 		this.attributeLoader = attributeLoader;
 	}
 
-	public Map<String, Entity> getEntities() {
+	public Map<String, MetaEntity> getEntities() {
 		return entities;
 	}
 
@@ -31,7 +31,7 @@ public class EntityContainerContext {
 		return attributeLoader;
 	}
 
-	public Entity getEntity(String entityClassName) {
+	public MetaEntity getEntity(String entityClassName) {
 		return entities.get(entityClassName);
 	}
 

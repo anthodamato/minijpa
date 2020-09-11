@@ -11,14 +11,14 @@ import javax.persistence.EntityExistsException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeUtil;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.EntityContainer;
 
 public class PersistenceContextImpl implements EntityContainer {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceContextImpl.class);
-	private Map<String, Entity> entities;
+	private Map<String, MetaEntity> entities;
 
 	/**
 	 * Managed entities. They are persistent on db.
@@ -44,7 +44,7 @@ public class PersistenceContextImpl implements EntityContainer {
 	 * marked as pending new. The structure is: Map<attribute, Map<entity instance,
 	 * List<target entity instance>>>.
 	 */
-	private Map<Attribute, Map<Object, List<Object>>> pendingNewAttributes = new HashMap<>();
+	private Map<MetaAttribute, Map<Object, List<Object>>> pendingNewAttributes = new HashMap<>();
 
 //	/**
 //	 * Entities not ready to be updated on db.
@@ -64,9 +64,9 @@ public class PersistenceContextImpl implements EntityContainer {
 	 * Map<parent entity class name, Map<parent instance, Map<Attribute,foreign key
 	 * value>>>
 	 */
-	private Map<Class<?>, Map<Object, Map<Attribute, Object>>> foreignKeyValues = new HashMap<>();
+	private Map<Class<?>, Map<Object, Map<MetaAttribute, Object>>> foreignKeyValues = new HashMap<>();
 
-	public PersistenceContextImpl(Map<String, Entity> entities) {
+	public PersistenceContextImpl(Map<String, MetaEntity> entities) {
 		super();
 		this.entities = entities;
 	}
@@ -104,7 +104,7 @@ public class PersistenceContextImpl implements EntityContainer {
 
 	@Override
 	public void save(Object entityInstance) throws Exception {
-		Entity e = entities.get(entityInstance.getClass().getName());
+		MetaEntity e = entities.get(entityInstance.getClass().getName());
 		LOG.info("save: entityInstance.getClass().getName()=" + entityInstance.getClass().getName());
 		LOG.info("save: e=" + e);
 		if (e == null)
@@ -120,7 +120,7 @@ public class PersistenceContextImpl implements EntityContainer {
 
 	@Override
 	public Object find(Class<?> entityClass, Object primaryKey) throws Exception {
-		Entity entity = entities.get(entityClass.getName());
+		MetaEntity entity = entities.get(entityClass.getName());
 		if (entity == null)
 			throw new IllegalArgumentException("Instance of class '" + entityClass.getName() + "' is not an entity");
 
@@ -140,7 +140,7 @@ public class PersistenceContextImpl implements EntityContainer {
 			return false;
 
 		LOG.info("isPersistentOnDb: mapEntities=" + mapEntities);
-		Entity e = entities.get(entityInstance.getClass().getName());
+		MetaEntity e = entities.get(entityInstance.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
@@ -174,7 +174,7 @@ public class PersistenceContextImpl implements EntityContainer {
 
 	@Override
 	public void detach(Object entityInstance) throws Exception {
-		Entity e = entities.get(entityInstance.getClass().getName());
+		MetaEntity e = entities.get(entityInstance.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
@@ -195,14 +195,14 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public void saveForeignKey(Object parentInstance, Attribute attribute, Object value) {
-		Map<Object, Map<Attribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
+	public void saveForeignKey(Object parentInstance, MetaAttribute attribute, Object value) {
+		Map<Object, Map<MetaAttribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
 		if (map == null) {
 			map = new HashMap<>();
 			foreignKeyValues.put(parentInstance.getClass(), map);
 		}
 
-		Map<Attribute, Object> parentMap = map.get(parentInstance);
+		Map<MetaAttribute, Object> parentMap = map.get(parentInstance);
 		if (parentMap == null) {
 			parentMap = new HashMap<>();
 			map.put(parentInstance, parentMap);
@@ -212,12 +212,12 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public Object getForeignKeyValue(Object parentInstance, Attribute attribute) {
-		Map<Object, Map<Attribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
+	public Object getForeignKeyValue(Object parentInstance, MetaAttribute attribute) {
+		Map<Object, Map<MetaAttribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
 		if (map == null)
 			return null;
 
-		Map<Attribute, Object> parentMap = map.get(parentInstance);
+		Map<MetaAttribute, Object> parentMap = map.get(parentInstance);
 		if (parentMap == null)
 			return null;
 
@@ -260,8 +260,8 @@ public class PersistenceContextImpl implements EntityContainer {
 		mapEntities.remove(entityInstance);
 	}
 
-	private Map<Object, List<Object>> getAttributeMap(Map<Attribute, Map<Object, List<Object>>> attributeInstances,
-			Attribute attribute) {
+	private Map<Object, List<Object>> getAttributeMap(Map<MetaAttribute, Map<Object, List<Object>>> attributeInstances,
+			MetaAttribute attribute) {
 		Map<Object, List<Object>> mapEntities = attributeInstances.get(attribute);
 		if (mapEntities == null) {
 			mapEntities = new HashMap<>();
@@ -272,7 +272,7 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public void addToPendingNewAttributes(Attribute attribute, Object entityInstance, List<Object> objects) {
+	public void addToPendingNewAttributes(MetaAttribute attribute, Object entityInstance, List<Object> objects) {
 		Map<Object, List<Object>> map = getAttributeMap(pendingNewAttributes, attribute);
 		if (map.get(entityInstance) != null)
 			return;
@@ -281,20 +281,20 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public List<Attribute> getPendingNewAttributes() {
-		List<Attribute> attributes = new ArrayList<>();
+	public List<MetaAttribute> getPendingNewAttributes() {
+		List<MetaAttribute> attributes = new ArrayList<>();
 		pendingNewAttributes.forEach((k, v) -> attributes.add(k));
 		return attributes;
 	}
 
 	@Override
-	public void removePendingNewAttribute(Attribute attribute, Object entityInstance) {
+	public void removePendingNewAttribute(MetaAttribute attribute, Object entityInstance) {
 		Map<Object, List<Object>> map = getAttributeMap(pendingNewAttributes, attribute);
 		map.remove(entityInstance);
 	}
 
 	@Override
-	public Map<Object, List<Object>> getPendingNewAttributeValue(Attribute attribute) {
+	public Map<Object, List<Object>> getPendingNewAttributeValue(MetaAttribute attribute) {
 		return pendingNewAttributes.get(attribute);
 	}
 

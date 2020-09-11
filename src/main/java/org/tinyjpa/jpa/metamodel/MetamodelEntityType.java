@@ -14,17 +14,32 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 public class MetamodelEntityType<X> implements EntityType<X> {
+	private SingularAttribute id;
+	private IdentifiableType<? super X> superType;
+	private Set<Attribute<? super X, ?>> attributes;
+	private Set<Attribute<X, ?>> declaredAttributes;
+	private Set<SingularAttribute<? super X, ?>> singularAttributes;
+	private Set<SingularAttribute<X, ?>> declaredSingularAttributes;
+	private PersistenceType persistenceType;
+	private Class<X> javaType;
+	private BindableType bindableType;
+	private Class<X> bindableJavaType;
+	private String name;
 
 	@Override
 	public <Y> SingularAttribute<? super X, Y> getId(Class<Y> type) {
-		// TODO Auto-generated method stub
-		return null;
+		if (type != id.getJavaType())
+			throw new IllegalArgumentException("Expected type: " + id.getJavaType().getName());
+
+		return id;
 	}
 
 	@Override
 	public <Y> SingularAttribute<X, Y> getDeclaredId(Class<Y> type) {
-		// TODO Auto-generated method stub
-		return null;
+		if (type != id.getJavaType())
+			throw new IllegalArgumentException("Expected type: " + id.getJavaType().getName());
+
+		return id;
 	}
 
 	@Override
@@ -41,44 +56,37 @@ public class MetamodelEntityType<X> implements EntityType<X> {
 
 	@Override
 	public IdentifiableType<? super X> getSupertype() {
-		// TODO Auto-generated method stub
-		return null;
+		return superType;
 	}
 
 	@Override
 	public boolean hasSingleIdAttribute() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean hasVersionAttribute() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public Set<SingularAttribute<? super X, ?>> getIdClassAttributes() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Type<?> getIdType() {
-		// TODO Auto-generated method stub
-		return null;
+		return id.getType();
 	}
 
 	@Override
 	public Set<Attribute<? super X, ?>> getAttributes() {
-		// TODO Auto-generated method stub
-		return null;
+		return attributes;
 	}
 
 	@Override
 	public Set<Attribute<X, ?>> getDeclaredAttributes() {
-		// TODO Auto-generated method stub
-		return null;
+		return declaredAttributes;
 	}
 
 	@Override
@@ -95,14 +103,12 @@ public class MetamodelEntityType<X> implements EntityType<X> {
 
 	@Override
 	public Set<SingularAttribute<? super X, ?>> getSingularAttributes() {
-		// TODO Auto-generated method stub
-		return null;
+		return singularAttributes;
 	}
 
 	@Override
 	public Set<SingularAttribute<X, ?>> getDeclaredSingularAttributes() {
-		// TODO Auto-generated method stub
-		return null;
+		return declaredSingularAttributes;
 	}
 
 	@Override
@@ -239,32 +245,104 @@ public class MetamodelEntityType<X> implements EntityType<X> {
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		// TODO Auto-generated method stub
-		return null;
+		return persistenceType;
 	}
 
 	@Override
 	public Class<X> getJavaType() {
-		// TODO Auto-generated method stub
-		return null;
+		return javaType;
 	}
 
 	@Override
 	public BindableType getBindableType() {
-		// TODO Auto-generated method stub
-		return null;
+		return bindableType;
 	}
 
 	@Override
 	public Class<X> getBindableJavaType() {
-		// TODO Auto-generated method stub
-		return null;
+		return bindableJavaType;
 	}
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return name;
 	}
 
+	public static class Builder {
+		private SingularAttribute<?, ?> id;
+		private IdentifiableType superType;
+		private Set<Attribute> attributes;
+		private Set<Attribute> declaredAttributes;
+		private PersistenceType persistenceType;
+		private Class javaType;
+		private BindableType bindableType;
+		private Class bindableJavaType;
+		private String name;
+
+		public Builder() {
+			super();
+		}
+
+		public Builder withId(SingularAttribute<?, ?> id) {
+			this.id = id;
+			return this;
+		}
+
+		public Builder withSuperType(IdentifiableType<?> superType) {
+			this.superType = superType;
+			return this;
+		}
+
+		public Builder withAttributes(Set<Attribute> attributes) {
+			this.attributes = attributes;
+			return this;
+		}
+
+		public Builder withDeclaredAttributes(Set<Attribute> declaredAttributes) {
+			this.declaredAttributes = declaredAttributes;
+			return this;
+		}
+
+		public Builder withPersistenceType(PersistenceType persistenceType) {
+			this.persistenceType = persistenceType;
+			return this;
+		}
+
+		public Builder withJavaType(Class javaType) {
+			this.javaType = javaType;
+			return this;
+		}
+
+		public Builder withBindableType(BindableType bindableType) {
+			this.bindableType = bindableType;
+			return this;
+		}
+
+		public Builder withBindableJavaType(Class bindableJavaType) {
+			this.bindableJavaType = bindableJavaType;
+			return this;
+		}
+
+		public Builder withName(String name) {
+			this.name = name;
+			return this;
+		}
+
+		public EntityType<?> build() {
+			MetamodelEntityType entityType = new MetamodelEntityType();
+			entityType.id = id;
+			entityType.superType = superType;
+			entityType.attributes = attributes;
+			entityType.declaredAttributes = declaredAttributes;
+			entityType.persistenceType = persistenceType;
+			entityType.javaType = javaType;
+			entityType.bindableType = bindableType;
+			entityType.bindableJavaType = bindableJavaType;
+			entityType.name = name;
+
+			((IdSingularAttribute) id).setDeclaringType(entityType);
+
+			return entityType;
+		}
+	}
 }

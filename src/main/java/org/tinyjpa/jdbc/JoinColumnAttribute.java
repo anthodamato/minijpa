@@ -1,13 +1,13 @@
 package org.tinyjpa.jdbc;
 
 public class JoinColumnAttribute extends AbstractAttribute {
-	private Attribute foreignKeyAttribute;
+	private MetaAttribute foreignKeyAttribute;
 
-	public Attribute getForeignKeyAttribute() {
+	public MetaAttribute getForeignKeyAttribute() {
 		return foreignKeyAttribute;
 	}
 
-	public void setForeignKeyAttribute(Attribute foreignKeyAttribute) {
+	public void setForeignKeyAttribute(MetaAttribute foreignKeyAttribute) {
 		this.foreignKeyAttribute = foreignKeyAttribute;
 	}
 
@@ -15,7 +15,7 @@ public class JoinColumnAttribute extends AbstractAttribute {
 		private String columnName;
 		private Class<?> type;
 		private Integer sqlType;
-		private Attribute foreignKeyAttribute;
+		private MetaAttribute foreignKeyAttribute;
 
 		public Builder withColumnName(String columnName) {
 			this.columnName = columnName;
@@ -32,7 +32,7 @@ public class JoinColumnAttribute extends AbstractAttribute {
 			return this;
 		}
 
-		public Builder withForeignKeyAttribute(Attribute foreignKeyAttribute) {
+		public Builder withForeignKeyAttribute(MetaAttribute foreignKeyAttribute) {
 			this.foreignKeyAttribute = foreignKeyAttribute;
 			return this;
 		}

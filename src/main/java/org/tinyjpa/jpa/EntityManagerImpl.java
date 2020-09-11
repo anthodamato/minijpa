@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.ConnectionHolderImpl;
 import org.tinyjpa.jdbc.ConnectionProviderImpl;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jdbc.db.JdbcEntityManagerImpl;
 import org.tinyjpa.jpa.db.DbConfigurationList;
@@ -40,7 +40,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	private JdbcEntityManagerImpl jdbcEntityManager;
 
 	public EntityManagerImpl(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
-			Map<String, Entity> entities) {
+			Map<String, MetaEntity> entities) {
 		super();
 		this.entityManagerFactory = entityManagerFactory;
 		this.persistenceUnitInfo = persistenceUnitInfo;
@@ -71,7 +71,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		if (entityTransaction == null || !entityTransaction.isActive())
 			throw new IllegalStateException("Transaction not active");
 
-		Entity e = entities.get(entity.getClass().getName());
+		MetaEntity e = entities.get(entity.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
@@ -96,7 +96,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		if (entityTransaction == null || !entityTransaction.isActive())
 			throw new IllegalStateException("Transaction not active");
 
-		Entity e = entities.get(entity.getClass().getName());
+		MetaEntity e = entities.get(entity.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 

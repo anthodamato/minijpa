@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ColumnNameValueUtil {
-	public static List<ColumnNameValue> createRelationshipAttrsList(List<Attribute> relationshipAttributes,
+	public static List<ColumnNameValue> createRelationshipAttrsList(List<MetaAttribute> relationshipAttributes,
 			List<Object> relationshipValues) {
 		List<ColumnNameValue> columnNameValues = new ArrayList<>();
 		for (int i = 0; i < relationshipAttributes.size(); ++i) {

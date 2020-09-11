@@ -1,8 +1,8 @@
 package org.tinyjpa.jdbc.db;
 
-import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.MetaAttribute;
 
 public interface AttributeLoader {
-	public Object load(Object parentInstance, Attribute a) throws Exception;
+	public Object load(Object parentInstance, MetaAttribute a) throws Exception;
 
 }

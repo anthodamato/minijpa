@@ -1,7 +1,7 @@
 package org.tinyjpa.jdbc.relationship;
 
-import org.tinyjpa.jdbc.Attribute;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaAttribute;
+import org.tinyjpa.jdbc.MetaEntity;
 
 public final class ManyToOne extends Relationship {
 	public ManyToOne() {
@@ -21,9 +21,9 @@ public final class ManyToOne extends Relationship {
 	public static class Builder {
 		private String joinColumn;
 		private FetchType fetchType = FetchType.EAGER;
-		private Entity owningEntity;
-		private Attribute owningAttribute;
-		private Entity attributeType;
+		private MetaEntity owningEntity;
+		private MetaAttribute owningAttribute;
+		private MetaEntity attributeType;
 
 		public Builder() {
 		}
@@ -38,17 +38,17 @@ public final class ManyToOne extends Relationship {
 			return this;
 		}
 
-		public Builder withOwningEntity(Entity owningEntity) {
+		public Builder withOwningEntity(MetaEntity owningEntity) {
 			this.owningEntity = owningEntity;
 			return this;
 		}
 
-		public Builder withOwningAttribute(Attribute attribute) {
+		public Builder withOwningAttribute(MetaAttribute attribute) {
 			this.owningAttribute = attribute;
 			return this;
 		}
 
-		public Builder withAttributeType(Entity attributeType) {
+		public Builder withAttributeType(MetaEntity attributeType) {
 			this.attributeType = attributeType;
 			return this;
 		}

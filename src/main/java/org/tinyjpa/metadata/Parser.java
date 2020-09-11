@@ -21,9 +21,9 @@ import javax.persistence.Table;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeUtil;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.JdbcTypes;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.PkGenerationType;
@@ -37,10 +37,10 @@ public class Parser {
 	private Logger LOG = LoggerFactory.getLogger(Parser.class);
 	private AliasGenerator aliasGenerator = new AliasGenerator();
 
-	public Map<String, Entity> parse(List<EnhEntity> enhancedClasses) throws Exception {
-		Map<String, Entity> entities = new HashMap<>();
+	public Map<String, MetaEntity> parse(List<EnhEntity> enhancedClasses) throws Exception {
+		Map<String, MetaEntity> entities = new HashMap<>();
 		for (EnhEntity enhEntity : enhancedClasses) {
-			Entity entity = parse(enhEntity, entities.values());
+			MetaEntity entity = parse(enhEntity, entities.values());
 			if (entity != null)
 				entities.put(enhEntity.getClassName(), entity);
 		}
@@ -50,7 +50,7 @@ public class Parser {
 		return entities;
 	}
 
-	private Entity parse(EnhEntity enhEntity, Collection<Entity> parsedEntities) throws Exception {
+	private MetaEntity parse(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
 		Class<?> c = Class.forName(enhEntity.getClassName());
 		javax.persistence.Entity ec = c.getAnnotation(javax.persistence.Entity.class);
 		if (ec == null) {
@@ -59,10 +59,10 @@ public class Parser {
 		}
 
 		LOG.info("Reading attributes...");
-		List<Attribute> attributes = readAttributes(enhEntity);
-		Entity mappedSuperclassEntity = null;
+		List<MetaAttribute> attributes = readAttributes(enhEntity);
+		MetaEntity mappedSuperclassEntity = null;
 		if (enhEntity.getMappedSuperclass() != null) {
-			Optional<Entity> optional = parsedEntities.stream().filter(e -> e.getMappedSuperclassEntity() != null)
+			Optional<MetaEntity> optional = parsedEntities.stream().filter(e -> e.getMappedSuperclassEntity() != null)
 					.filter(e -> e.getMappedSuperclassEntity().getClazz().getName()
 							.equals(enhEntity.getMappedSuperclass().getClassName()))
 					.findFirst();
@@ -72,19 +72,18 @@ public class Parser {
 			else
 				mappedSuperclassEntity = parseMappedSuperclass(enhEntity.getMappedSuperclass(), parsedEntities);
 
-//			List<Attribute> msAttributes = readAttributes(enhEntity.getMappedSuperclass());
-			List<Attribute> msAttributes = mappedSuperclassEntity.getAttributes();
+			List<MetaAttribute> msAttributes = mappedSuperclassEntity.getAttributes();
 			attributes.addAll(msAttributes);
 		}
 
 		LOG.info("Reading Id...");
-		Optional<Attribute> optional = attributes.stream().filter(a -> a.isId()).findFirst();
+		Optional<MetaAttribute> optional = attributes.stream().filter(a -> a.isId()).findFirst();
 		if (!optional.isPresent()) {
 			LOG.warn("@Id annotation not found");
 			return null;
 		}
 
-		Attribute id = optional.get();
+		MetaAttribute id = optional.get();
 		attributes.remove(id);
 
 		String tableName = c.getSimpleName();
@@ -93,10 +92,10 @@ public class Parser {
 			tableName = table.name();
 
 		String alias = aliasGenerator.calculateAlias(tableName, parsedEntities);
-		return new Entity(c, tableName, alias, id, attributes, mappedSuperclassEntity);
+		return new MetaEntity(c, tableName, alias, id, attributes, mappedSuperclassEntity);
 	}
 
-	private Entity parseMappedSuperclass(EnhEntity enhEntity, Collection<Entity> parsedEntities) throws Exception {
+	private MetaEntity parseMappedSuperclass(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
 		Class<?> c = Class.forName(enhEntity.getClassName());
 		MappedSuperclass ec = c.getAnnotation(MappedSuperclass.class);
 		if (ec == null) {
@@ -105,31 +104,31 @@ public class Parser {
 		}
 
 		LOG.info("Reading mapped superclass attributes...");
-		List<Attribute> attributes = readAttributes(enhEntity);
-		return new Entity(c, null, null, null, attributes, null);
+		List<MetaAttribute> attributes = readAttributes(enhEntity);
+		return new MetaEntity(c, null, null, null, attributes, null);
 	}
 
-	private List<Attribute> readAttributes(EnhEntity enhEntity) throws Exception {
-		List<Attribute> attributes = new ArrayList<>();
+	private List<MetaAttribute> readAttributes(EnhEntity enhEntity) throws Exception {
+		List<MetaAttribute> attributes = new ArrayList<>();
 		for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
-			Attribute attribute = readAttribute(enhEntity.getClassName(), enhAttribute);
+			MetaAttribute attribute = readAttribute(enhEntity.getClassName(), enhAttribute);
 			attributes.add(attribute);
 		}
 
 		return attributes;
 	}
 
-	private List<Attribute> readAttributes(List<EnhAttribute> enhAttributes, String parentClassName) throws Exception {
-		List<Attribute> attributes = new ArrayList<>();
+	private List<MetaAttribute> readAttributes(List<EnhAttribute> enhAttributes, String parentClassName) throws Exception {
+		List<MetaAttribute> attributes = new ArrayList<>();
 		for (EnhAttribute enhAttribute : enhAttributes) {
-			Attribute attribute = readAttribute(parentClassName, enhAttribute);
+			MetaAttribute attribute = readAttribute(parentClassName, enhAttribute);
 			attributes.add(attribute);
 		}
 
 		return attributes;
 	}
 
-	private Attribute readAttribute(String parentClassName, EnhAttribute enhAttribute) throws Exception {
+	private MetaAttribute readAttribute(String parentClassName, EnhAttribute enhAttribute) throws Exception {
 		String columnName = enhAttribute.getName();
 		Class<?> c = Class.forName(parentClassName);
 		LOG.info("readAttribute: columnName=" + columnName);
@@ -151,9 +150,9 @@ public class Parser {
 		}
 
 		Id idAnnotation = field.getAnnotation(Id.class);
-		Attribute attribute = null;
+		MetaAttribute attribute = null;
 		if (idAnnotation == null) {
-			List<Attribute> embeddedAttributes = null;
+			List<MetaAttribute> embeddedAttributes = null;
 			boolean embedded = enhAttribute.isEmbedded();
 			if (embedded) {
 				embeddedAttributes = readAttributes(enhAttribute.getEmbeddedAttributes(), enhAttribute.getClassName());
@@ -168,7 +167,7 @@ public class Parser {
 //			LOG.info("readAttribute: enhAttribute.getName()=" + enhAttribute.getName());
 //			LOG.info("readAttribute: embedded=" + embedded);
 
-			Attribute.Builder builder = new Attribute.Builder(enhAttribute.getName()).withColumnName(columnName)
+			MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
 					.withType(attributeClass).withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id)
 					.withSqlType(JdbcTypes.sqlTypeFromClass(attributeClass)).isEmbedded(embedded)
 					.withEmbeddedAttributes(embeddedAttributes);
@@ -204,7 +203,7 @@ public class Parser {
 				gv = new org.tinyjpa.jdbc.GeneratedValue(pkGenerationType, generatedValue.generator());
 			}
 
-			attribute = new Attribute.Builder(enhAttribute.getName()).withColumnName(columnName)
+			attribute = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
 					.withType(attributeClass).withReadMethod(readMethod).withWriteMethod(writeMethod).isId(true)
 					.withSqlType(JdbcTypes.sqlTypeFromClass(attributeClass)).withGeneratedValue(gv).build();
 		}
@@ -286,15 +285,15 @@ public class Parser {
 		return builder.build();
 	}
 
-	private String createDefaultJoinColumn(Attribute owningAttribute, Entity toEntity) {
+	private String createDefaultJoinColumn(MetaAttribute owningAttribute, MetaEntity toEntity) {
 		return owningAttribute.getName() + "_" + toEntity.getId().getColumnName();
 	}
 
-	private String createDefaultOneToManyOwnerJoinColumn(Entity entity, Attribute attribute) {
+	private String createDefaultOneToManyOwnerJoinColumn(MetaEntity entity, MetaAttribute attribute) {
 		return entity.getTableName() + "_" + attribute.getColumnName();
 	}
 
-	private JoinColumnAttribute createJoinColumnOwningAttribute(Entity entity, Attribute attribute, String joinColumn) {
+	private JoinColumnAttribute createJoinColumnOwningAttribute(MetaEntity entity, MetaAttribute attribute, String joinColumn) {
 		String jc = joinColumn;
 		if (jc == null)
 			jc = createDefaultOneToManyOwnerJoinColumn(entity, attribute);
@@ -303,10 +302,10 @@ public class Parser {
 				.withSqlType(attribute.getSqlType()).withForeignKeyAttribute(attribute).build();
 	}
 
-	private List<JoinColumnAttribute> createJoinColumnOwningAttributes(Entity entity) {
-		List<Attribute> attributes = entity.getId().expand();
+	private List<JoinColumnAttribute> createJoinColumnOwningAttributes(MetaEntity entity) {
+		List<MetaAttribute> attributes = entity.getId().expand();
 		List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
-		for (Attribute a : attributes) {
+		for (MetaAttribute a : attributes) {
 			JoinColumnAttribute joinColumnAttribute = createJoinColumnOwningAttribute(entity, a, null);
 			joinColumnAttributes.add(joinColumnAttribute);
 		}
@@ -314,11 +313,11 @@ public class Parser {
 		return joinColumnAttributes;
 	}
 
-	private String createDefaultOneToManyJoinColumn(Attribute relationshipAttribute, Attribute id) {
+	private String createDefaultOneToManyJoinColumn(MetaAttribute relationshipAttribute, MetaAttribute id) {
 		return relationshipAttribute.getName() + "_" + id.getColumnName();
 	}
 
-	private JoinColumnAttribute createJoinColumnTargetAttribute(Attribute id, Attribute relationshipAttribute,
+	private JoinColumnAttribute createJoinColumnTargetAttribute(MetaAttribute id, MetaAttribute relationshipAttribute,
 			String joinColumn) {
 		String jc = joinColumn;
 		if (jc == null)
@@ -328,10 +327,10 @@ public class Parser {
 				.withForeignKeyAttribute(id).build();
 	}
 
-	private List<JoinColumnAttribute> createJoinColumnTargetAttributes(Entity entity, Attribute relationshipAttribute) {
-		List<Attribute> attributes = entity.getId().expand();
+	private List<JoinColumnAttribute> createJoinColumnTargetAttributes(MetaEntity entity, MetaAttribute relationshipAttribute) {
+		List<MetaAttribute> attributes = entity.getId().expand();
 		List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
-		for (Attribute a : attributes) {
+		for (MetaAttribute a : attributes) {
 			JoinColumnAttribute joinColumnAttribute = createJoinColumnTargetAttribute(a, relationshipAttribute, null);
 			joinColumnAttributes.add(joinColumnAttribute);
 		}
@@ -339,12 +338,12 @@ public class Parser {
 		return joinColumnAttributes;
 	}
 
-	private String createDefaultOneToManyJoinTable(Entity owner, Entity target) {
+	private String createDefaultOneToManyJoinTable(MetaEntity owner, MetaEntity target) {
 		return owner.getTableName() + "_" + target.getTableName();
 	}
 
-	private void finalizeRelationships(Entity entity, Map<String, Entity> entities, List<Attribute> attributes) {
-		for (Attribute a : attributes) {
+	private void finalizeRelationships(MetaEntity entity, Map<String, MetaEntity> entities, List<MetaAttribute> attributes) {
+		for (MetaAttribute a : attributes) {
 			LOG.info("finalizeRelationships: a=" + a);
 			if (a.isEmbedded()) {
 				finalizeRelationships(entity, entities, a.getEmbeddedAttributes());
@@ -356,7 +355,7 @@ public class Parser {
 				continue;
 
 			if (relationship instanceof OneToOne) {
-				Entity toEntity = entities.get(a.getType().getName());
+				MetaEntity toEntity = entities.get(a.getType().getName());
 				LOG.info("finalizeRelationships: OneToOne toEntity=" + toEntity);
 				if (toEntity == null)
 					throw new IllegalArgumentException("One to One entity not found (" + a.getType().getName() + ")");
@@ -385,7 +384,7 @@ public class Parser {
 				builder.withAttributeType(toEntity);
 				a.setRelationship(builder.build());
 			} else if (relationship instanceof ManyToOne) {
-				Entity toEntity = entities.get(a.getType().getName());
+				MetaEntity toEntity = entities.get(a.getType().getName());
 				LOG.info("finalizeRelationships: ManyToOne toEntity=" + toEntity);
 				if (toEntity == null)
 					throw new IllegalArgumentException("Many to One entity not found (" + a.getType().getName() + ")");
@@ -407,7 +406,7 @@ public class Parser {
 				builder = builder.withAttributeType(toEntity);
 				a.setRelationship(builder.build());
 			} else if (relationship instanceof OneToMany) {
-				Entity toEntity = entities.get(relationship.getTargetEntityClass().getName());
+				MetaEntity toEntity = entities.get(relationship.getTargetEntityClass().getName());
 				LOG.info("finalizeRelationships: OneToMany toEntity=" + toEntity + "; a.getType().getName()="
 						+ a.getType().getName());
 				if (toEntity == null)
@@ -440,7 +439,7 @@ public class Parser {
 				} else {
 					builder = builder.withOwningEntity(toEntity);
 					builder = builder.withOwningAttribute(toEntity.getAttribute(relationship.getMappedBy()));
-					Attribute attribute = toEntity.getAttribute(relationship.getMappedBy());
+					MetaAttribute attribute = toEntity.getAttribute(relationship.getMappedBy());
 					LOG.info("finalizeRelationships: OneToMany targetAttribute=" + attribute);
 					builder = builder.withTargetAttribute(attribute);
 				}
@@ -457,20 +456,20 @@ public class Parser {
 	 * 
 	 * @param entities the list of all entities
 	 */
-	private void finalizeRelationships(Map<String, Entity> entities) {
-		for (Map.Entry<String, Entity> entry : entities.entrySet()) {
-			Entity entity = entry.getValue();
-			List<Attribute> attributes = entity.getAttributes();
+	private void finalizeRelationships(Map<String, MetaEntity> entities) {
+		for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+			MetaEntity entity = entry.getValue();
+			List<MetaAttribute> attributes = entity.getAttributes();
 			finalizeRelationships(entity, entities, attributes);
 		}
 	}
 
-	private void printAttributes(Map<String, Entity> entities) {
-		for (Map.Entry<String, Entity> entry : entities.entrySet()) {
-			Entity entity = entry.getValue();
-			List<Attribute> attributes = entity.getAttributes();
+	private void printAttributes(Map<String, MetaEntity> entities) {
+		for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+			MetaEntity entity = entry.getValue();
+			List<MetaAttribute> attributes = entity.getAttributes();
 			for (int i = 0; i < attributes.size(); ++i) {
-				Attribute a = attributes.get(i);
+				MetaAttribute a = attributes.get(i);
 				LOG.info("printAttributes: a=" + a);
 				if (a.getRelationship() != null) {
 					LOG.info("printAttributes: a.getRelationship()=" + a.getRelationship());

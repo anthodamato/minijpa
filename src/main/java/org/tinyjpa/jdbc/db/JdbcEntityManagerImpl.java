@@ -7,14 +7,14 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.AttributeValueConverter;
 import org.tinyjpa.jdbc.ColumnNameValue;
 import org.tinyjpa.jdbc.ColumnNameValueUtil;
 import org.tinyjpa.jdbc.ConnectionHolder;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.JdbcRunner;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.SqlStatement;
@@ -25,14 +25,14 @@ import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(JdbcEntityManagerImpl.class);
 	private DbConfiguration dbConfiguration;
-	private Map<String, Entity> entities;
+	private Map<String, MetaEntity> entities;
 	private EntityContainer entityContainer;
 	private EntityInstanceBuilder entityInstanceBuilder;
 	private AttributeValueConverter attributeValueConverter;
 	private ConnectionHolder connectionHolder;
 	private JdbcRunner jdbcRunner = new JdbcRunner();
 
-	public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, Map<String, Entity> entities,
+	public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, Map<String, MetaEntity> entities,
 			EntityContainer entityContainer, EntityInstanceBuilder entityInstanceBuilder,
 			AttributeValueConverter attributeValueConverter, ConnectionHolder connectionHolder) {
 		super();
@@ -48,13 +48,13 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		return findById(entityClass, primaryKey, null, null);
 	}
 
-	private Object findById(Class<?> entityClass, Object primaryKey, Attribute childAttribute,
+	private Object findById(Class<?> entityClass, Object primaryKey, MetaAttribute childAttribute,
 			Object childAttributeValue) throws Exception {
 		Object entityInstance = entityContainer.find(entityClass, primaryKey);
 		if (entityInstance != null)
 			return entityInstance;
 
-		Entity entity = entities.get(entityClass.getName());
+		MetaEntity entity = entities.get(entityClass.getName());
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
@@ -67,8 +67,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		return createAndSaveEntityInstance(attributeValues, entity, childAttribute, childAttributeValue, primaryKey);
 	}
 
-	private Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, Entity entity,
-			Attribute childAttribute, Object childAttributeValue, Object primaryKey) throws Exception {
+	private Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, MetaEntity entity,
+			MetaAttribute childAttribute, Object childAttributeValue, Object primaryKey) throws Exception {
 		LOG.info("createAndSaveEntityInstance: entity=" + entity);
 		Object entityObject = entityInstanceBuilder.build(entity, attributeValues.attributes, attributeValues.values,
 				primaryKey);
@@ -94,8 +94,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	}
 
 	@Override
-	public Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, Entity entity,
-			Attribute childAttribute, Object childAttributeValue) throws Exception {
+	public Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, MetaEntity entity,
+			MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 		Object primaryKey = AttributeUtil.createPK(entity, attributeValues);
 		return createAndSaveEntityInstance(attributeValues, entity, childAttribute, childAttributeValue, primaryKey);
 	}
@@ -112,12 +112,12 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 * @throws Exception
 	 */
 	private List<Object> findCollectionByForeignKey(Class<?> entityClass, Object foreignKey,
-			Attribute foreignKeyAttribute, Attribute childAttribute, Object childAttributeValue) throws Exception {
+			MetaAttribute foreignKeyAttribute, MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 //		Object entityInstance = entityContainer.find(entityClass, foreignKey);
 //		if (entityInstance != null)
 //			return entityInstance;
 
-		Entity entity = entities.get(entityClass.getName());
+		MetaEntity entity = entities.get(entityClass.getName());
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
@@ -127,10 +127,10 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				childAttribute, childAttributeValue);
 	}
 
-	private void loadRelationshipAttributes(Object parentInstance, Entity entity, Attribute childAttribute,
+	private void loadRelationshipAttributes(Object parentInstance, MetaEntity entity, MetaAttribute childAttribute,
 			Object childAttributeValue) throws Exception {
 		LOG.info("loadRelationshipAttributes: childAttribute=" + childAttribute);
-		for (Attribute a : entity.getRelationshipAttributes()) {
+		for (MetaAttribute a : entity.getRelationshipAttributes()) {
 			LOG.info("loadRelationshipAttributes: a=" + a);
 			if (childAttribute != null && a == childAttribute) {
 				// the attribute value is already available
@@ -139,7 +139,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			} else {
 				if (a.isEager()) {
 					if (a.getRelationship().getJoinTable() != null) {
-						Entity e = a.getRelationship().getAttributeType();
+						MetaEntity e = a.getRelationship().getAttributeType();
 						Object pk = AttributeUtil.getIdValue(entity, parentInstance);
 						SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectByJoinTable(e,
 								entity.getId(), pk, a.getRelationship().getJoinTable());
@@ -165,7 +165,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 * @return
 	 * @throws Exception
 	 */
-	private Object loadAttributeValueWithTableFK(Object parentInstance, Attribute a, Attribute childAttribute,
+	private Object loadAttributeValueWithTableFK(Object parentInstance, MetaAttribute a, MetaAttribute childAttribute,
 			Object childAttributeValue) throws Exception {
 		LOG.info("loadAttributeValue: parentInstance=" + parentInstance);
 		Object foreignKey = entityContainer.getForeignKeyValue(parentInstance, a);
@@ -196,7 +196,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 * @throws Exception
 	 */
 	private List<Object> loadAttributeValues(Object parentInstance, Class<?> targetEntity,
-			Attribute foreignKeyAttribute, Attribute childAttribute, Object childAttributeValue) throws Exception {
+			MetaAttribute foreignKeyAttribute, MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 		LOG.info("loadAttributeValues: parentInstance=" + parentInstance);
 		List<Object> objects = findCollectionByForeignKey(targetEntity, parentInstance, foreignKeyAttribute,
 				childAttribute, childAttributeValue);
@@ -211,9 +211,9 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 * @return the instance loaded. It can be a collection
 	 */
 	@Override
-	public Object load(Object parentInstance, Attribute a) throws Exception {
+	public Object load(Object parentInstance, MetaAttribute a) throws Exception {
 		LOG.info("load (lazy): parentInstance=" + parentInstance + "; a=" + a);
-		Attribute targetAttribute = null;
+		MetaAttribute targetAttribute = null;
 		Relationship relationship = a.getRelationship();
 		if (relationship != null)
 			targetAttribute = relationship.getTargetAttribute();
@@ -221,8 +221,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		if (relationship != null && relationship.toMany()) {
 			LOG.info("load (lazy): oneToMany targetAttribute=" + targetAttribute);
 			if (relationship.getJoinTable() != null) {
-				Entity entity = a.getRelationship().getAttributeType();
-				Entity e = entities.get(parentInstance.getClass().getName());
+				MetaEntity entity = a.getRelationship().getAttributeType();
+				MetaEntity e = entities.get(parentInstance.getClass().getName());
 				Object pk = AttributeUtil.getIdValue(e, parentInstance);
 				SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectByJoinTable(entity, e.getId(), pk,
 						a.getRelationship().getJoinTable());
@@ -250,9 +250,9 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 * @throws Exception
 	 */
 	protected boolean canPersistOnDb(Object entityInstance) throws Exception {
-		Entity entity = entities.get(entityInstance.getClass().getName());
+		MetaEntity entity = entities.get(entityInstance.getClass().getName());
 		for (JoinColumnAttribute joinColumnAttribute : entity.getJoinColumnAttributes()) {
-			Attribute a = joinColumnAttribute.getForeignKeyAttribute();
+			MetaAttribute a = joinColumnAttribute.getForeignKeyAttribute();
 			if (a.getRelationship().getFetchType() != FetchType.EAGER)
 				continue;
 
@@ -264,7 +264,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		return true;
 	}
 
-	private void persist(Entity entity, Object entityInstance, List<AttributeValue> attrValues) throws Exception {
+	private void persist(MetaEntity entity, Object entityInstance, List<AttributeValue> attrValues) throws Exception {
 		if (entityContainer.isSaved(entityInstance)) {
 			Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 			LOG.info("persist: idValue=" + idValue);
@@ -274,8 +274,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			// checks specific relationship attributes ('one to many' with join table) even
 			// if there are no notified changes. If they get changed then they'll be made
 			// persistent
-			Map<Attribute, Object> joinTableAttrs = new HashMap<>();
-			for (Attribute a : entity.getAttributes()) {
+			Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
+			for (MetaAttribute a : entity.getAttributes()) {
 				if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null) {
 					Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
 					LOG.info("persist: attributeInstance=" + attributeInstance);
@@ -295,8 +295,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 			// persist join table attributes
 			LOG.info("persist: joinTableAttrs.size()=" + joinTableAttrs.size());
-			for (Map.Entry<Attribute, Object> entry : joinTableAttrs.entrySet()) {
-				Attribute a = entry.getKey();
+			for (Map.Entry<MetaAttribute, Object> entry : joinTableAttrs.entrySet()) {
+				MetaAttribute a = entry.getKey();
 				List<Object> ees = AttributeUtil.getCollectionAsList(entry.getValue());
 				if (entityContainer.isSaved(ees)) {
 					persistJoinTableAttributes(ees, a, entityInstance);
@@ -308,7 +308,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		}
 	}
 
-	public void persist(Entity entity, Object entityInstance) throws Exception {
+	public void persist(MetaEntity entity, Object entityInstance) throws Exception {
 		Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(entity, entityInstance);
 		if (!optional.isPresent())
 			return;
@@ -324,7 +324,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		savePendings();
 	}
 
-	private boolean persistOnDb(Entity entity, Object entityInstance, List<AttributeValue> changes) throws Exception {
+	private boolean persistOnDb(MetaEntity entity, Object entityInstance, List<AttributeValue> changes) throws Exception {
 		boolean persistOnDb = canPersistOnDb(entityInstance);
 		LOG.info("persistOnDb: persistOnDb=" + persistOnDb + "; entityInstance=" + entityInstance);
 		if (!persistOnDb)
@@ -339,7 +339,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		return true;
 	}
 
-	private void remove(Object entityInstance, Entity e) throws Exception {
+	private void remove(Object entityInstance, MetaEntity e) throws Exception {
 		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 		LOG.info("remove: idValue=" + idValue);
 		SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateDeleteById(e, idValue);
@@ -347,7 +347,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	}
 
 	public void remove(Object entity) throws Exception {
-		Entity e = entities.get(entity.getClass().getName());
+		MetaEntity e = entities.get(entity.getClass().getName());
 		if (entityContainer.isSaved(entity)) {
 			LOG.info("Instance " + entity + " is in the persistence context");
 			remove(entity, e);
@@ -367,7 +367,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		List<Object> list = entityContainer.getPendingNew();
 		LOG.info("savePendings: list.size()=" + list.size());
 		for (Object entityInstance : list) {
-			Entity e = entities.get(entityInstance.getClass().getName());
+			MetaEntity e = entities.get(entityInstance.getClass().getName());
 			Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(e, entityInstance);
 			if (!optional.isPresent()) {
 				entityContainer.removePendingNew(entityInstance);
@@ -379,9 +379,9 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				entityContainer.removePendingNew(entityInstance);
 		}
 
-		List<Attribute> attributes = entityContainer.getPendingNewAttributes();
+		List<MetaAttribute> attributes = entityContainer.getPendingNewAttributes();
 		LOG.info("savePendings: attributes.size()=" + attributes.size());
-		for (Attribute a : attributes) {
+		for (MetaAttribute a : attributes) {
 			Map<Object, List<Object>> map = entityContainer.getPendingNewAttributeValue(a);
 			for (Map.Entry<Object, List<Object>> entry : map.entrySet()) {
 				List<Object> ees = entry.getValue();
@@ -394,7 +394,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		}
 	}
 
-	private void persistJoinTableAttributes(List<Object> ees, Attribute a, Object entityInstance) throws Exception {
+	private void persistJoinTableAttributes(List<Object> ees, MetaAttribute a, Object entityInstance) throws Exception {
 		LOG.info("persistJoinTableAttributes: 1");
 		// persist every entity instance
 		RelationshipJoinTable relationshipJoinTable = a.getRelationship().getJoinTable();

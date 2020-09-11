@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jdbc.Attribute;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaAttribute;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jpa.model.Citizen;
 
 public class ParserTest {
@@ -25,14 +25,14 @@ public class ParserTest {
 		EnhEntity enhEntity = enhEntities.get(0);
 		Assertions.assertNotNull(enhEntity.getClassName());
 
-		Map<String, Entity> entities = parser.parse(enhEntities);
-		Entity entity = entities.get("org.tinyjpa.jpa.model.Citizen");
+		Map<String, MetaEntity> entities = parser.parse(enhEntities);
+		MetaEntity entity = entities.get("org.tinyjpa.jpa.model.Citizen");
 		Assertions.assertNotNull(entity);
 		Assertions.assertNotNull(entity.getClazz());
 		Assertions.assertEquals(Citizen.class, entity.getClazz());
 		Assertions.assertEquals("citizen", entity.getTableName());
 		Assertions.assertEquals(2, entity.getAttributes().size());
-		Attribute attribute = entity.getAttribute("name");
+		MetaAttribute attribute = entity.getAttribute("name");
 		Assertions.assertEquals("first_name", attribute.getColumnName());
 		Assertions.assertEquals(String.class, attribute.getType());
 		attribute = entity.getAttribute("lastName");

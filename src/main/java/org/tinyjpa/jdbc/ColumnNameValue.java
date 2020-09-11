@@ -5,11 +5,11 @@ public class ColumnNameValue {
 	private Object value;
 	private Class<?> type;
 	private Integer sqlType;
-	private Attribute foreignKeyAttribute;
-	private Attribute attribute;
+	private MetaAttribute foreignKeyAttribute;
+	private MetaAttribute attribute;
 
 	public ColumnNameValue(String columnName, Object value, Class<?> type, Integer sqlType,
-			Attribute foreignKeyAttribute, Attribute attribute) {
+			MetaAttribute foreignKeyAttribute, MetaAttribute attribute) {
 		super();
 		this.columnName = columnName;
 		this.value = value;
@@ -25,7 +25,7 @@ public class ColumnNameValue {
 		return cnv;
 	}
 
-	public static ColumnNameValue build(Attribute av) {
+	public static ColumnNameValue build(MetaAttribute av) {
 		ColumnNameValue cnv = new ColumnNameValue(av.getColumnName(), null, av.getType(), av.getSqlType(), null, av);
 		return cnv;
 	}
@@ -46,11 +46,11 @@ public class ColumnNameValue {
 		return sqlType;
 	}
 
-	public Attribute getForeignKeyAttribute() {
+	public MetaAttribute getForeignKeyAttribute() {
 		return foreignKeyAttribute;
 	}
 
-	public Attribute getAttribute() {
+	public MetaAttribute getAttribute() {
 		return attribute;
 	}
 

@@ -88,7 +88,7 @@ public class JdbcRunner {
 		preparedStatement.close();
 	}
 
-	public AttributeValues findById(Connection connection, SqlStatement sqlStatement, Entity entity) throws Exception {
+	public AttributeValues findById(Connection connection, SqlStatement sqlStatement, MetaEntity entity) throws Exception {
 		PreparedStatement preparedStatement = null;
 		try {
 			LOG.info("findById: sql=" + sqlStatement.getSql());
@@ -122,8 +122,8 @@ public class JdbcRunner {
 		}
 	}
 
-	public List<Object> findCollectionById(Connection connection, SqlStatement sqlStatement, Entity entity,
-			JdbcEntityManager jdbcEntityManager, Attribute childAttribute, Object childAttributeValue)
+	public List<Object> findCollectionById(Connection connection, SqlStatement sqlStatement, MetaEntity entity,
+			JdbcEntityManager jdbcEntityManager, MetaAttribute childAttribute, Object childAttributeValue)
 			throws Exception {
 		PreparedStatement preparedStatement = null;
 		try {
@@ -178,8 +178,8 @@ public class JdbcRunner {
 
 	public class AttributeValues {
 		public List<Object> values = new ArrayList<>();
-		public List<Attribute> attributes = new ArrayList<>();
+		public List<MetaAttribute> attributes = new ArrayList<>();
 		public List<Object> relationshipValues = new ArrayList<>();
-		public List<Attribute> relationshipAttributes = new ArrayList<>();
+		public List<MetaAttribute> relationshipAttributes = new ArrayList<>();
 	}
 }

@@ -1,21 +1,21 @@
 package org.tinyjpa.jdbc.relationship;
 
-import org.tinyjpa.jdbc.Attribute;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaAttribute;
+import org.tinyjpa.jdbc.MetaEntity;
 
 public abstract class Relationship {
 	protected FetchType fetchType = FetchType.EAGER;
 	protected String joinColumn;
-	protected Entity owningEntity;
+	protected MetaEntity owningEntity;
 	// for bidirectional relationships
-	protected Attribute owningAttribute;
+	protected MetaAttribute owningAttribute;
 
 	/**
 	 * This is the target entity.
 	 */
-	protected Entity attributeType;
+	protected MetaEntity attributeType;
 	// for bidirectional relationships
-	protected Attribute targetAttribute;
+	protected MetaAttribute targetAttribute;
 	protected String mappedBy;
 	protected RelationshipJoinTable joinTable;
 	protected Class<?> targetEntityClass;
@@ -32,19 +32,19 @@ public abstract class Relationship {
 		return joinColumn;
 	}
 
-	public Entity getOwningEntity() {
+	public MetaEntity getOwningEntity() {
 		return owningEntity;
 	}
 
-	public Attribute getOwningAttribute() {
+	public MetaAttribute getOwningAttribute() {
 		return owningAttribute;
 	}
 
-	public Entity getAttributeType() {
+	public MetaEntity getAttributeType() {
 		return attributeType;
 	}
 
-	public Attribute getTargetAttribute() {
+	public MetaAttribute getTargetAttribute() {
 		return targetAttribute;
 	}
 

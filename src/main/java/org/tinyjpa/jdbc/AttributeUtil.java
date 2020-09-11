@@ -15,8 +15,8 @@ import org.tinyjpa.jdbc.JdbcRunner.AttributeValues;
 public class AttributeUtil {
 	private static final Logger LOG = LoggerFactory.getLogger(AttributeUtil.class);
 
-	public static Object createPK(Entity entity, AttributeValues attributeValues) throws Exception {
-		Attribute id = entity.getId();
+	public static Object createPK(MetaEntity entity, AttributeValues attributeValues) throws Exception {
+		MetaAttribute id = entity.getId();
 		if (id.isEmbedded()) {
 			Object pkObject = id.getType().newInstance();
 			createPK(entity, attributeValues, id.getEmbeddedAttributes(), id, pkObject);
@@ -27,9 +27,9 @@ public class AttributeUtil {
 		return attributeValues.values.get(index);
 	}
 
-	public static void createPK(Entity entity, AttributeValues attributeValues, List<Attribute> attributes,
-			Attribute id, Object pkObject) throws Exception {
-		for (Attribute a : attributes) {
+	public static void createPK(MetaEntity entity, AttributeValues attributeValues, List<MetaAttribute> attributes,
+			MetaAttribute id, Object pkObject) throws Exception {
+		for (MetaAttribute a : attributes) {
 			if (a.isEmbedded())
 				createPK(entity, attributeValues, a.getEmbeddedAttributes(), id, pkObject);
 			else {
@@ -40,9 +40,9 @@ public class AttributeUtil {
 		}
 	}
 
-	public static int indexOf(List<Attribute> attributes, String name) {
+	public static int indexOf(List<MetaAttribute> attributes, String name) {
 		for (int i = 0; i < attributes.size(); ++i) {
-			Attribute a = attributes.get(i);
+			MetaAttribute a = attributes.get(i);
 			LOG.info("indexOf: a.getName()=" + a.getName());
 			if (a.getName().equals(name))
 				return i;
@@ -51,7 +51,7 @@ public class AttributeUtil {
 		return -1;
 	}
 
-	public static int indexOfJoinColumnAttribute(List<JoinColumnAttribute> joinColumnAttributes, Attribute a) {
+	public static int indexOfJoinColumnAttribute(List<JoinColumnAttribute> joinColumnAttributes, MetaAttribute a) {
 		for (int i = 0; i < joinColumnAttributes.size(); ++i) {
 			if (joinColumnAttributes.get(i).getForeignKeyAttribute() == a)
 				return i;
@@ -60,12 +60,12 @@ public class AttributeUtil {
 		return -1;
 	}
 
-	public static Object getIdValue(Entity entity, Object entityInstance) throws Exception {
-		Attribute id = entity.getId();
+	public static Object getIdValue(MetaEntity entity, Object entityInstance) throws Exception {
+		MetaAttribute id = entity.getId();
 		return id.getReadMethod().invoke(entityInstance);
 	}
 
-	public static Object getIdValue(Attribute id, Object entityInstance) throws Exception {
+	public static Object getIdValue(MetaAttribute id, Object entityInstance) throws Exception {
 		return id.getReadMethod().invoke(entityInstance);
 	}
 

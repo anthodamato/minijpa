@@ -3,14 +3,14 @@ package org.tinyjpa.metadata;
 import java.util.Collection;
 import java.util.Optional;
 
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 
 public class AliasGenerator {
-	public String calculateAlias(String tableName, Collection<Entity> parsedEntities) {
+	public String calculateAlias(String tableName, Collection<MetaEntity> parsedEntities) {
 		String alias = calculateBasicAlias(tableName);
 		int counter = 1;
 		while (true) {
-			Optional<Entity> optional = aliasExists(alias, parsedEntities);
+			Optional<MetaEntity> optional = aliasExists(alias, parsedEntities);
 			if (!optional.isPresent())
 				return alias;
 
@@ -30,7 +30,7 @@ public class AliasGenerator {
 		return sb.toString().toLowerCase();
 	}
 
-	private Optional<Entity> aliasExists(String alias, Collection<Entity> parsedEntities) {
+	private Optional<MetaEntity> aliasExists(String alias, Collection<MetaEntity> parsedEntities) {
 		return parsedEntities.stream().filter(e -> e.getAlias().equals(alias)).findFirst();
 	}
 

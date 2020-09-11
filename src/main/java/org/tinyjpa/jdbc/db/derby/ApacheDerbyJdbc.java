@@ -7,14 +7,14 @@ import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.AbstractDbJdbc;
 
 public class ApacheDerbyJdbc extends AbstractDbJdbc {
 	private Logger LOG = LoggerFactory.getLogger(ApacheDerbyJdbc.class);
 
 	@Override
-	protected Long generateSequenceNextValue(Connection connection, Entity entity) throws SQLException {
+	protected Long generateSequenceNextValue(Connection connection, MetaEntity entity) throws SQLException {
 		String sql = "VALUES (NEXT VALUE FOR " + entity.getTableName().toUpperCase() + "_PK_SEQ)";
 		LOG.info("generateSequenceNextValue: sql=" + sql);
 		PreparedStatement preparedStatement = connection.prepareStatement(sql);

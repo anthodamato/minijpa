@@ -1,7 +1,7 @@
 package org.tinyjpa.jdbc.relationship;
 
-import org.tinyjpa.jdbc.Attribute;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaAttribute;
+import org.tinyjpa.jdbc.MetaEntity;
 
 public final class OneToMany extends Relationship {
 	private Class<?> collectionClass;
@@ -30,13 +30,13 @@ public final class OneToMany extends Relationship {
 		private String joinColumn;
 		private String mappedBy;
 		private FetchType fetchType = FetchType.LAZY;
-		private Entity owningEntity;
-		private Attribute owningAttribute;
+		private MetaEntity owningEntity;
+		private MetaAttribute owningAttribute;
 		private Class<?> collectionClass;
 		private Class<?> targetEntityClass;
-		private Attribute targetAttribute;
+		private MetaAttribute targetAttribute;
 		private RelationshipJoinTable joinTable;
-		private Entity attributeType;
+		private MetaEntity attributeType;
 
 		public Builder() {
 		}
@@ -56,12 +56,12 @@ public final class OneToMany extends Relationship {
 			return this;
 		}
 
-		public Builder withOwningEntity(Entity owningEntity) {
+		public Builder withOwningEntity(MetaEntity owningEntity) {
 			this.owningEntity = owningEntity;
 			return this;
 		}
 
-		public Builder withOwningAttribute(Attribute attribute) {
+		public Builder withOwningAttribute(MetaAttribute attribute) {
 			this.owningAttribute = attribute;
 			return this;
 		}
@@ -76,7 +76,7 @@ public final class OneToMany extends Relationship {
 			return this;
 		}
 
-		public Builder withTargetAttribute(Attribute targetAttribute) {
+		public Builder withTargetAttribute(MetaAttribute targetAttribute) {
 			this.targetAttribute = targetAttribute;
 			return this;
 		}
@@ -86,7 +86,7 @@ public final class OneToMany extends Relationship {
 			return this;
 		}
 
-		public Builder withAttributeType(Entity attributeType) {
+		public Builder withAttributeType(MetaEntity attributeType) {
 			this.attributeType = attributeType;
 			return this;
 		}

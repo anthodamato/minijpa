@@ -5,25 +5,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.tinyjpa.jdbc.Attribute;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaAttribute;
+import org.tinyjpa.jdbc.MetaEntity;
 
 public class EntityContext {
-	private Map<String, Entity> entities;
+	private Map<String, MetaEntity> entities;
 
-	public EntityContext(Map<String, Entity> entities) {
+	public EntityContext(Map<String, MetaEntity> entities) {
 		super();
 		this.entities = entities;
 	}
 
-	public Entity getEntity(String entityClassName) {
+	public MetaEntity getEntity(String entityClassName) {
 		return entities.get(entityClassName);
 	}
 
-	public Attribute findEmbeddedAttribute(String className) {
-		for (Map.Entry<String, Entity> entry : entities.entrySet()) {
-			Entity entity = entry.getValue();
-			Attribute attribute = findEmbeddedAttribute(className, entity.getAttributes());
+	public MetaAttribute findEmbeddedAttribute(String className) {
+		for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+			MetaEntity entity = entry.getValue();
+			MetaAttribute attribute = findEmbeddedAttribute(className, entity.getAttributes());
 			if (attribute != null)
 				return attribute;
 		}
@@ -31,14 +31,14 @@ public class EntityContext {
 		return null;
 	}
 
-	private Attribute findEmbeddedAttribute(String className, List<Attribute> attributes) {
-		for (Attribute attribute : attributes) {
+	private MetaAttribute findEmbeddedAttribute(String className, List<MetaAttribute> attributes) {
+		for (MetaAttribute attribute : attributes) {
 			if (attribute.isEmbedded()) {
 				if (attribute.getType().getName().equals(className)) {
 					return attribute;
 				}
 
-				Attribute a = findEmbeddedAttribute(className, attribute.getEmbeddedAttributes());
+				MetaAttribute a = findEmbeddedAttribute(className, attribute.getEmbeddedAttributes());
 				if (a != null)
 					return a;
 			}
@@ -47,7 +47,7 @@ public class EntityContext {
 		return null;
 	}
 
-	public Set<Entity> getEntities() {
+	public Set<MetaEntity> getEntities() {
 		return new HashSet<>(entities.values());
 	}
 }

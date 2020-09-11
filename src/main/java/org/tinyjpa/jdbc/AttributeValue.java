@@ -1,20 +1,20 @@
 package org.tinyjpa.jdbc;
 
 public class AttributeValue {
-	private Attribute attribute;
+	private MetaAttribute attribute;
 	private Object value;
 
-	public AttributeValue(Attribute attribute, Object value) {
+	public AttributeValue(MetaAttribute attribute, Object value) {
 		super();
 		this.attribute = attribute;
 		this.value = value;
 	}
 
-	public Attribute getAttribute() {
+	public MetaAttribute getAttribute() {
 		return attribute;
 	}
 
-	public void setAttribute(Attribute attribute) {
+	public void setAttribute(MetaAttribute attribute) {
 		this.attribute = attribute;
 	}
 

@@ -2,7 +2,7 @@ package org.tinyjpa.jdbc.relationship;
 
 import java.util.List;
 
-import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 
 public class RelationshipJoinTable {
@@ -10,12 +10,12 @@ public class RelationshipJoinTable {
 	private String alias;
 	private List<JoinColumnAttribute> joinColumnOwningAttributes;
 	private List<JoinColumnAttribute> joinColumnTargetAttributes;
-	private Attribute owningAttribute;
-	private Attribute targetAttribute;
+	private MetaAttribute owningAttribute;
+	private MetaAttribute targetAttribute;
 
 	public RelationshipJoinTable(String tableName, String alias, List<JoinColumnAttribute> joinColumnOwningAttributes,
-			List<JoinColumnAttribute> joinColumnTargetAttributes, Attribute owningAttribute,
-			Attribute targetAttribute) {
+			List<JoinColumnAttribute> joinColumnTargetAttributes, MetaAttribute owningAttribute,
+			MetaAttribute targetAttribute) {
 		super();
 		this.tableName = tableName;
 		this.alias = alias;
@@ -41,11 +41,11 @@ public class RelationshipJoinTable {
 		return joinColumnTargetAttributes;
 	}
 
-	public Attribute getOwningAttribute() {
+	public MetaAttribute getOwningAttribute() {
 		return owningAttribute;
 	}
 
-	public Attribute getTargetAttribute() {
+	public MetaAttribute getTargetAttribute() {
 		return targetAttribute;
 	}
 

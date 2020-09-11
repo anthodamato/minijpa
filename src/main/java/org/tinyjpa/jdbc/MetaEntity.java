@@ -4,19 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Entity {
+public class MetaEntity {
 	private Class<?> clazz;
 	private String tableName;
 	private String alias;
-	private Attribute id;
-	private List<Attribute> attributes;
+	private MetaAttribute id;
+	private List<MetaAttribute> attributes;
 	private List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
 	// used to build the metamodel. The 'attributes' field contains the
 	// MappedSuperclass attributes
-	private Entity mappedSuperclassEntity;
+	private MetaEntity mappedSuperclassEntity;
 
-	public Entity(Class<?> clazz, String tableName, String alias, Attribute id, List<Attribute> attributes,
-			Entity mappedSuperclassEntity) {
+	public MetaEntity(Class<?> clazz, String tableName, String alias, MetaAttribute id, List<MetaAttribute> attributes,
+			MetaEntity mappedSuperclassEntity) {
 		super();
 		this.clazz = clazz;
 		this.tableName = tableName;
@@ -38,12 +38,12 @@ public class Entity {
 		return alias;
 	}
 
-	public List<Attribute> getAttributes() {
+	public List<MetaAttribute> getAttributes() {
 		return attributes;
 	}
 
-	public Attribute getAttribute(String name) {
-		for (Attribute attribute : attributes) {
+	public MetaAttribute getAttribute(String name) {
+		for (MetaAttribute attribute : attributes) {
 			if (attribute.getName().equals(name))
 				return attribute;
 		}
@@ -54,21 +54,21 @@ public class Entity {
 		return null;
 	}
 
-	public Attribute getId() {
+	public MetaAttribute getId() {
 		return id;
 	}
 
-	public List<Attribute> expandAttributes() {
-		List<Attribute> list = new ArrayList<>();
-		for (Attribute a : attributes) {
+	public List<MetaAttribute> expandAttributes() {
+		List<MetaAttribute> list = new ArrayList<>();
+		for (MetaAttribute a : attributes) {
 			list.addAll(a.expand());
 		}
 
 		return list;
 	}
 
-	public Attribute findAttributeWithMappedBy(String mappedBy) {
-		for (Attribute attribute : attributes) {
+	public MetaAttribute findAttributeWithMappedBy(String mappedBy) {
+		for (MetaAttribute attribute : attributes) {
 			if (attribute.getRelationship() != null && mappedBy.equals(attribute.getRelationship().getMappedBy()))
 				return attribute;
 		}
@@ -80,11 +80,11 @@ public class Entity {
 		return joinColumnAttributes;
 	}
 
-	public List<Attribute> getRelationshipAttributes() {
+	public List<MetaAttribute> getRelationshipAttributes() {
 		return attributes.stream().filter(a -> a.getRelationship() != null).collect(Collectors.toList());
 	}
 
-	public Entity getMappedSuperclassEntity() {
+	public MetaEntity getMappedSuperclassEntity() {
 		return mappedSuperclassEntity;
 	}
 

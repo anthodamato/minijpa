@@ -10,9 +10,9 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeValue;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.AttributeLoader;
 
 public final class EntityDelegate implements EntityListener {
@@ -28,7 +28,7 @@ public final class EntityDelegate implements EntityListener {
 	 * 
 	 * Collects entity attributes changes.
 	 */
-	private Map<Entity, Map<Object, List<AttributeValue>>> changes = new HashMap<>();
+	private Map<MetaEntity, Map<Object, List<AttributeValue>>> changes = new HashMap<>();
 	/**
 	 * (key, value) is (Map<embedded instance, List<AttrValue>>>)
 	 * 
@@ -42,7 +42,7 @@ public final class EntityDelegate implements EntityListener {
 	 * (key, value) is (Map<owner entity instance class, Map<owner entity instance,
 	 * Set<Attribute>>>)
 	 */
-	private Map<Class<?>, Map<Object, Set<Attribute>>> loadedLazyAttributes = new HashMap<>();
+	private Map<Class<?>, Map<Object, Set<MetaAttribute>>> loadedLazyAttributes = new HashMap<>();
 
 	public static EntityDelegate getInstance() {
 		return entityDelegate;
@@ -55,8 +55,8 @@ public final class EntityDelegate implements EntityListener {
 	 * 
 	 * @param entities
 	 */
-	private synchronized void initDataStructures(Set<Entity> entities) {
-		for (Entity entity : entities) {
+	private synchronized void initDataStructures(Set<MetaEntity> entities) {
+		for (MetaEntity entity : entities) {
 			Map<Object, List<AttributeValue>> map = changes.get(entity);
 			if (map == null) {
 				map = new HashMap<>();
@@ -64,8 +64,8 @@ public final class EntityDelegate implements EntityListener {
 			}
 		}
 
-		for (Entity entity : entities) {
-			Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entity.getClazz());
+		for (MetaEntity entity : entities) {
+			Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entity.getClazz());
 			if (map == null) {
 				map = new HashMap<>();
 				loadedLazyAttributes.put(entity.getClazz(), map);
@@ -80,7 +80,7 @@ public final class EntityDelegate implements EntityListener {
 				return;
 		}
 
-		Entity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
+		MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
 		LOG.info("set: entityInstance=" + entityInstance);
 		if (entity == null) {
 			// it's an embedded attribute
@@ -90,8 +90,8 @@ public final class EntityDelegate implements EntityListener {
 				embeddedChanges.put(entityInstance, instanceAttrs);
 			}
 
-			Attribute parentAttribute = entityContextManager.findEmbeddedAttribute(entityInstance.getClass().getName());
-			Attribute attribute = parentAttribute.findChildByName(attributeName);
+			MetaAttribute parentAttribute = entityContextManager.findEmbeddedAttribute(entityInstance.getClass().getName());
+			MetaAttribute attribute = parentAttribute.findChildByName(attributeName);
 			Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
 					.findFirst();
 			if (optional.isPresent()) {
@@ -117,7 +117,7 @@ public final class EntityDelegate implements EntityListener {
 			map.put(entityInstance, instanceAttrs);
 		}
 
-		Attribute attribute = entity.getAttribute(attributeName);
+		MetaAttribute attribute = entity.getAttribute(attributeName);
 //		LOG.info("set: attributeName=" + attributeName + "; attribute=" + attribute);
 		Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
 				.findFirst();
@@ -143,7 +143,7 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	public void removeChanges(Object entityInstance) {
-		Entity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
+		MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
 		if (entity == null)
 			return;
 
@@ -155,8 +155,8 @@ public final class EntityDelegate implements EntityListener {
 		map.remove(entityInstance);
 	}
 
-	private void removeEmbeddedChanges(List<Attribute> attributes, Object entityInstance) {
-		for (Attribute attribute : attributes) {
+	private void removeEmbeddedChanges(List<MetaAttribute> attributes, Object entityInstance) {
+		for (MetaAttribute attribute : attributes) {
 			if (attribute.isId() || !attribute.isEmbedded())
 				continue;
 
@@ -173,7 +173,7 @@ public final class EntityDelegate implements EntityListener {
 		}
 	}
 
-	public Optional<List<AttributeValue>> getChanges(Entity entity, Object entityInstance) {
+	public Optional<List<AttributeValue>> getChanges(MetaEntity entity, Object entityInstance) {
 		Map<Object, List<AttributeValue>> map = changes.get(entity);
 //		if (map == null)
 //			return Optional.empty();
@@ -231,8 +231,8 @@ public final class EntityDelegate implements EntityListener {
 		if (entityContainerContextManager.isEmpty() || !entityContainerContextManager.isLoadedFromDb(entityInstance))
 			return value;
 
-		Entity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
-		Attribute a = entity.getAttribute(attributeName);
+		MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
+		MetaAttribute a = entity.getAttribute(attributeName);
 		LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
 		if (a.isLazy() && !isLazyAttributeLoaded(entityInstance, a)) {
 			AttributeLoader attributeLoader = entityContainerContextManager
@@ -249,26 +249,26 @@ public final class EntityDelegate implements EntityListener {
 		return value;
 	}
 
-	private boolean isLazyAttributeLoaded(Object entityInstance, Attribute a) {
-		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
+	private boolean isLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
+		Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
 //		if (map == null)
 //			return false;
 
-		Set<Attribute> attributes = map.get(entityInstance);
+		Set<MetaAttribute> attributes = map.get(entityInstance);
 		if (attributes == null)
 			return false;
 
 		return attributes.contains(a);
 	}
 
-	public void setLazyAttributeLoaded(Object entityInstance, Attribute a) {
-		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
+	public void setLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
+		Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
 //		if (map == null) {
 //			map = new HashMap<>();
 //			loadedLazyAttributes.put(entityInstance.getClass(), map);
 //		}
 
-		Set<Attribute> attributes = map.get(entityInstance);
+		Set<MetaAttribute> attributes = map.get(entityInstance);
 		if (attributes == null) {
 			attributes = new HashSet<>();
 			map.put(entityInstance, attributes);
@@ -277,12 +277,12 @@ public final class EntityDelegate implements EntityListener {
 		attributes.add(a);
 	}
 
-	public void removeLazyAttributeLoaded(Object entityInstance, Attribute a) {
-		Map<Object, Set<Attribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
+	public void removeLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
+		Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
 //		if (map == null)
 //			return;
 
-		Set<Attribute> attributes = map.get(entityInstance);
+		Set<MetaAttribute> attributes = map.get(entityInstance);
 		if (attributes == null)
 			return;
 
@@ -294,7 +294,7 @@ public final class EntityDelegate implements EntityListener {
 		}
 	}
 
-	public Map<Entity, Map<Object, List<AttributeValue>>> getChanges() {
+	public Map<MetaEntity, Map<Object, List<AttributeValue>>> getChanges() {
 		return changes;
 	}
 
@@ -325,9 +325,9 @@ public final class EntityDelegate implements EntityListener {
 			entityContexts.add(entityContext);
 		}
 
-		public Entity getEntity(String entityClassName) {
+		public MetaEntity getEntity(String entityClassName) {
 			for (EntityContext entityContext : entityContexts) {
-				Entity entity = entityContext.getEntity(entityClassName);
+				MetaEntity entity = entityContext.getEntity(entityClassName);
 				if (entity != null)
 					return entity;
 			}
@@ -335,9 +335,9 @@ public final class EntityDelegate implements EntityListener {
 			return null;
 		}
 
-		public Attribute findEmbeddedAttribute(String className) {
+		public MetaAttribute findEmbeddedAttribute(String className) {
 			for (EntityContext entityContext : entityContexts) {
-				Attribute attribute = entityContext.findEmbeddedAttribute(className);
+				MetaAttribute attribute = entityContext.findEmbeddedAttribute(className);
 				if (attribute != null)
 					return attribute;
 			}
@@ -360,7 +360,7 @@ public final class EntityDelegate implements EntityListener {
 
 		public AttributeLoader findByEntity(String className) {
 			for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-				Entity entity = entityContainerContext.getEntity(className);
+				MetaEntity entity = entityContainerContext.getEntity(className);
 				if (entity != null)
 					return entityContainerContext.getAttributeLoader();
 			}

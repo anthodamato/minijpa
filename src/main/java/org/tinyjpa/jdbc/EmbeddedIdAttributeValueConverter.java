@@ -16,9 +16,9 @@ public class EmbeddedIdAttributeValueConverter implements AttributeValueConverte
 			return attrValues;
 		}
 
-		List<Attribute> attributes = attrValue.getAttribute().getEmbeddedAttributes();
+		List<MetaAttribute> attributes = attrValue.getAttribute().getEmbeddedAttributes();
 		List<AttributeValue> attributeValues = new ArrayList<>();
-		for (Attribute a : attributes) {
+		for (MetaAttribute a : attributes) {
 			Object value = a.getReadMethod().invoke(attrValue.getValue());
 			attributeValues.add(new AttributeValue(a, value));
 		}

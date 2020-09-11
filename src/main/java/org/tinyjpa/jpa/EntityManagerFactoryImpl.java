@@ -16,7 +16,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.metadata.EnhEntity;
 import org.tinyjpa.metadata.EntityContext;
 import org.tinyjpa.metadata.EntityDelegate;
@@ -30,7 +30,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	/**
 	 * The key used is the full class name.
 	 */
-	private static Map<String, Entity> entities;
+	private static Map<String, MetaEntity> entities;
 
 	public EntityManagerFactoryImpl(PersistenceUnitInfo persistenceUnitInfo, @SuppressWarnings("rawtypes") Map map) {
 		super();
@@ -38,11 +38,11 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		this.map = map;
 	}
 
-	private synchronized Map<String, Entity> createEntities() throws Exception {
+	private synchronized Map<String, MetaEntity> createEntities() throws Exception {
 		List<EnhEntity> enhancedClasses = new EntityEnhancer(persistenceUnitInfo.getManagedClassNames()).enhance();
 
 		Parser parser = new Parser();
-		Map<String, Entity> entities = parser.parse(enhancedClasses);
+		Map<String, MetaEntity> entities = parser.parse(enhancedClasses);
 		EntityDelegate.getInstance().addEntityContext(new EntityContext(entities));
 		return entities;
 	}

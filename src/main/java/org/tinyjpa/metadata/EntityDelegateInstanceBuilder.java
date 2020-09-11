@@ -5,20 +5,20 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.Attribute;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeValue;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.EntityInstanceBuilder;
 
 public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	private Logger LOG = LoggerFactory.getLogger(EntityDelegateInstanceBuilder.class);
 
 	@Override
-	public Object build(Entity entity, List<Attribute> attributes, List<Object> values, Object idValue)
+	public Object build(MetaEntity entity, List<MetaAttribute> attributes, List<Object> values, Object idValue)
 			throws Exception {
 		Object entityInstance = entity.getClazz().newInstance();
 		int i = 0;
-		for (Attribute attribute : attributes) {
+		for (MetaAttribute attribute : attributes) {
 			LOG.info("build: attribute.getName()=" + attribute.getName());
 			findAndSetAttributeValue(entity.getClazz(), entityInstance, entity.getAttributes(), attribute,
 					values.get(i));
@@ -31,7 +31,7 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	}
 
 	@Override
-	public Object setAttributeValue(Object parentInstance, Class<?> parentClass, Attribute attribute, Object value)
+	public Object setAttributeValue(Object parentInstance, Class<?> parentClass, MetaAttribute attribute, Object value)
 			throws Exception {
 		Object parent = parentInstance;
 		if (parent == null)
@@ -49,7 +49,7 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	}
 
 	@Override
-	public Object getAttributeValue(Object parentInstance, Attribute attribute) throws Exception {
+	public Object getAttributeValue(Object parentInstance, MetaAttribute attribute) throws Exception {
 		LOG.info("getAttributeValue: parent=" + parentInstance + "; a.getReadMethod()=" + attribute.getReadMethod());
 		try {
 //			EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
@@ -61,18 +61,18 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 //		return parent;
 	}
 
-	private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, List<Attribute> attributes,
-			Attribute attribute, Object value) throws Exception {
+	private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, List<MetaAttribute> attributes,
+			MetaAttribute attribute, Object value) throws Exception {
 		LOG.info("findAndSetAttributeValue: value=" + value + "; value.getClass().getName()="
 				+ value.getClass().getName());
-		for (Attribute a : attributes) {
+		for (MetaAttribute a : attributes) {
 			if (a == attribute) {
 				return setAttributeValue(parentInstance, parentClass, attribute, value);
 			}
 		}
 
 		// search over embedded attributes
-		for (Attribute a : attributes) {
+		for (MetaAttribute a : attributes) {
 			if (!a.isEmbedded())
 				continue;
 
@@ -86,7 +86,7 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	}
 
 	@Override
-	public Optional<List<AttributeValue>> getChanges(Entity entity, Object entityInstance) {
+	public Optional<List<AttributeValue>> getChanges(MetaEntity entity, Object entityInstance) {
 		return EntityDelegate.getInstance().getChanges(entity, entityInstance);
 	}
 

@@ -7,83 +7,143 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
 public class MetamodelSingularAttribute<X, T> implements SingularAttribute<X, T> {
+	private String name;
+	private PersistentAttributeType persistentAttributeType = PersistentAttributeType.BASIC;
+	private ManagedType<X> declaringType;
+	private Class<T> javaType;
+	private Member javaMember;
+	private BindableType bindableType;
+	private Class<T> bindableJavaType;
+	private Type<T> type;
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return name;
 	}
 
 	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
-		// TODO Auto-generated method stub
-		return null;
+		return persistentAttributeType;
 	}
 
 	@Override
 	public ManagedType<X> getDeclaringType() {
-		// TODO Auto-generated method stub
-		return null;
+		return declaringType;
+	}
+
+	void setDeclaringType(ManagedType<X> managedType) {
+		this.declaringType = managedType;
 	}
 
 	@Override
 	public Class<T> getJavaType() {
-		// TODO Auto-generated method stub
-		return null;
+		return javaType;
 	}
 
 	@Override
 	public Member getJavaMember() {
-		// TODO Auto-generated method stub
-		return null;
+		return javaMember;
 	}
 
 	@Override
 	public boolean isAssociation() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean isCollection() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public BindableType getBindableType() {
-		// TODO Auto-generated method stub
-		return null;
+		return bindableType;
 	}
 
 	@Override
 	public Class<T> getBindableJavaType() {
-		// TODO Auto-generated method stub
-		return null;
+		return bindableJavaType;
 	}
 
 	@Override
 	public boolean isId() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean isVersion() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean isOptional() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
 	public Type<T> getType() {
-		// TODO Auto-generated method stub
-		return null;
+		return type;
+	}
+
+	public static class Builder {
+		private PersistentAttributeType persistentAttributeType;
+		private Class javaType;
+		private Member javaMember;
+		private BindableType bindableType;
+		private Class bindableJavaType;
+		private String name;
+		private Type type;
+
+		public Builder() {
+			super();
+		}
+
+		public Builder withPersistentAttributeType(PersistentAttributeType persistentAttributeType) {
+			this.persistentAttributeType = persistentAttributeType;
+			return this;
+		}
+
+		public Builder withJavaType(Class javaType) {
+			this.javaType = javaType;
+			return this;
+		}
+
+		public Builder withJavaMember(Member javaMember) {
+			this.javaMember = javaMember;
+			return this;
+		}
+
+		public Builder withBindableType(BindableType bindableType) {
+			this.bindableType = bindableType;
+			return this;
+		}
+
+		public Builder withBindableJavaType(Class bindableJavaType) {
+			this.bindableJavaType = bindableJavaType;
+			return this;
+		}
+
+		public Builder withName(String name) {
+			this.name = name;
+			return this;
+		}
+
+		public Builder withType(Type type) {
+			this.type = type;
+			return this;
+		}
+
+		public MetamodelSingularAttribute build() {
+			MetamodelSingularAttribute<?, ?> singularAttribute = new MetamodelSingularAttribute();
+			singularAttribute.persistentAttributeType = persistentAttributeType;
+			singularAttribute.javaType = javaType;
+			singularAttribute.javaMember = javaMember;
+			singularAttribute.bindableType = bindableType;
+			singularAttribute.bindableJavaType = bindableJavaType;
+			singularAttribute.name = name;
+
+			return singularAttribute;
+		}
 	}
 
 }

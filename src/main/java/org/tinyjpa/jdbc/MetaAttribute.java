@@ -7,7 +7,7 @@ import java.util.List;
 import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.Relationship;
 
-public class Attribute extends AbstractAttribute {
+public class MetaAttribute extends AbstractAttribute {
 //	private Logger LOG = LoggerFactory.getLogger(Attribute.class);
 	private String name;
 	private Method readMethod;
@@ -15,7 +15,7 @@ public class Attribute extends AbstractAttribute {
 	private boolean id;
 	private GeneratedValue generatedValue;
 	private boolean embedded;
-	private List<Attribute> embeddedAttributes;
+	private List<MetaAttribute> embeddedAttributes;
 	private Relationship relationship;
 
 	public String getName() {
@@ -42,7 +42,7 @@ public class Attribute extends AbstractAttribute {
 		return embedded;
 	}
 
-	public List<Attribute> getEmbeddedAttributes() {
+	public List<MetaAttribute> getEmbeddedAttributes() {
 		return embeddedAttributes;
 	}
 
@@ -54,11 +54,11 @@ public class Attribute extends AbstractAttribute {
 		this.relationship = relationship;
 	}
 
-	public Attribute findChildByName(String attributeName) {
+	public MetaAttribute findChildByName(String attributeName) {
 		if (getEmbeddedAttributes() == null)
 			return null;
 
-		for (Attribute a : getEmbeddedAttributes()) {
+		for (MetaAttribute a : getEmbeddedAttributes()) {
 			if (a.getName().equals(attributeName))
 				return a;
 		}
@@ -73,11 +73,11 @@ public class Attribute extends AbstractAttribute {
 		return false;
 	}
 
-	public List<Attribute> expand() {
-		List<Attribute> list = new ArrayList<>();
+	public List<MetaAttribute> expand() {
+		List<MetaAttribute> list = new ArrayList<>();
 //		LOG.info("expandAttribute: embedded=" + embedded + "; name=" + name);
 		if (embedded) {
-			for (Attribute a : embeddedAttributes) {
+			for (MetaAttribute a : embeddedAttributes) {
 				list.addAll(a.expand());
 			}
 		} else if (expandRelationship()) {
@@ -116,7 +116,7 @@ public class Attribute extends AbstractAttribute {
 		private Integer sqlType;
 		private GeneratedValue generatedValue;
 		private boolean embedded;
-		private List<Attribute> embeddedAttributes;
+		private List<MetaAttribute> embeddedAttributes;
 		private Relationship relationship;
 
 		public Builder(String name) {
@@ -165,7 +165,7 @@ public class Attribute extends AbstractAttribute {
 			return this;
 		}
 
-		public Builder withEmbeddedAttributes(List<Attribute> embeddedAttributes) {
+		public Builder withEmbeddedAttributes(List<MetaAttribute> embeddedAttributes) {
 			this.embeddedAttributes = embeddedAttributes;
 			return this;
 		}
@@ -190,8 +190,8 @@ public class Attribute extends AbstractAttribute {
 //			return this;
 //		}
 
-		public Attribute build() {
-			Attribute attribute = new Attribute();
+		public MetaAttribute build() {
+			MetaAttribute attribute = new MetaAttribute();
 			attribute.name = name;
 			attribute.columnName = columnName;
 			attribute.type = type;

@@ -9,12 +9,12 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.ConnectionHolder;
-import org.tinyjpa.jdbc.Entity;
+import org.tinyjpa.jdbc.MetaEntity;
 
 public abstract class AbstractEntityManager implements EntityManager {
 	private Logger LOG = LoggerFactory.getLogger(getClass());
 
-	protected Map<String, Entity> entities;
+	protected Map<String, MetaEntity> entities;
 	protected PersistenceUnitInfo persistenceUnitInfo;
 	protected PersistenceContextImpl persistenceContext;
 	protected PersistenceContextType persistenceContextType = PersistenceContextType.TRANSACTION;
