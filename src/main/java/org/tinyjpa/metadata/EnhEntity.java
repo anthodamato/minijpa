@@ -7,6 +7,7 @@ public class EnhEntity {
 	private String className;
 	private List<EnhAttribute> enhAttributes = new ArrayList<>();
 	private EnhEntity mappedSuperclass;
+	private List<EnhEntity> embeddables = new ArrayList<>();
 
 	public String getClassName() {
 		return className;
@@ -32,4 +33,11 @@ public class EnhEntity {
 		this.mappedSuperclass = mappedSuperclass;
 	}
 
+	public List<EnhEntity> getEmbeddables() {
+		return embeddables;
+	}
+
+	public void addEmbeddables(List<EnhEntity> embeddables) {
+		embeddables.addAll(embeddables);
+	}
 }

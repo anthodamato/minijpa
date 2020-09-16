@@ -1,5 +1,6 @@
 package org.tinyjpa.jdbc;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +9,6 @@ import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.Relationship;
 
 public class MetaAttribute extends AbstractAttribute {
-//	private Logger LOG = LoggerFactory.getLogger(Attribute.class);
 	private String name;
 	private Method readMethod;
 	private Method writeMethod;
@@ -17,6 +17,8 @@ public class MetaAttribute extends AbstractAttribute {
 	private boolean embedded;
 	private List<MetaAttribute> embeddedAttributes;
 	private Relationship relationship;
+	private boolean collection = false;
+	private Field javaMember;
 
 	public String getName() {
 		return name;
@@ -52,6 +54,10 @@ public class MetaAttribute extends AbstractAttribute {
 
 	public void setRelationship(Relationship relationship) {
 		this.relationship = relationship;
+	}
+
+	public Field getJavaMember() {
+		return javaMember;
 	}
 
 	public MetaAttribute findChildByName(String attributeName) {
@@ -101,6 +107,10 @@ public class MetaAttribute extends AbstractAttribute {
 		return relationship.getFetchType() == FetchType.LAZY;
 	}
 
+	public boolean isCollection() {
+		return collection;
+	}
+
 	@Override
 	public String toString() {
 		return "(Name=" + name + "; columnName=" + columnName + "; embedded=" + embedded + ")";
@@ -118,6 +128,8 @@ public class MetaAttribute extends AbstractAttribute {
 		private boolean embedded;
 		private List<MetaAttribute> embeddedAttributes;
 		private Relationship relationship;
+		private boolean collection = false;
+		private Field javaMember;
 
 		public Builder(String name) {
 			super();
@@ -175,6 +187,16 @@ public class MetaAttribute extends AbstractAttribute {
 			return this;
 		}
 
+		public Builder isCollection(boolean collection) {
+			this.collection = collection;
+			return this;
+		}
+
+		public Builder withJavaMember(Field field) {
+			this.javaMember = field;
+			return this;
+		}
+
 //		public Builder with(Attribute attribute) {
 //			this.name = attribute.name;
 //			this.columnName = attribute.columnName;
@@ -203,6 +225,8 @@ public class MetaAttribute extends AbstractAttribute {
 			attribute.embedded = embedded;
 			attribute.embeddedAttributes = embeddedAttributes;
 			attribute.relationship = relationship;
+			attribute.collection = collection;
+			attribute.javaMember = javaMember;
 			return attribute;
 		}
 	}

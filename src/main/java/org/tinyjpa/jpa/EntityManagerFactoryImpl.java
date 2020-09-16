@@ -1,6 +1,5 @@
 package org.tinyjpa.jpa;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Cache;
@@ -17,10 +16,9 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.MetaEntity;
-import org.tinyjpa.metadata.EnhEntity;
+import org.tinyjpa.jpa.metamodel.MetamodelFactory;
 import org.tinyjpa.metadata.EntityContext;
 import org.tinyjpa.metadata.EntityDelegate;
-import org.tinyjpa.metadata.EntityEnhancer;
 import org.tinyjpa.metadata.Parser;
 
 public class EntityManagerFactoryImpl implements EntityManagerFactory {
@@ -31,6 +29,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	 * The key used is the full class name.
 	 */
 	private static Map<String, MetaEntity> entities;
+	private Metamodel metamodel;
 
 	public EntityManagerFactoryImpl(PersistenceUnitInfo persistenceUnitInfo, @SuppressWarnings("rawtypes") Map map) {
 		super();
@@ -39,10 +38,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	}
 
 	private synchronized Map<String, MetaEntity> createEntities() throws Exception {
-		List<EnhEntity> enhancedClasses = new EntityEnhancer(persistenceUnitInfo.getManagedClassNames()).enhance();
-
-		Parser parser = new Parser();
-		Map<String, MetaEntity> entities = parser.parse(enhancedClasses);
+		Map<String, MetaEntity> entities = new Parser().createMetaEntities(persistenceUnitInfo.getManagedClassNames());
 		EntityDelegate.getInstance().addEntityContext(new EntityContext(entities));
 		return entities;
 	}
@@ -90,8 +86,14 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	}
 
 	public Metamodel getMetamodel() {
-		// TODO Auto-generated method stub
-		return null;
+		if (metamodel == null)
+			try {
+				metamodel = new MetamodelFactory(entities).build();
+			} catch (Exception e) {
+				LOG.error(e.getMessage());
+			}
+
+		return metamodel;
 	}
 
 	public boolean isOpen() {

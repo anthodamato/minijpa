@@ -1,5 +1,6 @@
 package org.tinyjpa.jpa.metamodel;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.metamodel.Attribute;
@@ -173,7 +174,11 @@ public class MetamodelEntityType<X> implements EntityType<X> {
 
 	@Override
 	public Attribute<? super X, ?> getAttribute(String name) {
-		// TODO Auto-generated method stub
+		Optional<Attribute<? super X, ?>> optional = attributes.stream().filter(a -> a.getName().equals(name))
+				.findFirst();
+		if (optional.isPresent())
+			return optional.get();
+
 		return null;
 	}
 
@@ -278,6 +283,7 @@ public class MetamodelEntityType<X> implements EntityType<X> {
 		private BindableType bindableType;
 		private Class bindableJavaType;
 		private String name;
+		private Set<SingularAttribute> singularAttributes;
 
 		public Builder() {
 			super();
@@ -300,6 +306,11 @@ public class MetamodelEntityType<X> implements EntityType<X> {
 
 		public Builder withDeclaredAttributes(Set<Attribute> declaredAttributes) {
 			this.declaredAttributes = declaredAttributes;
+			return this;
+		}
+
+		public Builder withSingularAttributes(Set<SingularAttribute> singularAttributes) {
+			this.singularAttributes = singularAttributes;
 			return this;
 		}
 
@@ -334,6 +345,7 @@ public class MetamodelEntityType<X> implements EntityType<X> {
 			entityType.superType = superType;
 			entityType.attributes = attributes;
 			entityType.declaredAttributes = declaredAttributes;
+			entityType.singularAttributes = singularAttributes;
 			entityType.persistenceType = persistenceType;
 			entityType.javaType = javaType;
 			entityType.bindableType = bindableType;

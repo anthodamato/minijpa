@@ -34,6 +34,7 @@ public class MetamodelUtils {
 		Assertions.assertEquals(persistentAttributeType, attribute.getPersistentAttributeType());
 		Assertions.assertFalse(isAssociation);
 		Assertions.assertFalse(isCollection);
+		Assertions.assertNotNull(attribute.getJavaMember());
 		Assertions.assertEquals(name, attribute.getJavaMember().getName());
 	}
 }

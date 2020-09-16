@@ -42,10 +42,10 @@ public class EntityEnhancer {
 			LOG.info("enhance: dataEntity.mappedSuperclass=" + dataEntity.mappedSuperclass);
 			if (dataEntity.mappedSuperclass != null) {
 				LOG.info("enhance: dataEntity.mappedSuperclass.className=" + dataEntity.mappedSuperclass.className);
-				enhMappedSuperclassEntity = enhance(dataEntity.mappedSuperclass);
+				enhMappedSuperclassEntity = enhance(dataEntity.mappedSuperclass, enhEntities);
 			}
 
-			EnhEntity enhEntity = enhance(dataEntity);
+			EnhEntity enhEntity = enhance(dataEntity, enhEntities);
 			enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
 			enhEntities.add(enhEntity);
 		}
@@ -53,14 +53,44 @@ public class EntityEnhancer {
 		return enhEntities;
 	}
 
-	private EnhEntity enhance(DataEntity dataEntity) throws Exception {
+	private EnhEntity enhance(DataEntity dataEntity, List<EnhEntity> parsedEntities) throws Exception {
 		LOG.info("enhance: dataEntity.className=" + dataEntity.className);
 		EnhEntity enhEntity = new EnhEntity();
 		enhEntity.setClassName(dataEntity.className);
 		List<EnhAttribute> enhAttributes = enhance(dataEntity.ct, dataEntity.dataAttributes, dataEntity);
 		LOG.info("enhance: attributes created for " + dataEntity.className);
 		enhEntity.setEnhAttributes(enhAttributes);
+		List<EnhEntity> embeddables = findEmbeddables(enhAttributes, parsedEntities);
+		enhEntity.addEmbeddables(embeddables);
 		return enhEntity;
+	}
+
+	private List<EnhEntity> findEmbeddables(List<EnhAttribute> enhAttributes, List<EnhEntity> parsedEntities) {
+		List<EnhEntity> embeddables = new ArrayList<>();
+		for (EnhAttribute enhAttribute : enhAttributes) {
+			if (!enhAttribute.isEmbedded())
+				continue;
+
+			EnhEntity embeddable = findInspectedEnhEmbeddables(enhAttribute.getClassName(), parsedEntities);
+			if (embeddable == null) {
+				embeddable = new EnhEntity();
+				embeddable.setClassName(enhAttribute.getClassName());
+				embeddable.setEnhAttributes(enhAttribute.getEmbeddedAttributes());
+			}
+
+			embeddables.add(embeddable);
+		}
+
+		return embeddables;
+	}
+
+	private EnhEntity findInspectedEnhEmbeddables(String className, List<EnhEntity> parsedEntities) {
+		for (EnhEntity enhEntity : parsedEntities) {
+			if (enhEntity.getClassName().equals(className))
+				return enhEntity;
+		}
+
+		return null;
 	}
 
 	private boolean toEnhance(List<DataAttribute> dataAttributes) throws Exception {
@@ -141,16 +171,14 @@ public class EntityEnhancer {
 		return dataEntities;
 	}
 
-	private void inspect(String className, List<DataEntity> dataEntities) throws Exception {
+	private void inspect(String className, List<DataEntity> inspectedClasses) throws Exception {
 		// already enhanced
-		for (DataEntity enhEntity : dataEntities) {
+		for (DataEntity enhEntity : inspectedClasses) {
 			if (enhEntity.className.equals(className))
 				return;
 		}
 
 		ClassPool pool = ClassPool.getDefault();
-//		LOG.info("Enhancing: " + className);
-
 		CtClass ct = pool.get(className);
 		// mapped superclasses are enhanced finding the entity superclasses
 		Object mappedSuperclassAnnotation = ct.getAnnotation(MappedSuperclass.class);
@@ -171,21 +199,27 @@ public class EntityEnhancer {
 		DataEntity dataEntity = new DataEntity();
 		dataEntity.className = className;
 
-		Optional<DataEntity> optional = findMappedSuperclass(ct, dataEntities);
+		Optional<DataEntity> optional = findMappedSuperclass(ct, inspectedClasses);
 		if (optional.isPresent())
 			dataEntity.mappedSuperclass = optional.get();
 
 		List<Property> properties = findAttributes(ct);
 		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
-		List<DataAttribute> attrs = findAttributes(ct, properties, false);
+		List<DataAttribute> attrs = createDataAttributes(properties, false);
 		dataEntity.dataAttributes = attrs;
 		dataEntity.ct = ct;
+
+		// looks for embeddables
+		List<DataEntity> embeddables = new ArrayList<>();
+		createEmbeddables(attrs, embeddables, inspectedClasses);
+		dataEntity.embeddables.addAll(embeddables);
+
 		if (!attrs.isEmpty() || dataEntity.mappedSuperclass != null) {
-			dataEntities.add(dataEntity);
+			inspectedClasses.add(dataEntity);
 		}
 	}
 
-	private Optional<DataEntity> findMappedSuperclass(CtClass ct, List<DataEntity> enhancedClasses) throws Exception {
+	private Optional<DataEntity> findMappedSuperclass(CtClass ct, List<DataEntity> inspectedClasses) throws Exception {
 		CtClass superClass = ct.getSuperclass();
 		if (superClass == null)
 			return Optional.empty();
@@ -198,16 +232,15 @@ public class EntityEnhancer {
 		if (mappedSuperclassAnnotation == null)
 			return Optional.empty();
 
-//		LOG.info("mappedSuperclassAnnotation=" + mappedSuperclassAnnotation);
-		// checks if the mapped superclass id already enhanced
-		DataEntity mappedSuperclassEnhEntity = findEnhancedMappedSuperclass(enhancedClasses, superClass.getName());
+		// checks if the mapped superclass id already inspected
+		DataEntity mappedSuperclassEnhEntity = findInspectedMappedSuperclass(inspectedClasses, superClass.getName());
 		LOG.info("mappedSuperclassEnhEntity=" + mappedSuperclassEnhEntity);
 		if (mappedSuperclassEnhEntity != null)
 			return Optional.of(mappedSuperclassEnhEntity);
 
 		List<Property> properties = findAttributes(superClass);
 		LOG.info("Found " + properties.size() + " attributes in '" + superClass.getName() + "'");
-		List<DataAttribute> attrs = findAttributes(superClass, properties, false);
+		List<DataAttribute> attrs = createDataAttributes(properties, false);
 		LOG.info("attrs.size()=" + attrs.size());
 		if (attrs.isEmpty())
 			return Optional.empty();
@@ -216,10 +249,15 @@ public class EntityEnhancer {
 		mappedSuperclass.className = superClass.getName();
 		mappedSuperclass.dataAttributes = attrs;
 		mappedSuperclass.ct = superClass;
+
+		List<DataEntity> embeddables = new ArrayList<>();
+		createEmbeddables(attrs, embeddables, inspectedClasses);
+		mappedSuperclass.embeddables.addAll(embeddables);
+
 		return Optional.of(mappedSuperclass);
 	}
 
-	private DataEntity findEnhancedMappedSuperclass(List<DataEntity> enhancedClasses, String superclassName) {
+	private DataEntity findInspectedMappedSuperclass(List<DataEntity> enhancedClasses, String superclassName) {
 		for (DataEntity enhEntity : enhancedClasses) {
 			DataEntity mappedSuperclassEnhEntity = enhEntity.mappedSuperclass;
 			if (mappedSuperclassEnhEntity != null && mappedSuperclassEnhEntity.className.equals(superclassName))
@@ -229,8 +267,43 @@ public class EntityEnhancer {
 		return null;
 	}
 
-	private List<DataAttribute> findAttributes(CtClass ct, List<Property> properties, boolean embeddedId)
-			throws Exception {
+	private void createEmbeddables(List<DataAttribute> dataAttributes, List<DataEntity> embeddables,
+			List<DataEntity> inspectedClasses) {
+		for (DataAttribute dataAttribute : dataAttributes) {
+			if (!dataAttribute.property.embedded)
+				continue;
+
+			DataEntity dataEntity = findInspectedEmbeddable(inspectedClasses, dataAttribute.property.ctField.getName());
+			if (dataEntity == null) {
+				dataEntity = new DataEntity();
+				dataEntity.className = dataAttribute.property.ctField.getName();
+				dataEntity.dataAttributes = dataAttribute.embeddedAttributes;
+				dataEntity.ct = dataAttribute.embeddedCtClass;
+			}
+
+			embeddables.add(dataEntity);
+			createEmbeddables(dataAttribute.embeddedAttributes, embeddables, inspectedClasses);
+		}
+	}
+
+	private DataEntity findInspectedEmbeddable(List<DataEntity> inspectedClasses, String className) {
+		for (DataEntity dataEntity : inspectedClasses) {
+			for (DataEntity embeddable : dataEntity.embeddables) {
+				if (embeddable.className.equals(className))
+					return embeddable;
+
+				if (!embeddable.embeddables.isEmpty()) {
+					DataEntity entity = findInspectedEmbeddable(embeddable.embeddables, className);
+					if (entity != null)
+						return entity;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private List<DataAttribute> createDataAttributes(List<Property> properties, boolean embeddedId) throws Exception {
 		List<DataAttribute> attributes = new ArrayList<>();
 		// nothing to do if there are no persistent attributes
 		if (properties.isEmpty())
@@ -266,7 +339,7 @@ public class EntityEnhancer {
 		List<DataAttribute> embeddedAttributes = null;
 		CtClass embeddedCtClass = null;
 		if (property.embedded) {
-			embeddedAttributes = findAttributes(property.ctField.getType(), property.embeddedProperties, property.id);
+			embeddedAttributes = createDataAttributes(property.embeddedProperties, property.id);
 			embeddedCtClass = property.ctField.getType();
 		}
 
@@ -297,50 +370,60 @@ public class EntityEnhancer {
 		CtField[] ctFields = ctClass.getDeclaredFields();
 		List<Property> attrs = new ArrayList<>();
 		for (CtField ctField : ctFields) {
-			LOG.info("findAttributes: ctField.getName()=" + ctField.getName());
-			LOG.info("findAttributes: ctField.getModifiers()=" + ctField.getModifiers());
-			LOG.info("findAttributes: ctField.getType().getName()=" + ctField.getType().getName());
-			LOG.info("findAttributes: ctField.getSignature()=" + ctField.getSignature());
-			LOG.info("findAttributes: ctField.getFieldInfo()=" + ctField.getFieldInfo());
-			LOG.info("findAttributes: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());
-			int modifier = ctField.getModifiers();
-			if (!Modifier.isPrivate(modifier) && !Modifier.isProtected(modifier) && !Modifier.isPackage(modifier))
-				continue;
-
-			Object transientAnnotation = ctField.getAnnotation(Transient.class);
-			if (transientAnnotation != null)
-				continue;
-
-			PropertyMethod getPropertyMethod = findGetMethod(ctClass, ctField);
-			if (!getPropertyMethod.method.isPresent())
-				continue;
-
-			PropertyMethod setPropertyMethod = findSetMethod(ctClass, ctField);
-			if (!setPropertyMethod.method.isPresent())
-				continue;
-
-			Object idAnnotation = ctField.getAnnotation(Id.class);
-			Object embeddedIdAnnotation = ctField.getAnnotation(EmbeddedId.class);
-			boolean id = idAnnotation != null || embeddedIdAnnotation != null;
-
-			boolean embedded = false;
-			List<Property> embeddedProperties = null;
-			Object embeddedAnnotation = ctField.getAnnotation(Embedded.class);
-			if (embeddedAnnotation != null || embeddedIdAnnotation != null) {
-				embedded = true;
-				embeddedProperties = findAttributes(ctField.getType());
-				if (embeddedProperties.isEmpty()) {
-					embeddedProperties = null;
-					embedded = false;
-				}
-			}
-
-			Property property = new Property(id, getPropertyMethod.method.get(), setPropertyMethod.method.get(),
-					ctField, embedded, embeddedProperties, getPropertyMethod.enhance, setPropertyMethod.enhance);
-			attrs.add(property);
+			Optional<Property> optional = readAttribute(ctField, ctClass);
+			if (optional.isPresent())
+				attrs.add(optional.get());
 		}
 
 		return attrs;
+	}
+
+	private Optional<Property> readAttribute(CtField ctField, CtClass ctClass) throws Exception {
+		LOG.info("readAttribute: ctField.getName()=" + ctField.getName());
+		LOG.info("readAttribute: ctField.getModifiers()=" + ctField.getModifiers());
+		LOG.info("readAttribute: ctField.getType().getName()=" + ctField.getType().getName());
+		LOG.info("readAttribute: ctField.getSignature()=" + ctField.getSignature());
+		LOG.info("readAttribute: ctField.getFieldInfo()=" + ctField.getFieldInfo());
+		LOG.info("readAttribute: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());
+		int modifier = ctField.getModifiers();
+		if (!Modifier.isPrivate(modifier) && !Modifier.isProtected(modifier) && !Modifier.isPackage(modifier))
+			return Optional.empty();
+
+		Object transientAnnotation = ctField.getAnnotation(Transient.class);
+		if (transientAnnotation != null)
+			return Optional.empty();
+
+		PropertyMethod getPropertyMethod = findGetMethod(ctClass, ctField);
+		if (!getPropertyMethod.method.isPresent())
+			return Optional.empty();
+
+		PropertyMethod setPropertyMethod = findSetMethod(ctClass, ctField);
+		if (!setPropertyMethod.method.isPresent())
+			return Optional.empty();
+
+		Object idAnnotation = ctField.getAnnotation(Id.class);
+		Object embeddedIdAnnotation = ctField.getAnnotation(EmbeddedId.class);
+
+		boolean embedded = false;
+		List<Property> embeddedProperties = null;
+		Object embeddedAnnotation = ctField.getAnnotation(Embedded.class);
+		if (embeddedAnnotation != null || embeddedIdAnnotation != null) {
+			Object embeddableAnnotation = ctField.getType().getAnnotation(Embeddable.class);
+			if (embeddableAnnotation == null)
+				throw new Exception("@Embeddable annotation missing on '" + ctField.getType().getName() + "'");
+
+			embedded = true;
+			embeddedProperties = findAttributes(ctField.getType());
+			if (embeddedProperties.isEmpty()) {
+				embeddedProperties = null;
+				embedded = false;
+			}
+		}
+
+		boolean id = idAnnotation != null || embeddedIdAnnotation != null;
+		Property property = new Property(id, getPropertyMethod.method.get(), setPropertyMethod.method.get(), ctField,
+				embedded, embeddedProperties, getPropertyMethod.enhance, setPropertyMethod.enhance);
+		return Optional.of(property);
 	}
 
 	private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws NotFoundException {
@@ -493,8 +576,9 @@ public class EntityEnhancer {
 
 	private class DataEntity {
 		private String className;
+		private CtClass ct;
 		private List<DataAttribute> dataAttributes = new ArrayList<>();
 		private DataEntity mappedSuperclass;
-		private CtClass ct;
+		private List<DataEntity> embeddables = new ArrayList<>();
 	}
 }

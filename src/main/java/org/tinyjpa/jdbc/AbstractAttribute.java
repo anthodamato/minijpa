@@ -2,6 +2,11 @@ package org.tinyjpa.jdbc;
 
 public abstract class AbstractAttribute {
 	protected String columnName;
+	/**
+	 * Attribute type: java.lang.Long, java.lang.Date, java.lang.String,
+	 * java.lang.Boolean, java.util.Collection, java.util.List, java.util.Map,
+	 * java.util.Set, etc.
+	 */
 	protected Class<?> type;
 	protected Integer sqlType;
 

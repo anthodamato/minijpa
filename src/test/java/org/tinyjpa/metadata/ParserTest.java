@@ -17,15 +17,7 @@ public class ParserTest {
 	public void parse() throws Exception {
 		List<String> classNames = new ArrayList<>();
 		classNames.add("org.tinyjpa.jpa.model.Citizen");
-		EntityEnhancer entityEnhancer = new EntityEnhancer(classNames);
-		List<EnhEntity> enhEntities = entityEnhancer.enhance();
-		Assertions.assertNotNull(enhEntities);
-		Assertions.assertEquals(1, enhEntities.size());
-		Assertions.assertNotNull(enhEntities.get(0));
-		EnhEntity enhEntity = enhEntities.get(0);
-		Assertions.assertNotNull(enhEntity.getClassName());
-
-		Map<String, MetaEntity> entities = parser.parse(enhEntities);
+		Map<String, MetaEntity> entities = parser.createMetaEntities(classNames);
 		MetaEntity entity = entities.get("org.tinyjpa.jpa.model.Citizen");
 		Assertions.assertNotNull(entity);
 		Assertions.assertNotNull(entity.getClazz());

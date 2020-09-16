@@ -38,6 +38,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
 	private JdbcEntityManagerImpl jdbcEntityManager;
+	private Metamodel metamodel;
 
 	public EntityManagerImpl(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
 			Map<String, MetaEntity> entities) {
@@ -387,8 +388,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public Metamodel getMetamodel() {
-		// TODO Auto-generated method stub
-		return null;
+		return entityManagerFactory.getMetamodel();
 	}
 
 	@Override

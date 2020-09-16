@@ -14,9 +14,10 @@ public class MetaEntity {
 	// used to build the metamodel. The 'attributes' field contains the
 	// MappedSuperclass attributes
 	private MetaEntity mappedSuperclassEntity;
+	private List<MetaEntity> embeddables;
 
 	public MetaEntity(Class<?> clazz, String tableName, String alias, MetaAttribute id, List<MetaAttribute> attributes,
-			MetaEntity mappedSuperclassEntity) {
+			MetaEntity mappedSuperclassEntity, List<MetaEntity> embeddables) {
 		super();
 		this.clazz = clazz;
 		this.tableName = tableName;
@@ -24,6 +25,7 @@ public class MetaEntity {
 		this.id = id;
 		this.attributes = attributes;
 		this.mappedSuperclassEntity = mappedSuperclassEntity;
+		this.embeddables = embeddables;
 	}
 
 	public Class<?> getClazz() {
@@ -56,6 +58,10 @@ public class MetaEntity {
 
 	public MetaAttribute getId() {
 		return id;
+	}
+
+	public List<MetaEntity> getEmbeddables() {
+		return embeddables;
 	}
 
 	public List<MetaAttribute> expandAttributes() {

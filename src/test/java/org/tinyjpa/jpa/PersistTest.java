@@ -8,6 +8,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.Bindable.BindableType;
 import javax.persistence.metamodel.EntityType;
@@ -20,11 +21,13 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tinyjpa.jpa.model.Address;
 import org.tinyjpa.jpa.model.Citizen;
 
 public class PersistTest {
-//	private Logger LOG = LoggerFactory.getLogger(PersistTest.class);
+	private Logger LOG = LoggerFactory.getLogger(PersistTest.class);
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
@@ -84,6 +87,7 @@ public class PersistTest {
 		}
 
 		Set<ManagedType<?>> managedTypes = metamodel.getManagedTypes();
+		Assertions.assertNotNull(managedTypes);
 		Assertions.assertEquals(2, managedTypes.size());
 
 		em.close();
@@ -98,10 +102,11 @@ public class PersistTest {
 		Assertions.assertEquals(Address.class, entityType.getBindableJavaType());
 
 		List<String> names = MetamodelUtils.getAttributeNames(entityType);
-		Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList("id", "name", "postcode"), names));
+		Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList("id", "name", "postcode", "tt"), names));
 
-		MetamodelUtils.checkAttribute(entityType.getAttribute("name"), "name", String.class,
-				PersistentAttributeType.BASIC, false, false);
+		Attribute<?, ?> attribute = entityType.getAttribute("name");
+		Assertions.assertNotNull(attribute);
+		MetamodelUtils.checkAttribute(attribute, "name", String.class, PersistentAttributeType.BASIC, false, false);
 		MetamodelUtils.checkAttribute(entityType.getAttribute("postcode"), "postcode", String.class,
 				PersistentAttributeType.BASIC, false, false);
 	}
