@@ -14,6 +14,8 @@ public class MetaEntity {
 	// used to build the metamodel. The 'attributes' field contains the
 	// MappedSuperclass attributes
 	private MetaEntity mappedSuperclassEntity;
+	// used to build the metamodel. The 'attributes' field contains the
+	// Embeddable attributes
 	private List<MetaEntity> embeddables;
 
 	public MetaEntity(Class<?> clazz, String tableName, String alias, MetaAttribute id, List<MetaAttribute> attributes,
