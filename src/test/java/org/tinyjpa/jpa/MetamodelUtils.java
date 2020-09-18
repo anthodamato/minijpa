@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
-import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Type;
 import javax.persistence.metamodel.Type.PersistenceType;
 
@@ -20,12 +20,20 @@ public class MetamodelUtils {
 		Assertions.assertEquals(pt, persistenceType);
 	}
 
-	public static List<String> getAttributeNames(EntityType<?> entityType) {
-		Set<?> attributes = entityType.getAttributes();
+	public static List<String> getAttributeNames(ManagedType<?> managedType) {
+		Set<?> attributes = managedType.getAttributes();
 		return attributes.stream().map(a -> {
 			Attribute<?, ?> attribute = (Attribute<?, ?>) a;
 			return attribute;
 		}).map(a -> a.getName()).collect(Collectors.toList());
+	}
+
+	public static List<Attribute<?, ?>> getAttributes(ManagedType<?> managedType) {
+		Set<?> attributes = managedType.getAttributes();
+		return attributes.stream().map(a -> {
+			Attribute<?, ?> attribute = (Attribute<?, ?>) a;
+			return attribute;
+		}).collect(Collectors.toList());
 	}
 
 	public static void checkAttribute(Attribute<?, ?> attribute, String name, Class<?> javaType,

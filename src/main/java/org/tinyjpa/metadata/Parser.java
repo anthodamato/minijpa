@@ -101,27 +101,37 @@ public class Parser {
 			Collection<MetaEntity> parsedEntities) throws Exception {
 		List<MetaEntity> embeddables = new ArrayList<>();
 		for (EnhEntity enhEntity : enhEmbeddables) {
-			Optional<MetaEntity> optionalMetaEntity = findParsedEmbeddable(enhEntity.getClassName(), parsedEntities);
-			MetaEntity metaEntity = null;
-			if (optionalMetaEntity.isPresent()) {
-				metaEntity = optionalMetaEntity.get();
-			} else {
-				List<MetaAttribute> embeddedAttributes = new ArrayList<>();
-				for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
-					Optional<MetaAttribute> optional = attributes.stream()
-							.filter(a -> a.getName().equals(enhAttribute.getName())).findFirst();
-					if (optional.isPresent())
-						embeddedAttributes.add(optional.get());
-				}
-
-				Class<?> c = Class.forName(enhEntity.getClassName());
-				metaEntity = new MetaEntity(c, null, null, null, embeddedAttributes, null, null);
-			}
-
-			embeddables.add(metaEntity);
+			MetaEntity embeddable = buildEmbeddable(enhEntity, attributes, parsedEntities);
+			embeddables.add(embeddable);
 		}
 
 		return embeddables;
+	}
+
+	private MetaEntity buildEmbeddable(EnhEntity enhEmbeddable, List<MetaAttribute> attributes,
+			Collection<MetaEntity> parsedEntities) throws Exception {
+		Optional<MetaEntity> optionalMetaEntity = findParsedEmbeddable(enhEmbeddable.getClassName(), parsedEntities);
+		MetaEntity metaEntity = null;
+		if (optionalMetaEntity.isPresent()) {
+			metaEntity = optionalMetaEntity.get();
+		} else {
+			List<MetaAttribute> embeddedAttributes = new ArrayList<>();
+			for (EnhAttribute enhAttribute : enhEmbeddable.getEnhAttributes()) {
+				Optional<MetaAttribute> optional = attributes.stream()
+						.filter(a -> a.isEmbedded() && a.getType().getName().equals(enhEmbeddable.getClassName()))
+						.findFirst();
+				MetaAttribute metaAttribute = optional.get();
+				optional = metaAttribute.getEmbeddedAttributes().stream()
+						.filter(a -> a.getName().equals(enhAttribute.getName())).findFirst();
+				if (optional.isPresent())
+					embeddedAttributes.add(optional.get());
+			}
+
+			Class<?> c = Class.forName(enhEmbeddable.getClassName());
+			metaEntity = new MetaEntity(c, null, null, null, embeddedAttributes, null, null);
+		}
+
+		return metaEntity;
 	}
 
 	private Optional<MetaEntity> findParsedEmbeddable(String className, Collection<MetaEntity> parsedEntities) {

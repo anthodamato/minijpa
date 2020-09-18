@@ -68,16 +68,20 @@ public class EntityEnhancer {
 	private List<EnhEntity> findEmbeddables(List<EnhAttribute> enhAttributes, List<EnhEntity> parsedEntities) {
 		List<EnhEntity> embeddables = new ArrayList<>();
 		for (EnhAttribute enhAttribute : enhAttributes) {
+			LOG.info("findEmbeddables: enhAttribute.getName()=" + enhAttribute.getName()
+					+ "; enhAttribute.isEmbedded()=" + enhAttribute.isEmbedded());
 			if (!enhAttribute.isEmbedded())
 				continue;
 
 			EnhEntity embeddable = findInspectedEnhEmbeddables(enhAttribute.getClassName(), parsedEntities);
+			LOG.info("findEmbeddables: already parsed embeddable=" + embeddable);
 			if (embeddable == null) {
 				embeddable = new EnhEntity();
 				embeddable.setClassName(enhAttribute.getClassName());
 				embeddable.setEnhAttributes(enhAttribute.getEmbeddedAttributes());
 			}
 
+			LOG.info("findEmbeddables: got embeddable=" + embeddable);
 			embeddables.add(embeddable);
 		}
 

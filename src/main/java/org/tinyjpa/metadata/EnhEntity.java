@@ -38,6 +38,6 @@ public class EnhEntity {
 	}
 
 	public void addEmbeddables(List<EnhEntity> embeddables) {
-		embeddables.addAll(embeddables);
+		this.embeddables.addAll(embeddables);
 	}
 }
