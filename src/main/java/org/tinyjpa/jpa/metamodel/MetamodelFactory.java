@@ -2,13 +2,17 @@ package org.tinyjpa.jpa.metamodel;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.Bindable.BindableType;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
@@ -25,8 +29,16 @@ public class MetamodelFactory {
 	}
 
 	public Metamodel build() throws Exception {
+		Set<MappedSuperclassType<?>> mappedSuperclassTypes = buildMappedSuperclassTypes(entities);
 		Set<EntityType<?>> entityTypes = buildEntityTypes(entities);
-		return new MetamodelImpl(null, entityTypes, null);
+		Set<EmbeddableType<?>> embeddableTypes = buildEmbeddableTypes(entities);
+
+		Set<ManagedType<?>> managedTypes = new HashSet<>();
+		managedTypes.addAll(mappedSuperclassTypes);
+		managedTypes.addAll(embeddableTypes);
+		managedTypes.addAll(entityTypes);
+
+		return new MetamodelImpl(managedTypes, entityTypes, embeddableTypes);
 	}
 
 	private Set<EntityType<?>> buildEntityTypes(Map<String, MetaEntity> entities) throws Exception {
@@ -79,4 +91,76 @@ public class MetamodelFactory {
 
 		return Collections.unmodifiableSet(singularAttributes);
 	}
+
+	private Set<EmbeddableType<?>> buildEmbeddableTypes(Map<String, MetaEntity> entities) throws Exception {
+		Set<EmbeddableType<?>> embeddableTypes = new HashSet<EmbeddableType<?>>();
+		Set<MetaEntity> incEmbeddables = new HashSet<>();
+		for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+			MetaEntity metaEntity = entry.getValue();
+			List<MetaEntity> embeddables = metaEntity.getEmbeddables();
+			if (embeddables == null)
+				continue;
+
+			for (MetaEntity embeddable : embeddables) {
+				if (!incEmbeddables.contains(embeddable)) {
+					embeddableTypes.add(buildEmbeddableType(embeddable));
+					incEmbeddables.add(embeddable);
+				}
+			}
+		}
+
+		return embeddableTypes;
+	}
+
+	private EmbeddableType<?> buildEmbeddableType(MetaEntity entity) throws Exception {
+		EmbeddableType<?> metamodelEntityType = new MetamodelEmbeddableType<Object>();
+		Set<SingularAttribute> singularAttributes = buildSingularAttributes(entity);
+		Set<Attribute> allAttributes = new HashSet<>();
+		allAttributes.addAll(singularAttributes);
+		Set<Attribute> attributes = Collections.unmodifiableSet(allAttributes);
+
+		MetamodelEmbeddableType.Builder builder = new MetamodelEmbeddableType.Builder().withJavaType(entity.getClazz())
+				.withSingularAttributes(singularAttributes).withPersistenceType(PersistenceType.EMBEDDABLE)
+				.withAttributes(attributes);
+		metamodelEntityType = builder.build();
+		return metamodelEntityType;
+	}
+
+	private Set<MappedSuperclassType<?>> buildMappedSuperclassTypes(Map<String, MetaEntity> entities) throws Exception {
+		Set<MappedSuperclassType<?>> mappedSuperclassTypes = new HashSet<MappedSuperclassType<?>>();
+		Set<MetaEntity> incMappedSuperclass = new HashSet<>();
+		for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+			MetaEntity metaEntity = entry.getValue();
+			MetaEntity mappedSuperclass = metaEntity.getMappedSuperclassEntity();
+			if (mappedSuperclass == null)
+				continue;
+
+			if (!incMappedSuperclass.contains(mappedSuperclass)) {
+				mappedSuperclassTypes.add(buildMappedSuperclassType(mappedSuperclass));
+				incMappedSuperclass.add(mappedSuperclass);
+			}
+		}
+
+		return mappedSuperclassTypes;
+	}
+
+	private MappedSuperclassType<?> buildMappedSuperclassType(MetaEntity entity) throws Exception {
+		MappedSuperclassType<?> metamodelEntityType = new MetamodelMappedSuperclassType<Object>();
+		MetaAttribute id = entity.getId();
+		SingularAttribute<?, ?> idSingularAttribute = new IdSingularAttribute(id.getName(), null, id.getType(),
+				entity.getClazz().getDeclaredField(id.getName()), id.getType(),
+				new MetamodelType(PersistenceType.BASIC, id.getType()));
+
+		Set<SingularAttribute> singularAttributes = buildSingularAttributes(entity);
+		Set<Attribute> allAttributes = new HashSet<>();
+		allAttributes.addAll(singularAttributes);
+		Set<Attribute> attributes = Collections.unmodifiableSet(allAttributes);
+
+		MetamodelMappedSuperclassType.Builder builder = new MetamodelMappedSuperclassType.Builder()
+				.withJavaType(entity.getClazz()).withId(idSingularAttribute).withSingularAttributes(singularAttributes)
+				.withPersistenceType(PersistenceType.MAPPED_SUPERCLASS).withAttributes(attributes);
+		metamodelEntityType = builder.build();
+		return metamodelEntityType;
+	}
+
 }
