@@ -96,10 +96,6 @@ public class AttributeUtil {
 
 		Class<?>[] ics = attributeClass.getInterfaces();
 		for (Class<?> ic : ics) {
-			LOG.info("implementsInterface: ic=" + ic);
-		}
-
-		for (Class<?> ic : ics) {
 			if (ic == interfaceClass)
 				return true;
 		}
@@ -112,7 +108,6 @@ public class AttributeUtil {
 	}
 
 	public static boolean isCollectionClass(Class<?> attributeClass) {
-		LOG.info("isCollectionClass: attributeClass=" + attributeClass);
 		if (implementsInterface(attributeClass, Collection.class))
 			return true;
 

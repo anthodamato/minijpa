@@ -14,9 +14,6 @@ import org.tinyjpa.jpa.model.embedded.HotelBooking;
 import org.tinyjpa.jpa.model.embedded.RoomBookingId;
 
 /**
- * java -jar $DERBY_HOME/lib/derbyrun.jar server start
- * 
- * connect 'jdbc:derby://localhost:1527/test';
  * 
  * @author adamato
  *

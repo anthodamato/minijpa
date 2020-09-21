@@ -43,6 +43,7 @@ public class ParserTest {
 		Assertions.assertNotNull(entity.getClazz());
 		Assertions.assertEquals(Book.class, entity.getClazz());
 		List<MetaEntity> embeddables = entity.getEmbeddables();
+		Assertions.assertNotNull(embeddables);
 		Assertions.assertEquals(1, embeddables.size());
 
 		entity = embeddables.get(0);

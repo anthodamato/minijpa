@@ -21,17 +21,12 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.tinyjpa.jpa.MetamodelUtils;
 import org.tinyjpa.jpa.PersistenceProviderImpl;
 import org.tinyjpa.jpa.model.embedded.Book;
 import org.tinyjpa.jpa.model.embedded.BookFormat;
 
 /**
- * java -jar $DERBY_HOME/lib/derbyrun.jar server start
- * 
- * connect 'jdbc:derby://localhost:1527/test';
  * 
  * @author adamato
  *

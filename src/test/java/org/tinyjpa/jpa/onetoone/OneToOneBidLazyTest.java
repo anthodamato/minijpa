@@ -13,9 +13,6 @@ import org.tinyjpa.jpa.model.onetoone.lazy.Capital;
 import org.tinyjpa.jpa.model.onetoone.lazy.State;
 
 /**
- * java -jar $DERBY_HOME/lib/derbyrun.jar server start
- * 
- * connect 'jdbc:derby://localhost:1527/test';
  * 
  * @author adamato
  *

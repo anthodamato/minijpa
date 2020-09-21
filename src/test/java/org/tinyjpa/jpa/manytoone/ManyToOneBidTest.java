@@ -11,9 +11,6 @@ import org.tinyjpa.jpa.model.manytoone.Department;
 import org.tinyjpa.jpa.model.manytoone.Employee;
 
 /**
- * java -jar $DERBY_HOME/lib/derbyrun.jar server start
- * 
- * connect 'jdbc:derby://localhost:1527/test';
  * 
  * @author adamato
  *

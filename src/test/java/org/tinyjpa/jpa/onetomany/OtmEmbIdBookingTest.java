@@ -16,9 +16,6 @@ import org.tinyjpa.jpa.model.onetomany.HotelBookingDetail;
 import org.tinyjpa.jpa.model.onetomany.HotelCustomer;
 
 /**
- * java -jar $DERBY_HOME/lib/derbyrun.jar server start
- * 
- * connect 'jdbc:derby://localhost:1527/test';
  * 
  * @author adamato
  *

@@ -80,12 +80,9 @@ public class Parser {
 		}
 
 		LOG.info("Reading Id...");
-		Optional<MetaAttribute> optional = attributes.stream().filter(a -> a.isId()).findFirst();
-		if (!optional.isPresent())
+		Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
+		if (!optionalId.isPresent())
 			throw new Exception("@Id annotation not found: '" + c.getName() + "'");
-
-		MetaAttribute id = optional.get();
-		attributes.remove(id);
 
 		String tableName = c.getSimpleName();
 		Table table = c.getAnnotation(Table.class);
@@ -93,7 +90,11 @@ public class Parser {
 			tableName = table.name();
 
 		String alias = aliasGenerator.calculateAlias(tableName, parsedEntities);
+		LOG.info("Building embeddables...");
 		List<MetaEntity> embeddables = buildEmbeddables(enhEntity.getEmbeddables(), attributes, parsedEntities);
+		MetaAttribute id = optionalId.get();
+		attributes.remove(id);
+
 		return new MetaEntity(c, tableName, alias, id, attributes, mappedSuperclassEntity, embeddables);
 	}
 
@@ -136,7 +137,11 @@ public class Parser {
 
 	private Optional<MetaEntity> findParsedEmbeddable(String className, Collection<MetaEntity> parsedEntities) {
 		for (MetaEntity metaEntity : parsedEntities) {
-			for (MetaEntity embeddable : metaEntity.getEmbeddables()) {
+			List<MetaEntity> embeddables = metaEntity.getEmbeddables();
+			if (embeddables == null)
+				continue;
+
+			for (MetaEntity embeddable : embeddables) {
 				if (embeddable.getClazz().getName().equals(className))
 					return Optional.of(embeddable);
 			}

@@ -10,9 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.tinyjpa.jpa.model.Citizen;
 
 /**
- * java -jar $DERBY_HOME/lib/derbyrun.jar server start
- * 
- * connect 'jdbc:derby://localhost:1527/test';
  * 
  * @author adamato
  *
