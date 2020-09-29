@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.tinyjpa.metadata.enhancer.EnhAttribute;
+import org.tinyjpa.metadata.enhancer.EnhEntity;
+import org.tinyjpa.metadata.enhancer.javassist.EntityEnhancer;
 
 public class EnhancerTest {
 	@Test

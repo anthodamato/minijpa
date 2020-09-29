@@ -7,16 +7,17 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.AttributeValueConverter;
+import org.tinyjpa.jdbc.CollectionUtils;
 import org.tinyjpa.jdbc.ColumnNameValue;
 import org.tinyjpa.jdbc.ColumnNameValueUtil;
 import org.tinyjpa.jdbc.ConnectionHolder;
-import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.JdbcRunner;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
+import org.tinyjpa.jdbc.MetaAttribute;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.SqlStatement;
 import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.Relationship;
@@ -112,7 +113,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 * @throws Exception
 	 */
 	private List<Object> findCollectionByForeignKey(Class<?> entityClass, Object foreignKey,
-			MetaAttribute foreignKeyAttribute, MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
+			MetaAttribute foreignKeyAttribute, MetaAttribute childAttribute, Object childAttributeValue)
+			throws Exception {
 //		Object entityInstance = entityContainer.find(entityClass, foreignKey);
 //		if (entityInstance != null)
 //			return entityInstance;
@@ -196,7 +198,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 * @throws Exception
 	 */
 	private List<Object> loadAttributeValues(Object parentInstance, Class<?> targetEntity,
-			MetaAttribute foreignKeyAttribute, MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
+			MetaAttribute foreignKeyAttribute, MetaAttribute childAttribute, Object childAttributeValue)
+			throws Exception {
 		LOG.info("loadAttributeValues: parentInstance=" + parentInstance);
 		List<Object> objects = findCollectionByForeignKey(targetEntity, parentInstance, foreignKeyAttribute,
 				childAttribute, childAttributeValue);
@@ -280,8 +283,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 					Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
 					LOG.info("persist: attributeInstance=" + attributeInstance);
 					LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
-					if (AttributeUtil.isCollectionClass(attributeInstance.getClass())
-							&& !AttributeUtil.isCollectionEmpty(attributeInstance)) {
+					if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
+							&& !CollectionUtils.isCollectionEmpty(attributeInstance)) {
 						joinTableAttrs.put(a, attributeInstance);
 					}
 				}
@@ -297,7 +300,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			LOG.info("persist: joinTableAttrs.size()=" + joinTableAttrs.size());
 			for (Map.Entry<MetaAttribute, Object> entry : joinTableAttrs.entrySet()) {
 				MetaAttribute a = entry.getKey();
-				List<Object> ees = AttributeUtil.getCollectionAsList(entry.getValue());
+				List<Object> ees = CollectionUtils.getCollectionAsList(entry.getValue());
 				if (entityContainer.isSaved(ees)) {
 					persistJoinTableAttributes(ees, a, entityInstance);
 				} else {
@@ -324,7 +327,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		savePendings();
 	}
 
-	private boolean persistOnDb(MetaEntity entity, Object entityInstance, List<AttributeValue> changes) throws Exception {
+	private boolean persistOnDb(MetaEntity entity, Object entityInstance, List<AttributeValue> changes)
+			throws Exception {
 		boolean persistOnDb = canPersistOnDb(entityInstance);
 		LOG.info("persistOnDb: persistOnDb=" + persistOnDb + "; entityInstance=" + entityInstance);
 		if (!persistOnDb)

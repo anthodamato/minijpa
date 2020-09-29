@@ -9,6 +9,9 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.tinyjpa.metadata.enhancer.EnhAttribute;
+import org.tinyjpa.metadata.enhancer.EnhEntity;
+import org.tinyjpa.metadata.enhancer.javassist.EntityEnhancer;
 
 public class EntityEnhancerTest {
 	@Test

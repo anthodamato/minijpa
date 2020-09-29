@@ -1,4 +1,4 @@
-package org.tinyjpa.metadata;
+package org.tinyjpa.metadata.enhancer;
 
 import java.util.ArrayList;
 import java.util.List;

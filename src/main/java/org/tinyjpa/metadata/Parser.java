@@ -22,7 +22,7 @@ import javax.persistence.Table;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.AttributeUtil;
+import org.tinyjpa.jdbc.CollectionUtils;
 import org.tinyjpa.jdbc.JdbcTypes;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
@@ -33,6 +33,9 @@ import org.tinyjpa.jdbc.relationship.OneToMany;
 import org.tinyjpa.jdbc.relationship.OneToOne;
 import org.tinyjpa.jdbc.relationship.Relationship;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
+import org.tinyjpa.metadata.enhancer.EnhAttribute;
+import org.tinyjpa.metadata.enhancer.EnhEntity;
+import org.tinyjpa.metadata.enhancer.javassist.EntityEnhancer;
 
 public class Parser {
 	private Logger LOG = LoggerFactory.getLogger(Parser.class);
@@ -61,7 +64,7 @@ public class Parser {
 		if (ec == null)
 			throw new Exception("@Entity annotation not found: '" + c.getName() + "'");
 
-		LOG.info("Reading attributes...");
+		LOG.info("Reading '" + enhEntity.getClassName() + "' attributes...");
 		List<MetaAttribute> attributes = readAttributes(enhEntity);
 		MetaEntity mappedSuperclassEntity = null;
 		if (enhEntity.getMappedSuperclass() != null) {
@@ -157,7 +160,7 @@ public class Parser {
 		if (ec == null)
 			throw new Exception("@MappedSuperclass annotation not found: '" + c.getName() + "'");
 
-		LOG.info("Reading mapped superclass attributes...");
+		LOG.info("Reading mapped superclass '" + enhEntity.getClassName() + "' attributes...");
 		List<MetaAttribute> attributes = readAttributes(enhEntity);
 		return new MetaEntity(c, null, null, null, attributes, null, null);
 	}
@@ -186,7 +189,7 @@ public class Parser {
 	private MetaAttribute readAttribute(String parentClassName, EnhAttribute enhAttribute) throws Exception {
 		String columnName = enhAttribute.getName();
 		Class<?> c = Class.forName(parentClassName);
-		LOG.info("readAttribute: columnName=" + columnName);
+		LOG.info("Reading attribute '" + columnName + "'");
 //		LOG.info("readAttributes: c.getClassLoader()=" + c.getClassLoader());
 		Field field = c.getDeclaredField(enhAttribute.getName());
 		Class<?> attributeClass = null;
@@ -211,7 +214,6 @@ public class Parser {
 			boolean embedded = enhAttribute.isEmbedded();
 			if (embedded) {
 				embeddedAttributes = readAttributes(enhAttribute.getEmbeddedAttributes(), enhAttribute.getClassName());
-				LOG.info("readAttribute: embeddedAttributes.size()=" + embeddedAttributes.size());
 				if (embeddedAttributes.isEmpty()) {
 					embedded = false;
 					embeddedAttributes = null;
@@ -222,7 +224,7 @@ public class Parser {
 //			LOG.info("readAttribute: enhAttribute.getName()=" + enhAttribute.getName());
 //			LOG.info("readAttribute: embedded=" + embedded);
 
-			boolean isCollection = AttributeUtil.isCollectionClass(attributeClass);
+			boolean isCollection = CollectionUtils.isCollectionClass(attributeClass);
 			MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
 					.withType(attributeClass).withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id)
 					.withSqlType(JdbcTypes.sqlTypeFromClass(attributeClass)).isEmbedded(embedded)
@@ -238,7 +240,7 @@ public class Parser {
 			} else if (oneToMany != null) {
 				Class<?> collectionClass = findAttributeImpl(c, readMethod);
 				if (collectionClass == null) {
-					collectionClass = AttributeUtil.findImplementationClass(attributeClass);
+					collectionClass = CollectionUtils.findImplementationClass(attributeClass);
 				}
 
 				Class<?> targetEntity = oneToMany.targetEntity();
