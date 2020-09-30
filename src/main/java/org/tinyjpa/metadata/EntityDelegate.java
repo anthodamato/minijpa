@@ -65,10 +65,10 @@ public final class EntityDelegate implements EntityListener {
 		}
 
 		for (MetaEntity entity : entities) {
-			Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entity.getClazz());
+			Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entity.getEntityClass());
 			if (map == null) {
 				map = new HashMap<>();
-				loadedLazyAttributes.put(entity.getClazz(), map);
+				loadedLazyAttributes.put(entity.getEntityClass(), map);
 			}
 		}
 	}

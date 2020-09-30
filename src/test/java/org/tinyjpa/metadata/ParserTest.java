@@ -21,8 +21,8 @@ public class ParserTest {
 		Map<String, MetaEntity> entities = parser.createMetaEntities(classNames);
 		MetaEntity entity = entities.get("org.tinyjpa.jpa.model.Citizen");
 		Assertions.assertNotNull(entity);
-		Assertions.assertNotNull(entity.getClazz());
-		Assertions.assertEquals(Citizen.class, entity.getClazz());
+		Assertions.assertNotNull(entity.getEntityClass());
+		Assertions.assertEquals(Citizen.class, entity.getEntityClass());
 		Assertions.assertEquals("citizen", entity.getTableName());
 		Assertions.assertEquals(2, entity.getAttributes().size());
 		MetaAttribute attribute = entity.getAttribute("name");
@@ -40,8 +40,8 @@ public class ParserTest {
 		Map<String, MetaEntity> entities = parser.createMetaEntities(classNames);
 		MetaEntity entity = entities.get("org.tinyjpa.jpa.model.embedded.Book");
 		Assertions.assertNotNull(entity);
-		Assertions.assertNotNull(entity.getClazz());
-		Assertions.assertEquals(Book.class, entity.getClazz());
+		Assertions.assertNotNull(entity.getEntityClass());
+		Assertions.assertEquals(Book.class, entity.getEntityClass());
 		List<MetaEntity> embeddables = entity.getEmbeddables();
 		Assertions.assertNotNull(embeddables);
 		Assertions.assertEquals(1, embeddables.size());

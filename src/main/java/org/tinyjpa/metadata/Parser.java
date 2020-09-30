@@ -69,7 +69,7 @@ public class Parser {
 		MetaEntity mappedSuperclassEntity = null;
 		if (enhEntity.getMappedSuperclass() != null) {
 			Optional<MetaEntity> optional = parsedEntities.stream().filter(e -> e.getMappedSuperclassEntity() != null)
-					.filter(e -> e.getMappedSuperclassEntity().getClazz().getName()
+					.filter(e -> e.getMappedSuperclassEntity().getEntityClass().getName()
 							.equals(enhEntity.getMappedSuperclass().getClassName()))
 					.findFirst();
 
@@ -80,12 +80,20 @@ public class Parser {
 
 			List<MetaAttribute> msAttributes = mappedSuperclassEntity.getAttributes();
 			attributes.addAll(msAttributes);
+			attributes.add(mappedSuperclassEntity.getId());
 		}
 
 		LOG.info("Reading Id...");
-		Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
-		if (!optionalId.isPresent())
-			throw new Exception("@Id annotation not found: '" + c.getName() + "'");
+		MetaAttribute id = null;
+		if (mappedSuperclassEntity != null)
+			id = mappedSuperclassEntity.getId();
+		else {
+			Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
+			if (!optionalId.isPresent())
+				throw new Exception("@Id annotation not found: '" + c.getName() + "'");
+
+			id = optionalId.get();
+		}
 
 		String tableName = c.getSimpleName();
 		Table table = c.getAnnotation(Table.class);
@@ -95,7 +103,7 @@ public class Parser {
 		String alias = aliasGenerator.calculateAlias(tableName, parsedEntities);
 		LOG.info("Building embeddables...");
 		List<MetaEntity> embeddables = buildEmbeddables(enhEntity.getEmbeddables(), attributes, parsedEntities);
-		MetaAttribute id = optionalId.get();
+
 		attributes.remove(id);
 
 		return new MetaEntity(c, tableName, alias, id, attributes, mappedSuperclassEntity, embeddables);
@@ -145,7 +153,7 @@ public class Parser {
 				continue;
 
 			for (MetaEntity embeddable : embeddables) {
-				if (embeddable.getClazz().getName().equals(className))
+				if (embeddable.getEntityClass().getName().equals(className))
 					return Optional.of(embeddable);
 			}
 		}
@@ -162,7 +170,15 @@ public class Parser {
 
 		LOG.info("Reading mapped superclass '" + enhEntity.getClassName() + "' attributes...");
 		List<MetaAttribute> attributes = readAttributes(enhEntity);
-		return new MetaEntity(c, null, null, null, attributes, null, null);
+
+		Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
+		if (!optionalId.isPresent())
+			throw new Exception("@Id annotation not found in mapped superclass: '" + c.getName() + "'");
+
+		MetaAttribute id = optionalId.get();
+		attributes.remove(id);
+
+		return new MetaEntity(c, null, null, optionalId.get(), attributes, null, null);
 	}
 
 	private List<MetaAttribute> readAttributes(EnhEntity enhEntity) throws Exception {

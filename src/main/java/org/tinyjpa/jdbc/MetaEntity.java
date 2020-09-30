@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MetaEntity {
-	private Class<?> clazz;
+	private Class<?> entityClass;
 	private String tableName;
 	private String alias;
 	private MetaAttribute id;
@@ -18,10 +18,10 @@ public class MetaEntity {
 	// Embeddable attributes
 	private List<MetaEntity> embeddables;
 
-	public MetaEntity(Class<?> clazz, String tableName, String alias, MetaAttribute id, List<MetaAttribute> attributes,
+	public MetaEntity(Class<?> entityClass, String tableName, String alias, MetaAttribute id, List<MetaAttribute> attributes,
 			MetaEntity mappedSuperclassEntity, List<MetaEntity> embeddables) {
 		super();
-		this.clazz = clazz;
+		this.entityClass = entityClass;
 		this.tableName = tableName;
 		this.alias = alias;
 		this.id = id;
@@ -30,8 +30,8 @@ public class MetaEntity {
 		this.embeddables = embeddables;
 	}
 
-	public Class<?> getClazz() {
-		return clazz;
+	public Class<?> getEntityClass() {
+		return entityClass;
 	}
 
 	public String getTableName() {
@@ -98,7 +98,7 @@ public class MetaEntity {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + "@ Class: " + clazz.getName() + "; tableName: " + tableName;
+		return getClass().getName() + "@ Class: " + entityClass.getName() + "; tableName: " + tableName;
 	}
 
 }

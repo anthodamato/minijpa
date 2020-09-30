@@ -16,11 +16,11 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	@Override
 	public Object build(MetaEntity entity, List<MetaAttribute> attributes, List<Object> values, Object idValue)
 			throws Exception {
-		Object entityInstance = entity.getClazz().newInstance();
+		Object entityInstance = entity.getEntityClass().newInstance();
 		int i = 0;
 		for (MetaAttribute attribute : attributes) {
 			LOG.info("build: attribute.getName()=" + attribute.getName());
-			findAndSetAttributeValue(entity.getClazz(), entityInstance, entity.getAttributes(), attribute,
+			findAndSetAttributeValue(entity.getEntityClass(), entityInstance, entity.getAttributes(), attribute,
 					values.get(i));
 			++i;
 		}
