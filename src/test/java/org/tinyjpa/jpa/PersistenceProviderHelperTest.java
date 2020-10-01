@@ -11,7 +11,7 @@ public class PersistenceProviderHelperTest {
 	@Test
 	public void mutiplePU() throws Exception {
 		PersistenceUnitInfo persistenceUnitInfo = new PersistenceProviderHelper()
-				.parseXml("/org/tinyjpa/jpa/embedded/persistence.xml", "emb_booking");
+				.parseXml("/META-INF/persistence.xml", "emb_booking");
 		List<String> classNames = persistenceUnitInfo.getManagedClassNames();
 		Assertions.assertFalse(classNames.isEmpty());
 		Assertions.assertEquals(1, classNames.size());

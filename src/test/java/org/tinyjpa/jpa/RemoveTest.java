@@ -15,34 +15,31 @@ public class RemoveTest {
 	public void remove() throws Exception {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
 		final EntityManager em = emf.createEntityManager();
-		try {
-			final EntityTransaction tx = em.getTransaction();
-			tx.begin();
+		final EntityTransaction tx = em.getTransaction();
+		tx.begin();
 
-			Citizen citizen = new Citizen();
-			citizen.setName("Marc");
-			em.persist(citizen);
+		Citizen citizen = new Citizen();
+		citizen.setName("Marc");
+		em.persist(citizen);
 
-			Address address = new Address();
-			address.setName("Regent St");
-			em.persist(address);
+		Address address = new Address();
+		address.setName("Regent St");
+		em.persist(address);
 
-			tx.commit();
+		tx.commit();
 
-			Citizen c = em.find(Citizen.class, citizen.getId());
-			Assertions.assertNotNull(c);
+		Citizen c = em.find(Citizen.class, citizen.getId());
+		Assertions.assertNotNull(c);
 
-			em.remove(citizen);
+		em.remove(citizen);
 
-			c = em.find(Citizen.class, citizen.getId());
-			Assertions.assertNull(c);
+		c = em.find(Citizen.class, citizen.getId());
+		Assertions.assertNull(c);
 
-			c = em.find(Citizen.class, address.getId());
-			Assertions.assertNull(c);
-		} finally {
-			em.close();
-			emf.close();
-		}
+		c = em.find(Citizen.class, address.getId());
+		Assertions.assertNull(c);
+		em.close();
+		emf.close();
 	}
 
 }

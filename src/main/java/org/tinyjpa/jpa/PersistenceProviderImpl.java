@@ -39,14 +39,15 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 		}
 
 		LOG.info("processConfiguration: ...");
-		new PersistenceUnitPropertyActions().analyze(persistenceUnitInfo);
+		new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 	}
 
+	@Override
 	public EntityManagerFactory createEntityManagerFactory(String emName, @SuppressWarnings("rawtypes") Map map) {
 		return createEntityManagerFactory("/META-INF/persistence.xml", emName, map);
 	}
 
-	public EntityManagerFactory createEntityManagerFactory(String path, String emName,
+	private EntityManagerFactory createEntityManagerFactory(String path, String emName,
 			@SuppressWarnings("rawtypes") Map map) {
 		PersistenceUnitInfo persistenceUnitInfo = null;
 		try {
@@ -71,6 +72,7 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 		return new EntityManagerFactoryImpl(persistenceUnitInfo, map);
 	}
 
+	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo,
 			@SuppressWarnings("rawtypes") Map map) {
 		if (persistenceUnitInfo == null)
@@ -87,9 +89,11 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 		return new EntityManagerFactoryImpl(persistenceUnitInfo, map);
 	}
 
+	@Override
 	public void generateSchema(PersistenceUnitInfo info, @SuppressWarnings("rawtypes") Map map) {
 	}
 
+	@Override
 	public boolean generateSchema(String persistenceUnitName, @SuppressWarnings("rawtypes") Map map) {
 		PersistenceUnitInfo persistenceUnitInfo;
 		try {
@@ -105,6 +109,7 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 		return true;
 	}
 
+	@Override
 	public ProviderUtil getProviderUtil() {
 		return null;
 	}

@@ -9,10 +9,12 @@ import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 
 public class EntityContext {
+	private String persistenceUnitName;
 	private Map<String, MetaEntity> entities;
 
-	public EntityContext(Map<String, MetaEntity> entities) {
+	public EntityContext(String persistenceUnitName, Map<String, MetaEntity> entities) {
 		super();
+		this.persistenceUnitName = persistenceUnitName;
 		this.entities = entities;
 	}
 
@@ -47,7 +49,16 @@ public class EntityContext {
 		return null;
 	}
 
-	public Set<MetaEntity> getEntities() {
+	public String getPersistenceUnitName() {
+		return persistenceUnitName;
+	}
+
+	public Set<MetaEntity> getMetaEntities() {
 		return new HashSet<>(entities.values());
 	}
+
+	public Map<String, MetaEntity> getEntities() {
+		return entities;
+	}
+
 }

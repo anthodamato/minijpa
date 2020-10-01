@@ -4,24 +4,8 @@
              http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
 	version="2.2">
 
-	<!-- <persistence-unit name="citizens"> -->
-	<!-- <description>Citizen registry</description> -->
-	<!-- <class>org.tinyjpa.jpa.model.Citizen</class> -->
-	<!-- <class>org.tinyjpa.jpa.model.Address</class> -->
-
-	<!-- <properties> -->
-	<!-- <property name="javax.persistence.jdbc.user" value="test" /> -->
-	<!-- <property name="javax.persistence.jdbc.password" -->
-	<!-- value="test" /> -->
-	<!-- <property name="javax.persistence.jdbc.url" -->
-	<!-- value="jdbc:derby://localhost:1527/test" /> -->
-	<!-- <property name="javax.persistence.jdbc.driver" -->
-	<!-- value="org.apache.derby.jdbc.ClientDriver" /> -->
-	<!-- </properties> -->
-	<!-- </persistence-unit> -->
-
 	<persistence-unit name="citizens">
-		<description>Citizen registry</description>
+		<description>Citizen Registry</description>
 		<class>org.tinyjpa.jpa.model.Citizen</class>
 		<class>org.tinyjpa.jpa.model.Address</class>
 
@@ -33,14 +17,47 @@
 
 			<property
 				name="javax.persistence.schema-generation.database.action"
-				value="create" />
+				value="drop-and-create" />
 			<property
 				name="javax.persistence.schema-generation.create-source"
 				value="script" />
 			<property
 				name="javax.persistence.schema-generation.create-script-source"
 				value="META-INF/create_citizens_db.sql" />
+			<property
+				name="javax.persistence.schema-generation.drop-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.drop-script-source"
+				value="META-INF/drop_citizens_db.sql" />
+		</properties>
+	</persistence-unit>
 
+	<persistence-unit name="citizens_only">
+		<description>Citizen Entity Only</description>
+		<class>org.tinyjpa.jpa.model.Citizen</class>
+
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:citizens_only;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="drop-and-create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_citizens_db.sql" />
+			<property
+				name="javax.persistence.schema-generation.drop-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.drop-script-source"
+				value="META-INF/drop_citizens_db.sql" />
 		</properties>
 	</persistence-unit>
 
@@ -66,6 +83,225 @@
 			<property
 				name="javax.persistence.schema-generation.create-script-source"
 				value="META-INF/create_mapped_superclass_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="emb_books">
+		<description>Books</description>
+		<class>org.tinyjpa.jpa.model.embedded.Book</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_emb_books_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="emb_booking">
+		<description>Books</description>
+		<class>org.tinyjpa.jpa.model.embedded.HotelBooking</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_emb_booking_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="cities_uni">
+		<description>Cities</description>
+		<class>org.tinyjpa.jpa.model.onetoone.City</class>
+		<class>org.tinyjpa.jpa.model.onetoone.Region</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_city_onetoone_uni_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="onetoone_bid">
+		<description>Cities</description>
+		<class>org.tinyjpa.jpa.model.onetoone.Person</class>
+		<class>org.tinyjpa.jpa.model.onetoone.Fingerprint</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_onetoone_bid_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="onetoone_bid_lazy">
+		<description>Cities</description>
+		<class>org.tinyjpa.jpa.model.onetoone.lazy.State</class>
+		<class>org.tinyjpa.jpa.model.onetoone.lazy.Capital</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_onetoone_bid_lazy_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="onetomany_uni">
+		<description>Unidirectional One to Many</description>
+		<class>org.tinyjpa.jpa.model.onetomany.Store</class>
+		<class>org.tinyjpa.jpa.model.onetomany.Item</class>
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_onetomany_uni_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="otm_emb_booking">
+		<description>Unidirectional One to Many</description>
+		<class>org.tinyjpa.jpa.model.onetomany.HotelBookingDetail</class>
+		<class>org.tinyjpa.jpa.model.onetomany.HotelCustomer</class>
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_otm_emb_booking_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="onetoone_bid_lazy">
+		<description>Cities</description>
+		<class>org.tinyjpa.jpa.model.onetoone.lazy.State</class>
+		<class>org.tinyjpa.jpa.model.onetoone.lazy.Capital</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_onetoone_bid_lazy_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="manytoone_bid">
+		<description>Cities</description>
+		<class>org.tinyjpa.jpa.model.manytoone.Employee</class>
+		<class>org.tinyjpa.jpa.model.manytoone.Department</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_manytoone_bid_db.sql" />
 		</properties>
 	</persistence-unit>
 

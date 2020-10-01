@@ -1,6 +1,8 @@
 package org.tinyjpa.jpa;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.Cache;
 import javax.persistence.EntityGraph;
@@ -28,7 +30,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	/**
 	 * The key used is the full class name.
 	 */
-	private static Map<String, MetaEntity> entities;
+	private Map<String, MetaEntity> entities;
 	private Metamodel metamodel;
 
 	public EntityManagerFactoryImpl(PersistenceUnitInfo persistenceUnitInfo, @SuppressWarnings("rawtypes") Map map) {
@@ -38,8 +40,34 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	}
 
 	private synchronized Map<String, MetaEntity> createEntities() throws Exception {
+		// if the entities have been already parsed they are saved in the EntityContext.
+		// It must reuse them. Just one MetaEntity instance for each class name must
+		// exists.
+		Optional<EntityContext> optional = EntityDelegate.getInstance()
+				.getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
+		if (optional.isPresent()) {
+			LOG.info("Persistence Unit Entities already parsed");
+			return optional.get().getEntities();
+		}
+
+		// collects existing meta entities
+		Map<String, MetaEntity> existingMetaEntities = new HashMap<>();
+		for (String className : persistenceUnitInfo.getManagedClassNames()) {
+			Optional<MetaEntity> optionalMetaEntity = EntityDelegate.getInstance().getMetaEntity(className);
+			if (optionalMetaEntity.isPresent())
+				existingMetaEntities.put(className, optionalMetaEntity.get());
+		}
+
+		LOG.info("Parsing entities...");
 		Map<String, MetaEntity> entities = new Parser().createMetaEntities(persistenceUnitInfo.getManagedClassNames());
-		EntityDelegate.getInstance().addEntityContext(new EntityContext(entities));
+		// replaces the existing meta entities
+		entities.putAll(existingMetaEntities);
+//		for (Map.Entry<String, MetaEntity> entry : existingMetaEntities.entrySet()) {
+//			entities.put(entry.getKey(), entry.getValue());
+//		}
+
+		EntityDelegate.getInstance()
+				.addEntityContext(new EntityContext(persistenceUnitInfo.getPersistenceUnitName(), entities));
 		return entities;
 	}
 

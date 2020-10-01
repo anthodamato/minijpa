@@ -72,6 +72,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		if (entityTransaction == null || !entityTransaction.isActive())
 			throw new IllegalStateException("Transaction not active");
 
+		LOG.info("persist: entities=" + entities);
 		MetaEntity e = entities.get(entity.getClass().getName());
 		if (e == null)
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");

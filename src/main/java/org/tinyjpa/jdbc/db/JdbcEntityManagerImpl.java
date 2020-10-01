@@ -312,7 +312,9 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	}
 
 	public void persist(MetaEntity entity, Object entityInstance) throws Exception {
+		LOG.info("persist: entityInstanceBuilder=" + entityInstanceBuilder);
 		Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(entity, entityInstance);
+		LOG.info("persist: changes=" + optional.isPresent());
 		if (!optional.isPresent())
 			return;
 

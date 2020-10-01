@@ -1,8 +1,6 @@
 package org.tinyjpa.jpa.db;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.Properties;
@@ -17,39 +15,59 @@ import org.tinyjpa.jdbc.ScriptRunner;
 public class PersistenceUnitPropertyActions {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceUnitPropertyActions.class);
 
-	public void analyze(PersistenceUnitInfo persistenceUnitInfo) throws URISyntaxException, IOException,
-			InstantiationException, IllegalAccessException, ClassNotFoundException {
+	private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo) throws Exception {
+		String filePath = scriptPath;
+		if (!scriptPath.startsWith("/"))
+			filePath = "/" + filePath;
+
+		File file = Paths.get(getClass().getResource(filePath).toURI()).toFile();
+		Connection connection = null;
+		try {
+			connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
+			new ScriptRunner().run(file, connection);
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+		} finally {
+			if (connection != null)
+				try {
+					connection.close();
+				} catch (Exception e2) {
+					LOG.error(e2.getMessage());
+				}
+		}
+	}
+
+	public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 		Properties properties = persistenceUnitInfo.getProperties();
 		LOG.info("properties=" + properties);
 		String action = (String) properties.get("javax.persistence.schema-generation.database.action");
+		String createSource = (String) properties.get("javax.persistence.schema-generation.create-source");
+		String createScriptSource = (String) properties.get("javax.persistence.schema-generation.create-script-source");
+		String dropSource = (String) properties.get("javax.persistence.schema-generation.drop-source");
+		String dropScriptSource = (String) properties.get("javax.persistence.schema-generation.drop-script-source");
 		LOG.info("action=" + action);
-		if (action != null && action.equals("create")) {
-			String createSource = (String) properties.get("javax.persistence.schema-generation.create-source");
-			if (createSource != null && createSource.equals("script")) {
-				String createScriptSource = (String) properties
-						.get("javax.persistence.schema-generation.create-script-source");
-				if (createScriptSource != null) {
-					String filePath = createScriptSource;
-					if (!createScriptSource.startsWith("/"))
-						filePath = "/" + createScriptSource;
+		if (action == null || action.isEmpty())
+			return;
 
-					File file = Paths.get(getClass().getResource(filePath).toURI()).toFile();
-					Connection connection = null;
-					try {
-						connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
-						new ScriptRunner().run(file, connection);
-					} catch (Exception e) {
-						LOG.error(e.getMessage());
-					} finally {
-						if (connection != null)
-							try {
-								connection.close();
-							} catch (Exception e2) {
-								LOG.error(e2.getMessage());
-							}
-					}
+		if (action.equals("create")) {
+			if (createSource != null && createSource.equals("script")) {
+				if (createScriptSource != null) {
+					runScript(createScriptSource, persistenceUnitInfo);
+				}
+			}
+		} else if (action.equals("drop-and-create")) {
+			if (dropSource != null && dropSource.equals("script")) {
+				if (dropScriptSource != null) {
+					runScript(dropScriptSource, persistenceUnitInfo);
+				}
+			}
+
+			if (createSource != null && createSource.equals("script")) {
+				if (createScriptSource != null) {
+					runScript(createScriptSource, persistenceUnitInfo);
 				}
 			}
 		}
 	}
+
 }

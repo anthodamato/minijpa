@@ -5,10 +5,10 @@ import java.util.Arrays;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.PersistenceProviderImpl;
 import org.tinyjpa.jpa.model.onetomany.Item;
 import org.tinyjpa.jpa.model.onetomany.Store;
 
@@ -21,8 +21,7 @@ public class OneToManyUniTest {
 
 	@Test
 	public void persist() throws Exception {
-		EntityManagerFactory emf = new PersistenceProviderImpl()
-				.createEntityManagerFactory("/org/tinyjpa/jpa/onetomany/persistence.xml", "onetomany_uni", null);
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni");
 		final EntityManager em = emf.createEntityManager();
 		Store store = new Store();
 		store.setName("Upton Store");

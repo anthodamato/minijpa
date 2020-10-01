@@ -242,7 +242,7 @@ public class EntityEnhancer {
 				modified = true;
 			}
 
-			if (enhanceAttribute && !enhancedDataEntities.contains(managedData)) {
+			if (enhanceAttribute && !enhancedDataEntities.contains(managedData) && !ct.isFrozen()) {
 				if (property.getPropertyMethod.enhance) {
 					if (isLazyOrEntityType(property.getPropertyMethod.method.get().getReturnType()))
 						modifyGetMethod(property.getPropertyMethod.method.get(), property.ctField);
@@ -264,7 +264,8 @@ public class EntityEnhancer {
 		}
 
 		if (modified) {
-			ct.toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
+			if (!ct.isFrozen())
+				ct.toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
 		}
 
 		if (managedData != null)
@@ -274,6 +275,9 @@ public class EntityEnhancer {
 	}
 
 	private void enhanceConstructor(ManagedData managedData, BMTMethodInfo bmtMethodInfo) throws Exception {
+		if (managedData.getCtClass().isFrozen())
+			return;
+
 		for (BMTFieldInfo bmtFieldInfo : bmtMethodInfo.getBmtFieldInfos()) {
 			Optional<AttributeData> optional = managedData.findAttribute(bmtFieldInfo.name);
 			if (!optional.isPresent())
@@ -281,7 +285,6 @@ public class EntityEnhancer {
 
 			if (bmtFieldInfo.implementation != null) {
 				// an implementation class. It can be a collection. NEW_EXPR_OP
-
 				if (CollectionUtils.isCollectionName(bmtFieldInfo.implementation)) {
 					modifyConstructorWithCollectionCheck(bmtMethodInfo.ctConstructor, optional.get().property.ctField);
 				} else {
@@ -294,6 +297,9 @@ public class EntityEnhancer {
 	}
 
 	private void addEntityDelegateField(CtClass ct) throws Exception {
+		if (ct.isFrozen())
+			return;
+
 		LOG.info("addEntityDelegateField: ct.getName()=" + ct.getName());
 		ClassPool pool = ClassPool.getDefault();
 		Class<?> delegateClass = EntityDelegate.class;
@@ -305,13 +311,11 @@ public class EntityEnhancer {
 	private void modifyGetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
 		String mc = ctField.getName() + " = (" + ctMethod.getReturnType().getName() + ") entityDelegate.get("
 				+ ctField.getName() + ",\"" + ctField.getName() + "\", this);";
-//		LOG.info("modifyGetMethod: mc=" + mc);
 		ctMethod.insertBefore(mc);
 	}
 
 	private void modifySetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
 		String mc = "entityDelegate.set(" + ctField.getName() + ",\"" + ctField.getName() + "\", this);";
-//		LOG.info("modifySetMethod: mc=" + mc);
 		ctMethod.insertBefore(mc);
 	}
 
@@ -361,9 +365,10 @@ public class EntityEnhancer {
 
 	private CtMethod createSetMethod(CtClass ctClass, CtField ctField, boolean delegate) throws Exception {
 		int counter = 0;
+		CtMethod ctMethod = null;
 		for (int i = 0; i < 100; ++i) {
 			try {
-				ctClass.getDeclaredMethod(buildSetMethodName(ctField, counter));
+				ctMethod = ctClass.getDeclaredMethod(buildSetMethodName(ctField, counter));
 			} catch (NotFoundException e) {
 				break;
 			}
@@ -371,25 +376,14 @@ public class EntityEnhancer {
 			++counter;
 		}
 
+		if (ctClass.isFrozen())
+			return ctMethod;
+
 		String setMethodString = createSetMethodString(ctField, delegate, counter);
-		CtMethod ctMethod = CtNewMethod.make(setMethodString, ctClass);
+		ctMethod = CtNewMethod.make(setMethodString, ctClass);
 		ctClass.addMethod(ctMethod);
 		LOG.info("createSetMethod: Created new method: " + setMethodString);
 		return ctMethod;
-	}
-
-	private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws NotFoundException {
-		try {
-			String methodName = "get" + BeanUtil.capitalize(ctField.getName());
-			return ctClass.getDeclaredMethod(methodName);
-		} catch (NotFoundException e) {
-			if (ctField.getType().getName().equals("java.lang.Boolean")
-					|| ctField.getType().getName().equals("boolean")) {
-				return ctClass.getDeclaredMethod("is" + BeanUtil.capitalize(ctField.getName()));
-			}
-		}
-
-		return null;
 	}
 
 	/**
@@ -408,56 +402,6 @@ public class EntityEnhancer {
 
 	private boolean isEntityName(String name) {
 		return dataEntities.stream().filter(d -> d.getClassName().equals(name)).findFirst().isPresent();
-	}
-
-	private PropertyMethod findGetMethod(CtClass ctClass, CtField ctField) throws Exception {
-		CtMethod getMethod = null;
-		try {
-			getMethod = findIsGetMethod(ctClass, ctField);
-		} catch (NotFoundException e) {
-			return new PropertyMethod();
-		}
-
-		if (getMethod == null)
-			return new PropertyMethod();
-
-//			LOG.info("findGetMethod: getMethod.getName()=" + getMethod.getName());
-		CtClass[] params = getMethod.getParameterTypes();
-//			LOG.info("findGetMethod: params.length=" + params.length);
-		if (params.length != 0)
-			return new PropertyMethod();
-
-//			LOG.info("findGetMethod: ctField.getType().getName()=" + ctField.getType().getName());
-//			LOG.info("findGetMethod: getMethod.getReturnType().getName()=" + getMethod.getReturnType().getName());
-		if (!getMethod.getReturnType().subtypeOf(ctField.getType()))
-			return new PropertyMethod();
-
-		return new PropertyMethod(Optional.of(getMethod), true);
-	}
-
-	private PropertyMethod findSetMethod(CtClass ctClass, CtField ctField) throws Exception {
-		CtMethod setMethod = null;
-		try {
-			setMethod = ctClass.getDeclaredMethod("set" + BeanUtil.capitalize(ctField.getName()));
-		} catch (NotFoundException e) {
-			return new PropertyMethod();
-		}
-
-//			LOG.info("findSetMethod: setMethod.getName()=" + setMethod.getName());
-		CtClass[] params = setMethod.getParameterTypes();
-//			LOG.info("findSetMethod: params.length=" + params.length);
-		if (params.length != 1)
-			return new PropertyMethod();
-
-		if (!ctField.getType().subtypeOf(params[0]))
-			return new PropertyMethod();
-
-//			LOG.info("findSetMethod: setMethod.getReturnType().getName()=" + setMethod.getReturnType().getName());
-		if (!setMethod.getReturnType().getName().equals(Void.TYPE.getName())) // void type
-			return new PropertyMethod();
-
-//			LOG.info("findSetMethod: subtypeOf=true");
-		return new PropertyMethod(Optional.of(setMethod), true);
 	}
 
 }

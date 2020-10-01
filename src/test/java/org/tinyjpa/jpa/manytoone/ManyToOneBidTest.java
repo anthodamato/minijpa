@@ -3,10 +3,10 @@ package org.tinyjpa.jpa.manytoone;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.PersistenceProviderImpl;
 import org.tinyjpa.jpa.model.manytoone.Department;
 import org.tinyjpa.jpa.model.manytoone.Employee;
 
@@ -19,8 +19,7 @@ public class ManyToOneBidTest {
 
 	@Test
 	public void persist() throws Exception {
-		EntityManagerFactory emf = new PersistenceProviderImpl()
-				.createEntityManagerFactory("/org/tinyjpa/jpa/manytoone/persistence.xml", "manytoone_bid", null);
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory("manytoone_bid");
 		final EntityManager em = emf.createEntityManager();
 		try {
 			final EntityTransaction tx = em.getTransaction();

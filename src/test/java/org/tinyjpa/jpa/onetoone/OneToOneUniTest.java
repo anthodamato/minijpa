@@ -3,10 +3,10 @@ package org.tinyjpa.jpa.onetoone;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.PersistenceProviderImpl;
 import org.tinyjpa.jpa.model.onetoone.City;
 import org.tinyjpa.jpa.model.onetoone.Region;
 
@@ -18,8 +18,7 @@ public class OneToOneUniTest {
 
 	@Test
 	public void persist() throws Exception {
-		EntityManagerFactory emf = new PersistenceProviderImpl()
-				.createEntityManagerFactory("/org/tinyjpa/jpa/onetoone/persistence.xml", "cities_uni", null);
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory("cities_uni");
 		final EntityManager em = emf.createEntityManager();
 		try {
 			final EntityTransaction tx = em.getTransaction();

@@ -83,7 +83,7 @@ public class Parser {
 			attributes.add(mappedSuperclassEntity.getId());
 		}
 
-		LOG.info("Reading Id...");
+		LOG.info("Getting '" + c.getName() + "' Id...");
 		MetaAttribute id = null;
 		if (mappedSuperclassEntity != null)
 			id = mappedSuperclassEntity.getId();
@@ -94,6 +94,10 @@ public class Parser {
 
 			id = optionalId.get();
 		}
+
+		String name = c.getSimpleName();
+		if (ec.name() != null && !ec.name().trim().isEmpty())
+			name = ec.name();
 
 		String tableName = c.getSimpleName();
 		Table table = c.getAnnotation(Table.class);
@@ -106,7 +110,7 @@ public class Parser {
 
 		attributes.remove(id);
 
-		return new MetaEntity(c, tableName, alias, id, attributes, mappedSuperclassEntity, embeddables);
+		return new MetaEntity(c, name, tableName, alias, id, attributes, mappedSuperclassEntity, embeddables);
 	}
 
 	private List<MetaEntity> buildEmbeddables(List<EnhEntity> enhEmbeddables, List<MetaAttribute> attributes,
@@ -140,7 +144,7 @@ public class Parser {
 			}
 
 			Class<?> c = Class.forName(enhEmbeddable.getClassName());
-			metaEntity = new MetaEntity(c, null, null, null, embeddedAttributes, null, null);
+			metaEntity = new MetaEntity(c, null, null, null, null, embeddedAttributes, null, null);
 		}
 
 		return metaEntity;
@@ -178,7 +182,7 @@ public class Parser {
 		MetaAttribute id = optionalId.get();
 		attributes.remove(id);
 
-		return new MetaEntity(c, null, null, optionalId.get(), attributes, null, null);
+		return new MetaEntity(c, null, null, null, optionalId.get(), attributes, null, null);
 	}
 
 	private List<MetaAttribute> readAttributes(EnhEntity enhEntity) throws Exception {

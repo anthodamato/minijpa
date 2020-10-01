@@ -81,7 +81,7 @@ public class MetamodelFactory {
 				.withBindableType(BindableType.ENTITY_TYPE).withJavaType(entity.getEntityClass())
 				.withBindableJavaType(entity.getEntityClass()).withId(idSingularAttribute)
 				.withSingularAttributes(singularAttributes).withPersistenceType(PersistenceType.ENTITY)
-				.withName(entity.getTableName()).withAttributes(attributes);
+				.withName(entity.getName()).withAttributes(attributes);
 		metamodelEntityType = builder.build();
 		return metamodelEntityType;
 	}

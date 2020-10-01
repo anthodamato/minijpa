@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.Bindable.BindableType;
 import javax.persistence.metamodel.EmbeddableType;
@@ -22,7 +23,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.tinyjpa.jpa.MetamodelUtils;
-import org.tinyjpa.jpa.PersistenceProviderImpl;
 import org.tinyjpa.jpa.model.embedded.Book;
 import org.tinyjpa.jpa.model.embedded.BookFormat;
 
@@ -37,8 +37,7 @@ public class EmbBookTest {
 
 	@BeforeAll
 	public static void beforeAll() {
-		emf = new PersistenceProviderImpl().createEntityManagerFactory("/org/tinyjpa/jpa/embedded/persistence.xml",
-				"emb_books", null);
+		emf = Persistence.createEntityManagerFactory("emb_books");
 	}
 
 	@AfterAll

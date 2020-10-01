@@ -3,10 +3,10 @@ package org.tinyjpa.jpa.onetoone;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.PersistenceProviderImpl;
 import org.tinyjpa.jpa.model.onetoone.Fingerprint;
 import org.tinyjpa.jpa.model.onetoone.Person;
 
@@ -19,8 +19,7 @@ public class OneToOneBidTest {
 
 	@Test
 	public void persist() throws Exception {
-		EntityManagerFactory emf = new PersistenceProviderImpl()
-				.createEntityManagerFactory("/org/tinyjpa/jpa/onetoone/persistence.xml", "onetoone_bid", null);
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid");
 		final EntityManager em = emf.createEntityManager();
 		try {
 			final EntityTransaction tx = em.getTransaction();

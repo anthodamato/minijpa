@@ -3,12 +3,12 @@ package org.tinyjpa.jpa.onetoone;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jpa.PersistenceProviderImpl;
 import org.tinyjpa.jpa.model.onetoone.lazy.Capital;
 import org.tinyjpa.jpa.model.onetoone.lazy.State;
 
@@ -22,8 +22,7 @@ public class OneToOneBidLazyTest {
 
 	@Test
 	public void persist() throws Exception {
-		EntityManagerFactory emf = new PersistenceProviderImpl()
-				.createEntityManagerFactory("/org/tinyjpa/jpa/onetoone/persistence.xml", "onetoone_bid_lazy", null);
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid_lazy");
 		final EntityManager em = emf.createEntityManager();
 		try {
 			final EntityTransaction tx = em.getTransaction();

@@ -1,5 +1,6 @@
 package org.tinyjpa.metadata.enhancer.javassist;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,8 +39,13 @@ public class ClassInspector {
 	private Logger LOG = LoggerFactory.getLogger(ClassInspector.class);
 
 	public List<ManagedData> inspect(List<String> classNames) throws Exception {
+		String processName = ManagementFactory.getRuntimeMXBean().getName();
+		LOG.info("inspect: os process=" + processName + "; Thread.currentThread().getContextClassLoader()="
+				+ Thread.currentThread().getContextClassLoader());
+
 		List<ManagedData> dataEntities = new ArrayList<>();
 		for (String className : classNames) {
+			LOG.info("inspect: className=" + className);
 			inspect(className, dataEntities);
 		}
 
@@ -85,9 +91,11 @@ public class ClassInspector {
 		dataEntity.setCtClass(ct);
 
 		// looks for embeddables
+		LOG.info("Inspects embeddables...");
 		List<ManagedData> embeddables = new ArrayList<>();
 		createEmbeddables(attrs, embeddables, inspectedClasses);
 		dataEntity.getEmbeddables().addAll(embeddables);
+		LOG.info("Found " + embeddables.size() + " embeddables in '" + ct.getName() + "'");
 
 		if (!attrs.isEmpty() || dataEntity.mappedSuperclass != null) {
 			List<BMTMethodInfo> methodInfos = inspectConstructorsAndMethods(ct);
@@ -195,6 +203,9 @@ public class ClassInspector {
 
 	private List<BMTMethodInfo> inspectConstructorsAndMethods(CtClass ct) throws Exception {
 		List<BMTMethodInfo> methodInfos = new ArrayList<>();
+		if (ct.isFrozen())
+			return methodInfos;
+
 		ExprEditorExt exprEditorExt = new ExprEditorExt();
 		CtConstructor[] ctConstructors = ct.getConstructors();
 		for (CtConstructor ctConstructor : ctConstructors) {
@@ -258,8 +269,8 @@ public class ClassInspector {
 		LOG.info("readAttribute: ctField.getModifiers()=" + ctField.getModifiers());
 		LOG.info("readAttribute: ctField.getType().getName()=" + ctField.getType().getName());
 		LOG.info("readAttribute: ctField.getSignature()=" + ctField.getSignature());
-		LOG.info("readAttribute: ctField.getFieldInfo()=" + ctField.getFieldInfo());
-		LOG.info("readAttribute: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());
+//		LOG.info("readAttribute: ctField.getFieldInfo()=" + ctField.getFieldInfo());
+//		LOG.info("readAttribute: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());
 		int modifier = ctField.getModifiers();
 		if (!Modifier.isPrivate(modifier) && !Modifier.isProtected(modifier) && !Modifier.isPackage(modifier))
 			return Optional.empty();
@@ -385,6 +396,11 @@ public class ClassInspector {
 			name = null;
 			fieldInfos.clear();
 		}
+
+//		@Override
+//		public boolean doit(CtClass clazz, MethodInfo minfo) throws CannotCompileException {
+//			return false;
+//		}
 
 		@Override
 		public void edit(NewExpr e) throws CannotCompileException {
