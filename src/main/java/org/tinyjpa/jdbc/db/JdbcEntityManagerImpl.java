@@ -1,5 +1,6 @@
 package org.tinyjpa.jdbc.db;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -269,6 +270,9 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	private void persist(MetaEntity entity, Object entityInstance, List<AttributeValue> attrValues) throws Exception {
 		if (entityContainer.isSaved(entityInstance)) {
+			if (attrValues.isEmpty())
+				return;
+
 			Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 			LOG.info("persist: idValue=" + idValue);
 			SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateUpdate(entityInstance, entity, attrValues);
@@ -315,10 +319,13 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		LOG.info("persist: entityInstanceBuilder=" + entityInstanceBuilder);
 		Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(entity, entityInstance);
 		LOG.info("persist: changes=" + optional.isPresent());
-		if (!optional.isPresent())
-			return;
+		List<AttributeValue> attributeValues = null;
+		if (optional.isPresent())
+			attributeValues = optional.get();
+		else
+			attributeValues = new ArrayList<>();
 
-		boolean stored = persistOnDb(entity, entityInstance, optional.get());
+		boolean stored = persistOnDb(entity, entityInstance, attributeValues);
 		if (stored) {
 			// are there any pending attributes?
 		} else {
