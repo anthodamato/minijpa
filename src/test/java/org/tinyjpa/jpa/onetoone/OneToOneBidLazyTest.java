@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jpa.model.onetoone.lazy.Capital;
-import org.tinyjpa.jpa.model.onetoone.lazy.State;
+import org.tinyjpa.jpa.model.Capital;
+import org.tinyjpa.jpa.model.State;
 
 /**
  * 

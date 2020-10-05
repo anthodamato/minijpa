@@ -1,16 +1,21 @@
-package org.tinyjpa.jpa.model.onetomany;
+package org.tinyjpa.jpa.model;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 
 @Entity
-public class HotelCustomer {
+public class Person {
+
 	@Id
 	@GeneratedValue
 	private Long id;
 
 	private String name;
+
+	@OneToOne
+	private Fingerprint fingerprint;
 
 	public Long getId() {
 		return id;
@@ -26,6 +31,14 @@ public class HotelCustomer {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Fingerprint getFingerprint() {
+		return fingerprint;
+	}
+
+	public void setFingerprint(Fingerprint fingerprint) {
+		this.fingerprint = fingerprint;
 	}
 
 }

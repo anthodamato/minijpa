@@ -21,9 +21,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.model.mappedsuperclass.Shape;
-import org.tinyjpa.jpa.model.mappedsuperclass.Square;
-import org.tinyjpa.jpa.model.mappedsuperclass.Triangle;
+import org.tinyjpa.jpa.model.Shape;
+import org.tinyjpa.jpa.model.Square;
+import org.tinyjpa.jpa.model.Triangle;
 
 public class MappedSuperclassTest {
 	private static EntityManagerFactory emf;

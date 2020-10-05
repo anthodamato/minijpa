@@ -7,8 +7,8 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.model.onetoone.Fingerprint;
-import org.tinyjpa.jpa.model.onetoone.Person;
+import org.tinyjpa.jpa.model.Fingerprint;
+import org.tinyjpa.jpa.model.Person;
 
 /**
  * 

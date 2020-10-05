@@ -7,8 +7,8 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.model.onetoone.City;
-import org.tinyjpa.jpa.model.onetoone.Region;
+import org.tinyjpa.jpa.model.City;
+import org.tinyjpa.jpa.model.Region;
 
 /**
  * @author adamato

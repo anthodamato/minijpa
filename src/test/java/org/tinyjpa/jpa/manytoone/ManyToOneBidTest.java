@@ -7,8 +7,8 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.model.manytoone.Department;
-import org.tinyjpa.jpa.model.manytoone.Employee;
+import org.tinyjpa.jpa.model.Department;
+import org.tinyjpa.jpa.model.Employee;
 
 /**
  * 

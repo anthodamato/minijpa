@@ -1,12 +1,10 @@
-package org.tinyjpa.jpa.model.onetomany;
+package org.tinyjpa.jpa.model;
 
 import java.util.Collection;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
-
-import org.tinyjpa.jpa.model.embedded.RoomBookingId;
 
 @Entity
 public class HotelBookingDetail {

@@ -1,4 +1,4 @@
-package org.tinyjpa.jpa.model.manytoone;
+package org.tinyjpa.jpa.model;
 
 import java.util.Collection;
 import java.util.HashSet;

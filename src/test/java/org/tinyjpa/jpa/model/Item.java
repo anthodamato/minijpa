@@ -1,4 +1,4 @@
-package org.tinyjpa.jpa.model.onetomany;
+package org.tinyjpa.jpa.model;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

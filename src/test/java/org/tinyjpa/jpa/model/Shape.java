@@ -1,4 +1,4 @@
-package org.tinyjpa.jpa.model.mappedsuperclass;
+package org.tinyjpa.jpa.model;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

@@ -1,4 +1,4 @@
-package org.tinyjpa.jpa.model.mappedsuperclass;
+package org.tinyjpa.jpa.model;
 
 import java.util.HashMap;
 import java.util.HashSet;

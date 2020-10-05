@@ -29,7 +29,7 @@ public class EnhancerTest {
 	@Test
 	public void embeddedExample() throws Exception {
 		List<String> classNames = new ArrayList<>();
-		classNames.add("org.tinyjpa.jpa.model.embedded.Book");
+		classNames.add("org.tinyjpa.jpa.model.Book");
 		EntityEnhancer entityEnhancer = new EntityEnhancer(classNames);
 		List<EnhEntity> enhEntities = entityEnhancer.enhance();
 		Assertions.assertNotNull(enhEntities);

@@ -9,8 +9,8 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.model.onetomany.Item;
-import org.tinyjpa.jpa.model.onetomany.Store;
+import org.tinyjpa.jpa.model.Item;
+import org.tinyjpa.jpa.model.Store;
 
 /**
  * 

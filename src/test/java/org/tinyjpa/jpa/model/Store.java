@@ -1,20 +1,22 @@
-package org.tinyjpa.jpa.model.onetoone.lazy;
+package org.tinyjpa.jpa.model;
+
+import java.util.Collection;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 
 @Entity
-public class Capital {
+public class Store {
 	@Id
 	@GeneratedValue
 	private Long id;
 
 	private String name;
 
-	@OneToOne(mappedBy = "capital")
-	private State state;
+	@OneToMany
+	private Collection<Item> items;
 
 	public Long getId() {
 		return id;
@@ -32,12 +34,12 @@ public class Capital {
 		this.name = name;
 	}
 
-	public State getState() {
-		return state;
+	public Collection<Item> getItems() {
+		return items;
 	}
 
-	public void setState(State state) {
-		this.state = state;
+	public void setItems(Collection<Item> items) {
+		this.items = items;
 	}
 
 }

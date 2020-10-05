@@ -1,20 +1,17 @@
-package org.tinyjpa.jpa.model.onetoone;
+package org.tinyjpa.jpa.model;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
 
 @Entity
-public class City {
+public class Region {
 	@Id
 	@GeneratedValue
 	private Long id;
 
 	private String name;
-
-	@OneToOne
-	private Region region;
+	private Integer population;
 
 	public Long getId() {
 		return id;
@@ -32,12 +29,12 @@ public class City {
 		this.name = name;
 	}
 
-	public Region getRegion() {
-		return region;
+	public Integer getPopulation() {
+		return population;
 	}
 
-	public void setRegion(Region region) {
-		this.region = region;
+	public void setPopulation(Integer population) {
+		this.population = population;
 	}
 
 }

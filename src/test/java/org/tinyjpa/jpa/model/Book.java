@@ -1,4 +1,4 @@
-package org.tinyjpa.jpa.model.embedded;
+package org.tinyjpa.jpa.model;
 
 import javax.persistence.Embedded;
 import javax.persistence.Entity;

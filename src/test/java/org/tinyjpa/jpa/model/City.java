@@ -1,4 +1,4 @@
-package org.tinyjpa.jpa.model.onetoone;
+package org.tinyjpa.jpa.model;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -6,8 +6,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 @Entity
-public class Person {
-
+public class City {
 	@Id
 	@GeneratedValue
 	private Long id;
@@ -15,7 +14,7 @@ public class Person {
 	private String name;
 
 	@OneToOne
-	private Fingerprint fingerprint;
+	private Region region;
 
 	public Long getId() {
 		return id;
@@ -33,12 +32,12 @@ public class Person {
 		this.name = name;
 	}
 
-	public Fingerprint getFingerprint() {
-		return fingerprint;
+	public Region getRegion() {
+		return region;
 	}
 
-	public void setFingerprint(Fingerprint fingerprint) {
-		this.fingerprint = fingerprint;
+	public void setRegion(Region region) {
+		this.region = region;
 	}
 
 }

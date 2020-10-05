@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.tinyjpa.jpa.MetamodelUtils;
-import org.tinyjpa.jpa.model.embedded.Book;
-import org.tinyjpa.jpa.model.embedded.BookFormat;
+import org.tinyjpa.jpa.model.Book;
+import org.tinyjpa.jpa.model.BookFormat;
 
 /**
  * 

@@ -1,22 +1,20 @@
-package org.tinyjpa.jpa.model.onetomany;
-
-import java.util.Collection;
+package org.tinyjpa.jpa.model;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 @Entity
-public class Store {
+public class Capital {
 	@Id
 	@GeneratedValue
 	private Long id;
 
 	private String name;
 
-	@OneToMany
-	private Collection<Item> items;
+	@OneToOne(mappedBy = "capital")
+	private State state;
 
 	public Long getId() {
 		return id;
@@ -34,12 +32,12 @@ public class Store {
 		this.name = name;
 	}
 
-	public Collection<Item> getItems() {
-		return items;
+	public State getState() {
+		return state;
 	}
 
-	public void setItems(Collection<Item> items) {
-		this.items = items;
+	public void setState(State state) {
+		this.state = state;
 	}
 
 }

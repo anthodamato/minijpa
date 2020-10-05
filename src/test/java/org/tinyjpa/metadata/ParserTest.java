@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
+import org.tinyjpa.jpa.model.Book;
 import org.tinyjpa.jpa.model.Citizen;
-import org.tinyjpa.jpa.model.embedded.Book;
 
 public class ParserTest {
 	private Parser parser = new Parser();
@@ -36,9 +36,9 @@ public class ParserTest {
 	@Test
 	public void embeddedExample() throws Exception {
 		List<String> classNames = new ArrayList<>();
-		classNames.add("org.tinyjpa.jpa.model.embedded.Book");
+		classNames.add("org.tinyjpa.jpa.model.Book");
 		Map<String, MetaEntity> entities = parser.createMetaEntities(classNames);
-		MetaEntity entity = entities.get("org.tinyjpa.jpa.model.embedded.Book");
+		MetaEntity entity = entities.get("org.tinyjpa.jpa.model.Book");
 		Assertions.assertNotNull(entity);
 		Assertions.assertNotNull(entity.getEntityClass());
 		Assertions.assertEquals(Book.class, entity.getEntityClass());

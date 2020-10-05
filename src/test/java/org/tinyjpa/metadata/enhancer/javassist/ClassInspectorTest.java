@@ -12,8 +12,8 @@ public class ClassInspectorTest {
 	@Test
 	public void mappedSuperclass() throws Exception {
 		ClassInspector ci = new ClassInspector();
-		List<String> classNames = Arrays.asList("org.tinyjpa.jpa.model.mappedsuperclass.TriangleAttrs",
-				"org.tinyjpa.jpa.model.mappedsuperclass.Square");
+		List<String> classNames = Arrays.asList("org.tinyjpa.jpa.model.TriangleAttrs",
+				"org.tinyjpa.jpa.model.Square");
 		List<ManagedData> managedDatas = ci.inspect(classNames);
 		Assertions.assertNotNull(managedDatas);
 		Assertions.assertEquals(2, managedDatas.size());
@@ -25,7 +25,7 @@ public class ClassInspectorTest {
 		Assertions.assertNotNull(managedData1.mappedSuperclass);
 
 		ManagedData triangleManagedData = managedData0.getClassName()
-				.equals("org.tinyjpa.jpa.model.mappedsuperclass.TriangleAttrs") ? managedData0 : managedData1;
+				.equals("org.tinyjpa.jpa.model.TriangleAttrs") ? managedData0 : managedData1;
 		Assertions.assertNotNull(triangleManagedData);
 
 		Assertions.assertEquals(4, triangleManagedData.getDataAttributes().size());

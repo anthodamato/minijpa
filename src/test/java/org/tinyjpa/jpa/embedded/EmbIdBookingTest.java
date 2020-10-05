@@ -10,8 +10,8 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.model.embedded.HotelBooking;
-import org.tinyjpa.jpa.model.embedded.RoomBookingId;
+import org.tinyjpa.jpa.model.HotelBooking;
+import org.tinyjpa.jpa.model.RoomBookingId;
 
 /**
  * 

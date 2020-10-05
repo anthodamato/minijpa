@@ -1,4 +1,4 @@
-package org.tinyjpa.jpa.model.embedded;
+package org.tinyjpa.jpa.model;
 
 import java.io.Serializable;
 import java.sql.Date;

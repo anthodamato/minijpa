@@ -1,21 +1,20 @@
-package org.tinyjpa.jpa.model.onetoone.lazy;
+package org.tinyjpa.jpa.model;
 
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 
 @Entity
-public class State {
+public class Employee {
 	@Id
 	@GeneratedValue
 	private Long id;
 
 	private String name;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	private Capital capital;
+	@ManyToOne
+	private Department department;
 
 	public Long getId() {
 		return id;
@@ -33,12 +32,11 @@ public class State {
 		this.name = name;
 	}
 
-	public Capital getCapital() {
-		return capital;
+	public Department getDepartment() {
+		return department;
 	}
 
-	public void setCapital(Capital capital) {
-		this.capital = capital;
+	public void setDepartment(Department department) {
+		this.department = department;
 	}
-
 }

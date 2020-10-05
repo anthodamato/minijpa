@@ -11,9 +11,9 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.tinyjpa.jpa.model.embedded.RoomBookingId;
-import org.tinyjpa.jpa.model.onetomany.HotelBookingDetail;
-import org.tinyjpa.jpa.model.onetomany.HotelCustomer;
+import org.tinyjpa.jpa.model.HotelBookingDetail;
+import org.tinyjpa.jpa.model.HotelCustomer;
+import org.tinyjpa.jpa.model.RoomBookingId;
 
 /**
  * 

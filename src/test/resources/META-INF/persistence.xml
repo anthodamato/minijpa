@@ -91,8 +91,8 @@
 
 	<persistence-unit name="mapped_superclass">
 		<description>MappedSuperclass Test</description>
-		<class>org.tinyjpa.jpa.model.mappedsuperclass.Triangle</class>
-		<class>org.tinyjpa.jpa.model.mappedsuperclass.Square</class>
+		<class>org.tinyjpa.jpa.model.Triangle</class>
+		<class>org.tinyjpa.jpa.model.Square</class>
 
 		<properties>
 			<property name="hibernate.dialect"
@@ -116,7 +116,7 @@
 
 	<persistence-unit name="emb_books">
 		<description>Books</description>
-		<class>org.tinyjpa.jpa.model.embedded.Book</class>
+		<class>org.tinyjpa.jpa.model.Book</class>
 
 		<properties>
 			<property name="hibernate.dialect"
@@ -140,7 +140,7 @@
 
 	<persistence-unit name="emb_booking">
 		<description>Books</description>
-		<class>org.tinyjpa.jpa.model.embedded.HotelBooking</class>
+		<class>org.tinyjpa.jpa.model.HotelBooking</class>
 
 		<properties>
 			<property name="hibernate.dialect"
@@ -164,8 +164,8 @@
 
 	<persistence-unit name="cities_uni">
 		<description>Cities</description>
-		<class>org.tinyjpa.jpa.model.onetoone.City</class>
-		<class>org.tinyjpa.jpa.model.onetoone.Region</class>
+		<class>org.tinyjpa.jpa.model.City</class>
+		<class>org.tinyjpa.jpa.model.Region</class>
 
 		<properties>
 			<property name="hibernate.dialect"
@@ -189,8 +189,8 @@
 
 	<persistence-unit name="onetoone_bid">
 		<description>Cities</description>
-		<class>org.tinyjpa.jpa.model.onetoone.Person</class>
-		<class>org.tinyjpa.jpa.model.onetoone.Fingerprint</class>
+		<class>org.tinyjpa.jpa.model.Person</class>
+		<class>org.tinyjpa.jpa.model.Fingerprint</class>
 
 		<properties>
 			<property name="hibernate.dialect"
@@ -214,8 +214,8 @@
 
 	<persistence-unit name="onetoone_bid_lazy">
 		<description>Cities</description>
-		<class>org.tinyjpa.jpa.model.onetoone.lazy.State</class>
-		<class>org.tinyjpa.jpa.model.onetoone.lazy.Capital</class>
+		<class>org.tinyjpa.jpa.model.State</class>
+		<class>org.tinyjpa.jpa.model.Capital</class>
 
 		<properties>
 			<property name="hibernate.dialect"
@@ -239,8 +239,8 @@
 
 	<persistence-unit name="onetomany_uni">
 		<description>Unidirectional One to Many</description>
-		<class>org.tinyjpa.jpa.model.onetomany.Store</class>
-		<class>org.tinyjpa.jpa.model.onetomany.Item</class>
+		<class>org.tinyjpa.jpa.model.Store</class>
+		<class>org.tinyjpa.jpa.model.Item</class>
 		<properties>
 			<property name="hibernate.dialect"
 				value="org.hibernate.dialect.DerbyDialect" />
@@ -262,8 +262,8 @@
 
 	<persistence-unit name="otm_emb_booking">
 		<description>Unidirectional One to Many</description>
-		<class>org.tinyjpa.jpa.model.onetomany.HotelBookingDetail</class>
-		<class>org.tinyjpa.jpa.model.onetomany.HotelCustomer</class>
+		<class>org.tinyjpa.jpa.model.HotelBookingDetail</class>
+		<class>org.tinyjpa.jpa.model.HotelCustomer</class>
 		<properties>
 			<property name="hibernate.dialect"
 				value="org.hibernate.dialect.DerbyDialect" />
@@ -285,8 +285,8 @@
 
 	<persistence-unit name="onetoone_bid_lazy">
 		<description>Cities</description>
-		<class>org.tinyjpa.jpa.model.onetoone.lazy.State</class>
-		<class>org.tinyjpa.jpa.model.onetoone.lazy.Capital</class>
+		<class>org.tinyjpa.jpa.model.State</class>
+		<class>org.tinyjpa.jpa.model.Capital</class>
 
 		<properties>
 			<property name="hibernate.dialect"
@@ -310,8 +310,8 @@
 
 	<persistence-unit name="manytoone_bid">
 		<description>Cities</description>
-		<class>org.tinyjpa.jpa.model.manytoone.Employee</class>
-		<class>org.tinyjpa.jpa.model.manytoone.Department</class>
+		<class>org.tinyjpa.jpa.model.Employee</class>
+		<class>org.tinyjpa.jpa.model.Department</class>
 
 		<properties>
 			<property name="hibernate.dialect"
