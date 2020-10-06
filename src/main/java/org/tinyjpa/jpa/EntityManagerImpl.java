@@ -27,6 +27,7 @@ import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jdbc.db.JdbcEntityManagerImpl;
 import org.tinyjpa.jpa.criteria.CriteriaBuilderImpl;
+import org.tinyjpa.jpa.criteria.TypedQueryImpl;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
 import org.tinyjpa.metadata.EntityContainerContext;
@@ -257,8 +258,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-		// TODO Auto-generated method stub
-		return null;
+		return new TypedQueryImpl<T>(criteriaQuery);
 	}
 
 	@Override

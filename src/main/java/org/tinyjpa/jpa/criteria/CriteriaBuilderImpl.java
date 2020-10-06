@@ -39,8 +39,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
-		// TODO Auto-generated method stub
-		return null;
+		return new CriteriaQueryImpl<T>(resultClass);
 	}
 
 	@Override

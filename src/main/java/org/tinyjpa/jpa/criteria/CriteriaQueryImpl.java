@@ -8,77 +8,21 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.EntityType;
 
-public class CriteriaQueryImpl<T> implements CriteriaQuery<T> {
+public class CriteriaQueryImpl<T> extends AbstractAbstractQuery<T> implements CriteriaQuery<T> {
+	private Class<T> resultClass;
+	private Selection<? extends T> selection;
 
-	@Override
-	public <X> Root<X> from(Class<X> entityClass) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <X> Root<X> from(EntityType<X> entity) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Set<Root<?>> getRoots() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Selection<T> getSelection() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<Expression<?>> getGroupList() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Predicate getGroupRestriction() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean isDistinct() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public Class<T> getResultType() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public <U> Subquery<U> subquery(Class<U> type) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Predicate getRestriction() {
-		// TODO Auto-generated method stub
-		return null;
+	public CriteriaQueryImpl(Class<T> resultClass) {
+		super();
+		this.resultClass = resultClass;
 	}
 
 	@Override
 	public CriteriaQuery<T> select(Selection<? extends T> selection) {
-		// TODO Auto-generated method stub
-		return null;
+		this.selection = selection;
+		return this;
 	}
 
 	@Override
