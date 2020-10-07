@@ -8,11 +8,11 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 
 public class CriteriaQueryImpl<T> extends AbstractAbstractQuery<T> implements CriteriaQuery<T> {
 	private Class<T> resultClass;
-	private Selection<? extends T> selection;
 
 	public CriteriaQueryImpl(Class<T> resultClass) {
 		super();
@@ -21,8 +21,11 @@ public class CriteriaQueryImpl<T> extends AbstractAbstractQuery<T> implements Cr
 
 	@Override
 	public CriteriaQuery<T> select(Selection<? extends T> selection) {
-		this.selection = selection;
-		return this;
+		Set<Root<?>> roots = getRoots();
+		if (roots.contains(selection) && roots.size() == 1)
+			return this;
+
+		return null;
 	}
 
 	@Override

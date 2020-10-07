@@ -69,13 +69,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		return createAndSaveEntityInstance(attributeValues, entity, childAttribute, childAttributeValue, primaryKey);
 	}
 
-	private Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, MetaEntity entity,
-			MetaAttribute childAttribute, Object childAttributeValue, Object primaryKey) throws Exception {
-		LOG.info("createAndSaveEntityInstance: entity=" + entity);
-		Object entityObject = entityInstanceBuilder.build(entity, attributeValues.attributes, attributeValues.values,
-				primaryKey);
-		LOG.info("createAndSaveEntityInstance: primaryKey=" + primaryKey + "; entityObject=" + entityObject);
-
+	private void saveEntityInstanceValues(Object entityObject, JdbcRunner.AttributeValues attributeValues,
+			MetaEntity entity, MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 		// saves the foreign key values. Foreign key values are stored on a db table but
 		// they don't have a field in the entity instance, so they are retrieved from db
 		// and saved in the persistence context. Later, those values can be used to
@@ -90,6 +85,16 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		});
 
 		loadRelationshipAttributes(entityObject, entity, childAttribute, childAttributeValue);
+	}
+
+	private Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, MetaEntity entity,
+			MetaAttribute childAttribute, Object childAttributeValue, Object primaryKey) throws Exception {
+		LOG.info("createAndSaveEntityInstance: entity=" + entity);
+		Object entityObject = entityInstanceBuilder.build(entity, attributeValues.attributes, attributeValues.values,
+				primaryKey);
+		LOG.info("createAndSaveEntityInstance: primaryKey=" + primaryKey + "; entityObject=" + entityObject);
+
+		saveEntityInstanceValues(entityObject, attributeValues, entity, childAttribute, childAttributeValue);
 		entityContainer.save(entityObject, primaryKey);
 		entityContainer.setLoadedFromDb(entityObject);
 		return entityObject;
@@ -99,6 +104,13 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	public Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, MetaEntity entity,
 			MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 		Object primaryKey = AttributeUtil.createPK(entity, attributeValues);
+		Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
+		if (entityInstance != null) {
+			saveEntityInstanceValues(entityInstance, attributeValues, entity, childAttribute, childAttributeValue);
+			entityContainer.setLoadedFromDb(entityInstance);
+			return entityInstance;
+		}
+
 		return createAndSaveEntityInstance(attributeValues, entity, childAttribute, childAttributeValue, primaryKey);
 	}
 
@@ -106,8 +118,9 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 * Executes a query like: 'select (Entity fields) from table where
 	 * pk=foreignkey'
 	 * 
-	 * @param entityClass
-	 * @param foreignKey
+	 * @param entityClass         result's class
+	 * @param foreignKey          foreign key value
+	 * @param foreignKeyAttribute foreign key attribute
 	 * @param childAttribute
 	 * @param childAttributeValue
 	 * @return
@@ -128,6 +141,23 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				foreignKey);
 		return jdbcRunner.findCollectionById(connectionHolder.getConnection(), sqlStatement, entity, this,
 				childAttribute, childAttributeValue);
+	}
+
+	/**
+	 * Executes a query like: 'select (Entity fields) from table
+	 * 
+	 * @param entityClass result's class
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<Object> loadAllFields(Class<?> entityClass) throws Exception {
+		MetaEntity entity = entities.get(entityClass.getName());
+		if (entity == null)
+			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
+
+		SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectAllFields(entity);
+		return jdbcRunner.findCollectionById(connectionHolder.getConnection(), sqlStatement, entity, this, null, null);
 	}
 
 	private void loadRelationshipAttributes(Object parentInstance, MetaEntity entity, MetaAttribute childAttribute,
@@ -185,14 +215,16 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	/**
 	 * Loads the 'parentInstance's collection (or map) specified by the attribute
-	 * 'a'. The attribute 'a' type can be one of 'java.util.Collection',
-	 * 'java.util.List' or 'java.util.Map', etc. For example, in order to load the
-	 * list of Employee for a given Department (foreign key) we have to pass:
+	 * 'foreignKeyAttribute'. The attribute 'foreignKeyAttribute' type can be one of
+	 * 'java.util.Collection', 'java.util.List' or 'java.util.Map', etc. For
+	 * example, in order to load the list of Employee for a given Department
+	 * (foreign key) we have to pass:
 	 * 
 	 * - the department instance, so we can get the foreign key - the Employee class
 	 * 
 	 * @param parentInstance
-	 * @param a
+	 * @param targetEntity        the object result class
+	 * @param foreignKeyAttribute
 	 * @param childAttribute
 	 * @param childAttributeValue
 	 * @return

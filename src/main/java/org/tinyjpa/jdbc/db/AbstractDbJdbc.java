@@ -8,16 +8,16 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.AttributeValueConverter;
 import org.tinyjpa.jdbc.ColumnNameValue;
 import org.tinyjpa.jdbc.DefaultNameTranslator;
 import org.tinyjpa.jdbc.EmbeddedIdAttributeValueConverter;
-import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.GeneratedValue;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
+import org.tinyjpa.jdbc.MetaAttribute;
+import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.NameTranslator;
 import org.tinyjpa.jdbc.PkGenerationType;
 import org.tinyjpa.jdbc.PkStrategy;
@@ -63,8 +63,8 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		return generatePlainInsert(entityInstance, entity, attrValues);
 	}
 
-	protected SqlStatement generatePlainInsert(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
-			throws Exception {
+	protected SqlStatement generatePlainInsert(Object entityInstance, MetaEntity entity,
+			List<AttributeValue> attrValues) throws Exception {
 		MetaAttribute id = entity.getId();
 		Object idValue = id.getReadMethod().invoke(entityInstance);
 		List<AttributeValue> attrValuesWithId = new ArrayList<>();
@@ -241,24 +241,15 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 				.withFetchColumnNameValues(fetchColumnNameValues).build();
 	}
 
-	@Override
-	public SqlStatement generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
-			Object foreignKeyInstance) throws Exception {
-		List<AttributeValue> attributeValues = new ArrayList<>();
-		AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKeyInstance);
-		LOG.info("generateSelectByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute);
-
-		attributeValues.add(attrValue);
-
+	private StringBuilder createAllFieldsQuery(MetaEntity entity, List<MetaAttribute> expandedAttributes)
+			throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
-		int i = 0;
-		List<MetaAttribute> expandedAttributes = entity.getId().expand();
-		expandedAttributes.addAll(entity.expandAttributes());
 		List<String> columns = createColumns(expandedAttributes);
 		List<String> joinColumnNames = entity.getJoinColumnAttributes().stream().map(c -> c.getColumnName())
 				.collect(Collectors.toList());
 		columns.addAll(joinColumnNames);
+		int i = 0;
 		for (String c : columns) {
 			if (i > 0)
 				sb.append(", ");
@@ -269,11 +260,34 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 		sb.append(" from ");
 		sb.append(entity.getTableName());
+		return sb;
+	}
+
+	@Override
+	public SqlStatement generateSelectAllFields(MetaEntity entity) throws Exception {
+		List<MetaAttribute> expandedAttributes = entity.getId().expand();
+		expandedAttributes.addAll(entity.expandAttributes());
+		StringBuilder sb = createAllFieldsQuery(entity, expandedAttributes);
+
+		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
+		String sql = sb.toString();
+		return new SqlStatement.Builder().withSql(sql).withFetchColumnNameValues(fetchColumnNameValues).build();
+	}
+
+	@Override
+	public SqlStatement generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
+			Object foreignKeyInstance) throws Exception {
+		List<MetaAttribute> expandedAttributes = entity.getId().expand();
+		expandedAttributes.addAll(entity.expandAttributes());
+		StringBuilder sb = createAllFieldsQuery(entity, expandedAttributes);
 		sb.append(" where ");
 
+		List<AttributeValue> attributeValues = new ArrayList<>();
+		AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKeyInstance);
+		LOG.info("generateSelectByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute);
+		attributeValues.add(attrValue);
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attributeValues);
-//		columnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
-		i = 0;
+		int i = 0;
 		for (ColumnNameValue cnv : columnNameValues) {
 			if (i > 0)
 				sb.append(" and ");

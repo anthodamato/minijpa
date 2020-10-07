@@ -258,7 +258,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-		return new TypedQueryImpl<T>(criteriaQuery);
+		return new TypedQueryImpl<T>(criteriaQuery, jdbcEntityManager);
 	}
 
 	@Override

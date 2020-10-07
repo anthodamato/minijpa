@@ -34,6 +34,10 @@ public class RootImpl<X> implements Root<X> {
 		this.entityClass = entityClass;
 	}
 
+	Class<X> getEntityClass() {
+		return entityClass;
+	}
+
 	@Override
 	public Set<Join<X, ?>> getJoins() {
 		// TODO Auto-generated method stub

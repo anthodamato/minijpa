@@ -11,8 +11,8 @@ import javax.persistence.EntityExistsException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeUtil;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.EntityContainer;
 

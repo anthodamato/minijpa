@@ -1,11 +1,15 @@
 package org.tinyjpa.jdbc.db;
 
+import java.util.List;
+
+import org.tinyjpa.jdbc.JdbcRunner;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
-import org.tinyjpa.jdbc.JdbcRunner;
 
 public interface JdbcEntityManager {
 	public Object createAndSaveEntityInstance(JdbcRunner.AttributeValues attributeValues, MetaEntity entity,
 			MetaAttribute childAttribute, Object childAttributeValue) throws Exception;
+
+	public List<Object> loadAllFields(Class<?> entityClass) throws Exception;
 
 }

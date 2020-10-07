@@ -3,8 +3,8 @@ package org.tinyjpa.jdbc.db;
 import java.sql.Connection;
 import java.util.List;
 
-import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeValue;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.NameTranslator;
 import org.tinyjpa.jdbc.SqlStatement;
@@ -22,6 +22,8 @@ public interface DbJdbc {
 	public SqlStatement generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId, Object joinTableForeignKey,
 			RelationshipJoinTable joinTable) throws Exception;
 
+	public SqlStatement generateSelectAllFields(MetaEntity entity) throws Exception;
+
 	public SqlStatement generateUpdate(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception;
 
@@ -31,4 +33,5 @@ public interface DbJdbc {
 			Object targetInstance) throws Exception;
 
 	public NameTranslator getNameTranslator();
+
 }

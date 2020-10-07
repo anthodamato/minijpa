@@ -1,5 +1,6 @@
 package org.tinyjpa.jdbc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SqlStatement {
@@ -41,7 +42,7 @@ public class SqlStatement {
 		private String sql;
 		private List<AttributeValue> attrValues;
 		private Object idValue;
-		private List<ColumnNameValue> columnNameValues;
+		private List<ColumnNameValue> columnNameValues = new ArrayList<>();
 		private List<ColumnNameValue> fetchColumnNameValues;
 
 		public Builder() {
