@@ -15,8 +15,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.tinyjpa.jpa.model.Citizen;
 
 /**
@@ -25,7 +23,6 @@ import org.tinyjpa.jpa.model.Citizen;
  *
  */
 public class FindTest {
-	private Logger LOG = LoggerFactory.getLogger(FindTest.class);
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
@@ -69,15 +66,13 @@ public class FindTest {
 		citizen.setName("Anthony");
 		citizen.setLastName("Smith");
 		em.persist(citizen);
-		Citizen c = em.find(Citizen.class, citizen.getId());
-		LOG.info("criteria: c=" + c + "; c.getName()=" + c.getName());
+		Citizen c_Smith = em.find(Citizen.class, citizen.getId());
 
 		citizen = new Citizen();
 		citizen.setName("Bill");
 		citizen.setLastName("Crown");
 		em.persist(citizen);
-		c = em.find(Citizen.class, citizen.getId());
-		LOG.info("criteria: c=" + c + "; c.getName()=" + c.getName());
+		Citizen c_Crown = em.find(Citizen.class, citizen.getId());
 
 		Assertions.assertNotNull(citizen.getId());
 		tx.commit();
@@ -92,9 +87,21 @@ public class FindTest {
 
 		Assertions.assertEquals(2, citizens.size());
 
+		// check the references
+		int counter = 0;
 		for (Citizen ct : citizens) {
-			LOG.info("criteria: ct=" + ct + "; ct.getName()=" + ct.getName());
+			if (ct.getId() == c_Crown.getId()) {
+				++counter;
+				Assertions.assertTrue(ct == c_Crown);
+			}
+
+			if (ct.getId() == c_Smith.getId()) {
+				++counter;
+				Assertions.assertTrue(ct == c_Smith);
+			}
 		}
+
+		Assertions.assertEquals(2, counter);
 
 		em.close();
 	}
