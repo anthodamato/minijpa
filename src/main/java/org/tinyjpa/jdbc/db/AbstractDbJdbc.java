@@ -254,12 +254,14 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			if (i > 0)
 				sb.append(", ");
 
-			sb.append(c);
+			sb.append(getNameTranslator().toColumnName(entity.getAlias(), c));
 			++i;
 		}
 
 		sb.append(" from ");
 		sb.append(entity.getTableName());
+		sb.append(" ");
+		sb.append(entity.getAlias());
 		return sb;
 	}
 

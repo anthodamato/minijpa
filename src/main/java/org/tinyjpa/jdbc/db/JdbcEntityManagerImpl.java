@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -375,9 +376,12 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		if (!persistOnDb)
 			return false;
 
-		LOG.info("persist: changes.size()=" + changes.size());
+		LOG.info("persist: changes.size()=" + changes.size() + "; "
+				+ changes.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
 		LOG.info("persist: entityInstance=" + entityInstance);
 		List<AttributeValue> values = attributeValueConverter.convert(changes);
+		LOG.info("persist: values.size()=" + values.size() + "; "
+				+ values.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
 		persist(entity, entityInstance, values);
 		entityContainer.save(entityInstance);
 		entityInstanceBuilder.removeChanges(entityInstance);

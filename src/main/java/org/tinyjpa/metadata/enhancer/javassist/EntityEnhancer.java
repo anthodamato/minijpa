@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.Entity;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.CollectionUtils;
@@ -11,6 +13,7 @@ import org.tinyjpa.metadata.BeanUtil;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.enhancer.EnhAttribute;
 import org.tinyjpa.metadata.enhancer.EnhEntity;
+import org.tinyjpa.metadata.enhancer.Enhanced;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -35,35 +38,39 @@ public class EntityEnhancer {
 
 	private List<String> classNames;
 	private List<ManagedData> enhancedDataEntities = new ArrayList<>();
-	private List<ManagedData> dataEntities;
+//	private List<ManagedData> dataEntities;
 	private ClassInspector classInspector = new ClassInspector();
+
+	public EntityEnhancer() {
+		super();
+	}
 
 	public EntityEnhancer(List<String> classNames) {
 		super();
 		this.classNames = classNames;
 	}
 
-	public List<EnhEntity> enhance() throws Exception {
-		dataEntities = classInspector.inspect(classNames);
-		List<EnhEntity> enhEntities = new ArrayList<>();
-		for (ManagedData dataEntity : dataEntities) {
-			EnhEntity enhMappedSuperclassEntity = null;
-			LOG.info("enhance: dataEntity.mappedSuperclass=" + dataEntity.mappedSuperclass);
-			if (dataEntity.mappedSuperclass != null) {
-				LOG.info(
-						"enhance: dataEntity.mappedSuperclass.className=" + dataEntity.mappedSuperclass.getClassName());
-				enhMappedSuperclassEntity = enhance(dataEntity.mappedSuperclass, enhEntities);
-			}
+//	public List<EnhEntity> enhance() throws Exception {
+//		List<ManagedData> dataEntities = classInspector.inspect(classNames);
+//		List<EnhEntity> enhEntities = new ArrayList<>();
+//		for (ManagedData dataEntity : dataEntities) {
+//			EnhEntity enhMappedSuperclassEntity = null;
+//			LOG.info("enhance: dataEntity.mappedSuperclass=" + dataEntity.mappedSuperclass);
+//			if (dataEntity.mappedSuperclass != null) {
+//				LOG.info(
+//						"enhance: dataEntity.mappedSuperclass.className=" + dataEntity.mappedSuperclass.getClassName());
+//				enhMappedSuperclassEntity = enhance(dataEntity.mappedSuperclass, enhEntities);
+//			}
+//
+//			EnhEntity enhEntity = enhance(dataEntity, enhEntities);
+//			enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
+//			enhEntities.add(enhEntity);
+//		}
+//
+//		return enhEntities;
+//	}
 
-			EnhEntity enhEntity = enhance(dataEntity, enhEntities);
-			enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
-			enhEntities.add(enhEntity);
-		}
-
-		return enhEntities;
-	}
-
-	private EnhEntity enhance(ManagedData managedData, List<EnhEntity> parsedEntities) throws Exception {
+	public EnhEntity enhance(ManagedData managedData, List<EnhEntity> parsedEntities) throws Exception {
 		LOG.info("enhance: managedData.className=" + managedData.getClassName());
 		EnhEntity enhEntity = new EnhEntity();
 		enhEntity.setClassName(managedData.getClassName());
@@ -72,6 +79,7 @@ public class EntityEnhancer {
 		enhEntity.setEnhAttributes(enhAttributes);
 		List<EnhEntity> embeddables = findEmbeddables(enhAttributes, parsedEntities);
 		enhEntity.addEmbeddables(embeddables);
+		LOG.info("enhance: completed '" + managedData.getClassName() + "'");
 		return enhEntity;
 	}
 
@@ -205,6 +213,27 @@ public class EntityEnhancer {
 		}
 	}
 
+	private boolean isClassModified(CtClass ctClass) throws NotFoundException {
+		CtClass[] ctInterfaces = ctClass.getInterfaces();
+//		LOG.info("isClassModified: ctInterfaces.length=" + ctInterfaces.length);
+		for (CtClass ct : ctInterfaces) {
+//			LOG.info("isClassModified: ct.getName()=" + ct.getName());
+			if (ct.getName().equals(Enhanced.class.getName()))
+				return true;
+		}
+
+		return false;
+	}
+
+	private boolean isClassWritable(CtClass ctClass) {
+		return !ctClass.isFrozen();
+	}
+
+	private boolean canModify(CtClass ctClass) throws NotFoundException {
+//		return !isClassModified(ctClass) && isClassWritable(ctClass);
+		return isClassWritable(ctClass);
+	}
+
 	private List<EnhAttribute> enhance(ManagedData managedData) throws Exception {
 		CtClass ct = managedData.getCtClass();
 		LOG.info("enhance: ct.getName()=" + ct.getName());
@@ -213,7 +242,14 @@ public class EntityEnhancer {
 //			printInfo(ct);
 //		}
 
+		LOG.info("enhance: ct.isFrozen()=" + ct.isFrozen() + "; isClassModified(ct)=" + isClassModified(ct));
+//		if (ct.isFrozen() && !isClassModified(ct)) {
+//			ct.defrost();
+//		}
+
+		LOG.info("enhance: isClassWritable(ct)=" + isClassWritable(ct));
 		boolean modified = false;
+		boolean canModify = canModify(ct);
 		if (!enhancedDataEntities.contains(managedData)) {
 			if (toEnhance(managedData)) {
 				LOG.info("Enhancing: " + ct.getName());
@@ -242,7 +278,7 @@ public class EntityEnhancer {
 				modified = true;
 			}
 
-			if (enhanceAttribute && !enhancedDataEntities.contains(managedData) && !ct.isFrozen()) {
+			if (enhanceAttribute && !enhancedDataEntities.contains(managedData) && canModify(ct)) {
 				if (property.getPropertyMethod.enhance) {
 					if (isLazyOrEntityType(property.getPropertyMethod.method.get().getReturnType()))
 						modifyGetMethod(property.getPropertyMethod.method.get(), property.ctField);
@@ -263,11 +299,17 @@ public class EntityEnhancer {
 			enhAttributes.add(enhAttribute);
 		}
 
-		if (modified) {
-			if (!ct.isFrozen())
-				ct.toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
-		}
+		LOG.info("enhance: modified=" + modified + "; canModify(ct)=" + canModify(ct) + "; ct.isModified()="
+				+ ct.isModified());
+//		if (modified) {
+//			if (canModify) {
+//				LOG.info("enhance: writing class " + ct.getName());
+////				addEnhancedInterface(ct);
+////				ct.toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
+//			}
+//		}
 
+		LOG.info("enhance: managedData=" + managedData);
 		if (managedData != null)
 			enhancedDataEntities.add(managedData);
 
@@ -275,7 +317,7 @@ public class EntityEnhancer {
 	}
 
 	private void enhanceConstructor(ManagedData managedData, BMTMethodInfo bmtMethodInfo) throws Exception {
-		if (managedData.getCtClass().isFrozen())
+		if (!canModify(managedData.getCtClass()))
 			return;
 
 		for (BMTFieldInfo bmtFieldInfo : bmtMethodInfo.getBmtFieldInfos()) {
@@ -297,7 +339,8 @@ public class EntityEnhancer {
 	}
 
 	private void addEntityDelegateField(CtClass ct) throws Exception {
-		if (ct.isFrozen())
+//		LOG.info("addEntityDelegateField: canModify(ct)=" + canModify(ct));
+		if (!canModify(ct))
 			return;
 
 		LOG.info("addEntityDelegateField: ct.getName()=" + ct.getName());
@@ -305,28 +348,41 @@ public class EntityEnhancer {
 		Class<?> delegateClass = EntityDelegate.class;
 		pool.importPackage(delegateClass.getPackage().getName());
 		CtField f = CtField.make("private EntityDelegate entityDelegate = EntityDelegate.getInstance();", ct);
+		LOG.info("Adding Entity Delegate");
 		ct.addField(f);
+	}
+
+	private void addEnhancedInterface(CtClass ct) throws Exception {
+		ClassPool pool = ClassPool.getDefault();
+		Class<?> enhancedClass = Enhanced.class;
+		pool.importPackage(enhancedClass.getPackage().getName());
+		CtClass ctClass = pool.get(enhancedClass.getName());
+		ct.addInterface(ctClass);
 	}
 
 	private void modifyGetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
 		String mc = ctField.getName() + " = (" + ctMethod.getReturnType().getName() + ") entityDelegate.get("
 				+ ctField.getName() + ",\"" + ctField.getName() + "\", this);";
+		LOG.info("Modifying get method: mc=" + mc);
 		ctMethod.insertBefore(mc);
 	}
 
 	private void modifySetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
 		String mc = "entityDelegate.set(" + ctField.getName() + ",\"" + ctField.getName() + "\", this);";
+		LOG.info("Modifying set method: mc=" + mc);
 		ctMethod.insertBefore(mc);
 	}
 
 	private void modifyConstructorWithCollectionCheck(CtConstructor ctConstructor, CtField ctField) throws Exception {
 		String mc = "if(!" + ctField.getName() + ".isEmpty()) { entityDelegate.set(" + ctField.getName() + ",\""
 				+ ctField.getName() + "\", this); }";
+		LOG.info("Modifying constructor: mc=" + mc);
 		ctConstructor.insertAfter(mc);
 	}
 
 	private void modifyConstructorWithSimpleField(CtConstructor ctConstructor, CtField ctField) throws Exception {
 		String mc = "entityDelegate.set(" + ctField.getName() + ",\"" + ctField.getName() + "\", this);";
+		LOG.info("Modifying constructor: mc=" + mc);
 		ctConstructor.insertAfter(mc);
 	}
 
@@ -376,7 +432,7 @@ public class EntityEnhancer {
 			++counter;
 		}
 
-		if (ctClass.isFrozen())
+		if (!canModify(ctClass))
 			return ctMethod;
 
 		String setMethodString = createSetMethodString(ctField, delegate, counter);
@@ -392,16 +448,21 @@ public class EntityEnhancer {
 	 * @param ctClass
 	 * @return true if the input type can be a lazy attribute
 	 */
-	private boolean isLazyOrEntityType(CtClass ctClass) {
+	private boolean isLazyOrEntityType(CtClass ctClass) throws Exception {
 		String name = ctClass.getName();
-		if (isEntityName(name))
+
+		Object entity = ctClass.getAnnotation(Entity.class);
+		if (entity != null)
 			return true;
+
+//		if (isEntityName(name))
+//			return true;
 
 		return CollectionUtils.isCollectionName(name);
 	}
 
-	private boolean isEntityName(String name) {
-		return dataEntities.stream().filter(d -> d.getClassName().equals(name)).findFirst().isPresent();
-	}
+//	private boolean isEntityName(String name) {
+//		return dataEntities.stream().filter(d -> d.getClassName().equals(name)).findFirst().isPresent();
+//	}
 
 }

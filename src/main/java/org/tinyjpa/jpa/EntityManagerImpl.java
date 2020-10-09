@@ -40,7 +40,6 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
 	private JdbcEntityManagerImpl jdbcEntityManager;
-//	private Metamodel metamodel;
 
 	public EntityManagerImpl(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
 			Map<String, MetaEntity> entities) {

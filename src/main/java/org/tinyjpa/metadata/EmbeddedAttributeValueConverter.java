@@ -4,14 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.AttributeValueConverter;
 
 public class EmbeddedAttributeValueConverter implements AttributeValueConverter {
+	private Logger LOG = LoggerFactory.getLogger(EmbeddedAttributeValueConverter.class);
 
 	@Override
 	public List<AttributeValue> convert(AttributeValue attrValue) throws Exception {
 		List<AttributeValue> attrValues = new ArrayList<>();
+		LOG.info("convert: getAttribute().getName()=" + attrValue.getAttribute().getName()
+				+ "; getAttribute().isEmbedded()=" + attrValue.getAttribute().isEmbedded());
 		if (!attrValue.getAttribute().isEmbedded()) {
 			attrValues.add(attrValue);
 			return attrValues;

@@ -1,9 +1,9 @@
 package org.tinyjpa.metadata.enhancer.javassist;
 
-import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -38,25 +38,24 @@ import javassist.expr.NewExpr;
 public class ClassInspector {
 	private Logger LOG = LoggerFactory.getLogger(ClassInspector.class);
 
-	public List<ManagedData> inspect(List<String> classNames) throws Exception {
-		String processName = ManagementFactory.getRuntimeMXBean().getName();
-		LOG.info("inspect: os process=" + processName + "; Thread.currentThread().getContextClassLoader()="
-				+ Thread.currentThread().getContextClassLoader());
+//	public List<ManagedData> inspect(List<String> classNames) throws Exception {
+//		List<ManagedData> dataEntities = new ArrayList<>();
+//		for (String className : classNames) {
+//			LOG.info("inspect: className=" + className);
+//			inspect(className, dataEntities);
+//		}
+//
+//		return dataEntities;
+//	}
 
-		List<ManagedData> dataEntities = new ArrayList<>();
-		for (String className : classNames) {
-			LOG.info("inspect: className=" + className);
-			inspect(className, dataEntities);
-		}
-
-		return dataEntities;
-	}
-
-	private void inspect(String className, List<ManagedData> inspectedClasses) throws Exception {
-		// already enhanced
-		for (ManagedData enhEntity : inspectedClasses) {
-			if (enhEntity.getClassName().equals(className))
-				return;
+	public ManagedData inspect(String className, List<ManagedData> inspectedClasses) throws Exception {
+		// already inspected
+		for (ManagedData managedData : inspectedClasses) {
+			LOG.info("inspect: enhEntity=" + managedData + "; enhEntity.getClassName()=" + managedData.getClassName()
+					+ "; attrs=" + managedData.getDataAttributes().stream().map(a -> a.property.ctField.getName())
+							.collect(Collectors.toList()));
+			if (managedData.getClassName().equals(className))
+				return null;
 		}
 
 		ClassPool pool = ClassPool.getDefault();
@@ -64,46 +63,49 @@ public class ClassInspector {
 		// mapped superclasses are enhanced finding the entity superclasses
 		Object mappedSuperclassAnnotation = ct.getAnnotation(MappedSuperclass.class);
 		if (mappedSuperclassAnnotation != null)
-			return;
+			return null;
 
 		// skip embeddable classes
 		Object embeddableAnnotation = ct.getAnnotation(Embeddable.class);
 		if (embeddableAnnotation != null)
-			return;
+			return null;
 
 		Object entityAnnotation = ct.getAnnotation(Entity.class);
 		if (entityAnnotation == null) {
 			LOG.error("@Entity annotation not found: " + ct.getName());
-			return;
+			return null;
 		}
 
-		ManagedData dataEntity = new ManagedData();
-		dataEntity.setClassName(className);
+		ManagedData managedData = new ManagedData();
+		managedData.setClassName(className);
 
 		Optional<ManagedData> optional = findMappedSuperclass(ct, inspectedClasses);
 		if (optional.isPresent())
-			dataEntity.mappedSuperclass = optional.get();
+			managedData.mappedSuperclass = optional.get();
 
 		List<Property> properties = findAttributes(ct);
 		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
 		List<AttributeData> attrs = createDataAttributes(properties, false);
-		dataEntity.addAttributeDatas(attrs);
-		dataEntity.setCtClass(ct);
+		managedData.addAttributeDatas(attrs);
+		managedData.setCtClass(ct);
 
 		// looks for embeddables
 		LOG.info("Inspects embeddables...");
 		List<ManagedData> embeddables = new ArrayList<>();
 		createEmbeddables(attrs, embeddables, inspectedClasses);
-		dataEntity.getEmbeddables().addAll(embeddables);
+		managedData.getEmbeddables().addAll(embeddables);
 		LOG.info("Found " + embeddables.size() + " embeddables in '" + ct.getName() + "'");
 
-		if (!attrs.isEmpty() || dataEntity.mappedSuperclass != null) {
+		if (!attrs.isEmpty() || managedData.mappedSuperclass != null) {
 			List<BMTMethodInfo> methodInfos = inspectConstructorsAndMethods(ct);
 			if (!methodInfos.isEmpty())
-				dataEntity.getMethodInfos().addAll(methodInfos);
+				managedData.getMethodInfos().addAll(methodInfos);
 
-			inspectedClasses.add(dataEntity);
+			inspectedClasses.add(managedData);
+			return managedData;
 		}
+
+		return null;
 	}
 
 	private Optional<ManagedData> findMappedSuperclass(CtClass ct, List<ManagedData> inspectedClasses)
@@ -161,15 +163,16 @@ public class ClassInspector {
 			if (!dataAttribute.property.embedded)
 				continue;
 
-			ManagedData dataEntity = findInspectedEmbeddable(inspectedClasses,
+			ManagedData managedData = findInspectedEmbeddable(inspectedClasses,
 					dataAttribute.property.ctField.getName());
-			embeddables.add(dataEntity);
+			if (managedData != null)
+				embeddables.add(managedData);
 		}
 	}
 
 	private ManagedData findInspectedEmbeddable(List<ManagedData> inspectedClasses, String className) {
-		for (ManagedData dataEntity : inspectedClasses) {
-			for (ManagedData embeddable : dataEntity.getEmbeddables()) {
+		for (ManagedData managedData : inspectedClasses) {
+			for (ManagedData embeddable : managedData.getEmbeddables()) {
 				if (embeddable.getClassName().equals(className))
 					return embeddable;
 
@@ -231,7 +234,8 @@ public class ClassInspector {
 
 	private AttributeData createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
 		LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
-				+ "; property.embedded=" + property.embedded);
+				+ "; property.embedded=" + property.embedded + "; property.ctField.getType().getName()="
+				+ property.ctField.getType().getName());
 //		List<AttributeData> embeddedAttributes = null;
 //		CtClass embeddedCtClass = null;
 		ManagedData embeddedData = null;
@@ -239,6 +243,7 @@ public class ClassInspector {
 			embeddedData = new ManagedData(ManagedData.EMBEDDABLE);
 			embeddedData.addAttributeDatas(createDataAttributes(property.embeddedProperties, property.id));
 			embeddedData.setCtClass(property.ctField.getType());
+			embeddedData.setClassName(property.ctField.getType().getName());
 //			embeddedAttributes = createDataAttributes(property.embeddedProperties, property.id);
 //			embeddedCtClass = property.ctField.getType();
 		}
@@ -268,7 +273,7 @@ public class ClassInspector {
 		LOG.info("readAttribute: ctField.getName()=" + ctField.getName());
 		LOG.info("readAttribute: ctField.getModifiers()=" + ctField.getModifiers());
 		LOG.info("readAttribute: ctField.getType().getName()=" + ctField.getType().getName());
-		LOG.info("readAttribute: ctField.getSignature()=" + ctField.getSignature());
+//		LOG.info("readAttribute: ctField.getSignature()=" + ctField.getSignature());
 //		LOG.info("readAttribute: ctField.getFieldInfo()=" + ctField.getFieldInfo());
 //		LOG.info("readAttribute: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());
 		int modifier = ctField.getModifiers();

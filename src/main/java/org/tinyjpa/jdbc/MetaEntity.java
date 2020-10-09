@@ -2,6 +2,7 @@ package org.tinyjpa.jdbc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class MetaEntity {
@@ -100,6 +101,12 @@ public class MetaEntity {
 
 	public MetaEntity getMappedSuperclassEntity() {
 		return mappedSuperclassEntity;
+	}
+
+	public boolean isEmbeddedAttribute(String name) {
+		Optional<MetaAttribute> optional = attributes.stream().filter(a -> a.getName().equals(name) && a.isEmbedded())
+				.findFirst();
+		return optional.isPresent();
 	}
 
 	@Override

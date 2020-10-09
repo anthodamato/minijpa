@@ -1,5 +1,6 @@
 package org.tinyjpa.metadata.enhancer.javassist;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,9 +13,15 @@ public class ClassInspectorTest {
 	@Test
 	public void mappedSuperclass() throws Exception {
 		ClassInspector ci = new ClassInspector();
-		List<String> classNames = Arrays.asList("org.tinyjpa.jpa.model.TriangleAttrs",
-				"org.tinyjpa.jpa.model.Square");
-		List<ManagedData> managedDatas = ci.inspect(classNames);
+		List<String> classNames = Arrays.asList("org.tinyjpa.jpa.model.TriangleAttrs", "org.tinyjpa.jpa.model.Square");
+		List<ManagedData> managedDatas = new ArrayList<>();
+		ManagedData managedData = ci.inspect("org.tinyjpa.jpa.model.TriangleAttrs", new ArrayList<ManagedData>());
+		managedDatas.add(managedData);
+
+//		List<ManagedData> managedDatas = ci.inspect(classNames);
+		managedData = ci.inspect("org.tinyjpa.jpa.model.Square", new ArrayList<ManagedData>());
+		managedDatas.add(managedData);
+
 		Assertions.assertNotNull(managedDatas);
 		Assertions.assertEquals(2, managedDatas.size());
 
@@ -24,8 +31,9 @@ public class ClassInspectorTest {
 		ManagedData managedData1 = managedDatas.get(1);
 		Assertions.assertNotNull(managedData1.mappedSuperclass);
 
-		ManagedData triangleManagedData = managedData0.getClassName()
-				.equals("org.tinyjpa.jpa.model.TriangleAttrs") ? managedData0 : managedData1;
+		ManagedData triangleManagedData = managedData0.getClassName().equals("org.tinyjpa.jpa.model.TriangleAttrs")
+				? managedData0
+				: managedData1;
 		Assertions.assertNotNull(triangleManagedData);
 
 		Assertions.assertEquals(4, triangleManagedData.getDataAttributes().size());

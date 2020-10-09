@@ -17,4 +17,8 @@ public class AttributeData {
 		this.embeddedData = embeddedData;
 	}
 
+	public ManagedData getEmbeddedData() {
+		return embeddedData;
+	}
+
 }

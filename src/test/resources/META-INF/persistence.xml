@@ -62,7 +62,7 @@
 	</persistence-unit>
 
 	<persistence-unit name="generic_list">
-		<description>Citizen Entity Only</description>
+		<description>Generic List</description>
 		<class>org.tinyjpa.jpa.model.GenericList</class>
 
 		<properties>

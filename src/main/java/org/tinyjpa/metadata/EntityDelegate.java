@@ -35,6 +35,7 @@ public final class EntityDelegate implements EntityListener {
 	 * Collects embedded attributes changes.
 	 */
 	private Map<Object, List<AttributeValue>> embeddedChanges = new HashMap<>();
+
 	private List<Object> ignoreEntityInstances = new ArrayList<Object>();
 
 	/**
@@ -75,26 +76,28 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	@Override
-	public void set(Object value, String attributeName, Object entityInstance) {
+	public void set(Object value, String attributeName, Object owningEntityInstance) {
 		for (Object object : ignoreEntityInstances) {
-			if (object == entityInstance)
+			if (object == owningEntityInstance)
 				return;
 		}
 
-		MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
-		LOG.info("set: this=" + this + "; getClass().getClassLoader()=" + getClass().getClassLoader()
-				+ "; Thread.currentThread()=" + Thread.currentThread());
-		LOG.info("set: entityInstance=" + entityInstance + "; attributeName=" + attributeName + "; value=" + value);
+		MetaEntity entity = entityContextManager.getEntity(owningEntityInstance.getClass().getName());
+//		LOG.info("set: this=" + this + "; getClass().getClassLoader()=" + getClass().getClassLoader()
+//				+ "; Thread.currentThread()=" + Thread.currentThread());
+		LOG.info("set: owningEntityInstance=" + owningEntityInstance + "; attributeName=" + attributeName + "; value="
+				+ value + "; entity=" + entity);
 		if (entity == null) {
 			// it's an embedded attribute
-			List<AttributeValue> instanceAttrs = embeddedChanges.get(entityInstance);
+			List<AttributeValue> instanceAttrs = embeddedChanges.get(owningEntityInstance);
+			LOG.info("set: embedded instanceAttrs=" + instanceAttrs);
 			if (instanceAttrs == null) {
 				instanceAttrs = new ArrayList<>();
-				embeddedChanges.put(entityInstance, instanceAttrs);
+				embeddedChanges.put(owningEntityInstance, instanceAttrs);
 			}
 
-			MetaAttribute parentAttribute = entityContextManager
-					.findEmbeddedAttribute(entityInstance.getClass().getName());
+			MetaAttribute parentAttribute = entityContextManager.findEmbeddedAttribute(owningEntityInstance.getClass().getName());
+			LOG.info("set: parentAttribute=" + parentAttribute);
 			MetaAttribute attribute = parentAttribute.findChildByName(attributeName);
 			Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
 					.findFirst();
@@ -110,14 +113,14 @@ public final class EntityDelegate implements EntityListener {
 		}
 
 		Map<Object, List<AttributeValue>> map = changes.get(entity);
-		List<AttributeValue> instanceAttrs = map.get(entityInstance);
+		List<AttributeValue> instanceAttrs = map.get(owningEntityInstance);
 		if (instanceAttrs == null) {
 			instanceAttrs = new ArrayList<>();
-			map.put(entityInstance, instanceAttrs);
+			map.put(owningEntityInstance, instanceAttrs);
 		}
 
-		LOG.info("set: instanceAttrs=" + instanceAttrs + "; entityInstance=" + entityInstance + "; entity=" + entity
-				+ "; map=" + map);
+		LOG.info("set: instanceAttrs=" + instanceAttrs + "; entityInstance=" + owningEntityInstance + "; entity="
+				+ entity + "; map=" + map);
 		MetaAttribute attribute = entity.getAttribute(attributeName);
 		LOG.info("set: attributeName=" + attributeName + "; attribute=" + attribute);
 		Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
@@ -134,6 +137,7 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	public Optional<List<AttributeValue>> findEmbeddedAttrValues(Object embeddedInstance) {
+		LOG.info("findEmbeddedAttrValues: embeddedChanges.size()=" + embeddedChanges.size());
 		for (Map.Entry<Object, List<AttributeValue>> entry : embeddedChanges.entrySet()) {
 			LOG.info("findEmbeddedAttrValues: entry.getKey()=" + entry.getKey());
 		}
@@ -178,8 +182,8 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	public Optional<List<AttributeValue>> getChanges(MetaEntity entity, Object entityInstance) {
-		LOG.info("getChanges: this=" + this + "; getClass().getClassLoader()=" + getClass().getClassLoader()
-				+ "; Thread.currentThread()=" + Thread.currentThread());
+//		LOG.info("getChanges: this=" + this + "; getClass().getClassLoader()=" + getClass().getClassLoader()
+//				+ "; Thread.currentThread()=" + Thread.currentThread());
 		Map<Object, List<AttributeValue>> map = changes.get(entity);
 		List<AttributeValue> instanceAttrs = map.get(entityInstance);
 		LOG.info("getChanges: instanceAttrs=" + instanceAttrs + "; entityInstance=" + entityInstance + "; entity="
@@ -299,9 +303,9 @@ public final class EntityDelegate implements EntityListener {
 		}
 	}
 
-	public Map<MetaEntity, Map<Object, List<AttributeValue>>> getChanges() {
-		return changes;
-	}
+//	public Map<MetaEntity, Map<Object, List<AttributeValue>>> getChanges() {
+//		return changes;
+//	}
 
 	public void addIgnoreEntityInstance(Object object) {
 		ignoreEntityInstances.add(object);

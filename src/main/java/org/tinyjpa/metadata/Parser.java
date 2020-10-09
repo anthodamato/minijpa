@@ -41,10 +41,10 @@ public class Parser {
 	private Logger LOG = LoggerFactory.getLogger(Parser.class);
 	private AliasGenerator aliasGenerator = new AliasGenerator();
 
-	public Map<String, MetaEntity> createMetaEntities(List<String> classNames) throws Exception {
-		List<EnhEntity> enhancedClasses = new EntityEnhancer(classNames).enhance();
-		return parse(enhancedClasses);
-	}
+//	public Map<String, MetaEntity> createMetaEntities(List<String> classNames) throws Exception {
+//		List<EnhEntity> enhancedClasses = new EntityEnhancer(classNames).enhance();
+//		return parse(enhancedClasses);
+//	}
 
 	private Map<String, MetaEntity> parse(List<EnhEntity> enhancedClasses) throws Exception {
 		Map<String, MetaEntity> entities = new HashMap<>();
@@ -58,7 +58,12 @@ public class Parser {
 		return entities;
 	}
 
-	private MetaEntity parse(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
+	public void fillRelationships(Map<String, MetaEntity> entities) {
+		finalizeRelationships(entities);
+		printAttributes(entities);
+	}
+
+	public MetaEntity parse(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
 		Class<?> c = Class.forName(enhEntity.getClassName());
 		Entity ec = c.getAnnotation(Entity.class);
 		if (ec == null)

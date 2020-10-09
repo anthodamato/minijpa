@@ -13,7 +13,7 @@ public class ManagedData {
 	private String className;
 	private CtClass ctClass;
 	private List<AttributeData> dataAttributes = new ArrayList<>();
-	ManagedData mappedSuperclass;
+	public ManagedData mappedSuperclass;
 	private List<ManagedData> embeddables = new ArrayList<>();
 	int type = ENTITY;
 	private List<BMTMethodInfo> methodInfos = new ArrayList<>();
@@ -35,7 +35,7 @@ public class ManagedData {
 		this.className = className;
 	}
 
-	CtClass getCtClass() {
+	public CtClass getCtClass() {
 		return ctClass;
 	}
 
@@ -43,7 +43,7 @@ public class ManagedData {
 		this.ctClass = ctClass;
 	}
 
-	List<AttributeData> getDataAttributes() {
+	public List<AttributeData> getDataAttributes() {
 		return dataAttributes;
 	}
 
@@ -51,7 +51,7 @@ public class ManagedData {
 		dataAttributes.addAll(datas);
 	}
 
-	List<ManagedData> getEmbeddables() {
+	public List<ManagedData> getEmbeddables() {
 		return embeddables;
 	}
 
