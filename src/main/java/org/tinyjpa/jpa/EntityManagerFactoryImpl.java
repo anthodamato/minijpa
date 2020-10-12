@@ -1,9 +1,7 @@
 package org.tinyjpa.jpa;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -25,12 +23,8 @@ import org.tinyjpa.jpa.metamodel.MetamodelFactory;
 import org.tinyjpa.metadata.EntityContext;
 import org.tinyjpa.metadata.EntityDelegate;
 import org.tinyjpa.metadata.Parser;
+import org.tinyjpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.tinyjpa.metadata.enhancer.EnhEntity;
-import org.tinyjpa.metadata.enhancer.EnhEntityRegistry;
-import org.tinyjpa.metadata.enhancer.javassist.AttributeData;
-import org.tinyjpa.metadata.enhancer.javassist.ClassInspector;
-import org.tinyjpa.metadata.enhancer.javassist.EntityEnhancer;
-import org.tinyjpa.metadata.enhancer.javassist.ManagedData;
 
 public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	private Logger LOG = LoggerFactory.getLogger(EntityManagerFactoryImpl.class);
@@ -69,55 +63,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 
 		LOG.info("Parsing entities...");
 		Map<String, MetaEntity> entities = new HashMap<>();
-		ClassInspector classInspector = new ClassInspector();
-		EntityEnhancer entityEnhancer = new EntityEnhancer();
 		Parser parser = new Parser();
-//		Map<String, MetaEntity> entities = parser.createMetaEntities(persistenceUnitInfo.getManagedClassNames());
-		List<EnhEntity> parsedEntities = new ArrayList<>();
-		parsedEntities.addAll(EnhEntityRegistry.getInstance().getEnhEntities());
-
-		List<ManagedData> inspectedClasses = new ArrayList<>(EnhEntityRegistry.getInstance().getInspectedClasses());
 		for (String className : persistenceUnitInfo.getManagedClassNames()) {
 			LOG.info("createEntities: className=" + className);
-			LOG.info("createEntities: EnhEntityRegistry.getInstance()=" + EnhEntityRegistry.getInstance());
-			Optional<EnhEntity> optionalEnhEntity = EnhEntityRegistry.getInstance().getEnhEntity(className);
-			if (optionalEnhEntity.isPresent()) {
-				LOG.info("createEntities: className=" + className + " found in registry");
-				MetaEntity metaEntity = parser.parse(optionalEnhEntity.get(), entities.values());
-				EnhEntity enhEntity = optionalEnhEntity.get();
-				parsedEntities.add(enhEntity);
-				entities.put(enhEntity.getClassName(), metaEntity);
-			} else {
-				ManagedData managedData = classInspector.inspect(className, inspectedClasses);
-				LOG.info("createEntities: className=" + className + "; managedData=" + managedData);
-				if (managedData == null)
-					continue;
-
-				EnhEntity enhMappedSuperclassEntity = null;
-				if (managedData.mappedSuperclass != null) {
-					enhMappedSuperclassEntity = entityEnhancer.enhance(managedData.mappedSuperclass, parsedEntities);
-				}
-
-				EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-				enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
-				LOG.info("createEntities: className=" + className + "; enhEntity=" + enhEntity);
-
-				EnhEntityRegistry.getInstance().add(enhEntity);
-				EnhEntityRegistry.getInstance().add(managedData);
-				if (managedData.mappedSuperclass != null)
-					EnhEntityRegistry.getInstance().add(managedData.mappedSuperclass);
-
-				for (AttributeData attributeData : managedData.getDataAttributes()) {
-					if (attributeData.getEmbeddedData() != null)
-						EnhEntityRegistry.getInstance().add(attributeData.getEmbeddedData());
-				}
-
-				LOG.info("createEntities: className=" + className + " added to registry");
-
-				MetaEntity metaEntity = parser.parse(enhEntity, entities.values());
-
-				entities.put(enhEntity.getClassName(), metaEntity);
-			}
+			EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
+			MetaEntity metaEntity = parser.parse(enhEntity, entities.values());
+			entities.put(enhEntity.getClassName(), metaEntity);
 		}
 
 		// replaces the existing meta entities

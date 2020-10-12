@@ -121,7 +121,6 @@ public class EntityManagerImpl extends AbstractEntityManager {
 			if (entityObject == null)
 				return null;
 
-			LOG.info("find: entityObject=" + entityObject);
 			return (T) entityObject;
 		} catch (Exception e) {
 			LOG.error(e.getMessage());

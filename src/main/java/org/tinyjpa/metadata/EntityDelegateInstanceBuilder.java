@@ -20,6 +20,7 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 		int i = 0;
 		for (MetaAttribute attribute : attributes) {
 			LOG.info("build: attribute.getName()=" + attribute.getName());
+			LOG.info("build: values=" + values);
 			findAndSetAttributeValue(entity.getEntityClass(), entityInstance, entity.getAttributes(), attribute,
 					values.get(i));
 			++i;

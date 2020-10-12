@@ -38,24 +38,14 @@ import javassist.expr.NewExpr;
 public class ClassInspector {
 	private Logger LOG = LoggerFactory.getLogger(ClassInspector.class);
 
-//	public List<ManagedData> inspect(List<String> classNames) throws Exception {
-//		List<ManagedData> dataEntities = new ArrayList<>();
-//		for (String className : classNames) {
-//			LOG.info("inspect: className=" + className);
-//			inspect(className, dataEntities);
-//		}
-//
-//		return dataEntities;
-//	}
-
 	public ManagedData inspect(String className, List<ManagedData> inspectedClasses) throws Exception {
 		// already inspected
 		for (ManagedData managedData : inspectedClasses) {
-			LOG.info("inspect: enhEntity=" + managedData + "; enhEntity.getClassName()=" + managedData.getClassName()
-					+ "; attrs=" + managedData.getDataAttributes().stream().map(a -> a.property.ctField.getName())
-							.collect(Collectors.toList()));
+			LOG.info("inspect: managedData=" + managedData + "; managedData.getClassName()="
+					+ managedData.getClassName() + "; attrs=" + managedData.getDataAttributes().stream()
+							.map(a -> a.property.ctField.getName()).collect(Collectors.toList()));
 			if (managedData.getClassName().equals(className))
-				return null;
+				return managedData;
 		}
 
 		ClassPool pool = ClassPool.getDefault();

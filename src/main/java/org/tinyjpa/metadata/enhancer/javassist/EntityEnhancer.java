@@ -3,6 +3,7 @@ package org.tinyjpa.metadata.enhancer.javassist;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.persistence.Entity;
 
@@ -36,41 +37,18 @@ import javassist.expr.NewExpr;
 public class EntityEnhancer {
 	private Logger LOG = LoggerFactory.getLogger(EntityEnhancer.class);
 
-	private List<String> classNames;
 	private List<ManagedData> enhancedDataEntities = new ArrayList<>();
-//	private List<ManagedData> dataEntities;
-	private ClassInspector classInspector = new ClassInspector();
 
 	public EntityEnhancer() {
 		super();
 	}
 
-	public EntityEnhancer(List<String> classNames) {
-		super();
-		this.classNames = classNames;
-	}
+	public EnhEntity enhance(ManagedData managedData, Set<EnhEntity> parsedEntities) throws Exception {
+		EnhEntity enhMappedSuperclassEntity = null;
+		if (managedData.mappedSuperclass != null) {
+			enhMappedSuperclassEntity = enhance(managedData.mappedSuperclass, parsedEntities);
+		}
 
-//	public List<EnhEntity> enhance() throws Exception {
-//		List<ManagedData> dataEntities = classInspector.inspect(classNames);
-//		List<EnhEntity> enhEntities = new ArrayList<>();
-//		for (ManagedData dataEntity : dataEntities) {
-//			EnhEntity enhMappedSuperclassEntity = null;
-//			LOG.info("enhance: dataEntity.mappedSuperclass=" + dataEntity.mappedSuperclass);
-//			if (dataEntity.mappedSuperclass != null) {
-//				LOG.info(
-//						"enhance: dataEntity.mappedSuperclass.className=" + dataEntity.mappedSuperclass.getClassName());
-//				enhMappedSuperclassEntity = enhance(dataEntity.mappedSuperclass, enhEntities);
-//			}
-//
-//			EnhEntity enhEntity = enhance(dataEntity, enhEntities);
-//			enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
-//			enhEntities.add(enhEntity);
-//		}
-//
-//		return enhEntities;
-//	}
-
-	public EnhEntity enhance(ManagedData managedData, List<EnhEntity> parsedEntities) throws Exception {
 		LOG.info("enhance: managedData.className=" + managedData.getClassName());
 		EnhEntity enhEntity = new EnhEntity();
 		enhEntity.setClassName(managedData.getClassName());
@@ -80,10 +58,14 @@ public class EntityEnhancer {
 		List<EnhEntity> embeddables = findEmbeddables(enhAttributes, parsedEntities);
 		enhEntity.addEmbeddables(embeddables);
 		LOG.info("enhance: completed '" + managedData.getClassName() + "'");
+
+		enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
+		parsedEntities.add(enhEntity);
+
 		return enhEntity;
 	}
 
-	private List<EnhEntity> findEmbeddables(List<EnhAttribute> enhAttributes, List<EnhEntity> parsedEntities) {
+	private List<EnhEntity> findEmbeddables(List<EnhAttribute> enhAttributes, Set<EnhEntity> parsedEntities) {
 		List<EnhEntity> embeddables = new ArrayList<>();
 		for (EnhAttribute enhAttribute : enhAttributes) {
 			LOG.info("findEmbeddables: enhAttribute.getName()=" + enhAttribute.getName()
@@ -106,7 +88,7 @@ public class EntityEnhancer {
 		return embeddables;
 	}
 
-	private EnhEntity findInspectedEnhEmbeddables(String className, List<EnhEntity> parsedEntities) {
+	private EnhEntity findInspectedEnhEmbeddables(String className, Set<EnhEntity> parsedEntities) {
 		for (EnhEntity enhEntity : parsedEntities) {
 			if (enhEntity.getClassName().equals(className))
 				return enhEntity;
@@ -455,14 +437,7 @@ public class EntityEnhancer {
 		if (entity != null)
 			return true;
 
-//		if (isEntityName(name))
-//			return true;
-
 		return CollectionUtils.isCollectionName(name);
 	}
-
-//	private boolean isEntityName(String name) {
-//		return dataEntities.stream().filter(d -> d.getClassName().equals(name)).findFirst().isPresent();
-//	}
 
 }

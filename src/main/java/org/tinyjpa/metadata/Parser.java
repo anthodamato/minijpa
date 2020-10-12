@@ -35,28 +35,10 @@ import org.tinyjpa.jdbc.relationship.Relationship;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 import org.tinyjpa.metadata.enhancer.EnhAttribute;
 import org.tinyjpa.metadata.enhancer.EnhEntity;
-import org.tinyjpa.metadata.enhancer.javassist.EntityEnhancer;
 
 public class Parser {
 	private Logger LOG = LoggerFactory.getLogger(Parser.class);
 	private AliasGenerator aliasGenerator = new AliasGenerator();
-
-//	public Map<String, MetaEntity> createMetaEntities(List<String> classNames) throws Exception {
-//		List<EnhEntity> enhancedClasses = new EntityEnhancer(classNames).enhance();
-//		return parse(enhancedClasses);
-//	}
-
-	private Map<String, MetaEntity> parse(List<EnhEntity> enhancedClasses) throws Exception {
-		Map<String, MetaEntity> entities = new HashMap<>();
-		for (EnhEntity enhEntity : enhancedClasses) {
-			MetaEntity entity = parse(enhEntity, entities.values());
-			entities.put(enhEntity.getClassName(), entity);
-		}
-
-		finalizeRelationships(entities);
-		printAttributes(entities);
-		return entities;
-	}
 
 	public void fillRelationships(Map<String, MetaEntity> entities) {
 		finalizeRelationships(entities);
