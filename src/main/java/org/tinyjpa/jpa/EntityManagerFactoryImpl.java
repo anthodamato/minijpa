@@ -78,11 +78,12 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 
 		EntityDelegate.getInstance()
 				.addEntityContext(new EntityContext(persistenceUnitInfo.getPersistenceUnitName(), entities));
+
 		return entities;
 	}
 
+	@Override
 	public EntityManager createEntityManager() {
-		LOG.info("createEntityManager: entities=" + entities);
 		synchronized (persistenceUnitInfo) {
 			if (entities == null)
 				try {
@@ -109,6 +110,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		return new EntityManagerImpl(this, persistenceUnitInfo, entities);
 	}
 
+	@Override
 	public EntityManager createEntityManager(@SuppressWarnings("rawtypes") Map map) {
 		synchronized (persistenceUnitInfo) {
 			if (entities == null)
@@ -122,22 +124,26 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		return new EntityManagerImpl(this, persistenceUnitInfo, entities);
 	}
 
+	@Override
 	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public EntityManager createEntityManager(SynchronizationType synchronizationType,
 			@SuppressWarnings("rawtypes") Map map) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public Metamodel getMetamodel() {
 		if (metamodel == null)
 			try {
@@ -149,41 +155,49 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 		return metamodel;
 	}
 
+	@Override
 	public boolean isOpen() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
+	@Override
 	public void close() {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public Map<String, Object> getProperties() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public Cache getCache() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public PersistenceUnitUtil getPersistenceUnitUtil() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public void addNamedQuery(String name, Query query) {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public <T> T unwrap(Class<T> cls) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
 		// TODO Auto-generated method stub
 

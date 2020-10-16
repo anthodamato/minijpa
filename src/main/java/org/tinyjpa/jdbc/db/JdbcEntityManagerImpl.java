@@ -27,13 +27,13 @@ import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 
 public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(JdbcEntityManagerImpl.class);
-	private DbConfiguration dbConfiguration;
-	private Map<String, MetaEntity> entities;
+	protected DbConfiguration dbConfiguration;
+	protected Map<String, MetaEntity> entities;
 	private EntityContainer entityContainer;
 	private EntityInstanceBuilder entityInstanceBuilder;
 	private AttributeValueConverter attributeValueConverter;
-	private ConnectionHolder connectionHolder;
-	private JdbcRunner jdbcRunner = new JdbcRunner();
+	protected ConnectionHolder connectionHolder;
+	protected JdbcRunner jdbcRunner = new JdbcRunner();
 
 	public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, Map<String, MetaEntity> entities,
 			EntityContainer entityContainer, EntityInstanceBuilder entityInstanceBuilder,
@@ -140,12 +140,12 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 		SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectByForeignKey(entity, foreignKeyAttribute,
 				foreignKey);
-		return jdbcRunner.findCollectionById(connectionHolder.getConnection(), sqlStatement, entity, this,
-				childAttribute, childAttributeValue);
+		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement, entity, this, childAttribute,
+				childAttributeValue);
 	}
 
 	/**
-	 * Executes a query like: 'select (Entity fields) from table
+	 * Executes a query like: 'select (Entity fields) from table'
 	 * 
 	 * @param entityClass result's class
 	 * @return
@@ -158,7 +158,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
 		SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectAllFields(entity);
-		return jdbcRunner.findCollectionById(connectionHolder.getConnection(), sqlStatement, entity, this, null, null);
+		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement, entity, this, null, null);
 	}
 
 	private void loadRelationshipAttributes(Object parentInstance, MetaEntity entity, MetaAttribute childAttribute,
@@ -177,8 +177,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 						Object pk = AttributeUtil.getIdValue(entity, parentInstance);
 						SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectByJoinTable(e,
 								entity.getId(), pk, a.getRelationship().getJoinTable());
-						List<Object> objects = jdbcRunner.findCollectionById(connectionHolder.getConnection(),
-								sqlStatement, entity, this, childAttribute, childAttributeValue);
+						List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement,
+								entity, this, childAttribute, childAttributeValue);
 						entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, objects);
 					} else {
 						loadAttributeValueWithTableFK(parentInstance, a, null, null);
@@ -263,8 +263,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				Object pk = AttributeUtil.getIdValue(e, parentInstance);
 				SqlStatement sqlStatement = dbConfiguration.getDbJdbc().generateSelectByJoinTable(entity, e.getId(), pk,
 						a.getRelationship().getJoinTable());
-				List<Object> objects = jdbcRunner.findCollectionById(connectionHolder.getConnection(), sqlStatement,
-						entity, this, null, null);
+				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement, entity,
+						this, null, null);
 				LOG.info("load (lazy): oneToMany objects.size()=" + objects.size());
 				return objects;
 			}

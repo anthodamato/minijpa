@@ -46,7 +46,8 @@ public class FindTest {
 
 		Assertions.assertNotNull(citizen.getId());
 
-		// after the 'detach' the 'find' must return null as it didn't call 'commit' so
+		// TODO after the 'detach' the 'find' must return null as it didn't call
+		// 'commit' so
 		// the instance is not persistent
 //		em.detach(citizen);
 		Citizen c = em.find(Citizen.class, citizen.getId());
@@ -75,6 +76,7 @@ public class FindTest {
 
 	@Test
 	public void criteria() {
+		System.out.println("FindTest: Running 'criteria'");
 		final EntityManager em = emf.createEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		tx.begin();
@@ -120,48 +122,52 @@ public class FindTest {
 		em.close();
 	}
 
-//	@Test
-//	public void criteriaEquals() {
-//		final EntityManager em = emf.createEntityManager();
-//		EntityTransaction tx = em.getTransaction();
-//		tx.begin();
-//		Citizen citizen = createCitizenSmith();
-//		em.persist(citizen);
-//		Citizen c_Smith = em.find(Citizen.class, citizen.getId());
-//
-//		citizen = createCitizenCrown();
-//		em.persist(citizen);
-//		Citizen c_Crown = em.find(Citizen.class, citizen.getId());
-//
-//		Assertions.assertNotNull(citizen.getId());
-//
-//		CriteriaBuilder cb = em.getCriteriaBuilder();
-//		CriteriaQuery<Citizen> cq = cb.createQuery(Citizen.class);
-//		Root<Citizen> root = cq.from(Citizen.class);
-//
-//		cq.where(cb.equal(root.get("lastName"), "Smith"));
-//		CriteriaQuery<Citizen> cqCitizen = cq.select(root);
-//
-//		TypedQuery<Citizen> typedQuery = em.createQuery(cqCitizen);
-//		List<Citizen> citizens = typedQuery.getResultList();
-//
-//		Assertions.assertEquals(1, citizens.size());
-//
-//		// check the references
-//		int counter = 0;
-//		for (Citizen ct : citizens) {
-//			if (ct.getId() == c_Smith.getId()) {
-//				++counter;
-//				Assertions.assertTrue(ct == c_Smith);
-//			}
-//		}
-//
-//		Assertions.assertEquals(1, counter);
-//
-//		em.remove(c_Crown);
-//		em.remove(c_Smith);
-//		tx.commit();
-//		em.close();
-//	}
+	@Test
+	public void criteriaEquals() {
+		System.out.println("FindTest: Running 'criteriaEquals'");
+		final EntityManager em = emf.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			Citizen citizen = createCitizenSmith();
+			em.persist(citizen);
+			Citizen c_Smith = em.find(Citizen.class, citizen.getId());
+
+			citizen = createCitizenCrown();
+			em.persist(citizen);
+			Citizen c_Crown = em.find(Citizen.class, citizen.getId());
+
+			Assertions.assertNotNull(citizen.getId());
+
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<Citizen> cq = cb.createQuery(Citizen.class);
+			Root<Citizen> root = cq.from(Citizen.class);
+
+			cq.where(cb.equal(root.get("lastName"), "Smith"));
+			CriteriaQuery<Citizen> cqCitizen = cq.select(root);
+
+			TypedQuery<Citizen> typedQuery = em.createQuery(cqCitizen);
+			List<Citizen> citizens = typedQuery.getResultList();
+
+			Assertions.assertEquals(1, citizens.size());
+
+			// check the references
+			int counter = 0;
+			for (Citizen ct : citizens) {
+				if (ct.getId() == c_Smith.getId()) {
+					++counter;
+					Assertions.assertTrue(ct == c_Smith);
+				}
+			}
+
+			Assertions.assertEquals(1, counter);
+
+			em.remove(c_Crown);
+			em.remove(c_Smith);
+		} finally {
+			tx.commit();
+			em.close();
+		}
+	}
 
 }

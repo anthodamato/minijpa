@@ -28,8 +28,15 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
+import javax.persistence.metamodel.Metamodel;
 
 public class CriteriaBuilderImpl implements CriteriaBuilder {
+	private Metamodel metamodel;
+
+	public CriteriaBuilderImpl(Metamodel metamodel) {
+		super();
+		this.metamodel = metamodel;
+	}
 
 	@Override
 	public CriteriaQuery<Object> createQuery() {
@@ -39,7 +46,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
-		return new CriteriaQueryImpl<T>(resultClass);
+		return new CriteriaQueryImpl<T>(resultClass, metamodel);
 	}
 
 	@Override
@@ -248,8 +255,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate equal(Expression<?> x, Object y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.EQUAL, x, y);
 	}
 
 	@Override
@@ -260,8 +266,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate notEqual(Expression<?> x, Object y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.NOT_EQUAL, x, y);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package org.tinyjpa.jdbc.db.derby;
+package org.tinyjpa.jpa.db;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,9 +8,9 @@ import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.MetaEntity;
-import org.tinyjpa.jdbc.db.AbstractDbJdbc;
+import org.tinyjpa.jpa.criteria.AbstractDbJdbcCriteria;
 
-public class ApacheDerbyJdbc extends AbstractDbJdbc {
+public class ApacheDerbyJdbc extends AbstractDbJdbcCriteria {
 	private Logger LOG = LoggerFactory.getLogger(ApacheDerbyJdbc.class);
 
 	@Override

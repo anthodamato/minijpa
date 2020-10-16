@@ -25,9 +25,8 @@ import org.tinyjpa.jdbc.ConnectionHolderImpl;
 import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
-import org.tinyjpa.jdbc.db.JdbcEntityManagerImpl;
 import org.tinyjpa.jpa.criteria.CriteriaBuilderImpl;
-import org.tinyjpa.jpa.criteria.TypedQueryImpl;
+import org.tinyjpa.jpa.criteria.JdbcCriteriaEntityManagerImpl;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
 import org.tinyjpa.metadata.EntityContainerContext;
@@ -39,7 +38,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	private EntityManagerFactory entityManagerFactory;
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
-	private JdbcEntityManagerImpl jdbcEntityManager;
+	private JdbcCriteriaEntityManagerImpl jdbcEntityManager;
 
 	public EntityManagerImpl(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
 			Map<String, MetaEntity> entities) {
@@ -50,23 +49,11 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		this.persistenceContext = new PersistenceContextImpl(entities);
 		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
-		this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, entities, persistenceContext,
+		this.jdbcEntityManager = new JdbcCriteriaEntityManagerImpl(dbConfiguration, entities, persistenceContext,
 				new EntityDelegateInstanceBuilder(), new EmbeddedAttributeValueConverter(), connectionHolder);
-//		EntityDelegate.getInstance().addAttributeLoader(persistenceUnitInfo, jdbcEntityManager);
-//		EntityDelegate.getInstance().setEntityContainer(persistenceContext);
 		EntityDelegate.getInstance()
 				.addEntityManagerContext(new EntityContainerContext(entities, persistenceContext, jdbcEntityManager));
 	}
-
-//	public EntityManagerImpl(PersistenceUnitInfo persistenceUnitInfo, PersistenceContextType persistenceContextType,
-//			Map<String, Entity> entities) {
-//		this(persistenceUnitInfo, entities);
-//		this.persistenceContextType = persistenceContextType;
-////		this.persistenceContext = new PersistenceContextImpl(entities);
-////		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
-////		if (persistenceContextType.equals(PersistenceContextType.EXTENDED))
-////			persistenceContext = new ExtendedPersistenceContext();
-//	}
 
 	@Override
 	public void persist(Object entity) {
@@ -382,7 +369,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
-		return new CriteriaBuilderImpl();
+		return new CriteriaBuilderImpl(getMetamodel());
 	}
 
 	@Override

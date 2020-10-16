@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.DbMetaData;
 import org.tinyjpa.jdbc.db.DbConfiguration;
+import org.tinyjpa.jpa.db.DbConfigurationFactory;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.jpa.db.PersistenceUnitPropertyActions;
 
@@ -20,17 +21,19 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 	private Logger LOG = LoggerFactory.getLogger(PersistenceProviderImpl.class);
 
 	private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
+		LOG.info("Processing Db Configuration...");
+		LOG.info("processConfiguration: persistenceUnitInfo=" + persistenceUnitInfo);
 		new ConnectionProviderImpl(persistenceUnitInfo).init();
 
 		Connection connection = null;
 		try {
 			connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
 			DbMetaData dbMetaData = new DbMetaData();
-			dbMetaData.find(connection);
-			DbConfiguration dbConfiguration = new DbMetaData().createDbConfiguration(connection);
+			dbMetaData.showDatabaseMetadata(connection);
+			DbConfiguration dbConfiguration = DbConfigurationFactory.create(connection);
 			DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo, dbConfiguration);
 		} catch (Exception e) {
-			LOG.info("processConfiguration: Exception " + e.getClass());
+			LOG.error("processConfiguration: Exception " + e.getClass());
 			if (connection != null)
 				connection.rollback();
 		} finally {
@@ -38,7 +41,6 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 				connection.close();
 		}
 
-		LOG.info("processConfiguration: ...");
 		new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 	}
 
@@ -58,7 +60,6 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 			}
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
-			LOG.info("createEntityManagerFactory(String emName");
 			return null;
 		}
 

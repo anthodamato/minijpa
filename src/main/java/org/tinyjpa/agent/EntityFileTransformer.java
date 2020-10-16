@@ -12,6 +12,7 @@ import org.tinyjpa.metadata.enhancer.BytecodeEnhancerProvider;
 public class EntityFileTransformer implements ClassFileTransformer {
 	private Logger LOG = LoggerFactory.getLogger(EntityFileTransformer.class);
 	private BytecodeEnhancer bytecodeEnhancer = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer();
+	private boolean log = false;
 
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
@@ -27,7 +28,8 @@ public class EntityFileTransformer implements ClassFileTransformer {
 				|| className.startsWith("org/opentest4j/"))
 			return null;
 
-		LOG.info("transform: className=" + className);
+		if (log)
+			LOG.info("transform: className=" + className);
 
 		String fullClassName = className.replaceAll("/", ".");
 

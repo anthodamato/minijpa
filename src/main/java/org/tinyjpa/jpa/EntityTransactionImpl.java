@@ -53,6 +53,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 
 		try {
 			connection.commit();
+			LOG.info("Commit Done");
 		} catch (SQLException e) {
 			LOG.error(e.getMessage());
 			try {

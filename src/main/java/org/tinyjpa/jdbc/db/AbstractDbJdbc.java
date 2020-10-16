@@ -160,7 +160,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		return list;
 	}
 
-	private List<ColumnNameValue> convertAttributes(List<MetaAttribute> attributes) throws Exception {
+	protected List<ColumnNameValue> convertAttributes(List<MetaAttribute> attributes) throws Exception {
 		List<ColumnNameValue> list = new ArrayList<>();
 		for (MetaAttribute a : attributes) {
 			ColumnNameValue columnNameValue = null;
@@ -241,7 +241,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 				.withFetchColumnNameValues(fetchColumnNameValues).build();
 	}
 
-	private StringBuilder createAllFieldsQuery(MetaEntity entity, List<MetaAttribute> expandedAttributes)
+	protected StringBuilder createAllFieldsQuery(MetaEntity entity, List<MetaAttribute> expandedAttributes)
 			throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
@@ -294,7 +294,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			if (i > 0)
 				sb.append(" and ");
 
-			sb.append(cnv.getColumnName());
+			sb.append(getNameTranslator().toColumnName(entity.getAlias(), cnv.getColumnName()));
 			sb.append(" = ?");
 			++i;
 		}

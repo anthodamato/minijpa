@@ -37,13 +37,15 @@ import javassist.expr.NewExpr;
 
 public class ClassInspector {
 	private Logger LOG = LoggerFactory.getLogger(ClassInspector.class);
+	private boolean log = false;
 
 	public ManagedData inspect(String className, List<ManagedData> inspectedClasses) throws Exception {
 		// already inspected
 		for (ManagedData managedData : inspectedClasses) {
-			LOG.info("inspect: managedData=" + managedData + "; managedData.getClassName()="
-					+ managedData.getClassName() + "; attrs=" + managedData.getDataAttributes().stream()
-							.map(a -> a.property.ctField.getName()).collect(Collectors.toList()));
+			if (log)
+				LOG.info("inspect: managedData=" + managedData + "; managedData.getClassName()="
+						+ managedData.getClassName() + "; attrs=" + managedData.getDataAttributes().stream()
+								.map(a -> a.property.ctField.getName()).collect(Collectors.toList()));
 			if (managedData.getClassName().equals(className))
 				return managedData;
 		}
@@ -74,7 +76,9 @@ public class ClassInspector {
 			managedData.mappedSuperclass = optional.get();
 
 		List<Property> properties = findAttributes(ct);
-		LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
+		if (log)
+			LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
+
 		List<AttributeData> attrs = createDataAttributes(properties, false);
 		managedData.addAttributeDatas(attrs);
 		managedData.setCtClass(ct);
@@ -107,21 +111,24 @@ public class ClassInspector {
 		if (superClass.getName().equals("java.lang.Object"))
 			return Optional.empty();
 
-		LOG.info("superClass.getName()=" + superClass.getName());
+		if (log)
+			LOG.info("superClass.getName()=" + superClass.getName());
 		Object mappedSuperclassAnnotation = superClass.getAnnotation(MappedSuperclass.class);
 		if (mappedSuperclassAnnotation == null)
 			return Optional.empty();
 
 		// checks if the mapped superclass id already inspected
 		ManagedData mappedSuperclassEnhEntity = findInspectedMappedSuperclass(inspectedClasses, superClass.getName());
-		LOG.info("mappedSuperclassEnhEntity=" + mappedSuperclassEnhEntity);
+		if (log)
+			LOG.info("mappedSuperclassEnhEntity=" + mappedSuperclassEnhEntity);
 		if (mappedSuperclassEnhEntity != null)
 			return Optional.of(mappedSuperclassEnhEntity);
 
 		List<Property> properties = findAttributes(superClass);
 		LOG.info("Found " + properties.size() + " attributes in '" + superClass.getName() + "'");
 		List<AttributeData> attrs = createDataAttributes(properties, false);
-		LOG.info("attrs.size()=" + attrs.size());
+		if (log)
+			LOG.info("attrs.size()=" + attrs.size());
 		if (attrs.isEmpty())
 			return Optional.empty();
 
@@ -204,7 +211,8 @@ public class ClassInspector {
 		for (CtConstructor ctConstructor : ctConstructors) {
 			ctConstructor.instrument(exprEditorExt);
 			List<BMTFieldInfo> fieldInfos = exprEditorExt.getFieldInfos();
-			LOG.info("inspectConstructorsAndMethods: fieldInfos.size()=" + fieldInfos.size());
+			if (log)
+				LOG.info("inspectConstructorsAndMethods: fieldInfos.size()=" + fieldInfos.size());
 			if (!fieldInfos.isEmpty()) {
 				BMTMethodInfo methodInfo = new BMTMethodInfo();
 				methodInfo.ctConstructor = ctConstructor;
@@ -223,9 +231,10 @@ public class ClassInspector {
 	}
 
 	private AttributeData createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
-		LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
-				+ "; property.embedded=" + property.embedded + "; property.ctField.getType().getName()="
-				+ property.ctField.getType().getName());
+		if (log)
+			LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
+					+ "; property.embedded=" + property.embedded + "; property.ctField.getType().getName()="
+					+ property.ctField.getType().getName());
 //		List<AttributeData> embeddedAttributes = null;
 //		CtClass embeddedCtClass = null;
 		ManagedData embeddedData = null;
@@ -260,9 +269,12 @@ public class ClassInspector {
 	}
 
 	private Optional<Property> readAttribute(CtField ctField, CtClass ctClass) throws Exception {
-		LOG.info("readAttribute: ctField.getName()=" + ctField.getName());
-		LOG.info("readAttribute: ctField.getModifiers()=" + ctField.getModifiers());
-		LOG.info("readAttribute: ctField.getType().getName()=" + ctField.getType().getName());
+		if (log)
+			LOG.info("readAttribute: ctField.getName()=" + ctField.getName());
+		if (log)
+			LOG.info("readAttribute: ctField.getModifiers()=" + ctField.getModifiers());
+		if (log)
+			LOG.info("readAttribute: ctField.getType().getName()=" + ctField.getType().getName());
 //		LOG.info("readAttribute: ctField.getSignature()=" + ctField.getSignature());
 //		LOG.info("readAttribute: ctField.getFieldInfo()=" + ctField.getFieldInfo());
 //		LOG.info("readAttribute: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());

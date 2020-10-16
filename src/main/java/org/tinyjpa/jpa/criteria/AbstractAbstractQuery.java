@@ -1,5 +1,6 @@
 package org.tinyjpa.jpa.criteria;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,9 +12,20 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 
 public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
+	private Class<T> resultClass;
+	private Metamodel metamodel;
 	private Set<Root<?>> roots = new HashSet<>();
+	protected Selection<? extends T> selection;
+	protected List<Expression<Boolean>> restrictions = new ArrayList<>();
+
+	public AbstractAbstractQuery(Class<T> resultClass, Metamodel metamodel) {
+		super();
+		this.resultClass = resultClass;
+		this.metamodel = metamodel;
+	}
 
 	@Override
 	public <U> Subquery<U> subquery(Class<U> type) {
@@ -29,7 +41,8 @@ public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
 
 	@Override
 	public <X> Root<X> from(Class<X> entityClass) {
-		Root<X> root = new RootImpl<X>(entityClass);
+		EntityType<X> entityType = metamodel.entity(entityClass);
+		Root<X> root = new RootImpl<X>(entityClass, entityType);
 		roots.add(root);
 		return root;
 	}
@@ -42,14 +55,23 @@ public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
 
 	@Override
 	public AbstractQuery<T> where(Expression<Boolean> restriction) {
-		// TODO Auto-generated method stub
-		return null;
+		restrictions.clear();
+		restrictions.add(restriction);
+		return this;
 	}
 
 	@Override
 	public AbstractQuery<T> where(Predicate... restrictions) {
-		// TODO Auto-generated method stub
-		return null;
+		this.restrictions.clear();
+		for (Predicate predicate : restrictions) {
+			this.restrictions.add(predicate);
+		}
+
+		return this;
+	}
+
+	public List<Expression<Boolean>> getRestrictions() {
+		return restrictions;
 	}
 
 	@Override
@@ -89,8 +111,7 @@ public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
 
 	@Override
 	public Selection<T> getSelection() {
-		// TODO Auto-generated method stub
-		return null;
+		return (Selection<T>) selection;
 	}
 
 	@Override
@@ -113,8 +134,7 @@ public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
 
 	@Override
 	public Class<T> getResultType() {
-		// TODO Auto-generated method stub
-		return null;
+		return resultClass;
 	}
 
 }

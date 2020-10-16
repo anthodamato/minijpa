@@ -46,6 +46,9 @@ public class JdbcRunner {
 
 	private void setPreparedStatementValues(PreparedStatement preparedStatement, List<ColumnNameValue> columnNameValues)
 			throws SQLException {
+		if (columnNameValues == null)
+			return;
+
 		int index = 1;
 		for (ColumnNameValue columnNameValue : columnNameValues) {
 			LOG.info("setPreparedStatementValues: columnName=" + columnNameValue.getColumnName() + "; type="
@@ -58,25 +61,28 @@ public class JdbcRunner {
 
 	public Object persist(SqlStatement sqlStatement, Connection connection) throws SQLException {
 		LOG.info("persist: sqlStatement.sql=" + sqlStatement.getSql());
-		PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement.getSql(),
-				Statement.RETURN_GENERATED_KEYS);
-		setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
-		preparedStatement.execute();
-		if (sqlStatement.getIdValue() != null) {
-			preparedStatement.close();
-			return sqlStatement.getIdValue();
-		}
+		LOG.info("persist: connection=" + connection);
+		PreparedStatement preparedStatement = null;
+		try {
+			preparedStatement = connection.prepareStatement(sqlStatement.getSql(), Statement.RETURN_GENERATED_KEYS);
+			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
+			preparedStatement.execute();
+			if (sqlStatement.getIdValue() != null)
+				return sqlStatement.getIdValue();
 
-		Object pk = null;
-		ResultSet resultSet = preparedStatement.getGeneratedKeys();
-		LOG.info("persist: getGeneratedKeys() resultSet=" + resultSet);
-		if (resultSet != null && resultSet.next()) {
-			pk = resultSet.getLong(1);
-			LOG.info("persist: getGeneratedKeys() pk=" + pk);
-		}
+			Object pk = null;
+			ResultSet resultSet = preparedStatement.getGeneratedKeys();
+			LOG.info("persist: getGeneratedKeys() resultSet=" + resultSet);
+			if (resultSet != null && resultSet.next()) {
+				pk = resultSet.getLong(1);
+				LOG.info("persist: getGeneratedKeys() pk=" + pk);
+			}
 
-		preparedStatement.close();
-		return pk;
+			return pk;
+		} finally {
+			if (preparedStatement != null)
+				preparedStatement.close();
+		}
 	}
 
 	public void delete(SqlStatement sqlStatement, Connection connection) throws SQLException {
@@ -88,7 +94,8 @@ public class JdbcRunner {
 		preparedStatement.close();
 	}
 
-	public AttributeValues findById(Connection connection, SqlStatement sqlStatement, MetaEntity entity) throws Exception {
+	public AttributeValues findById(Connection connection, SqlStatement sqlStatement, MetaEntity entity)
+			throws Exception {
 		PreparedStatement preparedStatement = null;
 		try {
 			LOG.info("findById: sql=" + sqlStatement.getSql());
@@ -118,11 +125,12 @@ public class JdbcRunner {
 
 			return attributeValues;
 		} finally {
-			preparedStatement.close();
+			if (preparedStatement != null)
+				preparedStatement.close();
 		}
 	}
 
-	public List<Object> findCollectionById(Connection connection, SqlStatement sqlStatement, MetaEntity entity,
+	public List<Object> findCollection(Connection connection, SqlStatement sqlStatement, MetaEntity entity,
 			JdbcEntityManager jdbcEntityManager, MetaAttribute childAttribute, Object childAttributeValue)
 			throws Exception {
 		PreparedStatement preparedStatement = null;
@@ -133,9 +141,10 @@ public class JdbcRunner {
 			LOG.info("findCollectionById: sqlStatement=" + sqlStatement);
 //			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
 			preparedStatement = connection.prepareStatement(sql);
-			LOG.info("findCollectionById: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
 			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
 
+			LOG.info("findCollectionById: Running `" + sql + "`");
+			LOG.info("findCollectionById: connection=" + connection);
 			List<Object> objects = new ArrayList<>();
 			ResultSet rs = preparedStatement.executeQuery();
 			while (rs.next()) {
@@ -150,7 +159,8 @@ public class JdbcRunner {
 
 			return objects;
 		} finally {
-			preparedStatement.close();
+			if (preparedStatement != null)
+				preparedStatement.close();
 		}
 	}
 

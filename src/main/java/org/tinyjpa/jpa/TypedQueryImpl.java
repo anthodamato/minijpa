@@ -1,4 +1,4 @@
-package org.tinyjpa.jpa.criteria;
+package org.tinyjpa.jpa;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -13,21 +13,33 @@ import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.db.JdbcEntityManager;
+import org.tinyjpa.jpa.criteria.JdbcCriteriaEntityManager;
 
 public class TypedQueryImpl<X> implements TypedQuery<X> {
 	private Logger LOG = LoggerFactory.getLogger(TypedQueryImpl.class);
-	private CriteriaQuery<X> criteriaQuery;
-	private JdbcEntityManager jdbcEntityManager;
+	protected CriteriaQuery<?> criteriaQuery;
+	protected JdbcCriteriaEntityManager jdbcCriteriaEntityManager;
 
-	public TypedQueryImpl(CriteriaQuery<X> criteriaQuery, JdbcEntityManager jdbcEntityManager) {
+	public TypedQueryImpl(CriteriaQuery<?> criteriaQuery, JdbcCriteriaEntityManager jdbcCriteriaEntityManager) {
 		super();
 		this.criteriaQuery = criteriaQuery;
-		this.jdbcEntityManager = jdbcEntityManager;
+		this.jdbcCriteriaEntityManager = jdbcCriteriaEntityManager;
+	}
+
+	@Override
+	public List<X> getResultList() {
+		List<?> list = null;
+		try {
+//			list = criteriaJdbcEntityManager.loadAllFields(criteriaQuery.getSelection().getJavaType());
+			list = jdbcCriteriaEntityManager.select(criteriaQuery);
+		} catch (Exception e) {
+			throw new PersistenceException(e.getMessage());
+		}
+
+		return (List<X>) list;
 	}
 
 	@Override
@@ -124,20 +136,6 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 	public <T> T unwrap(Class<T> cls) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public List<X> getResultList() {
-		Set<Root<?>> roots = criteriaQuery.getRoots();
-		Root<?> root = roots.iterator().next();
-		List<?> list = null;
-		try {
-			list = jdbcEntityManager.loadAllFields(((RootImpl) root).getEntityClass());
-		} catch (Exception e) {
-			throw new PersistenceException(e.getMessage());
-		}
-
-		return (List<X>) list;
 	}
 
 	@Override
