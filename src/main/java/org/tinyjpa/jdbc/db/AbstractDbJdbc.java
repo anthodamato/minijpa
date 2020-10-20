@@ -486,4 +486,19 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 				.withColumnNameValues(columnNameValues).build();
 	}
 
+	protected String notEqualOperator() {
+		return "<>";
+	}
+
+	protected String equalOperator() {
+		return "=";
+	}
+
+	protected String orOperator() {
+		return "or";
+	}
+
+	protected String andOperator() {
+		return "and";
+	}
 }

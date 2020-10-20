@@ -1,5 +1,6 @@
 package org.tinyjpa.jpa.criteria;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
@@ -9,12 +10,20 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 	private PredicateType predicateType;
 	private Expression<?> x;
 	private Object y;
+	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
 	public PredicateImpl(PredicateType predicateType, Expression<?> x, Object y) {
-		super(null);
+		super(Boolean.class);
 		this.predicateType = predicateType;
 		this.x = x;
 		this.y = y;
+	}
+
+	public PredicateImpl(PredicateType predicateType, Expression<Boolean> x, Expression<Boolean> y) {
+		super(Boolean.class);
+		this.predicateType = predicateType;
+		this.expressions.add(x);
+		this.expressions.add(y);
 	}
 
 	@Override
@@ -24,8 +33,13 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 
 	@Override
 	public BooleanOperator getOperator() {
-		// TODO Auto-generated method stub
-		return null;
+		if (predicateType == PredicateType.OR)
+			return BooleanOperator.OR;
+
+		if (predicateType == PredicateType.AND)
+			return BooleanOperator.AND;
+
+		return BooleanOperator.AND;
 	}
 
 	@Override
@@ -36,8 +50,7 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 
 	@Override
 	public List<Expression<Boolean>> getExpressions() {
-		// TODO Auto-generated method stub
-		return null;
+		return new ArrayList<Expression<Boolean>>(expressions);
 	}
 
 	@Override

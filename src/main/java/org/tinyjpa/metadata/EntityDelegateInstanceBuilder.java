@@ -5,13 +5,14 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeValue;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.EntityInstanceBuilder;
 
 public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	private Logger LOG = LoggerFactory.getLogger(EntityDelegateInstanceBuilder.class);
+	private boolean log = false;
 
 	@Override
 	public Object build(MetaEntity entity, List<MetaAttribute> attributes, List<Object> values, Object idValue)
@@ -19,8 +20,11 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 		Object entityInstance = entity.getEntityClass().newInstance();
 		int i = 0;
 		for (MetaAttribute attribute : attributes) {
-			LOG.info("build: attribute.getName()=" + attribute.getName());
-			LOG.info("build: values=" + values);
+			if (log) {
+				LOG.info("build: attribute.getName()=" + attribute.getName());
+				LOG.info("build: values=" + values);
+			}
+
 			findAndSetAttributeValue(entity.getEntityClass(), entityInstance, entity.getAttributes(), attribute,
 					values.get(i));
 			++i;
@@ -38,7 +42,9 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 		if (parent == null)
 			parent = parentClass.newInstance();
 
-		LOG.info("setAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
+		if (log)
+			LOG.info("setAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
+
 		try {
 			EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
 			attribute.getWriteMethod().invoke(parent, value);
@@ -51,7 +57,10 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 
 	@Override
 	public Object getAttributeValue(Object parentInstance, MetaAttribute attribute) throws Exception {
-		LOG.info("getAttributeValue: parent=" + parentInstance + "; a.getReadMethod()=" + attribute.getReadMethod());
+		if (log)
+			LOG.info(
+					"getAttributeValue: parent=" + parentInstance + "; a.getReadMethod()=" + attribute.getReadMethod());
+
 		try {
 //			EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
 			return attribute.getReadMethod().invoke(parentInstance);
@@ -64,8 +73,10 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 
 	private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, List<MetaAttribute> attributes,
 			MetaAttribute attribute, Object value) throws Exception {
-		LOG.info("findAndSetAttributeValue: value=" + value + "; value.getClass().getName()="
-				+ value.getClass().getName());
+		if (log)
+			LOG.info("findAndSetAttributeValue: value=" + value + "; value.getClass().getName()="
+					+ value.getClass().getName());
+
 		for (MetaAttribute a : attributes) {
 			if (a == attribute) {
 				return setAttributeValue(parentInstance, parentClass, attribute, value);

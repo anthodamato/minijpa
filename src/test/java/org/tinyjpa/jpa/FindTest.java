@@ -9,6 +9,8 @@ import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Predicate.BooleanOperator;
 import javax.persistence.criteria.Root;
 
 import org.junit.jupiter.api.AfterAll;
@@ -60,9 +62,16 @@ public class FindTest {
 		em.close();
 	}
 
-	private Citizen createCitizenSmith() {
+	private Citizen createCitizenAnthonySmith() {
 		Citizen citizen = new Citizen();
 		citizen.setName("Anthony");
+		citizen.setLastName("Smith");
+		return citizen;
+	}
+
+	private Citizen createCitizenLucySmith() {
+		Citizen citizen = new Citizen();
+		citizen.setName("Lucy");
 		citizen.setLastName("Smith");
 		return citizen;
 	}
@@ -74,13 +83,19 @@ public class FindTest {
 		return citizen;
 	}
 
+	private Citizen createCitizenWolf() {
+		Citizen citizen = new Citizen();
+		citizen.setName("David");
+		citizen.setLastName("Wolf");
+		return citizen;
+	}
+
 	@Test
 	public void criteria() {
-		System.out.println("FindTest: Running 'criteria'");
 		final EntityManager em = emf.createEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		tx.begin();
-		Citizen citizen = createCitizenSmith();
+		Citizen citizen = createCitizenAnthonySmith();
 		em.persist(citizen);
 		Citizen c_Smith = em.find(Citizen.class, citizen.getId());
 
@@ -124,12 +139,11 @@ public class FindTest {
 
 	@Test
 	public void criteriaEquals() {
-		System.out.println("FindTest: Running 'criteriaEquals'");
 		final EntityManager em = emf.createEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
-			Citizen citizen = createCitizenSmith();
+			Citizen citizen = createCitizenAnthonySmith();
 			em.persist(citizen);
 			Citizen c_Smith = em.find(Citizen.class, citizen.getId());
 
@@ -143,7 +157,12 @@ public class FindTest {
 			CriteriaQuery<Citizen> cq = cb.createQuery(Citizen.class);
 			Root<Citizen> root = cq.from(Citizen.class);
 
-			cq.where(cb.equal(root.get("lastName"), "Smith"));
+			Predicate predicate = cb.equal(root.get("lastName"), "Smith");
+			Assertions.assertEquals(BooleanOperator.AND, predicate.getOperator());
+			Assertions.assertEquals(Boolean.class, predicate.getJavaType());
+			Assertions.assertFalse(predicate.isCompoundSelection());
+
+			cq.where(predicate);
 			CriteriaQuery<Citizen> cqCitizen = cq.select(root);
 
 			TypedQuery<Citizen> typedQuery = em.createQuery(cqCitizen);
@@ -164,6 +183,89 @@ public class FindTest {
 
 			em.remove(c_Crown);
 			em.remove(c_Smith);
+		} finally {
+			tx.commit();
+			em.close();
+		}
+	}
+
+	@Test
+	public void orCriteria() {
+		final EntityManager em = emf.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			Citizen citizen = createCitizenAnthonySmith();
+			em.persist(citizen);
+			Citizen c_AnthonySmith = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(citizen.getId());
+			Assertions.assertTrue(citizen == c_AnthonySmith);
+
+			citizen = createCitizenLucySmith();
+			em.persist(citizen);
+			Citizen c_LucySmith = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(citizen.getId());
+			Assertions.assertTrue(citizen == c_LucySmith);
+
+			citizen = createCitizenCrown();
+			em.persist(citizen);
+			Citizen c_Crown = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(citizen.getId());
+			Assertions.assertTrue(citizen == c_Crown);
+
+			citizen = createCitizenWolf();
+			em.persist(citizen);
+			Citizen c_Wolf = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(citizen.getId());
+			Assertions.assertTrue(citizen == c_Wolf);
+
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<Citizen> cq = cb.createQuery(Citizen.class);
+			Root<Citizen> root = cq.from(Citizen.class);
+
+			// lastname=='Smith' or 'lastName'=='Wolf'
+			Predicate lastNameSmith = cb.equal(root.get("lastName"), "Smith");
+			Assertions.assertEquals(BooleanOperator.AND, lastNameSmith.getOperator());
+			Assertions.assertEquals(Boolean.class, lastNameSmith.getJavaType());
+			Assertions.assertFalse(lastNameSmith.isCompoundSelection());
+			Assertions.assertTrue(lastNameSmith.getExpressions().isEmpty());
+
+			Predicate lastNameWolf = cb.equal(root.get("lastName"), "Wolf");
+
+			Predicate orLastName = cb.or(lastNameSmith, lastNameWolf);
+			Assertions.assertFalse(orLastName.isCompoundSelection());
+			Assertions.assertEquals(BooleanOperator.OR, orLastName.getOperator());
+			Assertions.assertFalse(orLastName.getExpressions().isEmpty());
+			Assertions.assertEquals(2, orLastName.getExpressions().size());
+
+			cq.where(orLastName);
+			CriteriaQuery<Citizen> cqCitizen = cq.select(root);
+
+			TypedQuery<Citizen> typedQuery = em.createQuery(cqCitizen);
+			List<Citizen> citizens = typedQuery.getResultList();
+
+			Assertions.assertEquals(3, citizens.size());
+
+			System.out.println("FindTest: orCriteria Running two 'or', one 'and'");
+			// two 'or', one 'and'
+			Predicate nameDavid = cb.equal(root.get("name"), "David");
+			Predicate nameAnthony = cb.equal(root.get("name"), "Anthony");
+			Predicate orName = cb.or(nameDavid, nameAnthony);
+
+			Predicate and = cb.and(orLastName, orName);
+
+			cq.where(and);
+
+			cqCitizen = cq.select(root);
+			typedQuery = em.createQuery(cqCitizen);
+			citizens = typedQuery.getResultList();
+
+			Assertions.assertEquals(2, citizens.size());
+
+			em.remove(c_Crown);
+			em.remove(c_AnthonySmith);
+			em.remove(c_LucySmith);
+			em.remove(c_Wolf);
 		} finally {
 			tx.commit();
 			em.close();

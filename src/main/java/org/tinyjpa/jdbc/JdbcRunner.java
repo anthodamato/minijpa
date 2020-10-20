@@ -16,6 +16,7 @@ import org.tinyjpa.jdbc.db.JdbcEntityManager;
 
 public class JdbcRunner {
 	private Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
+	private boolean log = false;
 
 	private void setPreparedStatementValue(PreparedStatement preparedStatement, int index, Class<?> type,
 			Integer sqlType, Object value) throws SQLException {
@@ -136,22 +137,20 @@ public class JdbcRunner {
 		PreparedStatement preparedStatement = null;
 		try {
 			String sql = sqlStatement.getSql();
-			LOG.info("findCollectionById: sql=`" + sql + "`");
-			LOG.info("findCollectionById: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
-			LOG.info("findCollectionById: sqlStatement=" + sqlStatement);
+			LOG.info("findCollection: sql=`" + sql + "`");
+			LOG.info("findCollection: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
 //			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
 
-			LOG.info("findCollectionById: Running `" + sql + "`");
-			LOG.info("findCollectionById: connection=" + connection);
+			LOG.info("findCollection: Running `" + sql + "`");
 			List<Object> objects = new ArrayList<>();
 			ResultSet rs = preparedStatement.executeQuery();
 			while (rs.next()) {
 				AttributeValues attributeValues = createAttributeValuesFromResultSet(
 						sqlStatement.getFetchColumnNameValues(), rs);
 
-				LOG.info("findCollectionById: attributeValues=" + attributeValues);
+				LOG.info("findCollection: attributeValues=" + attributeValues);
 				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
 						childAttributeValue);
 				objects.add(instance);
@@ -169,8 +168,9 @@ public class JdbcRunner {
 		AttributeValues attributeValues = new AttributeValues();
 		int i = 1;
 		for (ColumnNameValue cnv : columnNameValues) {
-			LOG.info(
-					"createAttributeValuesFromResultSet: cnv.getForeignKeyAttribute()=" + cnv.getForeignKeyAttribute());
+			if (log)
+				LOG.info("createAttributeValuesFromResultSet: cnv.getForeignKeyAttribute()="
+						+ cnv.getForeignKeyAttribute());
 			if (cnv.getForeignKeyAttribute() != null) {
 				attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
 				attributeValues.relationshipValues.add(rs.getObject(i, cnv.getType()));

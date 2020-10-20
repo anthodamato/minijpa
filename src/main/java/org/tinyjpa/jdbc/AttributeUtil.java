@@ -37,7 +37,6 @@ public class AttributeUtil {
 	public static int indexOf(List<MetaAttribute> attributes, String name) {
 		for (int i = 0; i < attributes.size(); ++i) {
 			MetaAttribute a = attributes.get(i);
-			LOG.info("indexOf: a.getName()=" + a.getName());
 			if (a.getName().equals(name))
 				return i;
 		}

@@ -27,20 +27,17 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 			if (expression instanceof PredicateImpl) {
 				PredicateImpl predicateImpl = (PredicateImpl) expression;
 				LOG.info("select: predicateImpl.getPredicateType()=" + predicateImpl.getPredicateType());
-				if (predicateImpl.getPredicateType() == PredicateType.EQUAL) {
-					LOG.info("select: criteriaQuery.getResultType()=" + criteriaQuery.getResultType());
-					MetaEntity entity = entities.get(criteriaQuery.getResultType().getName());
+				LOG.info("select: criteriaQuery.getResultType()=" + criteriaQuery.getResultType());
+				MetaEntity entity = entities.get(criteriaQuery.getResultType().getName());
 
-					List<MetaAttribute> expandedAttributes = entity.getId().expand();
-					expandedAttributes.addAll(entity.expandAttributes());
-					StringBuilder sb = createAllFieldsQuery(entity, expandedAttributes);
-					sb.append(" where ");
-					sb.append(createExpressionString(predicateImpl, entity));
-					List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
-					String sql = sb.toString();
-					return new SqlStatement.Builder().withSql(sql).withFetchColumnNameValues(fetchColumnNameValues)
-							.build();
-				}
+				List<MetaAttribute> expandedAttributes = entity.getId().expand();
+				expandedAttributes.addAll(entity.expandAttributes());
+				StringBuilder sb = createAllFieldsQuery(entity, expandedAttributes);
+				sb.append(" where");
+				createExpressionString(predicateImpl, entity, sb);
+				List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
+				String sql = sb.toString();
+				return new SqlStatement.Builder().withSql(sql).withFetchColumnNameValues(fetchColumnNameValues).build();
 			}
 		}
 
@@ -53,28 +50,66 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		return new SqlStatement.Builder().withSql(sql).withFetchColumnNameValues(fetchColumnNameValues).build();
 	}
 
-	private String createExpressionString(PredicateImpl predicateImpl, MetaEntity entity) {
-		StringBuilder sb = new StringBuilder();
+	private void createExpressionString(PredicateImpl predicateImpl, MetaEntity entity, StringBuilder sb) {
 		if (predicateImpl.getPredicateType() == PredicateType.EQUAL) {
 			Expression<?> expression = predicateImpl.getX();
 			LOG.info("createExpressionString: expression=" + expression);
-			Object object = predicateImpl.getY();
-			LOG.info("createExpressionString: object=" + object);
+			Object value = predicateImpl.getY();
+			LOG.info("createExpressionString: object=" + value);
 			if (expression instanceof PathImpl) {
 				PathImpl<?> pathImpl = (PathImpl<?>) expression;
-				String attributeName = pathImpl.getAttributeName();
-				LOG.info("createExpressionString: attributeName=" + attributeName);
-				String columnName = entity.getAttribute(attributeName).getColumnName();
-				sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
-				sb.append("=");
-				if (object instanceof String) {
-					sb.append("'");
-					sb.append((String) object);
-					sb.append("'");
-				}
+				expressionValueString(equalOperator(), pathImpl, value, entity, sb);
 			}
+		} else if (predicateImpl.getPredicateType() == PredicateType.NOT_EQUAL) {
+			Expression<?> expression = predicateImpl.getX();
+			LOG.info("createExpressionString: expression=" + expression);
+			Object value = predicateImpl.getY();
+			LOG.info("createExpressionString: object=" + value);
+			if (expression instanceof PathImpl) {
+				PathImpl<?> pathImpl = (PathImpl<?>) expression;
+				expressionValueString(notEqualOperator(), pathImpl, value, entity, sb);
+			}
+		} else if (predicateImpl.getPredicateType() == PredicateType.OR) {
+			expressionsString(orOperator(), predicateImpl, entity, sb);
+		} else if (predicateImpl.getPredicateType() == PredicateType.AND) {
+			expressionsString(andOperator(), predicateImpl, entity, sb);
 		}
-
-		return sb.toString();
 	}
+
+	private void expressionValueString(String operator, PathImpl<?> pathImpl, Object value, MetaEntity entity,
+			StringBuilder sb) {
+		String attributeName = pathImpl.getAttributeName();
+		LOG.info("expressionValueString: attributeName=" + attributeName);
+		String columnName = entity.getAttribute(attributeName).getColumnName();
+		sb.append(" ");
+		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(" ");
+		sb.append(operator);
+		sb.append(" ");
+		if (value instanceof String) {
+			sb.append("'");
+			sb.append((String) value);
+			sb.append("'");
+		} else {
+			sb.append(value.toString());
+		}
+	}
+
+	private void expressionsString(String operator, PredicateImpl predicateImpl, MetaEntity entity, StringBuilder sb) {
+		List<Expression<Boolean>> expressions = predicateImpl.getExpressions();
+		int i = 0;
+		for (Expression<Boolean> expression : expressions) {
+			sb.append(" ");
+			if (i > 0) {
+				sb.append(operator);
+			}
+
+			sb.append(" (");
+			PredicateImpl p = (PredicateImpl) expression;
+			createExpressionString(p, entity, sb);
+			sb.append(")");
+			++i;
+		}
+	}
+
 }

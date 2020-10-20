@@ -401,6 +401,15 @@ public class EntityEnhancer {
 		return sb.toString();
 	}
 
+	/**
+	 * TODO check this method
+	 * 
+	 * @param ctClass
+	 * @param ctField
+	 * @param delegate
+	 * @return
+	 * @throws Exception
+	 */
 	private CtMethod createSetMethod(CtClass ctClass, CtField ctField, boolean delegate) throws Exception {
 		int counter = 0;
 		CtMethod ctMethod = null;

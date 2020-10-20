@@ -34,6 +34,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	private AttributeValueConverter attributeValueConverter;
 	protected ConnectionHolder connectionHolder;
 	protected JdbcRunner jdbcRunner = new JdbcRunner();
+	private boolean log = false;
 
 	public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, Map<String, MetaEntity> entities,
 			EntityContainer entityContainer, EntityInstanceBuilder entityInstanceBuilder,
@@ -163,7 +164,9 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	private void loadRelationshipAttributes(Object parentInstance, MetaEntity entity, MetaAttribute childAttribute,
 			Object childAttributeValue) throws Exception {
-		LOG.info("loadRelationshipAttributes: childAttribute=" + childAttribute);
+		if (log)
+			LOG.info("loadRelationshipAttributes: childAttribute=" + childAttribute);
+
 		for (MetaAttribute a : entity.getRelationshipAttributes()) {
 			LOG.info("loadRelationshipAttributes: a=" + a);
 			if (childAttribute != null && a == childAttribute) {

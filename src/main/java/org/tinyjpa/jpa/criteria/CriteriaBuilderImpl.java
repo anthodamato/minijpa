@@ -183,8 +183,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate and(Expression<Boolean> x, Expression<Boolean> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.AND, x, y);
 	}
 
 	@Override
@@ -195,8 +194,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate or(Expression<Boolean> x, Expression<Boolean> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.OR, x, y);
 	}
 
 	@Override

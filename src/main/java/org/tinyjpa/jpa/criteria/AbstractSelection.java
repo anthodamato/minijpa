@@ -5,6 +5,7 @@ import java.util.List;
 import javax.persistence.criteria.Selection;
 
 public abstract class AbstractSelection<X> extends AbstractTupleElement<X> implements Selection<X> {
+	private boolean compoundSelection = false;
 
 	public AbstractSelection(Class<? extends X> javaType) {
 		super(javaType);
@@ -18,15 +19,15 @@ public abstract class AbstractSelection<X> extends AbstractTupleElement<X> imple
 
 	@Override
 	public boolean isCompoundSelection() {
-		// TODO Auto-generated method stub
-		return false;
+		return compoundSelection;
 	}
 
 	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
-		// TODO Auto-generated method stub
+		if (!compoundSelection)
+			throw new IllegalStateException("Not a compound selection");
+
 		return null;
 	}
 
-	
 }
