@@ -232,14 +232,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate isNull(Expression<?> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.IS_NULL, x, null, null);
 	}
 
 	@Override
 	public Predicate isNotNull(Expression<?> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.IS_NOT_NULL, x, null, null);
 	}
 
 	@Override

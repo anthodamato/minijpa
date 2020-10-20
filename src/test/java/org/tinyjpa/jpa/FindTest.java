@@ -1,5 +1,6 @@
 package org.tinyjpa.jpa;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -13,10 +14,12 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Predicate.BooleanOperator;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.tinyjpa.jpa.model.Address;
 import org.tinyjpa.jpa.model.Citizen;
 
 /**
@@ -317,11 +320,77 @@ public class FindTest {
 			List<Citizen> citizens = typedQuery.getResultList();
 
 			Assertions.assertEquals(2, citizens.size());
+			CollectionUtils.containsAll(citizens, Arrays.asList(c_Wolf, c_Crown));
 
 			em.remove(c_Crown);
 			em.remove(c_AnthonySmith);
 			em.remove(c_LucySmith);
 			em.remove(c_Wolf);
+		} finally {
+			tx.commit();
+			em.close();
+		}
+	}
+
+	private Address createRegentStAddress() {
+		Address address = new Address();
+		address.setName("Regent St");
+		address.setPostcode("W1B4EA");
+		return address;
+	}
+
+	private Address createRomfordRdAddress() {
+		Address address = new Address();
+		address.setName("Romford");
+		return address;
+	}
+
+	@Test
+	public void isNullCriteria() {
+		final EntityManager em = emf.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			Address address = createRegentStAddress();
+			em.persist(address);
+			Address a_RegentSt = em.find(Address.class, address.getId());
+			Assertions.assertTrue(address == a_RegentSt);
+
+			address = createRomfordRdAddress();
+			em.persist(address);
+			Address a_RomfordRd = em.find(Address.class, address.getId());
+			Assertions.assertTrue(address == a_RomfordRd);
+
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<Address> cq = cb.createQuery(Address.class);
+			Root<Address> root = cq.from(Address.class);
+
+			// postcode is null
+			Predicate isNull = cb.isNull(root.get("postcode"));
+			cq.where(isNull);
+
+			cq.select(root);
+
+			TypedQuery<Address> typedQuery = em.createQuery(cq);
+			List<Address> citizens = typedQuery.getResultList();
+
+			Assertions.assertEquals(1, citizens.size());
+			CollectionUtils.containsAll(citizens, Arrays.asList(a_RegentSt));
+
+			// postcode is not null
+			Predicate isNotNull = cb.isNull(root.get("postcode"));
+			cq.where(isNotNull);
+
+			cq.select(root);
+
+			typedQuery = em.createQuery(cq);
+			citizens = typedQuery.getResultList();
+
+			Assertions.assertEquals(1, citizens.size());
+			CollectionUtils.containsAll(citizens, Arrays.asList(a_RomfordRd));
+
+			em.remove(a_RegentSt);
+			em.remove(a_RomfordRd);
 		} finally {
 			tx.commit();
 			em.close();
