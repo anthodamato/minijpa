@@ -369,7 +369,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
-		return new CriteriaBuilderImpl(getMetamodel());
+		return new CriteriaBuilderImpl(this);
 	}
 
 	@Override

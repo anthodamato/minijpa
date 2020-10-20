@@ -35,6 +35,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 				StringBuilder sb = createAllFieldsQuery(entity, expandedAttributes);
 				sb.append(" where");
 				createExpressionString(predicateImpl, entity, sb);
+				LOG.info("select: sb.toString()=" + sb.toString());
 				List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
 				String sql = sb.toString();
 				return new SqlStatement.Builder().withSql(sql).withFetchColumnNameValues(fetchColumnNameValues).build();
@@ -54,29 +55,43 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		if (predicateImpl.getPredicateType() == PredicateType.EQUAL) {
 			Expression<?> expression = predicateImpl.getX();
 			LOG.info("createExpressionString: expression=" + expression);
-			Object value = predicateImpl.getY();
+			Object value = predicateImpl.getValue();
 			LOG.info("createExpressionString: object=" + value);
 			if (expression instanceof PathImpl) {
 				PathImpl<?> pathImpl = (PathImpl<?>) expression;
-				expressionValueString(equalOperator(), pathImpl, value, entity, sb);
+				applyBinaryOperator(equalOperator(), pathImpl, value, entity, sb);
 			}
 		} else if (predicateImpl.getPredicateType() == PredicateType.NOT_EQUAL) {
 			Expression<?> expression = predicateImpl.getX();
 			LOG.info("createExpressionString: expression=" + expression);
-			Object value = predicateImpl.getY();
+			Object value = predicateImpl.getValue();
 			LOG.info("createExpressionString: object=" + value);
 			if (expression instanceof PathImpl) {
 				PathImpl<?> pathImpl = (PathImpl<?>) expression;
-				expressionValueString(notEqualOperator(), pathImpl, value, entity, sb);
+				applyBinaryOperator(notEqualOperator(), pathImpl, value, entity, sb);
 			}
 		} else if (predicateImpl.getPredicateType() == PredicateType.OR) {
-			expressionsString(orOperator(), predicateImpl, entity, sb);
+			applyBinaryOperator(orOperator(), predicateImpl, entity, sb);
 		} else if (predicateImpl.getPredicateType() == PredicateType.AND) {
-			expressionsString(andOperator(), predicateImpl, entity, sb);
+			applyBinaryOperator(andOperator(), predicateImpl, entity, sb);
+		} else if (predicateImpl.getPredicateType() == PredicateType.NOT) {
+			applyPrefixUnaryOperator(notOperator(), predicateImpl, entity, sb);
+		} else if (predicateImpl.getPredicateType() == PredicateType.IS_NULL) {
+			Expression<?> expression = predicateImpl.getX();
+			if (expression instanceof PathImpl) {
+				PathImpl<?> pathImpl = (PathImpl<?>) expression;
+				applyPostfixUnaryOperator(isNullOperator(), pathImpl, entity, sb);
+			}
+		} else if (predicateImpl.getPredicateType() == PredicateType.IS_NOT_NULL) {
+			Expression<?> expression = predicateImpl.getX();
+			if (expression instanceof PathImpl) {
+				PathImpl<?> pathImpl = (PathImpl<?>) expression;
+				applyPostfixUnaryOperator(isNotNullOperator(), pathImpl, entity, sb);
+			}
 		}
 	}
 
-	private void expressionValueString(String operator, PathImpl<?> pathImpl, Object value, MetaEntity entity,
+	private void applyBinaryOperator(String operator, PathImpl<?> pathImpl, Object value, MetaEntity entity,
 			StringBuilder sb) {
 		String attributeName = pathImpl.getAttributeName();
 		LOG.info("expressionValueString: attributeName=" + attributeName);
@@ -95,7 +110,8 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		}
 	}
 
-	private void expressionsString(String operator, PredicateImpl predicateImpl, MetaEntity entity, StringBuilder sb) {
+	private void applyBinaryOperator(String operator, PredicateImpl predicateImpl, MetaEntity entity,
+			StringBuilder sb) {
 		List<Expression<Boolean>> expressions = predicateImpl.getExpressions();
 		int i = 0;
 		for (Expression<Boolean> expression : expressions) {
@@ -110,6 +126,29 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 			sb.append(")");
 			++i;
 		}
+	}
+
+	private void applyPrefixUnaryOperator(String operator, PredicateImpl predicateImpl, MetaEntity entity,
+			StringBuilder sb) {
+		List<Expression<Boolean>> expressions = predicateImpl.getExpressions();
+		sb.append(" ");
+		sb.append(operator);
+		sb.append(" (");
+		for (Expression<Boolean> expression : expressions) {
+			PredicateImpl p = (PredicateImpl) expression;
+			createExpressionString(p, entity, sb);
+		}
+
+		sb.append(")");
+	}
+
+	private void applyPostfixUnaryOperator(String operator, PathImpl<?> pathImpl, MetaEntity entity, StringBuilder sb) {
+		String attributeName = pathImpl.getAttributeName();
+		String columnName = entity.getAttribute(attributeName).getColumnName();
+		sb.append(" ");
+		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(" ");
+		sb.append(operator);
 	}
 
 }

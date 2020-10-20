@@ -501,4 +501,16 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 	protected String andOperator() {
 		return "and";
 	}
+
+	protected String notOperator() {
+		return "not";
+	}
+
+	protected String isNullOperator() {
+		return "is null";
+	}
+
+	protected String isNotNullOperator() {
+		return "is not null";
+	}
 }

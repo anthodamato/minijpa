@@ -36,6 +36,7 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 //			list = criteriaJdbcEntityManager.loadAllFields(criteriaQuery.getSelection().getJavaType());
 			list = jdbcCriteriaEntityManager.select(criteriaQuery);
 		} catch (Exception e) {
+			LOG.error(e.getMessage());
 			throw new PersistenceException(e.getMessage());
 		}
 

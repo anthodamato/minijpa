@@ -3,6 +3,7 @@ package org.tinyjpa.jpa.criteria;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
@@ -14,8 +15,8 @@ import javax.persistence.metamodel.Metamodel;
 public class CriteriaQueryImpl<T> extends AbstractAbstractQuery<T> implements CriteriaQuery<T> {
 //	private List<Selection<? extends T>> selections = new ArrayList<Selection<? extends T>>();
 
-	public CriteriaQueryImpl(Class<T> resultClass, Metamodel metamodel) {
-		super(resultClass, metamodel);
+	public CriteriaQueryImpl(Class<T> resultClass, EntityManager em) {
+		super(resultClass, em);
 	}
 
 	@Override

@@ -9,14 +9,16 @@ import javax.persistence.criteria.Predicate;
 public class PredicateImpl extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
 	private PredicateType predicateType;
 	private Expression<?> x;
-	private Object y;
+	private Expression<?> y;
+	private Object value;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
-	public PredicateImpl(PredicateType predicateType, Expression<?> x, Object y) {
+	public PredicateImpl(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value) {
 		super(Boolean.class);
 		this.predicateType = predicateType;
 		this.x = x;
 		this.y = y;
+		this.value = value;
 	}
 
 	public PredicateImpl(PredicateType predicateType, Expression<Boolean> x, Expression<Boolean> y) {
@@ -24,6 +26,19 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 		this.predicateType = predicateType;
 		this.expressions.add(x);
 		this.expressions.add(y);
+	}
+
+	public PredicateImpl(PredicateType predicateType, Expression<Boolean>[] restrictions) {
+		super(Boolean.class);
+		this.predicateType = predicateType;
+		for (Expression<Boolean> expression : restrictions)
+			this.expressions.add(expression);
+	}
+
+	public PredicateImpl(PredicateType predicateType, Expression<Boolean> x) {
+		super(Boolean.class);
+		this.predicateType = predicateType;
+		this.expressions.add(x);
 	}
 
 	@Override
@@ -44,8 +59,7 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 
 	@Override
 	public boolean isNegated() {
-		// TODO Auto-generated method stub
-		return false;
+		return predicateType == PredicateType.NOT;
 	}
 
 	@Override
@@ -63,8 +77,12 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 		return x;
 	}
 
-	public Object getY() {
+	public Expression<?> getY() {
 		return y;
+	}
+
+	public Object getValue() {
+		return value;
 	}
 
 }

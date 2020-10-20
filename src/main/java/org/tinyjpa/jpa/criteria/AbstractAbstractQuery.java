@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
@@ -12,19 +13,18 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
 	private Class<T> resultClass;
-	private Metamodel metamodel;
+	private EntityManager em;
 	private Set<Root<?>> roots = new HashSet<>();
 	protected Selection<? extends T> selection;
 	protected List<Expression<Boolean>> restrictions = new ArrayList<>();
 
-	public AbstractAbstractQuery(Class<T> resultClass, Metamodel metamodel) {
+	public AbstractAbstractQuery(Class<T> resultClass, EntityManager em) {
 		super();
 		this.resultClass = resultClass;
-		this.metamodel = metamodel;
+		this.em = em;
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
 
 	@Override
 	public <X> Root<X> from(Class<X> entityClass) {
-		EntityType<X> entityType = metamodel.entity(entityClass);
+		EntityType<X> entityType = em.getMetamodel().entity(entityClass);
 		Root<X> root = new RootImpl<X>(entityClass, entityType);
 		roots.add(root);
 		return root;

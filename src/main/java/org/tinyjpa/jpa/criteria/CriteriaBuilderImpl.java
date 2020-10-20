@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CompoundSelection;
@@ -28,14 +29,13 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.Metamodel;
 
 public class CriteriaBuilderImpl implements CriteriaBuilder {
-	private Metamodel metamodel;
+	private EntityManager em;
 
-	public CriteriaBuilderImpl(Metamodel metamodel) {
+	public CriteriaBuilderImpl(EntityManager em) {
 		super();
-		this.metamodel = metamodel;
+		this.em = em;
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
-		return new CriteriaQueryImpl<T>(resultClass, metamodel);
+		return new CriteriaQueryImpl<T>(resultClass, em);
 	}
 
 	@Override
@@ -188,8 +188,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate and(Predicate... restrictions) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.AND, restrictions);
 	}
 
 	@Override
@@ -199,14 +198,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate or(Predicate... restrictions) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.OR, restrictions);
 	}
 
 	@Override
 	public Predicate not(Expression<Boolean> restriction) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.NOT, restriction);
 	}
 
 	@Override
@@ -247,24 +244,22 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate equal(Expression<?> x, Expression<?> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.EQUAL, x, y, null);
 	}
 
 	@Override
 	public Predicate equal(Expression<?> x, Object y) {
-		return new PredicateImpl(PredicateType.EQUAL, x, y);
+		return new PredicateImpl(PredicateType.EQUAL, x, null, y);
 	}
 
 	@Override
 	public Predicate notEqual(Expression<?> x, Expression<?> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.NOT_EQUAL, x, y, null);
 	}
 
 	@Override
 	public Predicate notEqual(Expression<?> x, Object y) {
-		return new PredicateImpl(PredicateType.NOT_EQUAL, x, y);
+		return new PredicateImpl(PredicateType.NOT_EQUAL, x, null, y);
 	}
 
 	@Override

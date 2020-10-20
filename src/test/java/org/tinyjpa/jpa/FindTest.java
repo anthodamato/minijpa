@@ -246,7 +246,6 @@ public class FindTest {
 
 			Assertions.assertEquals(3, citizens.size());
 
-			System.out.println("FindTest: orCriteria Running two 'or', one 'and'");
 			// two 'or', one 'and'
 			Predicate nameDavid = cb.equal(root.get("name"), "David");
 			Predicate nameAnthony = cb.equal(root.get("name"), "Anthony");
@@ -259,6 +258,63 @@ public class FindTest {
 			cqCitizen = cq.select(root);
 			typedQuery = em.createQuery(cqCitizen);
 			citizens = typedQuery.getResultList();
+
+			Assertions.assertEquals(2, citizens.size());
+
+			em.remove(c_Crown);
+			em.remove(c_AnthonySmith);
+			em.remove(c_LucySmith);
+			em.remove(c_Wolf);
+		} finally {
+			tx.commit();
+			em.close();
+		}
+	}
+
+	@Test
+	public void notCriteria() {
+		final EntityManager em = emf.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			Citizen citizen = createCitizenAnthonySmith();
+			em.persist(citizen);
+			Citizen c_AnthonySmith = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(citizen.getId());
+			Assertions.assertTrue(citizen == c_AnthonySmith);
+
+			citizen = createCitizenLucySmith();
+			em.persist(citizen);
+			Citizen c_LucySmith = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(citizen.getId());
+			Assertions.assertTrue(citizen == c_LucySmith);
+
+			citizen = createCitizenCrown();
+			em.persist(citizen);
+			Citizen c_Crown = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(citizen.getId());
+			Assertions.assertTrue(citizen == c_Crown);
+
+			citizen = createCitizenWolf();
+			em.persist(citizen);
+			Citizen c_Wolf = em.find(Citizen.class, citizen.getId());
+			Assertions.assertNotNull(citizen.getId());
+			Assertions.assertTrue(citizen == c_Wolf);
+
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<Citizen> cq = cb.createQuery(Citizen.class);
+			Root<Citizen> root = cq.from(Citizen.class);
+
+			// not lastname=='Smith'
+			Predicate lastNameSmith = cb.equal(root.get("lastName"), "Smith");
+			Predicate not = cb.not(lastNameSmith);
+			cq.where(not);
+			Assertions.assertTrue(not.isNegated());
+
+			CriteriaQuery<Citizen> cqCitizen = cq.select(root);
+
+			TypedQuery<Citizen> typedQuery = em.createQuery(cqCitizen);
+			List<Citizen> citizens = typedQuery.getResultList();
 
 			Assertions.assertEquals(2, citizens.size());
 
