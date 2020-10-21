@@ -220,14 +220,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate isTrue(Expression<Boolean> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.IS_TRUE, x, null, null);
 	}
 
 	@Override
 	public Predicate isFalse(Expression<Boolean> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.IS_FALSE, x, null, null);
 	}
 
 	@Override

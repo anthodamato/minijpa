@@ -51,43 +51,64 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		return new SqlStatement.Builder().withSql(sql).withFetchColumnNameValues(fetchColumnNameValues).build();
 	}
 
+	private String getOperator(PredicateType predicateType) {
+		switch (predicateType) {
+		case EQUAL:
+			return equalOperator();
+		case NOT_EQUAL:
+			return notEqualOperator();
+		case AND:
+			return andOperator();
+		case IS_FALSE:
+			return isFalseOperator();
+		case IS_NOT_NULL:
+			return isNotNullOperator();
+		case IS_NULL:
+			return isNullOperator();
+		case IS_TRUE:
+			return isTrueOperator();
+		case NOT:
+			return notOperator();
+		case OR:
+			return orOperator();
+		}
+
+		return "";
+	}
+
 	private void createExpressionString(PredicateImpl predicateImpl, MetaEntity entity, StringBuilder sb) {
-		if (predicateImpl.getPredicateType() == PredicateType.EQUAL) {
+		switch (predicateImpl.getPredicateType()) {
+		case EQUAL:
+		case NOT_EQUAL:
 			Expression<?> expression = predicateImpl.getX();
 			LOG.info("createExpressionString: expression=" + expression);
 			Object value = predicateImpl.getValue();
 			LOG.info("createExpressionString: object=" + value);
 			if (expression instanceof PathImpl) {
 				PathImpl<?> pathImpl = (PathImpl<?>) expression;
-				applyBinaryOperator(equalOperator(), pathImpl, value, entity, sb);
+				applyBinaryOperator(getOperator(predicateImpl.getPredicateType()), pathImpl, value, entity, sb);
 			}
-		} else if (predicateImpl.getPredicateType() == PredicateType.NOT_EQUAL) {
-			Expression<?> expression = predicateImpl.getX();
-			LOG.info("createExpressionString: expression=" + expression);
-			Object value = predicateImpl.getValue();
-			LOG.info("createExpressionString: object=" + value);
+			break;
+
+		case OR:
+		case AND:
+			applyBinaryOperator(getOperator(predicateImpl.getPredicateType()), predicateImpl, entity, sb);
+			break;
+
+		case NOT:
+			applyPrefixUnaryOperator(getOperator(predicateImpl.getPredicateType()), predicateImpl, entity, sb);
+			break;
+
+		case IS_NULL:
+		case IS_NOT_NULL:
+		case IS_TRUE:
+		case IS_FALSE:
+			expression = predicateImpl.getX();
 			if (expression instanceof PathImpl) {
 				PathImpl<?> pathImpl = (PathImpl<?>) expression;
-				applyBinaryOperator(notEqualOperator(), pathImpl, value, entity, sb);
+				applyPostfixUnaryOperator(getOperator(predicateImpl.getPredicateType()), pathImpl, entity, sb);
 			}
-		} else if (predicateImpl.getPredicateType() == PredicateType.OR) {
-			applyBinaryOperator(orOperator(), predicateImpl, entity, sb);
-		} else if (predicateImpl.getPredicateType() == PredicateType.AND) {
-			applyBinaryOperator(andOperator(), predicateImpl, entity, sb);
-		} else if (predicateImpl.getPredicateType() == PredicateType.NOT) {
-			applyPrefixUnaryOperator(notOperator(), predicateImpl, entity, sb);
-		} else if (predicateImpl.getPredicateType() == PredicateType.IS_NULL) {
-			Expression<?> expression = predicateImpl.getX();
-			if (expression instanceof PathImpl) {
-				PathImpl<?> pathImpl = (PathImpl<?>) expression;
-				applyPostfixUnaryOperator(isNullOperator(), pathImpl, entity, sb);
-			}
-		} else if (predicateImpl.getPredicateType() == PredicateType.IS_NOT_NULL) {
-			Expression<?> expression = predicateImpl.getX();
-			if (expression instanceof PathImpl) {
-				PathImpl<?> pathImpl = (PathImpl<?>) expression;
-				applyPostfixUnaryOperator(isNotNullOperator(), pathImpl, entity, sb);
-			}
+			break;
 		}
 	}
 

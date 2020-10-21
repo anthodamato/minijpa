@@ -513,4 +513,12 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 	protected String isNotNullOperator() {
 		return "is not null";
 	}
+
+	protected String isTrueOperator() {
+		return "= true";
+	}
+
+	protected String isFalseOperator() {
+		return "= false";
+	}
 }

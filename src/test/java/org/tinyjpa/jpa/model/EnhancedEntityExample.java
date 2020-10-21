@@ -2,7 +2,7 @@ package org.tinyjpa.jpa.model;
 
 import org.tinyjpa.metadata.EntityDelegate;
 
-public class ExampleProxyEntity {
+public class EnhancedEntityExample {
 	private Long id;
 	private String attribute1;
 	private String attribute2;
