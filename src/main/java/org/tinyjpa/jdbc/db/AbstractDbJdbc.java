@@ -521,4 +521,12 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 	protected String isFalseOperator() {
 		return "= false";
 	}
+
+	protected String emptyConjunctionOperator() {
+		return "1=1";
+	}
+
+	protected String emptyDisjunctionOperator() {
+		return "1=2";
+	}
 }

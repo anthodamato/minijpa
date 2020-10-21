@@ -38,7 +38,8 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 	public PredicateImpl(PredicateType predicateType, Expression<Boolean> x) {
 		super(Boolean.class);
 		this.predicateType = predicateType;
-		this.expressions.add(x);
+		if (x != null)
+			this.expressions.add(x);
 	}
 
 	@Override

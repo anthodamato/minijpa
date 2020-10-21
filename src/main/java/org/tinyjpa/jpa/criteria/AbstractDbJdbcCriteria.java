@@ -71,6 +71,12 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 			return notOperator();
 		case OR:
 			return orOperator();
+		case EMPTY_CONJUNCTION:
+			return emptyConjunctionOperator();
+		case EMPTY_DISJUNCTION:
+			return emptyDisjunctionOperator();
+		default:
+			break;
 		}
 
 		return "";
@@ -108,6 +114,10 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 				PathImpl<?> pathImpl = (PathImpl<?>) expression;
 				applyPostfixUnaryOperator(getOperator(predicateImpl.getPredicateType()), pathImpl, entity, sb);
 			}
+			break;
+		case EMPTY_CONJUNCTION:
+		case EMPTY_DISJUNCTION:
+			applyCondition(getOperator(predicateImpl.getPredicateType()), sb);
 			break;
 		}
 	}
@@ -170,6 +180,11 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
+	}
+
+	private void applyCondition(String condition, StringBuilder sb) {
+		sb.append(" ");
+		sb.append(condition);
 	}
 
 }

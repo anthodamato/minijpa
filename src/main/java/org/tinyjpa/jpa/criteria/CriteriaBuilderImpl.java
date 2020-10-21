@@ -208,14 +208,14 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate conjunction() {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO not tested
+		return new PredicateImpl(PredicateType.EMPTY_CONJUNCTION, ((Expression<Boolean>) null));
 	}
 
 	@Override
 	public Predicate disjunction() {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO not tested
+		return new PredicateImpl(PredicateType.EMPTY_DISJUNCTION, ((Expression<Boolean>) null));
 	}
 
 	@Override
