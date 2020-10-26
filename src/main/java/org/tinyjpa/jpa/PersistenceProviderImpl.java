@@ -24,6 +24,7 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 		LOG.info("Processing Db Configuration...");
 		LOG.info("processConfiguration: persistenceUnitInfo=" + persistenceUnitInfo);
 		new ConnectionProviderImpl(persistenceUnitInfo).init();
+		new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 
 		Connection connection = null;
 		try {
@@ -41,7 +42,7 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 				connection.close();
 		}
 
-		new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
+//		new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 	}
 
 	@Override

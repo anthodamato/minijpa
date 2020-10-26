@@ -14,6 +14,8 @@ public class JoinColumnAttribute extends AbstractAttribute {
 	public static class Builder {
 		private String columnName;
 		private Class<?> type;
+		private Class<?> readWriteDbType;
+		private DbTypeMapper dbTypeMapper;
 		private Integer sqlType;
 		private MetaAttribute foreignKeyAttribute;
 
@@ -24,6 +26,16 @@ public class JoinColumnAttribute extends AbstractAttribute {
 
 		public Builder withType(Class<?> type) {
 			this.type = type;
+			return this;
+		}
+
+		public Builder withReadWriteDbType(Class<?> readWriteDbType) {
+			this.readWriteDbType = readWriteDbType;
+			return this;
+		}
+
+		public Builder withDbTypeMapper(DbTypeMapper dbTypeMapper) {
+			this.dbTypeMapper = dbTypeMapper;
 			return this;
 		}
 
@@ -41,6 +53,8 @@ public class JoinColumnAttribute extends AbstractAttribute {
 			JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute();
 			joinColumnAttribute.columnName = columnName;
 			joinColumnAttribute.type = type;
+			joinColumnAttribute.readWriteDbType = readWriteDbType;
+			joinColumnAttribute.dbTypeMapper = dbTypeMapper;
 			joinColumnAttribute.sqlType = sqlType;
 			joinColumnAttribute.foreignKeyAttribute = foreignKeyAttribute;
 			return joinColumnAttribute;

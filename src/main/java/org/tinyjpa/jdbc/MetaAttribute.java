@@ -120,6 +120,8 @@ public class MetaAttribute extends AbstractAttribute {
 		private String name;
 		private String columnName;
 		private Class<?> type;
+		private Class<?> readWriteDbType;
+		private DbTypeMapper dbTypeMapper;
 		private Method readMethod;
 		private Method writeMethod;
 		private boolean id;
@@ -144,6 +146,16 @@ public class MetaAttribute extends AbstractAttribute {
 
 		public Builder withType(Class<?> type) {
 			this.type = type;
+			return this;
+		}
+
+		public Builder withReadWriteDbType(Class<?> readWriteDbType) {
+			this.readWriteDbType = readWriteDbType;
+			return this;
+		}
+
+		public Builder withDbTypeMapper(DbTypeMapper dbTypeMapper) {
+			this.dbTypeMapper = dbTypeMapper;
 			return this;
 		}
 
@@ -217,6 +229,8 @@ public class MetaAttribute extends AbstractAttribute {
 			attribute.name = name;
 			attribute.columnName = columnName;
 			attribute.type = type;
+			attribute.readWriteDbType = readWriteDbType;
+			attribute.dbTypeMapper = dbTypeMapper;
 			attribute.readMethod = readMethod;
 			attribute.writeMethod = writeMethod;
 			attribute.id = id;

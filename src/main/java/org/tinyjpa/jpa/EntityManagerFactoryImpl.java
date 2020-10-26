@@ -18,7 +18,9 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.DbTypeMapper;
 import org.tinyjpa.jdbc.MetaEntity;
+import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.jpa.metamodel.MetamodelFactory;
 import org.tinyjpa.metadata.EntityContext;
 import org.tinyjpa.metadata.EntityDelegate;
@@ -63,9 +65,10 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 
 		LOG.info("Parsing entities...");
 		Map<String, MetaEntity> entities = new HashMap<>();
-		Parser parser = new Parser();
+		DbTypeMapper dbTypeMapper = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo)
+				.getDbTypeMapper();
+		Parser parser = new Parser(dbTypeMapper);
 		for (String className : persistenceUnitInfo.getManagedClassNames()) {
-			LOG.info("createEntities: className=" + className);
 			EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
 			MetaEntity metaEntity = parser.parse(enhEntity, entities.values());
 			entities.put(enhEntity.getClassName(), metaEntity);

@@ -10,10 +10,8 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
-import javax.persistence.metamodel.Metamodel;
 
 public class CriteriaQueryImpl<T> extends AbstractAbstractQuery<T> implements CriteriaQuery<T> {
-//	private List<Selection<? extends T>> selections = new ArrayList<Selection<? extends T>>();
 
 	public CriteriaQueryImpl(Class<T> resultClass, EntityManager em) {
 		super(resultClass, em);
@@ -21,13 +19,7 @@ public class CriteriaQueryImpl<T> extends AbstractAbstractQuery<T> implements Cr
 
 	@Override
 	public CriteriaQuery<T> select(Selection<? extends T> selection) {
-//		selections.clear();
-//		selections.add(selection);
 		this.selection = selection;
-//		Set<Root<?>> roots = getRoots();
-//		if (roots.contains(selection) && roots.size() == 1)
-//			return this;
-
 		return this;
 	}
 

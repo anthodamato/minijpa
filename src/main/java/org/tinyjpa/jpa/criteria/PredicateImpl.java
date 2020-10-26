@@ -10,15 +10,16 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 	private PredicateType predicateType;
 	private Expression<?> x;
 	private Expression<?> y;
-	private Object value;
+	private Object value1;
+	private Object value2;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
-	public PredicateImpl(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value) {
+	public PredicateImpl(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value1) {
 		super(Boolean.class);
 		this.predicateType = predicateType;
 		this.x = x;
 		this.y = y;
-		this.value = value;
+		this.value1 = value1;
 	}
 
 	public PredicateImpl(PredicateType predicateType, Expression<Boolean> x, Expression<Boolean> y) {
@@ -82,8 +83,12 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 		return y;
 	}
 
-	public Object getValue() {
-		return value;
+	public Object getValue1() {
+		return value1;
+	}
+
+	public Object getValue2() {
+		return value2;
 	}
 
 }

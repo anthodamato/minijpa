@@ -7,13 +7,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
+import org.tinyjpa.jpa.db.ApacheDerbyDbTypeMapper;
 import org.tinyjpa.jpa.model.Book;
 import org.tinyjpa.jpa.model.Citizen;
 import org.tinyjpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.tinyjpa.metadata.enhancer.EnhEntity;
 
 public class ParserTest {
-	private Parser parser = new Parser();
+	private Parser parser = new Parser(new ApacheDerbyDbTypeMapper());
 
 	@Test
 	public void parse() throws Exception {
@@ -42,7 +43,6 @@ public class ParserTest {
 
 		List<MetaEntity> parsedEntities = new ArrayList<>();
 		MetaEntity entity = parser.parse(enhEntity, parsedEntities);
-
 		Assertions.assertNotNull(entity);
 		Assertions.assertNotNull(entity.getEntityClass());
 		Assertions.assertEquals(Book.class, entity.getEntityClass());

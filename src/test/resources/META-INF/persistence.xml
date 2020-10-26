@@ -357,4 +357,28 @@
 		</properties>
 	</persistence-unit>
 
+	<persistence-unit name="holidays">
+		<description>Holidays</description>
+		<class>org.tinyjpa.jpa.model.Holiday</class>
+
+		<properties>
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.DerbyTenSevenDialect" />
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:holidays;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_holiday_db.sql" />
+		</properties>
+	</persistence-unit>
+
 </persistence>

@@ -23,6 +23,7 @@ import javax.persistence.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.CollectionUtils;
+import org.tinyjpa.jdbc.DbTypeMapper;
 import org.tinyjpa.jdbc.JdbcTypes;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
@@ -38,7 +39,13 @@ import org.tinyjpa.metadata.enhancer.EnhEntity;
 
 public class Parser {
 	private Logger LOG = LoggerFactory.getLogger(Parser.class);
+	private DbTypeMapper dbTypeMapper;
 	private AliasGenerator aliasGenerator = new AliasGenerator();
+
+	public Parser(DbTypeMapper dbTypeMapper) {
+		super();
+		this.dbTypeMapper = dbTypeMapper;
+	}
 
 	public void fillRelationships(Map<String, MetaEntity> entities) {
 		finalizeRelationships(entities);
@@ -216,6 +223,8 @@ public class Parser {
 
 		Id idAnnotation = field.getAnnotation(Id.class);
 		MetaAttribute attribute = null;
+		Integer sqlType = JdbcTypes.sqlTypeFromClass(attributeClass);
+		Class<?> readWriteType = dbTypeMapper.map(attributeClass, sqlType);
 		if (idAnnotation == null) {
 			List<MetaAttribute> embeddedAttributes = null;
 			boolean embedded = enhAttribute.isEmbedded();
@@ -233,9 +242,10 @@ public class Parser {
 
 			boolean isCollection = CollectionUtils.isCollectionClass(attributeClass);
 			MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
-					.withType(attributeClass).withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id)
-					.withSqlType(JdbcTypes.sqlTypeFromClass(attributeClass)).isEmbedded(embedded)
-					.withEmbeddedAttributes(embeddedAttributes).isCollection(isCollection).withJavaMember(field);
+					.withType(attributeClass).withReadWriteDbType(readWriteType).withDbTypeMapper(dbTypeMapper)
+					.withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id).withSqlType(sqlType)
+					.isEmbedded(embedded).withEmbeddedAttributes(embeddedAttributes).isCollection(isCollection)
+					.withJavaMember(field);
 			javax.persistence.OneToOne oneToOne = field.getAnnotation(javax.persistence.OneToOne.class);
 			javax.persistence.ManyToOne manyToOne = field.getAnnotation(javax.persistence.ManyToOne.class);
 			javax.persistence.OneToMany oneToMany = field.getAnnotation(javax.persistence.OneToMany.class);
@@ -269,9 +279,9 @@ public class Parser {
 			}
 
 			attribute = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
-					.withType(attributeClass).withReadMethod(readMethod).withWriteMethod(writeMethod).isId(true)
-					.withSqlType(JdbcTypes.sqlTypeFromClass(attributeClass)).withGeneratedValue(gv)
-					.withJavaMember(field).build();
+					.withType(attributeClass).withReadWriteDbType(readWriteType).withDbTypeMapper(dbTypeMapper)
+					.withReadMethod(readMethod).withWriteMethod(writeMethod).isId(true).withSqlType(sqlType)
+					.withGeneratedValue(gv).withJavaMember(field).build();
 		}
 
 		return attribute;
@@ -366,6 +376,7 @@ public class Parser {
 			jc = createDefaultOneToManyOwnerJoinColumn(entity, attribute);
 
 		return new JoinColumnAttribute.Builder().withColumnName(jc).withType(attribute.getType())
+				.withReadWriteDbType(attribute.getReadWriteDbType()).withDbTypeMapper(dbTypeMapper)
 				.withSqlType(attribute.getSqlType()).withForeignKeyAttribute(attribute).build();
 	}
 
@@ -390,8 +401,9 @@ public class Parser {
 		if (jc == null)
 			jc = createDefaultOneToManyJoinColumn(relationshipAttribute, id);
 
-		return new JoinColumnAttribute.Builder().withColumnName(jc).withType(id.getType()).withSqlType(id.getSqlType())
-				.withForeignKeyAttribute(id).build();
+		return new JoinColumnAttribute.Builder().withColumnName(jc).withType(id.getType())
+				.withReadWriteDbType(id.getReadWriteDbType()).withDbTypeMapper(dbTypeMapper)
+				.withSqlType(id.getSqlType()).withForeignKeyAttribute(id).build();
 	}
 
 	private List<JoinColumnAttribute> createJoinColumnTargetAttributes(MetaEntity entity,
@@ -440,6 +452,7 @@ public class Parser {
 
 					JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
 							.withColumnName(joinColumnName).withType(toEntity.getId().getType())
+							.withReadWriteDbType(toEntity.getId().getReadWriteDbType()).withDbTypeMapper(dbTypeMapper)
 							.withSqlType(toEntity.getId().getSqlType()).withForeignKeyAttribute(a).build();
 					entity.getJoinColumnAttributes().add(joinColumnAttribute);
 					builder = builder.withTargetAttribute(toEntity.findAttributeWithMappedBy(a.getName()));
@@ -467,6 +480,7 @@ public class Parser {
 
 					JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
 							.withColumnName(joinColumnName).withType(toEntity.getId().getType())
+							.withReadWriteDbType(toEntity.getId().getReadWriteDbType()).withDbTypeMapper(dbTypeMapper)
 							.withSqlType(toEntity.getId().getSqlType()).withForeignKeyAttribute(a).build();
 					entity.getJoinColumnAttributes().add(joinColumnAttribute);
 				}
@@ -501,6 +515,7 @@ public class Parser {
 						// used
 						JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
 								.withColumnName(relationship.getJoinColumn()).withType(entity.getId().getType())
+								.withReadWriteDbType(entity.getId().getReadWriteDbType()).withDbTypeMapper(dbTypeMapper)
 								.withSqlType(entity.getId().getSqlType()).withForeignKeyAttribute(entity.getId())
 								.build();
 						toEntity.getJoinColumnAttributes().add(joinColumnAttribute);

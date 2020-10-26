@@ -148,7 +148,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 				if (joinColumn != null && attributeType != null) {
 					Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
 					columnNameValue = new ColumnNameValue(joinColumn, idValue, attributeType.getId().getType(),
-							attributeType.getId().getSqlType(), a, null);
+							attributeType.getId().getReadWriteDbType(), attributeType.getId().getSqlType(), a, null);
 					list.add(columnNameValue);
 				}
 			} else {
@@ -175,8 +175,8 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		List<ColumnNameValue> list = new ArrayList<>();
 		for (JoinColumnAttribute a : attributes) {
 			ColumnNameValue columnNameValue = null;
-			columnNameValue = new ColumnNameValue(a.getColumnName(), null, a.getType(), a.getSqlType(),
-					a.getForeignKeyAttribute(), null);
+			columnNameValue = new ColumnNameValue(a.getColumnName(), null, a.getType(), a.getReadWriteDbType(),
+					a.getSqlType(), a.getForeignKeyAttribute(), null);
 			list.add(columnNameValue);
 		}
 
@@ -395,7 +395,8 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 					av.getValue());
 
 			ColumnNameValue cnv = new ColumnNameValue(joinColumnAttributes.get(index).getColumnName(), avn.getValue(),
-					avn.getAttribute().getType(), avn.getAttribute().getSqlType(), null, avn.getAttribute());
+					avn.getAttribute().getType(), avn.getAttribute().getReadWriteDbType(),
+					avn.getAttribute().getSqlType(), null, avn.getAttribute());
 			columnNameValues.add(cnv);
 		}
 
@@ -495,31 +496,31 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 	}
 
 	protected String orOperator() {
-		return "or";
+		return "OR";
 	}
 
 	protected String andOperator() {
-		return "and";
+		return "AND";
 	}
 
 	protected String notOperator() {
-		return "not";
+		return "NOT";
 	}
 
 	protected String isNullOperator() {
-		return "is null";
+		return "IS NULL";
 	}
 
 	protected String isNotNullOperator() {
-		return "is not null";
+		return "IS NOT NULL";
 	}
 
 	protected String isTrueOperator() {
-		return "= true";
+		return "= TRUE";
 	}
 
 	protected String isFalseOperator() {
-		return "= false";
+		return "= FALSE";
 	}
 
 	protected String emptyConjunctionOperator() {
@@ -528,5 +529,21 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 
 	protected String emptyDisjunctionOperator() {
 		return "1=2";
+	}
+
+	protected String greaterThanOperator() {
+		return ">";
+	}
+
+	protected String lessThanOperator() {
+		return "<";
+	}
+
+	protected String betweenOperator() {
+		return "BETWEEN";
+	}
+
+	protected String likeOperator() {
+		return "LIKE";
 	}
 }

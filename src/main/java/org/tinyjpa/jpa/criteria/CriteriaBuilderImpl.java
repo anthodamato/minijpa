@@ -261,14 +261,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x,
 			Expression<? extends Y> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.GREATER_THAN, x, y, null);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x, Y y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.GREATER_THAN, x, null, y);
 	}
 
 	@Override
@@ -286,14 +284,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate lessThan(Expression<? extends Y> x, Expression<? extends Y> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.LESS_THAN, x, y, null);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate lessThan(Expression<? extends Y> x, Y y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.LESS_THAN, x, null, y);
 	}
 
 	@Override
@@ -312,26 +308,22 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate between(Expression<? extends Y> v, Expression<? extends Y> x,
 			Expression<? extends Y> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new BetweenExpressionsPredicate(v, x, y);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate between(Expression<? extends Y> v, Y x, Y y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new BetweenValuesPredicate(v, x, y);
 	}
 
 	@Override
 	public Predicate gt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.GT, x, y, null);
 	}
 
 	@Override
 	public Predicate gt(Expression<? extends Number> x, Number y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.GT, x, null, y);
 	}
 
 	@Override
@@ -348,14 +340,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate lt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.LT, x, y, null);
 	}
 
 	@Override
 	public Predicate lt(Expression<? extends Number> x, Number y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new PredicateImpl(PredicateType.LT, x, null, y);
 	}
 
 	@Override
@@ -606,38 +596,32 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate like(Expression<String> x, Expression<String> pattern) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternExprPredicate(x, pattern);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, String pattern) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternPredicate(x, pattern);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternExprPredicate(x, pattern, escapeChar);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, Expression<String> pattern, char escapeChar) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternExprPredicate(x, pattern, escapeChar);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternPredicate(x, pattern, escapeChar);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, String pattern, char escapeChar) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternPredicate(x, pattern, escapeChar);
 	}
 
 	@Override

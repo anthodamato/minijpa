@@ -17,15 +17,12 @@ public class EntityFileTransformer implements ClassFileTransformer {
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		if (className == null)
-			return null;
-
-		if (className.startsWith("java/") || className.startsWith("javax/") || className.startsWith("jdk/")
-				|| className.startsWith("sun/") || className.startsWith("com/sun/") || className.startsWith("org/xml/")
-				|| className.startsWith("org/junit/") || className.startsWith("org/apache/")
-				|| className.startsWith("ch/qos/logback/") || className.startsWith("org/slf4j/")
-				|| className.startsWith("javassist/") || className.startsWith("org/apiguardian/")
-				|| className.startsWith("org/opentest4j/"))
+		if (className == null || className.startsWith("java/") || className.startsWith("javax/")
+				|| className.startsWith("jdk/") || className.startsWith("sun/") || className.startsWith("com/sun/")
+				|| className.startsWith("org/xml/") || className.startsWith("org/junit/")
+				|| className.startsWith("org/apache/") || className.startsWith("ch/qos/logback/")
+				|| className.startsWith("org/slf4j/") || className.startsWith("javassist/")
+				|| className.startsWith("org/apiguardian/") || className.startsWith("org/opentest4j/"))
 			return null;
 
 		if (log)

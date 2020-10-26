@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +44,8 @@ public class JdbcRunner {
 			preparedStatement.setString(index, (String) value);
 		else if (type == Date.class)
 			preparedStatement.setDate(index, (Date) value);
+		else if (type == LocalDate.class)
+			preparedStatement.setDate(index, Date.valueOf((LocalDate) value));
 	}
 
 	private void setPreparedStatementValues(PreparedStatement preparedStatement, List<ColumnNameValue> columnNameValues)
@@ -111,14 +114,19 @@ public class JdbcRunner {
 
 			AttributeValues attributeValues = new AttributeValues();
 
+			Object value = null;
+			MetaAttribute metaAttribute = null;
 			int i = 1;
 			for (ColumnNameValue cnv : sqlStatement.getFetchColumnNameValues()) {
 				if (cnv.getForeignKeyAttribute() != null) {
 					attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
-					attributeValues.relationshipValues.add(rs.getObject(i, cnv.getType()));
+					attributeValues.relationshipValues.add(rs.getObject(i, cnv.getReadWriteDbType()));
 				} else {
 					attributeValues.attributes.add(cnv.getAttribute());
-					attributeValues.values.add(rs.getObject(i, cnv.getAttribute().getType()));
+					metaAttribute = cnv.getAttribute();
+					value = rs.getObject(i, metaAttribute.getReadWriteDbType());
+					attributeValues.values.add(metaAttribute.dbTypeMapper.convert(value,
+							metaAttribute.getReadWriteDbType(), metaAttribute.getType()));
 				}
 
 				++i;
@@ -143,7 +151,7 @@ public class JdbcRunner {
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
 
-			LOG.info("findCollection: Running `" + sql + "`");
+			LOG.info("Running `" + sql + "`");
 			List<Object> objects = new ArrayList<>();
 			ResultSet rs = preparedStatement.executeQuery();
 			while (rs.next()) {
@@ -166,6 +174,8 @@ public class JdbcRunner {
 	private AttributeValues createAttributeValuesFromResultSet(List<ColumnNameValue> columnNameValues, ResultSet rs)
 			throws Exception {
 		AttributeValues attributeValues = new AttributeValues();
+		Object value = null;
+		MetaAttribute metaAttribute = null;
 		int i = 1;
 		for (ColumnNameValue cnv : columnNameValues) {
 			if (log)
@@ -173,11 +183,14 @@ public class JdbcRunner {
 						+ cnv.getForeignKeyAttribute());
 			if (cnv.getForeignKeyAttribute() != null) {
 				attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
-				attributeValues.relationshipValues.add(rs.getObject(i, cnv.getType()));
+				attributeValues.relationshipValues.add(rs.getObject(i, cnv.getReadWriteDbType()));
 				LOG.info("createAttributeValuesFromResultSet: cnv.getType()=" + cnv.getType());
 			} else {
 				attributeValues.attributes.add(cnv.getAttribute());
-				attributeValues.values.add(rs.getObject(i, cnv.getAttribute().getType()));
+				metaAttribute = cnv.getAttribute();
+				value = rs.getObject(i, metaAttribute.getReadWriteDbType());
+				attributeValues.values.add(metaAttribute.dbTypeMapper.convert(value, metaAttribute.getReadWriteDbType(),
+						metaAttribute.getType()));
 			}
 
 			++i;

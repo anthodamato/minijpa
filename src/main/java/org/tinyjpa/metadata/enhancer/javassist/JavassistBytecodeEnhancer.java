@@ -29,8 +29,7 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 	@Override
 	public byte[] toBytecode(String className) throws Exception {
 		ClassPool cp = ClassPool.getDefault();
-		CtClass ctClass;
-		ctClass = cp.get(className);
+		CtClass ctClass = cp.get(className);
 		Object entity = ctClass.getAnnotation(Entity.class);
 		Object mappedSuperclass = ctClass.getAnnotation(MappedSuperclass.class);
 		Object embeddable = ctClass.getAnnotation(Embeddable.class);

@@ -9,6 +9,8 @@ public abstract class AbstractAttribute {
 	 */
 	protected Class<?> type;
 	protected Integer sqlType;
+	protected Class<?> readWriteDbType;
+	protected DbTypeMapper dbTypeMapper;
 
 	public String getColumnName() {
 		return columnName;
@@ -32,6 +34,22 @@ public abstract class AbstractAttribute {
 
 	public void setSqlType(Integer sqlType) {
 		this.sqlType = sqlType;
+	}
+
+	public Class<?> getReadWriteDbType() {
+		return readWriteDbType;
+	}
+
+	public void setReadWriteDbType(Class<?> readWriteDbType) {
+		this.readWriteDbType = readWriteDbType;
+	}
+
+	public DbTypeMapper getDbTypeMapper() {
+		return dbTypeMapper;
+	}
+
+	public void setDbTypeMapper(DbTypeMapper dbTypeMapper) {
+		this.dbTypeMapper = dbTypeMapper;
 	}
 
 }

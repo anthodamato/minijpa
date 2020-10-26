@@ -3,6 +3,8 @@ package org.tinyjpa.jdbc;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +13,6 @@ public class JdbcTypes {
 	private static Logger LOG = LoggerFactory.getLogger(JdbcTypes.class);
 
 	public static Integer sqlTypeFromClass(Class<?> c) {
-//		LOG.info("sqlTypeFromClass: c=" + c + "; c.getName()=" + c.getName() + "; c.isPrimitive()=" + c.isPrimitive());
-
 		if (c == BigDecimal.class)
 			return Types.DECIMAL;
 
@@ -39,6 +39,12 @@ public class JdbcTypes {
 
 		if (c == Character.class)
 			return Types.CHAR;
+
+		if (c == Date.class)
+			return Types.DATE;
+
+		if (c == LocalDate.class)
+			return Types.DATE;
 
 		if (c.isPrimitive()) {
 			if (c.getName().equals("byte"))
