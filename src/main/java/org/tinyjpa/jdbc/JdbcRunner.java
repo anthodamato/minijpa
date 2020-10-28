@@ -205,4 +205,19 @@ public class JdbcRunner {
 		public List<Object> relationshipValues = new ArrayList<>();
 		public List<MetaAttribute> relationshipAttributes = new ArrayList<>();
 	}
+
+	public Long generateSequenceNextValue(Connection connection, String sql) throws SQLException {
+		LOG.info("generateSequenceNextValue: sql=" + sql);
+		PreparedStatement preparedStatement = connection.prepareStatement(sql);
+		preparedStatement.execute();
+		ResultSet rs = preparedStatement.getResultSet();
+		Long value = null;
+		if (rs.next()) {
+			value = rs.getLong(1);
+		}
+
+		rs.close();
+		return value;
+	}
+
 }

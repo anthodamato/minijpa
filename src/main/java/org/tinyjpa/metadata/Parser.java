@@ -28,6 +28,7 @@ import org.tinyjpa.jdbc.JdbcTypes;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
+import org.tinyjpa.jdbc.PkGeneration;
 import org.tinyjpa.jdbc.PkGenerationType;
 import org.tinyjpa.jdbc.relationship.ManyToOne;
 import org.tinyjpa.jdbc.relationship.OneToMany;
@@ -272,10 +273,10 @@ public class Parser {
 			LOG.info("readAttribute: attribute: " + attribute);
 		} else {
 			GeneratedValue generatedValue = field.getAnnotation(GeneratedValue.class);
-			org.tinyjpa.jdbc.GeneratedValue gv = null;
+			PkGeneration gv = null;
 			if (generatedValue != null) {
 				PkGenerationType pkGenerationType = decodePkGenerationType(generatedValue.strategy());
-				gv = new org.tinyjpa.jdbc.GeneratedValue(pkGenerationType, generatedValue.generator());
+				gv = new PkGeneration(pkGenerationType, generatedValue.generator());
 			}
 
 			attribute = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)

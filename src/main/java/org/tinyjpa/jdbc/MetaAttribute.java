@@ -13,7 +13,7 @@ public class MetaAttribute extends AbstractAttribute {
 	private Method readMethod;
 	private Method writeMethod;
 	private boolean id;
-	private GeneratedValue generatedValue;
+	private PkGeneration generatedValue;
 	private boolean embedded;
 	private List<MetaAttribute> embeddedAttributes;
 	private Relationship relationship;
@@ -36,7 +36,7 @@ public class MetaAttribute extends AbstractAttribute {
 		return id;
 	}
 
-	public GeneratedValue getGeneratedValue() {
+	public PkGeneration getGeneratedValue() {
 		return generatedValue;
 	}
 
@@ -126,7 +126,7 @@ public class MetaAttribute extends AbstractAttribute {
 		private Method writeMethod;
 		private boolean id;
 		private Integer sqlType;
-		private GeneratedValue generatedValue;
+		private PkGeneration generatedValue;
 		private boolean embedded;
 		private List<MetaAttribute> embeddedAttributes;
 		private Relationship relationship;
@@ -179,7 +179,7 @@ public class MetaAttribute extends AbstractAttribute {
 			return this;
 		}
 
-		public Builder withGeneratedValue(GeneratedValue generatedValue) {
+		public Builder withGeneratedValue(PkGeneration generatedValue) {
 			this.generatedValue = generatedValue;
 			return this;
 		}

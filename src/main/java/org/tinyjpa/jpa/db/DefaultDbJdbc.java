@@ -1,22 +1,20 @@
 package org.tinyjpa.jpa.db;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import org.tinyjpa.jdbc.GeneratedValue;
 import org.tinyjpa.jdbc.MetaEntity;
+import org.tinyjpa.jdbc.PkGeneration;
 import org.tinyjpa.jdbc.PkStrategy;
-import org.tinyjpa.jpa.criteria.AbstractDbJdbcCriteria;
+import org.tinyjpa.jdbc.db.BasicDbJdbc;
 
-public class DefaultDbJdbc extends AbstractDbJdbcCriteria {
+public class DefaultDbJdbc extends BasicDbJdbc {
 
-	protected PkStrategy findPkStrategy(GeneratedValue generatedValue) {
+	@Override
+	public PkStrategy findPkStrategy(PkGeneration generatedValue) {
 		return PkStrategy.PLAIN;
 	}
 
 	@Override
-	protected Long generateSequenceNextValue(Connection connection, MetaEntity entity) throws SQLException {
-		return null;
+	public String sequenceNextValueStatement(MetaEntity entity) {
+		return "";
 	}
 
 }

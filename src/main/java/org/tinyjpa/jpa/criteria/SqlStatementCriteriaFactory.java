@@ -17,12 +17,16 @@ import org.tinyjpa.jdbc.ColumnNameValue;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.SqlStatement;
-import org.tinyjpa.jdbc.db.AbstractDbJdbc;
+import org.tinyjpa.jdbc.db.DbJdbc;
+import org.tinyjpa.jdbc.db.SqlStatementFactory;
 
-public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements DbJdbcCriteria {
-	private Logger LOG = LoggerFactory.getLogger(AbstractDbJdbcCriteria.class);
+public class SqlStatementCriteriaFactory extends SqlStatementFactory {
+	private Logger LOG = LoggerFactory.getLogger(SqlStatementCriteriaFactory.class);
 
-	@Override
+	public SqlStatementCriteriaFactory(DbJdbc dbJdbc) {
+		super(dbJdbc);
+	}
+
 	public SqlStatement select(CriteriaQuery<?> criteriaQuery, Map<String, MetaEntity> entities) throws Exception {
 		LOG.info("select: this=" + this);
 		List<Expression<Boolean>> restrictions = ((CriteriaQueryImpl) criteriaQuery).getRestrictions();
@@ -209,7 +213,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		String attributeName = pathImpl.getAttributeName();
 		String columnName = entity.getAttribute(attributeName).getColumnName();
 		sb.append(" ");
-		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
@@ -227,7 +231,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		String attributeName = pathImpl.getAttributeName();
 		String columnName = entity.getAttribute(attributeName).getColumnName();
 		sb.append(" ");
-		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
@@ -254,7 +258,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		String attributeName = pathImpl.getAttributeName();
 		String columnName = entity.getAttribute(attributeName).getColumnName();
 		sb.append(" ");
-		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
@@ -267,7 +271,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 			StringBuilder sb) {
 		String columnName = metaAttribute.getColumnName();
 		sb.append(" ");
-		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ?");
@@ -277,7 +281,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 			StringBuilder sb) {
 		String columnName = metaAttribute.getColumnName();
 		sb.append(" ");
-		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ? AND ?");
@@ -319,7 +323,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		String attributeName = pathImpl.getAttributeName();
 		String columnName = entity.getAttribute(attributeName).getColumnName();
 		sb.append(" ");
-		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
 	}
@@ -339,7 +343,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		String attributeName = pathImpl.getAttributeName();
 		String columnName = entity.getAttribute(attributeName).getColumnName();
 		sb.append(" ");
-		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" '");
@@ -352,7 +356,7 @@ public abstract class AbstractDbJdbcCriteria extends AbstractDbJdbc implements D
 		String attributeName = pathImpl.getAttributeName();
 		String columnName = entity.getAttribute(attributeName).getColumnName();
 		sb.append(" ");
-		sb.append(getNameTranslator().toColumnName(entity.getAlias(), columnName));
+		sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), columnName));
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" '");

@@ -1,14 +1,14 @@
 package org.tinyjpa.jdbc;
 
-public class GeneratedValue {
+public class PkGeneration {
 	private PkGenerationType strategy = PkGenerationType.AUTO;
 	private String generator;
 
-	public GeneratedValue() {
+	public PkGeneration() {
 		super();
 	}
 
-	public GeneratedValue(PkGenerationType strategy, String generator) {
+	public PkGeneration(PkGenerationType strategy, String generator) {
 		super();
 		this.strategy = strategy;
 		this.generator = generator;

@@ -33,9 +33,7 @@ public class JdbcCriteriaEntityManagerImpl extends JdbcEntityManagerImpl impleme
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
-		DbJdbcCriteria dbJdbcCriteria = (DbJdbcCriteria) dbConfiguration.getDbJdbc();
-		LOG.info("select: dbJdbcCriteria=" + dbJdbcCriteria);
-		SqlStatement sqlStatement = dbJdbcCriteria.select(criteriaQuery, entities);
+		SqlStatement sqlStatement = sqlStatementCriteriaFactory.select(criteriaQuery, entities);
 		LOG.info("select: sqlStatement.getSql()=" + sqlStatement.getSql());
 
 		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement, entity, this, null, null);

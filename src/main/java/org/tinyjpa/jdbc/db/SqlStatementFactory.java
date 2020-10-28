@@ -1,7 +1,5 @@
 package org.tinyjpa.jdbc.db;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,59 +10,25 @@ import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.AttributeValueConverter;
 import org.tinyjpa.jdbc.ColumnNameValue;
-import org.tinyjpa.jdbc.DefaultNameTranslator;
 import org.tinyjpa.jdbc.EmbeddedIdAttributeValueConverter;
-import org.tinyjpa.jdbc.GeneratedValue;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
-import org.tinyjpa.jdbc.NameTranslator;
-import org.tinyjpa.jdbc.PkGenerationType;
-import org.tinyjpa.jdbc.PkStrategy;
 import org.tinyjpa.jdbc.SqlStatement;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 
-public abstract class AbstractDbJdbc implements DbJdbc {
-	private Logger LOG = LoggerFactory.getLogger(AbstractDbJdbc.class);
+public class SqlStatementFactory {
+	private Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
 	private AttributeValueConverter embeddedIdAttributeValueConverter = new EmbeddedIdAttributeValueConverter();
-	private NameTranslator nameTranslator = new DefaultNameTranslator();
+	protected DbJdbc dbJdbc;
 
-	@Override
-	public NameTranslator getNameTranslator() {
-		return nameTranslator;
+	public SqlStatementFactory(DbJdbc dbJdbc) {
+		super();
+		this.dbJdbc = dbJdbc;
 	}
 
-	protected PkStrategy findPkStrategy(GeneratedValue generatedValue) {
-		if (generatedValue == null)
-			return PkStrategy.PLAIN;
-
-		if (generatedValue.getStrategy() == PkGenerationType.IDENTITY)
-			return PkStrategy.IDENTITY;
-
-		if (generatedValue.getStrategy() == PkGenerationType.SEQUENCE
-				|| generatedValue.getStrategy() == PkGenerationType.AUTO)
-			return PkStrategy.SEQUENCE;
-
-		return PkStrategy.PLAIN;
-	}
-
-	@Override
-	public SqlStatement generateInsert(Connection connection, Object entityInstance, MetaEntity entity,
-			List<AttributeValue> attrValues) throws Exception {
-		MetaAttribute id = entity.getId();
-		PkStrategy pkStrategy = findPkStrategy(id.getGeneratedValue());
-
-		LOG.info("generateInsert: pkStrategy=" + pkStrategy);
-		if (pkStrategy == PkStrategy.SEQUENCE)
-			return generateInsertSequenceStrategy(connection, entity, attrValues);
-		else if (pkStrategy == PkStrategy.IDENTITY)
-			return generateInsertIdentityStrategy(entity, attrValues);
-
-		return generatePlainInsert(entityInstance, entity, attrValues);
-	}
-
-	protected SqlStatement generatePlainInsert(Object entityInstance, MetaEntity entity,
-			List<AttributeValue> attrValues) throws Exception {
+	public SqlStatement generatePlainInsert(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
+			throws Exception {
 		MetaAttribute id = entity.getId();
 		Object idValue = id.getReadMethod().invoke(entityInstance);
 		List<AttributeValue> attrValuesWithId = new ArrayList<>();
@@ -79,11 +43,8 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 				.withColumnNameValues(columnNameValues).build();
 	}
 
-	protected abstract Long generateSequenceNextValue(Connection connection, MetaEntity entity) throws SQLException;
-
-	protected SqlStatement generateInsertSequenceStrategy(Connection connection, MetaEntity entity,
-			List<AttributeValue> attrValues) throws Exception {
-		Long idValue = generateSequenceNextValue(connection, entity);
+	public SqlStatement generateInsertSequenceStrategy(Long idValue, MetaEntity entity, List<AttributeValue> attrValues)
+			throws Exception {
 		LOG.info("generateInsertSequenceStrategy: idValue=" + idValue);
 
 		List<AttributeValue> attrValuesWithId = new ArrayList<>();
@@ -98,7 +59,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 				.withColumnNameValues(columnNameValues).build();
 	}
 
-	protected SqlStatement generateInsertIdentityStrategy(MetaEntity entity, List<AttributeValue> attrValues)
+	public SqlStatement generateInsertIdentityStrategy(MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception {
 		List<AttributeValue> attributeValues = attrValues;
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
@@ -197,7 +158,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		return list;
 	}
 
-	@Override
 	public SqlStatement generateSelectById(MetaEntity entity, Object idValue) throws Exception {
 		List<AttributeValue> idAttributeValues = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
@@ -254,7 +214,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			if (i > 0)
 				sb.append(", ");
 
-			sb.append(getNameTranslator().toColumnName(entity.getAlias(), c));
+			sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), c));
 			++i;
 		}
 
@@ -265,7 +225,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		return sb;
 	}
 
-	@Override
 	public SqlStatement generateSelectAllFields(MetaEntity entity) throws Exception {
 		List<MetaAttribute> expandedAttributes = entity.getId().expand();
 		expandedAttributes.addAll(entity.expandAttributes());
@@ -276,7 +235,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		return new SqlStatement.Builder().withSql(sql).withFetchColumnNameValues(fetchColumnNameValues).build();
 	}
 
-	@Override
 	public SqlStatement generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
 			Object foreignKeyInstance) throws Exception {
 		List<MetaAttribute> expandedAttributes = entity.getId().expand();
@@ -294,7 +252,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			if (i > 0)
 				sb.append(" and ");
 
-			sb.append(getNameTranslator().toColumnName(entity.getAlias(), cnv.getColumnName()));
+			sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), cnv.getColumnName()));
 			sb.append(" = ?");
 			++i;
 		}
@@ -305,7 +263,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 				.withFetchColumnNameValues(fetchColumnNameValues).build();
 	}
 
-	@Override
 	public SqlStatement generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId, Object joinTableForeignKey,
 			RelationshipJoinTable joinTable) throws Exception {
 		StringBuilder sb = new StringBuilder();
@@ -322,7 +279,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			if (i > 0)
 				sb.append(", ");
 
-			sb.append(getNameTranslator().toColumnName(entity.getAlias(), c));
+			sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), c));
 			++i;
 		}
 
@@ -345,12 +302,13 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			if (k > 0)
 				sb.append(" and ");
 
-			sb.append(getNameTranslator().toColumnName(entity.getAlias(), idAttributes.get(k).getColumnName()));
+			sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), idAttributes.get(k).getColumnName()));
 			sb.append(" = ");
 			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnTargetAttributes, idAttributes.get(k));
 			LOG.info("generateSelectByJoinTable: index=" + index);
 			JoinColumnAttribute joinColumnAttribute = joinColumnTargetAttributes.get(index);
-			sb.append(getNameTranslator().toColumnName(joinTable.getAlias(), joinColumnAttribute.getColumnName()));
+			sb.append(
+					dbJdbc.getNameTranslator().toColumnName(joinTable.getAlias(), joinColumnAttribute.getColumnName()));
 		}
 
 		sb.append(" where ");
@@ -369,7 +327,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 			LOG.info("generateSelectByJoinTable: 2 index=" + index);
 			attributeValues.add(
 					new AttributeValue(joinColumnOwningAttributes.get(index).getForeignKeyAttribute(), av.getValue()));
-			sb.append(getNameTranslator().toColumnName(joinTable.getAlias(),
+			sb.append(dbJdbc.getNameTranslator().toColumnName(joinTable.getAlias(),
 					joinColumnOwningAttributes.get(index).getColumnName()));
 			sb.append(" = ?");
 			++i;
@@ -403,7 +361,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		return columnNameValues;
 	}
 
-	@Override
 	public SqlStatement generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, Object owningInstance,
 			Object targetInstance) throws Exception {
 		LOG.info("generateJoinTableInsert: owningInstance=" + owningInstance);
@@ -419,7 +376,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
 	}
 
-	@Override
 	public SqlStatement generateUpdate(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception {
 		LOG.info("generateUpdate: attrValues=" + attrValues);
@@ -459,7 +415,6 @@ public abstract class AbstractDbJdbc implements DbJdbc {
 				.withColumnNameValues(columnNameValues).build();
 	}
 
-	@Override
 	public SqlStatement generateDeleteById(MetaEntity entity, Object idValue) throws Exception {
 		List<AttributeValue> idAttributeValues = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);

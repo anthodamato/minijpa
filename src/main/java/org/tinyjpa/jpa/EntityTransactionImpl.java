@@ -22,8 +22,8 @@ public class EntityTransactionImpl implements EntityTransaction {
 
 	@Override
 	public void begin() {
-		if (active)
-			throw new IllegalStateException("Transaction already active");
+//		if (active)
+//			throw new IllegalStateException("Transaction already active");
 
 		try {
 			connection = abstractEntityManager.connectionHolder.getConnection();
@@ -63,11 +63,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 			}
 		}
 
-//		try {
-//			connection.close();
-//		} catch (SQLException e) {
-//			LOG.error(e.getMessage());
-//		}
+//		this.active = false;
 	}
 
 	@Override
@@ -91,6 +87,8 @@ public class EntityTransactionImpl implements EntityTransaction {
 		} catch (SQLException e) {
 			LOG.error(e.getMessage());
 		}
+
+//		this.active = false;
 	}
 
 	@Override
