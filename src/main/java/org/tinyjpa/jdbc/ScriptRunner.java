@@ -17,7 +17,6 @@ public class ScriptRunner {
 	private Logger LOG = LoggerFactory.getLogger(ScriptRunner.class);
 
 	public void run(File file, Connection connection) {
-		LOG.info("run: connection=" + connection);
 		List<String> statements = null;
 		try {
 			statements = readStatements(file);

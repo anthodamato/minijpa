@@ -51,6 +51,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 			}
 		}
 
+		abstractEntityManager.flush();
 		try {
 			connection.commit();
 			LOG.info("Commit Done");

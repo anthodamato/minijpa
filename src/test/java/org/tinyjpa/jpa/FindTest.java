@@ -186,6 +186,9 @@ public class FindTest {
 
 			em.remove(c_Crown);
 			em.remove(c_Smith);
+		} catch (Exception e) {
+			tx.rollback();
+			Assertions.fail(e.getMessage());
 		} finally {
 			tx.commit();
 			em.close();
@@ -268,6 +271,9 @@ public class FindTest {
 			em.remove(c_AnthonySmith);
 			em.remove(c_LucySmith);
 			em.remove(c_Wolf);
+		} catch (Exception e) {
+			tx.rollback();
+			Assertions.fail(e.getMessage());
 		} finally {
 			tx.commit();
 			em.close();
@@ -326,6 +332,9 @@ public class FindTest {
 			em.remove(c_AnthonySmith);
 			em.remove(c_LucySmith);
 			em.remove(c_Wolf);
+		} catch (Exception e) {
+			tx.rollback();
+			Assertions.fail(e.getMessage());
 		} finally {
 			tx.commit();
 			em.close();
@@ -391,6 +400,9 @@ public class FindTest {
 
 			em.remove(a_RegentSt);
 			em.remove(a_RomfordRd);
+		} catch (Exception e) {
+			tx.rollback();
+			Assertions.fail(e.getMessage());
 		} finally {
 			tx.commit();
 			em.close();

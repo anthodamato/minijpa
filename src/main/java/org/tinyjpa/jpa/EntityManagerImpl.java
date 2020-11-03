@@ -25,6 +25,7 @@ import org.tinyjpa.jdbc.ConnectionHolderImpl;
 import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
+import org.tinyjpa.jdbc.db.TinyFlushMode;
 import org.tinyjpa.jpa.criteria.CriteriaBuilderImpl;
 import org.tinyjpa.jpa.criteria.JdbcCriteriaEntityManagerImpl;
 import org.tinyjpa.jpa.db.DbConfigurationList;
@@ -39,6 +40,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
 	private JdbcCriteriaEntityManagerImpl jdbcEntityManager;
+	private FlushModeType flushModeType = FlushModeType.AUTO;
 
 	public EntityManagerImpl(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
 			Map<String, MetaEntity> entities) {
@@ -65,8 +67,9 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		if (e == null)
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
+		TinyFlushMode tinyFlushMode = flushModeType == FlushModeType.AUTO ? TinyFlushMode.AUTO : TinyFlushMode.COMMIT;
 		try {
-			jdbcEntityManager.persist(e, entity);
+			jdbcEntityManager.persist(e, entity, tinyFlushMode);
 		} catch (Exception ex) {
 			LOG.error(ex.getClass().getName());
 			LOG.error(ex.getMessage());
@@ -83,13 +86,33 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public void remove(Object entity) {
+		try {
+			if (!persistenceContext.isManaged(entity))
+				return;
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			return;
+		}
+
+		try {
+			if (persistenceContext.isDetached(entity)) {
+				throw new IllegalArgumentException("Entity '" + entity + "' is detached");
+			}
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			return;
+		}
+
 		if (entityTransaction == null || !entityTransaction.isActive())
 			throw new IllegalStateException("Transaction not active");
 
 		MetaEntity e = entities.get(entity.getClass().getName());
-		if (e == null)
-			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
+		if (e == null) {
+			entityTransaction.setRollbackOnly();
+			throw new IllegalArgumentException("Object '" + entity.getClass().getName() + "' is not an entity");
+		}
 
+		LOG.info("remove: entity=" + entity);
 		try {
 			jdbcEntityManager.remove(entity);
 		} catch (Exception ex) {
@@ -141,20 +164,22 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
-
+		try {
+			jdbcEntityManager.flush();
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
+		}
 	}
 
 	@Override
 	public void setFlushMode(FlushModeType flushMode) {
-		// TODO Auto-generated method stub
-
+		this.flushModeType = flushMode;
 	}
 
 	@Override
 	public FlushModeType getFlushMode() {
-		// TODO Auto-generated method stub
-		return null;
+		return flushModeType;
 	}
 
 	@Override

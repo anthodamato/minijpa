@@ -29,7 +29,7 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 
 	public SqlStatement select(CriteriaQuery<?> criteriaQuery, Map<String, MetaEntity> entities) throws Exception {
 		LOG.info("select: this=" + this);
-		List<Expression<Boolean>> restrictions = ((CriteriaQueryImpl) criteriaQuery).getRestrictions();
+		List<Expression<Boolean>> restrictions = ((CriteriaQueryImpl<?>) criteriaQuery).getRestrictions();
 		LOG.info("select: restrictions=" + restrictions);
 		if (!restrictions.isEmpty()) {
 			Expression<Boolean> expression = restrictions.get(0);

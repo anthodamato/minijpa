@@ -23,7 +23,15 @@ public class PersistenceContextImpl implements EntityContainer {
 	/**
 	 * Managed entities. They are persistent on db.
 	 */
-	private Map<Class<?>, Map<Object, Object>> persistentEntities = new HashMap<>();
+	private Map<Class<?>, Map<Object, Object>> flushedPersistEntities = new HashMap<>();
+	/**
+	 * Managed entities. They are not persistent on db.
+	 */
+	private Map<Class<?>, Map<Object, Object>> notFlushedPersistEntities = new HashMap<>();
+	/**
+	 * Managed entities. They are not persistent on db.
+	 */
+	private Map<Class<?>, Map<Object, Object>> notFlushedRemoveEntities = new HashMap<>();
 	/**
 	 * Detached entities.
 	 */
@@ -81,7 +89,7 @@ public class PersistenceContextImpl implements EntityContainer {
 		return mapEntities;
 	}
 
-	private boolean isEntityDetached(Object entityInstance, Object idValue) {
+	private boolean isDetached(Object entityInstance, Object idValue) {
 		Map<Object, Object> mapEntities = detachedEntities.get(entityInstance.getClass());
 		if (mapEntities == null)
 			return false;
@@ -93,8 +101,15 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public void save(Object entityInstance, Object idValue) throws Exception {
-		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), persistentEntities);
+	public boolean isDetached(Object entityInstance) throws Exception {
+		MetaEntity e = entities.get(entityInstance.getClass().getName());
+		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+		return isDetached(entityInstance, idValue);
+	}
+
+	@Override
+	public void addFlushedPersist(Object entityInstance, Object idValue) throws Exception {
+		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), flushedPersistEntities);
 		if (mapEntities.get(idValue) != null)
 			return;
 
@@ -103,7 +118,7 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public void save(Object entityInstance) throws Exception {
+	public void addFlushedPersist(Object entityInstance) throws Exception {
 		MetaEntity e = entities.get(entityInstance.getClass().getName());
 		LOG.info("save: entityInstance.getClass().getName()=" + entityInstance.getClass().getName());
 		LOG.info("save: e=" + e);
@@ -112,10 +127,60 @@ public class PersistenceContextImpl implements EntityContainer {
 
 		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 
-		if (isEntityDetached(entityInstance, idValue))
+		if (isDetached(entityInstance, idValue))
 			throw new EntityExistsException("Entity: '" + entityInstance + "' is detached");
 
-		save(entityInstance, idValue);
+		addFlushedPersist(entityInstance, idValue);
+	}
+
+	@Override
+	public void addNotFlushedPersist(Object entityInstance, Object idValue) throws Exception {
+		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), notFlushedPersistEntities);
+		if (mapEntities.get(idValue) != null)
+			return;
+
+		LOG.info("Instance " + entityInstance + " saved in the PC pk=" + idValue);
+		mapEntities.put(idValue, entityInstance);
+	}
+
+	@Override
+	public void addNotFlushedRemove(Object entityInstance, Object idValue) throws Exception {
+		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), notFlushedRemoveEntities);
+		if (mapEntities.get(idValue) != null)
+			return;
+
+		LOG.info("Instance " + entityInstance + " saved in the PC for removal pk=" + idValue);
+		mapEntities.put(idValue, entityInstance);
+	}
+
+	@Override
+	public Set<Class<?>> getNotFlushedPersistClasses() {
+		return notFlushedPersistEntities.keySet();
+	}
+
+	@Override
+	public Set<Class<?>> getNotFlushedRemoveClasses() {
+		return notFlushedRemoveEntities.keySet();
+	}
+
+	@Override
+	public Map<Object, Object> getNotFlushedPersistEntities(Class<?> c) {
+		return notFlushedPersistEntities.get(c);
+	}
+
+	@Override
+	public Map<Object, Object> getNotFlushedRemoveEntities(Class<?> c) {
+		return notFlushedRemoveEntities.get(c);
+	}
+
+	@Override
+	public Set<Class<?>> getFlushedPersistClasses() {
+		return flushedPersistEntities.keySet();
+	}
+
+	@Override
+	public Map<Object, Object> getFlushedPersistEntities(Class<?> c) {
+		return flushedPersistEntities.get(c);
 	}
 
 	@Override
@@ -127,35 +192,51 @@ public class PersistenceContextImpl implements EntityContainer {
 		if (primaryKey == null)
 			throw new IllegalArgumentException("Primary key is null (class '" + entityClass.getName() + "')");
 
-		Map<Object, Object> persistentEntitiesMap = getEntityMap(entityClass, persistentEntities);
-		Object entityInstance = persistentEntitiesMap.get(primaryKey);
-		LOG.info("find: entityInstance=" + entityInstance);
+		Map<Object, Object> notFlushedEntitiesMap = getEntityMap(entityClass, notFlushedPersistEntities);
+		Object entityInstance = notFlushedEntitiesMap.get(primaryKey);
+		LOG.info("find: not flushed entityInstance=" + entityInstance);
+		if (entityInstance != null)
+			return entityInstance;
+
+		Map<Object, Object> flushedEntitiesMap = getEntityMap(entityClass, flushedPersistEntities);
+		entityInstance = flushedEntitiesMap.get(primaryKey);
+		LOG.info("find: flushed entityInstance=" + entityInstance);
 		return entityInstance;
 	}
 
 	@Override
-	public boolean isSaved(Object entityInstance) throws Exception {
-		Map<Object, Object> mapEntities = persistentEntities.get(entityInstance.getClass());
+	public boolean isManaged(Object entityInstance) throws Exception {
+		Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
+		if (mapEntities != null) {
+			MetaEntity e = entities.get(entityInstance.getClass().getName());
+			Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+			if (idValue == null)
+				return false;
+
+			if (mapEntities.get(idValue) != null)
+				return true;
+		}
+
+		mapEntities = flushedPersistEntities.get(entityInstance.getClass());
 		if (mapEntities == null)
 			return false;
 
-		LOG.info("isPersistentOnDb: mapEntities=" + mapEntities);
+		LOG.info("isManaged: mapEntities=" + mapEntities);
 		MetaEntity e = entities.get(entityInstance.getClass().getName());
-		if (e == null)
-			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
+//		if (e == null)
+//			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
 		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-		if (mapEntities.get(idValue) == null)
-			return false;
+		if (mapEntities.get(idValue) != null)
+			return true;
 
-		LOG.info("isPersistentOnDb: true");
-		return true;
+		return false;
 	}
 
 	@Override
-	public boolean isSaved(List<Object> entityInstanceList) throws Exception {
+	public boolean isManaged(List<Object> entityInstanceList) throws Exception {
 		for (Object instance : entityInstanceList) {
-			if (!isSaved(instance))
+			if (!isManaged(instance))
 				return false;
 		}
 
@@ -163,13 +244,83 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	@Override
-	public void remove(Object entityInstance, Object primaryKey) {
-		Map<Object, Object> mapEntities = persistentEntities.get(entityInstance.getClass());
+	public boolean isFlushedPersist(Object entityInstance) throws Exception {
+		Map<Object, Object> mapEntities = flushedPersistEntities.get(entityInstance.getClass());
+		if (mapEntities == null)
+			return false;
+
+		MetaEntity e = entities.get(entityInstance.getClass().getName());
+		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+		if (mapEntities.get(idValue) == null)
+			return false;
+
+		return true;
+	}
+
+	@Override
+	public boolean isNotFlushedPersist(Object entityInstance) throws Exception {
+		Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
+		if (mapEntities == null)
+			return false;
+
+		MetaEntity e = entities.get(entityInstance.getClass().getName());
+		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+		if (mapEntities.get(idValue) == null)
+			return false;
+
+		return true;
+	}
+
+	@Override
+	public boolean isNotFlushedPersist(Object entityInstance, Object primaryKey) throws Exception {
+		Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
+		if (mapEntities == null)
+			return false;
+
+		if (mapEntities.get(primaryKey) == null)
+			return false;
+
+		return true;
+	}
+
+	@Override
+	public void removeFlushed(Object entityInstance, Object primaryKey) {
+		Map<Object, Object> mapEntities = flushedPersistEntities.get(entityInstance.getClass());
 		if (mapEntities == null)
 			return;
 
 		mapEntities.remove(primaryKey);
 		LOG.info("remove: entityInstance '" + entityInstance + "' removed from persistence context");
+	}
+
+	@Override
+	public void removeNotFlushedPersist(Object entityInstance, Object primaryKey) throws Exception {
+		Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
+		if (mapEntities == null)
+			return;
+
+		mapEntities.remove(primaryKey);
+	}
+
+	@Override
+	public void removeNotFlushedRemove(Object entityInstance, Object primaryKey) throws Exception {
+		Map<Object, Object> mapEntities = notFlushedRemoveEntities.get(entityInstance.getClass());
+		if (mapEntities == null)
+			return;
+
+		mapEntities.remove(primaryKey);
+	}
+
+	@Override
+	public boolean isNotFlushedRemove(Class<?> c, Object primaryKey) throws Exception {
+		Map<Object, Object> mapEntities = notFlushedRemoveEntities.get(c);
+		if (mapEntities == null)
+			return false;
+
+		if (mapEntities.get(primaryKey) == null)
+			return false;
+
+		return true;
 	}
 
 	@Override
@@ -180,10 +331,10 @@ public class PersistenceContextImpl implements EntityContainer {
 
 		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 
-		if (isEntityDetached(entityInstance, idValue))
+		if (isDetached(entityInstance, idValue))
 			return;
 
-		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), persistentEntities);
+		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), flushedPersistEntities);
 		mapEntities.remove(idValue, entityInstance);
 
 		mapEntities = getEntityMap(entityInstance.getClass(), detachedEntities);
@@ -228,12 +379,12 @@ public class PersistenceContextImpl implements EntityContainer {
 	 * Ends this persistence context.
 	 */
 	@Override
-	public void end() {
+	public void close() {
 
 	}
 
 	@Override
-	public void addToPendingNew(Object entityInstance) {
+	public void addPendingNew(Object entityInstance) {
 		Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), pendingNewEntities);
 		if (mapEntities.get(entityInstance) != null)
 			return;

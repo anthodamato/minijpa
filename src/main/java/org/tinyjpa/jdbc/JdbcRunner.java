@@ -65,7 +65,6 @@ public class JdbcRunner {
 
 	public Object persist(SqlStatement sqlStatement, Connection connection) throws SQLException {
 		LOG.info("persist: sqlStatement.sql=" + sqlStatement.getSql());
-		LOG.info("persist: connection=" + connection);
 		PreparedStatement preparedStatement = null;
 		try {
 			preparedStatement = connection.prepareStatement(sqlStatement.getSql(), Statement.RETURN_GENERATED_KEYS);
@@ -76,7 +75,6 @@ public class JdbcRunner {
 
 			Object pk = null;
 			ResultSet resultSet = preparedStatement.getGeneratedKeys();
-			LOG.info("persist: getGeneratedKeys() resultSet=" + resultSet);
 			if (resultSet != null && resultSet.next()) {
 				pk = resultSet.getLong(1);
 				LOG.info("persist: getGeneratedKeys() pk=" + pk);

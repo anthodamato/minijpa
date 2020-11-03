@@ -55,14 +55,58 @@ public class PersistTest {
 		address.setName("Regent St");
 		em.persist(address);
 
-		tx.commit();
-
 		c = em.find(Citizen.class, citizen.getId());
 		Assertions.assertNotNull(c);
 
 		Assertions.assertNotNull(address.getId());
-		c = em.find(Citizen.class, address.getId());
-		Assertions.assertNull(c);
+		Citizen cn = em.find(Citizen.class, address.getId());
+		Assertions.assertNull(cn);
+
+		em.remove(c);
+		em.remove(address);
+
+		tx.commit();
+		em.close();
+	}
+
+	@Test
+	public void update() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		final EntityTransaction tx = em.getTransaction();
+		tx.begin();
+
+		Citizen citizen = new Citizen();
+		citizen.setName("Marc");
+		em.persist(citizen);
+
+		Address address = new Address();
+		address.setName("Regent St");
+		em.persist(address);
+
+		Citizen cn = em.find(Citizen.class, address.getId());
+		Assertions.assertNull(cn);
+
+		tx.commit();
+
+		tx.begin();
+		Citizen c = em.find(Citizen.class, citizen.getId());
+		Assertions.assertNotNull(c);
+
+		// no need to call persist
+		c.setName("Joe");
+		tx.commit();
+
+		tx.begin();
+		em.detach(citizen);
+		System.out.println("After detach");
+		c = em.find(Citizen.class, citizen.getId());
+		Assertions.assertNotNull(c);
+		Assertions.assertEquals("Joe", c.getName());
+
+		em.remove(c);
+		em.remove(address);
+		
+		tx.commit();
 		em.close();
 	}
 

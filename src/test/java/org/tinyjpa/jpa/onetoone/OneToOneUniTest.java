@@ -39,6 +39,7 @@ public class OneToOneUniTest {
 			tx.commit();
 
 			em.detach(city);
+			System.out.println("Detached");
 
 			City c = em.find(City.class, city.getId());
 			Assertions.assertNotNull(c);

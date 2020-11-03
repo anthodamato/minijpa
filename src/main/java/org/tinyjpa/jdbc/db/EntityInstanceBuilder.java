@@ -3,8 +3,8 @@ package org.tinyjpa.jdbc.db;
 import java.util.List;
 import java.util.Optional;
 
-import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.AttributeValue;
+import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 
 public interface EntityInstanceBuilder {

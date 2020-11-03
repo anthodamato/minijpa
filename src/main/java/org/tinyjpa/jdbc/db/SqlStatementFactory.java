@@ -43,22 +43,6 @@ public class SqlStatementFactory {
 				.withColumnNameValues(columnNameValues).build();
 	}
 
-	public SqlStatement generateInsertSequenceStrategy(Long idValue, MetaEntity entity, List<AttributeValue> attrValues)
-			throws Exception {
-		LOG.info("generateInsertSequenceStrategy: idValue=" + idValue);
-
-		List<AttributeValue> attrValuesWithId = new ArrayList<>();
-		attrValuesWithId.add(new AttributeValue(entity.getId(), idValue));
-		attrValuesWithId.addAll(attrValues);
-
-		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValuesWithId);
-		LOG.info("generateInsertSequenceStrategy: columnNameValues.size()=" + columnNameValues.size());
-		String sql = generateInsertStatement(entity.getTableName(), columnNameValues);
-		LOG.info("generateInsertSequenceStrategy: sql=" + sql);
-		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValuesWithId).withIdValue(idValue)
-				.withColumnNameValues(columnNameValues).build();
-	}
-
 	public SqlStatement generateInsertIdentityStrategy(MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception {
 		List<AttributeValue> attributeValues = attrValues;
@@ -376,16 +360,17 @@ public class SqlStatementFactory {
 		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
 	}
 
-	public SqlStatement generateUpdate(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
-			throws Exception {
+	public SqlStatement generateUpdate(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues,
+			Object idValue) throws Exception {
 		LOG.info("generateUpdate: attrValues=" + attrValues);
 		StringBuilder sb = new StringBuilder();
-		MetaAttribute id = entity.getId();
 		if (entity.getAttributes().isEmpty()) {
 			String sql = sb.toString();
 			return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValues).build();
 		}
 
+		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
+		attrValues.add(attrValueId);
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
 		sb.append("update ");
 		sb.append(entity.getTableName());
@@ -406,7 +391,7 @@ public class SqlStatementFactory {
 		}
 
 		sb.append(" where ");
-		sb.append(id.getColumnName());
+		sb.append(entity.getId().getColumnName());
 		sb.append("= ?");
 		String sql = sb.toString();
 

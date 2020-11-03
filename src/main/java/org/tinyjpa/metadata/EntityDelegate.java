@@ -96,7 +96,8 @@ public final class EntityDelegate implements EntityListener {
 				embeddedChanges.put(owningEntityInstance, instanceAttrs);
 			}
 
-			MetaAttribute parentAttribute = entityContextManager.findEmbeddedAttribute(owningEntityInstance.getClass().getName());
+			MetaAttribute parentAttribute = entityContextManager
+					.findEmbeddedAttribute(owningEntityInstance.getClass().getName());
 			LOG.info("set: parentAttribute=" + parentAttribute);
 			MetaAttribute attribute = parentAttribute.findChildByName(attributeName);
 			Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
@@ -192,6 +193,15 @@ public final class EntityDelegate implements EntityListener {
 			return Optional.empty();
 
 		return Optional.of(instanceAttrs);
+	}
+
+	public Set<MetaEntity> getChangeMetaEntities() {
+		return changes.keySet();
+	}
+
+	public Set<Object> getChangeEntities(MetaEntity metaEntity) {
+		Map<Object, List<AttributeValue>> map = changes.get(metaEntity);
+		return map.keySet();
 	}
 
 	@Override
