@@ -22,6 +22,7 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 	private Logger LOG = LoggerFactory.getLogger(TypedQueryImpl.class);
 	protected CriteriaQuery<?> criteriaQuery;
 	protected JdbcCriteriaEntityManager jdbcCriteriaEntityManager;
+	private FlushModeType flushModeType = FlushModeType.AUTO;
 
 	public TypedQueryImpl(CriteriaQuery<?> criteriaQuery, JdbcCriteriaEntityManager jdbcCriteriaEntityManager) {
 		super();
@@ -34,7 +35,9 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 		List<?> list = null;
 		try {
 //			list = criteriaJdbcEntityManager.loadAllFields(criteriaQuery.getSelection().getJavaType());
-			jdbcCriteriaEntityManager.flush();
+			if (flushModeType == FlushModeType.AUTO)
+				jdbcCriteriaEntityManager.flush();
+
 			list = jdbcCriteriaEntityManager.select(criteriaQuery);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
@@ -124,8 +127,7 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public FlushModeType getFlushMode() {
-		// TODO Auto-generated method stub
-		return null;
+		return flushModeType;
 	}
 
 	@Override
@@ -220,8 +222,8 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public TypedQuery<X> setFlushMode(FlushModeType flushMode) {
-		// TODO Auto-generated method stub
-		return null;
+		this.flushModeType = flushMode;
+		return this;
 	}
 
 	@Override

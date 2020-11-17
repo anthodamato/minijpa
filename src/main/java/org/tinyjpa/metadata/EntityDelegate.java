@@ -158,9 +158,6 @@ public final class EntityDelegate implements EntityListener {
 		removeEmbeddedChanges(entity.getAttributes(), entityInstance);
 		Map<Object, List<AttributeValue>> map = changes.get(entity);
 		LOG.info("removeChanges: map=" + map);
-//		if (map == null)
-//			return;
-
 		map.remove(entityInstance);
 	}
 
@@ -270,9 +267,6 @@ public final class EntityDelegate implements EntityListener {
 
 	private boolean isLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
 		Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-//		if (map == null)
-//			return false;
-
 		Set<MetaAttribute> attributes = map.get(entityInstance);
 		if (attributes == null)
 			return false;
@@ -282,11 +276,6 @@ public final class EntityDelegate implements EntityListener {
 
 	public void setLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
 		Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-//		if (map == null) {
-//			map = new HashMap<>();
-//			loadedLazyAttributes.put(entityInstance.getClass(), map);
-//		}
-
 		Set<MetaAttribute> attributes = map.get(entityInstance);
 		if (attributes == null) {
 			attributes = new HashSet<>();
@@ -298,9 +287,6 @@ public final class EntityDelegate implements EntityListener {
 
 	public void removeLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
 		Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-//		if (map == null)
-//			return;
-
 		Set<MetaAttribute> attributes = map.get(entityInstance);
 		if (attributes == null)
 			return;
@@ -308,14 +294,8 @@ public final class EntityDelegate implements EntityListener {
 		attributes.remove(a);
 		if (attributes.isEmpty()) {
 			map.remove(entityInstance);
-//			if (map.isEmpty())
-//				loadedLazyAttributes.remove(entityInstance.getClass());
 		}
 	}
-
-//	public Map<MetaEntity, Map<Object, List<AttributeValue>>> getChanges() {
-//		return changes;
-//	}
 
 	public void addIgnoreEntityInstance(Object object) {
 		ignoreEntityInstances.add(object);
@@ -324,18 +304,6 @@ public final class EntityDelegate implements EntityListener {
 	public void removeIgnoreEntityInstance(Object object) {
 		ignoreEntityInstances.remove(object);
 	}
-
-//	private boolean isNewInstance(Object entityInstance) throws Exception {
-//		if (entities == null)
-//			return true;
-//
-//		Entity entity = entities.get(entityInstance.getClass().getName());
-//		Object pk = AttributeUtil.getIdValue(entity, entityInstance);
-//		if (pk == null)
-//			return true;
-//
-//		return !entityContainer.isSaved(entityInstance);
-//	}
 
 	private class EntityContextManager {
 		private List<EntityContext> entityContexts = new ArrayList<>();

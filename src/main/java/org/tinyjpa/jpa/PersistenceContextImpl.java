@@ -36,14 +36,12 @@ public class PersistenceContextImpl implements EntityContainer {
 	 * Detached entities.
 	 */
 	private Map<Class<?>, Map<Object, Object>> detachedEntities = new HashMap<>();
-
 	/**
 	 * New entities not ready to be inserted on db. The pk could be missing, so the
 	 * structure is: Map<entity class name, Map<entity instance ref, entity instance
 	 * ref>>
 	 */
 	private Map<Class<?>, Map<Object, Object>> pendingNewEntities = new HashMap<>();
-
 	/**
 	 * New attributes not ready to be inserted on db. For example, they can be
 	 * attributes that require a join table. The default 'one to many' relationship
@@ -376,7 +374,8 @@ public class PersistenceContextImpl implements EntityContainer {
 	}
 
 	/**
-	 * Ends this persistence context.
+	 * Ends this persistence context. TODO If needed, entities must be removed when
+	 * the entity manager is closed.
 	 */
 	@Override
 	public void close() {
