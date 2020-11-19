@@ -6,7 +6,7 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
-public class PredicateImpl extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
+public class ComparisonPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
 	private PredicateType predicateType;
 	private Expression<?> x;
 	private Expression<?> y;
@@ -14,33 +14,12 @@ public class PredicateImpl extends AbstractExpression<Boolean> implements Predic
 	private Object value2;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
-	public PredicateImpl(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value1) {
+	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value1) {
 		super(Boolean.class);
 		this.predicateType = predicateType;
 		this.x = x;
 		this.y = y;
 		this.value1 = value1;
-	}
-
-	public PredicateImpl(PredicateType predicateType, Expression<Boolean> x, Expression<Boolean> y) {
-		super(Boolean.class);
-		this.predicateType = predicateType;
-		this.expressions.add(x);
-		this.expressions.add(y);
-	}
-
-	public PredicateImpl(PredicateType predicateType, Expression<Boolean>[] restrictions) {
-		super(Boolean.class);
-		this.predicateType = predicateType;
-		for (Expression<Boolean> expression : restrictions)
-			this.expressions.add(expression);
-	}
-
-	public PredicateImpl(PredicateType predicateType, Expression<Boolean> x) {
-		super(Boolean.class);
-		this.predicateType = predicateType;
-		if (x != null)
-			this.expressions.add(x);
 	}
 
 	@Override

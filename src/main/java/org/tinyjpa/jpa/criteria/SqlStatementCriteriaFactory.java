@@ -103,7 +103,9 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 
 	private List<ColumnNameValue> createExpressionString(Predicate predicate, MetaEntity entity, StringBuilder sb) {
 		PredicateTypeInfo predicateTypeInfo = (PredicateTypeInfo) predicate;
-		PredicateImpl predicateImpl = null;
+		ComparisonPredicate predicateImpl = null;
+		BooleanExprPredicate unaryBooleanPredicate = null;
+		ExprPredicate exprPredicate = null;
 		switch (predicateTypeInfo.getPredicateType()) {
 		case EQUAL:
 		case NOT_EQUAL:
@@ -111,7 +113,7 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 		case GT:
 		case LESS_THAN:
 		case LT:
-			predicateImpl = (PredicateImpl) predicate;
+			predicateImpl = (ComparisonPredicate) predicate;
 			Expression<?> expression = predicateImpl.getX();
 			LOG.info("createExpressionString: expression=" + expression);
 			Object value = predicateImpl.getValue1();
@@ -180,28 +182,39 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 
 		case OR:
 		case AND:
-			predicateImpl = (PredicateImpl) predicate;
-			applyBinaryOperator(getOperator(predicateImpl.getPredicateType()), predicateImpl, entity, sb);
+			if (predicate instanceof MultiplePredicate) {
+				applyBinaryOperator(getOperator(((MultiplePredicate) predicate).getPredicateType()),
+						((MultiplePredicate) predicate).getRestrictions(), entity, sb);
+			}
+
+			applyBinaryOperator(getOperator(((BinaryBooleanExprPredicate) predicate).getPredicateType()),
+					(Predicate) ((BinaryBooleanExprPredicate) predicate).getX(),
+					(Predicate) ((BinaryBooleanExprPredicate) predicate).getY(), entity, sb);
 			break;
 
 		case NOT:
-			predicateImpl = (PredicateImpl) predicate;
-			applyPrefixUnaryOperator(getOperator(predicateImpl.getPredicateType()), predicateImpl, entity, sb);
+			unaryBooleanPredicate = (BooleanExprPredicate) predicate;
+			applyPrefixUnaryOperator(getOperator(unaryBooleanPredicate.getPredicateType()), unaryBooleanPredicate,
+					entity, sb);
 			break;
 
 		case IS_NULL:
 		case IS_NOT_NULL:
+			exprPredicate = (ExprPredicate) predicate;
+			pathImpl = (PathImpl<?>) exprPredicate.getX();
+			applyPostfixUnaryOperator(getOperator(exprPredicate.getPredicateType()), pathImpl, entity, sb);
+			break;
+
 		case IS_TRUE:
 		case IS_FALSE:
-			predicateImpl = (PredicateImpl) predicate;
-			pathImpl = (PathImpl<?>) predicateImpl.getX();
-			applyPostfixUnaryOperator(getOperator(predicateImpl.getPredicateType()), pathImpl, entity, sb);
+			unaryBooleanPredicate = (BooleanExprPredicate) predicate;
+			pathImpl = (PathImpl<?>) unaryBooleanPredicate.getX();
+			applyPostfixUnaryOperator(getOperator(unaryBooleanPredicate.getPredicateType()), pathImpl, entity, sb);
 			break;
 
 		case EMPTY_CONJUNCTION:
 		case EMPTY_DISJUNCTION:
-			predicateImpl = (PredicateImpl) predicate;
-			applyCondition(getOperator(predicateImpl.getPredicateType()), sb);
+			applyCondition(getOperator(((EmptyPredicate) predicate).getPredicateType()), sb);
 			break;
 		}
 
@@ -287,7 +300,7 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 		sb.append(" ? AND ?");
 	}
 
-	private void applyBinaryOperator(String operator, PredicateImpl predicateImpl, MetaEntity entity,
+	private void applyBinaryOperator(String operator, ComparisonPredicate predicateImpl, MetaEntity entity,
 			StringBuilder sb) {
 		List<Expression<Boolean>> expressions = predicateImpl.getExpressions();
 		int i = 0;
@@ -298,21 +311,47 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 			}
 
 			sb.append(" (");
-			PredicateImpl p = (PredicateImpl) expression;
+			ComparisonPredicate p = (ComparisonPredicate) expression;
 			createExpressionString(p, entity, sb);
 			sb.append(")");
 			++i;
 		}
 	}
 
-	private void applyPrefixUnaryOperator(String operator, PredicateImpl predicateImpl, MetaEntity entity,
-			StringBuilder sb) {
-		List<Expression<Boolean>> expressions = predicateImpl.getExpressions();
+	private void applyBinaryOperator(String operator, Predicate p1, Predicate p2, MetaEntity entity, StringBuilder sb) {
+		sb.append(" (");
+		createExpressionString(p1, entity, sb);
+		sb.append(")");
+		sb.append(" ");
+		sb.append(operator);
+		sb.append(" (");
+		createExpressionString(p2, entity, sb);
+		sb.append(")");
+	}
+
+	private void applyBinaryOperator(String operator, Predicate[] predicates, MetaEntity entity, StringBuilder sb) {
+		int i = 0;
+		for (Predicate p : predicates) {
+			sb.append(" ");
+			if (i > 0) {
+				sb.append(operator);
+			}
+
+			sb.append(" (");
+			createExpressionString(p, entity, sb);
+			sb.append(")");
+			++i;
+		}
+	}
+
+	private void applyPrefixUnaryOperator(String operator, BooleanExprPredicate unaryBooleanPredicate,
+			MetaEntity entity, StringBuilder sb) {
+		List<Expression<Boolean>> expressions = unaryBooleanPredicate.getExpressions();
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" (");
 		for (Expression<Boolean> expression : expressions) {
-			PredicateImpl p = (PredicateImpl) expression;
+			ComparisonPredicate p = (ComparisonPredicate) expression;
 			createExpressionString(p, entity, sb);
 		}
 

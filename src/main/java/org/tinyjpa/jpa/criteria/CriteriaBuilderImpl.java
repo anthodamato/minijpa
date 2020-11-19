@@ -183,90 +183,90 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate and(Expression<Boolean> x, Expression<Boolean> y) {
-		return new PredicateImpl(PredicateType.AND, x, y);
+		return new BinaryBooleanExprPredicate(PredicateType.AND, x, y);
 	}
 
 	@Override
 	public Predicate and(Predicate... restrictions) {
-		return new PredicateImpl(PredicateType.AND, restrictions);
+		return new MultiplePredicate(PredicateType.AND, restrictions);
 	}
 
 	@Override
 	public Predicate or(Expression<Boolean> x, Expression<Boolean> y) {
-		return new PredicateImpl(PredicateType.OR, x, y);
+		return new BinaryBooleanExprPredicate(PredicateType.OR, x, y);
 	}
 
 	@Override
 	public Predicate or(Predicate... restrictions) {
-		return new PredicateImpl(PredicateType.OR, restrictions);
+		return new MultiplePredicate(PredicateType.OR, restrictions);
 	}
 
 	@Override
 	public Predicate not(Expression<Boolean> restriction) {
-		return new PredicateImpl(PredicateType.NOT, restriction);
+		return new BooleanExprPredicate(PredicateType.NOT, restriction);
 	}
 
 	@Override
 	public Predicate conjunction() {
 		// TODO not tested
-		return new PredicateImpl(PredicateType.EMPTY_CONJUNCTION, ((Expression<Boolean>) null));
+		return new EmptyPredicate(PredicateType.EMPTY_CONJUNCTION);
 	}
 
 	@Override
 	public Predicate disjunction() {
 		// TODO not tested
-		return new PredicateImpl(PredicateType.EMPTY_DISJUNCTION, ((Expression<Boolean>) null));
+		return new EmptyPredicate(PredicateType.EMPTY_DISJUNCTION);
 	}
 
 	@Override
 	public Predicate isTrue(Expression<Boolean> x) {
-		return new PredicateImpl(PredicateType.IS_TRUE, x, null, null);
+		return new BooleanExprPredicate(PredicateType.IS_TRUE, x);
 	}
 
 	@Override
 	public Predicate isFalse(Expression<Boolean> x) {
-		return new PredicateImpl(PredicateType.IS_FALSE, x, null, null);
+		return new BooleanExprPredicate(PredicateType.IS_FALSE, x);
 	}
 
 	@Override
 	public Predicate isNull(Expression<?> x) {
-		return new PredicateImpl(PredicateType.IS_NULL, x, null, null);
+		return new ExprPredicate(PredicateType.IS_NULL, x);
 	}
 
 	@Override
 	public Predicate isNotNull(Expression<?> x) {
-		return new PredicateImpl(PredicateType.IS_NOT_NULL, x, null, null);
+		return new ExprPredicate(PredicateType.IS_NOT_NULL, x);
 	}
 
 	@Override
 	public Predicate equal(Expression<?> x, Expression<?> y) {
-		return new PredicateImpl(PredicateType.EQUAL, x, y, null);
+		return new ComparisonPredicate(PredicateType.EQUAL, x, y, null);
 	}
 
 	@Override
 	public Predicate equal(Expression<?> x, Object y) {
-		return new PredicateImpl(PredicateType.EQUAL, x, null, y);
+		return new ComparisonPredicate(PredicateType.EQUAL, x, null, y);
 	}
 
 	@Override
 	public Predicate notEqual(Expression<?> x, Expression<?> y) {
-		return new PredicateImpl(PredicateType.NOT_EQUAL, x, y, null);
+		return new ComparisonPredicate(PredicateType.NOT_EQUAL, x, y, null);
 	}
 
 	@Override
 	public Predicate notEqual(Expression<?> x, Object y) {
-		return new PredicateImpl(PredicateType.NOT_EQUAL, x, null, y);
+		return new ComparisonPredicate(PredicateType.NOT_EQUAL, x, null, y);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x,
 			Expression<? extends Y> y) {
-		return new PredicateImpl(PredicateType.GREATER_THAN, x, y, null);
+		return new ComparisonPredicate(PredicateType.GREATER_THAN, x, y, null);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x, Y y) {
-		return new PredicateImpl(PredicateType.GREATER_THAN, x, null, y);
+		return new ComparisonPredicate(PredicateType.GREATER_THAN, x, null, y);
 	}
 
 	@Override
@@ -284,12 +284,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate lessThan(Expression<? extends Y> x, Expression<? extends Y> y) {
-		return new PredicateImpl(PredicateType.LESS_THAN, x, y, null);
+		return new ComparisonPredicate(PredicateType.LESS_THAN, x, y, null);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate lessThan(Expression<? extends Y> x, Y y) {
-		return new PredicateImpl(PredicateType.LESS_THAN, x, null, y);
+		return new ComparisonPredicate(PredicateType.LESS_THAN, x, null, y);
 	}
 
 	@Override
@@ -318,12 +318,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate gt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		return new PredicateImpl(PredicateType.GT, x, y, null);
+		return new ComparisonPredicate(PredicateType.GT, x, y, null);
 	}
 
 	@Override
 	public Predicate gt(Expression<? extends Number> x, Number y) {
-		return new PredicateImpl(PredicateType.GT, x, null, y);
+		return new ComparisonPredicate(PredicateType.GT, x, null, y);
 	}
 
 	@Override
@@ -340,12 +340,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate lt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		return new PredicateImpl(PredicateType.LT, x, y, null);
+		return new ComparisonPredicate(PredicateType.LT, x, y, null);
 	}
 
 	@Override
 	public Predicate lt(Expression<? extends Number> x, Number y) {
-		return new PredicateImpl(PredicateType.LT, x, null, y);
+		return new ComparisonPredicate(PredicateType.LT, x, null, y);
 	}
 
 	@Override
