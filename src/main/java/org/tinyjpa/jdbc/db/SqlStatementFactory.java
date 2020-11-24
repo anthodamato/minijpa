@@ -39,17 +39,15 @@ public class SqlStatementFactory {
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValuesWithId);
 
 		String sql = generateInsertStatement(entity.getTableName(), columnNameValues);
-		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValuesWithId).withIdValue(idValue)
-				.withColumnNameValues(columnNameValues).build();
+		return new SqlStatement.Builder().withSql(sql).withIdValue(idValue).withColumnNameValues(columnNameValues)
+				.build();
 	}
 
 	public SqlStatement generateInsertIdentityStrategy(MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception {
-		List<AttributeValue> attributeValues = attrValues;
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
 		String sql = generateInsertStatement(entity.getTableName(), columnNameValues);
-		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attributeValues)
-				.withColumnNameValues(columnNameValues).build();
+		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
 	}
 
 	protected String generateInsertStatement(String tableName, List<ColumnNameValue> columnNameValues) {
@@ -366,7 +364,7 @@ public class SqlStatementFactory {
 		StringBuilder sb = new StringBuilder();
 		if (entity.getAttributes().isEmpty()) {
 			String sql = sb.toString();
-			return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValues).build();
+			return new SqlStatement.Builder().withSql(sql).build();
 		}
 
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
@@ -396,8 +394,7 @@ public class SqlStatementFactory {
 		String sql = sb.toString();
 
 		LOG.info("generateUpdate: sql=" + sql);
-		return new SqlStatement.Builder().withSql(sql).withAttributeValues(attrValues)
-				.withColumnNameValues(columnNameValues).build();
+		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
 	}
 
 	public SqlStatement generateDeleteById(MetaEntity entity, Object idValue) throws Exception {
@@ -423,8 +420,7 @@ public class SqlStatementFactory {
 		}
 
 		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withAttributeValues(idAttributeValues)
-				.withColumnNameValues(columnNameValues).build();
+		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
 	}
 
 	protected String notEqualOperator() {

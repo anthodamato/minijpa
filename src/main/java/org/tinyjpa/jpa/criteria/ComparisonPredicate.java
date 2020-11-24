@@ -11,7 +11,6 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 	private Expression<?> x;
 	private Expression<?> y;
 	private Object value1;
-	private Object value2;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
 	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value1) {
@@ -64,10 +63,6 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 
 	public Object getValue1() {
 		return value1;
-	}
-
-	public Object getValue2() {
-		return value2;
 	}
 
 }

@@ -89,7 +89,7 @@ public class JdbcRunner {
 
 	public void delete(SqlStatement sqlStatement, Connection connection) throws SQLException {
 		LOG.info("delete: sqlStatement.sql=" + sqlStatement.getSql());
-		LOG.info("delete: attrValues.size()=" + sqlStatement.getAttrValues().size());
+//		LOG.info("delete: attrValues.size()=" + sqlStatement.getAttrValues().size());
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlStatement.getSql());
 		setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
 		preparedStatement.execute();

@@ -98,14 +98,11 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 			break;
 		}
 
-		return "";
+		throw new IllegalArgumentException("Unknown operator for predicate type: " + predicateType);
 	}
 
 	private List<ColumnNameValue> createExpressionString(Predicate predicate, MetaEntity entity, StringBuilder sb) {
 		PredicateTypeInfo predicateTypeInfo = (PredicateTypeInfo) predicate;
-		ComparisonPredicate predicateImpl = null;
-		BooleanExprPredicate unaryBooleanPredicate = null;
-		ExprPredicate exprPredicate = null;
 		switch (predicateTypeInfo.getPredicateType()) {
 		case EQUAL:
 		case NOT_EQUAL:
@@ -113,21 +110,22 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 		case GT:
 		case LESS_THAN:
 		case LT:
-			predicateImpl = (ComparisonPredicate) predicate;
-			Expression<?> expression = predicateImpl.getX();
+			Expression<?> expression = ((ComparisonPredicate) predicate).getX();
 			LOG.info("createExpressionString: expression=" + expression);
-			Object value = predicateImpl.getValue1();
+			Object value = ((ComparisonPredicate) predicate).getValue1();
 			LOG.info("createExpressionString: object=" + value);
 			PathImpl<?> pathImpl = (PathImpl<?>) expression;
 			if (value instanceof LocalDate) {
 				String attributeName = pathImpl.getAttributeName();
 				MetaAttribute attribute = entity.getAttribute(attributeName);
-				applyQMBinaryOperator(getOperator(predicateImpl.getPredicateType()), attribute, entity, sb);
+				applyQMBinaryOperator(getOperator(((ComparisonPredicate) predicate).getPredicateType()), attribute,
+						entity, sb);
 				AttributeValue av = new AttributeValue(attribute, value);
 				ColumnNameValue columnNameValue = ColumnNameValue.build(av);
 				return Arrays.asList(columnNameValue);
 			} else
-				applyBinaryOperator(getOperator(predicateImpl.getPredicateType()), pathImpl, value, entity, sb);
+				applyBinaryOperator(getOperator(((ComparisonPredicate) predicate).getPredicateType()), pathImpl, value,
+						entity, sb);
 
 			break;
 
@@ -138,7 +136,6 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 			pathImpl = (PathImpl<?>) betweenExpressionsPredicate.getV();
 			applyBetweenExpressionsOperator(getOperator(betweenExpressionsPredicate.getPredicateType()), pathImpl, x, y,
 					entity, sb);
-
 			break;
 
 		case BETWEEN_VALUES:
@@ -168,7 +165,6 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 			pathImpl = (PathImpl<?>) likePatternPredicate.getX();
 			applyLikePatternOperator(getOperator(likePatternPredicate.getPredicateType()), pathImpl, pattern, entity,
 					sb);
-
 			break;
 
 		case LIKE_PATTERN_EXPR:
@@ -177,7 +173,6 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 			pathImpl = (PathImpl<?>) likePatternExprPredicate.getX();
 			applyLikePatternExprOperator(getOperator(likePatternExprPredicate.getPredicateType()), pathImpl,
 					patternExpr, entity, sb);
-
 			break;
 
 		case OR:
@@ -193,23 +188,22 @@ public class SqlStatementCriteriaFactory extends SqlStatementFactory {
 			break;
 
 		case NOT:
-			unaryBooleanPredicate = (BooleanExprPredicate) predicate;
-			applyPrefixUnaryOperator(getOperator(unaryBooleanPredicate.getPredicateType()), unaryBooleanPredicate,
-					entity, sb);
+			applyPrefixUnaryOperator(getOperator(((BooleanExprPredicate) predicate).getPredicateType()),
+					((BooleanExprPredicate) predicate), entity, sb);
 			break;
 
 		case IS_NULL:
 		case IS_NOT_NULL:
-			exprPredicate = (ExprPredicate) predicate;
-			pathImpl = (PathImpl<?>) exprPredicate.getX();
-			applyPostfixUnaryOperator(getOperator(exprPredicate.getPredicateType()), pathImpl, entity, sb);
+			pathImpl = (PathImpl<?>) ((ExprPredicate) predicate).getX();
+			applyPostfixUnaryOperator(getOperator(((ExprPredicate) predicate).getPredicateType()), pathImpl, entity,
+					sb);
 			break;
 
 		case IS_TRUE:
 		case IS_FALSE:
-			unaryBooleanPredicate = (BooleanExprPredicate) predicate;
-			pathImpl = (PathImpl<?>) unaryBooleanPredicate.getX();
-			applyPostfixUnaryOperator(getOperator(unaryBooleanPredicate.getPredicateType()), pathImpl, entity, sb);
+			pathImpl = (PathImpl<?>) ((BooleanExprPredicate) predicate).getX();
+			applyPostfixUnaryOperator(getOperator(((BooleanExprPredicate) predicate).getPredicateType()), pathImpl,
+					entity, sb);
 			break;
 
 		case EMPTY_CONJUNCTION:
