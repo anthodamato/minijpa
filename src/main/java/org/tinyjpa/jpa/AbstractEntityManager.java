@@ -28,6 +28,10 @@ public abstract class AbstractEntityManager implements EntityManager {
 		return connectionHolder;
 	}
 
+	public Map<String, MetaEntity> getEntities() {
+		return entities;
+	}
+
 //	public Connection createConnection() throws SQLException {
 //		connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
 //		return connection;

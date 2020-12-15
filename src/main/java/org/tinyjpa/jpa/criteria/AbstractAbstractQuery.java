@@ -3,6 +3,7 @@ package org.tinyjpa.jpa.criteria;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -13,6 +14,9 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+
+import org.tinyjpa.jdbc.MetaEntity;
+import org.tinyjpa.jpa.EntityManagerImpl;
 
 public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
 	private Class<T> resultClass;
@@ -42,7 +46,10 @@ public abstract class AbstractAbstractQuery<T> implements AbstractQuery<T> {
 	@Override
 	public <X> Root<X> from(Class<X> entityClass) {
 		EntityType<X> entityType = em.getMetamodel().entity(entityClass);
-		Root<X> root = new RootImpl<X>(entityClass, entityType);
+		Map<String, MetaEntity> entities = ((EntityManagerImpl) em).getEntities();
+		MetaEntity metaEntity = entities.get(entityClass.getName());
+//		Root<X> root = new RootImpl<X>(entityClass, entityType);
+		Root<X> root = new MiniRoot<X>(entityType, metaEntity);
 		roots.add(root);
 		return root;
 	}

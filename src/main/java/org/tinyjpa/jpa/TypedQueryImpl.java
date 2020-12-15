@@ -16,15 +16,15 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jpa.criteria.JdbcCriteriaEntityManager;
+import org.tinyjpa.jdbc.db.JdbcEntityManager;
 
 public class TypedQueryImpl<X> implements TypedQuery<X> {
 	private Logger LOG = LoggerFactory.getLogger(TypedQueryImpl.class);
 	protected CriteriaQuery<?> criteriaQuery;
-	protected JdbcCriteriaEntityManager jdbcCriteriaEntityManager;
+	protected JdbcEntityManager jdbcCriteriaEntityManager;
 	private FlushModeType flushModeType = FlushModeType.AUTO;
 
-	public TypedQueryImpl(CriteriaQuery<?> criteriaQuery, JdbcCriteriaEntityManager jdbcCriteriaEntityManager) {
+	public TypedQueryImpl(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
 		super();
 		this.criteriaQuery = criteriaQuery;
 		this.jdbcCriteriaEntityManager = jdbcCriteriaEntityManager;
@@ -34,10 +34,10 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 	public List<X> getResultList() {
 		List<?> list = null;
 		try {
-//			list = criteriaJdbcEntityManager.loadAllFields(criteriaQuery.getSelection().getJavaType());
 			if (flushModeType == FlushModeType.AUTO)
 				jdbcCriteriaEntityManager.flush();
 
+			LOG.info("getResultList: select criteriaQuery=" + criteriaQuery);
 			list = jdbcCriteriaEntityManager.select(criteriaQuery);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());

@@ -1,8 +1,13 @@
 package org.tinyjpa.jdbc.db;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +20,13 @@ import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.SqlStatement;
+import org.tinyjpa.jdbc.model.SqlDelete;
+import org.tinyjpa.jdbc.model.SqlInsert;
+import org.tinyjpa.jdbc.model.SqlSelect;
+import org.tinyjpa.jdbc.model.SqlSelectJoin;
+import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
+import org.tinyjpa.jpa.criteria.PredicateTypeInfo;
 
 public class SqlStatementFactory {
 	private Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
@@ -27,7 +38,7 @@ public class SqlStatementFactory {
 		this.dbJdbc = dbJdbc;
 	}
 
-	public SqlStatement generatePlainInsert(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
+	public SqlInsert generatePlainInsert(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception {
 		MetaAttribute id = entity.getId();
 		Object idValue = id.getReadMethod().invoke(entityInstance);
@@ -38,16 +49,13 @@ public class SqlStatementFactory {
 
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValuesWithId);
 
-		String sql = generateInsertStatement(entity.getTableName(), columnNameValues);
-		return new SqlStatement.Builder().withSql(sql).withIdValue(idValue).withColumnNameValues(columnNameValues)
-				.build();
+		return new SqlInsert(entity.getTableName(), idValue, columnNameValues);
 	}
 
-	public SqlStatement generateInsertIdentityStrategy(MetaEntity entity, List<AttributeValue> attrValues)
+	public SqlInsert generateInsertIdentityStrategy(MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception {
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
-		String sql = generateInsertStatement(entity.getTableName(), columnNameValues);
-		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
+		return new SqlInsert(entity.getTableName(), columnNameValues);
 	}
 
 	protected String generateInsertStatement(String tableName, List<ColumnNameValue> columnNameValues) {
@@ -106,15 +114,14 @@ public class SqlStatementFactory {
 	protected List<ColumnNameValue> convertAttributes(List<MetaAttribute> attributes) throws Exception {
 		List<ColumnNameValue> list = new ArrayList<>();
 		for (MetaAttribute a : attributes) {
-			ColumnNameValue columnNameValue = null;
-			columnNameValue = ColumnNameValue.build(a);
+			ColumnNameValue columnNameValue = ColumnNameValue.build(a);
 			list.add(columnNameValue);
 		}
 
 		return list;
 	}
 
-	private List<ColumnNameValue> convertJoinColumnAttributes(List<JoinColumnAttribute> attributes) throws Exception {
+	protected List<ColumnNameValue> convertJoinColumnAttributes(List<JoinColumnAttribute> attributes) throws Exception {
 		List<ColumnNameValue> list = new ArrayList<>();
 		for (JoinColumnAttribute a : attributes) {
 			ColumnNameValue columnNameValue = null;
@@ -126,7 +133,7 @@ public class SqlStatementFactory {
 		return list;
 	}
 
-	private List<String> createColumns(List<MetaAttribute> attributes) throws Exception {
+	private List<String> createColumns(List<MetaAttribute> attributes) {
 		List<String> list = new ArrayList<>();
 		for (MetaAttribute a : attributes) {
 			if (a.getRelationship() != null) {
@@ -140,47 +147,21 @@ public class SqlStatementFactory {
 		return list;
 	}
 
-	public SqlStatement generateSelectById(MetaEntity entity, Object idValue) throws Exception {
+	public SqlSelect generateSelectById(MetaEntity entity, Object idValue) throws Exception {
 		List<AttributeValue> idAttributeValues = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
 		idAttributeValues.add(attrValueId);
 
-		StringBuilder sb = new StringBuilder();
-		sb.append("select ");
-		int i = 0;
 		List<MetaAttribute> expandedAttributes = entity.expandAttributes();
 		List<String> columns = createColumns(expandedAttributes);
 		List<String> joinColumnNames = entity.getJoinColumnAttributes().stream().map(c -> c.getColumnName())
 				.collect(Collectors.toList());
 		columns.addAll(joinColumnNames);
-		for (String c : columns) {
-			if (i > 0)
-				sb.append(", ");
-
-			sb.append(c);
-			++i;
-		}
-
-		sb.append(" from ");
-		sb.append(entity.getTableName());
-		sb.append(" where ");
-
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(idAttributeValues);
-		i = 0;
-		for (ColumnNameValue cnv : columnNameValues) {
-			if (i > 0)
-				sb.append(" and ");
-
-			sb.append(cnv.getColumnName());
-			sb.append(" = ?");
-			++i;
-		}
-
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
 		fetchColumnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
-		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues)
-				.withFetchColumnNameValues(fetchColumnNameValues).build();
+		return new SqlSelect(entity.getTableName(), entity.getAlias(), columnNameValues, fetchColumnNameValues, null,
+				null);
 	}
 
 	protected StringBuilder createAllFieldsQuery(MetaEntity entity, List<MetaAttribute> expandedAttributes)
@@ -207,119 +188,55 @@ public class SqlStatementFactory {
 		return sb;
 	}
 
-	public SqlStatement generateSelectAllFields(MetaEntity entity) throws Exception {
-		List<MetaAttribute> expandedAttributes = entity.getId().expand();
-		expandedAttributes.addAll(entity.expandAttributes());
-		StringBuilder sb = createAllFieldsQuery(entity, expandedAttributes);
-
+	public SqlSelect generateSelectAllFields(MetaEntity entity) throws Exception {
+		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
-		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withFetchColumnNameValues(fetchColumnNameValues).build();
+		return new SqlSelect(entity.getTableName(), entity.getAlias(), Collections.emptyList(), fetchColumnNameValues,
+				null, null);
 	}
 
-	public SqlStatement generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
+	public SqlSelect generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
 			Object foreignKeyInstance) throws Exception {
-		List<MetaAttribute> expandedAttributes = entity.getId().expand();
-		expandedAttributes.addAll(entity.expandAttributes());
-		StringBuilder sb = createAllFieldsQuery(entity, expandedAttributes);
-		sb.append(" where ");
-
+		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<AttributeValue> attributeValues = new ArrayList<>();
 		AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKeyInstance);
-		LOG.info("generateSelectByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute);
 		attributeValues.add(attrValue);
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attributeValues);
-		int i = 0;
-		for (ColumnNameValue cnv : columnNameValues) {
-			if (i > 0)
-				sb.append(" and ");
-
-			sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), cnv.getColumnName()));
-			sb.append(" = ?");
-			++i;
-		}
-
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
-		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues)
-				.withFetchColumnNameValues(fetchColumnNameValues).build();
+		return new SqlSelect(entity.getTableName(), entity.getAlias(), columnNameValues, fetchColumnNameValues, null,
+				null);
 	}
 
-	public SqlStatement generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId, Object joinTableForeignKey,
-			RelationshipJoinTable joinTable) throws Exception {
-		StringBuilder sb = new StringBuilder();
-		sb.append("select ");
-		int i = 0;
-		List<MetaAttribute> expandedAttributes = entity.getId().expand();
-		List<MetaAttribute> idAttributes = new ArrayList<>(expandedAttributes);
-		expandedAttributes.addAll(entity.expandAttributes());
+	public SqlSelectJoin generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId,
+			Object joinTableForeignKey, RelationshipJoinTable joinTable) throws Exception {
+		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<String> columns = createColumns(expandedAttributes);
 		List<String> joinColumnNames = entity.getJoinColumnAttributes().stream().map(c -> c.getColumnName())
 				.collect(Collectors.toList());
 		columns.addAll(joinColumnNames);
-		for (String c : columns) {
-			if (i > 0)
-				sb.append(", ");
-
-			sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), c));
-			++i;
-		}
 
 		// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
 		// where j.t2=fk
-		sb.append(" from ");
-		sb.append(entity.getTableName());
-		sb.append(" ");
-		sb.append(entity.getAlias());
-		sb.append(" inner join ");
-		sb.append(joinTable.getTableName());
-		sb.append(" ");
-		sb.append(joinTable.getAlias());
-		sb.append(" on ");
 
-		// deal with multiple column pk
-		List<JoinColumnAttribute> joinColumnTargetAttributes = joinTable.getJoinColumnTargetAttributes();
-		int index = -1;
-		for (int k = 0; k < idAttributes.size(); ++k) {
-			if (k > 0)
-				sb.append(" and ");
-
-			sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), idAttributes.get(k).getColumnName()));
-			sb.append(" = ");
-			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnTargetAttributes, idAttributes.get(k));
-			LOG.info("generateSelectByJoinTable: index=" + index);
-			JoinColumnAttribute joinColumnAttribute = joinColumnTargetAttributes.get(index);
-			sb.append(
-					dbJdbc.getNameTranslator().toColumnName(joinTable.getAlias(), joinColumnAttribute.getColumnName()));
-		}
-
-		sb.append(" where ");
-
+		// handles multiple column pk
+		List<MetaAttribute> idAttributes = entity.getId().expand();
 		List<JoinColumnAttribute> joinColumnOwningAttributes = joinTable.getJoinColumnOwningAttributes();
 		List<AttributeValue> owningIdAttributeValues = embeddedIdAttributeValueConverter
 				.convert(new AttributeValue(owningId, joinTableForeignKey));
 
 		List<AttributeValue> attributeValues = new ArrayList<>();
-		i = 0;
+		int index = -1;
 		for (AttributeValue av : owningIdAttributeValues) {
-			if (i > 0)
-				sb.append(" and ");
-
 			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnOwningAttributes, av.getAttribute());
 			LOG.info("generateSelectByJoinTable: 2 index=" + index);
 			attributeValues.add(
 					new AttributeValue(joinColumnOwningAttributes.get(index).getForeignKeyAttribute(), av.getValue()));
-			sb.append(dbJdbc.getNameTranslator().toColumnName(joinTable.getAlias(),
-					joinColumnOwningAttributes.get(index).getColumnName()));
-			sb.append(" = ?");
-			++i;
 		}
 
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attributeValues);
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
-		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues)
-				.withFetchColumnNameValues(fetchColumnNameValues).build();
+		return new SqlSelectJoin(entity.getTableName(), entity.getAlias(), columnNameValues, fetchColumnNameValues,
+				idAttributes, joinTable, owningIdAttributeValues);
 	}
 
 	private List<ColumnNameValue> createJoinColumnAVS(List<JoinColumnAttribute> joinColumnAttributes,
@@ -358,128 +275,46 @@ public class SqlStatementFactory {
 		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
 	}
 
-	public SqlStatement generateUpdate(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues,
-			Object idValue) throws Exception {
+	public SqlUpdate generateUpdate(MetaEntity entity, List<AttributeValue> attrValues, Object idValue)
+			throws Exception {
 		LOG.info("generateUpdate: attrValues=" + attrValues);
-		StringBuilder sb = new StringBuilder();
-		if (entity.getAttributes().isEmpty()) {
-			String sql = sb.toString();
-			return new SqlStatement.Builder().withSql(sql).build();
-		}
-
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
 		attrValues.add(attrValueId);
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
-		sb.append("update ");
-		sb.append(entity.getTableName());
-		sb.append(" set ");
-		int i = 0;
-		for (AttributeValue attrValue : attrValues) {
-			if (attrValue.getAttribute().isId())
-				continue;
-
-			if (i > 0)
-				sb.append(",");
-
-			LOG.info("generateUpdate: attrValue=" + attrValue);
-			LOG.info("generateUpdate: attrValue.getAttribute()=" + attrValue.getAttribute());
-			sb.append(attrValue.getAttribute().getColumnName());
-			sb.append(" = ?");
-			++i;
-		}
-
-		sb.append(" where ");
-		sb.append(entity.getId().getColumnName());
-		sb.append("= ?");
-		String sql = sb.toString();
-
-		LOG.info("generateUpdate: sql=" + sql);
-		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
+		return new SqlUpdate(entity.getTableName(), columnNameValues);
 	}
 
-	public SqlStatement generateDeleteById(MetaEntity entity, Object idValue) throws Exception {
+	public SqlDelete generateDeleteById(MetaEntity entity, Object idValue) throws Exception {
 		List<AttributeValue> idAttributeValues = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
 		idAttributeValues.add(attrValueId);
-
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(idAttributeValues);
+		return new SqlDelete(entity.getTableName(), columnNameValues);
+	}
 
-		StringBuilder sb = new StringBuilder();
-		sb.append("delete from ");
-		sb.append(entity.getTableName());
-		sb.append(" where ");
+	public SqlSelect select(CriteriaQuery<?> criteriaQuery, Map<String, MetaEntity> entities) throws Exception {
+		LOG.info("select: this=" + this);
+		Predicate restriction = criteriaQuery.getRestriction();
+		LOG.info("select: criteriaQuery.getResultType()=" + criteriaQuery.getResultType());
+		if (restriction != null) {
+			LOG.info("select: ((PredicateTypeInfo) predicate).getPredicateType()="
+					+ ((PredicateTypeInfo) restriction).getPredicateType());
+			MetaEntity entity = entities.get(criteriaQuery.getResultType().getName());
 
-		int i = 0;
-		for (AttributeValue a : idAttributeValues) {
-			if (i > 0)
-				sb.append(" and ");
+			List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
+			List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
+			fetchColumnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
 
-			sb.append(a.getAttribute().getColumnName());
-			sb.append(" = ?");
-			++i;
+			return new SqlSelect(entity.getTableName(), entity.getAlias(), Collections.emptyList(),
+					fetchColumnNameValues, null, criteriaQuery);
 		}
 
-		String sql = sb.toString();
-		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
+		MetaEntity entity = entities.get(criteriaQuery.getResultType().getName());
+		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
+		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
+		LOG.info("select: fetchColumnNameValues=" + fetchColumnNameValues);
+		return new SqlSelect(entity.getTableName(), entity.getAlias(), Collections.emptyList(), fetchColumnNameValues,
+				null, criteriaQuery);
 	}
 
-	protected String notEqualOperator() {
-		return "<>";
-	}
-
-	protected String equalOperator() {
-		return "=";
-	}
-
-	protected String orOperator() {
-		return "OR";
-	}
-
-	protected String andOperator() {
-		return "AND";
-	}
-
-	protected String notOperator() {
-		return "NOT";
-	}
-
-	protected String isNullOperator() {
-		return "IS NULL";
-	}
-
-	protected String isNotNullOperator() {
-		return "IS NOT NULL";
-	}
-
-	protected String isTrueOperator() {
-		return "= TRUE";
-	}
-
-	protected String isFalseOperator() {
-		return "= FALSE";
-	}
-
-	protected String emptyConjunctionOperator() {
-		return "1=1";
-	}
-
-	protected String emptyDisjunctionOperator() {
-		return "1=2";
-	}
-
-	protected String greaterThanOperator() {
-		return ">";
-	}
-
-	protected String lessThanOperator() {
-		return "<";
-	}
-
-	protected String betweenOperator() {
-		return "BETWEEN";
-	}
-
-	protected String likeOperator() {
-		return "LIKE";
-	}
 }

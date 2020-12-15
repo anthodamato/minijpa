@@ -2,6 +2,8 @@ package org.tinyjpa.jdbc.db;
 
 import java.util.List;
 
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.tinyjpa.jdbc.JdbcRunner;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
@@ -15,5 +17,7 @@ public interface JdbcEntityManager {
 			MetaAttribute childAttribute, Object childAttributeValue) throws Exception;
 
 	public List<Object> loadAllFields(Class<?> entityClass) throws Exception;
+
+	public List<Object> select(CriteriaQuery<?> criteriaQuery) throws Exception;
 
 }

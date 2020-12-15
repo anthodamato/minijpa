@@ -46,7 +46,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
-		return new CriteriaQueryImpl<T>(resultClass, em);
+		return new MiniCriteriaQuery<T>(resultClass, em);
 	}
 
 	@Override
@@ -203,6 +203,9 @@ public class CriteriaBuilderImpl implements CriteriaBuilder {
 
 	@Override
 	public Predicate not(Expression<Boolean> restriction) {
+		if (restriction instanceof ComparisonPredicate)
+			return ((ComparisonPredicate) restriction).not();
+
 		return new BooleanExprPredicate(PredicateType.NOT, restriction);
 	}
 

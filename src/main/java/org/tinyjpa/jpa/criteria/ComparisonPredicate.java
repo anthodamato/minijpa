@@ -11,6 +11,7 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 	private Expression<?> x;
 	private Expression<?> y;
 	private Object value1;
+	private boolean negated = false;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
 	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value1) {
@@ -19,6 +20,16 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 		this.x = x;
 		this.y = y;
 		this.value1 = value1;
+	}
+
+	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value1,
+			boolean negated) {
+		super(Boolean.class);
+		this.predicateType = predicateType;
+		this.x = x;
+		this.y = y;
+		this.value1 = value1;
+		this.negated = negated;
 	}
 
 	@Override
@@ -39,7 +50,7 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 
 	@Override
 	public boolean isNegated() {
-		return predicateType == PredicateType.NOT;
+		return negated;
 	}
 
 	@Override
@@ -49,8 +60,7 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 
 	@Override
 	public Predicate not() {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(predicateType, x, y, value1, !negated);
 	}
 
 	public Expression<?> getX() {

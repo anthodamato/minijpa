@@ -82,6 +82,16 @@ public class MetaEntity {
 		return list;
 	}
 
+	public List<MetaAttribute> expandAllAttributes() {
+		List<MetaAttribute> list = new ArrayList<>();
+		list.addAll(id.expand());
+		for (MetaAttribute a : attributes) {
+			list.addAll(a.expand());
+		}
+
+		return list;
+	}
+
 	public MetaAttribute findAttributeWithMappedBy(String mappedBy) {
 		for (MetaAttribute attribute : attributes) {
 			if (attribute.getRelationship() != null && mappedBy.equals(attribute.getRelationship().getMappedBy()))

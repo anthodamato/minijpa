@@ -5,7 +5,6 @@ import java.util.List;
 
 public class SqlStatement {
 	private String sql;
-	private int startIndex = 0;
 	private Object idValue;
 	private List<ColumnNameValue> columnNameValues;
 	private List<ColumnNameValue> fetchColumnNameValues;
@@ -15,10 +14,6 @@ public class SqlStatement {
 
 	public String getSql() {
 		return sql;
-	}
-
-	public int getStartIndex() {
-		return startIndex;
 	}
 
 	public Object getIdValue() {

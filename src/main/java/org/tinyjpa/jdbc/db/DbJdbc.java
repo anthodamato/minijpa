@@ -17,36 +17,66 @@ public interface DbJdbc {
 	 */
 	public String sequenceNextValueStatement(MetaEntity entity);
 
-//	public SqlStatement generateInsertSequenceStrategy(Long idValue, MetaEntity entity, List<AttributeValue> attrValues)
-//			throws Exception;
-//
-//	public SqlStatement generateInsertIdentityStrategy(MetaEntity entity, List<AttributeValue> attrValues)
-//			throws Exception;
-//
-//	public SqlStatement generatePlainInsert(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
-//			throws Exception;
-//
-////	public SqlStatement generateInsert(Connection connection, Object entityInstance, MetaEntity entity,
-////			List<AttributeValue> attrValues) throws Exception;
-//
-//	public SqlStatement generateSelectById(MetaEntity entity, Object idValue) throws Exception;
-//
-//	public SqlStatement generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
-//			Object foreignKeyInstance) throws Exception;
-//
-//	public SqlStatement generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId, Object joinTableForeignKey,
-//			RelationshipJoinTable joinTable) throws Exception;
-//
-//	public SqlStatement generateSelectAllFields(MetaEntity entity) throws Exception;
-//
-//	public SqlStatement generateUpdate(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
-//			throws Exception;
-//
-//	public SqlStatement generateDeleteById(MetaEntity entity, Object idValue) throws Exception;
-//
-//	public SqlStatement generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, Object owningInstance,
-//			Object targetInstance) throws Exception;
-
 	public NameTranslator getNameTranslator();
+
+	public default String notEqualOperator() {
+		return "<>";
+	}
+
+	public default String equalOperator() {
+		return "=";
+	}
+
+	public default String orOperator() {
+		return "OR";
+	}
+
+	public default String andOperator() {
+		return "AND";
+	}
+
+	public default String notOperator() {
+		return "NOT";
+	}
+
+	public default String isNullOperator() {
+		return "IS NULL";
+	}
+
+	public default String isNotNullOperator() {
+		return "IS NOT NULL";
+	}
+
+	public default String isTrueOperator() {
+		return "= TRUE";
+	}
+
+	public default String isFalseOperator() {
+		return "= FALSE";
+	}
+
+	public default String emptyConjunctionOperator() {
+		return "1=1";
+	}
+
+	public default String emptyDisjunctionOperator() {
+		return "1=2";
+	}
+
+	public default String greaterThanOperator() {
+		return ">";
+	}
+
+	public default String lessThanOperator() {
+		return "<";
+	}
+
+	public default String betweenOperator() {
+		return "BETWEEN";
+	}
+
+	public default String likeOperator() {
+		return "LIKE";
+	}
 
 }

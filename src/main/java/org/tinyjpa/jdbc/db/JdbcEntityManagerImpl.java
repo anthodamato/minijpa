@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.AttributeUtil;
@@ -24,10 +26,14 @@ import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.PkStrategy;
 import org.tinyjpa.jdbc.SqlStatement;
+import org.tinyjpa.jdbc.model.SqlDelete;
+import org.tinyjpa.jdbc.model.SqlInsert;
+import org.tinyjpa.jdbc.model.SqlSelect;
+import org.tinyjpa.jdbc.model.SqlSelectJoin;
+import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.Relationship;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
-import org.tinyjpa.jpa.criteria.SqlStatementCriteriaFactory;
 
 public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(JdbcEntityManagerImpl.class);
@@ -37,8 +43,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	private EntityInstanceBuilder entityInstanceBuilder;
 	private AttributeValueConverter attributeValueConverter;
 	protected ConnectionHolder connectionHolder;
-	protected JdbcRunner jdbcRunner = new JdbcRunner();
-	protected SqlStatementCriteriaFactory sqlStatementCriteriaFactory;
+	protected JdbcRunner jdbcRunner;
+	protected SqlStatementFactory sqlStatementFactory;
 	private boolean log = true;
 
 	public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, Map<String, MetaEntity> entities,
@@ -51,7 +57,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		this.entityInstanceBuilder = entityInstanceBuilder;
 		this.attributeValueConverter = attributeValueConverter;
 		this.connectionHolder = connectionHolder;
-		this.sqlStatementCriteriaFactory = new SqlStatementCriteriaFactory(dbConfiguration.getDbJdbc());
+		this.sqlStatementFactory = new SqlStatementFactory(dbConfiguration.getDbJdbc());
+		this.jdbcRunner = new JdbcRunner(new SqlStatementGenerator(dbConfiguration.getDbJdbc()));
 	}
 
 	public Object findById(Class<?> entityClass, Object primaryKey) throws Exception {
@@ -72,9 +79,17 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
-		SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectById(entity, primaryKey);
-		JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(connectionHolder.getConnection(), sqlStatement,
-				entity);
+//		SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectById(entity, primaryKey);
+//		JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(connectionHolder.getConnection(), sqlStatement,
+//				entity);
+
+		LOG.info("findById: entity=" + entity);
+		SqlSelect sqlSelect = sqlStatementFactory.generateSelectById(entity, primaryKey);
+		LOG.info("findById: sqlSelect.getTableName()=" + sqlSelect.getTableName());
+		LOG.info("findById: sqlSelect.getColumnNameValues()=" + sqlSelect.getColumnNameValues());
+		LOG.info("findById: sqlSelect.getFetchColumnNameValues()=" + sqlSelect.getFetchColumnNameValues());
+		LOG.info("findById: sqlSelect.getJoinColumnNameValues()=" + sqlSelect.getJoinColumnNameValues());
+		JdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(connectionHolder.getConnection(), sqlSelect);
 		if (attributeValues == null)
 			return null;
 
@@ -152,9 +167,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
-		SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectByForeignKey(entity, foreignKeyAttribute,
-				foreignKey);
-		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement, entity, this, childAttribute,
+		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, foreignKey);
+		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlSelect, entity, this, childAttribute,
 				childAttributeValue);
 	}
 
@@ -171,8 +185,10 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
-		SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectAllFields(entity);
-		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement, entity, this, null, null);
+//		SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectAllFields(entity);
+//		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement, entity, this, null, null);
+		SqlSelect sqlSelect = sqlStatementFactory.generateSelectAllFields(entity);
+		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlSelect, entity, this, null, null);
 	}
 
 	private void loadRelationshipAttributes(Object parentInstance, MetaEntity entity, MetaAttribute childAttribute,
@@ -191,10 +207,12 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 					if (a.getRelationship().getJoinTable() != null) {
 						MetaEntity e = a.getRelationship().getAttributeType();
 						Object pk = AttributeUtil.getIdValue(entity, parentInstance);
-						SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectByJoinTable(e,
-								entity.getId(), pk, a.getRelationship().getJoinTable());
-						List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement,
-								entity, this, childAttribute, childAttributeValue);
+//						SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectByJoinTable(e,
+//								entity.getId(), pk, a.getRelationship().getJoinTable());
+						SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(e, entity.getId(),
+								pk, a.getRelationship().getJoinTable());
+						List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(),
+								sqlSelectJoin, entity, this, childAttribute, childAttributeValue);
 						entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, objects);
 					} else {
 						loadAttributeValueWithTableFK(parentInstance, a, null, null);
@@ -277,10 +295,12 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				MetaEntity entity = a.getRelationship().getAttributeType();
 				MetaEntity e = entities.get(parentInstance.getClass().getName());
 				Object pk = AttributeUtil.getIdValue(e, parentInstance);
-				SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectByJoinTable(entity, e.getId(), pk,
+//				SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectByJoinTable(entity, e.getId(), pk,
+//						a.getRelationship().getJoinTable());
+				SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
 						a.getRelationship().getJoinTable());
-				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sqlStatement, entity,
-						this, null, null);
+				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sqlSelectJoin,
+						entity, this, null, null);
 				LOG.info("load (lazy): oneToMany objects.size()=" + objects.size());
 				return objects;
 			}
@@ -295,56 +315,58 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	private void persist(MetaEntity entity, Object entityInstance, List<AttributeValue> attrValues) throws Exception {
 		if (entityContainer.isFlushedPersist(entityInstance)) {
+			// It's an update.
 			if (attrValues.isEmpty())
 				return;
 
 			Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 			LOG.info("persist: idValue=" + idValue);
-			SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateUpdate(entityInstance, entity, attrValues,
-					idValue);
-			jdbcRunner.persist(sqlStatement, connectionHolder.getConnection());
+			SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attrValues, idValue);
+			jdbcRunner.persist(sqlUpdate, connectionHolder.getConnection());
+			return;
+		}
+
+		// It's an insert.
+		// checks specific relationship attributes ('one to many' with join table) even
+		// if there are no notified changes. If they get changed then they'll be made
+		// persistent
+		Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
+		for (MetaAttribute a : entity.getAttributes()) {
+			if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null) {
+				Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
+				LOG.info("persist: attributeInstance=" + attributeInstance);
+				LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
+				if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
+						&& !CollectionUtils.isCollectionEmpty(attributeInstance)) {
+					joinTableAttrs.put(a, attributeInstance);
+				}
+			}
+		}
+
+		SqlInsert sqlInsert = null;
+		MetaAttribute id = entity.getId();
+		PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(id.getGeneratedValue());
+		LOG.info("Primary Key Generation Strategy: " + pkStrategy);
+		if (pkStrategy == PkStrategy.IDENTITY) {
+			sqlInsert = sqlStatementFactory.generateInsertIdentityStrategy(entity, attrValues);
 		} else {
-			// checks specific relationship attributes ('one to many' with join table) even
-			// if there are no notified changes. If they get changed then they'll be made
-			// persistent
-			Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
-			for (MetaAttribute a : entity.getAttributes()) {
-				if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null) {
-					Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
-					LOG.info("persist: attributeInstance=" + attributeInstance);
-					LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
-					if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
-							&& !CollectionUtils.isCollectionEmpty(attributeInstance)) {
-						joinTableAttrs.put(a, attributeInstance);
-					}
-				}
-			}
+			sqlInsert = sqlStatementFactory.generatePlainInsert(entityInstance, entity, attrValues);
+		}
 
-			SqlStatement sqlStatement = null;
-			MetaAttribute id = entity.getId();
-			PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(id.getGeneratedValue());
-			LOG.info("Primary Key Generation Strategy: " + pkStrategy);
-			if (pkStrategy == PkStrategy.IDENTITY) {
-				sqlStatement = sqlStatementCriteriaFactory.generateInsertIdentityStrategy(entity, attrValues);
+		Object pk = jdbcRunner.persist(sqlInsert, connectionHolder.getConnection());
+		LOG.info("persist: pk=" + pk);
+		entity.getId().getWriteMethod().invoke(entityInstance, pk);
+
+		// persist join table attributes
+		LOG.info("persist: joinTableAttrs.size()=" + joinTableAttrs.size());
+		for (Map.Entry<MetaAttribute, Object> entry : joinTableAttrs.entrySet()) {
+			MetaAttribute a = entry.getKey();
+			List<Object> ees = CollectionUtils.getCollectionAsList(entry.getValue());
+			if (entityContainer.isManaged(ees)) {
+				persistJoinTableAttributes(ees, a, entityInstance);
 			} else {
-				sqlStatement = sqlStatementCriteriaFactory.generatePlainInsert(entityInstance, entity, attrValues);
-			}
-
-			Object pk = jdbcRunner.persist(sqlStatement, connectionHolder.getConnection());
-			LOG.info("persist: pk=" + pk);
-			entity.getId().getWriteMethod().invoke(entityInstance, pk);
-
-			// persist join table attributes
-			LOG.info("persist: joinTableAttrs.size()=" + joinTableAttrs.size());
-			for (Map.Entry<MetaAttribute, Object> entry : joinTableAttrs.entrySet()) {
-				MetaAttribute a = entry.getKey();
-				List<Object> ees = CollectionUtils.getCollectionAsList(entry.getValue());
-				if (entityContainer.isManaged(ees)) {
-					persistJoinTableAttributes(ees, a, entityInstance);
-				} else {
-					// add to pending new attributes
-					entityContainer.addToPendingNewAttributes(a, entityInstance, ees);
-				}
+				// add to pending new attributes
+				entityContainer.addToPendingNewAttributes(a, entityInstance, ees);
 			}
 		}
 	}
@@ -496,8 +518,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	private void remove(Object entityInstance, MetaEntity e) throws Exception {
 		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 		LOG.info("remove: idValue=" + idValue);
-		SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateDeleteById(e, idValue);
-		jdbcRunner.delete(sqlStatement, connectionHolder.getConnection());
+		SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(e, idValue);
+		jdbcRunner.delete(sqlDelete, connectionHolder.getConnection());
 	}
 
 	public void remove(Object entity) throws Exception {
@@ -553,10 +575,23 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		// persist every entity instance
 		RelationshipJoinTable relationshipJoinTable = a.getRelationship().getJoinTable();
 		for (Object instance : ees) {
-			SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateJoinTableInsert(relationshipJoinTable,
+			SqlStatement sqlStatement = sqlStatementFactory.generateJoinTableInsert(relationshipJoinTable,
 					entityInstance, instance);
 			jdbcRunner.persist(sqlStatement, connectionHolder.getConnection());
 		}
+	}
+
+	@Override
+	public List<Object> select(CriteriaQuery<?> criteriaQuery) throws Exception {
+		Class<?> entityClass = criteriaQuery.getResultType();
+		LOG.info("select: entityClass=" + entityClass);
+		MetaEntity entity = entities.get(entityClass.getName());
+		if (entity == null)
+			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
+
+		SqlSelect sqlSelect = sqlStatementFactory.select(criteriaQuery, entities);
+
+		return jdbcRunner.findCollection(connectionHolder.getConnection(), sqlSelect, entity, this, null, null);
 	}
 
 }

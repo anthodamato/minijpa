@@ -8,25 +8,25 @@ import javax.persistence.criteria.Predicate;
 
 public class LikePatternExprPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
 	private Expression<?> x;
-	private Expression<java.lang.String> patternEx;
+	private Expression<String> patternEx;
 	private Character escapeChar;
 	private Expression<java.lang.Character> escapeCharEx;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
-	public LikePatternExprPredicate(Expression<?> x, Expression<java.lang.String> patternEx) {
+	public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx) {
 		super(Boolean.class);
 		this.x = x;
 		this.patternEx = patternEx;
 	}
 
-	public LikePatternExprPredicate(Expression<?> x, Expression<java.lang.String> patternEx, Character escapeChar) {
+	public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx, Character escapeChar) {
 		super(Boolean.class);
 		this.x = x;
 		this.patternEx = patternEx;
 		this.escapeChar = escapeChar;
 	}
 
-	public LikePatternExprPredicate(Expression<?> x, Expression<java.lang.String> patternEx,
+	public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx,
 			Expression<java.lang.Character> escapeCharEx) {
 		super(Boolean.class);
 		this.x = x;
@@ -72,7 +72,7 @@ public class LikePatternExprPredicate extends AbstractExpression<Boolean> implem
 		return escapeCharEx;
 	}
 
-	public Expression<java.lang.String> getPatternEx() {
+	public Expression<String> getPatternEx() {
 		return patternEx;
 	}
 

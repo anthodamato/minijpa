@@ -25,9 +25,9 @@ import org.tinyjpa.jdbc.ConnectionHolderImpl;
 import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
+import org.tinyjpa.jdbc.db.JdbcEntityManagerImpl;
 import org.tinyjpa.jdbc.db.TinyFlushMode;
 import org.tinyjpa.jpa.criteria.CriteriaBuilderImpl;
-import org.tinyjpa.jpa.criteria.JdbcCriteriaEntityManagerImpl;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
 import org.tinyjpa.metadata.EntityContainerContext;
@@ -39,7 +39,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 	private EntityManagerFactory entityManagerFactory;
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
-	private JdbcCriteriaEntityManagerImpl jdbcEntityManager;
+	private JdbcEntityManagerImpl jdbcEntityManager;
 	private FlushModeType flushModeType = FlushModeType.AUTO;
 
 	public EntityManagerImpl(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
@@ -51,7 +51,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		this.persistenceContext = new PersistenceContextImpl(entities);
 		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
-		this.jdbcEntityManager = new JdbcCriteriaEntityManagerImpl(dbConfiguration, entities, persistenceContext,
+		this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, entities, persistenceContext,
 				new EntityDelegateInstanceBuilder(), new EmbeddedAttributeValueConverter(), connectionHolder);
 		EntityDelegate.getInstance()
 				.addEntityManagerContext(new EntityContainerContext(entities, persistenceContext, jdbcEntityManager));

@@ -3,6 +3,7 @@ package org.tinyjpa.jdbc;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.tinyjpa.jdbc.relationship.FetchType;
@@ -19,6 +20,8 @@ public class MetaAttribute extends AbstractAttribute {
 	private Relationship relationship;
 	private boolean collection = false;
 	private Field javaMember;
+	// calculated fields
+	private List<MetaAttribute> expandedAttributeList;
 
 	public String getName() {
 		return name;
@@ -80,6 +83,9 @@ public class MetaAttribute extends AbstractAttribute {
 	}
 
 	public List<MetaAttribute> expand() {
+		if (expandedAttributeList != null)
+			return expandedAttributeList;
+
 		List<MetaAttribute> list = new ArrayList<>();
 //		LOG.info("expandAttribute: embedded=" + embedded + "; name=" + name);
 		if (embedded) {
@@ -90,7 +96,8 @@ public class MetaAttribute extends AbstractAttribute {
 			list.add(this);
 		}
 
-		return list;
+		expandedAttributeList = Collections.unmodifiableList(list);
+		return expandedAttributeList;
 	}
 
 	public boolean isEager() {
