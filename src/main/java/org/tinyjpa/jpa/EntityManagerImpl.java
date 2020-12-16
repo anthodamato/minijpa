@@ -27,7 +27,7 @@ import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jdbc.db.JdbcEntityManagerImpl;
 import org.tinyjpa.jdbc.db.TinyFlushMode;
-import org.tinyjpa.jpa.criteria.CriteriaBuilderImpl;
+import org.tinyjpa.jpa.criteria.MiniCriteriaBuilder;
 import org.tinyjpa.jpa.db.DbConfigurationList;
 import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
 import org.tinyjpa.metadata.EntityContainerContext;
@@ -394,7 +394,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
-		return new CriteriaBuilderImpl(this);
+		return new MiniCriteriaBuilder(this);
 	}
 
 	@Override

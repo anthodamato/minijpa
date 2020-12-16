@@ -30,10 +30,10 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
-public class CriteriaBuilderImpl implements CriteriaBuilder {
+public class MiniCriteriaBuilder implements CriteriaBuilder {
 	private EntityManager em;
 
-	public CriteriaBuilderImpl(EntityManager em) {
+	public MiniCriteriaBuilder(EntityManager em) {
 		super();
 		this.em = em;
 	}

@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,24 +17,16 @@ import org.tinyjpa.jdbc.EmbeddedIdAttributeValueConverter;
 import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
-import org.tinyjpa.jdbc.SqlStatement;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
 import org.tinyjpa.jdbc.model.SqlSelectJoin;
 import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
-import org.tinyjpa.jpa.criteria.PredicateTypeInfo;
 
 public class SqlStatementFactory {
 	private Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
 	private AttributeValueConverter embeddedIdAttributeValueConverter = new EmbeddedIdAttributeValueConverter();
-	protected DbJdbc dbJdbc;
-
-	public SqlStatementFactory(DbJdbc dbJdbc) {
-		super();
-		this.dbJdbc = dbJdbc;
-	}
 
 	public SqlInsert generatePlainInsert(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception {
@@ -56,26 +46,6 @@ public class SqlStatementFactory {
 			throws Exception {
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(attrValues);
 		return new SqlInsert(entity.getTableName(), columnNameValues);
-	}
-
-	protected String generateInsertStatement(String tableName, List<ColumnNameValue> columnNameValues) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("insert into ");
-		sb.append(tableName);
-		sb.append(" (");
-		String cols = columnNameValues.stream().map(a -> a.getColumnName()).collect(Collectors.joining(","));
-		sb.append(cols);
-		sb.append(") values (");
-
-		for (int i = 0; i < columnNameValues.size(); ++i) {
-			if (i > 0)
-				sb.append(",");
-
-			sb.append("?");
-		}
-
-		sb.append(")");
-		return sb.toString();
 	}
 
 	private List<ColumnNameValue> convertAttributeValues(List<AttributeValue> attributeValues) throws Exception {
@@ -133,59 +103,17 @@ public class SqlStatementFactory {
 		return list;
 	}
 
-	private List<String> createColumns(List<MetaAttribute> attributes) {
-		List<String> list = new ArrayList<>();
-		for (MetaAttribute a : attributes) {
-			if (a.getRelationship() != null) {
-				if (a.getRelationship().getJoinColumn() != null)
-					list.add(a.getRelationship().getJoinColumn());
-			} else {
-				list.add(a.getColumnName());
-			}
-		}
-
-		return list;
-	}
-
 	public SqlSelect generateSelectById(MetaEntity entity, Object idValue) throws Exception {
 		List<AttributeValue> idAttributeValues = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
 		idAttributeValues.add(attrValueId);
 
 		List<MetaAttribute> expandedAttributes = entity.expandAttributes();
-		List<String> columns = createColumns(expandedAttributes);
-		List<String> joinColumnNames = entity.getJoinColumnAttributes().stream().map(c -> c.getColumnName())
-				.collect(Collectors.toList());
-		columns.addAll(joinColumnNames);
 		List<ColumnNameValue> columnNameValues = convertAttributeValues(idAttributeValues);
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
 		fetchColumnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
 		return new SqlSelect(entity.getTableName(), entity.getAlias(), columnNameValues, fetchColumnNameValues, null,
 				null);
-	}
-
-	protected StringBuilder createAllFieldsQuery(MetaEntity entity, List<MetaAttribute> expandedAttributes)
-			throws Exception {
-		StringBuilder sb = new StringBuilder();
-		sb.append("select ");
-		List<String> columns = createColumns(expandedAttributes);
-		List<String> joinColumnNames = entity.getJoinColumnAttributes().stream().map(c -> c.getColumnName())
-				.collect(Collectors.toList());
-		columns.addAll(joinColumnNames);
-		int i = 0;
-		for (String c : columns) {
-			if (i > 0)
-				sb.append(", ");
-
-			sb.append(dbJdbc.getNameTranslator().toColumnName(entity.getAlias(), c));
-			++i;
-		}
-
-		sb.append(" from ");
-		sb.append(entity.getTableName());
-		sb.append(" ");
-		sb.append(entity.getAlias());
-		return sb;
 	}
 
 	public SqlSelect generateSelectAllFields(MetaEntity entity) throws Exception {
@@ -210,10 +138,6 @@ public class SqlStatementFactory {
 	public SqlSelectJoin generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId,
 			Object joinTableForeignKey, RelationshipJoinTable joinTable) throws Exception {
 		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
-		List<String> columns = createColumns(expandedAttributes);
-		List<String> joinColumnNames = entity.getJoinColumnAttributes().stream().map(c -> c.getColumnName())
-				.collect(Collectors.toList());
-		columns.addAll(joinColumnNames);
 
 		// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
 		// where j.t2=fk
@@ -228,7 +152,7 @@ public class SqlStatementFactory {
 		int index = -1;
 		for (AttributeValue av : owningIdAttributeValues) {
 			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnOwningAttributes, av.getAttribute());
-			LOG.info("generateSelectByJoinTable: 2 index=" + index);
+			LOG.info("generateSelectByJoinTable: index=" + index);
 			attributeValues.add(
 					new AttributeValue(joinColumnOwningAttributes.get(index).getForeignKeyAttribute(), av.getValue()));
 		}
@@ -260,7 +184,7 @@ public class SqlStatementFactory {
 		return columnNameValues;
 	}
 
-	public SqlStatement generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, Object owningInstance,
+	public SqlInsert generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, Object owningInstance,
 			Object targetInstance) throws Exception {
 		LOG.info("generateJoinTableInsert: owningInstance=" + owningInstance);
 		LOG.info("generateJoinTableInsert: targetInstance=" + targetInstance);
@@ -271,8 +195,7 @@ public class SqlStatementFactory {
 		MetaAttribute targetId = relationshipJoinTable.getTargetAttribute();
 		columnNameValues.addAll(createJoinColumnAVS(relationshipJoinTable.getJoinColumnTargetAttributes(), targetId,
 				AttributeUtil.getIdValue(targetId, targetInstance)));
-		String sql = generateInsertStatement(relationshipJoinTable.getTableName(), columnNameValues);
-		return new SqlStatement.Builder().withSql(sql).withColumnNameValues(columnNameValues).build();
+		return new SqlInsert(relationshipJoinTable.getTableName(), columnNameValues);
 	}
 
 	public SqlUpdate generateUpdate(MetaEntity entity, List<AttributeValue> attrValues, Object idValue)
@@ -293,26 +216,10 @@ public class SqlStatementFactory {
 	}
 
 	public SqlSelect select(CriteriaQuery<?> criteriaQuery, Map<String, MetaEntity> entities) throws Exception {
-		LOG.info("select: this=" + this);
-		Predicate restriction = criteriaQuery.getRestriction();
-		LOG.info("select: criteriaQuery.getResultType()=" + criteriaQuery.getResultType());
-		if (restriction != null) {
-			LOG.info("select: ((PredicateTypeInfo) predicate).getPredicateType()="
-					+ ((PredicateTypeInfo) restriction).getPredicateType());
-			MetaEntity entity = entities.get(criteriaQuery.getResultType().getName());
-
-			List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
-			List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
-			fetchColumnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
-
-			return new SqlSelect(entity.getTableName(), entity.getAlias(), Collections.emptyList(),
-					fetchColumnNameValues, null, criteriaQuery);
-		}
-
 		MetaEntity entity = entities.get(criteriaQuery.getResultType().getName());
 		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
-		LOG.info("select: fetchColumnNameValues=" + fetchColumnNameValues);
+		fetchColumnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
 		return new SqlSelect(entity.getTableName(), entity.getAlias(), Collections.emptyList(), fetchColumnNameValues,
 				null, criteriaQuery);
 	}

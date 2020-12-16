@@ -153,47 +153,6 @@ public class JdbcRunner {
 		}
 	}
 
-//	public AttributeValues findById(Connection connection, SqlStatement sqlStatement, MetaEntity entity)
-//			throws Exception {
-//		PreparedStatement preparedStatement = null;
-//		try {
-//			LOG.info("findById: sql=" + sqlStatement.getSql());
-//			preparedStatement = connection.prepareStatement(sqlStatement.getSql());
-//			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
-//
-//			ResultSet rs = preparedStatement.executeQuery();
-//			boolean next = rs.next();
-//			LOG.info("findById: next=" + next);
-//			if (!next)
-//				return null;
-//
-//			AttributeValues attributeValues = new AttributeValues();
-//
-//			Object value = null;
-//			MetaAttribute metaAttribute = null;
-//			int i = 1;
-//			for (ColumnNameValue cnv : sqlStatement.getFetchColumnNameValues()) {
-//				if (cnv.getForeignKeyAttribute() != null) {
-//					attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
-//					attributeValues.relationshipValues.add(rs.getObject(i, cnv.getReadWriteDbType()));
-//				} else {
-//					attributeValues.attributes.add(cnv.getAttribute());
-//					metaAttribute = cnv.getAttribute();
-//					value = rs.getObject(i, metaAttribute.getReadWriteDbType());
-//					attributeValues.values.add(metaAttribute.dbTypeMapper.convert(value,
-//							metaAttribute.getReadWriteDbType(), metaAttribute.getType()));
-//				}
-//
-//				++i;
-//			}
-//
-//			return attributeValues;
-//		} finally {
-//			if (preparedStatement != null)
-//				preparedStatement.close();
-//		}
-//	}
-
 	public AttributeValues findById(Connection connection, SqlSelect sqlSelect) throws Exception {
 		PreparedStatement preparedStatement = null;
 		try {
@@ -236,38 +195,6 @@ public class JdbcRunner {
 		}
 	}
 
-//	public List<Object> findCollection(Connection connection, SqlStatement sqlStatement, MetaEntity entity,
-//			JdbcEntityManager jdbcEntityManager, MetaAttribute childAttribute, Object childAttributeValue)
-//			throws Exception {
-//		PreparedStatement preparedStatement = null;
-//		try {
-//			String sql = sqlStatement.getSql();
-//			LOG.info("findCollection: sql=`" + sql + "`");
-//			LOG.info("findCollection: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
-////			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
-//			preparedStatement = connection.prepareStatement(sql);
-//			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
-//
-//			LOG.info("Running `" + sql + "`");
-//			List<Object> objects = new ArrayList<>();
-//			ResultSet rs = preparedStatement.executeQuery();
-//			while (rs.next()) {
-//				AttributeValues attributeValues = createAttributeValuesFromResultSet(
-//						sqlStatement.getFetchColumnNameValues(), rs);
-//
-//				LOG.info("findCollection: attributeValues=" + attributeValues);
-//				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
-//						childAttributeValue);
-//				objects.add(instance);
-//			}
-//
-//			return objects;
-//		} finally {
-//			if (preparedStatement != null)
-//				preparedStatement.close();
-//		}
-//	}
-
 	public List<Object> findCollection(Connection connection, SqlSelect sqlSelect, MetaEntity entity,
 			JdbcEntityManager jdbcEntityManager, MetaAttribute childAttribute, Object childAttributeValue)
 			throws Exception {
@@ -275,57 +202,12 @@ public class JdbcRunner {
 			String sql = sqlStatementGenerator.generate(sqlSelect);
 			return findCollection(connection, sql, sqlSelect.getFetchColumnNameValues(),
 					sqlSelect.getColumnNameValues(), entity, jdbcEntityManager, childAttribute, childAttributeValue);
-//			return findCollectionNoCriteria(connection, sqlSelect, entity, jdbcEntityManager, childAttribute,
-//					childAttributeValue);
 		}
 
 		LOG.info("findCollection: sqlSelect=" + sqlSelect);
 		StatementData statementData = sqlStatementGenerator.generateByCriteria(sqlSelect);
-		LOG.info("findCollection: statementData=" + statementData);
-		SqlSelect select = new SqlSelect(sqlSelect.getTableName(), sqlSelect.getTableAlias(),
-				statementData.getParameters(), sqlSelect.getFetchColumnNameValues(), null, null);
 		return findCollection(connection, statementData.getSql(), sqlSelect.getFetchColumnNameValues(),
 				statementData.getParameters(), entity, jdbcEntityManager, childAttribute, childAttributeValue);
-//		return findCollectionNoCriteria(connection, select, entity, jdbcEntityManager, null, null);
-	}
-
-	private List<Object> findCollectionNoCriteria(Connection connection, SqlSelect sqlSelect, MetaEntity entity,
-			JdbcEntityManager jdbcEntityManager, MetaAttribute childAttribute, Object childAttributeValue)
-			throws Exception {
-		PreparedStatement preparedStatement = null;
-		try {
-			LOG.info("findCollection: sqlSelect.getTableName()=" + sqlSelect.getTableName());
-			LOG.info("findCollection: sqlSelect.getTableAlias()=" + sqlSelect.getTableAlias());
-			LOG.info("findCollection: sqlSelect.getColumnNameValues()=" + sqlSelect.getColumnNameValues());
-			LOG.info("findCollection: sqlSelect.getFetchColumnNameValues()=" + sqlSelect.getFetchColumnNameValues());
-			LOG.info("findCollection: sqlSelect.getJoinColumnNameValues()=" + sqlSelect.getJoinColumnNameValues());
-
-			String sql = sqlStatementGenerator.generate(sqlSelect);
-
-			LOG.info("findCollection: sql=`" + sql + "`");
-//			LOG.info("findCollection: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
-//			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
-			preparedStatement = connection.prepareStatement(sql);
-			setPreparedStatementValues(preparedStatement, sqlSelect.getColumnNameValues());
-
-			LOG.info("Running `" + sql + "`");
-			List<Object> objects = new ArrayList<>();
-			ResultSet rs = preparedStatement.executeQuery();
-			while (rs.next()) {
-				AttributeValues attributeValues = createAttributeValuesFromResultSet(
-						sqlSelect.getFetchColumnNameValues(), rs);
-
-				LOG.info("findCollection: attributeValues=" + attributeValues);
-				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
-						childAttributeValue);
-				objects.add(instance);
-			}
-
-			return objects;
-		} finally {
-			if (preparedStatement != null)
-				preparedStatement.close();
-		}
 	}
 
 	private List<Object> findCollection(Connection connection, String sql, List<ColumnNameValue> fetchColumnNameValues,
