@@ -141,7 +141,13 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	/**
 	 * Executes a query like: 'select (Entity fields) from table where
-	 * pk=foreignkey'
+	 * pk=foreignkey' <br>
+	 * The attribute 'foreignKeyAttribute' type can be one of
+	 * 'java.util.Collection', 'java.util.List' or 'java.util.Map', etc. <br>
+	 * For example, in order to load the list of Employee for a given Department
+	 * (foreign key) we have to pass:
+	 * 
+	 * - the department instance, so we can get the foreign key - the Employee class
 	 * 
 	 * @param entityClass         result's class
 	 * @param foreignKey          foreign key value
@@ -154,10 +160,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	private List<Object> findCollectionByForeignKey(Class<?> entityClass, Object foreignKey,
 			MetaAttribute foreignKeyAttribute, MetaAttribute childAttribute, Object childAttributeValue)
 			throws Exception {
-//		Object entityInstance = entityContainer.find(entityClass, foreignKey);
-//		if (entityInstance != null)
-//			return entityInstance;
-
 		MetaEntity entity = entities.get(entityClass.getName());
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
@@ -223,32 +225,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	}
 
 	/**
-	 * Loads the 'parentInstance's collection (or map) specified by the attribute
-	 * 'foreignKeyAttribute'. The attribute 'foreignKeyAttribute' type can be one of
-	 * 'java.util.Collection', 'java.util.List' or 'java.util.Map', etc. For
-	 * example, in order to load the list of Employee for a given Department
-	 * (foreign key) we have to pass:
-	 * 
-	 * - the department instance, so we can get the foreign key - the Employee class
-	 * 
-	 * @param parentInstance
-	 * @param targetEntity        the object result class
-	 * @param foreignKeyAttribute
-	 * @param childAttribute
-	 * @param childAttributeValue
-	 * @return
-	 * @throws Exception
-	 */
-	private List<Object> loadAttributeValues(Object parentInstance, Class<?> targetEntity,
-			MetaAttribute foreignKeyAttribute, MetaAttribute childAttribute, Object childAttributeValue)
-			throws Exception {
-		LOG.info("loadAttributeValues: parentInstance=" + parentInstance);
-		List<Object> objects = findCollectionByForeignKey(targetEntity, parentInstance, foreignKeyAttribute,
-				childAttribute, childAttributeValue);
-		return objects;
-	}
-
-	/**
 	 * Used for lazy loading attributes.
 	 * 
 	 * @param parentInstance the parent instance
@@ -269,8 +245,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				MetaEntity entity = a.getRelationship().getAttributeType();
 				MetaEntity e = entities.get(parentInstance.getClass().getName());
 				Object pk = AttributeUtil.getIdValue(e, parentInstance);
-//				SqlStatement sqlStatement = sqlStatementCriteriaFactory.generateSelectByJoinTable(entity, e.getId(), pk,
-//						a.getRelationship().getJoinTable());
 				SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
 						a.getRelationship().getJoinTable());
 				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sqlSelectJoin,
@@ -279,7 +253,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				return objects;
 			}
 
-			return loadAttributeValues(parentInstance, relationship.getTargetEntityClass(),
+			return findCollectionByForeignKey(relationship.getTargetEntityClass(), parentInstance,
 					relationship.getOwningAttribute(), targetAttribute, parentInstance);
 		}
 
@@ -354,7 +328,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(id.getGeneratedValue());
 		if (pkStrategy == PkStrategy.SEQUENCE) {
 			String seqStm = dbConfiguration.getDbJdbc().sequenceNextValueStatement(entity);
-			Long longValue = jdbcRunner.generateSequenceNextValue(connectionHolder.getConnection(), seqStm);
+			Long longValue = jdbcRunner.generateNextSequenceValue(connectionHolder.getConnection(), seqStm);
 			entity.getId().getWriteMethod().invoke(entityInstance, longValue);
 			return longValue;
 		}

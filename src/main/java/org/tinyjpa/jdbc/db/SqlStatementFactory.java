@@ -58,22 +58,18 @@ public class SqlStatementFactory {
 				continue;
 			}
 
-			ColumnNameValue columnNameValue = null;
-//			if (a.getManyToOne() != null)
-//				LOG.info("convertAttributeValues: attribute.getManyToOne()=" + a.getManyToOne()
-//						+ "; attribute.getManyToOne().isOwner()=" + a.getManyToOne().isOwner());
-
 			if (a.getRelationship() != null) {
 				String joinColumn = a.getRelationship().getJoinColumn();
 				MetaEntity attributeType = a.getRelationship().getAttributeType();
 				if (joinColumn != null && attributeType != null) {
 					Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
-					columnNameValue = new ColumnNameValue(joinColumn, idValue, attributeType.getId().getType(),
-							attributeType.getId().getReadWriteDbType(), attributeType.getId().getSqlType(), a, null);
+					ColumnNameValue columnNameValue = new ColumnNameValue(joinColumn, idValue,
+							attributeType.getId().getType(), attributeType.getId().getReadWriteDbType(),
+							attributeType.getId().getSqlType(), a, null);
 					list.add(columnNameValue);
 				}
 			} else {
-				columnNameValue = ColumnNameValue.build(av);
+				ColumnNameValue columnNameValue = ColumnNameValue.build(av);
 				list.add(columnNameValue);
 			}
 		}

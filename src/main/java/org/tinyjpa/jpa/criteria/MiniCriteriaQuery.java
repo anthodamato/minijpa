@@ -53,6 +53,7 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 		return new HashSet<>(roots);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Selection<T> getSelection() {
 		return (Selection<T>) selection;

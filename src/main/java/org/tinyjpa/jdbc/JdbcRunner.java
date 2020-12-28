@@ -79,6 +79,7 @@ public class JdbcRunner {
 	public Object persist(SqlStatement sqlStatement, Connection connection) throws SQLException {
 		LOG.info("persist: sqlStatement.sql=" + sqlStatement.getSql());
 		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 		try {
 			preparedStatement = connection.prepareStatement(sqlStatement.getSql(), Statement.RETURN_GENERATED_KEYS);
 			setPreparedStatementValues(preparedStatement, sqlStatement.getColumnNameValues());
@@ -87,7 +88,7 @@ public class JdbcRunner {
 				return sqlStatement.getIdValue();
 
 			Object pk = null;
-			ResultSet resultSet = preparedStatement.getGeneratedKeys();
+			resultSet = preparedStatement.getGeneratedKeys();
 			if (resultSet != null && resultSet.next()) {
 				pk = resultSet.getLong(1);
 				LOG.info("persist: getGeneratedKeys() pk=" + pk);
@@ -95,6 +96,9 @@ public class JdbcRunner {
 
 			return pk;
 		} finally {
+			if (resultSet != null)
+				resultSet.close();
+
 			if (preparedStatement != null)
 				preparedStatement.close();
 		}
@@ -118,6 +122,7 @@ public class JdbcRunner {
 		String sql = sqlStatementGenerator.generate(sqlInsert);
 		LOG.info("persist: sql=" + sql);
 		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 		try {
 			preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 			setPreparedStatementValues(preparedStatement, sqlInsert.getColumnNameValues());
@@ -126,7 +131,7 @@ public class JdbcRunner {
 				return sqlInsert.getIdValue();
 
 			Object pk = null;
-			ResultSet resultSet = preparedStatement.getGeneratedKeys();
+			resultSet = preparedStatement.getGeneratedKeys();
 			if (resultSet != null && resultSet.next()) {
 				pk = resultSet.getLong(1);
 				LOG.info("persist: getGeneratedKeys() pk=" + pk);
@@ -134,6 +139,9 @@ public class JdbcRunner {
 
 			return pk;
 		} finally {
+			if (resultSet != null)
+				resultSet.close();
+
 			if (preparedStatement != null)
 				preparedStatement.close();
 		}
@@ -155,6 +163,7 @@ public class JdbcRunner {
 
 	public AttributeValues findById(Connection connection, SqlSelect sqlSelect) throws Exception {
 		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
 		try {
 			String sql = sqlStatementGenerator.generate(sqlSelect);
 
@@ -162,7 +171,7 @@ public class JdbcRunner {
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementValues(preparedStatement, sqlSelect.getColumnNameValues());
 
-			ResultSet rs = preparedStatement.executeQuery();
+			rs = preparedStatement.executeQuery();
 			boolean next = rs.next();
 			LOG.info("findById: next=" + next);
 			if (!next)
@@ -190,6 +199,9 @@ public class JdbcRunner {
 
 			return attributeValues;
 		} finally {
+			if (rs != null)
+				rs.close();
+
 			if (preparedStatement != null)
 				preparedStatement.close();
 		}
@@ -214,6 +226,7 @@ public class JdbcRunner {
 			List<ColumnNameValue> parameters, MetaEntity entity, JdbcEntityManager jdbcEntityManager,
 			MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
 		try {
 			LOG.info("findCollection: parameters=" + parameters);
 			LOG.info("findCollection: fetchColumnNameValues=" + fetchColumnNameValues);
@@ -226,7 +239,7 @@ public class JdbcRunner {
 
 			LOG.info("Running `" + sql + "`");
 			List<Object> objects = new ArrayList<>();
-			ResultSet rs = preparedStatement.executeQuery();
+			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
 				AttributeValues attributeValues = createAttributeValuesFromResultSet(fetchColumnNameValues, rs);
 
@@ -238,6 +251,9 @@ public class JdbcRunner {
 
 			return objects;
 		} finally {
+			if (rs != null)
+				rs.close();
+
 			if (preparedStatement != null)
 				preparedStatement.close();
 		}
@@ -247,6 +263,7 @@ public class JdbcRunner {
 			JdbcEntityManager jdbcEntityManager, MetaAttribute childAttribute, Object childAttributeValue)
 			throws Exception {
 		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
 		try {
 			String sql = sqlStatementGenerator.generate(sqlSelectJoin);
 			LOG.info("findCollection: sql=`" + sql + "`");
@@ -257,7 +274,7 @@ public class JdbcRunner {
 
 			LOG.info("Running `" + sql + "`");
 			List<Object> objects = new ArrayList<>();
-			ResultSet rs = preparedStatement.executeQuery();
+			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
 				AttributeValues attributeValues = createAttributeValuesFromResultSet(
 						sqlSelectJoin.getFetchColumnNameValues(), rs);
@@ -270,6 +287,9 @@ public class JdbcRunner {
 
 			return objects;
 		} finally {
+			if (rs != null)
+				rs.close();
+
 			if (preparedStatement != null)
 				preparedStatement.close();
 		}
@@ -310,17 +330,26 @@ public class JdbcRunner {
 		public List<MetaAttribute> relationshipAttributes = new ArrayList<>();
 	}
 
-	public Long generateSequenceNextValue(Connection connection, String sql) throws SQLException {
+	public Long generateNextSequenceValue(Connection connection, String sql) throws SQLException {
 		LOG.info("generateSequenceNextValue: sql=" + sql);
-		PreparedStatement preparedStatement = connection.prepareStatement(sql);
-		preparedStatement.execute();
-		ResultSet rs = preparedStatement.getResultSet();
 		Long value = null;
-		if (rs.next()) {
-			value = rs.getLong(1);
+		ResultSet rs = null;
+		PreparedStatement preparedStatement = null;
+		try {
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.execute();
+			rs = preparedStatement.getResultSet();
+			if (rs.next()) {
+				value = rs.getLong(1);
+			}
+		} finally {
+			if (rs != null)
+				rs.close();
+
+			if (preparedStatement != null)
+				preparedStatement.close();
 		}
 
-		rs.close();
 		return value;
 	}
 
