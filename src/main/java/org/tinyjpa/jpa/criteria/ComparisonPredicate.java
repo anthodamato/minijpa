@@ -10,25 +10,25 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 	private PredicateType predicateType;
 	private Expression<?> x;
 	private Expression<?> y;
-	private Object value1;
+	private Object value;
 	private boolean negated = false;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
-	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value1) {
+	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value) {
 		super(Boolean.class);
 		this.predicateType = predicateType;
 		this.x = x;
 		this.y = y;
-		this.value1 = value1;
+		this.value = value;
 	}
 
-	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value1,
+	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value,
 			boolean negated) {
 		super(Boolean.class);
 		this.predicateType = predicateType;
 		this.x = x;
 		this.y = y;
-		this.value1 = value1;
+		this.value = value;
 		this.negated = negated;
 	}
 
@@ -60,7 +60,7 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 
 	@Override
 	public Predicate not() {
-		return new ComparisonPredicate(predicateType, x, y, value1, !negated);
+		return new ComparisonPredicate(predicateType, x, y, value, !negated);
 	}
 
 	public Expression<?> getX() {
@@ -71,8 +71,8 @@ public class ComparisonPredicate extends AbstractExpression<Boolean> implements 
 		return y;
 	}
 
-	public Object getValue1() {
-		return value1;
+	public Object getValue() {
+		return value;
 	}
 
 }

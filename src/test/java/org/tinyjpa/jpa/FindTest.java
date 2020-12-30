@@ -7,6 +7,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -189,6 +190,48 @@ public class FindTest {
 		} catch (Exception e) {
 			tx.rollback();
 			Assertions.fail(e.getMessage());
+		} finally {
+			tx.commit();
+			em.close();
+		}
+	}
+
+	@Test
+	public void equalCriteriaParameter() {
+		final EntityManager em = emf.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			Citizen citizen = createCitizenAnthonySmith();
+			em.persist(citizen);
+			Citizen c_Smith = em.find(Citizen.class, citizen.getId());
+
+			citizen = createCitizenCrown();
+			em.persist(citizen);
+			Citizen c_Crown = em.find(Citizen.class, citizen.getId());
+
+			Assertions.assertNotNull(citizen.getId());
+
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<Citizen> cq = cb.createQuery(Citizen.class);
+			Root<Citizen> root = cq.from(Citizen.class);
+
+			Predicate predicate = cb.equal(root.get("lastName"), cb.parameter(String.class, "last_name"));
+			Assertions.assertEquals(BooleanOperator.AND, predicate.getOperator());
+			Assertions.assertEquals(Boolean.class, predicate.getJavaType());
+			Assertions.assertFalse(predicate.isCompoundSelection());
+
+			cq.where(predicate);
+
+			Query query = em.createQuery(cq);
+			String lastName = "Smith";
+			query.setParameter("last_name", lastName);
+			Citizen c = (Citizen) query.getSingleResult();
+
+			Assertions.assertNotNull(c);
+
+			em.remove(c_Crown);
+			em.remove(c_Smith);
 		} finally {
 			tx.commit();
 			em.close();

@@ -527,14 +527,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MiniParameterExpression<T>(paramClass);
 	}
 
 	@Override
 	public <T> ParameterExpression<T> parameter(Class<T> paramClass, String name) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MiniParameterExpression<T>(paramClass, name);
 	}
 
 	@Override

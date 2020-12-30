@@ -16,8 +16,8 @@ import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.EntityContainer;
 
-public class PersistenceContextImpl implements EntityContainer {
-	private Logger LOG = LoggerFactory.getLogger(PersistenceContextImpl.class);
+public class MiniPersistenceContext implements EntityContainer {
+	private Logger LOG = LoggerFactory.getLogger(MiniPersistenceContext.class);
 	private Map<String, MetaEntity> entities;
 
 	/**
@@ -72,7 +72,7 @@ public class PersistenceContextImpl implements EntityContainer {
 	 */
 	private Map<Class<?>, Map<Object, Map<MetaAttribute, Object>>> foreignKeyValues = new HashMap<>();
 
-	public PersistenceContextImpl(Map<String, MetaEntity> entities) {
+	public MiniPersistenceContext(Map<String, MetaEntity> entities) {
 		super();
 		this.entities = entities;
 	}

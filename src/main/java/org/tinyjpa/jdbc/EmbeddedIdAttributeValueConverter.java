@@ -24,7 +24,6 @@ public class EmbeddedIdAttributeValueConverter implements AttributeValueConverte
 		}
 
 		for (AttributeValue av : attributeValues) {
-//				LOG.info("expandEmbedded: av.getAttribute().getName()=" + av.getAttribute().getName());
 			List<AttributeValue> attrValueList = convert(av);
 			attrValues.addAll(attrValueList);
 		}
@@ -36,8 +35,6 @@ public class EmbeddedIdAttributeValueConverter implements AttributeValueConverte
 	public List<AttributeValue> convert(List<AttributeValue> attrValues) throws Exception {
 		List<AttributeValue> values = new ArrayList<>();
 		for (AttributeValue attrValue : attrValues) {
-//			LOG.info("persist: attrValue.getAttribute().getName()=" + attrValue.getAttribute().getName());
-//			LOG.info("persist: attrValue.getAttribute().isEmbedded()=" + attrValue.getAttribute().isEmbedded());
 			values.addAll(convert(attrValue));
 		}
 

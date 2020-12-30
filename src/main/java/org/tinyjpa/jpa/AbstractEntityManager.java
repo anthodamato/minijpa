@@ -6,21 +6,17 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.spi.PersistenceUnitInfo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.ConnectionHolder;
 import org.tinyjpa.jdbc.MetaEntity;
 
 public abstract class AbstractEntityManager implements EntityManager {
-	private Logger LOG = LoggerFactory.getLogger(getClass());
-
 	protected Map<String, MetaEntity> entities;
 	protected PersistenceUnitInfo persistenceUnitInfo;
-	protected PersistenceContextImpl persistenceContext;
+	protected MiniPersistenceContext persistenceContext;
 	protected PersistenceContextType persistenceContextType = PersistenceContextType.TRANSACTION;
 	protected ConnectionHolder connectionHolder;
 
-	public PersistenceContextImpl getPersistenceContext() {
+	public MiniPersistenceContext getPersistenceContext() {
 		return persistenceContext;
 	}
 
@@ -32,8 +28,4 @@ public abstract class AbstractEntityManager implements EntityManager {
 		return entities;
 	}
 
-//	public Connection createConnection() throws SQLException {
-//		connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
-//		return connection;
-//	}
 }

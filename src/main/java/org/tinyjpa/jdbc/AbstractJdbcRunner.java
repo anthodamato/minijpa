@@ -13,24 +13,15 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.db.JdbcEntityManager;
-import org.tinyjpa.jdbc.db.SqlStatementGenerator;
-import org.tinyjpa.jdbc.db.StatementData;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
 import org.tinyjpa.jdbc.model.SqlSelectJoin;
 import org.tinyjpa.jdbc.model.SqlUpdate;
 
-public class JdbcRunner {
-	private Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
-	private SqlStatementGenerator sqlStatementGenerator;
+public abstract class AbstractJdbcRunner {
+	private Logger LOG = LoggerFactory.getLogger(AbstractJdbcRunner.class);
 	private boolean log = false;
-
-	public JdbcRunner(SqlStatementGenerator sqlStatementGenerator) {
-		super();
-		this.sqlStatementGenerator = sqlStatementGenerator;
-	}
 
 	private void setPreparedStatementValue(PreparedStatement preparedStatement, int index, Class<?> type,
 			Integer sqlType, Object value) throws SQLException {
@@ -104,8 +95,8 @@ public class JdbcRunner {
 		}
 	}
 
-	public void persist(SqlUpdate sqlUpdate, Connection connection) throws SQLException {
-		String sql = sqlStatementGenerator.generate(sqlUpdate);
+	public void persist(SqlUpdate sqlUpdate, Connection connection, String sql) throws SQLException {
+//		String sql = sqlStatementGenerator.generate(sqlUpdate);
 		LOG.info("persist: sql=" + sql);
 		PreparedStatement preparedStatement = null;
 		try {
@@ -118,8 +109,7 @@ public class JdbcRunner {
 		}
 	}
 
-	public Object persist(SqlInsert sqlInsert, Connection connection) throws SQLException {
-		String sql = sqlStatementGenerator.generate(sqlInsert);
+	public Object persist(String sql, SqlInsert sqlInsert, Connection connection) throws SQLException {
 		LOG.info("persist: sql=" + sql);
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -147,8 +137,7 @@ public class JdbcRunner {
 		}
 	}
 
-	public void delete(SqlDelete sqlDelete, Connection connection) throws SQLException {
-		String sql = sqlStatementGenerator.generate(sqlDelete);
+	public void delete(String sql, SqlDelete sqlDelete, Connection connection) throws SQLException {
 		LOG.info("persist: sql=" + sql);
 		PreparedStatement preparedStatement = null;
 		try {
@@ -161,12 +150,10 @@ public class JdbcRunner {
 		}
 	}
 
-	public AttributeValues findById(Connection connection, SqlSelect sqlSelect) throws Exception {
+	public AttributeValues findById(String sql, Connection connection, SqlSelect sqlSelect) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
-			String sql = sqlStatementGenerator.generate(sqlSelect);
-
 			LOG.info("findById: sql=" + sql);
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementValues(preparedStatement, sqlSelect.getColumnNameValues());
@@ -207,24 +194,12 @@ public class JdbcRunner {
 		}
 	}
 
-	public List<Object> findCollection(Connection connection, SqlSelect sqlSelect, MetaEntity entity,
-			JdbcEntityManager jdbcEntityManager, MetaAttribute childAttribute, Object childAttributeValue)
-			throws Exception {
-		if (sqlSelect.getCriteriaQuery() == null) {
-			String sql = sqlStatementGenerator.generate(sqlSelect);
-			return findCollection(connection, sql, sqlSelect.getFetchColumnNameValues(),
-					sqlSelect.getColumnNameValues(), entity, jdbcEntityManager, childAttribute, childAttributeValue);
-		}
+	public abstract Object createEntityInstance(AttributeValues attributeValues, MetaEntity entity,
+			MetaAttribute childAttribute, Object childAttributeValue) throws Exception;
 
-		LOG.info("findCollection: sqlSelect=" + sqlSelect);
-		StatementData statementData = sqlStatementGenerator.generateByCriteria(sqlSelect);
-		return findCollection(connection, statementData.getSql(), sqlSelect.getFetchColumnNameValues(),
-				statementData.getParameters(), entity, jdbcEntityManager, childAttribute, childAttributeValue);
-	}
-
-	private List<Object> findCollection(Connection connection, String sql, List<ColumnNameValue> fetchColumnNameValues,
-			List<ColumnNameValue> parameters, MetaEntity entity, JdbcEntityManager jdbcEntityManager,
-			MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
+	public List<Object> findCollection(Connection connection, String sql, List<ColumnNameValue> fetchColumnNameValues,
+			List<ColumnNameValue> parameters, MetaEntity entity, MetaAttribute childAttribute,
+			Object childAttributeValue) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
@@ -244,8 +219,9 @@ public class JdbcRunner {
 				AttributeValues attributeValues = createAttributeValuesFromResultSet(fetchColumnNameValues, rs);
 
 				LOG.info("findCollection: attributeValues=" + attributeValues);
-				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
-						childAttributeValue);
+//				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
+//						childAttributeValue);
+				Object instance = createEntityInstance(attributeValues, entity, childAttribute, childAttributeValue);
 				objects.add(instance);
 			}
 
@@ -259,13 +235,11 @@ public class JdbcRunner {
 		}
 	}
 
-	public List<Object> findCollection(Connection connection, SqlSelectJoin sqlSelectJoin, MetaEntity entity,
-			JdbcEntityManager jdbcEntityManager, MetaAttribute childAttribute, Object childAttributeValue)
-			throws Exception {
+	public List<Object> findCollection(Connection connection, String sql, SqlSelectJoin sqlSelectJoin,
+			MetaEntity entity, MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
-			String sql = sqlStatementGenerator.generate(sqlSelectJoin);
 			LOG.info("findCollection: sql=`" + sql + "`");
 //			LOG.info("findCollection: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
 //			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
@@ -280,8 +254,9 @@ public class JdbcRunner {
 						sqlSelectJoin.getFetchColumnNameValues(), rs);
 
 				LOG.info("findCollection: attributeValues=" + attributeValues);
-				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
-						childAttributeValue);
+//				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
+//						childAttributeValue);
+				Object instance = createEntityInstance(attributeValues, entity, childAttribute, childAttributeValue);
 				objects.add(instance);
 			}
 

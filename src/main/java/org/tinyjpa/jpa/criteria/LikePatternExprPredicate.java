@@ -68,7 +68,7 @@ public class LikePatternExprPredicate extends AbstractExpression<Boolean> implem
 		return escapeChar;
 	}
 
-	public Expression<java.lang.Character> getEscapeCharEx() {
+	public Expression<Character> getEscapeCharEx() {
 		return escapeCharEx;
 	}
 

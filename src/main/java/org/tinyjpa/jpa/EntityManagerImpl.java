@@ -25,10 +25,10 @@ import org.tinyjpa.jdbc.ConnectionHolderImpl;
 import org.tinyjpa.jdbc.ConnectionProviderImpl;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.db.DbConfiguration;
-import org.tinyjpa.jdbc.db.JdbcEntityManagerImpl;
 import org.tinyjpa.jdbc.db.TinyFlushMode;
 import org.tinyjpa.jpa.criteria.MiniCriteriaBuilder;
 import org.tinyjpa.jpa.db.DbConfigurationList;
+import org.tinyjpa.jpa.db.JdbcEntityManagerImpl;
 import org.tinyjpa.metadata.EmbeddedAttributeValueConverter;
 import org.tinyjpa.metadata.EntityContainerContext;
 import org.tinyjpa.metadata.EntityDelegate;
@@ -48,7 +48,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 		this.entityManagerFactory = entityManagerFactory;
 		this.persistenceUnitInfo = persistenceUnitInfo;
 		this.entities = entities;
-		this.persistenceContext = new PersistenceContextImpl(entities);
+		this.persistenceContext = new MiniPersistenceContext(entities);
 		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 		this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, entities, persistenceContext,
@@ -268,7 +268,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-		return new TypedQueryImpl<T>(criteriaQuery, jdbcEntityManager);
+		return new MiniTypedQuery<T>(criteriaQuery, jdbcEntityManager);
 	}
 
 	@Override

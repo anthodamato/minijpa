@@ -4,9 +4,10 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.JdbcRunner.AttributeValues;
+import org.tinyjpa.jdbc.AbstractJdbcRunner.AttributeValues;
 
 public class AttributeUtil {
+	@SuppressWarnings("unused")
 	private static final Logger LOG = LoggerFactory.getLogger(AttributeUtil.class);
 
 	public static Object createPK(MetaEntity entity, AttributeValues attributeValues) throws Exception {

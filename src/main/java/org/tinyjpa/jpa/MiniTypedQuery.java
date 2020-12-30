@@ -1,33 +1,45 @@
 package org.tinyjpa.jpa;
 
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.db.JdbcEntityManager;
+import org.tinyjpa.jpa.criteria.CriteriaUtils;
+import org.tinyjpa.jpa.db.JdbcEntityManager;
 
-public class TypedQueryImpl<X> implements TypedQuery<X> {
-	private Logger LOG = LoggerFactory.getLogger(TypedQueryImpl.class);
+public class MiniTypedQuery<X> implements TypedQuery<X> {
+	private Logger LOG = LoggerFactory.getLogger(MiniTypedQuery.class);
 	protected CriteriaQuery<?> criteriaQuery;
 	protected JdbcEntityManager jdbcCriteriaEntityManager;
 	private FlushModeType flushModeType = FlushModeType.AUTO;
+	private Map<String, Object> namedParameters = new HashMap<>();
+	private Set<Parameter<?>> parameters;
 
-	public TypedQueryImpl(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
+	public MiniTypedQuery(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
 		super();
 		this.criteriaQuery = criteriaQuery;
 		this.jdbcCriteriaEntityManager = jdbcCriteriaEntityManager;
+	}
+
+	public CriteriaQuery<?> getCriteriaQuery() {
+		return criteriaQuery;
 	}
 
 	@Override
@@ -38,7 +50,7 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 				jdbcCriteriaEntityManager.flush();
 
 			LOG.info("getResultList: select criteriaQuery=" + criteriaQuery);
-			list = jdbcCriteriaEntityManager.select(criteriaQuery);
+			list = jdbcCriteriaEntityManager.select(this);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
 			throw new PersistenceException(e.getMessage());
@@ -73,14 +85,18 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public Set<Parameter<?>> getParameters() {
-		// TODO Auto-generated method stub
-		return null;
+		if (this.parameters == null) {
+			Predicate predicate = criteriaQuery.getRestriction();
+			Set<Parameter<?>> params = CriteriaUtils.findParameters(predicate);
+			this.parameters = Collections.unmodifiableSet(params);
+		}
+
+		return parameters;
 	}
 
 	@Override
 	public Parameter<?> getParameter(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		return CriteriaUtils.findParameterByName(parameters, name);
 	}
 
 	@Override
@@ -115,8 +131,7 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public Object getParameterValue(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		return namedParameters.get(name);
 	}
 
 	@Override
@@ -144,8 +159,24 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public X getSingleResult() {
-		// TODO Auto-generated method stub
-		return null;
+		List<?> list = null;
+		try {
+			if (flushModeType == FlushModeType.AUTO)
+				jdbcCriteriaEntityManager.flush();
+
+			list = jdbcCriteriaEntityManager.select(this);
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
+		}
+
+		if (list.isEmpty())
+			throw new NoResultException("No result to return");
+
+		if (list.size() > 1)
+			throw new NonUniqueResultException("More than one result to return");
+
+		return (X) list.get(0);
 	}
 
 	@Override
@@ -186,8 +217,8 @@ public class TypedQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public TypedQuery<X> setParameter(String name, Object value) {
-		// TODO Auto-generated method stub
-		return null;
+		namedParameters.put(name, value);
+		return this;
 	}
 
 	@Override

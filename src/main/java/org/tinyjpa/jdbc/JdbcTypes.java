@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JdbcTypes {
+	@SuppressWarnings("unused")
 	private static Logger LOG = LoggerFactory.getLogger(JdbcTypes.class);
 
 	public static Integer sqlTypeFromClass(Class<?> c) {
