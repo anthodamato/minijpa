@@ -10,6 +10,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Selection;
 
 import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.AttributeValue;
@@ -18,11 +19,28 @@ import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.db.DbJdbc;
 import org.tinyjpa.jdbc.db.StatementData;
+import org.tinyjpa.jdbc.model.Column;
+import org.tinyjpa.jdbc.model.FromTable;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
 import org.tinyjpa.jdbc.model.SqlSelectJoin;
 import org.tinyjpa.jdbc.model.SqlUpdate;
+import org.tinyjpa.jdbc.model.TableColumn;
+import org.tinyjpa.jdbc.model.aggregate.AggregateFunction;
+import org.tinyjpa.jdbc.model.aggregate.Count;
+import org.tinyjpa.jdbc.model.aggregate.Distinct;
+import org.tinyjpa.jdbc.model.aggregate.GroupBy;
+import org.tinyjpa.jdbc.model.aggregate.Sum;
+import org.tinyjpa.jdbc.model.condition.AndCondition;
+import org.tinyjpa.jdbc.model.condition.Condition;
+import org.tinyjpa.jdbc.model.condition.EqualColumnExprCondition;
+import org.tinyjpa.jdbc.model.condition.EqualColumnsCondition;
+import org.tinyjpa.jdbc.model.condition.LikeCondition;
+import org.tinyjpa.jdbc.model.condition.OrCondition;
+import org.tinyjpa.jdbc.model.join.FromJoin;
+import org.tinyjpa.jdbc.model.join.JoinType;
+import org.tinyjpa.jpa.MiniTypedQuery;
 import org.tinyjpa.jpa.criteria.BetweenExpressionsPredicate;
 import org.tinyjpa.jpa.criteria.BetweenValuesPredicate;
 import org.tinyjpa.jpa.criteria.BinaryBooleanExprPredicate;
@@ -32,6 +50,8 @@ import org.tinyjpa.jpa.criteria.EmptyPredicate;
 import org.tinyjpa.jpa.criteria.ExprPredicate;
 import org.tinyjpa.jpa.criteria.LikePatternExprPredicate;
 import org.tinyjpa.jpa.criteria.LikePatternPredicate;
+import org.tinyjpa.jpa.criteria.MaxExpression;
+import org.tinyjpa.jpa.criteria.MinExpression;
 import org.tinyjpa.jpa.criteria.MiniPath;
 import org.tinyjpa.jpa.criteria.MultiplePredicate;
 import org.tinyjpa.jpa.criteria.PredicateType;
@@ -135,7 +155,7 @@ public class SqlStatementGenerator {
 		return list;
 	}
 
-	public String generate(SqlSelect sqlSelect) {
+	public String generateSql(SqlSelect sqlSelect) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
 		List<String> columns = createColumns(sqlSelect.getFetchColumnNameValues());
@@ -149,7 +169,7 @@ public class SqlStatementGenerator {
 		}
 
 		sb.append(" from ");
-		sb.append(sqlSelect.getTableName());
+		sb.append(sqlSelect.getFromTable().getName());
 		if (sqlSelect.getColumnNameValues().isEmpty())
 			return sb.toString();
 
@@ -163,6 +183,188 @@ public class SqlStatementGenerator {
 			sb.append(cnv.getColumnName());
 			sb.append(" = ?");
 			++i;
+		}
+
+		return sb.toString();
+	}
+
+	private String exportColumn(Column column) {
+		if (column.getAlias().isPresent())
+			return column.getName() + " AS " + column.getAlias().get();
+
+		return column.getName();
+	}
+
+	private String exportTableColumn(TableColumn tableColumn) {
+		if (tableColumn.getTable().isPresent() && tableColumn.getTable().get().getAlias().isPresent())
+			return tableColumn.getTable().get().getAlias().get() + "." + exportColumn(tableColumn.getColumn());
+
+		if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
+			return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(tableColumn.getColumn());
+
+		return exportColumn(tableColumn.getColumn());
+	}
+
+	private String exportAggregateFunction(AggregateFunction aggregateFunction) {
+		if (aggregateFunction instanceof Sum)
+			return "sum(" + exportTableColumn(((Sum) aggregateFunction).getTableColumn()) + ")";
+
+		if (aggregateFunction instanceof Distinct)
+			return "distinct " + exportTableColumn(((Distinct) aggregateFunction).getTableColumn());
+
+		if (aggregateFunction instanceof Count) {
+			Count count = (Count) aggregateFunction;
+			if (count.getExpression().isPresent())
+				return "count(" + count.getExpression().get() + ")";
+
+			if (count.getAggregateFunction().isPresent())
+				return exportAggregateFunction(count.getAggregateFunction().get());
+		}
+
+		throw new IllegalArgumentException("Aggregate function '" + aggregateFunction + "'not supported");
+	}
+
+	private String exportCondition(Condition condition) {
+		if (condition instanceof AndCondition) {
+			AndCondition andCondition = (AndCondition) condition;
+			StringBuilder sb = new StringBuilder();
+			if (andCondition.nested())
+				sb.append("(");
+
+			String cc = andCondition.getConditions().stream().map(c -> {
+				return exportCondition(c);
+			}).collect(Collectors.joining(" and "));
+			sb.append(cc);
+
+			if (andCondition.nested())
+				sb.append(")");
+
+			return sb.toString();
+		}
+
+		if (condition instanceof OrCondition) {
+			OrCondition orCondition = (OrCondition) condition;
+			StringBuilder sb = new StringBuilder();
+			if (orCondition.nested())
+				sb.append("(");
+
+			String cc = orCondition.getConditions().stream().map(c -> {
+				return exportCondition(c);
+			}).collect(Collectors.joining(" or "));
+			sb.append(cc);
+
+			if (orCondition.nested())
+				sb.append(")");
+
+			return sb.toString();
+		}
+
+		if (condition instanceof LikeCondition) {
+			LikeCondition likeCondition = (LikeCondition) condition;
+			return exportColumn(likeCondition.getColumn()) + dbJdbc.likeOperator() + " '"
+					+ likeCondition.getExpression() + "'";
+		}
+
+		if (condition instanceof EqualColumnExprCondition) {
+			EqualColumnExprCondition equalColumnExprCondition = (EqualColumnExprCondition) condition;
+			return exportTableColumn(equalColumnExprCondition.getColumnLeft()) + dbJdbc.equalOperator()
+					+ equalColumnExprCondition.getExpression();
+		}
+
+		if (condition instanceof EqualColumnsCondition) {
+			EqualColumnsCondition equalColumnsCondition = (EqualColumnsCondition) condition;
+			return exportColumn(equalColumnsCondition.getColumnLeft()) + dbJdbc.equalOperator()
+					+ exportColumn(equalColumnsCondition.getColumnRight());
+		}
+
+		throw new IllegalArgumentException("Condition '" + condition + "'not supported");
+	}
+
+	private String exportJoins(FromTable fromTable) {
+		StringBuilder sb = new StringBuilder();
+		if (!fromTable.getJoins().isPresent())
+			return sb.toString();
+
+		List<FromJoin> fromJoins = fromTable.getJoins().get();
+		for (FromJoin fromJoin : fromJoins) {
+			if (fromJoin.getType() == JoinType.InnerJoin) {
+				sb.append(" INNER JOIN ");
+				FromTable toTable = fromJoin.getToTable();
+				sb.append(toTable.getName());
+				if (toTable.getAlias().isPresent()) {
+					sb.append(" AS ");
+					sb.append(toTable.getAlias().get());
+				}
+
+				sb.append(" ON ");
+				List<Column> fromColumns = fromJoin.getFromColumns();
+				List<Column> toColumns = fromJoin.getToColumns();
+				for (int i = 0; i < fromColumns.size(); ++i) {
+					if (i > 0) {
+						sb.append(" AND ");
+					}
+
+					if (fromTable.getAlias().isPresent()) {
+						sb.append(fromTable.getAlias().get());
+						sb.append(".");
+					}
+
+					sb.append(fromColumns.get(i).getName());
+					sb.append("=");
+					if (toTable.getAlias().isPresent()) {
+						sb.append(toTable.getAlias().get());
+						sb.append(".");
+					}
+
+					sb.append(toColumns.get(i).getName());
+				}
+			}
+		}
+
+		return sb.toString();
+	}
+
+	private String exportFromTable(FromTable fromTable) {
+		StringBuilder sb = new StringBuilder(fromTable.getName());
+		if (fromTable.getAlias().isPresent()) {
+			sb.append(" AS ");
+			sb.append(fromTable.getAlias().get());
+		}
+
+		sb.append(exportJoins(fromTable));
+		return sb.toString();
+	}
+
+	private String exportGroupBy(GroupBy groupBy) {
+		return "group by "
+				+ groupBy.getColumns().stream().map(c -> exportTableColumn(c)).collect(Collectors.joining(", "));
+	}
+
+	public String export(SqlSelect sqlSelect) {
+		StringBuilder sb = new StringBuilder("select ");
+		String cc = sqlSelect.getValues().stream().map(c -> {
+			if (c instanceof TableColumn)
+				return exportTableColumn((TableColumn) c);
+			if (c instanceof AggregateFunction)
+				return exportAggregateFunction((AggregateFunction) c);
+
+			throw new IllegalArgumentException("Value type '" + c + "'not supported");
+		}).collect(Collectors.joining(", "));
+
+		sb.append(cc);
+		sb.append(" from ");
+		sb.append(exportFromTable(sqlSelect.getFromTable()));
+
+		if (sqlSelect.getConditions().isPresent()) {
+			sb.append(" where ");
+			String ccs = sqlSelect.getConditions().get().stream().map(c -> exportCondition(c))
+					.collect(Collectors.joining(" "));
+			sb.append(ccs);
+		}
+
+		if (sqlSelect.getGroupBy().isPresent()) {
+			sb.append(" ");
+			sb.append(exportGroupBy(sqlSelect.getGroupBy().get()));
 		}
 
 		return sb.toString();
@@ -242,13 +444,13 @@ public class SqlStatementGenerator {
 		case AND:
 			return dbJdbc.andOperator();
 		case IS_FALSE:
-			return dbJdbc.isFalseOperator();
+			return dbJdbc.falseOperator();
 		case IS_NOT_NULL:
-			return dbJdbc.isNotNullOperator();
+			return dbJdbc.notNullOperator();
 		case IS_NULL:
-			return dbJdbc.isNullOperator();
+			return dbJdbc.nullOperator();
 		case IS_TRUE:
-			return dbJdbc.isTrueOperator();
+			return dbJdbc.trueOperator();
 		case NOT:
 			return dbJdbc.notOperator();
 		case OR:
@@ -276,7 +478,7 @@ public class SqlStatementGenerator {
 		throw new IllegalArgumentException("Unknown operator for predicate type: " + predicateType);
 	}
 
-	protected StringBuilder createAllFieldsQuery(SqlSelect sqlSelect) throws Exception {
+	private StringBuilder createAllFieldsQuery(SqlSelect sqlSelect) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select ");
 		List<String> columns = createColumns(sqlSelect.getFetchColumnNameValues());
@@ -286,31 +488,79 @@ public class SqlStatementGenerator {
 			if (i > 0)
 				sb.append(", ");
 
-			sb.append(dbJdbc.getNameTranslator().toColumnName(sqlSelect.getTableAlias(), c));
+			sb.append(dbJdbc.getNameTranslator().toColumnName(sqlSelect.getFromTable().getAlias().get(), c));
 			++i;
 		}
 
 		sb.append(" from ");
-		sb.append(sqlSelect.getTableName());
+		sb.append(sqlSelect.getFromTable().getName());
 		sb.append(" ");
-		sb.append(sqlSelect.getTableAlias());
+		sb.append(sqlSelect.getFromTable().getAlias().get());
+		return sb;
+	}
+
+	private void createSelectionFields(SqlSelect sqlSelect, CriteriaQuery<?> criteriaQuery, StringBuilder sb) {
+		Selection<?> selection = criteriaQuery.getSelection();
+		if (selection == null)
+			return;
+
+		if (selection instanceof MaxExpression<?>) {
+			MaxExpression<Number> maxExpression = (MaxExpression<Number>) selection;
+			Expression<Number> expr = maxExpression.getX();
+			if (expr instanceof MiniPath<?>) {
+				MiniPath<?> miniPath = (MiniPath<?>) expr;
+				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+				sb.append(" max(");
+				sb.append(sqlSelect.getFromTable().getAlias().get());
+				sb.append(".");
+				sb.append(metaAttribute.getColumnName());
+				sb.append(")");
+			}
+		} else if (selection instanceof MinExpression<?>) {
+			MinExpression<Number> minExpression = (MinExpression<Number>) selection;
+			Expression<Number> expr = minExpression.getX();
+			if (expr instanceof MiniPath<?>) {
+				MiniPath<?> miniPath = (MiniPath<?>) expr;
+				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+				sb.append(" min(");
+				sb.append(sqlSelect.getFromTable().getAlias().get());
+				sb.append(".");
+				sb.append(metaAttribute.getColumnName());
+				sb.append(")");
+			}
+		}
+
+	}
+
+	private StringBuilder createSelectionQuery(SqlSelect sqlSelect, CriteriaQuery<?> criteriaQuery) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		sb.append("select ");
+		createSelectionFields(sqlSelect, criteriaQuery, sb);
+		sb.append(" from ");
+		sb.append(sqlSelect.getFromTable().getName());
+		sb.append(" ");
+		sb.append(sqlSelect.getFromTable().getAlias().get());
 		return sb;
 	}
 
 	public StatementData generateByCriteria(SqlSelect sqlSelect, Query query) throws Exception {
-		CriteriaQuery<?> criteriaQuery = sqlSelect.getCriteriaQuery();
+		CriteriaQuery<?> criteriaQuery = null;
+		if (query instanceof MiniTypedQuery<?>)
+			criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
+		StringBuilder sb = null;
+		if (sqlSelect.getResult() == null)
+			sb = createSelectionQuery(sqlSelect, criteriaQuery);
+		else
+			sb = createAllFieldsQuery(sqlSelect);
+
 		Predicate restriction = criteriaQuery.getRestriction();
 		List<ColumnNameValue> parameters = new ArrayList<>();
 		if (restriction != null) {
-			StringBuilder sb = createAllFieldsQuery(sqlSelect);
 			sb.append(" where");
 			createExpressionString(sqlSelect, restriction, sb, parameters, query);
-			return new StatementData(sb.toString(), parameters);
 		}
 
-		StringBuilder sb = createAllFieldsQuery(sqlSelect);
-		String sql = sb.toString();
-		return new StatementData(sql, parameters);
+		return new StatementData(sb.toString(), parameters);
 	}
 
 	private void translateComparisonPredicate(ComparisonPredicate comparisonPredicate, List<ColumnNameValue> parameters,
@@ -505,8 +755,8 @@ public class SqlStatementGenerator {
 				MetaAttribute attribute = miniPath.getMetaAttribute();
 
 				sb.append(" ");
-				sb.append(
-						dbJdbc.getNameTranslator().toColumnName(sqlSelect.getTableAlias(), attribute.getColumnName()));
+				sb.append(dbJdbc.getNameTranslator().toColumnName(sqlSelect.getFromTable().getAlias().get(),
+						attribute.getColumnName()));
 				sb.append(" ");
 				sb.append(operator);
 			}
@@ -521,7 +771,8 @@ public class SqlStatementGenerator {
 		if (x instanceof MiniPath<?>) {
 			MiniPath<?> miniPath = (MiniPath<?>) x;
 			MetaAttribute attribute = miniPath.getMetaAttribute();
-			addColumnNameAndOperator(sqlSelect.getTableAlias(), attribute.getColumnName(), operator, sb);
+			addColumnNameAndOperator(sqlSelect.getFromTable().getAlias().get(), attribute.getColumnName(), operator,
+					sb);
 		}
 //		else if (x instanceof ParameterExpression<?>) {
 //			ParameterExpression<?> parameterExpression = (ParameterExpression<?>) x;
@@ -585,22 +836,23 @@ public class SqlStatementGenerator {
 		if (predicateType == PredicateType.EQUAL || predicateType == PredicateType.NOT_EQUAL
 				|| predicateType == PredicateType.GREATER_THAN || predicateType == PredicateType.GT
 				|| predicateType == PredicateType.LESS_THAN || predicateType == PredicateType.LT) {
-			translateComparisonPredicate((ComparisonPredicate) predicate, parameters, sb, sqlSelect.getTableAlias(),
-					query);
+			translateComparisonPredicate((ComparisonPredicate) predicate, parameters, sb,
+					sqlSelect.getFromTable().getAlias().get(), query);
 		} else if (predicateType == PredicateType.BETWEEN_EXPRESSIONS) {
 			BetweenExpressionsPredicate betweenExpressionsPredicate = (BetweenExpressionsPredicate) predicate;
-			translateBetweenExpressionsPredicate(betweenExpressionsPredicate, parameters, sb, sqlSelect.getTableAlias(),
-					query);
+			translateBetweenExpressionsPredicate(betweenExpressionsPredicate, parameters, sb,
+					sqlSelect.getFromTable().getAlias().get(), query);
 		} else if (predicateType == PredicateType.BETWEEN_VALUES) {
 			BetweenValuesPredicate betweenValuesPredicate = (BetweenValuesPredicate) predicate;
-			translateBetweenValuesPredicate(betweenValuesPredicate, parameters, sb, sqlSelect.getTableAlias(), query);
+			translateBetweenValuesPredicate(betweenValuesPredicate, parameters, sb,
+					sqlSelect.getFromTable().getAlias().get(), query);
 		} else if (predicateType == PredicateType.LIKE_PATTERN) {
 			LikePatternPredicate likePatternPredicate = (LikePatternPredicate) predicate;
-			translateLikePatternPredicate(likePatternPredicate, sb, sqlSelect.getTableAlias(), query);
+			translateLikePatternPredicate(likePatternPredicate, sb, sqlSelect.getFromTable().getAlias().get(), query);
 		} else if (predicateType == PredicateType.LIKE_PATTERN_EXPR) {
 			LikePatternExprPredicate likePatternExprPredicate = (LikePatternExprPredicate) predicate;
-			translateLikePatternExprPredicate(likePatternExprPredicate, sb, parameters, sqlSelect.getTableAlias(),
-					query);
+			translateLikePatternExprPredicate(likePatternExprPredicate, sb, parameters,
+					sqlSelect.getFromTable().getAlias().get(), query);
 		} else if (predicateType == PredicateType.OR || predicateType == PredicateType.AND) {
 			if (predicate instanceof MultiplePredicate) {
 				translateMultiplePredicate(null, sb, parameters, query, sqlSelect);

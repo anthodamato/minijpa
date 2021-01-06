@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,12 +22,19 @@ import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.MetaEntityHelper;
+import org.tinyjpa.jdbc.model.FromTable;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
 import org.tinyjpa.jdbc.model.SqlSelectJoin;
 import org.tinyjpa.jdbc.model.SqlUpdate;
+import org.tinyjpa.jdbc.model.TableColumn;
+import org.tinyjpa.jdbc.model.condition.AndCondition;
+import org.tinyjpa.jdbc.model.condition.AndConditionImpl;
+import org.tinyjpa.jdbc.model.condition.Condition;
+import org.tinyjpa.jdbc.model.condition.EqualColumnExprCondition;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
+import org.tinyjpa.jpa.criteria.MiniRoot;
 
 public class SqlStatementFactory {
 	private Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
@@ -51,21 +62,27 @@ public class SqlStatementFactory {
 	}
 
 	public SqlSelect generateSelectById(MetaEntity entity, Object idValue) throws Exception {
-		List<AttributeValue> idAttributeValues = new ArrayList<>();
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
-		idAttributeValues.add(attrValueId);
-		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(idAttributeValues);
+		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValue(attrValueId);
 
 		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
-		return new SqlSelect(entity.getTableName(), entity.getAlias(), columnNameValues, fetchColumnNameValues, null,
-				null);
+
+		FromTable fromTable = FromTable.of(entity);
+		List<TableColumn> tableColumns = metaEntityHelper.toTableColumns(columnNameValues, fromTable);
+		List<Condition> conditions = tableColumns.stream().map(t -> {
+			return new EqualColumnExprCondition(t, "?");
+		}).collect(Collectors.toList());
+		
+		AndCondition andCondition = new AndConditionImpl(conditions);
+		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
+				.withFetchValues(fetchColumnNameValues).withConditions(Arrays.asList(andCondition))
+				.withParameters(metaEntityHelper.convertAVToQP(attrValueId)).build();
 	}
 
 	public SqlSelect generateSelectAllFields(MetaEntity entity) throws Exception {
 		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
-		return new SqlSelect(entity.getTableName(), entity.getAlias(), Collections.emptyList(), fetchColumnNameValues,
-				null, null);
+		return new SqlSelect(FromTable.of(entity), Collections.emptyList(), fetchColumnNameValues, null, entity);
 	}
 
 	public SqlSelect generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
@@ -76,8 +93,7 @@ public class SqlStatementFactory {
 		attributeValues.add(attrValue);
 		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(attributeValues);
 		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
-		return new SqlSelect(entity.getTableName(), entity.getAlias(), columnNameValues, fetchColumnNameValues, null,
-				null);
+		return new SqlSelect(FromTable.of(entity), columnNameValues, fetchColumnNameValues, null, entity);
 	}
 
 	public SqlSelectJoin generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId,
@@ -138,10 +154,22 @@ public class SqlStatementFactory {
 		return new SqlDelete(entity.getTableName(), columnNameValues);
 	}
 
-	public SqlSelect select(CriteriaQuery<?> criteriaQuery, MetaEntity entity) throws Exception {
-		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
-		return new SqlSelect(entity.getTableName(), entity.getAlias(), Collections.emptyList(), fetchColumnNameValues,
-				null, criteriaQuery);
-	}
+	public SqlSelect select(CriteriaQuery<?> criteriaQuery) {
+		Set<Root<?>> roots = criteriaQuery.getRoots();
+		Root<?> root = roots.iterator().next();
+		MetaEntity entity = ((MiniRoot<?>) root).getMetaEntity();
+		Selection<?> selection = criteriaQuery.getSelection();
+		if (selection == null) {
+			List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
+			return new SqlSelect(FromTable.of(entity), Collections.emptyList(), fetchColumnNameValues, null, entity);
+		}
 
+		if (selection instanceof MiniRoot<?>) {
+			entity = ((MiniRoot<?>) root).getMetaEntity();
+			List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
+			return new SqlSelect(FromTable.of(entity), Collections.emptyList(), fetchColumnNameValues, null, entity);
+		}
+
+		return new SqlSelect(FromTable.of(entity), Collections.emptyList(), null, null, null);
+	}
 }

@@ -40,8 +40,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public CriteriaQuery<Object> createQuery() {
-		// TODO Auto-generated method stub
-		return null;
+		return new MiniCriteriaQuery<Object>(Object.class, em);
 	}
 
 	@Override
@@ -123,14 +122,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public <N extends Number> Expression<N> max(Expression<N> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MaxExpression<N>(x);
 	}
 
 	@Override
 	public <N extends Number> Expression<N> min(Expression<N> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MinExpression<N>(x);
 	}
 
 	@Override

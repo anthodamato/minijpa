@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.model.QueryParameter;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
@@ -63,6 +64,21 @@ public abstract class AbstractJdbcRunner {
 					+ columnNameValue.getType().getName() + "; value=" + columnNameValue.getValue());
 			setPreparedStatementValue(preparedStatement, index, columnNameValue.getType(), columnNameValue.getSqlType(),
 					columnNameValue.getValue());
+			++index;
+		}
+	}
+
+	private void setPreparedStatementParameters(PreparedStatement preparedStatement,
+			List<QueryParameter> queryParameters) throws SQLException {
+		if (queryParameters.isEmpty())
+			return;
+
+		int index = 1;
+		for (QueryParameter queryParameter : queryParameters) {
+			LOG.info("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
+					+ queryParameter.getValue());
+			setPreparedStatementValue(preparedStatement, index, queryParameter.getType(), queryParameter.getSqlType(),
+					queryParameter.getValue());
 			++index;
 		}
 	}
@@ -156,7 +172,7 @@ public abstract class AbstractJdbcRunner {
 		try {
 			LOG.info("findById: sql=" + sql);
 			preparedStatement = connection.prepareStatement(sql);
-			setPreparedStatementValues(preparedStatement, sqlSelect.getColumnNameValues());
+			setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
 
 			rs = preparedStatement.executeQuery();
 			boolean next = rs.next();
@@ -219,8 +235,6 @@ public abstract class AbstractJdbcRunner {
 				AttributeValues attributeValues = createAttributeValuesFromResultSet(fetchColumnNameValues, rs);
 
 				LOG.info("findCollection: attributeValues=" + attributeValues);
-//				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
-//						childAttributeValue);
 				Object instance = createEntityInstance(attributeValues, entity, childAttribute, childAttributeValue);
 				objects.add(instance);
 			}
@@ -326,6 +340,42 @@ public abstract class AbstractJdbcRunner {
 		}
 
 		return value;
+	}
+
+	public List<Object> runQuery(Connection connection, String sql, List<ColumnNameValue> fetchColumnNameValues,
+			List<ColumnNameValue> parameters, MetaEntity entity, MetaAttribute childAttribute,
+			Object childAttributeValue) throws Exception {
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		try {
+			LOG.info("findCollection: parameters=" + parameters);
+			LOG.info("findCollection: fetchColumnNameValues=" + fetchColumnNameValues);
+
+			LOG.info("findCollection: sql=`" + sql + "`");
+//			LOG.info("findCollection: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
+//			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
+			preparedStatement = connection.prepareStatement(sql);
+			setPreparedStatementValues(preparedStatement, parameters);
+
+			LOG.info("Running `" + sql + "`");
+			List<Object> objects = new ArrayList<>();
+			rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+//				AttributeValues attributeValues = createAttributeValuesFromResultSet(fetchColumnNameValues, rs);
+//				LOG.info("findCollection: attributeValues=" + attributeValues);
+
+				Object instance = rs.getObject(1);
+				objects.add(instance);
+			}
+
+			return objects;
+		} finally {
+			if (rs != null)
+				rs.close();
+
+			if (preparedStatement != null)
+				preparedStatement.close();
+		}
 	}
 
 }

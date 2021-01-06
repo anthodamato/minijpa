@@ -3,6 +3,12 @@ package org.tinyjpa.jdbc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.tinyjpa.jdbc.model.Column;
+import org.tinyjpa.jdbc.model.FromTable;
+import org.tinyjpa.jdbc.model.QueryParameter;
+import org.tinyjpa.jdbc.model.TableColumn;
+import org.tinyjpa.jdbc.model.Value;
+
 public class MetaEntityHelper {
 	private AttributeValueConverter attributeValueConverter = new EmbeddedIdAttributeValueConverter();
 
@@ -28,30 +34,73 @@ public class MetaEntityHelper {
 		return list;
 	}
 
+	public List<ColumnNameValue> convertAttributeValue(AttributeValue av) throws Exception {
+		List<ColumnNameValue> list = new ArrayList<>();
+		MetaAttribute a = av.getAttribute();
+		if (a.isEmbedded() && a.isId()) {
+			List<AttributeValue> idav = attributeValueConverter.convert(av);
+			list.addAll(convertAttributeValues(idav));
+			return list;
+		}
+
+		if (a.getRelationship() != null) {
+			String joinColumn = a.getRelationship().getJoinColumn();
+			MetaEntity attributeType = a.getRelationship().getAttributeType();
+			if (joinColumn != null && attributeType != null) {
+				Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
+				ColumnNameValue columnNameValue = new ColumnNameValue(joinColumn, idValue,
+						attributeType.getId().getType(), attributeType.getId().getReadWriteDbType(),
+						attributeType.getId().getSqlType(), a, null);
+				list.add(columnNameValue);
+			}
+		} else {
+			ColumnNameValue columnNameValue = ColumnNameValue.build(av);
+			list.add(columnNameValue);
+		}
+
+		return list;
+	}
+
 	public List<ColumnNameValue> convertAttributeValues(List<AttributeValue> attributeValues) throws Exception {
 		List<ColumnNameValue> list = new ArrayList<>();
 		for (AttributeValue av : attributeValues) {
-			MetaAttribute a = av.getAttribute();
-			if (a.isEmbedded() && a.isId()) {
-				List<AttributeValue> idav = attributeValueConverter.convert(av);
-				list.addAll(convertAttributeValues(idav));
-				continue;
-			}
+			list.addAll(convertAttributeValue(av));
+		}
 
-			if (a.getRelationship() != null) {
-				String joinColumn = a.getRelationship().getJoinColumn();
-				MetaEntity attributeType = a.getRelationship().getAttributeType();
-				if (joinColumn != null && attributeType != null) {
-					Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
-					ColumnNameValue columnNameValue = new ColumnNameValue(joinColumn, idValue,
-							attributeType.getId().getType(), attributeType.getId().getReadWriteDbType(),
-							attributeType.getId().getSqlType(), a, null);
-					list.add(columnNameValue);
-				}
-			} else {
-				ColumnNameValue columnNameValue = ColumnNameValue.build(av);
-				list.add(columnNameValue);
+		return list;
+	}
+
+	public List<QueryParameter> convertAVToQP(AttributeValue av) throws Exception {
+		List<QueryParameter> list = new ArrayList<>();
+		MetaAttribute a = av.getAttribute();
+		if (a.isEmbedded() && a.isId()) {
+			List<AttributeValue> idav = attributeValueConverter.convert(av);
+			list.addAll(convertAVToQP(idav));
+			return list;
+		}
+
+		if (a.getRelationship() != null) {
+			String joinColumn = a.getRelationship().getJoinColumn();
+			MetaEntity attributeType = a.getRelationship().getAttributeType();
+			if (joinColumn != null && attributeType != null) {
+				Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
+				QueryParameter queryParameter = new QueryParameter(idValue, attributeType.getId().getType(),
+						attributeType.getId().getSqlType());
+				list.add(queryParameter);
 			}
+		} else {
+			QueryParameter queryParameter = new QueryParameter(av.getValue(), av.getAttribute().getType(),
+					av.getAttribute().getSqlType());
+			list.add(queryParameter);
+		}
+
+		return list;
+	}
+
+	public List<QueryParameter> convertAVToQP(List<AttributeValue> attributeValues) throws Exception {
+		List<QueryParameter> list = new ArrayList<>();
+		for (AttributeValue av : attributeValues) {
+			list.addAll(convertAVToQP(av));
 		}
 
 		return list;
@@ -83,5 +132,41 @@ public class MetaEntityHelper {
 		List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
 		fetchColumnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
 		return fetchColumnNameValues;
+	}
+
+	public List<Value> toValues(MetaEntity entity, FromTable fromTable) {
+		List<Value> values = new ArrayList<Value>();
+		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
+		for (MetaAttribute attribute : expandedAttributes) {
+			TableColumn tableColumn = new TableColumn(fromTable, new Column(attribute.columnName));
+			values.add(tableColumn);
+		}
+
+		for (JoinColumnAttribute joinColumnAttribute : entity.getJoinColumnAttributes()) {
+			TableColumn tableColumn = new TableColumn(fromTable, new Column(joinColumnAttribute.columnName));
+			values.add(tableColumn);
+		}
+
+		return values;
+	}
+
+//	public List<TableColumn> toTableColumns(List<AbstractAttribute> abstractAttributes, FromTable fromTable) {
+//		List<TableColumn> tableColumns = new ArrayList<>();
+//		for (AbstractAttribute attribute : abstractAttributes) {
+//			TableColumn tableColumn = new TableColumn(fromTable, new Column(attribute.columnName));
+//			tableColumns.add(tableColumn);
+//		}
+//
+//		return tableColumns;
+//	}
+
+	public List<TableColumn> toTableColumns(List<ColumnNameValue> columnNameValues, FromTable fromTable) {
+		List<TableColumn> tableColumns = new ArrayList<>();
+		for (ColumnNameValue columnNameValue : columnNameValues) {
+			TableColumn tableColumn = new TableColumn(fromTable, new Column(columnNameValue.getColumnName()));
+			tableColumns.add(tableColumn);
+		}
+
+		return tableColumns;
 	}
 }

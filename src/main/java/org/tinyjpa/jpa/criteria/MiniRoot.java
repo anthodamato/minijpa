@@ -39,6 +39,10 @@ public class MiniRoot<X> implements Root<X> {
 		this.metaEntity = metaEntity;
 	}
 
+	public MetaEntity getMetaEntity() {
+		return metaEntity;
+	}
+
 	@Override
 	public Set<Join<X, ?>> getJoins() {
 		// TODO Auto-generated method stub

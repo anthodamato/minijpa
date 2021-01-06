@@ -39,19 +39,19 @@ public interface DbJdbc {
 		return "NOT";
 	}
 
-	public default String isNullOperator() {
+	public default String nullOperator() {
 		return "IS NULL";
 	}
 
-	public default String isNotNullOperator() {
+	public default String notNullOperator() {
 		return "IS NOT NULL";
 	}
 
-	public default String isTrueOperator() {
+	public default String trueOperator() {
 		return "= TRUE";
 	}
 
-	public default String isFalseOperator() {
+	public default String falseOperator() {
 		return "= FALSE";
 	}
 

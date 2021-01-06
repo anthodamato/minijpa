@@ -90,11 +90,12 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 		LOG.info("findById: entity=" + entity);
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectById(entity, primaryKey);
-		LOG.info("findById: sqlSelect.getTableName()=" + sqlSelect.getTableName());
+		LOG.info("findById: sqlSelect.getTableName()=" + sqlSelect.getFromTable().getName());
 		LOG.info("findById: sqlSelect.getColumnNameValues()=" + sqlSelect.getColumnNameValues());
 		LOG.info("findById: sqlSelect.getFetchColumnNameValues()=" + sqlSelect.getFetchColumnNameValues());
 		LOG.info("findById: sqlSelect.getJoinColumnNameValues()=" + sqlSelect.getJoinColumnNameValues());
-		String sql = sqlStatementGenerator.generate(sqlSelect);
+//		String sql = sqlStatementGenerator.generateSql(sqlSelect);
+		String sql = sqlStatementGenerator.export(sqlSelect);
 		AbstractJdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(sql, connectionHolder.getConnection(),
 				sqlSelect);
 		if (attributeValues == null)
@@ -177,7 +178,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, foreignKey);
-		String sql = sqlStatementGenerator.generate(sqlSelect);
+		String sql = sqlStatementGenerator.generateSql(sqlSelect);
 		return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect.getFetchColumnNameValues(),
 				sqlSelect.getColumnNameValues(), entity, childAttribute, childAttributeValue);
 	}
@@ -551,16 +552,23 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	public List<Object> select(Query query) throws Exception {
 		MiniTypedQuery<?> miniTypedQuery = (MiniTypedQuery<?>) query;
 		CriteriaQuery<?> criteriaQuery = miniTypedQuery.getCriteriaQuery();
-		Class<?> entityClass = criteriaQuery.getResultType();
-		MetaEntity entity = entities.get(entityClass.getName());
-		if (entity == null)
-			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
+//		Class<?> entityClass = criteriaQuery.getResultType();
+//		MetaEntity entity = entities.get(entityClass.getName());
+//		if (entity == null)
+//			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
-		SqlSelect sqlSelect = sqlStatementFactory.select(criteriaQuery, entity);
+		SqlSelect sqlSelect = sqlStatementFactory.select(criteriaQuery);
 		StatementData statementData = sqlStatementGenerator.generateByCriteria(sqlSelect, query);
+		// returns a list of entities
+		if (sqlSelect.getResult() != null) {
+			return jdbcRunner.findCollection(connectionHolder.getConnection(), statementData.getSql(),
+					sqlSelect.getFetchColumnNameValues(), statementData.getParameters(), sqlSelect.getResult(), null,
+					null);
+		}
 
-		return jdbcRunner.findCollection(connectionHolder.getConnection(), statementData.getSql(),
-				sqlSelect.getFetchColumnNameValues(), statementData.getParameters(), entity, null, null);
+		// returns an aggregate expression result (max, min, etc)
+		return jdbcRunner.runQuery(connectionHolder.getConnection(), statementData.getSql(),
+				sqlSelect.getFetchColumnNameValues(), statementData.getParameters(), sqlSelect.getResult(), null, null);
 	}
 
 }
