@@ -1,5 +1,6 @@
 package org.tinyjpa.jdbc.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,5 +16,9 @@ public interface FromTable {
 
 	public static FromTable of(MetaEntity entity) {
 		return new FromTableImpl(entity.getTableName(), entity.getAlias());
+	}
+
+	public static FromTable of(MetaEntity entity, FromJoin fromJoin) {
+		return new FromTableImpl(entity.getTableName(), entity.getAlias(), Arrays.asList(fromJoin));
 	}
 }

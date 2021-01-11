@@ -34,7 +34,7 @@ public class SqlStatementGeneratorTest {
 				.asList(new EqualColumnExprCondition(new TableColumn(fromTable, nameColumn), "'Sam'"));
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).withConditions(conditions)
 				.build();
-		Assertions.assertEquals("select c.id from citizen AS c where c.first_name='Sam'",
+		Assertions.assertEquals("select c.id from citizen AS c where c.first_name = 'Sam'",
 				sqlStatementGenerator.export(sqlSelect));
 	}
 
@@ -98,7 +98,7 @@ public class SqlStatementGeneratorTest {
 				.build();
 
 		Assertions.assertEquals(
-				"select r.name from region AS r INNER JOIN city AS c ON r.id=c.region_id where c.name='Nottingham'",
+				"select r.name from region AS r INNER JOIN city AS c ON r.id = c.region_id where c.name = 'Nottingham'",
 				sqlStatementGenerator.export(sqlSelect));
 	}
 

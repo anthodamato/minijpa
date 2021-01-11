@@ -35,7 +35,6 @@ import org.tinyjpa.jdbc.db.TinyFlushMode;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
-import org.tinyjpa.jdbc.model.SqlSelectJoin;
 import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.Relationship;
@@ -177,10 +176,16 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
+		LOG.info("findCollectionByForeignKey: 1");
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, foreignKey);
-		String sql = sqlStatementGenerator.generateSql(sqlSelect);
-		return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect.getFetchColumnNameValues(),
-				sqlSelect.getColumnNameValues(), entity, childAttribute, childAttributeValue);
+//		String sql = sqlStatementGenerator.generateSql(sqlSelect);
+		LOG.info("findCollectionByForeignKey: sqlSelect=" + sqlSelect);
+		String sql = sqlStatementGenerator.export(sqlSelect);
+		LOG.info("findCollectionByForeignKey: sql=" + sql);
+//		return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect.getFetchColumnNameValues(),
+//				sqlSelect.getColumnNameValues(), entity, childAttribute, childAttributeValue);
+		return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, entity, childAttribute,
+				childAttributeValue);
 	}
 
 	private void loadRelationshipAttributes(Object parentInstance, MetaEntity entity, MetaAttribute childAttribute,
@@ -199,11 +204,14 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 					if (a.getRelationship().getJoinTable() != null) {
 						MetaEntity e = a.getRelationship().getAttributeType();
 						Object pk = AttributeUtil.getIdValue(entity, parentInstance);
-						SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(e, entity.getId(),
-								pk, a.getRelationship().getJoinTable());
-						String sql = sqlStatementGenerator.generate(sqlSelectJoin);
+//						SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(e, entity.getId(),
+//								pk, a.getRelationship().getJoinTable());
+						SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(e, entity.getId(), pk,
+								a.getRelationship().getJoinTable());
+//						String sql = sqlStatementGenerator.generate(sqlSelectJoin);
+						String sql = sqlStatementGenerator.export(sqlSelect);
 						List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sql,
-								sqlSelectJoin, entity, childAttribute, childAttributeValue);
+								sqlSelect, entity, childAttribute, childAttributeValue);
 						entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, objects);
 					} else {
 						loadAttributeValueWithTableFK(parentInstance, a, null, null);
@@ -248,22 +256,26 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	 */
 	@Override
 	public Object load(Object parentInstance, MetaAttribute a) throws Exception {
-		LOG.info("load (lazy): parentInstance=" + parentInstance + "; a=" + a);
+		LOG.info("load (lazy): parentInstance=" + parentInstance + "; attribute=" + a);
 		MetaAttribute targetAttribute = null;
 		Relationship relationship = a.getRelationship();
 		if (relationship != null)
 			targetAttribute = relationship.getTargetAttribute();
 
 		if (relationship != null && relationship.toMany()) {
-			LOG.info("load (lazy): oneToMany targetAttribute=" + targetAttribute);
+			LOG.info("load (lazy): oneToMany targetAttribute=" + targetAttribute + "; relationship.getJoinTable()="
+					+ relationship.getJoinTable());
 			if (relationship.getJoinTable() != null) {
 				MetaEntity entity = a.getRelationship().getAttributeType();
 				MetaEntity e = entities.get(parentInstance.getClass().getName());
 				Object pk = AttributeUtil.getIdValue(e, parentInstance);
-				SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
+//				SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
+//						a.getRelationship().getJoinTable());
+				SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
 						a.getRelationship().getJoinTable());
-				String sql = sqlStatementGenerator.generate(sqlSelectJoin);
-				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelectJoin,
+//				String sql = sqlStatementGenerator.generate(sqlSelectJoin);
+				String sql = sqlStatementGenerator.export(sqlSelect);
+				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect,
 						entity, null, null);
 				LOG.info("load (lazy): oneToMany objects.size()=" + objects.size());
 				return objects;

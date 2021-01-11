@@ -2,26 +2,22 @@ package org.tinyjpa.jdbc.model.condition;
 
 import org.tinyjpa.jdbc.model.TableColumn;
 
-
 public class EqualColumnExprCondition implements Condition {
-  private TableColumn columnLeft;
-  private String expression;
+	private TableColumn leftColumn;
+	private String expression;
 
+	public EqualColumnExprCondition(TableColumn leftColumn, String expression) {
+		super();
+		this.leftColumn = leftColumn;
+		this.expression = expression;
+	}
 
-  public EqualColumnExprCondition(TableColumn columnLeft, String expression) {
-    super();
-    this.columnLeft=columnLeft;
-    this.expression=expression;
-  }
+	public TableColumn getLeftColumn() {
+		return leftColumn;
+	}
 
-
-  public TableColumn getColumnLeft() {
-    return columnLeft;
-  }
-
-
-  public String getExpression() {
-    return expression;
-  }
+	public String getExpression() {
+		return expression;
+	}
 
 }

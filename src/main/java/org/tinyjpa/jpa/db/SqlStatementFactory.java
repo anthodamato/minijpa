@@ -13,6 +13,7 @@ import javax.persistence.criteria.Selection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinyjpa.jdbc.AbstractAttributeValue;
 import org.tinyjpa.jdbc.AttributeUtil;
 import org.tinyjpa.jdbc.AttributeValue;
 import org.tinyjpa.jdbc.AttributeValueConverter;
@@ -22,21 +23,27 @@ import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.MetaEntityHelper;
+import org.tinyjpa.jdbc.model.Column;
 import org.tinyjpa.jdbc.model.FromTable;
+import org.tinyjpa.jdbc.model.FromTableImpl;
+import org.tinyjpa.jdbc.model.QueryParameter;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
-import org.tinyjpa.jdbc.model.SqlSelectJoin;
 import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.model.TableColumn;
 import org.tinyjpa.jdbc.model.condition.AndCondition;
 import org.tinyjpa.jdbc.model.condition.AndConditionImpl;
 import org.tinyjpa.jdbc.model.condition.Condition;
 import org.tinyjpa.jdbc.model.condition.EqualColumnExprCondition;
+import org.tinyjpa.jdbc.model.join.FromJoin;
+import org.tinyjpa.jdbc.model.join.FromJoinImpl;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
 import org.tinyjpa.jpa.criteria.MiniRoot;
 
 public class SqlStatementFactory {
+	public static final String QM = "?";
+
 	private Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
 	private AttributeValueConverter attributeValueConverter = new EmbeddedIdAttributeValueConverter();
 	private MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
@@ -63,64 +70,91 @@ public class SqlStatementFactory {
 
 	public SqlSelect generateSelectById(MetaEntity entity, Object idValue) throws Exception {
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
-		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValue(attrValueId);
-
 		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
 
 		FromTable fromTable = FromTable.of(entity);
-		List<TableColumn> tableColumns = metaEntityHelper.toTableColumns(columnNameValues, fromTable);
+		List<TableColumn> tableColumns = metaEntityHelper.toTableColumns(entity.getId().expand(), fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
-			return new EqualColumnExprCondition(t, "?");
+			return new EqualColumnExprCondition(t, QM);
 		}).collect(Collectors.toList());
-		
+
 		AndCondition andCondition = new AndConditionImpl(conditions);
 		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
 				.withFetchValues(fetchColumnNameValues).withConditions(Arrays.asList(andCondition))
 				.withParameters(metaEntityHelper.convertAVToQP(attrValueId)).build();
 	}
 
-	public SqlSelect generateSelectAllFields(MetaEntity entity) throws Exception {
-		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
-		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
-		return new SqlSelect(FromTable.of(entity), Collections.emptyList(), fetchColumnNameValues, null, entity);
-	}
-
 	public SqlSelect generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
 			Object foreignKeyInstance) throws Exception {
-		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<AttributeValue> attributeValues = new ArrayList<>();
 		AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKeyInstance);
 		attributeValues.add(attrValue);
-		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(attributeValues);
-		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
-		return new SqlSelect(FromTable.of(entity), columnNameValues, fetchColumnNameValues, null, entity);
+		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
+
+		List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attrValue);
+		FromTable fromTable = FromTable.of(entity);
+		List<TableColumn> tableColumns = metaEntityHelper.queryParametersToTableColumns(parameters, fromTable);
+		List<Condition> conditions = tableColumns.stream().map(t -> {
+			return new EqualColumnExprCondition(t, QM);
+		}).collect(Collectors.toList());
+
+		Condition condition = null;
+		if (conditions.size() > 1)
+			condition = new AndConditionImpl(conditions);
+		else
+			condition = conditions.get(0);
+
+		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
+				.withFetchValues(fetchColumnNameValues).withConditions(Arrays.asList(condition))
+				.withParameters(parameters).build();
 	}
 
-	public SqlSelectJoin generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId,
-			Object joinTableForeignKey, RelationshipJoinTable joinTable) throws Exception {
+	public SqlSelect generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId, Object joinTableForeignKey,
+			RelationshipJoinTable relationshipJoinTable) throws Exception {
 		// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
 		// where j.t2=fk
-
-		// handles multiple column pk
 		List<MetaAttribute> idAttributes = entity.getId().expand();
-		List<JoinColumnAttribute> joinColumnOwningAttributes = joinTable.getJoinColumnOwningAttributes();
+		List<Column> idColumns = idAttributes.stream().map(a -> {
+			return new Column(a.getColumnName());
+		}).collect(Collectors.toList());
+
+		List<Column> idTargetColumns = relationshipJoinTable.getJoinColumnTargetAttributes().stream().map(a -> {
+			return new Column(a.getColumnName());
+		}).collect(Collectors.toList());
+
+		FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
+		FromJoin fromJoin = new FromJoinImpl(joinTable, idColumns, idTargetColumns);
+
+		FromTable fromTable = FromTable.of(entity, fromJoin);
+		// handles multiple column pk
+		List<JoinColumnAttribute> joinColumnOwningAttributes = relationshipJoinTable.getJoinColumnOwningAttributes();
 		List<AttributeValue> owningIdAttributeValues = attributeValueConverter
 				.convert(new AttributeValue(owningId, joinTableForeignKey));
 
-		List<AttributeValue> attributeValues = new ArrayList<>();
+		List<AbstractAttributeValue> attributeValues = new ArrayList<>();
 		int index = -1;
 		for (AttributeValue av : owningIdAttributeValues) {
 			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnOwningAttributes, av.getAttribute());
-			LOG.info("generateSelectByJoinTable: index=" + index);
-			attributeValues.add(
-					new AttributeValue(joinColumnOwningAttributes.get(index).getForeignKeyAttribute(), av.getValue()));
+			attributeValues.add(new AbstractAttributeValue(joinColumnOwningAttributes.get(index), av.getValue()));
 		}
 
-		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(attributeValues);
+		List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
+		List<TableColumn> tableColumns = metaEntityHelper.queryParametersToTableColumns(parameters, joinTable);
+		List<Condition> conditions = tableColumns.stream().map(t -> {
+			return new EqualColumnExprCondition(t, QM);
+		}).collect(Collectors.toList());
+
+		Condition condition = null;
+		if (conditions.size() > 1)
+			condition = new AndConditionImpl(conditions);
+		else
+			condition = conditions.get(0);
+
 		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
-		return new SqlSelectJoin(entity.getTableName(), entity.getAlias(), columnNameValues, fetchColumnNameValues,
-				idAttributes, joinTable, owningIdAttributeValues);
+		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
+				.withFetchValues(fetchColumnNameValues).withConditions(Arrays.asList(condition))
+				.withParameters(parameters).build();
 	}
 
 	public SqlInsert generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, Object owningInstance,

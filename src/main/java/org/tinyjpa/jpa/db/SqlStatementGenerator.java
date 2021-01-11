@@ -12,10 +12,9 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
-import org.tinyjpa.jdbc.AttributeUtil;
-import org.tinyjpa.jdbc.AttributeValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.ColumnNameValue;
-import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.db.DbJdbc;
 import org.tinyjpa.jdbc.db.StatementData;
@@ -24,7 +23,6 @@ import org.tinyjpa.jdbc.model.FromTable;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
-import org.tinyjpa.jdbc.model.SqlSelectJoin;
 import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.model.TableColumn;
 import org.tinyjpa.jdbc.model.aggregate.AggregateFunction;
@@ -58,6 +56,8 @@ import org.tinyjpa.jpa.criteria.PredicateType;
 import org.tinyjpa.jpa.criteria.PredicateTypeInfo;
 
 public class SqlStatementGenerator {
+	private Logger LOG = LoggerFactory.getLogger(SqlStatementGenerator.class);
+
 	private DbJdbc dbJdbc;
 
 	public SqlStatementGenerator(DbJdbc dbJdbc) {
@@ -225,6 +225,7 @@ public class SqlStatementGenerator {
 	}
 
 	private String exportCondition(Condition condition) {
+		LOG.info("exportCondition: condition=" + condition);
 		if (condition instanceof AndCondition) {
 			AndCondition andCondition = (AndCondition) condition;
 			StringBuilder sb = new StringBuilder();
@@ -267,14 +268,22 @@ public class SqlStatementGenerator {
 
 		if (condition instanceof EqualColumnExprCondition) {
 			EqualColumnExprCondition equalColumnExprCondition = (EqualColumnExprCondition) condition;
-			return exportTableColumn(equalColumnExprCondition.getColumnLeft()) + dbJdbc.equalOperator()
-					+ equalColumnExprCondition.getExpression();
+			StringBuilder sb = new StringBuilder(exportTableColumn(equalColumnExprCondition.getLeftColumn()));
+			sb.append(" ");
+			sb.append(dbJdbc.equalOperator());
+			sb.append(" ");
+			sb.append(equalColumnExprCondition.getExpression());
+			return sb.toString();
 		}
 
 		if (condition instanceof EqualColumnsCondition) {
 			EqualColumnsCondition equalColumnsCondition = (EqualColumnsCondition) condition;
-			return exportColumn(equalColumnsCondition.getColumnLeft()) + dbJdbc.equalOperator()
-					+ exportColumn(equalColumnsCondition.getColumnRight());
+			StringBuilder sb = new StringBuilder(exportColumn(equalColumnsCondition.getColumnLeft()));
+			sb.append(" ");
+			sb.append(dbJdbc.equalOperator());
+			sb.append(" ");
+			sb.append(exportColumn(equalColumnsCondition.getColumnRight()));
+			return sb.toString();
 		}
 
 		throw new IllegalArgumentException("Condition '" + condition + "'not supported");
@@ -310,7 +319,7 @@ public class SqlStatementGenerator {
 					}
 
 					sb.append(fromColumns.get(i).getName());
-					sb.append("=");
+					sb.append(" = ");
 					if (toTable.getAlias().isPresent()) {
 						sb.append(toTable.getAlias().get());
 						sb.append(".");
@@ -365,71 +374,6 @@ public class SqlStatementGenerator {
 		if (sqlSelect.getGroupBy().isPresent()) {
 			sb.append(" ");
 			sb.append(exportGroupBy(sqlSelect.getGroupBy().get()));
-		}
-
-		return sb.toString();
-	}
-
-	public String generate(SqlSelectJoin sqlSelectJoin) throws Exception {
-		StringBuilder sb = new StringBuilder();
-		sb.append("select ");
-		int i = 0;
-		List<String> columns = createColumns(sqlSelectJoin.getFetchColumnNameValues());
-		for (String c : columns) {
-			if (i > 0)
-				sb.append(", ");
-
-			sb.append(dbJdbc.getNameTranslator().toColumnName(sqlSelectJoin.getTableAlias(), c));
-			++i;
-		}
-
-		// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
-		// where j.t2=fk
-		sb.append(" from ");
-		sb.append(sqlSelectJoin.getTableName());
-		sb.append(" ");
-		sb.append(sqlSelectJoin.getTableAlias());
-		sb.append(" inner join ");
-		sb.append(sqlSelectJoin.getJoinTable().getTableName());
-		sb.append(" ");
-		sb.append(sqlSelectJoin.getJoinTable().getAlias());
-		sb.append(" on ");
-
-		// handles multiple column pk
-		List<JoinColumnAttribute> joinColumnTargetAttributes = sqlSelectJoin.getJoinTable()
-				.getJoinColumnTargetAttributes();
-		int index = -1;
-		for (int k = 0; k < sqlSelectJoin.getIdAttributes().size(); ++k) {
-			if (k > 0)
-				sb.append(" and ");
-
-			sb.append(dbJdbc.getNameTranslator().toColumnName(sqlSelectJoin.getTableAlias(),
-					sqlSelectJoin.getIdAttributes().get(k).getColumnName()));
-			sb.append(" = ");
-			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnTargetAttributes,
-					sqlSelectJoin.getIdAttributes().get(k));
-			JoinColumnAttribute joinColumnAttribute = joinColumnTargetAttributes.get(index);
-			sb.append(dbJdbc.getNameTranslator().toColumnName(sqlSelectJoin.getJoinTable().getAlias(),
-					joinColumnAttribute.getColumnName()));
-		}
-
-		sb.append(" where ");
-
-		List<JoinColumnAttribute> joinColumnOwningAttributes = sqlSelectJoin.getJoinTable()
-				.getJoinColumnOwningAttributes();
-		List<AttributeValue> attributeValues = new ArrayList<>();
-		i = 0;
-		for (AttributeValue av : sqlSelectJoin.getOwningIdAttributeValues()) {
-			if (i > 0)
-				sb.append(" and ");
-
-			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnOwningAttributes, av.getAttribute());
-			attributeValues.add(
-					new AttributeValue(joinColumnOwningAttributes.get(index).getForeignKeyAttribute(), av.getValue()));
-			sb.append(dbJdbc.getNameTranslator().toColumnName(sqlSelectJoin.getJoinTable().getAlias(),
-					joinColumnOwningAttributes.get(index).getColumnName()));
-			sb.append(" = ?");
-			++i;
 		}
 
 		return sb.toString();

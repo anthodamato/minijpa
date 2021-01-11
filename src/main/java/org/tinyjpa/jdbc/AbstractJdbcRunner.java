@@ -17,7 +17,6 @@ import org.tinyjpa.jdbc.model.QueryParameter;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
-import org.tinyjpa.jdbc.model.SqlSelectJoin;
 import org.tinyjpa.jdbc.model.SqlUpdate;
 
 public abstract class AbstractJdbcRunner {
@@ -112,7 +111,6 @@ public abstract class AbstractJdbcRunner {
 	}
 
 	public void persist(SqlUpdate sqlUpdate, Connection connection, String sql) throws SQLException {
-//		String sql = sqlStatementGenerator.generate(sqlUpdate);
 		LOG.info("persist: sql=" + sql);
 		PreparedStatement preparedStatement = null;
 		try {
@@ -249,27 +247,24 @@ public abstract class AbstractJdbcRunner {
 		}
 	}
 
-	public List<Object> findCollection(Connection connection, String sql, SqlSelectJoin sqlSelectJoin,
-			MetaEntity entity, MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
+	public List<Object> findCollection(Connection connection, String sql, SqlSelect sqlSelect, MetaEntity entity,
+			MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
 			LOG.info("findCollection: sql=`" + sql + "`");
-//			LOG.info("findCollection: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
 //			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
 			preparedStatement = connection.prepareStatement(sql);
-			setPreparedStatementValues(preparedStatement, sqlSelectJoin.getColumnNameValues());
+			setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
 
 			LOG.info("Running `" + sql + "`");
 			List<Object> objects = new ArrayList<>();
 			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
 				AttributeValues attributeValues = createAttributeValuesFromResultSet(
-						sqlSelectJoin.getFetchColumnNameValues(), rs);
+						sqlSelect.getFetchColumnNameValues(), rs);
 
 				LOG.info("findCollection: attributeValues=" + attributeValues);
-//				Object instance = jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
-//						childAttributeValue);
 				Object instance = createEntityInstance(attributeValues, entity, childAttribute, childAttributeValue);
 				objects.add(instance);
 			}
@@ -361,9 +356,6 @@ public abstract class AbstractJdbcRunner {
 			List<Object> objects = new ArrayList<>();
 			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
-//				AttributeValues attributeValues = createAttributeValuesFromResultSet(fetchColumnNameValues, rs);
-//				LOG.info("findCollection: attributeValues=" + attributeValues);
-
 				Object instance = rs.getObject(1);
 				objects.add(instance);
 			}

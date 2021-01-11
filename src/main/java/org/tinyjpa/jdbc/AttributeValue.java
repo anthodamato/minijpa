@@ -14,10 +14,6 @@ public class AttributeValue {
 		return attribute;
 	}
 
-	public void setAttribute(MetaAttribute attribute) {
-		this.attribute = attribute;
-	}
-
 	public Object getValue() {
 		return value;
 	}

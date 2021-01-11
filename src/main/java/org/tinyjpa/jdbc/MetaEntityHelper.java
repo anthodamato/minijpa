@@ -70,6 +70,24 @@ public class MetaEntityHelper {
 		return list;
 	}
 
+	public List<QueryParameter> convertAVToQP(AbstractAttributeValue av) throws Exception {
+		List<QueryParameter> list = new ArrayList<>();
+		AbstractAttribute a = av.getAttribute();
+		QueryParameter queryParameter = new QueryParameter(a.getColumnName(), av.getValue(),
+				av.getAttribute().getType(), av.getAttribute().getSqlType());
+		list.add(queryParameter);
+		return list;
+	}
+
+	public List<QueryParameter> convertAbstractAVToQP(List<AbstractAttributeValue> attributeValues) throws Exception {
+		List<QueryParameter> list = new ArrayList<>();
+		for (AbstractAttributeValue av : attributeValues) {
+			list.addAll(convertAVToQP(av));
+		}
+
+		return list;
+	}
+
 	public List<QueryParameter> convertAVToQP(AttributeValue av) throws Exception {
 		List<QueryParameter> list = new ArrayList<>();
 		MetaAttribute a = av.getAttribute();
@@ -84,13 +102,13 @@ public class MetaEntityHelper {
 			MetaEntity attributeType = a.getRelationship().getAttributeType();
 			if (joinColumn != null && attributeType != null) {
 				Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
-				QueryParameter queryParameter = new QueryParameter(idValue, attributeType.getId().getType(),
+				QueryParameter queryParameter = new QueryParameter(joinColumn, idValue, attributeType.getId().getType(),
 						attributeType.getId().getSqlType());
 				list.add(queryParameter);
 			}
 		} else {
-			QueryParameter queryParameter = new QueryParameter(av.getValue(), av.getAttribute().getType(),
-					av.getAttribute().getSqlType());
+			QueryParameter queryParameter = new QueryParameter(a.getColumnName(), av.getValue(),
+					av.getAttribute().getType(), av.getAttribute().getSqlType());
 			list.add(queryParameter);
 		}
 
@@ -160,13 +178,44 @@ public class MetaEntityHelper {
 //		return tableColumns;
 //	}
 
-	public List<TableColumn> toTableColumns(List<ColumnNameValue> columnNameValues, FromTable fromTable) {
+//	public List<TableColumn> columnValueToTableColumns(List<ColumnNameValue> columnNameValues, FromTable fromTable) {
+//		List<TableColumn> tableColumns = new ArrayList<>();
+//		for (ColumnNameValue columnNameValue : columnNameValues) {
+//			TableColumn tableColumn = new TableColumn(fromTable, new Column(columnNameValue.getColumnName()));
+//			tableColumns.add(tableColumn);
+//		}
+//
+//		return tableColumns;
+//	}
+
+	public List<TableColumn> toTableColumns(List<MetaAttribute> attributes, FromTable fromTable) {
 		List<TableColumn> tableColumns = new ArrayList<>();
-		for (ColumnNameValue columnNameValue : columnNameValues) {
-			TableColumn tableColumn = new TableColumn(fromTable, new Column(columnNameValue.getColumnName()));
+		for (MetaAttribute metaAttribute : attributes) {
+			TableColumn tableColumn = new TableColumn(fromTable, new Column(metaAttribute.getColumnName()));
 			tableColumns.add(tableColumn);
 		}
 
 		return tableColumns;
 	}
+
+	public List<TableColumn> queryParametersToTableColumns(List<QueryParameter> parameters, FromTable fromTable) {
+		List<TableColumn> tableColumns = new ArrayList<>();
+		for (QueryParameter parameter : parameters) {
+			TableColumn tableColumn = new TableColumn(fromTable, new Column(parameter.getColumnName()));
+			tableColumns.add(tableColumn);
+		}
+
+		return tableColumns;
+	}
+
+//	public List<TableColumn> toTableColumns(MetaAttribute attribute, FromTable fromTable) {
+//		List<TableColumn> tableColumns = new ArrayList<>();
+//		
+//		for (MetaAttribute metaAttribute : attributes) {
+//			TableColumn tableColumn = new TableColumn(fromTable, new Column(metaAttribute.getColumnName()));
+//			tableColumns.add(tableColumn);
+//		}
+//
+//		return tableColumns;
+//	}
 }
