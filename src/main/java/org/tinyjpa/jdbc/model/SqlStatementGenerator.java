@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.ColumnNameValue;
 import org.tinyjpa.jdbc.db.DbJdbc;
 import org.tinyjpa.jdbc.model.aggregate.AggregateFunction;
 import org.tinyjpa.jdbc.model.aggregate.Count;
@@ -75,20 +74,15 @@ public class SqlStatementGenerator {
 		return sb.toString();
 	}
 
-	public String generate(SqlDelete sqlDelete) {
+	public String export(SqlDelete sqlDelete) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("delete from ");
-		sb.append(sqlDelete.getTableName());
-		sb.append(" where ");
+		sb.append(dbJdbc.getNameTranslator().toTableName(sqlDelete.getFromTable().getAlias(),
+				sqlDelete.getFromTable().getName()));
 
-		int i = 0;
-		for (ColumnNameValue columnNameValue : sqlDelete.getColumnNameValues()) {
-			if (i > 0)
-				sb.append(" and ");
-
-			sb.append(columnNameValue.getAttribute().getColumnName());
-			sb.append(" = ?");
-			++i;
+		if (sqlDelete.getCondition().isPresent()) {
+			sb.append(" where ");
+			sb.append(exportCondition(sqlDelete.getCondition().get()));
 		}
 
 		return sb.toString();

@@ -159,7 +159,9 @@ public abstract class AbstractJdbcRunner {
 		PreparedStatement preparedStatement = null;
 		try {
 			preparedStatement = connection.prepareStatement(sql);
-			setPreparedStatementValues(preparedStatement, sqlDelete.getColumnNameValues());
+			if (sqlDelete.getParameters().isPresent())
+				setPreparedStatementParameters(preparedStatement, sqlDelete.getParameters().get());
+
 			preparedStatement.execute();
 		} finally {
 			if (preparedStatement != null)

@@ -483,7 +483,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 		LOG.info("remove: idValue=" + idValue);
 		SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(e, idValue);
-		String sql = sqlStatementGenerator.generate(sqlDelete);
+		String sql = sqlStatementGenerator.export(sqlDelete);
 		jdbcRunner.delete(sql, sqlDelete, connectionHolder.getConnection());
 	}
 

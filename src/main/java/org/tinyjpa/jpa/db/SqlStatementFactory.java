@@ -218,9 +218,11 @@ public class SqlStatementFactory {
 	}
 
 	public SqlDelete generateDeleteById(MetaEntity entity, Object idValue) throws Exception {
-		List<AttributeValue> idAttributeValues = Arrays.asList(new AttributeValue(entity.getId(), idValue));
-		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(idAttributeValues);
-		return new SqlDelete(entity.getTableName(), columnNameValues);
+		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
+		FromTable fromTable = FromTable.of(entity);
+		List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attrValueId);
+		Condition condition = createAttributeEqualCondition(entity, attrValueId);
+		return new SqlDelete(fromTable, Optional.of(parameters), Optional.of(condition));
 	}
 
 	private Condition createAttributeEqualCondition(MetaEntity entity, AttributeValue attributeValue) throws Exception {

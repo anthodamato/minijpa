@@ -1,25 +1,33 @@
 package org.tinyjpa.jdbc.model;
 
 import java.util.List;
+import java.util.Optional;
 
-import org.tinyjpa.jdbc.ColumnNameValue;
+import org.tinyjpa.jdbc.QueryParameter;
+import org.tinyjpa.jdbc.model.condition.Condition;
 
 public class SqlDelete {
-	private String tableName;
-	private List<ColumnNameValue> columnNameValues;
+	private FromTable fromTable;
+	private Optional<List<QueryParameter>> parameters = Optional.empty();
+	private Optional<Condition> condition;
 
-	public SqlDelete(String tableName, List<ColumnNameValue> columnNameValues) {
+	public SqlDelete(FromTable fromTable, Optional<List<QueryParameter>> parameters, Optional<Condition> condition) {
 		super();
-		this.tableName = tableName;
-		this.columnNameValues = columnNameValues;
+		this.fromTable = fromTable;
+		this.parameters = parameters;
+		this.condition = condition;
 	}
 
-	public String getTableName() {
-		return tableName;
+	public FromTable getFromTable() {
+		return fromTable;
 	}
 
-	public List<ColumnNameValue> getColumnNameValues() {
-		return columnNameValues;
+	public Optional<List<QueryParameter>> getParameters() {
+		return parameters;
+	}
+
+	public Optional<Condition> getCondition() {
+		return condition;
 	}
 
 }
