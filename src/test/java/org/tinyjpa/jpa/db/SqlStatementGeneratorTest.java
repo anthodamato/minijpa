@@ -15,8 +15,9 @@ import org.tinyjpa.jdbc.model.aggregate.Count;
 import org.tinyjpa.jdbc.model.aggregate.Distinct;
 import org.tinyjpa.jdbc.model.aggregate.GroupBy;
 import org.tinyjpa.jdbc.model.aggregate.Sum;
+import org.tinyjpa.jdbc.model.condition.BinaryCondition;
 import org.tinyjpa.jdbc.model.condition.Condition;
-import org.tinyjpa.jdbc.model.condition.EqualColumnExprCondition;
+import org.tinyjpa.jdbc.model.condition.ConditionType;
 import org.tinyjpa.jdbc.model.join.FromJoin;
 import org.tinyjpa.jdbc.model.join.FromJoinImpl;
 
@@ -30,8 +31,9 @@ public class SqlStatementGeneratorTest {
 		Column nameColumn = new Column("first_name");
 
 		List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
-		List<Condition> conditions = Arrays
-				.asList(new EqualColumnExprCondition(new TableColumn(fromTable, nameColumn), "'Sam'"));
+		BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
+				.withLeftColumn(new TableColumn(fromTable, nameColumn)).withRightExpression("'Sam'").build();
+		List<Condition> conditions = Arrays.asList(binaryCondition);
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).withConditions(conditions)
 				.build();
 		Assertions.assertEquals("select c.id from citizen AS c where c.first_name = 'Sam'",
@@ -92,8 +94,9 @@ public class SqlStatementGeneratorTest {
 		Column regionNameColumn = new Column("name");
 
 		List<Value> values = Arrays.asList(new TableColumn(regionTable, regionNameColumn));
-		List<Condition> conditions = Arrays
-				.asList(new EqualColumnExprCondition(new TableColumn(cityTable, nameColumn), "'Nottingham'"));
+		BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
+				.withLeftColumn(new TableColumn(cityTable, nameColumn)).withRightExpression("'Nottingham'").build();
+		List<Condition> conditions = Arrays.asList(binaryCondition);
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(regionTable).withValues(values).withConditions(conditions)
 				.build();
 

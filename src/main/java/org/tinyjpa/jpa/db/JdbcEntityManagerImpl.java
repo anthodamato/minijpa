@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.Query;
-import javax.persistence.criteria.CriteriaQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,6 @@ import org.tinyjpa.jdbc.db.AttributeLoader;
 import org.tinyjpa.jdbc.db.DbConfiguration;
 import org.tinyjpa.jdbc.db.EntityContainer;
 import org.tinyjpa.jdbc.db.EntityInstanceBuilder;
-import org.tinyjpa.jdbc.db.StatementData;
 import org.tinyjpa.jdbc.db.TinyFlushMode;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
@@ -39,7 +37,6 @@ import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.Relationship;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
-import org.tinyjpa.jpa.MiniTypedQuery;
 
 public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(JdbcEntityManagerImpl.class);
@@ -91,7 +88,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectById(entity, primaryKey);
 		LOG.info("findById: sqlSelect.getTableName()=" + sqlSelect.getFromTable().getName());
 		LOG.info("findById: sqlSelect.getColumnNameValues()=" + sqlSelect.getColumnNameValues());
-		LOG.info("findById: sqlSelect.getFetchColumnNameValues()=" + sqlSelect.getFetchColumnNameValues());
+		LOG.info("findById: sqlSelect.getFetchColumnNameValues()=" + sqlSelect.getFetchParameters());
 		LOG.info("findById: sqlSelect.getJoinColumnNameValues()=" + sqlSelect.getJoinColumnNameValues());
 //		String sql = sqlStatementGenerator.generateSql(sqlSelect);
 		String sql = sqlStatementGenerator.export(sqlSelect);
@@ -176,15 +173,10 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
-		LOG.info("findCollectionByForeignKey: 1");
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, foreignKey);
-//		String sql = sqlStatementGenerator.generateSql(sqlSelect);
-		LOG.info("findCollectionByForeignKey: sqlSelect=" + sqlSelect);
 		String sql = sqlStatementGenerator.export(sqlSelect);
 		LOG.info("findCollectionByForeignKey: sql=" + sql);
-//		return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect.getFetchColumnNameValues(),
-//				sqlSelect.getColumnNameValues(), entity, childAttribute, childAttributeValue);
-		return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, entity, childAttribute,
+		return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, childAttribute,
 				childAttributeValue);
 	}
 
@@ -204,14 +196,11 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 					if (a.getRelationship().getJoinTable() != null) {
 						MetaEntity e = a.getRelationship().getAttributeType();
 						Object pk = AttributeUtil.getIdValue(entity, parentInstance);
-//						SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(e, entity.getId(),
-//								pk, a.getRelationship().getJoinTable());
 						SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(e, entity.getId(), pk,
 								a.getRelationship().getJoinTable());
-//						String sql = sqlStatementGenerator.generate(sqlSelectJoin);
 						String sql = sqlStatementGenerator.export(sqlSelect);
 						List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sql,
-								sqlSelect, entity, childAttribute, childAttributeValue);
+								sqlSelect, childAttribute, childAttributeValue);
 						entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, objects);
 					} else {
 						loadAttributeValueWithTableFK(parentInstance, a, null, null);
@@ -236,7 +225,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			Object childAttributeValue) throws Exception {
 		LOG.info("loadAttributeValueWithTableFK: parentInstance=" + parentInstance);
 		Object foreignKey = entityContainer.getForeignKeyValue(parentInstance, a);
-//		LOG.info("loadAttributeValue: a=" + a + "; oneToOne=" + a.getOneToOne() + "; foreignKey=" + foreignKey);
 		Object foreignKeyInstance = findById(a.getType(), foreignKey, childAttribute, childAttributeValue);
 		LOG.info("loadAttributeValueWithTableFK: foreignKeyInstance=" + foreignKeyInstance);
 		if (foreignKeyInstance != null) {
@@ -275,8 +263,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 						a.getRelationship().getJoinTable());
 //				String sql = sqlStatementGenerator.generate(sqlSelectJoin);
 				String sql = sqlStatementGenerator.export(sqlSelect);
-				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect,
-						entity, null, null);
+				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null,
+						null);
 				LOG.info("load (lazy): oneToMany objects.size()=" + objects.size());
 				return objects;
 			}
@@ -562,25 +550,16 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	@Override
 	public List<Object> select(Query query) throws Exception {
-		MiniTypedQuery<?> miniTypedQuery = (MiniTypedQuery<?>) query;
-		CriteriaQuery<?> criteriaQuery = miniTypedQuery.getCriteriaQuery();
-//		Class<?> entityClass = criteriaQuery.getResultType();
-//		MetaEntity entity = entities.get(entityClass.getName());
-//		if (entity == null)
-//			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
-
-		SqlSelect sqlSelect = sqlStatementFactory.select(criteriaQuery);
-		StatementData statementData = sqlStatementGenerator.generateByCriteria(sqlSelect, query);
-		// returns a list of entities
+		SqlSelect sqlSelect = sqlStatementFactory.select(query);
+		LOG.info("select: sqlSelect=" + sqlSelect);
+		String sql = sqlStatementGenerator.export(sqlSelect);
+		LOG.info("select: sql=" + sql);
 		if (sqlSelect.getResult() != null) {
-			return jdbcRunner.findCollection(connectionHolder.getConnection(), statementData.getSql(),
-					sqlSelect.getFetchColumnNameValues(), statementData.getParameters(), sqlSelect.getResult(), null,
-					null);
+			return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null);
 		}
 
 		// returns an aggregate expression result (max, min, etc)
-		return jdbcRunner.runQuery(connectionHolder.getConnection(), statementData.getSql(),
-				sqlSelect.getFetchColumnNameValues(), statementData.getParameters(), sqlSelect.getResult(), null, null);
+		return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect, null, null);
 	}
 
 }

@@ -1,13 +1,19 @@
 package org.tinyjpa.jpa.db;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 
@@ -23,23 +29,45 @@ import org.tinyjpa.jdbc.JoinColumnAttribute;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.MetaEntityHelper;
+import org.tinyjpa.jdbc.QueryParameter;
 import org.tinyjpa.jdbc.model.Column;
 import org.tinyjpa.jdbc.model.FromTable;
 import org.tinyjpa.jdbc.model.FromTableImpl;
-import org.tinyjpa.jdbc.model.QueryParameter;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
 import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.model.TableColumn;
-import org.tinyjpa.jdbc.model.condition.AndCondition;
-import org.tinyjpa.jdbc.model.condition.AndConditionImpl;
+import org.tinyjpa.jdbc.model.Value;
+import org.tinyjpa.jdbc.model.aggregate.Max;
+import org.tinyjpa.jdbc.model.aggregate.Min;
+import org.tinyjpa.jdbc.model.condition.BetweenCondition;
+import org.tinyjpa.jdbc.model.condition.BinaryCondition;
+import org.tinyjpa.jdbc.model.condition.BinaryLogicConditionImpl;
 import org.tinyjpa.jdbc.model.condition.Condition;
-import org.tinyjpa.jdbc.model.condition.EqualColumnExprCondition;
+import org.tinyjpa.jdbc.model.condition.ConditionType;
+import org.tinyjpa.jdbc.model.condition.EmptyCondition;
+import org.tinyjpa.jdbc.model.condition.UnaryCondition;
+import org.tinyjpa.jdbc.model.condition.UnaryLogicConditionImpl;
 import org.tinyjpa.jdbc.model.join.FromJoin;
 import org.tinyjpa.jdbc.model.join.FromJoinImpl;
 import org.tinyjpa.jdbc.relationship.RelationshipJoinTable;
+import org.tinyjpa.jpa.MiniTypedQuery;
+import org.tinyjpa.jpa.criteria.BetweenExpressionsPredicate;
+import org.tinyjpa.jpa.criteria.BetweenValuesPredicate;
+import org.tinyjpa.jpa.criteria.BinaryBooleanExprPredicate;
+import org.tinyjpa.jpa.criteria.BooleanExprPredicate;
+import org.tinyjpa.jpa.criteria.ComparisonPredicate;
+import org.tinyjpa.jpa.criteria.ExprPredicate;
+import org.tinyjpa.jpa.criteria.LikePatternExprPredicate;
+import org.tinyjpa.jpa.criteria.LikePatternPredicate;
+import org.tinyjpa.jpa.criteria.MaxExpression;
+import org.tinyjpa.jpa.criteria.MinExpression;
+import org.tinyjpa.jpa.criteria.MiniPath;
 import org.tinyjpa.jpa.criteria.MiniRoot;
+import org.tinyjpa.jpa.criteria.MultiplePredicate;
+import org.tinyjpa.jpa.criteria.PredicateType;
+import org.tinyjpa.jpa.criteria.PredicateTypeInfo;
 
 public class SqlStatementFactory {
 	public static final String QM = "?";
@@ -75,12 +103,12 @@ public class SqlStatementFactory {
 		FromTable fromTable = FromTable.of(entity);
 		List<TableColumn> tableColumns = metaEntityHelper.toTableColumns(entity.getId().expand(), fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
-			return new EqualColumnExprCondition(t, QM);
+			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
 		}).collect(Collectors.toList());
 
-		AndCondition andCondition = new AndConditionImpl(conditions);
+		Condition condition = Condition.toAnd(conditions);
 		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
-				.withFetchValues(fetchColumnNameValues).withConditions(Arrays.asList(andCondition))
+				.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
 				.withParameters(metaEntityHelper.convertAVToQP(attrValueId)).build();
 	}
 
@@ -95,18 +123,13 @@ public class SqlStatementFactory {
 		FromTable fromTable = FromTable.of(entity);
 		List<TableColumn> tableColumns = metaEntityHelper.queryParametersToTableColumns(parameters, fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
-			return new EqualColumnExprCondition(t, QM);
+			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
 		}).collect(Collectors.toList());
 
-		Condition condition = null;
-		if (conditions.size() > 1)
-			condition = new AndConditionImpl(conditions);
-		else
-			condition = conditions.get(0);
-
+		Condition condition = Condition.toAnd(conditions);
 		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
-				.withFetchValues(fetchColumnNameValues).withConditions(Arrays.asList(condition))
-				.withParameters(parameters).build();
+				.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
+				.withParameters(parameters).withResult(entity).build();
 	}
 
 	public SqlSelect generateSelectByJoinTable(MetaEntity entity, MetaAttribute owningId, Object joinTableForeignKey,
@@ -124,7 +147,6 @@ public class SqlStatementFactory {
 
 		FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
 		FromJoin fromJoin = new FromJoinImpl(joinTable, idColumns, idTargetColumns);
-
 		FromTable fromTable = FromTable.of(entity, fromJoin);
 		// handles multiple column pk
 		List<JoinColumnAttribute> joinColumnOwningAttributes = relationshipJoinTable.getJoinColumnOwningAttributes();
@@ -141,20 +163,15 @@ public class SqlStatementFactory {
 		List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
 		List<TableColumn> tableColumns = metaEntityHelper.queryParametersToTableColumns(parameters, joinTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
-			return new EqualColumnExprCondition(t, QM);
+			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
 		}).collect(Collectors.toList());
 
-		Condition condition = null;
-		if (conditions.size() > 1)
-			condition = new AndConditionImpl(conditions);
-		else
-			condition = conditions.get(0);
-
+		Condition condition = Condition.toAnd(conditions);
 		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
 		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
-				.withFetchValues(fetchColumnNameValues).withConditions(Arrays.asList(condition))
-				.withParameters(parameters).build();
+				.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
+				.withParameters(parameters).withResult(entity).build();
 	}
 
 	public SqlInsert generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, Object owningInstance,
@@ -188,22 +205,480 @@ public class SqlStatementFactory {
 		return new SqlDelete(entity.getTableName(), columnNameValues);
 	}
 
-	public SqlSelect select(CriteriaQuery<?> criteriaQuery) {
+	private Optional<Value> createSelectionValue(FromTable fromTable, Selection<?> selection) {
+		if (selection == null)
+			return Optional.empty();
+
+		if (selection instanceof MaxExpression<?>) {
+			@SuppressWarnings("unchecked")
+			MaxExpression<Number> maxExpression = (MaxExpression<Number>) selection;
+			Expression<Number> expr = maxExpression.getX();
+			if (expr instanceof MiniPath<?>) {
+				MiniPath<?> miniPath = (MiniPath<?>) expr;
+				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+				return Optional.of(new Max(new TableColumn(fromTable, new Column(metaAttribute.getColumnName()))));
+			}
+		} else if (selection instanceof MinExpression<?>) {
+			@SuppressWarnings("unchecked")
+			MinExpression<Number> minExpression = (MinExpression<Number>) selection;
+			Expression<Number> expr = minExpression.getX();
+			if (expr instanceof MiniPath<?>) {
+				MiniPath<?> miniPath = (MiniPath<?>) expr;
+				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+				return Optional.of(new Min(new TableColumn(fromTable, new Column(metaAttribute.getColumnName()))));
+			}
+		}
+
+		return Optional.empty();
+	}
+
+	private List<Value> createSelectionValues(FromTable fromTable, Selection<?> selection) {
+		if (selection == null)
+			return Collections.emptyList();
+
+		List<Value> values = new ArrayList<>();
+		if (selection.isCompoundSelection()) {
+			List<Selection<?>> selections = selection.getCompoundSelectionItems();
+			for (Selection<?> s : selections) {
+				Optional<Value> optional = createSelectionValue(fromTable, s);
+				if (optional.isPresent())
+					values.add(optional.get());
+			}
+		} else {
+			Optional<Value> optional = createSelectionValue(fromTable, selection);
+			if (optional.isPresent())
+				values.add(optional.get());
+		}
+
+		return values;
+	}
+
+	private Optional<ColumnNameValue> createFetchParameter(Selection<?> selection) {
+		if (selection == null)
+			return Optional.empty();
+
+		if (selection instanceof MaxExpression<?>) {
+			@SuppressWarnings("unchecked")
+			MaxExpression<Number> maxExpression = (MaxExpression<Number>) selection;
+			Expression<Number> expr = maxExpression.getX();
+			if (expr instanceof MiniPath<?>) {
+				MiniPath<?> miniPath = (MiniPath<?>) expr;
+				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+				ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
+				return Optional.of(columnNameValue);
+			}
+		} else if (selection instanceof MinExpression<?>) {
+			@SuppressWarnings("unchecked")
+			MinExpression<Number> minExpression = (MinExpression<Number>) selection;
+			Expression<Number> expr = minExpression.getX();
+			if (expr instanceof MiniPath<?>) {
+				MiniPath<?> miniPath = (MiniPath<?>) expr;
+				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+				ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
+				return Optional.of(columnNameValue);
+			}
+		} else if (selection instanceof MiniPath<?>) {
+			MiniPath<?> miniPath = (MiniPath<?>) selection;
+			MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+			ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
+			return Optional.of(columnNameValue);
+		}
+
+		return Optional.empty();
+	}
+
+	private List<ColumnNameValue> createFetchParameters(Selection<?> selection) {
+		if (selection == null)
+			return Collections.emptyList();
+
+		List<ColumnNameValue> values = new ArrayList<>();
+		if (selection.isCompoundSelection()) {
+			List<Selection<?>> selections = selection.getCompoundSelectionItems();
+			for (Selection<?> s : selections) {
+				Optional<ColumnNameValue> optional = createFetchParameter(s);
+				if (optional.isPresent())
+					values.add(optional.get());
+			}
+		} else {
+			Optional<ColumnNameValue> optional = createFetchParameter(selection);
+			if (optional.isPresent())
+				values.add(optional.get());
+		}
+
+		return values;
+	}
+
+	private boolean requireQM(Object value) {
+		if (value instanceof LocalDate)
+			return true;
+
+		return false;
+	}
+
+	private void addParameter(ParameterExpression<?> parameterExpression, MetaAttribute attribute,
+			List<QueryParameter> parameters, Query query) {
+		Object value = null;
+		if (parameterExpression.getName() != null) {
+			value = query.getParameterValue(parameterExpression.getName());
+		}
+
+		QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), value, attribute.getType(),
+				attribute.getSqlType());
+		parameters.add(queryParameter);
+	}
+
+	private String buildValue(Object value) {
+		StringBuilder sb = new StringBuilder();
+		if (value instanceof String) {
+			sb.append("'");
+			sb.append((String) value);
+			sb.append("'");
+		} else {
+			sb.append(value.toString());
+		}
+
+		return sb.toString();
+	}
+
+	private TableColumn createTableColumnFromPath(MiniPath<?> miniPath) {
+		MetaAttribute attribute1 = miniPath.getMetaAttribute();
+		return new TableColumn(FromTable.of(miniPath.getMetaEntity()), new Column(attribute1.getColumnName()));
+	}
+
+	private ConditionType getOperator(PredicateType predicateType) {
+		switch (predicateType) {
+		case EQUAL:
+			return ConditionType.EQUAL;
+		case NOT_EQUAL:
+			return ConditionType.NOT_EQUAL;
+		case AND:
+			return ConditionType.AND;
+		case IS_FALSE:
+			return ConditionType.IS_FALSE;
+		case IS_NOT_NULL:
+			return ConditionType.IS_NOT_NULL;
+		case IS_NULL:
+			return ConditionType.IS_NULL;
+		case IS_TRUE:
+			return ConditionType.IS_TRUE;
+		case NOT:
+			return ConditionType.NOT;
+		case OR:
+			return ConditionType.OR;
+		case EMPTY_CONJUNCTION:
+			return ConditionType.AND;
+		case EMPTY_DISJUNCTION:
+			return ConditionType.OR;
+		case GREATER_THAN:
+		case GT:
+			return ConditionType.GREATER_THAN;
+		case LESS_THAN:
+		case LT:
+			return ConditionType.LESS_THAN;
+		case BETWEEN_EXPRESSIONS:
+		case BETWEEN_VALUES:
+			return ConditionType.BETWEEN;
+		case LIKE_PATTERN:
+		case LIKE_PATTERN_EXPR:
+			return ConditionType.LIKE;
+		default:
+			break;
+		}
+
+		throw new IllegalArgumentException("Unknown condition type for predicate type: " + predicateType);
+	}
+
+	private Optional<Condition> translateComparisonPredicate(ComparisonPredicate comparisonPredicate,
+			List<QueryParameter> parameters, Query query) {
+		Expression<?> expression1 = comparisonPredicate.getX();
+		Expression<?> expression2 = comparisonPredicate.getY();
+
+		ConditionType conditionType = getOperator(comparisonPredicate.getPredicateType());
+		BinaryCondition.Builder builder = new BinaryCondition.Builder(conditionType);
+		if (expression1 instanceof MiniPath<?>) {
+			MiniPath<?> miniPath = (MiniPath<?>) expression1;
+			MetaAttribute attribute1 = miniPath.getMetaAttribute();
+			TableColumn tableColumn1 = createTableColumnFromPath(miniPath);
+			if (expression2 != null) {
+				if (expression2 instanceof MiniPath<?>) {
+					miniPath = (MiniPath<?>) expression2;
+					TableColumn tableColumn2 = createTableColumnFromPath(miniPath);
+					builder.withLeftColumn(tableColumn1).withRightColumn(tableColumn2);
+				} else if (expression2 instanceof ParameterExpression<?>) {
+					ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression2;
+					addParameter(parameterExpression, attribute1, parameters, query);
+					builder.withLeftColumn(tableColumn1).withRightExpression(QM);
+				}
+			} else if (comparisonPredicate.getValue() != null) {
+				if (requireQM(comparisonPredicate.getValue())) {
+					QueryParameter queryParameter = new QueryParameter(attribute1.getColumnName(),
+							comparisonPredicate.getValue(), attribute1.getType(), attribute1.getSqlType());
+					parameters.add(queryParameter);
+					builder.withLeftColumn(tableColumn1).withRightExpression(QM);
+				} else {
+					builder.withLeftColumn(tableColumn1)
+							.withRightExpression(buildValue(comparisonPredicate.getValue()));
+				}
+			}
+
+			return Optional.of(builder.build());
+		}
+//			else if (expression1 instanceof ParameterExpression<?>) {
+//				ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression1;
+////				MiniPath<?> miniPath = (MiniPath<?>) expression1;
+////				MetaAttribute attribute1 = miniPath.getMetaAttribute();
+//				addParameter(parameterExpression, attribute1, parameters, query);
+//				if (expression2 instanceof MiniPath<?>) {
+//					MiniPath<?> miniPath = (MiniPath<?>) expression2;
+////					MetaAttribute attribute2 = miniPath.getMetaAttribute();
+////					FromTable fromTable2 = FromTable.of(miniPath.getMetaEntity());
+////					Column column1 = new Column(attribute2.getColumnName(), fromTable2.getAlias().get());
+////					TableColumn tableColumn = new TableColumn(fromTable2, column1);
+//					TableColumn tableColumn = createTableColumnFromPath(miniPath);
+//					return Optional.of(new EqualExprColumnCondition(QM, tableColumn));
+//				} else if (expression2 instanceof ParameterExpression<?>) {
+//					parameterExpression = (ParameterExpression<?>) expression2;
+//					miniPath = (MiniPath<?>) expression2;
+//					MetaAttribute attribute2 = miniPath.getMetaAttribute();
+//					addParameter(parameterExpression, attribute2, parameters, query);
+//					return Optional.of(new EqualExprExprCondition(QM, QM));
+//				}
+//			}
+
+		return Optional.empty();
+	}
+
+	private Optional<Condition> translateBetweenExpressionsPredicate(
+			BetweenExpressionsPredicate betweenExpressionsPredicate, List<QueryParameter> parameters, Query query) {
+		Expression<?> expression1 = betweenExpressionsPredicate.getX();
+		Expression<?> expression2 = betweenExpressionsPredicate.getY();
+		MiniPath<?> miniPath = (MiniPath<?>) betweenExpressionsPredicate.getV();
+		MetaAttribute attribute = miniPath.getMetaAttribute();
+
+		BetweenCondition.Builder builder = new BetweenCondition.Builder(createTableColumnFromPath(miniPath));
+		if (expression1 instanceof MiniPath<?>) {
+			builder.withLeftColumn(createTableColumnFromPath((MiniPath<?>) expression1));
+		} else if (expression1 instanceof ParameterExpression<?>) {
+			ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression1;
+			addParameter(parameterExpression, attribute, parameters, query);
+			builder.withLeftExpression(QM);
+		}
+
+		if (expression2 instanceof MiniPath<?>) {
+			builder.withRightColumn(createTableColumnFromPath((MiniPath<?>) expression2));
+		} else if (expression2 instanceof ParameterExpression<?>) {
+			ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression2;
+			addParameter(parameterExpression, attribute, parameters, query);
+			builder.withLeftExpression(QM);
+		}
+
+		return Optional.of(builder.build());
+	}
+
+	private Optional<Condition> translateBetweenValuesPredicate(BetweenValuesPredicate betweenValuesPredicate,
+			List<QueryParameter> parameters, Query query) {
+		Object x = betweenValuesPredicate.getX();
+		Object y = betweenValuesPredicate.getY();
+		MiniPath<?> miniPath = (MiniPath<?>) betweenValuesPredicate.getV();
+		MetaAttribute attribute = miniPath.getMetaAttribute();
+
+		BetweenCondition.Builder builder = new BetweenCondition.Builder(createTableColumnFromPath(miniPath));
+		if (requireQM(x)) {
+			QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), x, attribute.getType(),
+					attribute.getSqlType());
+			parameters.add(queryParameter);
+			builder.withLeftExpression(QM);
+		} else {
+			builder.withLeftExpression(buildValue(x));
+		}
+
+		if (requireQM(y)) {
+			QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), y, attribute.getType(),
+					attribute.getSqlType());
+			parameters.add(queryParameter);
+			builder.withRightExpression(QM);
+		} else {
+			builder.withRightExpression(buildValue(y));
+		}
+
+		return Optional.of(builder.build());
+	}
+
+	private Optional<Condition> translateBooleanExprPredicate(BooleanExprPredicate booleanExprPredicate,
+			List<QueryParameter> parameters, Query query) {
+		Expression<Boolean> x = booleanExprPredicate.getX();
+
+		if (x instanceof Predicate) {
+			Optional<Condition> optional = createConditions((Predicate) x, parameters, query);
+			if (optional.isPresent())
+				return Optional.of(new UnaryLogicConditionImpl(getOperator(booleanExprPredicate.getPredicateType()),
+						optional.get()));
+		}
+
+		if (x instanceof MiniPath<?>) {
+			MiniPath<?> miniPath = (MiniPath<?>) x;
+			return Optional.of(new UnaryCondition(getOperator(booleanExprPredicate.getPredicateType()),
+					createTableColumnFromPath(miniPath)));
+		}
+
+		return Optional.empty();
+	}
+
+	private Optional<Condition> translateExprPredicate(ExprPredicate exprPredicate, List<QueryParameter> parameters,
+			Query query) {
+		Expression<?> x = exprPredicate.getX();
+
+		if (x instanceof MiniPath<?>) {
+			MiniPath<?> miniPath = (MiniPath<?>) x;
+			return Optional.of(new UnaryCondition(getOperator(exprPredicate.getPredicateType()),
+					createTableColumnFromPath(miniPath)));
+		}
+
+		return Optional.empty();
+	}
+
+	private Optional<Condition> translateMultiplePredicate(MultiplePredicate multiplePredicate,
+			List<QueryParameter> parameters, Query query) {
+		Predicate[] predicates = multiplePredicate.getRestrictions();
+		List<Condition> conditions = new ArrayList<>();
+		LOG.info("translateMultiplePredicate: conditions.size()=" + conditions.size());
+		for (Predicate p : predicates) {
+			Optional<Condition> optional = createConditions(p, parameters, query);
+			if (optional.isPresent())
+				conditions.add(optional.get());
+		}
+
+		if (!conditions.isEmpty())
+			return Optional.of(
+					new BinaryLogicConditionImpl(getOperator(multiplePredicate.getPredicateType()), conditions, true));
+
+		return Optional.empty();
+	}
+
+	private Optional<Condition> translateBinaryBooleanExprPredicate(
+			BinaryBooleanExprPredicate binaryBooleanExprPredicate, List<QueryParameter> parameters, Query query) {
+		Expression<Boolean> x = binaryBooleanExprPredicate.getX();
+		Expression<Boolean> y = binaryBooleanExprPredicate.getY();
+
+		LOG.info("translateBinaryBooleanExprPredicate: x=" + x);
+		LOG.info("translateBinaryBooleanExprPredicate: y=" + y);
+		List<Condition> conditions = new ArrayList<>();
+		if (x instanceof Predicate) {
+			Optional<Condition> optional = createConditions((Predicate) x, parameters, query);
+			if (optional.isPresent())
+				conditions.add(optional.get());
+		}
+
+		if (y instanceof Predicate) {
+			Optional<Condition> optional = createConditions((Predicate) y, parameters, query);
+			if (optional.isPresent())
+				conditions.add(optional.get());
+		}
+
+		if (!conditions.isEmpty())
+			return Optional.of(new BinaryLogicConditionImpl(getOperator(binaryBooleanExprPredicate.getPredicateType()),
+					conditions, true));
+
+		return Optional.empty();
+	}
+
+	private Optional<Condition> translateLikePatternPredicate(LikePatternPredicate likePatternPredicate, Query query) {
+		String pattern = likePatternPredicate.getPattern();
+		MiniPath<?> miniPath = (MiniPath<?>) likePatternPredicate.getX();
+		return Optional.of(new BinaryCondition.Builder(ConditionType.LIKE)
+				.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(pattern)).build());
+	}
+
+	private Optional<Condition> translateLikePatternExprPredicate(LikePatternExprPredicate likePatternExprPredicate,
+			List<QueryParameter> parameters, Query query) {
+		Expression<String> pattern = likePatternExprPredicate.getPatternEx();
+		MiniPath<?> miniPath = (MiniPath<?>) likePatternExprPredicate.getX();
+		MetaAttribute attribute = miniPath.getMetaAttribute();
+		if (pattern instanceof ParameterExpression<?>) {
+			ParameterExpression<?> parameterExpression = (ParameterExpression<?>) pattern;
+			addParameter(parameterExpression, attribute, parameters, query);
+		}
+
+		return Optional.of(new BinaryCondition.Builder(ConditionType.LIKE)
+				.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(QM)).build());
+	}
+
+	private Optional<Condition> createConditions(Predicate predicate, List<QueryParameter> parameters, Query query) {
+		PredicateTypeInfo predicateTypeInfo = (PredicateTypeInfo) predicate;
+		PredicateType predicateType = predicateTypeInfo.getPredicateType();
+		if (predicateType == PredicateType.EQUAL || predicateType == PredicateType.NOT_EQUAL
+				|| predicateType == PredicateType.GREATER_THAN || predicateType == PredicateType.GT
+				|| predicateType == PredicateType.LESS_THAN || predicateType == PredicateType.LT) {
+			return translateComparisonPredicate((ComparisonPredicate) predicate, parameters, query);
+		} else if (predicateType == PredicateType.BETWEEN_EXPRESSIONS) {
+			BetweenExpressionsPredicate betweenExpressionsPredicate = (BetweenExpressionsPredicate) predicate;
+			return translateBetweenExpressionsPredicate(betweenExpressionsPredicate, parameters, query);
+		} else if (predicateType == PredicateType.BETWEEN_VALUES) {
+			BetweenValuesPredicate betweenValuesPredicate = (BetweenValuesPredicate) predicate;
+			return translateBetweenValuesPredicate(betweenValuesPredicate, parameters, query);
+		} else if (predicateType == PredicateType.LIKE_PATTERN) {
+			LikePatternPredicate likePatternPredicate = (LikePatternPredicate) predicate;
+			return translateLikePatternPredicate(likePatternPredicate, query);
+		} else if (predicateType == PredicateType.LIKE_PATTERN_EXPR) {
+			LikePatternExprPredicate likePatternExprPredicate = (LikePatternExprPredicate) predicate;
+			return translateLikePatternExprPredicate(likePatternExprPredicate, parameters, query);
+		} else if (predicateType == PredicateType.OR || predicateType == PredicateType.AND) {
+			if (predicate instanceof MultiplePredicate) {
+				return translateMultiplePredicate((MultiplePredicate) predicate, parameters, query);
+			} else {
+				return translateBinaryBooleanExprPredicate((BinaryBooleanExprPredicate) predicate, parameters, query);
+			}
+		} else if (predicateType == PredicateType.NOT) {
+			return translateBooleanExprPredicate((BooleanExprPredicate) predicate, parameters, query);
+		} else if (predicateType == PredicateType.IS_NULL || predicateType == PredicateType.IS_NOT_NULL) {
+			return translateExprPredicate((ExprPredicate) predicate, parameters, query);
+		} else if (predicateType == PredicateType.IS_TRUE || predicateType == PredicateType.IS_FALSE) {
+			return translateBooleanExprPredicate((BooleanExprPredicate) predicate, parameters, query);
+		} else if (predicateType == PredicateType.EMPTY_CONJUNCTION
+				|| predicateType == PredicateType.EMPTY_DISJUNCTION) {
+			return Optional.of(new EmptyCondition(getOperator(predicateType)));
+		}
+
+		return Optional.empty();
+	}
+
+	public SqlSelect select(Query query) {
+		CriteriaQuery<?> criteriaQuery = null;
+		if (query instanceof MiniTypedQuery<?>)
+			criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
+
 		Set<Root<?>> roots = criteriaQuery.getRoots();
 		Root<?> root = roots.iterator().next();
 		MetaEntity entity = ((MiniRoot<?>) root).getMetaEntity();
-		Selection<?> selection = criteriaQuery.getSelection();
-		if (selection == null) {
-			List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
-			return new SqlSelect(FromTable.of(entity), Collections.emptyList(), fetchColumnNameValues, null, entity);
+
+		Predicate restriction = criteriaQuery.getRestriction();
+		List<QueryParameter> parameters = new ArrayList<>();
+		Optional<Condition> optionalCondition = Optional.empty();
+		if (restriction != null) {
+			optionalCondition = createConditions(restriction, parameters, query);
 		}
 
-		if (selection instanceof MiniRoot<?>) {
+		List<Condition> conditions = null;
+		if (optionalCondition.isPresent())
+			conditions = Arrays.asList(optionalCondition.get());
+
+		Selection<?> selection = criteriaQuery.getSelection();
+		LOG.info("select: selection=" + selection);
+		if (selection == null || selection instanceof MiniRoot<?>) {
 			entity = ((MiniRoot<?>) root).getMetaEntity();
 			List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
-			return new SqlSelect(FromTable.of(entity), Collections.emptyList(), fetchColumnNameValues, null, entity);
+
+			FromTable fromTable = FromTable.of(entity);
+			return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
+					.withFetchParameters(fetchColumnNameValues).withConditions(conditions).withParameters(parameters)
+					.withResult(entity).build();
 		}
 
-		return new SqlSelect(FromTable.of(entity), Collections.emptyList(), null, null, null);
+		FromTable fromTable = FromTable.of(entity);
+		List<Value> values = createSelectionValues(fromTable, selection);
+		List<ColumnNameValue> fetchParameters = createFetchParameters(selection);
+
+		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).withFetchParameters(fetchParameters)
+				.withConditions(conditions).withParameters(parameters).build();
 	}
 }

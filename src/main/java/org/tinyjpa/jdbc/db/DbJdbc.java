@@ -39,7 +39,7 @@ public interface DbJdbc {
 		return "NOT";
 	}
 
-	public default String nullOperator() {
+	public default String isNullOperator() {
 		return "IS NULL";
 	}
 

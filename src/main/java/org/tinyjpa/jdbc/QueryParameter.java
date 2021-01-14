@@ -1,4 +1,4 @@
-package org.tinyjpa.jdbc.model;
+package org.tinyjpa.jdbc;
 
 public class QueryParameter {
 	private String columnName;

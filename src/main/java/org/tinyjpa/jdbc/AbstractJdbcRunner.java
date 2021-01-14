@@ -13,7 +13,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.tinyjpa.jdbc.model.QueryParameter;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
@@ -183,7 +182,7 @@ public abstract class AbstractJdbcRunner {
 			Object value = null;
 			MetaAttribute metaAttribute = null;
 			int i = 1;
-			for (ColumnNameValue cnv : sqlSelect.getFetchColumnNameValues()) {
+			for (ColumnNameValue cnv : sqlSelect.getFetchParameters()) {
 				if (cnv.getForeignKeyAttribute() != null) {
 					attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
 					attributeValues.relationshipValues.add(rs.getObject(i, cnv.getReadWriteDbType()));
@@ -221,8 +220,6 @@ public abstract class AbstractJdbcRunner {
 			LOG.info("findCollection: fetchColumnNameValues=" + fetchColumnNameValues);
 
 			LOG.info("findCollection: sql=`" + sql + "`");
-//			LOG.info("findCollection: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
-//			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementValues(preparedStatement, parameters);
 
@@ -247,13 +244,12 @@ public abstract class AbstractJdbcRunner {
 		}
 	}
 
-	public List<Object> findCollection(Connection connection, String sql, SqlSelect sqlSelect, MetaEntity entity,
+	public List<Object> findCollection(Connection connection, String sql, SqlSelect sqlSelect,
 			MetaAttribute childAttribute, Object childAttributeValue) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
 			LOG.info("findCollection: sql=`" + sql + "`");
-//			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
 
@@ -261,11 +257,12 @@ public abstract class AbstractJdbcRunner {
 			List<Object> objects = new ArrayList<>();
 			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
-				AttributeValues attributeValues = createAttributeValuesFromResultSet(
-						sqlSelect.getFetchColumnNameValues(), rs);
+				AttributeValues attributeValues = createAttributeValuesFromResultSet(sqlSelect.getFetchParameters(),
+						rs);
 
 				LOG.info("findCollection: attributeValues=" + attributeValues);
-				Object instance = createEntityInstance(attributeValues, entity, childAttribute, childAttributeValue);
+				Object instance = createEntityInstance(attributeValues, sqlSelect.getResult(), childAttribute,
+						childAttributeValue);
 				objects.add(instance);
 			}
 
@@ -307,6 +304,51 @@ public abstract class AbstractJdbcRunner {
 		return attributeValues;
 	}
 
+	public List<Object> runQuery(Connection connection, String sql, SqlSelect sqlSelect, MetaAttribute childAttribute,
+			Object childAttributeValue) throws Exception {
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		try {
+//			LOG.info("runQuery: parameters=" + parameters);
+//			LOG.info("runQuery: fetchColumnNameValues=" + fetchColumnNameValues);
+
+			LOG.info("runQuery: sql=`" + sql + "`");
+			preparedStatement = connection.prepareStatement(sql);
+			setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
+
+			LOG.info("Running `" + sql + "`");
+			List<Object> objects = new ArrayList<>();
+			rs = preparedStatement.executeQuery();
+			int nc = sqlSelect.getValues().size();
+			List<ColumnNameValue> fetchParameters = sqlSelect.getFetchParameters();
+			while (rs.next()) {
+				if (nc == 1) {
+//					Object instance = rs.getObject(1);
+					Class<?> readWriteType = fetchParameters.get(0).getReadWriteDbType();
+					Object instance = rs.getObject(1, readWriteType);
+					objects.add(instance);
+				} else {
+					Object[] values = new Object[nc];
+					for (int i = 0; i < nc; ++nc) {
+//						values[i] = rs.getObject(i + 1);
+						Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
+						values[i] = rs.getObject(i + 1, readWriteType);
+					}
+
+					objects.add(values);
+				}
+			}
+
+			return objects;
+		} finally {
+			if (rs != null)
+				rs.close();
+
+			if (preparedStatement != null)
+				preparedStatement.close();
+		}
+	}
+
 	public class AttributeValues {
 		public List<Object> values = new ArrayList<>();
 		public List<MetaAttribute> attributes = new ArrayList<>();
@@ -335,39 +377,6 @@ public abstract class AbstractJdbcRunner {
 		}
 
 		return value;
-	}
-
-	public List<Object> runQuery(Connection connection, String sql, List<ColumnNameValue> fetchColumnNameValues,
-			List<ColumnNameValue> parameters, MetaEntity entity, MetaAttribute childAttribute,
-			Object childAttributeValue) throws Exception {
-		PreparedStatement preparedStatement = null;
-		ResultSet rs = null;
-		try {
-			LOG.info("findCollection: parameters=" + parameters);
-			LOG.info("findCollection: fetchColumnNameValues=" + fetchColumnNameValues);
-
-			LOG.info("findCollection: sql=`" + sql + "`");
-//			LOG.info("findCollection: sqlStatement.getColumnNameValues()=" + sqlStatement.getColumnNameValues());
-//			preparedStatement = connection.prepareStatement("select i.id, i.model, i.name from Item i where i.id = ?");
-			preparedStatement = connection.prepareStatement(sql);
-			setPreparedStatementValues(preparedStatement, parameters);
-
-			LOG.info("Running `" + sql + "`");
-			List<Object> objects = new ArrayList<>();
-			rs = preparedStatement.executeQuery();
-			while (rs.next()) {
-				Object instance = rs.getObject(1);
-				objects.add(instance);
-			}
-
-			return objects;
-		} finally {
-			if (rs != null)
-				rs.close();
-
-			if (preparedStatement != null)
-				preparedStatement.close();
-		}
 	}
 
 }

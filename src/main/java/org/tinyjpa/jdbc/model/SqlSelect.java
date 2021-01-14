@@ -6,13 +6,14 @@ import java.util.Optional;
 
 import org.tinyjpa.jdbc.ColumnNameValue;
 import org.tinyjpa.jdbc.MetaEntity;
+import org.tinyjpa.jdbc.QueryParameter;
 import org.tinyjpa.jdbc.model.aggregate.GroupBy;
 import org.tinyjpa.jdbc.model.condition.Condition;
 
 public class SqlSelect {
 	private FromTable fromTable;
 	private List<ColumnNameValue> columnNameValues;
-	private List<ColumnNameValue> fetchColumnNameValues;
+	private List<ColumnNameValue> fetchParameters;
 	private List<ColumnNameValue> joinColumnNameValues;
 	private MetaEntity result;
 	private List<Value> values;
@@ -22,17 +23,6 @@ public class SqlSelect {
 
 	private SqlSelect() {
 		super();
-	}
-
-	public SqlSelect(FromTable fromTable, List<ColumnNameValue> columnNameValues,
-			List<ColumnNameValue> fetchColumnNameValues, List<ColumnNameValue> joinColumnNameValues,
-			MetaEntity result) {
-		super();
-		this.fromTable = fromTable;
-		this.columnNameValues = columnNameValues;
-		this.fetchColumnNameValues = fetchColumnNameValues;
-		this.joinColumnNameValues = joinColumnNameValues;
-		this.result = result;
 	}
 
 	public FromTable getFromTable() {
@@ -59,8 +49,8 @@ public class SqlSelect {
 		return columnNameValues;
 	}
 
-	public List<ColumnNameValue> getFetchColumnNameValues() {
-		return fetchColumnNameValues;
+	public List<ColumnNameValue> getFetchParameters() {
+		return fetchParameters;
 	}
 
 	public List<ColumnNameValue> getJoinColumnNameValues() {
@@ -75,9 +65,10 @@ public class SqlSelect {
 		private FromTable fromTable;
 		private List<Value> values;
 		private List<Condition> conditions;
-		private List<QueryParameter> parameters;
+		private List<QueryParameter> parameters = Collections.emptyList();
 		private List<ColumnNameValue> fetchColumnNameValues;
 		private GroupBy groupBy;
+		private MetaEntity result;
 
 		public SqlSelectBuilder(FromTable fromTable) {
 			super();
@@ -90,16 +81,16 @@ public class SqlSelect {
 		}
 
 		public SqlSelectBuilder withConditions(List<Condition> conditions) {
-			this.conditions = Collections.unmodifiableList(conditions);
+			this.conditions = conditions;
 			return this;
 		}
 
 		public SqlSelectBuilder withParameters(List<QueryParameter> parameters) {
-			this.parameters = Collections.unmodifiableList(parameters);
+			this.parameters = parameters;
 			return this;
 		}
 
-		public SqlSelectBuilder withFetchValues(List<ColumnNameValue> fetchColumnNameValues) {
+		public SqlSelectBuilder withFetchParameters(List<ColumnNameValue> fetchColumnNameValues) {
 			this.fetchColumnNameValues = Collections.unmodifiableList(fetchColumnNameValues);
 			return this;
 		}
@@ -109,14 +100,20 @@ public class SqlSelect {
 			return this;
 		}
 
+		public SqlSelectBuilder withResult(MetaEntity result) {
+			this.result = result;
+			return this;
+		}
+
 		public SqlSelect build() {
 			SqlSelect sqlSelect = new SqlSelect();
 			sqlSelect.fromTable = fromTable;
 			sqlSelect.values = values;
 			sqlSelect.conditions = Optional.ofNullable(conditions);
 			sqlSelect.parameters = parameters;
-			sqlSelect.fetchColumnNameValues = fetchColumnNameValues;
+			sqlSelect.fetchParameters = fetchColumnNameValues;
 			sqlSelect.groupBy = Optional.ofNullable(groupBy);
+			sqlSelect.result = result;
 			return sqlSelect;
 		}
 	}

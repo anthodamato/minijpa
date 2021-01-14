@@ -40,10 +40,6 @@ public abstract class AbstractAttribute {
 		return readWriteDbType;
 	}
 
-	public void setReadWriteDbType(Class<?> readWriteDbType) {
-		this.readWriteDbType = readWriteDbType;
-	}
-
 	public DbTypeMapper getDbTypeMapper() {
 		return dbTypeMapper;
 	}

@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.tinyjpa.jdbc.model.Column;
 import org.tinyjpa.jdbc.model.FromTable;
-import org.tinyjpa.jdbc.model.QueryParameter;
 import org.tinyjpa.jdbc.model.TableColumn;
 import org.tinyjpa.jdbc.model.Value;
 

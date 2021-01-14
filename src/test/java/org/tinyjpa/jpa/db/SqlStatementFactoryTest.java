@@ -10,14 +10,22 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.model.SqlSelect;
+import org.tinyjpa.jdbc.model.condition.BinaryCondition;
 import org.tinyjpa.jdbc.model.condition.Condition;
-import org.tinyjpa.jdbc.model.condition.EqualColumnExprCondition;
+import org.tinyjpa.jdbc.model.condition.ConditionType;
+import org.tinyjpa.jdbc.model.condition.UnaryCondition;
+import org.tinyjpa.jpa.model.Address;
 import org.tinyjpa.jpa.model.Department;
 import org.tinyjpa.jpa.model.Employee;
 import org.tinyjpa.jpa.model.Item;
@@ -59,9 +67,9 @@ public class SqlStatementFactoryTest {
 		List<Condition> conditions = opt.get();
 		Assertions.assertEquals(1, conditions.size());
 		Condition condition = conditions.get(0);
-		Assertions.assertTrue(condition instanceof EqualColumnExprCondition);
-		EqualColumnExprCondition equalColumnExprCondition = (EqualColumnExprCondition) condition;
-		Assertions.assertEquals("department_id", equalColumnExprCondition.getLeftColumn().getColumn().getName());
+		Assertions.assertTrue(condition instanceof BinaryCondition);
+		BinaryCondition equalColumnExprCondition = (BinaryCondition) condition;
+		Assertions.assertEquals("department_id", equalColumnExprCondition.getLeftColumn().get().getColumn().getName());
 
 		String sql = new SqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 		Assertions.assertEquals(
@@ -115,6 +123,78 @@ public class SqlStatementFactoryTest {
 				"select i.id, i.model, i.name from Item AS i INNER JOIN Store_Item AS si ON i.id = si.items_id where si.Store_id = ?",
 				sql);
 
+		em.close();
+		emf.close();
+	}
+
+	private Address createRegentStAddress() {
+		Address address = new Address();
+		address.setName("Regent St");
+		address.setPostcode("W1B4EA");
+		return address;
+	}
+
+	private Address createRomfordRdAddress() {
+		Address address = new Address();
+		address.setName("Romford");
+		return address;
+	}
+
+	@Test
+	public void generateIsNullSelectByCriteria() throws Exception {
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
+		final EntityManager em = emf.createEntityManager();
+
+		Optional<EntityContext> optional = EntityDelegate.getInstance().getEntityContext("citizens");
+		if (!optional.isPresent())
+			Assertions.fail("Meta entities not found");
+
+		Map<String, MetaEntity> map = optional.get().getEntities();
+		EntityTransaction tx = em.getTransaction();
+		tx.begin();
+
+		Address regentAddress = createRegentStAddress();
+		em.persist(regentAddress);
+		Address a_RegentSt = em.find(Address.class, regentAddress.getId());
+		Assertions.assertTrue(regentAddress == a_RegentSt);
+
+		Address romfordAddress = createRomfordRdAddress();
+		em.persist(romfordAddress);
+		Address a_RomfordRd = em.find(Address.class, romfordAddress.getId());
+		Assertions.assertTrue(romfordAddress == a_RomfordRd);
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Address> cq = cb.createQuery(Address.class);
+		Root<Address> root = cq.from(Address.class);
+
+		// postcode is null
+		Predicate isNull = cb.isNull(root.get("postcode"));
+		cq.where(isNull);
+
+		cq.select(root);
+
+		TypedQuery<Address> typedQuery = em.createQuery(cq);
+
+		tx.commit();
+
+		SqlSelect sqlSelect = sqlStatementFactory.select(typedQuery);
+		Assertions.assertNotNull(sqlSelect.getValues());
+		Optional<List<Condition>> opt = sqlSelect.getConditions();
+		Assertions.assertTrue(opt.isPresent());
+		List<Condition> conditions = opt.get();
+		Assertions.assertEquals(1, conditions.size());
+		Condition condition = conditions.get(0);
+		Assertions.assertTrue(condition instanceof UnaryCondition);
+		Assertions.assertEquals(ConditionType.IS_NULL, condition.getConditionType());
+		UnaryCondition unaryCondition = (UnaryCondition) condition;
+		Assertions.assertNotNull(unaryCondition.getTableColumn());
+		Assertions.assertNotNull(unaryCondition.getExpression());
+
+		String sql = new SqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
+		Assertions.assertEquals("select a.id, a.name, a.postcode, a.tt from Address AS a where a.postcode IS NULL",
+				sql);
+
+		em.remove(regentAddress);
 		em.close();
 		emf.close();
 	}
