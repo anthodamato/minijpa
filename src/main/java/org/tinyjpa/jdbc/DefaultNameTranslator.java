@@ -1,13 +1,15 @@
 package org.tinyjpa.jdbc;
 
+import java.util.Optional;
+
 public class DefaultNameTranslator implements NameTranslator {
 
 	@Override
-	public String toColumnName(String alias, String columnName) {
-		if (alias == null)
-			return columnName;
+	public String toColumnName(Optional<String> tableAlias, String columnName) {
+		if (tableAlias.isPresent())
+			return tableAlias.get() + "." + columnName;
 
-		return alias + "." + columnName;
+		return columnName;
 	}
 
 }

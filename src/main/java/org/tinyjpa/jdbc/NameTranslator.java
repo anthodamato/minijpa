@@ -1,6 +1,7 @@
 package org.tinyjpa.jdbc;
 
-public interface NameTranslator {
-	public String toColumnName(String alias, String columnName);
+import java.util.Optional;
 
+public interface NameTranslator {
+	public String toColumnName(Optional<String> tableAlias, String columnName);
 }

@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.tinyjpa.jdbc.MetaAttribute;
 import org.tinyjpa.jdbc.MetaEntity;
 import org.tinyjpa.jdbc.model.SqlSelect;
+import org.tinyjpa.jdbc.model.SqlStatementGenerator;
 import org.tinyjpa.jdbc.model.condition.BinaryCondition;
 import org.tinyjpa.jdbc.model.condition.Condition;
 import org.tinyjpa.jdbc.model.condition.ConditionType;

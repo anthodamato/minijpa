@@ -12,9 +12,7 @@ import org.tinyjpa.jdbc.model.condition.Condition;
 
 public class SqlSelect {
 	private FromTable fromTable;
-	private List<ColumnNameValue> columnNameValues;
 	private List<ColumnNameValue> fetchParameters;
-	private List<ColumnNameValue> joinColumnNameValues;
 	private MetaEntity result;
 	private List<Value> values;
 	private Optional<List<Condition>> conditions = Optional.empty();
@@ -45,16 +43,8 @@ public class SqlSelect {
 		return groupBy;
 	}
 
-	public List<ColumnNameValue> getColumnNameValues() {
-		return columnNameValues;
-	}
-
 	public List<ColumnNameValue> getFetchParameters() {
 		return fetchParameters;
-	}
-
-	public List<ColumnNameValue> getJoinColumnNameValues() {
-		return joinColumnNameValues;
 	}
 
 	public MetaEntity getResult() {

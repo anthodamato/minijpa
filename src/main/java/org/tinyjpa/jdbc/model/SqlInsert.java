@@ -2,36 +2,43 @@ package org.tinyjpa.jdbc.model;
 
 import java.util.List;
 
-import org.tinyjpa.jdbc.ColumnNameValue;
+import org.tinyjpa.jdbc.QueryParameter;
 
 public class SqlInsert {
-	private String tableName;
+	private FromTable fromTable;
 	private Object idValue;
-	private List<ColumnNameValue> columnNameValues;
+	private List<QueryParameter> parameters;
+	private List<Column> columns;
 
-	public SqlInsert(String tableName, List<ColumnNameValue> columnNameValues) {
+	public SqlInsert(FromTable fromTable, List<Column> columns, List<QueryParameter> parameters) {
 		super();
-		this.tableName = tableName;
-		this.columnNameValues = columnNameValues;
+		this.fromTable = fromTable;
+		this.parameters = parameters;
+		this.columns = columns;
 	}
 
-	public SqlInsert(String tableName, Object idValue, List<ColumnNameValue> columnNameValues) {
+	public SqlInsert(FromTable fromTable, List<Column> columns, List<QueryParameter> parameters, Object idValue) {
 		super();
-		this.tableName = tableName;
+		this.fromTable = fromTable;
+		this.parameters = parameters;
+		this.columns = columns;
 		this.idValue = idValue;
-		this.columnNameValues = columnNameValues;
-	}
-
-	public String getTableName() {
-		return tableName;
 	}
 
 	public Object getIdValue() {
 		return idValue;
 	}
 
-	public List<ColumnNameValue> getColumnNameValues() {
-		return columnNameValues;
+	public FromTable getFromTable() {
+		return fromTable;
+	}
+
+	public List<QueryParameter> getParameters() {
+		return parameters;
+	}
+
+	public List<Column> getColumns() {
+		return columns;
 	}
 
 }

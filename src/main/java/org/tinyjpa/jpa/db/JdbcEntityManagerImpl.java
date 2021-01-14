@@ -33,6 +33,7 @@ import org.tinyjpa.jdbc.db.TinyFlushMode;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
+import org.tinyjpa.jdbc.model.SqlStatementGenerator;
 import org.tinyjpa.jdbc.model.SqlUpdate;
 import org.tinyjpa.jdbc.relationship.FetchType;
 import org.tinyjpa.jdbc.relationship.Relationship;
@@ -87,10 +88,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		LOG.info("findById: entity=" + entity);
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectById(entity, primaryKey);
 		LOG.info("findById: sqlSelect.getTableName()=" + sqlSelect.getFromTable().getName());
-		LOG.info("findById: sqlSelect.getColumnNameValues()=" + sqlSelect.getColumnNameValues());
 		LOG.info("findById: sqlSelect.getFetchColumnNameValues()=" + sqlSelect.getFetchParameters());
-		LOG.info("findById: sqlSelect.getJoinColumnNameValues()=" + sqlSelect.getJoinColumnNameValues());
-//		String sql = sqlStatementGenerator.generateSql(sqlSelect);
 		String sql = sqlStatementGenerator.export(sqlSelect);
 		AbstractJdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(sql, connectionHolder.getConnection(),
 				sqlSelect);
@@ -175,7 +173,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, foreignKey);
 		String sql = sqlStatementGenerator.export(sqlSelect);
-		LOG.info("findCollectionByForeignKey: sql=" + sql);
 		return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, childAttribute,
 				childAttributeValue);
 	}
@@ -318,7 +315,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			sqlInsert = sqlStatementFactory.generatePlainInsert(entityInstance, entity, attrValues);
 		}
 
-		String sql = sqlStatementGenerator.generate(sqlInsert);
+		String sql = sqlStatementGenerator.export(sqlInsert);
 		Object pk = jdbcRunner.persist(sql, sqlInsert, connectionHolder.getConnection());
 		LOG.info("persist: pk=" + pk);
 		entity.getId().getWriteMethod().invoke(entityInstance, pk);
@@ -543,7 +540,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		for (Object instance : ees) {
 			SqlInsert sqlInsert = sqlStatementFactory.generateJoinTableInsert(relationshipJoinTable, entityInstance,
 					instance);
-			String sql = sqlStatementGenerator.generate(sqlInsert);
+			String sql = sqlStatementGenerator.export(sqlInsert);
 			jdbcRunner.persist(sql, sqlInsert, connectionHolder.getConnection());
 		}
 	}

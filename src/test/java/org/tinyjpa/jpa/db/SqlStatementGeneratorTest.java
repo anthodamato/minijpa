@@ -9,6 +9,7 @@ import org.tinyjpa.jdbc.model.Column;
 import org.tinyjpa.jdbc.model.FromTable;
 import org.tinyjpa.jdbc.model.FromTableImpl;
 import org.tinyjpa.jdbc.model.SqlSelect;
+import org.tinyjpa.jdbc.model.SqlStatementGenerator;
 import org.tinyjpa.jdbc.model.TableColumn;
 import org.tinyjpa.jdbc.model.Value;
 import org.tinyjpa.jdbc.model.aggregate.Count;

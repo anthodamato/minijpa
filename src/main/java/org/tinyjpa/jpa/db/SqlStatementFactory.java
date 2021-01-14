@@ -85,15 +85,22 @@ public class SqlStatementFactory {
 		attrValuesWithId.add(attrValueId);
 		attrValuesWithId.addAll(attrValues);
 
-		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(attrValuesWithId);
+		List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attrValuesWithId);
+		List<Column> columns = parameters.stream().map(p -> {
+			return new Column(p.getColumnName());
+		}).collect(Collectors.toList());
 
-		return new SqlInsert(entity.getTableName(), idValue, columnNameValues);
+		return new SqlInsert(FromTable.of(entity), columns, parameters, idValue);
 	}
 
 	public SqlInsert generateInsertIdentityStrategy(MetaEntity entity, List<AttributeValue> attrValues)
 			throws Exception {
-		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(attrValues);
-		return new SqlInsert(entity.getTableName(), columnNameValues);
+		List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attrValues);
+		List<Column> columns = parameters.stream().map(p -> {
+			return new Column(p.getColumnName());
+		}).collect(Collectors.toList());
+
+		return new SqlInsert(FromTable.of(entity), columns, parameters);
 	}
 
 	public SqlSelect generateSelectById(MetaEntity entity, Object idValue) throws Exception {
@@ -178,16 +185,20 @@ public class SqlStatementFactory {
 			Object targetInstance) throws Exception {
 		LOG.info("generateJoinTableInsert: owningInstance=" + owningInstance);
 		LOG.info("generateJoinTableInsert: targetInstance=" + targetInstance);
-		List<ColumnNameValue> columnNameValues = new ArrayList<>();
+		List<QueryParameter> parameters = new ArrayList<>();
 		MetaAttribute owningId = relationshipJoinTable.getOwningAttribute();
-		columnNameValues
-				.addAll(metaEntityHelper.createJoinColumnAVS(relationshipJoinTable.getJoinColumnOwningAttributes(),
+		parameters
+				.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getJoinColumnOwningAttributes(),
 						owningId, AttributeUtil.getIdValue(owningId, owningInstance)));
 		MetaAttribute targetId = relationshipJoinTable.getTargetAttribute();
-		columnNameValues
-				.addAll(metaEntityHelper.createJoinColumnAVS(relationshipJoinTable.getJoinColumnTargetAttributes(),
+		parameters
+				.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getJoinColumnTargetAttributes(),
 						targetId, AttributeUtil.getIdValue(targetId, targetInstance)));
-		return new SqlInsert(relationshipJoinTable.getTableName(), columnNameValues);
+		List<Column> columns = parameters.stream().map(p -> {
+			return new Column(p.getColumnName());
+		}).collect(Collectors.toList());
+
+		return new SqlInsert(new FromTableImpl(relationshipJoinTable.getTableName()), columns, parameters);
 	}
 
 	public SqlUpdate generateUpdate(MetaEntity entity, List<AttributeValue> attrValues, Object idValue)

@@ -132,13 +132,37 @@ public class MetaEntityHelper {
 		List<ColumnNameValue> columnNameValues = new ArrayList<>();
 		for (AttributeValue av : idAttributeValues) {
 			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, av.getAttribute());
-			AttributeValue avn = new AttributeValue(joinColumnAttributes.get(index).getForeignKeyAttribute(),
-					av.getValue());
+//			AttributeValue avn = new AttributeValue(joinColumnAttributes.get(index).getForeignKeyAttribute(),
+//					av.getValue());
+			MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
 
-			ColumnNameValue cnv = new ColumnNameValue(joinColumnAttributes.get(index).getColumnName(), avn.getValue(),
-					avn.getAttribute().getType(), avn.getAttribute().getReadWriteDbType(),
-					avn.getAttribute().getSqlType(), null, avn.getAttribute());
+			ColumnNameValue cnv = new ColumnNameValue(joinColumnAttributes.get(index).getColumnName(), av.getValue(),
+					metaAttribute.getType(), metaAttribute.getReadWriteDbType(), metaAttribute.getSqlType(), null,
+					metaAttribute);
 			columnNameValues.add(cnv);
+		}
+
+		return columnNameValues;
+	}
+
+	public List<QueryParameter> createJoinColumnAVSToQP(List<JoinColumnAttribute> joinColumnAttributes,
+			MetaAttribute owningId, Object joinTableForeignKey) throws Exception {
+		List<AttributeValue> idAttributeValues = attributeValueConverter
+				.convert(new AttributeValue(owningId, joinTableForeignKey));
+
+		int index = -1;
+		List<QueryParameter> columnNameValues = new ArrayList<>();
+		for (AttributeValue av : idAttributeValues) {
+			index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, av.getAttribute());
+			MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
+
+//			ColumnNameValue cnv = new ColumnNameValue(joinColumnAttributes.get(index).getColumnName(), av.getValue(),
+//					metaAttribute.getType(), metaAttribute.getReadWriteDbType(), metaAttribute.getSqlType(), null,
+//					metaAttribute);
+//			columnNameValues.add(cnv);
+			QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(), av.getValue(),
+					metaAttribute.getType(), metaAttribute.getSqlType());
+			columnNameValues.add(qp);
 		}
 
 		return columnNameValues;

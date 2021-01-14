@@ -1,19 +1,13 @@
-package org.tinyjpa.jpa.db;
+package org.tinyjpa.jdbc.model;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinyjpa.jdbc.ColumnNameValue;
 import org.tinyjpa.jdbc.db.DbJdbc;
-import org.tinyjpa.jdbc.model.Column;
-import org.tinyjpa.jdbc.model.FromTable;
-import org.tinyjpa.jdbc.model.SqlDelete;
-import org.tinyjpa.jdbc.model.SqlInsert;
-import org.tinyjpa.jdbc.model.SqlSelect;
-import org.tinyjpa.jdbc.model.SqlUpdate;
-import org.tinyjpa.jdbc.model.TableColumn;
 import org.tinyjpa.jdbc.model.aggregate.AggregateFunction;
 import org.tinyjpa.jdbc.model.aggregate.Count;
 import org.tinyjpa.jdbc.model.aggregate.Distinct;
@@ -26,7 +20,6 @@ import org.tinyjpa.jdbc.model.condition.BinaryCondition;
 import org.tinyjpa.jdbc.model.condition.BinaryLogicCondition;
 import org.tinyjpa.jdbc.model.condition.Condition;
 import org.tinyjpa.jdbc.model.condition.ConditionType;
-import org.tinyjpa.jdbc.model.condition.LikeCondition;
 import org.tinyjpa.jdbc.model.condition.UnaryCondition;
 import org.tinyjpa.jdbc.model.condition.UnaryLogicCondition;
 import org.tinyjpa.jdbc.model.join.FromJoin;
@@ -42,17 +35,37 @@ public class SqlStatementGenerator {
 		this.dbJdbc = dbJdbc;
 	}
 
-	public String generate(SqlInsert sqlInsert) {
+//	public String generate(SqlInsert sqlInsert) {
+//		StringBuilder sb = new StringBuilder();
+//		sb.append("insert into ");
+//		sb.append(sqlInsert.getTableName());
+//		sb.append(" (");
+//		String cols = sqlInsert.getColumnNameValues().stream().map(a -> a.getColumnName())
+//				.collect(Collectors.joining(","));
+//		sb.append(cols);
+//		sb.append(") values (");
+//
+//		for (int i = 0; i < sqlInsert.getColumnNameValues().size(); ++i) {
+//			if (i > 0)
+//				sb.append(",");
+//
+//			sb.append("?");
+//		}
+//
+//		sb.append(")");
+//		return sb.toString();
+//	}
+
+	public String export(SqlInsert sqlInsert) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("insert into ");
-		sb.append(sqlInsert.getTableName());
+		sb.append(sqlInsert.getFromTable().getName());
 		sb.append(" (");
-		String cols = sqlInsert.getColumnNameValues().stream().map(a -> a.getColumnName())
-				.collect(Collectors.joining(","));
+		String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
 		sb.append(cols);
 		sb.append(") values (");
 
-		for (int i = 0; i < sqlInsert.getColumnNameValues().size(); ++i) {
+		for (int i = 0; i < sqlInsert.getParameters().size(); ++i) {
 			if (i > 0)
 				sb.append(",");
 
@@ -124,14 +137,26 @@ public class SqlStatementGenerator {
 		return column.getName();
 	}
 
+	private String exportColumnAlias(String columnName, Optional<String> alias) {
+		if (alias.isPresent())
+			return columnName + " AS " + alias.get();
+
+		return columnName;
+	}
+
 	private String exportTableColumn(TableColumn tableColumn) {
-		if (tableColumn.getTable().isPresent() && tableColumn.getTable().get().getAlias().isPresent())
-			return tableColumn.getTable().get().getAlias().get() + "." + exportColumn(tableColumn.getColumn());
+		Optional<FromTable> optionalFromTable = tableColumn.getTable();
+		Column column = tableColumn.getColumn();
+		if (optionalFromTable.isPresent()) {
+			String tc = dbJdbc.getNameTranslator().toColumnName(optionalFromTable.get().getAlias(), column.getName());
+			return exportColumnAlias(tc, column.getAlias());
+		}
 
 		if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
-			return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(tableColumn.getColumn());
+			return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
 
-		return exportColumn(tableColumn.getColumn());
+		String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+		return exportColumnAlias(c, column.getAlias());
 	}
 
 	private String exportAggregateFunction(AggregateFunction aggregateFunction) {
@@ -220,11 +245,11 @@ public class SqlStatementGenerator {
 			return sb.toString();
 		}
 
-		if (condition instanceof LikeCondition) {
-			LikeCondition likeCondition = (LikeCondition) condition;
-			return exportColumn(likeCondition.getColumn()) + getOperator(condition.getConditionType()) + " '"
-					+ likeCondition.getExpression() + "'";
-		}
+//		if (condition instanceof LikeCondition) {
+//			LikeCondition likeCondition = (LikeCondition) condition;
+//			return exportColumn(likeCondition.getColumn()) + getOperator(condition.getConditionType()) + " '"
+//					+ likeCondition.getExpression() + "'";
+//		}
 
 		if (condition instanceof BinaryCondition) {
 			BinaryCondition binaryCondition = (BinaryCondition) condition;

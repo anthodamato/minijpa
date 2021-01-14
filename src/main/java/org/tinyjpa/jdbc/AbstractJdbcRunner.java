@@ -128,7 +128,8 @@ public abstract class AbstractJdbcRunner {
 		ResultSet resultSet = null;
 		try {
 			preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-			setPreparedStatementValues(preparedStatement, sqlInsert.getColumnNameValues());
+//			setPreparedStatementValues(preparedStatement, sqlInsert.getColumnNameValues());
+			setPreparedStatementParameters(preparedStatement, sqlInsert.getParameters());
 			preparedStatement.execute();
 			if (sqlInsert.getIdValue() != null)
 				return sqlInsert.getIdValue();
