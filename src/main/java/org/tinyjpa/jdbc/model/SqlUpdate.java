@@ -1,25 +1,40 @@
 package org.tinyjpa.jdbc.model;
 
 import java.util.List;
+import java.util.Optional;
 
-import org.tinyjpa.jdbc.ColumnNameValue;
+import org.tinyjpa.jdbc.QueryParameter;
+import org.tinyjpa.jdbc.model.condition.Condition;
 
 public class SqlUpdate {
-	private String tableName;
-	private List<ColumnNameValue> columnNameValues;
+	private FromTable fromTable;
+	private Optional<List<QueryParameter>> parameters = Optional.empty();
+	private List<TableColumn> tableColumns;
+	private Optional<Condition> condition;
 
-	public SqlUpdate(String tableName, List<ColumnNameValue> columnNameValues) {
+	public SqlUpdate(FromTable fromTable, Optional<List<QueryParameter>> parameters, List<TableColumn> tableColumns,
+			Optional<Condition> condition) {
 		super();
-		this.tableName = tableName;
-		this.columnNameValues = columnNameValues;
+		this.fromTable = fromTable;
+		this.parameters = parameters;
+		this.tableColumns = tableColumns;
+		this.condition = condition;
 	}
 
-	public String getTableName() {
-		return tableName;
+	public FromTable getFromTable() {
+		return fromTable;
 	}
 
-	public List<ColumnNameValue> getColumnNameValues() {
-		return columnNameValues;
+	public Optional<List<QueryParameter>> getParameters() {
+		return parameters;
+	}
+
+	public List<TableColumn> getTableColumns() {
+		return tableColumns;
+	}
+
+	public Optional<Condition> getCondition() {
+		return condition;
 	}
 
 }

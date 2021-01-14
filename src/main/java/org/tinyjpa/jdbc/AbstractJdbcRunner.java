@@ -114,7 +114,10 @@ public abstract class AbstractJdbcRunner {
 		PreparedStatement preparedStatement = null;
 		try {
 			preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-			setPreparedStatementValues(preparedStatement, sqlUpdate.getColumnNameValues());
+//			setPreparedStatementValues(preparedStatement, sqlUpdate.getColumnNameValues());
+			if (sqlUpdate.getParameters().isPresent())
+				setPreparedStatementParameters(preparedStatement, sqlUpdate.getParameters().get());
+
 			preparedStatement.execute();
 		} finally {
 			if (preparedStatement != null)

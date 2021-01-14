@@ -12,4 +12,12 @@ public class DefaultNameTranslator implements NameTranslator {
 		return columnName;
 	}
 
+	@Override
+	public String toTableName(Optional<String> tableAlias, String tableName) {
+		if (tableAlias.isPresent())
+			return tableName + " AS " + tableAlias.get();
+
+		return tableName;
+	}
+
 }

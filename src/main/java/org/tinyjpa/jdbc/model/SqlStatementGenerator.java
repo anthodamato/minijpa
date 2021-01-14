@@ -35,27 +35,6 @@ public class SqlStatementGenerator {
 		this.dbJdbc = dbJdbc;
 	}
 
-//	public String generate(SqlInsert sqlInsert) {
-//		StringBuilder sb = new StringBuilder();
-//		sb.append("insert into ");
-//		sb.append(sqlInsert.getTableName());
-//		sb.append(" (");
-//		String cols = sqlInsert.getColumnNameValues().stream().map(a -> a.getColumnName())
-//				.collect(Collectors.joining(","));
-//		sb.append(cols);
-//		sb.append(") values (");
-//
-//		for (int i = 0; i < sqlInsert.getColumnNameValues().size(); ++i) {
-//			if (i > 0)
-//				sb.append(",");
-//
-//			sb.append("?");
-//		}
-//
-//		sb.append(")");
-//		return sb.toString();
-//	}
-
 	public String export(SqlInsert sqlInsert) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("insert into ");
@@ -76,36 +55,21 @@ public class SqlStatementGenerator {
 		return sb.toString();
 	}
 
-	public String generate(SqlUpdate sqlUpdate) {
+	public String export(SqlUpdate sqlUpdate) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("update ");
-		sb.append(sqlUpdate.getTableName());
+		sb.append(dbJdbc.getNameTranslator().toTableName(sqlUpdate.getFromTable().getAlias(),
+				sqlUpdate.getFromTable().getName()));
 		sb.append(" set ");
-		int i = 0;
-		for (ColumnNameValue columnNameValue : sqlUpdate.getColumnNameValues()) {
-			if (columnNameValue.getAttribute().isId())
-				continue;
 
-			if (i > 0)
-				sb.append(",");
+		String sv = sqlUpdate.getTableColumns().stream().map(c -> {
+			return exportTableColumn(c) + " = ?";
+		}).collect(Collectors.joining(", "));
+		sb.append(sv);
 
-			sb.append(columnNameValue.getAttribute().getColumnName());
-			sb.append(" = ?");
-			++i;
-		}
-
-		sb.append(" where ");
-		i = 0;
-		for (ColumnNameValue columnNameValue : sqlUpdate.getColumnNameValues()) {
-			if (!columnNameValue.getAttribute().isId())
-				continue;
-
-			if (i > 0)
-				sb.append(" and ");
-
-			sb.append(columnNameValue.getAttribute().getColumnName());
-			sb.append(" = ?");
-			++i;
+		if (sqlUpdate.getCondition().isPresent()) {
+			sb.append(" where ");
+			sb.append(exportCondition(sqlUpdate.getCondition().get()));
 		}
 
 		return sb.toString();
@@ -319,11 +283,11 @@ public class SqlStatementGenerator {
 			if (fromJoin.getType() == JoinType.InnerJoin) {
 				sb.append(" INNER JOIN ");
 				FromTable toTable = fromJoin.getToTable();
-				sb.append(toTable.getName());
-				if (toTable.getAlias().isPresent()) {
-					sb.append(" AS ");
-					sb.append(toTable.getAlias().get());
-				}
+				sb.append(dbJdbc.getNameTranslator().toTableName(toTable.getAlias(), toTable.getName()));
+//				if (toTable.getAlias().isPresent()) {
+//					sb.append(" AS ");
+//					sb.append(toTable.getAlias().get());
+//				}
 
 				sb.append(" ON ");
 				List<Column> fromColumns = fromJoin.getFromColumns();
@@ -354,11 +318,13 @@ public class SqlStatementGenerator {
 	}
 
 	private String exportFromTable(FromTable fromTable) {
-		StringBuilder sb = new StringBuilder(fromTable.getName());
-		if (fromTable.getAlias().isPresent()) {
-			sb.append(" AS ");
-			sb.append(fromTable.getAlias().get());
-		}
+//		StringBuilder sb = new StringBuilder(fromTable.getName());
+		StringBuilder sb = new StringBuilder(
+				dbJdbc.getNameTranslator().toTableName(fromTable.getAlias(), fromTable.getName()));
+//		if (fromTable.getAlias().isPresent()) {
+//			sb.append(" AS ");
+//			sb.append(fromTable.getAlias().get());
+//		}
 
 		sb.append(exportJoins(fromTable));
 		return sb.toString();

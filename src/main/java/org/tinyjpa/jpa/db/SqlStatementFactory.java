@@ -205,15 +205,42 @@ public class SqlStatementFactory {
 			throws Exception {
 		LOG.info("generateUpdate: attrValues=" + attrValues);
 		AttributeValue attrValueId = new AttributeValue(entity.getId(), idValue);
+		FromTable fromTable = FromTable.of(entity);
+		List<TableColumn> columns = attrValues.stream().map(p -> {
+			return new TableColumn(fromTable, new Column(p.getAttribute().getColumnName()));
+		}).collect(Collectors.toList());
+
+		Condition condition = createAttributeEqualCondition(entity, attrValueId);
+
 		attrValues.add(attrValueId);
-		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(attrValues);
-		return new SqlUpdate(entity.getTableName(), columnNameValues);
+		List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attrValues);
+		return new SqlUpdate(fromTable, Optional.of(parameters), columns, Optional.of(condition));
 	}
 
 	public SqlDelete generateDeleteById(MetaEntity entity, Object idValue) throws Exception {
 		List<AttributeValue> idAttributeValues = Arrays.asList(new AttributeValue(entity.getId(), idValue));
 		List<ColumnNameValue> columnNameValues = metaEntityHelper.convertAttributeValues(idAttributeValues);
 		return new SqlDelete(entity.getTableName(), columnNameValues);
+	}
+
+	private Condition createAttributeEqualCondition(MetaEntity entity, AttributeValue attributeValue) throws Exception {
+		List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attributeValue);
+		if (parameters.size() == 1) {
+			return new BinaryCondition.Builder(ConditionType.EQUAL)
+					.withLeftColumn(
+							new TableColumn(FromTable.of(entity), new Column(parameters.get(0).getColumnName())))
+					.withRightExpression(QM).build();
+		}
+
+		List<Condition> conditions = new ArrayList<>();
+		for (QueryParameter parameter : parameters) {
+			BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
+					.withLeftColumn(new TableColumn(FromTable.of(entity), new Column(parameter.getColumnName())))
+					.build();
+			conditions.add(binaryCondition);
+		}
+
+		return new BinaryLogicConditionImpl(ConditionType.AND, conditions);
 	}
 
 	private Optional<Value> createSelectionValue(FromTable fromTable, Selection<?> selection) {

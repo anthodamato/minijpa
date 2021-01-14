@@ -283,7 +283,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 			LOG.info("persist: idValue=" + idValue);
 			SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attrValues, idValue);
-			String sql = sqlStatementGenerator.generate(sqlUpdate);
+//			String sql = sqlStatementGenerator.generate(sqlUpdate);
+			String sql = sqlStatementGenerator.export(sqlUpdate);
 			jdbcRunner.persist(sqlUpdate, connectionHolder.getConnection(), sql);
 			return;
 		}
