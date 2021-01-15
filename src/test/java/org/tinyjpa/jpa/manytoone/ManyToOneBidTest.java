@@ -72,6 +72,11 @@ public class ManyToOneBidTest {
 			Assertions.assertTrue(!d.getEmployees().isEmpty());
 			Assertions.assertEquals(2, d.getEmployees().size());
 			Assertions.assertFalse(d == department);
+
+			tx.begin();
+			em.remove(employee);
+			em.remove(emp);
+			tx.commit();
 		} finally {
 			em.close();
 		}
@@ -132,6 +137,12 @@ public class ManyToOneBidTest {
 
 			Assertions.assertNotNull(s);
 			Assertions.assertEquals(130000l, s.longValue());
+
+			tx.begin();
+			em.remove(employee1);
+			em.remove(employee2);
+			em.remove(employee3);
+			tx.commit();
 		} finally {
 			em.close();
 		}
@@ -196,6 +207,12 @@ public class ManyToOneBidTest {
 
 			Assertions.assertTrue(criteriaQuery.getSelection().isCompoundSelection());
 			Assertions.assertEquals(Object[].class, criteriaQuery.getSelection().getJavaType());
+
+			tx.begin();
+			em.remove(employee1);
+			em.remove(employee2);
+			em.remove(employee3);
+			tx.commit();
 		} finally {
 			em.close();
 		}
