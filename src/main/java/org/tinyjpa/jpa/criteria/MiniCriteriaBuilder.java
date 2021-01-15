@@ -86,14 +86,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public Order asc(Expression<?> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new OrderImpl(x, true);
 	}
 
 	@Override
 	public Order desc(Expression<?> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new OrderImpl(x, false);
 	}
 
 	@Override

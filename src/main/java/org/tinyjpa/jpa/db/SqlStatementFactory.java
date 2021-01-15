@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -33,6 +34,7 @@ import org.tinyjpa.jdbc.QueryParameter;
 import org.tinyjpa.jdbc.model.Column;
 import org.tinyjpa.jdbc.model.FromTable;
 import org.tinyjpa.jdbc.model.FromTableImpl;
+import org.tinyjpa.jdbc.model.OrderBy;
 import org.tinyjpa.jdbc.model.SqlDelete;
 import org.tinyjpa.jdbc.model.SqlInsert;
 import org.tinyjpa.jdbc.model.SqlSelect;
@@ -249,7 +251,11 @@ public class SqlStatementFactory {
 		if (selection == null)
 			return Optional.empty();
 
-		if (selection instanceof MaxExpression<?>) {
+		if (selection instanceof MiniPath<?>) {
+			MiniPath<?> miniPath = (MiniPath<?>) selection;
+			MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+			return Optional.of(new TableColumn(fromTable, new Column(metaAttribute.getColumnName())));
+		} else if (selection instanceof MaxExpression<?>) {
 			@SuppressWarnings("unchecked")
 			MaxExpression<Number> maxExpression = (MaxExpression<Number>) selection;
 			Expression<Number> expr = maxExpression.getX();
@@ -297,7 +303,12 @@ public class SqlStatementFactory {
 		if (selection == null)
 			return Optional.empty();
 
-		if (selection instanceof MaxExpression<?>) {
+		if (selection instanceof MiniPath<?>) {
+			MiniPath<?> miniPath = (MiniPath<?>) selection;
+			MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+			ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
+			return Optional.of(columnNameValue);
+		} else if (selection instanceof MaxExpression<?>) {
 			@SuppressWarnings("unchecked")
 			MaxExpression<Number> maxExpression = (MaxExpression<Number>) selection;
 			Expression<Number> expr = maxExpression.getX();
@@ -317,11 +328,6 @@ public class SqlStatementFactory {
 				ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
 				return Optional.of(columnNameValue);
 			}
-		} else if (selection instanceof MiniPath<?>) {
-			MiniPath<?> miniPath = (MiniPath<?>) selection;
-			MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-			ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
-			return Optional.of(columnNameValue);
 		}
 
 		return Optional.empty();
@@ -682,6 +688,30 @@ public class SqlStatementFactory {
 		return Optional.empty();
 	}
 
+	private Optional<List<OrderBy>> createOrderByList(CriteriaQuery<?> criteriaQuery) {
+		if (criteriaQuery.getOrderList() == null || criteriaQuery.getOrderList().isEmpty())
+			return Optional.empty();
+
+		List<OrderBy> result = new ArrayList<>();
+		List<Order> orders = criteriaQuery.getOrderList();
+		for (Order order : orders) {
+			Expression<?> expression = order.getExpression();
+			if (expression instanceof MiniPath<?>) {
+				MiniPath<?> miniPath = (MiniPath<?>) expression;
+				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+				TableColumn tableColumn = new TableColumn(FromTable.of(miniPath.getMetaEntity()),
+						new Column(metaAttribute.getColumnName()));
+				OrderBy orderBy = new OrderBy(tableColumn, order.isAscending());
+				result.add(orderBy);
+			}
+		}
+
+		if (result.isEmpty())
+			return Optional.empty();
+
+		return Optional.of(result);
+	}
+
 	public SqlSelect select(Query query) {
 		CriteriaQuery<?> criteriaQuery = null;
 		if (query instanceof MiniTypedQuery<?>)
@@ -717,8 +747,14 @@ public class SqlStatementFactory {
 		FromTable fromTable = FromTable.of(entity);
 		List<Value> values = createSelectionValues(fromTable, selection);
 		List<ColumnNameValue> fetchParameters = createFetchParameters(selection);
+		Optional<List<OrderBy>> optionalOrderBy = createOrderByList(criteriaQuery);
 
-		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).withFetchParameters(fetchParameters)
-				.withConditions(conditions).withParameters(parameters).build();
+		SqlSelect.SqlSelectBuilder builder = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values)
+				.withFetchParameters(fetchParameters).withConditions(conditions).withParameters(parameters);
+
+		if (optionalOrderBy.isPresent())
+			builder.withOrderBy(optionalOrderBy.get());
+
+		return builder.build();
 	}
 }

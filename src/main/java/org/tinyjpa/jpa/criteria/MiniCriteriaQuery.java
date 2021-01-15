@@ -1,5 +1,8 @@
 package org.tinyjpa.jpa.criteria;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +28,8 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 	private Set<Root<?>> roots = new HashSet<>();
 	protected Selection<? extends T> selection;
 	private Predicate restriction;
+	private List<Order> orders = new ArrayList<>();
+	private boolean distinct;
 
 	public MiniCriteriaQuery(Class<T> resultClass, EntityManager em) {
 		super();
@@ -73,8 +78,7 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 
 	@Override
 	public boolean isDistinct() {
-		// TODO Auto-generated method stub
-		return false;
+		return distinct;
 	}
 
 	@Override
@@ -101,14 +105,14 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 
 	@Override
 	public CriteriaQuery<T> multiselect(Selection<?>... selections) {
-		// TODO Auto-generated method stub
-		return null;
+		this.selection = new CompoundSelectionImpl<T>(Arrays.asList(selections));
+		return this;
 	}
 
 	@Override
 	public CriteriaQuery<T> multiselect(List<Selection<?>> selectionList) {
-		// TODO Auto-generated method stub
-		return null;
+		this.selection = new CompoundSelectionImpl<T>(Collections.unmodifiableList(selectionList));
+		return this;
 	}
 
 	@Override
@@ -152,26 +156,33 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 
 	@Override
 	public CriteriaQuery<T> orderBy(Order... o) {
-		// TODO Auto-generated method stub
-		return null;
+		orders.clear();
+		if (o == null)
+			return this;
+
+		orders.addAll(Arrays.asList(o));
+		return this;
 	}
 
 	@Override
 	public CriteriaQuery<T> orderBy(List<Order> o) {
-		// TODO Auto-generated method stub
-		return null;
+		orders.clear();
+		if (o == null)
+			return this;
+
+		orders.addAll(o);
+		return this;
 	}
 
 	@Override
 	public CriteriaQuery<T> distinct(boolean distinct) {
-		// TODO Auto-generated method stub
-		return null;
+		this.distinct = distinct;
+		return this;
 	}
 
 	@Override
 	public List<Order> getOrderList() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.unmodifiableList(orders);
 	}
 
 	@Override

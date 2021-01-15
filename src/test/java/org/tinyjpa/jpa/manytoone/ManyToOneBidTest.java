@@ -2,6 +2,7 @@ package org.tinyjpa.jpa.manytoone;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -131,6 +132,70 @@ public class ManyToOneBidTest {
 
 			Assertions.assertNotNull(s);
 			Assertions.assertEquals(130000l, s.longValue());
+		} finally {
+			em.close();
+		}
+	}
+
+	@Test
+	public void multiSelect() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		try {
+			final EntityTransaction tx = em.getTransaction();
+			tx.begin();
+
+			Department department = new Department();
+			department.setName("Research");
+
+			Employee employee1 = new Employee();
+			employee1.setName("John Smith");
+			employee1.setSalary(new BigDecimal(130000f));
+			employee1.setDepartment(department);
+
+			Employee employee2 = new Employee();
+			employee2.setName("Margaret White");
+			BigDecimal salary = new BigDecimal(170000);
+			salary.setScale(2);
+			employee2.setSalary(salary);
+			employee2.setDepartment(department);
+
+			Employee employee3 = new Employee();
+			employee3.setName("Joshua Bann");
+			employee3.setSalary(new BigDecimal(140000f));
+			employee3.setDepartment(department);
+
+			em.persist(employee1);
+			em.persist(employee2);
+			em.persist(employee3);
+			em.persist(department);
+
+			tx.commit();
+
+			Assertions.assertTrue(department.getEmployees().isEmpty());
+
+			// max
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery criteriaQuery = cb.createQuery();
+			Root<Employee> root = criteriaQuery.from(Employee.class);
+			criteriaQuery.multiselect(root.get("name"), root.get("salary")).orderBy(cb.asc(root.get("name")));
+			Query query = em.createQuery(criteriaQuery);
+			List<Object[]> result = query.getResultList();
+			Assertions.assertEquals(3, result.size());
+			Object[] r1 = result.get(0);
+			Assertions.assertEquals("John Smith", r1[0]);
+			salary = new BigDecimal(new BigInteger("13000000"), 2);
+			Assertions.assertEquals(salary, r1[1]);
+			Object[] r2 = result.get(1);
+			Assertions.assertEquals("Joshua Bann", r2[0]);
+			salary = new BigDecimal(new BigInteger("14000000"), 2);
+			Assertions.assertEquals(salary, r2[1]);
+			Object[] r3 = result.get(2);
+			Assertions.assertEquals("Margaret White", r3[0]);
+			salary = new BigDecimal(new BigInteger("17000000"), 2);
+			Assertions.assertEquals(salary, r3[1]);
+
+			Assertions.assertTrue(criteriaQuery.getSelection().isCompoundSelection());
+			Assertions.assertEquals(Object[].class, criteriaQuery.getSelection().getJavaType());
 		} finally {
 			em.close();
 		}

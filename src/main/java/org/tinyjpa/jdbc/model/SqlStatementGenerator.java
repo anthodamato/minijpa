@@ -278,11 +278,6 @@ public class SqlStatementGenerator {
 				sb.append(" INNER JOIN ");
 				FromTable toTable = fromJoin.getToTable();
 				sb.append(dbJdbc.getNameTranslator().toTableName(toTable.getAlias(), toTable.getName()));
-//				if (toTable.getAlias().isPresent()) {
-//					sb.append(" AS ");
-//					sb.append(toTable.getAlias().get());
-//				}
-
 				sb.append(" ON ");
 				List<Column> fromColumns = fromJoin.getFromColumns();
 				List<Column> toColumns = fromJoin.getToColumns();
@@ -312,13 +307,8 @@ public class SqlStatementGenerator {
 	}
 
 	private String exportFromTable(FromTable fromTable) {
-//		StringBuilder sb = new StringBuilder(fromTable.getName());
 		StringBuilder sb = new StringBuilder(
 				dbJdbc.getNameTranslator().toTableName(fromTable.getAlias(), fromTable.getName()));
-//		if (fromTable.getAlias().isPresent()) {
-//			sb.append(" AS ");
-//			sb.append(fromTable.getAlias().get());
-//		}
 
 		sb.append(exportJoins(fromTable));
 		return sb.toString();
@@ -327,6 +317,11 @@ public class SqlStatementGenerator {
 	private String exportGroupBy(GroupBy groupBy) {
 		return "group by "
 				+ groupBy.getColumns().stream().map(c -> exportTableColumn(c)).collect(Collectors.joining(", "));
+	}
+
+	private String exportOrderBy(OrderBy orderBy) {
+		String ad = orderBy.isAscending() ? " ASC" : " DESC";
+		return exportTableColumn(orderBy.getTableColumn()) + ad;
 	}
 
 	public String export(SqlSelect sqlSelect) {
@@ -357,6 +352,14 @@ public class SqlStatementGenerator {
 		if (sqlSelect.getGroupBy().isPresent()) {
 			sb.append(" ");
 			sb.append(exportGroupBy(sqlSelect.getGroupBy().get()));
+		}
+
+		if (sqlSelect.getOrderByList().isPresent()) {
+			sb.append(" order by ");
+			String s = sqlSelect.getOrderByList().get().stream().map(o -> {
+				return exportOrderBy(o);
+			}).collect(Collectors.joining(", "));
+			sb.append(s);
 		}
 
 		return sb.toString();

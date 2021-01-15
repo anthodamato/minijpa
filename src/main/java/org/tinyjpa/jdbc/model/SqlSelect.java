@@ -18,6 +18,7 @@ public class SqlSelect {
 	private Optional<List<Condition>> conditions = Optional.empty();
 	private List<QueryParameter> parameters;
 	private Optional<GroupBy> groupBy = Optional.empty();
+	private Optional<List<OrderBy>> orderByList = Optional.empty();
 
 	private SqlSelect() {
 		super();
@@ -51,6 +52,10 @@ public class SqlSelect {
 		return result;
 	}
 
+	public Optional<List<OrderBy>> getOrderByList() {
+		return orderByList;
+	}
+
 	public static class SqlSelectBuilder {
 		private FromTable fromTable;
 		private List<Value> values;
@@ -59,6 +64,7 @@ public class SqlSelect {
 		private List<ColumnNameValue> fetchColumnNameValues;
 		private GroupBy groupBy;
 		private MetaEntity result;
+		private List<OrderBy> orderByList;
 
 		public SqlSelectBuilder(FromTable fromTable) {
 			super();
@@ -90,6 +96,11 @@ public class SqlSelect {
 			return this;
 		}
 
+		public SqlSelectBuilder withOrderBy(List<OrderBy> orderByList) {
+			this.orderByList = orderByList;
+			return this;
+		}
+
 		public SqlSelectBuilder withResult(MetaEntity result) {
 			this.result = result;
 			return this;
@@ -99,10 +110,15 @@ public class SqlSelect {
 			SqlSelect sqlSelect = new SqlSelect();
 			sqlSelect.fromTable = fromTable;
 			sqlSelect.values = values;
-			sqlSelect.conditions = Optional.ofNullable(conditions);
+			if (conditions != null && !conditions.isEmpty())
+				sqlSelect.conditions = Optional.ofNullable(conditions);
+
 			sqlSelect.parameters = parameters;
 			sqlSelect.fetchParameters = fetchColumnNameValues;
 			sqlSelect.groupBy = Optional.ofNullable(groupBy);
+			if (orderByList != null && !orderByList.isEmpty())
+				sqlSelect.orderByList = Optional.ofNullable(orderByList);
+
 			sqlSelect.result = result;
 			return sqlSelect;
 		}

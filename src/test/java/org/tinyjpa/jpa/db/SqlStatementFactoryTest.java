@@ -128,19 +128,6 @@ public class SqlStatementFactoryTest {
 		emf.close();
 	}
 
-	private Address createRegentStAddress() {
-		Address address = new Address();
-		address.setName("Regent St");
-		address.setPostcode("W1B4EA");
-		return address;
-	}
-
-	private Address createRomfordRdAddress() {
-		Address address = new Address();
-		address.setName("Romford");
-		return address;
-	}
-
 	@Test
 	public void generateIsNullSelectByCriteria() throws Exception {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
@@ -150,19 +137,8 @@ public class SqlStatementFactoryTest {
 		if (!optional.isPresent())
 			Assertions.fail("Meta entities not found");
 
-		Map<String, MetaEntity> map = optional.get().getEntities();
 		EntityTransaction tx = em.getTransaction();
 		tx.begin();
-
-		Address regentAddress = createRegentStAddress();
-		em.persist(regentAddress);
-		Address a_RegentSt = em.find(Address.class, regentAddress.getId());
-		Assertions.assertTrue(regentAddress == a_RegentSt);
-
-		Address romfordAddress = createRomfordRdAddress();
-		em.persist(romfordAddress);
-		Address a_RomfordRd = em.find(Address.class, romfordAddress.getId());
-		Assertions.assertTrue(romfordAddress == a_RomfordRd);
 
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Address> cq = cb.createQuery(Address.class);
@@ -195,7 +171,6 @@ public class SqlStatementFactoryTest {
 		Assertions.assertEquals("select a.id, a.name, a.postcode, a.tt from Address AS a where a.postcode IS NULL",
 				sql);
 
-		em.remove(regentAddress);
 		em.close();
 		emf.close();
 	}
