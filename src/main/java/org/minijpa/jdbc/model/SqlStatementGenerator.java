@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import org.minijpa.jdbc.db.DbJdbc;
 import org.minijpa.jdbc.model.aggregate.AggregateFunction;
 import org.minijpa.jdbc.model.aggregate.Count;
-import org.minijpa.jdbc.model.aggregate.Distinct;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.aggregate.Max;
 import org.minijpa.jdbc.model.aggregate.Min;
@@ -127,8 +126,8 @@ public class SqlStatementGenerator {
 		if (aggregateFunction instanceof Max)
 			return "max(" + exportTableColumn(((Max) aggregateFunction).getTableColumn()) + ")";
 
-		if (aggregateFunction instanceof Distinct)
-			return "distinct " + exportTableColumn(((Distinct) aggregateFunction).getTableColumn());
+//		if (aggregateFunction instanceof Distinct)
+//			return "distinct " + exportTableColumn(((Distinct) aggregateFunction).getTableColumn());
 
 		if (aggregateFunction instanceof Count) {
 			Count count = (Count) aggregateFunction;
@@ -326,6 +325,9 @@ public class SqlStatementGenerator {
 
 	public String export(SqlSelect sqlSelect) {
 		StringBuilder sb = new StringBuilder("select ");
+		if (sqlSelect.isDistinct())
+			sb.append("distinct ");
+
 		LOG.info("export: sqlSelect.getValues()=" + sqlSelect.getValues());
 
 		String cc = sqlSelect.getValues().stream().map(c -> {

@@ -755,6 +755,9 @@ public class SqlStatementFactory {
 		if (optionalOrderBy.isPresent())
 			builder.withOrderBy(optionalOrderBy.get());
 
+		if (criteriaQuery.isDistinct())
+			builder.distinct();
+
 		return builder.build();
 	}
 }

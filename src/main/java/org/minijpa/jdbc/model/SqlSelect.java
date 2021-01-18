@@ -19,6 +19,7 @@ public class SqlSelect {
 	private List<QueryParameter> parameters;
 	private Optional<GroupBy> groupBy = Optional.empty();
 	private Optional<List<OrderBy>> orderByList = Optional.empty();
+	private boolean distinct = false;
 
 	private SqlSelect() {
 		super();
@@ -56,6 +57,10 @@ public class SqlSelect {
 		return orderByList;
 	}
 
+	public boolean isDistinct() {
+		return distinct;
+	}
+
 	public static class SqlSelectBuilder {
 		private FromTable fromTable;
 		private List<Value> values;
@@ -65,6 +70,7 @@ public class SqlSelect {
 		private GroupBy groupBy;
 		private MetaEntity result;
 		private List<OrderBy> orderByList;
+		private boolean distinct = false;
 
 		public SqlSelectBuilder(FromTable fromTable) {
 			super();
@@ -106,6 +112,11 @@ public class SqlSelect {
 			return this;
 		}
 
+		public SqlSelectBuilder distinct() {
+			this.distinct = true;
+			return this;
+		}
+
 		public SqlSelect build() {
 			SqlSelect sqlSelect = new SqlSelect();
 			sqlSelect.fromTable = fromTable;
@@ -120,6 +131,7 @@ public class SqlSelect {
 				sqlSelect.orderByList = Optional.ofNullable(orderByList);
 
 			sqlSelect.result = result;
+			sqlSelect.distinct = distinct;
 			return sqlSelect;
 		}
 	}

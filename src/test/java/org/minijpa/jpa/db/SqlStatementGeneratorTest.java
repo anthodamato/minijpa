@@ -13,7 +13,6 @@ import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
 import org.minijpa.jdbc.model.aggregate.Count;
-import org.minijpa.jdbc.model.aggregate.Distinct;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.aggregate.Sum;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
@@ -21,7 +20,6 @@ import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
-import org.minijpa.jpa.db.ApacheDerbyJdbc;
 
 public class SqlStatementGeneratorTest {
 	private SqlStatementGenerator sqlStatementGenerator = new SqlStatementGenerator(new ApacheDerbyJdbc());
@@ -47,8 +45,8 @@ public class SqlStatementGeneratorTest {
 		FromTable fromTable = new FromTableImpl("citizen", "c");
 		Column nameColumn = new Column("first_name");
 
-		List<Value> values = Arrays.asList(new Distinct(new TableColumn(fromTable, nameColumn)));
-		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).build();
+		List<Value> values = Arrays.asList(new TableColumn(fromTable, nameColumn));
+		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).distinct().build();
 		Assertions.assertEquals("select distinct c.first_name from citizen AS c",
 				sqlStatementGenerator.export(sqlSelect));
 	}

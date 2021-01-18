@@ -9,6 +9,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.Bindable.BindableType;
 import javax.persistence.metamodel.EmbeddableType;
@@ -51,19 +54,8 @@ public class EmbBookTest {
 		final EntityTransaction tx = em.getTransaction();
 		tx.begin();
 
-		Book book = new Book();
-		book.setTitle("The Interpretation of Dreams");
-		book.setAuthor("Sigmund Freud");
-
-		BookFormat bookFormat = new BookFormat();
-		bookFormat.setFormat("paperback");
-		bookFormat.setPages(688);
-
-		book.setBookFormat(bookFormat);
-
+		Book book = create1stFreudBook();
 		em.persist(book);
-
-		System.out.println("EmbBookTest.persist: book.getId()=" + book.getId());
 
 		Assertions.assertNotNull(book.getId());
 		tx.commit();
@@ -144,6 +136,110 @@ public class EmbBookTest {
 				PersistentAttributeType.BASIC, false, false);
 		MetamodelUtils.checkAttribute(embeddableType.getAttribute("pages"), "pages", Integer.class,
 				PersistentAttributeType.BASIC, false, false);
+	}
+
+	private Book create1stFreudBook() {
+		Book book = new Book();
+		book.setTitle("The Interpretation of Dreams");
+		book.setAuthor("Sigmund Freud");
+
+		BookFormat bookFormat = new BookFormat();
+		bookFormat.setFormat("paperback");
+		bookFormat.setPages(688);
+
+		book.setBookFormat(bookFormat);
+		return book;
+	}
+
+	private Book create2ndFreudBook() {
+		Book book = new Book();
+		book.setTitle("The Ego and the Id");
+		book.setAuthor("Sigmund Freud");
+
+		BookFormat bookFormat = new BookFormat();
+		bookFormat.setFormat("electronic");
+		bookFormat.setPages(128);
+
+		book.setBookFormat(bookFormat);
+		return book;
+	}
+
+	private Book create1stJoyceBook() {
+		Book book = new Book();
+		book.setTitle("Ulysses");
+		book.setAuthor("James Joyce");
+
+		BookFormat bookFormat = new BookFormat();
+		bookFormat.setFormat("paperback");
+		bookFormat.setPages(1010);
+
+		book.setBookFormat(bookFormat);
+		return book;
+	}
+
+	private Book create1stLondonBook() {
+		Book book = new Book();
+		book.setTitle("The Call of the Wild");
+		book.setAuthor("Jack London");
+
+		BookFormat bookFormat = new BookFormat();
+		bookFormat.setFormat("hardcover");
+		bookFormat.setPages(58);
+
+		book.setBookFormat(bookFormat);
+		return book;
+	}
+
+	private Book create2ndLondonBook() {
+		Book book = new Book();
+		book.setTitle("South Sea Tales");
+		book.setAuthor("Jack London");
+
+		BookFormat bookFormat = new BookFormat();
+		bookFormat.setFormat("electronic");
+		bookFormat.setPages(215);
+
+		book.setBookFormat(bookFormat);
+		return book;
+	}
+
+	@Test
+	public void distinct() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		final EntityTransaction tx = em.getTransaction();
+		tx.begin();
+
+		Book book1 = create1stFreudBook();
+		em.persist(book1);
+		Book book2 = create2ndFreudBook();
+		em.persist(book2);
+		Book book3 = create1stJoyceBook();
+		em.persist(book3);
+		Book book4 = create1stLondonBook();
+		em.persist(book4);
+		Book book5 = create2ndLondonBook();
+		em.persist(book5);
+
+		CriteriaQuery<String> query = em.getCriteriaBuilder().createQuery(String.class);
+		Root<Book> root = query.from(Book.class);
+		query.select(root.get("author")).distinct(true);
+		TypedQuery<String> tq = em.createQuery(query);
+		List<String> resultList = tq.getResultList();
+		Assertions.assertEquals(3, resultList.size());
+		Assertions.assertTrue(
+				CollectionUtils.containsAll(Arrays.asList("Sigmund Freud", "James Joyce", "Jack London"), resultList));
+
+		tx.commit();
+
+		tx.begin();
+		em.remove(book1);
+		em.remove(book2);
+		em.remove(book3);
+		em.remove(book4);
+		em.remove(book5);
+		tx.commit();
+
+		em.close();
 	}
 
 }
