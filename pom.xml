@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org</groupId>
-	<artifactId>tinyjpa</artifactId>
+	<artifactId>minijpa</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>tinyjpa</name>
+	<name>minijpa</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -90,8 +90,8 @@
 				<version>3.0.0-M5</version>
 				<configuration>
 <!-- 					<reuseForks>false</reuseForks> -->
-					<argLine>-javaagent:"${settings.localRepository}"/org/tinyjpa/${project.version}/tinyjpa-${project.version}.jar</argLine>
-					<argLine>-javaagent:${project.build.directory}/tinyjpa-0.0.1-SNAPSHOT.jar</argLine>
+					<argLine>-javaagent:"${settings.localRepository}"/org/minijpa/${project.version}/minijpa-${project.version}.jar</argLine>
+					<argLine>-javaagent:${project.build.directory}/minijpa-0.0.1-SNAPSHOT.jar</argLine>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -110,8 +110,8 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Main-Class>org.tinyjpa.Main</Main-Class>
-							<Premain-Class>org.tinyjpa.agent.EntityAgent</Premain-Class>
+							<Main-Class>org.minijpa.Main</Main-Class>
+							<Premain-Class>org.minijpa.agent.EntityAgent</Premain-Class>
 						</manifestEntries>
 					</archive>
 				</configuration>
