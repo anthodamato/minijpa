@@ -1,2 +1,2 @@
-# tinyjpa
+# minijpa
 Tiny JPA implementation
