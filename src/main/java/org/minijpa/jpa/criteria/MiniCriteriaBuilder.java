@@ -142,14 +142,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public Expression<Long> count(Expression<?> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new CountExpression(x);
 	}
 
 	@Override
 	public Expression<Long> countDistinct(Expression<?> x) {
-		// TODO Auto-generated method stub
-		return null;
+		return new CountExpression(x, true);
 	}
 
 	@Override

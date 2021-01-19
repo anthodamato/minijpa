@@ -2,15 +2,17 @@ package org.minijpa.jdbc.model.aggregate;
 
 import java.util.Optional;
 
+import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
 
 public class Count implements AggregateFunction, Value {
-	private Optional<AggregateFunction> aggregateFunction = Optional.empty();
+	private Optional<TableColumn> tableColumn = Optional.empty();
 	private Optional<String> expression = Optional.empty();
+	private boolean distinct = false;
 
-	public Count(AggregateFunction aggregateFunction) {
+	public Count(TableColumn tableColumn) {
 		super();
-		this.aggregateFunction = Optional.of(aggregateFunction);
+		this.tableColumn = Optional.of(tableColumn);
 	}
 
 	public Count(String expression) {
@@ -18,12 +20,28 @@ public class Count implements AggregateFunction, Value {
 		this.expression = Optional.of(expression);
 	}
 
-	public Optional<AggregateFunction> getAggregateFunction() {
-		return aggregateFunction;
+	public Count(TableColumn tableColumn, boolean distinct) {
+		super();
+		this.tableColumn = Optional.of(tableColumn);
+		this.distinct = distinct;
+	}
+
+	public Count(String expression, boolean distinct) {
+		super();
+		this.expression = Optional.of(expression);
+		this.distinct = distinct;
+	}
+
+	public Optional<TableColumn> getTableColumn() {
+		return tableColumn;
 	}
 
 	public Optional<String> getExpression() {
 		return expression;
+	}
+
+	public boolean isDistinct() {
+		return distinct;
 	}
 
 	public static Count countStar() {

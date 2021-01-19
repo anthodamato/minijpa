@@ -10,6 +10,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
@@ -74,6 +75,10 @@ public class EmbBookTest {
 
 		Book b2 = em.find(Book.class, b.getId());
 		Assertions.assertTrue(b2 == b);
+
+		tx.begin();
+		em.remove(b2);
+		tx.commit();
 
 		em.close();
 	}
@@ -230,6 +235,48 @@ public class EmbBookTest {
 				CollectionUtils.containsAll(Arrays.asList("Sigmund Freud", "James Joyce", "Jack London"), resultList));
 
 		tx.commit();
+
+		tx.begin();
+		em.remove(book1);
+		em.remove(book2);
+		em.remove(book3);
+		em.remove(book4);
+		em.remove(book5);
+		tx.commit();
+
+		em.close();
+	}
+
+	@Test
+	public void count() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		final EntityTransaction tx = em.getTransaction();
+		tx.begin();
+
+		Book book1 = create1stFreudBook();
+		em.persist(book1);
+		Book book2 = create2ndFreudBook();
+		em.persist(book2);
+		Book book3 = create1stJoyceBook();
+		em.persist(book3);
+		Book book4 = create1stLondonBook();
+		em.persist(book4);
+		Book book5 = create2ndLondonBook();
+		em.persist(book5);
+		tx.commit();
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery query = cb.createQuery();
+		Root<Book> root = query.from(Book.class);
+		query.select(cb.count(root));
+		TypedQuery<?> typedQuery = em.createQuery(query);
+		Object result = typedQuery.getSingleResult();
+		Assertions.assertEquals(5L, result);
+
+		query.select(cb.countDistinct(root.get("author")));
+		typedQuery = em.createQuery(query);
+		result = typedQuery.getSingleResult();
+		Assertions.assertEquals(3L, result);
 
 		tx.begin();
 		em.remove(book1);

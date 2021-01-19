@@ -126,19 +126,23 @@ public class SqlStatementGenerator {
 		if (aggregateFunction instanceof Max)
 			return "max(" + exportTableColumn(((Max) aggregateFunction).getTableColumn()) + ")";
 
-//		if (aggregateFunction instanceof Distinct)
-//			return "distinct " + exportTableColumn(((Distinct) aggregateFunction).getTableColumn());
-
 		if (aggregateFunction instanceof Count) {
 			Count count = (Count) aggregateFunction;
-			if (count.getExpression().isPresent())
-				return "count(" + count.getExpression().get() + ")";
+			StringBuilder sb = new StringBuilder("count(");
+			if (count.isDistinct())
+				sb.append("distinct ");
 
-			if (count.getAggregateFunction().isPresent())
-				return exportAggregateFunction(count.getAggregateFunction().get());
+			if (count.getExpression().isPresent())
+				sb.append(count.getExpression().get());
+
+			if (count.getTableColumn().isPresent())
+				sb.append(exportTableColumn(count.getTableColumn().get()));
+
+			sb.append(")");
+			return sb.toString();
 		}
 
-		throw new IllegalArgumentException("Aggregate function '" + aggregateFunction + "'not supported");
+		throw new IllegalArgumentException("Aggregate function '" + aggregateFunction + "' not supported");
 	}
 
 	private String exportCondition(Condition condition) {

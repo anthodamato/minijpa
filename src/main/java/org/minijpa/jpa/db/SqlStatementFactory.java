@@ -24,6 +24,7 @@ import org.minijpa.jdbc.AttributeValue;
 import org.minijpa.jdbc.AttributeValueConverter;
 import org.minijpa.jdbc.ColumnNameValue;
 import org.minijpa.jdbc.EmbeddedIdAttributeValueConverter;
+import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
@@ -39,6 +40,7 @@ import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
+import org.minijpa.jdbc.model.aggregate.Count;
 import org.minijpa.jdbc.model.aggregate.Max;
 import org.minijpa.jdbc.model.aggregate.Min;
 import org.minijpa.jdbc.model.condition.BetweenCondition;
@@ -58,6 +60,7 @@ import org.minijpa.jpa.criteria.BetweenValuesPredicate;
 import org.minijpa.jpa.criteria.BinaryBooleanExprPredicate;
 import org.minijpa.jpa.criteria.BooleanExprPredicate;
 import org.minijpa.jpa.criteria.ComparisonPredicate;
+import org.minijpa.jpa.criteria.CountExpression;
 import org.minijpa.jpa.criteria.ExprPredicate;
 import org.minijpa.jpa.criteria.LikePatternExprPredicate;
 import org.minijpa.jpa.criteria.LikePatternPredicate;
@@ -240,7 +243,7 @@ public class SqlStatementFactory {
 		for (QueryParameter parameter : parameters) {
 			BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
 					.withLeftColumn(new TableColumn(FromTable.of(entity), new Column(parameter.getColumnName())))
-					.build();
+					.withRightExpression(QM).build();
 			conditions.add(binaryCondition);
 		}
 
@@ -272,6 +275,22 @@ public class SqlStatementFactory {
 				MiniPath<?> miniPath = (MiniPath<?>) expr;
 				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
 				return Optional.of(new Min(new TableColumn(fromTable, new Column(metaAttribute.getColumnName()))));
+			}
+		} else if (selection instanceof CountExpression) {
+			CountExpression count = (CountExpression) selection;
+			Expression<?> expr = count.getExpression();
+			if (expr instanceof MiniPath<?>) {
+				MiniPath<?> miniPath = (MiniPath<?>) expr;
+				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+				return Optional.of(new Count(new TableColumn(fromTable, new Column(metaAttribute.getColumnName())),
+						count.isDistinct()));
+			} else if (expr instanceof MiniRoot<?>) {
+				MiniRoot<?> miniRoot = (MiniRoot<?>) expr;
+				MetaEntity metaEntity = miniRoot.getMetaEntity();
+				List<MetaAttribute> idAttrs = metaEntity.getId().expand();
+				return Optional.of(
+						new Count(new TableColumn(FromTable.of(metaEntity), new Column(idAttrs.get(0).getColumnName())),
+								count.isDistinct()));
 			}
 		}
 
@@ -328,6 +347,10 @@ public class SqlStatementFactory {
 				ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
 				return Optional.of(columnNameValue);
 			}
+		} else if (selection instanceof CountExpression) {
+			ColumnNameValue cnv = new ColumnNameValue("count", null, Long.class, Long.class,
+					JdbcTypes.sqlTypeFromClass(Long.class), null, null);
+			return Optional.of(cnv);
 		}
 
 		return Optional.empty();
