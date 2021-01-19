@@ -11,26 +11,19 @@ public class LikePatternPredicate extends AbstractExpression<Boolean> implements
 	private String pattern;
 	private Character escapeChar;
 	private Expression<java.lang.Character> escapeCharEx;
+	private boolean not = false;
+	private boolean negated = false;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
-	public LikePatternPredicate(Expression<?> x, String pattern) {
-		super(Boolean.class);
-		this.x = x;
-		this.pattern = pattern;
-	}
-
-	public LikePatternPredicate(Expression<?> x, String pattern, Character escapeChar) {
+	public LikePatternPredicate(Expression<?> x, String pattern, Character escapeChar,
+			Expression<Character> escapeCharEx, boolean not, boolean negated) {
 		super(Boolean.class);
 		this.x = x;
 		this.pattern = pattern;
 		this.escapeChar = escapeChar;
-	}
-
-	public LikePatternPredicate(Expression<?> x, String pattern, Expression<Character> escapeCharEx) {
-		super(Boolean.class);
-		this.x = x;
-		this.pattern = pattern;
 		this.escapeCharEx = escapeCharEx;
+		this.not = not;
+		this.negated = negated;
 	}
 
 	@Override
@@ -45,7 +38,7 @@ public class LikePatternPredicate extends AbstractExpression<Boolean> implements
 
 	@Override
 	public boolean isNegated() {
-		return false;
+		return negated;
 	}
 
 	@Override
@@ -55,8 +48,7 @@ public class LikePatternPredicate extends AbstractExpression<Boolean> implements
 
 	@Override
 	public Predicate not() {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternPredicate(x, pattern, escapeChar, escapeCharEx, !not, true);
 	}
 
 	public Expression<?> getX() {
@@ -73,6 +65,10 @@ public class LikePatternPredicate extends AbstractExpression<Boolean> implements
 
 	public Expression<java.lang.Character> getEscapeCharEx() {
 		return escapeCharEx;
+	}
+
+	public boolean isNot() {
+		return not;
 	}
 
 }

@@ -268,14 +268,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(Expression<? extends Y> x,
 			Expression<? extends Y> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(PredicateType.GREATER_THAN_OR_EQUAL_TO, x, y, null);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(Expression<? extends Y> x, Y y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(PredicateType.GREATER_THAN_OR_EQUAL_TO, x, null, y);
 	}
 
 	@Override
@@ -291,14 +289,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(Expression<? extends Y> x,
 			Expression<? extends Y> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(PredicateType.LESS_THAN_OR_EQUAL_TO, x, y, null);
 	}
 
 	@Override
 	public <Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(Expression<? extends Y> x, Y y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(PredicateType.LESS_THAN_OR_EQUAL_TO, x, null, y);
 	}
 
 	@Override
@@ -324,14 +320,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public Predicate ge(Expression<? extends Number> x, Expression<? extends Number> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(PredicateType.GREATER_THAN_OR_EQUAL_TO, x, y, null);
 	}
 
 	@Override
 	public Predicate ge(Expression<? extends Number> x, Number y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(PredicateType.GREATER_THAN_OR_EQUAL_TO, x, null, y);
 	}
 
 	@Override
@@ -346,14 +340,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public Predicate le(Expression<? extends Number> x, Expression<? extends Number> y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(PredicateType.LESS_THAN_OR_EQUAL_TO, x, y, null);
 	}
 
 	@Override
 	public Predicate le(Expression<? extends Number> x, Number y) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ComparisonPredicate(PredicateType.LESS_THAN_OR_EQUAL_TO, x, null, y);
 	}
 
 	@Override
@@ -590,68 +582,62 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public Predicate like(Expression<String> x, Expression<String> pattern) {
-		return new LikePatternExprPredicate(x, pattern);
+		return new LikePatternExprPredicate(x, pattern, null, null, false, false);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, String pattern) {
-		return new LikePatternPredicate(x, pattern);
+		return new LikePatternPredicate(x, pattern, null, null, false, false);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-		return new LikePatternExprPredicate(x, pattern, escapeChar);
+		return new LikePatternExprPredicate(x, pattern, null, escapeChar, false, false);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, Expression<String> pattern, char escapeChar) {
-		return new LikePatternExprPredicate(x, pattern, escapeChar);
+		return new LikePatternExprPredicate(x, pattern, escapeChar, null, false, false);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-		return new LikePatternPredicate(x, pattern, escapeChar);
+		return new LikePatternPredicate(x, pattern, null, escapeChar, false, false);
 	}
 
 	@Override
 	public Predicate like(Expression<String> x, String pattern, char escapeChar) {
-		return new LikePatternPredicate(x, pattern, escapeChar);
+		return new LikePatternPredicate(x, pattern, escapeChar, null, false, false);
 	}
 
 	@Override
 	public Predicate notLike(Expression<String> x, Expression<String> pattern) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternExprPredicate(x, pattern, null, null, true, false);
 	}
 
 	@Override
 	public Predicate notLike(Expression<String> x, String pattern) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternPredicate(x, pattern, null, null, true, false);
 	}
 
 	@Override
 	public Predicate notLike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternExprPredicate(x, pattern, null, escapeChar, true, false);
 	}
 
 	@Override
 	public Predicate notLike(Expression<String> x, Expression<String> pattern, char escapeChar) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternExprPredicate(x, pattern, escapeChar, null, true, false);
 	}
 
 	@Override
 	public Predicate notLike(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternPredicate(x, pattern, null, escapeChar, true, false);
 	}
 
 	@Override
 	public Predicate notLike(Expression<String> x, String pattern, char escapeChar) {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternPredicate(x, pattern, escapeChar, null, true, false);
 	}
 
 	@Override

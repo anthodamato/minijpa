@@ -441,9 +441,13 @@ public class SqlStatementFactory {
 		case GREATER_THAN:
 		case GT:
 			return ConditionType.GREATER_THAN;
+		case GREATER_THAN_OR_EQUAL_TO:
+			return ConditionType.GREATER_THAN_OR_EQUAL_TO;
 		case LESS_THAN:
 		case LT:
 			return ConditionType.LESS_THAN;
+		case LESS_THAN_OR_EQUAL_TO:
+			return ConditionType.LESS_THAN_OR_EQUAL_TO;
 		case BETWEEN_EXPRESSIONS:
 		case BETWEEN_VALUES:
 			return ConditionType.BETWEEN;
@@ -654,8 +658,12 @@ public class SqlStatementFactory {
 	private Optional<Condition> translateLikePatternPredicate(LikePatternPredicate likePatternPredicate, Query query) {
 		String pattern = likePatternPredicate.getPattern();
 		MiniPath<?> miniPath = (MiniPath<?>) likePatternPredicate.getX();
-		return Optional.of(new BinaryCondition.Builder(ConditionType.LIKE)
-				.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(pattern)).build());
+		BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
+				.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(pattern));
+		if (likePatternPredicate.isNot())
+			builder.negated();
+
+		return Optional.of(builder.build());
 	}
 
 	private Optional<Condition> translateLikePatternExprPredicate(LikePatternExprPredicate likePatternExprPredicate,
@@ -668,16 +676,22 @@ public class SqlStatementFactory {
 			addParameter(parameterExpression, attribute, parameters, query);
 		}
 
-		return Optional.of(new BinaryCondition.Builder(ConditionType.LIKE)
-				.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(QM)).build());
+		BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
+				.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(QM));
+		if (likePatternExprPredicate.isNot())
+			builder.negated();
+
+		return Optional.of(builder.build());
 	}
 
 	private Optional<Condition> createConditions(Predicate predicate, List<QueryParameter> parameters, Query query) {
 		PredicateTypeInfo predicateTypeInfo = (PredicateTypeInfo) predicate;
 		PredicateType predicateType = predicateTypeInfo.getPredicateType();
 		if (predicateType == PredicateType.EQUAL || predicateType == PredicateType.NOT_EQUAL
-				|| predicateType == PredicateType.GREATER_THAN || predicateType == PredicateType.GT
-				|| predicateType == PredicateType.LESS_THAN || predicateType == PredicateType.LT) {
+				|| predicateType == PredicateType.GREATER_THAN
+				|| predicateType == PredicateType.GREATER_THAN_OR_EQUAL_TO || predicateType == PredicateType.GT
+				|| predicateType == PredicateType.LESS_THAN || predicateType == PredicateType.LESS_THAN_OR_EQUAL_TO
+				|| predicateType == PredicateType.LT) {
 			return translateComparisonPredicate((ComparisonPredicate) predicate, parameters, query);
 		} else if (predicateType == PredicateType.BETWEEN_EXPRESSIONS) {
 			BetweenExpressionsPredicate betweenExpressionsPredicate = (BetweenExpressionsPredicate) predicate;

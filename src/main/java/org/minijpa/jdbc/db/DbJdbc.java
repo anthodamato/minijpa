@@ -67,8 +67,16 @@ public interface DbJdbc {
 		return ">";
 	}
 
+	public default String greaterThanOrEqualToOperator() {
+		return ">=";
+	}
+
 	public default String lessThanOperator() {
 		return "<";
+	}
+
+	public default String lessThanOrEqualToOperator() {
+		return "<=";
 	}
 
 	public default String betweenOperator() {

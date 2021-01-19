@@ -11,6 +11,7 @@ import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.junit.jupiter.api.AfterAll;
@@ -207,6 +208,70 @@ public class ManyToOneBidTest {
 
 			Assertions.assertTrue(criteriaQuery.getSelection().isCompoundSelection());
 			Assertions.assertEquals(Object[].class, criteriaQuery.getSelection().getJavaType());
+
+			tx.begin();
+			em.remove(employee1);
+			em.remove(employee2);
+			em.remove(employee3);
+			tx.commit();
+		} finally {
+			em.close();
+		}
+	}
+
+	@Test
+	public void like() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		try {
+			final EntityTransaction tx = em.getTransaction();
+			tx.begin();
+
+			Department department = new Department();
+			department.setName("Research");
+
+			Employee employee1 = new Employee();
+			employee1.setName("John Smith");
+			employee1.setSalary(new BigDecimal(130000f));
+			employee1.setDepartment(department);
+
+			Employee employee2 = new Employee();
+			employee2.setName("Margaret White");
+			BigDecimal salary = new BigDecimal(170000);
+			salary.setScale(2);
+			employee2.setSalary(salary);
+			employee2.setDepartment(department);
+
+			Employee employee3 = new Employee();
+			employee3.setName("Joshua Bann");
+			employee3.setSalary(new BigDecimal(140000f));
+			employee3.setDepartment(department);
+
+			em.persist(employee1);
+			em.persist(employee2);
+			em.persist(employee3);
+			em.persist(department);
+
+			tx.commit();
+			// like
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery criteriaQuery = cb.createQuery();
+			Root<Employee> root = criteriaQuery.from(Employee.class);
+			Predicate predicate = cb.like(root.get("name"), "Jo%");
+			criteriaQuery.select(root);
+			criteriaQuery.where(predicate);
+			Query query = em.createQuery(criteriaQuery);
+			List<Employee> list = query.getResultList();
+
+			Assertions.assertEquals(2, list.size());
+
+			// not like
+			predicate = cb.notLike(root.get("name"), "Jo%");
+			criteriaQuery.select(root);
+			criteriaQuery.where(predicate);
+			query = em.createQuery(criteriaQuery);
+			list = query.getResultList();
+
+			Assertions.assertEquals(1, list.size());
 
 			tx.begin();
 			em.remove(employee1);

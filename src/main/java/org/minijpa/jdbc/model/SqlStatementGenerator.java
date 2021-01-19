@@ -216,13 +216,8 @@ public class SqlStatementGenerator {
 			BinaryCondition binaryCondition = (BinaryCondition) condition;
 
 			StringBuilder sb = new StringBuilder();
-//			if (binaryCondition.getConditionType() == ConditionType.LIKE) {
-//				sb.append(exportTableColumn(binaryCondition.getLeftColumn().get()));
-//				sb.append(" ");
-//				sb.append(getOperator(condition.getConditionType()));
-//				sb.append(" ");
-//				sb.append(binaryCondition.getRightExpression().get());
-//			} else {
+			if (binaryCondition.isNegated())
+				sb.append("not ");
 
 			if (binaryCondition.getLeftColumn().isPresent())
 				sb.append(exportTableColumn(binaryCondition.getLeftColumn().get()));
@@ -238,7 +233,6 @@ public class SqlStatementGenerator {
 
 			if (binaryCondition.getRightExpression().isPresent())
 				sb.append(binaryCondition.getRightExpression().get());
-//			}
 
 			return sb.toString();
 		}
@@ -397,8 +391,12 @@ public class SqlStatementGenerator {
 			return dbJdbc.emptyDisjunctionOperator();
 		case GREATER_THAN:
 			return dbJdbc.greaterThanOperator();
+		case GREATER_THAN_OR_EQUAL_TO:
+			return dbJdbc.greaterThanOrEqualToOperator();
 		case LESS_THAN:
 			return dbJdbc.lessThanOperator();
+		case LESS_THAN_OR_EQUAL_TO:
+			return dbJdbc.lessThanOrEqualToOperator();
 		case BETWEEN:
 			return dbJdbc.betweenOperator();
 		case LIKE:

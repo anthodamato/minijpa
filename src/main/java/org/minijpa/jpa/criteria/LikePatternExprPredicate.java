@@ -11,27 +11,19 @@ public class LikePatternExprPredicate extends AbstractExpression<Boolean> implem
 	private Expression<String> patternEx;
 	private Character escapeChar;
 	private Expression<java.lang.Character> escapeCharEx;
+	private boolean not = false;
+	private boolean negated = false;
 	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
-	public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx) {
-		super(Boolean.class);
-		this.x = x;
-		this.patternEx = patternEx;
-	}
-
-	public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx, Character escapeChar) {
+	public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx, Character escapeChar,
+			Expression<Character> escapeCharEx, boolean not, boolean negated) {
 		super(Boolean.class);
 		this.x = x;
 		this.patternEx = patternEx;
 		this.escapeChar = escapeChar;
-	}
-
-	public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx,
-			Expression<java.lang.Character> escapeCharEx) {
-		super(Boolean.class);
-		this.x = x;
-		this.patternEx = patternEx;
 		this.escapeCharEx = escapeCharEx;
+		this.not = not;
+		this.negated = negated;
 	}
 
 	@Override
@@ -46,7 +38,7 @@ public class LikePatternExprPredicate extends AbstractExpression<Boolean> implem
 
 	@Override
 	public boolean isNegated() {
-		return false;
+		return negated;
 	}
 
 	@Override
@@ -56,8 +48,7 @@ public class LikePatternExprPredicate extends AbstractExpression<Boolean> implem
 
 	@Override
 	public Predicate not() {
-		// TODO Auto-generated method stub
-		return null;
+		return new LikePatternExprPredicate(x, patternEx, escapeChar, escapeCharEx, !not, true);
 	}
 
 	public Expression<?> getX() {
@@ -74,6 +65,10 @@ public class LikePatternExprPredicate extends AbstractExpression<Boolean> implem
 
 	public Expression<String> getPatternEx() {
 		return patternEx;
+	}
+
+	public boolean isNot() {
+		return not;
 	}
 
 }
