@@ -19,6 +19,7 @@ import org.minijpa.jdbc.MetaEntity;
 public class MiniPath<X> implements Path<X> {
 	private MetaAttribute metaAttribute;
 	private MetaEntity metaEntity;
+	private String alias;
 
 	public MiniPath(MetaAttribute metaAttribute, MetaEntity metaEntity) {
 		super();
@@ -78,20 +79,21 @@ public class MiniPath<X> implements Path<X> {
 
 	@Override
 	public Selection<X> alias(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		if (this.alias != null)
+			return this;
+
+		this.alias = name;
+		return this;
 	}
 
 	@Override
 	public boolean isCompoundSelection() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new IllegalStateException("Not a compound selection");
 	}
 
 	@Override
@@ -102,8 +104,7 @@ public class MiniPath<X> implements Path<X> {
 
 	@Override
 	public String getAlias() {
-		// TODO Auto-generated method stub
-		return null;
+		return alias;
 	}
 
 	@Override

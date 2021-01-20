@@ -2,6 +2,7 @@ package org.minijpa.jpa;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -11,6 +12,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Predicate.BooleanOperator;
 import javax.persistence.criteria.Root;
@@ -222,6 +224,16 @@ public class FindTest {
 			Assertions.assertFalse(predicate.isCompoundSelection());
 
 			cq.where(predicate);
+
+			Set<ParameterExpression<?>> parameterExpressions = cq.getParameters();
+			Assertions.assertNotNull(parameterExpressions);
+			Assertions.assertFalse(parameterExpressions.isEmpty());
+			Assertions.assertEquals(1, parameterExpressions.size());
+			ParameterExpression<?> parameterExpression = parameterExpressions.iterator().next();
+			Assertions.assertEquals("last_name", parameterExpression.getName());
+			Assertions.assertEquals(String.class, parameterExpression.getJavaType());
+			Assertions.assertEquals(String.class, parameterExpression.getParameterType());
+			Assertions.assertNull(parameterExpression.getPosition());
 
 			Query query = em.createQuery(cq);
 			String lastName = "Smith";

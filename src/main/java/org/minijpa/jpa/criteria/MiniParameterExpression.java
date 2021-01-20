@@ -11,6 +11,7 @@ import javax.persistence.criteria.Selection;
 public class MiniParameterExpression<T> implements ParameterExpression<T> {
 	private Class<T> paramClass;
 	private String name;
+	private String alias;
 
 	public MiniParameterExpression(Class<T> paramClass) {
 		super();
@@ -83,32 +84,31 @@ public class MiniParameterExpression<T> implements ParameterExpression<T> {
 
 	@Override
 	public Selection<T> alias(String name) {
-		// TODO Auto-generated method stub
-		return null;
+		if (this.alias != null)
+			return this;
+
+		this.alias = name;
+		return this;
 	}
 
 	@Override
 	public boolean isCompoundSelection() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public List<Selection<?>> getCompoundSelectionItems() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new IllegalStateException("Not a compound selection");
 	}
 
 	@Override
 	public Class<? extends T> getJavaType() {
-		// TODO Auto-generated method stub
-		return null;
+		return paramClass;
 	}
 
 	@Override
 	public String getAlias() {
-		// TODO Auto-generated method stub
-		return null;
+		return alias;
 	}
 
 }

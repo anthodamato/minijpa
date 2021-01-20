@@ -187,8 +187,11 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 
 	@Override
 	public Set<ParameterExpression<?>> getParameters() {
-		// TODO Auto-generated method stub
-		return null;
+		if (restriction == null)
+			return new HashSet<ParameterExpression<?>>();
+
+		Set<ParameterExpression<?>> parameterExpressions = PredicateUtils.findParameters(restriction);
+		return parameterExpressions;
 	}
 
 }
