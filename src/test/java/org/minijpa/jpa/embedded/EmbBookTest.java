@@ -231,6 +231,7 @@ public class EmbBookTest {
 		TypedQuery<String> tq = em.createQuery(query);
 		List<String> resultList = tq.getResultList();
 		Assertions.assertEquals(3, resultList.size());
+		System.out.println("distinct: resultList=" + resultList);
 		Assertions.assertTrue(
 				CollectionUtils.containsAll(Arrays.asList("Sigmund Freud", "James Joyce", "Jack London"), resultList));
 

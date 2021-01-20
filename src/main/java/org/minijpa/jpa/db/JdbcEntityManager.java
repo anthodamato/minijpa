@@ -17,6 +17,6 @@ public interface JdbcEntityManager {
 	public Object createAndSaveEntityInstance(AbstractJdbcRunner.AttributeValues attributeValues, MetaEntity entity,
 			MetaAttribute childAttribute, Object childAttributeValue) throws Exception;
 
-	public List<Object> select(Query query) throws Exception;
+	public List<?> select(Query query) throws Exception;
 
 }

@@ -7,10 +7,12 @@ import javax.persistence.criteria.Selection;
 
 public class CompoundSelectionImpl<X> implements CompoundSelection<X> {
 	private List<Selection<?>> selections;
+	private Class<? extends X> javaType;
 
-	public CompoundSelectionImpl(List<Selection<?>> selections) {
+	public CompoundSelectionImpl(List<Selection<?>> selections, Class<? extends X> javaType) {
 		super();
 		this.selections = selections;
+		this.javaType = javaType;
 	}
 
 	@Override
@@ -31,7 +33,7 @@ public class CompoundSelectionImpl<X> implements CompoundSelection<X> {
 
 	@Override
 	public Class<? extends X> getJavaType() {
-		return (Class<? extends X>) Object[].class;
+		return javaType;
 	}
 
 	@Override

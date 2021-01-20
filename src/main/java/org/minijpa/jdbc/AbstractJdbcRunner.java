@@ -51,7 +51,7 @@ public abstract class AbstractJdbcRunner {
 			preparedStatement.setDate(index, Date.valueOf((LocalDate) value));
 	}
 
-	private void setPreparedStatementParameters(PreparedStatement preparedStatement,
+	protected void setPreparedStatementParameters(PreparedStatement preparedStatement,
 			List<QueryParameter> queryParameters) throws SQLException {
 		if (queryParameters.isEmpty())
 			return;
@@ -231,8 +231,17 @@ public abstract class AbstractJdbcRunner {
 		return attributeValues;
 	}
 
-	public List<Object> runQuery(Connection connection, String sql, SqlSelect sqlSelect, MetaAttribute childAttribute,
-			Object childAttributeValue) throws Exception {
+	protected Object[] createRecord(int nc, List<ColumnNameValue> fetchParameters, ResultSet rs) throws Exception {
+		Object[] values = new Object[nc];
+		for (int i = 0; i < nc; ++i) {
+			Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
+			values[i] = rs.getObject(i + 1, readWriteType);
+		}
+
+		return values;
+	}
+
+	public List<Object> runQuery(Connection connection, String sql, SqlSelect sqlSelect) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
@@ -250,11 +259,11 @@ public abstract class AbstractJdbcRunner {
 					Object instance = rs.getObject(1, readWriteType);
 					objects.add(instance);
 				} else {
-					Object[] values = new Object[nc];
-					for (int i = 0; i < nc; ++i) {
-						Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
-						values[i] = rs.getObject(i + 1, readWriteType);
-					}
+					Object[] values = createRecord(nc, fetchParameters, rs);
+//				for (int i = 0; i < nc; ++i) {
+//					Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
+//					values[i] = rs.getObject(i + 1, readWriteType);
+//				}
 
 					objects.add(values);
 				}

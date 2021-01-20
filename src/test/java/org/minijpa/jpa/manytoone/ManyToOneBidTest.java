@@ -9,6 +9,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
@@ -49,15 +50,8 @@ public class ManyToOneBidTest {
 			Department department = new Department();
 			department.setName("Research");
 
-			Employee employee = new Employee();
-			employee.setName("John Smith");
-			employee.setSalary(new BigDecimal(130000));
-			employee.setDepartment(department);
-
-			Employee emp = new Employee();
-			emp.setName("Margaret White");
-			emp.setSalary(new BigDecimal(170000));
-			emp.setDepartment(department);
+			Employee employee = jsEmployee(department);
+			Employee emp = mwEmployee(department);
 
 			em.persist(employee);
 			em.persist(emp);
@@ -83,6 +77,30 @@ public class ManyToOneBidTest {
 		}
 	}
 
+	private Employee jsEmployee(Department department) {
+		Employee employee = new Employee();
+		employee.setName("John Smith");
+		employee.setSalary(new BigDecimal(130000));
+		employee.setDepartment(department);
+		return employee;
+	}
+
+	private Employee mwEmployee(Department department) {
+		Employee emp = new Employee();
+		emp.setName("Margaret White");
+		emp.setSalary(new BigDecimal(170000));
+		emp.setDepartment(department);
+		return emp;
+	}
+
+	private Employee jbEmployee(Department department) {
+		Employee employee3 = new Employee();
+		employee3.setName("Joshua Bann");
+		employee3.setSalary(new BigDecimal(140000f));
+		employee3.setDepartment(department);
+		return employee3;
+	}
+
 	@Test
 	public void max() throws Exception {
 		final EntityManager em = emf.createEntityManager();
@@ -93,22 +111,9 @@ public class ManyToOneBidTest {
 			Department department = new Department();
 			department.setName("Research");
 
-			Employee employee1 = new Employee();
-			employee1.setName("John Smith");
-			employee1.setSalary(new BigDecimal(130000f));
-			employee1.setDepartment(department);
-
-			Employee employee2 = new Employee();
-			employee2.setName("Margaret White");
-			BigDecimal salary = new BigDecimal(170000);
-			salary.setScale(2);
-			employee2.setSalary(salary);
-			employee2.setDepartment(department);
-
-			Employee employee3 = new Employee();
-			employee3.setName("Joshua Bann");
-			employee3.setSalary(new BigDecimal(140000f));
-			employee3.setDepartment(department);
+			Employee employee1 = jsEmployee(department);
+			Employee employee2 = mwEmployee(department);
+			Employee employee3 = jbEmployee(department);
 
 			em.persist(employee1);
 			em.persist(employee2);
@@ -128,7 +133,7 @@ public class ManyToOneBidTest {
 			BigDecimal s = (BigDecimal) query.getSingleResult();
 
 			Assertions.assertNotNull(s);
-			salary = new BigDecimal(new BigInteger("17000000"), 2);
+			BigDecimal salary = new BigDecimal(new BigInteger("17000000"), 2);
 			Assertions.assertEquals(salary, s);
 
 			// min
@@ -159,22 +164,9 @@ public class ManyToOneBidTest {
 			Department department = new Department();
 			department.setName("Research");
 
-			Employee employee1 = new Employee();
-			employee1.setName("John Smith");
-			employee1.setSalary(new BigDecimal(130000f));
-			employee1.setDepartment(department);
-
-			Employee employee2 = new Employee();
-			employee2.setName("Margaret White");
-			BigDecimal salary = new BigDecimal(170000);
-			salary.setScale(2);
-			employee2.setSalary(salary);
-			employee2.setDepartment(department);
-
-			Employee employee3 = new Employee();
-			employee3.setName("Joshua Bann");
-			employee3.setSalary(new BigDecimal(140000f));
-			employee3.setDepartment(department);
+			Employee employee1 = jsEmployee(department);
+			Employee employee2 = mwEmployee(department);
+			Employee employee3 = jbEmployee(department);
 
 			em.persist(employee1);
 			em.persist(employee2);
@@ -185,7 +177,6 @@ public class ManyToOneBidTest {
 
 			Assertions.assertTrue(department.getEmployees().isEmpty());
 
-			// max
 			CriteriaBuilder cb = em.getCriteriaBuilder();
 			CriteriaQuery criteriaQuery = cb.createQuery();
 			Root<Employee> root = criteriaQuery.from(Employee.class);
@@ -195,7 +186,7 @@ public class ManyToOneBidTest {
 			Assertions.assertEquals(3, result.size());
 			Object[] r1 = result.get(0);
 			Assertions.assertEquals("John Smith", r1[0]);
-			salary = new BigDecimal(new BigInteger("13000000"), 2);
+			BigDecimal salary = new BigDecimal(new BigInteger("13000000"), 2);
 			Assertions.assertEquals(salary, r1[1]);
 			Object[] r2 = result.get(1);
 			Assertions.assertEquals("Joshua Bann", r2[0]);
@@ -229,22 +220,9 @@ public class ManyToOneBidTest {
 			Department department = new Department();
 			department.setName("Research");
 
-			Employee employee1 = new Employee();
-			employee1.setName("John Smith");
-			employee1.setSalary(new BigDecimal(130000f));
-			employee1.setDepartment(department);
-
-			Employee employee2 = new Employee();
-			employee2.setName("Margaret White");
-			BigDecimal salary = new BigDecimal(170000);
-			salary.setScale(2);
-			employee2.setSalary(salary);
-			employee2.setDepartment(department);
-
-			Employee employee3 = new Employee();
-			employee3.setName("Joshua Bann");
-			employee3.setSalary(new BigDecimal(140000f));
-			employee3.setDepartment(department);
+			Employee employee1 = jsEmployee(department);
+			Employee employee2 = mwEmployee(department);
+			Employee employee3 = jbEmployee(department);
 
 			em.persist(employee1);
 			em.persist(employee2);
@@ -272,6 +250,70 @@ public class ManyToOneBidTest {
 			list = query.getResultList();
 
 			Assertions.assertEquals(1, list.size());
+
+			tx.begin();
+			em.remove(employee1);
+			em.remove(employee2);
+			em.remove(employee3);
+			tx.commit();
+		} finally {
+			em.close();
+		}
+	}
+
+	@Test
+	public void tuple() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		try {
+			final EntityTransaction tx = em.getTransaction();
+			tx.begin();
+
+			Department department = new Department();
+			department.setName("Research");
+
+			Employee employee1 = jsEmployee(department);
+			Employee employee2 = mwEmployee(department);
+			Employee employee3 = jbEmployee(department);
+
+			em.persist(employee1);
+			em.persist(employee2);
+			em.persist(employee3);
+			em.persist(department);
+
+			tx.commit();
+
+			Assertions.assertTrue(department.getEmployees().isEmpty());
+
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaQuery<Tuple> criteriaQuery = cb.createTupleQuery();
+			Assertions.assertNotNull(criteriaQuery);
+			Root<Employee> root = criteriaQuery.from(Employee.class);
+			criteriaQuery.multiselect(root.get("name").alias("name"), root.get("salary").alias("salary"))
+					.orderBy(cb.asc(root.get("name")));
+			Query query = em.createQuery(criteriaQuery);
+			List<Tuple> result = query.getResultList();
+			Assertions.assertEquals(3, result.size());
+			Tuple r1 = result.get(0);
+			Assertions.assertEquals("John Smith", r1.get("name"));
+			Assertions.assertEquals("John Smith", r1.get(0));
+			BigDecimal salary = new BigDecimal(new BigInteger("13000000"), 2);
+			Assertions.assertEquals(salary, r1.get("salary"));
+			Assertions.assertEquals(salary, r1.get(1));
+			Tuple r2 = result.get(1);
+			Assertions.assertEquals("Joshua Bann", r2.get("name"));
+			Assertions.assertEquals("Joshua Bann", r2.get(0));
+			salary = new BigDecimal(new BigInteger("14000000"), 2);
+			Assertions.assertEquals(salary, r2.get("salary"));
+			Assertions.assertEquals(salary, r2.get(1));
+			Tuple r3 = result.get(2);
+			Assertions.assertEquals("Margaret White", r3.get("name"));
+			Assertions.assertEquals("Margaret White", r3.get(0));
+			salary = new BigDecimal(new BigInteger("17000000"), 2);
+			Assertions.assertEquals(salary, r3.get("salary"));
+			Assertions.assertEquals(salary, r3.get(1));
+
+			Assertions.assertTrue(criteriaQuery.getSelection().isCompoundSelection());
+			Assertions.assertEquals(Tuple.class, criteriaQuery.getSelection().getJavaType());
 
 			tx.begin();
 			em.remove(employee1);

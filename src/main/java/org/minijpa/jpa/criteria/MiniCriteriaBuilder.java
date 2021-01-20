@@ -40,7 +40,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public CriteriaQuery<Object> createQuery() {
-		return new MiniCriteriaQuery<Object>(Object.class, em);
+		return new MiniCriteriaQuery<Object>(em);
 	}
 
 	@Override
@@ -50,8 +50,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public CriteriaQuery<Tuple> createTupleQuery() {
-		// TODO Auto-generated method stub
-		return null;
+		return new MiniCriteriaQuery<Tuple>(Tuple.class, em);
 	}
 
 	@Override

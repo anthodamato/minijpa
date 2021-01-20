@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.Query;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.CompoundSelection;
+import javax.persistence.criteria.CriteriaQuery;
 
 import org.minijpa.jdbc.AbstractJdbcRunner;
 import org.minijpa.jdbc.AttributeUtil;
@@ -36,6 +39,7 @@ import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.relationship.FetchType;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
+import org.minijpa.jpa.MiniTypedQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +51,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	private EntityInstanceBuilder entityInstanceBuilder;
 	private AttributeValueConverter attributeValueConverter;
 	protected ConnectionHolder connectionHolder;
-	protected AbstractJdbcRunner jdbcRunner;
+	protected JdbcRunner jdbcRunner;
 	protected SqlStatementFactory sqlStatementFactory;
 	private boolean log = true;
 	private SqlStatementGenerator sqlStatementGenerator;
@@ -547,17 +551,29 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	}
 
 	@Override
-	public List<Object> select(Query query) throws Exception {
+	public List<?> select(Query query) throws Exception {
 		SqlSelect sqlSelect = sqlStatementFactory.select(query);
-		LOG.info("select: sqlSelect=" + sqlSelect);
 		String sql = sqlStatementGenerator.export(sqlSelect);
 		LOG.info("select: sql=" + sql);
 		if (sqlSelect.getResult() != null) {
 			return jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null);
 		}
 
+		CriteriaQuery<?> criteriaQuery = null;
+		if (query instanceof MiniTypedQuery<?>)
+			criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
+
+		if (criteriaQuery.getResultType() == Tuple.class) {
+			if (!(criteriaQuery.getSelection() instanceof CompoundSelection<?>))
+				throw new IllegalArgumentException(
+						"Selection '" + criteriaQuery.getSelection() + "' is not a compound selection");
+
+			return jdbcRunner.runTupleQuery(connectionHolder.getConnection(), sql, sqlSelect,
+					(CompoundSelection<?>) criteriaQuery.getSelection());
+		}
+
 		// returns an aggregate expression result (max, min, etc)
-		return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect, null, null);
+		return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect);
 	}
 
 }

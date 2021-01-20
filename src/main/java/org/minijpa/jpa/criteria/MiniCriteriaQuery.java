@@ -37,6 +37,12 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 		this.em = em;
 	}
 
+	public MiniCriteriaQuery(EntityManager em) {
+		super();
+		this.resultClass = (Class<T>) Object[].class;
+		this.em = em;
+	}
+
 	@Override
 	public <X> Root<X> from(Class<X> entityClass) {
 		EntityType<X> entityType = em.getMetamodel().entity(entityClass);
@@ -105,13 +111,13 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 
 	@Override
 	public CriteriaQuery<T> multiselect(Selection<?>... selections) {
-		this.selection = new CompoundSelectionImpl<T>(Arrays.asList(selections));
+		this.selection = new CompoundSelectionImpl<T>(Arrays.asList(selections), getResultType());
 		return this;
 	}
 
 	@Override
 	public CriteriaQuery<T> multiselect(List<Selection<?>> selectionList) {
-		this.selection = new CompoundSelectionImpl<T>(Collections.unmodifiableList(selectionList));
+		this.selection = new CompoundSelectionImpl<T>(Collections.unmodifiableList(selectionList), getResultType());
 		return this;
 	}
 
