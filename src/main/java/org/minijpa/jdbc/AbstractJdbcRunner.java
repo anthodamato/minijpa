@@ -110,7 +110,7 @@ public abstract class AbstractJdbcRunner {
 		}
 	}
 
-	public void delete(String sql, SqlDelete sqlDelete, Connection connection) throws SQLException {
+	public int delete(String sql, SqlDelete sqlDelete, Connection connection) throws SQLException {
 		LOG.info("persist: sql=" + sql);
 		PreparedStatement preparedStatement = null;
 		try {
@@ -119,6 +119,7 @@ public abstract class AbstractJdbcRunner {
 				setPreparedStatementParameters(preparedStatement, sqlDelete.getParameters().get());
 
 			preparedStatement.execute();
+			return preparedStatement.getUpdateCount();
 		} finally {
 			if (preparedStatement != null)
 				preparedStatement.close();

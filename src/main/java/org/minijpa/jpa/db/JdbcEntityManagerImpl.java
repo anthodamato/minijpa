@@ -40,6 +40,7 @@ import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.relationship.FetchType;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
+import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
 import org.slf4j.Logger;
@@ -611,6 +612,18 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		LOG.info("update: sql=" + sql);
 
 		return jdbcRunner.persist(sqlUpdate, connectionHolder.getConnection(), sql);
+	}
+
+	@Override
+	public int delete(DeleteQuery deleteQuery) throws Exception {
+		if (deleteQuery.getCriteriaDelete().getRoot() == null)
+			throw new IllegalArgumentException("Criteria Delete Root not defined");
+
+		SqlDelete sqlDelete = sqlStatementFactory.delete(deleteQuery);
+		String sql = sqlStatementGenerator.export(sqlDelete);
+		LOG.info("update: sql=" + sql);
+
+		return jdbcRunner.delete(sql, sqlDelete, connectionHolder.getConnection());
 	}
 
 }

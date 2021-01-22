@@ -60,8 +60,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MiniCriteriaDelete<T>(targetEntity, em);
 	}
 
 	@Override

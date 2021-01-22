@@ -8,6 +8,7 @@ import org.minijpa.jdbc.AbstractJdbcRunner;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.TinyFlushMode;
+import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.UpdateQuery;
 
 public interface JdbcEntityManager {
@@ -21,5 +22,7 @@ public interface JdbcEntityManager {
 	public List<?> select(Query query) throws Exception;
 
 	public int update(UpdateQuery updateQuery) throws Exception;
+
+	public int delete(DeleteQuery deleteQuery) throws Exception;
 
 }

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
@@ -57,6 +58,7 @@ import org.minijpa.jdbc.model.condition.UnaryLogicConditionImpl;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
+import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
 import org.minijpa.jpa.criteria.BetweenExpressionsPredicate;
@@ -833,5 +835,21 @@ public class SqlStatementFactory {
 
 		return new SqlUpdate(fromTable, Optional.of(parameters), columns, optionalCondition);
 
+	}
+
+	public SqlDelete delete(Query query) {
+		CriteriaDelete<?> criteriaDelete = ((DeleteQuery) query).getCriteriaDelete();
+		MetaEntity entity = ((MiniRoot<?>) criteriaDelete.getRoot()).getMetaEntity();
+
+		FromTable fromTable = FromTable.of(entity);
+		List<QueryParameter> parameters = new ArrayList<>();
+
+		Predicate restriction = criteriaDelete.getRestriction();
+		Optional<Condition> optionalCondition = Optional.empty();
+		if (restriction != null) {
+			optionalCondition = createConditions(restriction, parameters, query);
+		}
+
+		return new SqlDelete(fromTable, Optional.of(parameters), optionalCondition);
 	}
 }

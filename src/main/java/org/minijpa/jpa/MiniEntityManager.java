@@ -206,6 +206,10 @@ public class MiniEntityManager extends AbstractEntityManager {
 			jdbcEntityManager.refresh(entity);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
+			if (e instanceof PersistenceException) {
+				throw (PersistenceException) e;
+			}
+
 			throw new PersistenceException(e.getMessage());
 		}
 	}
@@ -288,8 +292,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public Query createQuery(CriteriaDelete deleteQuery) {
-		// TODO Auto-generated method stub
-		return null;
+		return new DeleteQuery(deleteQuery, this, jdbcEntityManager);
 	}
 
 	@Override
