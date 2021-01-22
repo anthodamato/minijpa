@@ -28,8 +28,9 @@ import org.minijpa.metadata.enhancer.EnhEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EntityManagerFactoryImpl implements EntityManagerFactory {
-	private Logger LOG = LoggerFactory.getLogger(EntityManagerFactoryImpl.class);
+public class MiniEntityManagerFactory implements EntityManagerFactory {
+	private Logger LOG = LoggerFactory.getLogger(MiniEntityManagerFactory.class);
+	private EntityManagerType entityManagerType;
 	private PersistenceUnitInfo persistenceUnitInfo;
 	private Map map;
 	/**
@@ -38,10 +39,16 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 	private Map<String, MetaEntity> entities;
 	private Metamodel metamodel;
 
-	public EntityManagerFactoryImpl(PersistenceUnitInfo persistenceUnitInfo, @SuppressWarnings("rawtypes") Map map) {
+	public MiniEntityManagerFactory(EntityManagerType entityManagerType, PersistenceUnitInfo persistenceUnitInfo,
+			@SuppressWarnings("rawtypes") Map map) {
 		super();
+		this.entityManagerType = entityManagerType;
 		this.persistenceUnitInfo = persistenceUnitInfo;
 		this.map = map;
+	}
+
+	public EntityManagerType getEntityManagerType() {
+		return entityManagerType;
 	}
 
 	private synchronized Map<String, MetaEntity> createEntities() throws Exception {

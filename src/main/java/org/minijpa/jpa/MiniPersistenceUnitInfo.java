@@ -11,14 +11,14 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
-public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
+public class MiniPersistenceUnitInfo implements PersistenceUnitInfo {
 	private String name;
 	private Properties properties = new Properties();
 	private List<String> managedClassNames;
 	private DataSource jtaDataSource;
 	private DataSource nonJtaDataSource;
 
-	public PersistenceUnitInfoImpl() {
+	public MiniPersistenceUnitInfo() {
 		super();
 	}
 
@@ -153,7 +153,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		}
 
 		public PersistenceUnitInfo build() {
-			PersistenceUnitInfoImpl impl = new PersistenceUnitInfoImpl();
+			MiniPersistenceUnitInfo impl = new MiniPersistenceUnitInfo();
 			impl.name = name;
 			impl.managedClassNames = managedClassNames;
 			impl.jtaDataSource = jtaDataSource;

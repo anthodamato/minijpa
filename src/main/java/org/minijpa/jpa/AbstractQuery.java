@@ -16,7 +16,7 @@ import org.minijpa.jpa.criteria.CriteriaUtils;
 import org.minijpa.jpa.db.JdbcEntityManager;
 
 public abstract class AbstractQuery implements Query {
-	protected JdbcEntityManager jdbcCriteriaEntityManager;
+	protected JdbcEntityManager jdbcEntityManager;
 	protected FlushModeType flushModeType = FlushModeType.AUTO;
 	protected Map<String, Object> namedParameters = new HashMap<>();
 	protected Set<Parameter<?>> parameters;

@@ -17,8 +17,8 @@ import org.minijpa.jpa.db.PersistenceUnitPropertyActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PersistenceProviderImpl implements PersistenceProvider {
-	private Logger LOG = LoggerFactory.getLogger(PersistenceProviderImpl.class);
+public class MiniPersistenceProvider implements PersistenceProvider {
+	private Logger LOG = LoggerFactory.getLogger(MiniPersistenceProvider.class);
 
 	private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 		LOG.info("Processing Db Configuration...");
@@ -71,7 +71,8 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 			LOG.info("createEntityManagerFactory(String emName: processConfiguration: " + e.getClass().getName());
 		}
 
-		return new EntityManagerFactoryImpl(persistenceUnitInfo, map);
+		LOG.info("createEntityManagerFactory: EntityManagerType.APPLICATION_MANAGED");
+		return new MiniEntityManagerFactory(EntityManagerType.APPLICATION_MANAGED, persistenceUnitInfo, map);
 	}
 
 	@Override
@@ -88,7 +89,8 @@ public class PersistenceProviderImpl implements PersistenceProvider {
 					+ e.getClass().getName());
 		}
 
-		return new EntityManagerFactoryImpl(persistenceUnitInfo, map);
+		LOG.info("createEntityManagerFactory: EntityManagerType.CONTAINER_MANAGED");
+		return new MiniEntityManagerFactory(EntityManagerType.CONTAINER_MANAGED, persistenceUnitInfo, map);
 	}
 
 	@Override

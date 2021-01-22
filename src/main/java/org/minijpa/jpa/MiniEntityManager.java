@@ -8,6 +8,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
+import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.StoredProcedureQuery;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 public class MiniEntityManager extends AbstractEntityManager {
 	private Logger LOG = LoggerFactory.getLogger(MiniEntityManager.class);
+	private EntityManagerType entityManagerType;
 	private EntityManagerFactory entityManagerFactory;
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
@@ -48,6 +50,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 		this.entityManagerFactory = entityManagerFactory;
 		this.persistenceUnitInfo = persistenceUnitInfo;
 		this.entities = entities;
+		this.entityManagerType = ((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType();
 		this.persistenceContext = new MiniPersistenceContext(entities);
 		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
@@ -103,8 +106,11 @@ public class MiniEntityManager extends AbstractEntityManager {
 			return;
 		}
 
-		if (entityTransaction == null || !entityTransaction.isActive())
-			throw new IllegalStateException("Transaction not active");
+		if (entityManagerType == EntityManagerType.CONTAINER_MANAGED
+				&& persistenceContextType == PersistenceContextType.TRANSACTION) {
+			if (entityTransaction == null || !entityTransaction.isActive())
+				throw new IllegalStateException("Transaction not active");
+		}
 
 		MetaEntity e = entities.get(entity.getClass().getName());
 		if (e == null) {
@@ -277,7 +283,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public Query createQuery(CriteriaUpdate updateQuery) {
-		return new UpdateQuery(updateQuery, jdbcEntityManager);
+		return new UpdateQuery(updateQuery, this, jdbcEntityManager);
 	}
 
 	@Override

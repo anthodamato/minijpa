@@ -64,7 +64,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 			}
 		}
 
-//		this.active = false;
+		this.active = false;
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import javax.naming.InitialContext;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
-import org.minijpa.jpa.PersistenceUnitInfoImpl;
+import org.minijpa.jpa.MiniPersistenceUnitInfo;
 import org.minijpa.metadata.PersistenceMetaData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +73,7 @@ public class PersistenceParser extends DefaultHandler {
 						nonJtaDs = findDataSource(nonJtaDataSource);
 					}
 
-					persistenceUnitMetaData = new PersistenceUnitInfoImpl.Builder().withName(persistentUnitName)
+					persistenceUnitMetaData = new MiniPersistenceUnitInfo.Builder().withName(persistentUnitName)
 							.withManagedClassNames(Collections.unmodifiableList(new ArrayList<>(managedClassNames)))
 							.withJtaDataSource(jtaDs).withNonJtaDataSource(nonJtaDs).build();
 				}

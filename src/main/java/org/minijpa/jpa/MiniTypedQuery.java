@@ -30,7 +30,7 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 	public MiniTypedQuery(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
 		super();
 		this.criteriaQuery = criteriaQuery;
-		this.jdbcCriteriaEntityManager = jdbcCriteriaEntityManager;
+		this.jdbcEntityManager = jdbcCriteriaEntityManager;
 	}
 
 	public CriteriaQuery<?> getCriteriaQuery() {
@@ -42,10 +42,10 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 		List<?> list = null;
 		try {
 			if (flushModeType == FlushModeType.AUTO)
-				jdbcCriteriaEntityManager.flush();
+				jdbcEntityManager.flush();
 
 			LOG.info("getResultList: select criteriaQuery=" + criteriaQuery);
-			list = jdbcCriteriaEntityManager.select(this);
+			list = jdbcEntityManager.select(this);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
 			throw new PersistenceException(e.getMessage());
@@ -156,9 +156,9 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 		List<?> list = null;
 		try {
 			if (flushModeType == FlushModeType.AUTO)
-				jdbcCriteriaEntityManager.flush();
+				jdbcEntityManager.flush();
 
-			list = jdbcCriteriaEntityManager.select(this);
+			list = jdbcEntityManager.select(this);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
 			throw new PersistenceException(e.getMessage());
