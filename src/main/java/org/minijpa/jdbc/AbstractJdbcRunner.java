@@ -66,7 +66,7 @@ public abstract class AbstractJdbcRunner {
 		}
 	}
 
-	public void persist(SqlUpdate sqlUpdate, Connection connection, String sql) throws SQLException {
+	public int persist(SqlUpdate sqlUpdate, Connection connection, String sql) throws SQLException {
 		LOG.info("persist: sql=" + sql);
 		PreparedStatement preparedStatement = null;
 		try {
@@ -75,6 +75,7 @@ public abstract class AbstractJdbcRunner {
 				setPreparedStatementParameters(preparedStatement, sqlUpdate.getParameters().get());
 
 			preparedStatement.execute();
+			return preparedStatement.getUpdateCount();
 		} finally {
 			if (preparedStatement != null)
 				preparedStatement.close();
@@ -276,6 +277,15 @@ public abstract class AbstractJdbcRunner {
 
 			if (preparedStatement != null)
 				preparedStatement.close();
+		}
+	}
+
+	public void logAttributeValues(AttributeValues attributeValues) {
+		for (int i = 0; i < attributeValues.attributes.size(); ++i) {
+			MetaAttribute attribute = attributeValues.attributes.get(i);
+			Object value = attributeValues.values.get(i);
+			LOG.info("logAttributeValues: " + i + " attribute.getName()=" + attribute.getName());
+			LOG.info("logAttributeValues: " + i + " value=" + value);
 		}
 	}
 

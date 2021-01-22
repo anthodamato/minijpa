@@ -214,6 +214,9 @@ public class MiniRoot<X> implements Root<X> {
 	@Override
 	public <Y> Path<Y> get(String attributeName) {
 		MetaAttribute metaAttribute = metaEntity.getAttribute(attributeName);
+		if (metaAttribute == null)
+			throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist");
+
 		return new MiniPath<Y>(metaAttribute, metaEntity);
 	}
 

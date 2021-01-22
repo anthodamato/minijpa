@@ -110,7 +110,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 				}
 		}
 
-		return new EntityManagerImpl(this, persistenceUnitInfo, entities);
+		return new MiniEntityManager(this, persistenceUnitInfo, entities);
 	}
 
 	@Override
@@ -124,7 +124,7 @@ public class EntityManagerFactoryImpl implements EntityManagerFactory {
 				}
 		}
 
-		return new EntityManagerImpl(this, persistenceUnitInfo, entities);
+		return new MiniEntityManager(this, persistenceUnitInfo, entities);
 	}
 
 	@Override

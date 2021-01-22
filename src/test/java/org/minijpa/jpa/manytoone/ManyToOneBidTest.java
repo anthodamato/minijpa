@@ -12,6 +12,7 @@ import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -316,6 +317,57 @@ public class ManyToOneBidTest {
 			Assertions.assertEquals(Tuple.class, criteriaQuery.getSelection().getJavaType());
 
 			tx.begin();
+			em.remove(employee1);
+			em.remove(employee2);
+			em.remove(employee3);
+			tx.commit();
+		} finally {
+			em.close();
+		}
+	}
+
+	@Test
+	public void criteriaUpdate() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		try {
+			final EntityTransaction tx = em.getTransaction();
+			tx.begin();
+
+			Department department = new Department();
+			department.setName("Research");
+
+			Employee employee1 = jsEmployee(department);
+			Employee employee2 = mwEmployee(department);
+			Employee employee3 = jbEmployee(department);
+
+			em.persist(employee1);
+			em.persist(employee2);
+			em.persist(employee3);
+			em.persist(department);
+
+			tx.commit();
+
+			tx.begin();
+			CriteriaBuilder cb = em.getCriteriaBuilder();
+			CriteriaUpdate<Employee> criteriaUpdate = cb.createCriteriaUpdate(Employee.class);
+			Assertions.assertNotNull(criteriaUpdate);
+			Root<Employee> root = criteriaUpdate.from(Employee.class);
+			criteriaUpdate.set("salary", new BigDecimal(140000));
+			criteriaUpdate.where(cb.equal(root.get("name"), "John Smith"));
+
+			Query query = em.createQuery(criteriaUpdate);
+			Assertions.assertNotNull(query);
+			int rowCount = query.executeUpdate();
+			Assertions.assertEquals(1, rowCount);
+			em.refresh(employee1);
+
+			CriteriaQuery<Employee> criteriaQuery = cb.createQuery(Employee.class);
+			criteriaQuery.where(cb.equal(root.get("name"), "John Smith"));
+			root = criteriaQuery.from(Employee.class);
+			query = em.createQuery(criteriaQuery);
+			Employee employee = (Employee) query.getSingleResult();
+			Assertions.assertEquals(new BigDecimal(new BigInteger("14000000"), 2), employee.getSalary());
+
 			em.remove(employee1);
 			em.remove(employee2);
 			em.remove(employee3);

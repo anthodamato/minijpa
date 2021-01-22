@@ -18,21 +18,24 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	public Object build(MetaEntity entity, List<MetaAttribute> attributes, List<Object> values, Object idValue)
 			throws Exception {
 		Object entityInstance = entity.getEntityClass().newInstance();
-		int i = 0;
-		for (MetaAttribute attribute : attributes) {
+		entity.getId().getWriteMethod().invoke(entityInstance, idValue);
+		setAttributeValues(entity, entityInstance, attributes, values);
+		return entityInstance;
+	}
+
+	@Override
+	public void setAttributeValues(MetaEntity entity, Object entityInstance, List<MetaAttribute> attributes,
+			List<Object> values) throws Exception {
+		for (int i = 0; i < attributes.size(); ++i) {
+			MetaAttribute attribute = attributes.get(i);
 			if (log) {
-				LOG.info("build: attribute.getName()=" + attribute.getName());
-				LOG.info("build: values=" + values);
+				LOG.info("setAttributeValues: attribute.getName()=" + attribute.getName());
+				LOG.info("setAttributeValues: values.get(i)=" + values.get(i));
 			}
 
 			findAndSetAttributeValue(entity.getEntityClass(), entityInstance, entity.getAttributes(), attribute,
 					values.get(i));
-			++i;
 		}
-
-		entity.getId().getWriteMethod().invoke(entityInstance, idValue);
-
-		return entityInstance;
 	}
 
 	@Override

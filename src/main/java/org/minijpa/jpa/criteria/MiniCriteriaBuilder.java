@@ -55,8 +55,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MiniCriteriaUpdate<T>(targetEntity, em);
 	}
 
 	@Override

@@ -34,15 +34,15 @@ import org.minijpa.metadata.EntityDelegateInstanceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EntityManagerImpl extends AbstractEntityManager {
-	private Logger LOG = LoggerFactory.getLogger(EntityManagerImpl.class);
+public class MiniEntityManager extends AbstractEntityManager {
+	private Logger LOG = LoggerFactory.getLogger(MiniEntityManager.class);
 	private EntityManagerFactory entityManagerFactory;
 	private EntityTransaction entityTransaction;
 	private DbConfiguration dbConfiguration;
 	private JdbcEntityManagerImpl jdbcEntityManager;
 	private FlushModeType flushModeType = FlushModeType.AUTO;
 
-	public EntityManagerImpl(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
+	public MiniEntityManager(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
 			Map<String, MetaEntity> entities) {
 		super();
 		this.entityManagerFactory = entityManagerFactory;
@@ -196,8 +196,12 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public void refresh(Object entity) {
-		// TODO Auto-generated method stub
-
+		try {
+			jdbcEntityManager.refresh(entity);
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -273,8 +277,7 @@ public class EntityManagerImpl extends AbstractEntityManager {
 
 	@Override
 	public Query createQuery(CriteriaUpdate updateQuery) {
-		// TODO Auto-generated method stub
-		return null;
+		return new UpdateQuery(updateQuery, jdbcEntityManager);
 	}
 
 	@Override

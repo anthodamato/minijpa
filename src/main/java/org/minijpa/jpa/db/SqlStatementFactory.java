@@ -5,15 +5,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
@@ -55,6 +58,7 @@ import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.MiniTypedQuery;
+import org.minijpa.jpa.UpdateQuery;
 import org.minijpa.jpa.criteria.BetweenExpressionsPredicate;
 import org.minijpa.jpa.criteria.BetweenValuesPredicate;
 import org.minijpa.jpa.criteria.BinaryBooleanExprPredicate;
@@ -66,6 +70,7 @@ import org.minijpa.jpa.criteria.LikePatternExprPredicate;
 import org.minijpa.jpa.criteria.LikePatternPredicate;
 import org.minijpa.jpa.criteria.MaxExpression;
 import org.minijpa.jpa.criteria.MinExpression;
+import org.minijpa.jpa.criteria.MiniCriteriaUpdate;
 import org.minijpa.jpa.criteria.MiniPath;
 import org.minijpa.jpa.criteria.MiniRoot;
 import org.minijpa.jpa.criteria.MultiplePredicate;
@@ -798,4 +803,35 @@ public class SqlStatementFactory {
 		return builder.build();
 	}
 
+	private QueryParameter createQueryParameter(MiniPath<?> miniPath, Object value) {
+		MetaAttribute a = miniPath.getMetaAttribute();
+		return new QueryParameter(a.getColumnName(), value, a.getType(), a.getSqlType());
+	}
+
+	public SqlUpdate update(Query query) {
+		CriteriaUpdate<?> criteriaUpdate = ((UpdateQuery) query).getCriteriaUpdate();
+		MetaEntity entity = ((MiniRoot<?>) criteriaUpdate.getRoot()).getMetaEntity();
+
+		FromTable fromTable = FromTable.of(entity);
+		List<QueryParameter> parameters = new ArrayList<>();
+		List<TableColumn> columns = new ArrayList<>();
+		Map<Path<?>, Object> setValues = ((MiniCriteriaUpdate) criteriaUpdate).getSetValues();
+		setValues.forEach((k, v) -> {
+			MiniPath<?> miniPath = (MiniPath<?>) k;
+			QueryParameter qp = createQueryParameter(miniPath, v);
+			parameters.add(qp);
+			TableColumn tableColumn = new TableColumn(fromTable,
+					new Column(miniPath.getMetaAttribute().getColumnName()));
+			columns.add(tableColumn);
+		});
+
+		Predicate restriction = criteriaUpdate.getRestriction();
+		Optional<Condition> optionalCondition = Optional.empty();
+		if (restriction != null) {
+			optionalCondition = createConditions(restriction, parameters, query);
+		}
+
+		return new SqlUpdate(fromTable, Optional.of(parameters), columns, optionalCondition);
+
+	}
 }

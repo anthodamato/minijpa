@@ -20,7 +20,7 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jpa.EntityManagerImpl;
+import org.minijpa.jpa.MiniEntityManager;
 
 public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 	private Class<T> resultClass;
@@ -37,6 +37,7 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 		this.em = em;
 	}
 
+	@SuppressWarnings("unchecked")
 	public MiniCriteriaQuery(EntityManager em) {
 		super();
 		this.resultClass = (Class<T>) Object[].class;
@@ -46,7 +47,7 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 	@Override
 	public <X> Root<X> from(Class<X> entityClass) {
 		EntityType<X> entityType = em.getMetamodel().entity(entityClass);
-		Map<String, MetaEntity> entities = ((EntityManagerImpl) em).getEntities();
+		Map<String, MetaEntity> entities = ((MiniEntityManager) em).getEntities();
 		MetaEntity metaEntity = entities.get(entityClass.getName());
 		Root<X> root = new MiniRoot<X>(entityType, metaEntity);
 		roots.add(root);

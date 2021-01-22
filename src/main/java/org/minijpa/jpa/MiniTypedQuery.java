@@ -3,7 +3,6 @@ package org.minijpa.jpa;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,13 +23,9 @@ import org.minijpa.jpa.db.JdbcEntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MiniTypedQuery<X> implements TypedQuery<X> {
+public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 	private Logger LOG = LoggerFactory.getLogger(MiniTypedQuery.class);
 	protected CriteriaQuery<?> criteriaQuery;
-	protected JdbcEntityManager jdbcCriteriaEntityManager;
-	private FlushModeType flushModeType = FlushModeType.AUTO;
-	private Map<String, Object> namedParameters = new HashMap<>();
-	private Set<Parameter<?>> parameters;
 
 	public MiniTypedQuery(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
 		super();
@@ -61,8 +56,7 @@ public class MiniTypedQuery<X> implements TypedQuery<X> {
 
 	@Override
 	public int executeUpdate() {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new IllegalStateException("Update call made from a Select context");
 	}
 
 	@Override
@@ -94,10 +88,10 @@ public class MiniTypedQuery<X> implements TypedQuery<X> {
 		return parameters;
 	}
 
-	@Override
-	public Parameter<?> getParameter(String name) {
-		return CriteriaUtils.findParameterByName(parameters, name);
-	}
+//	@Override
+//	public Parameter<?> getParameter(String name) {
+//		return CriteriaUtils.findParameterByName(parameters, name);
+//	}
 
 	@Override
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
@@ -140,10 +134,10 @@ public class MiniTypedQuery<X> implements TypedQuery<X> {
 		return null;
 	}
 
-	@Override
-	public FlushModeType getFlushMode() {
-		return flushModeType;
-	}
+//	@Override
+//	public FlushModeType getFlushMode() {
+//		return flushModeType;
+//	}
 
 	@Override
 	public LockModeType getLockMode() {

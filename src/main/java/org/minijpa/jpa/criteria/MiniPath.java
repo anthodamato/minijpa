@@ -3,6 +3,7 @@ package org.minijpa.jpa.criteria;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
@@ -146,7 +147,27 @@ public class MiniPath<X> implements Path<X> {
 	@Override
 	public <Y> Path<Y> get(String attributeName) {
 		MetaAttribute metaAttribute = metaEntity.getAttribute(attributeName);
+		if (metaAttribute == null)
+			throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist");
+
 		return new MiniPath<Y>(metaAttribute, metaEntity);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(metaEntity.getName(), metaAttribute.getName());
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || !(obj instanceof MiniPath<?>))
+			return false;
+
+		MiniPath<?> miniPath = (MiniPath<?>) obj;
+		if (miniPath.metaEntity != metaEntity || miniPath.metaAttribute != metaAttribute)
+			return false;
+
+		return true;
 	}
 
 }

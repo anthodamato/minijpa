@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
@@ -40,6 +41,7 @@ import org.minijpa.jdbc.relationship.FetchType;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.MiniTypedQuery;
+import org.minijpa.jpa.UpdateQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,6 +105,33 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			LOG.info("findById: relationshipValues: object=" + object);
 
 		return createAndSaveEntityInstance(attributeValues, entity, childAttribute, childAttributeValue, primaryKey);
+	}
+
+	public void refresh(Object entityInstance) throws Exception {
+		Class<?> entityClass = entityInstance.getClass();
+		MetaEntity entity = entities.get(entityClass.getName());
+		if (entity == null)
+			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
+
+		if (!entityContainer.isManaged(entityInstance))
+			throw new IllegalArgumentException("Entity '" + entityInstance + "' is not managed");
+
+		Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
+		SqlSelect sqlSelect = sqlStatementFactory.generateSelectById(entity, primaryKey);
+		LOG.info("refresh: sqlSelect.getTableName()=" + sqlSelect.getFromTable().getName());
+		LOG.info("refresh: sqlSelect.getFetchColumnNameValues()=" + sqlSelect.getFetchParameters());
+		String sql = sqlStatementGenerator.export(sqlSelect);
+		AbstractJdbcRunner.AttributeValues attributeValues = jdbcRunner.findById(sql, connectionHolder.getConnection(),
+				sqlSelect);
+		if (attributeValues == null)
+			throw new EntityNotFoundException("Entity '" + entityInstance + "' not found: pk=" + primaryKey);
+
+		entityInstanceBuilder.setAttributeValues(entity, entityInstance, attributeValues.attributes,
+				attributeValues.values);
+
+		saveEntityInstanceValues(entityInstance, attributeValues, entity, null, null);
+		entityContainer.addFlushedPersist(entityInstance, primaryKey);
+		entityContainer.setLoadedFromDb(entityInstance);
 	}
 
 	private void saveEntityInstanceValues(Object entityObject, AbstractJdbcRunner.AttributeValues attributeValues,
@@ -258,11 +287,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 				MetaEntity entity = a.getRelationship().getAttributeType();
 				MetaEntity e = entities.get(parentInstance.getClass().getName());
 				Object pk = AttributeUtil.getIdValue(e, parentInstance);
-//				SqlSelectJoin sqlSelectJoin = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
-//						a.getRelationship().getJoinTable());
 				SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
 						a.getRelationship().getJoinTable());
-//				String sql = sqlStatementGenerator.generate(sqlSelectJoin);
 				String sql = sqlStatementGenerator.export(sqlSelect);
 				List<Object> objects = jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null,
 						null);
@@ -287,7 +313,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 			Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 			LOG.info("persist: idValue=" + idValue);
 			SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attrValues, idValue);
-//			String sql = sqlStatementGenerator.generate(sqlUpdate);
 			String sql = sqlStatementGenerator.export(sqlUpdate);
 			jdbcRunner.persist(sqlUpdate, connectionHolder.getConnection(), sql);
 			return;
@@ -574,6 +599,18 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 		// returns an aggregate expression result (max, min, etc)
 		return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect);
+	}
+
+	@Override
+	public int update(UpdateQuery updateQuery) throws Exception {
+		if (updateQuery.getCriteriaUpdate().getRoot() == null)
+			throw new IllegalArgumentException("Criteria Update Root not defined");
+
+		SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery);
+		String sql = sqlStatementGenerator.export(sqlUpdate);
+		LOG.info("update: sql=" + sql);
+
+		return jdbcRunner.persist(sqlUpdate, connectionHolder.getConnection(), sql);
 	}
 
 }
