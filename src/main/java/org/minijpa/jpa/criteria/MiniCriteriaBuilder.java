@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CompoundSelection;
@@ -29,38 +28,47 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
+import javax.persistence.metamodel.Metamodel;
+
+import org.minijpa.jdbc.MetaEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MiniCriteriaBuilder implements CriteriaBuilder {
-	private EntityManager em;
+	private Logger LOG = LoggerFactory.getLogger(MiniCriteriaBuilder.class);
+	private Metamodel metamodel;
+	private Map<String, MetaEntity> entities;
 
-	public MiniCriteriaBuilder(EntityManager em) {
+	public MiniCriteriaBuilder(Metamodel metamodel, Map<String, MetaEntity> entities) {
 		super();
-		this.em = em;
+		this.metamodel = metamodel;
+		this.entities = entities;
 	}
 
 	@Override
 	public CriteriaQuery<Object> createQuery() {
-		return new MiniCriteriaQuery<Object>(em);
+		return new MiniCriteriaQuery<Object>(metamodel, entities);
 	}
 
 	@Override
 	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
-		return new MiniCriteriaQuery<T>(resultClass, em);
+		LOG.info("createQuery: resultClass=" + resultClass);
+		return new MiniCriteriaQuery<T>(resultClass, metamodel, entities);
 	}
 
 	@Override
 	public CriteriaQuery<Tuple> createTupleQuery() {
-		return new MiniCriteriaQuery<Tuple>(Tuple.class, em);
+		return new MiniCriteriaQuery<Tuple>(Tuple.class, metamodel, entities);
 	}
 
 	@Override
 	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity) {
-		return new MiniCriteriaUpdate<T>(targetEntity, em);
+		return new MiniCriteriaUpdate<T>(targetEntity, metamodel, entities);
 	}
 
 	@Override
 	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
-		return new MiniCriteriaDelete<T>(targetEntity, em);
+		return new MiniCriteriaDelete<T>(targetEntity, metamodel, entities);
 	}
 
 	@Override

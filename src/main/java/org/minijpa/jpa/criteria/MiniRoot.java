@@ -189,8 +189,12 @@ public class MiniRoot<X> implements Root<X> {
 
 	@Override
 	public <Y> Path<Y> get(SingularAttribute<? super X, Y> attribute) {
-		// TODO Auto-generated method stub
-		return null;
+		MetaAttribute metaAttribute = metaEntity.getAttribute(attribute.getName());
+		if (metaAttribute == null)
+			throw new IllegalArgumentException("Attribute '" + attribute.getName() + "' does not exist");
+
+		return new MiniPath<Y>(metaAttribute, metaEntity);
+
 	}
 
 	@Override

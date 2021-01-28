@@ -34,6 +34,9 @@ public abstract class AbstractIdentifiableType<X> extends AbstractManagedType<X>
 
 	@Override
 	public <Y> SingularAttribute<? super X, Y> getVersion(Class<Y> type) {
+		if (version == null)
+			return null;
+
 		if (type != version.getJavaType())
 			throw new IllegalArgumentException("Expected type version: " + version.getJavaType().getName());
 

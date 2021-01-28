@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
@@ -18,36 +17,40 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jpa.MiniEntityManager;
 
 public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 	private Class<T> resultClass;
-	private EntityManager em;
+	private Metamodel metamodel;
+	private Map<String, MetaEntity> entities;
+//	private EntityManager em;
 	private Set<Root<?>> roots = new HashSet<>();
 	protected Selection<? extends T> selection;
 	private Predicate restriction;
 	private List<Order> orders = new ArrayList<>();
 	private boolean distinct;
 
-	public MiniCriteriaQuery(Class<T> resultClass, EntityManager em) {
+	public MiniCriteriaQuery(Class<T> resultClass, Metamodel metamodel, Map<String, MetaEntity> entities) {
 		super();
 		this.resultClass = resultClass;
-		this.em = em;
+		this.metamodel = metamodel;
+		this.entities = entities;
 	}
 
 	@SuppressWarnings("unchecked")
-	public MiniCriteriaQuery(EntityManager em) {
+	public MiniCriteriaQuery(Metamodel metamodel, Map<String, MetaEntity> entities) {
 		super();
 		this.resultClass = (Class<T>) Object[].class;
-		this.em = em;
+		this.metamodel = metamodel;
+		this.entities = entities;
 	}
 
 	@Override
 	public <X> Root<X> from(Class<X> entityClass) {
-		EntityType<X> entityType = em.getMetamodel().entity(entityClass);
-		Map<String, MetaEntity> entities = ((MiniEntityManager) em).getEntities();
+		EntityType<X> entityType = metamodel.entity(entityClass);
+//		Map<String, MetaEntity> entities = ((MiniEntityManager) em).getEntities();
 		MetaEntity metaEntity = entities.get(entityClass.getName());
 		Root<X> root = new MiniRoot<X>(entityType, metaEntity);
 		roots.add(root);

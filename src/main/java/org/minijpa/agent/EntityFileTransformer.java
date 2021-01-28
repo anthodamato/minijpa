@@ -9,6 +9,8 @@ import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javassist.NotFoundException;
+
 public class EntityFileTransformer implements ClassFileTransformer {
 	private Logger LOG = LoggerFactory.getLogger(EntityFileTransformer.class);
 	private BytecodeEnhancer bytecodeEnhancer = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer();
@@ -22,7 +24,10 @@ public class EntityFileTransformer implements ClassFileTransformer {
 				|| className.startsWith("org/xml/") || className.startsWith("org/junit/")
 				|| className.startsWith("org/apache/") || className.startsWith("ch/qos/logback/")
 				|| className.startsWith("org/slf4j/") || className.startsWith("javassist/")
-				|| className.startsWith("org/apiguardian/") || className.startsWith("org/opentest4j/"))
+				|| className.startsWith("org/apiguardian/") || className.startsWith("org/opentest4j/")
+				|| className.startsWith("org/springframework/") || className.startsWith("net/bytebuddy/")
+				|| className.startsWith("org/mockito/") || className.startsWith("org/aspectj/")
+				|| className.startsWith("org/w3c/") || className.startsWith("com/zaxxer/"))
 			return null;
 
 		if (log)
@@ -33,6 +38,9 @@ public class EntityFileTransformer implements ClassFileTransformer {
 		try {
 			return bytecodeEnhancer.toBytecode(fullClassName);
 		} catch (Exception e) {
+			if (e instanceof NotFoundException)
+				return null;
+
 			LOG.error(e.getMessage());
 		}
 

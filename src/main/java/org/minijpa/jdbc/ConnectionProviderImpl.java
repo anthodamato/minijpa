@@ -8,7 +8,12 @@ import java.util.Properties;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ConnectionProviderImpl implements ConnectionProvider {
+	private Logger LOG = LoggerFactory.getLogger(ConnectionProviderImpl.class);
+
 	private PersistenceUnitInfo persistenceUnitInfo;
 
 	public ConnectionProviderImpl(PersistenceUnitInfo persistenceUnitInfo) {

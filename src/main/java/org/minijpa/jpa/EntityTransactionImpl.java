@@ -83,11 +83,11 @@ public class EntityTransactionImpl implements EntityTransaction {
 			}
 		}
 
-		try {
-			connection.close();
-		} catch (SQLException e) {
-			LOG.error(e.getMessage());
-		}
+//		try {
+//			connection.close();
+//		} catch (SQLException e) {
+//			LOG.error(e.getMessage());
+//		}
 
 //		this.active = false;
 	}
@@ -107,4 +107,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 		return active;
 	}
 
+	public Connection connection() {
+		return connection;
+	}
 }

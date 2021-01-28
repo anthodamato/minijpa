@@ -60,11 +60,12 @@ public class MiniEntityManager extends AbstractEntityManager {
 				.addEntityManagerContext(new EntityContainerContext(entities, persistenceContext, jdbcEntityManager));
 	}
 
+//	public Connection connection() {
+//		return ((EntityTransactionImpl) entityTransaction).connection();
+//	}
+
 	@Override
 	public void persist(Object entity) {
-		if (entityTransaction == null || !entityTransaction.isActive())
-			throw new IllegalStateException("Transaction not active");
-
 		LOG.info("persist: entities=" + entities);
 		MetaEntity e = entities.get(entity.getClass().getName());
 		if (e == null)
@@ -132,6 +133,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
+		LOG.info("find: this=" + this);
+		LOG.info("find: primaryKey=" + primaryKey);
 		try {
 			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
 			if (entityObject == null)
@@ -146,20 +149,50 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		// TODO Auto-generated method stub
-		return null;
+		LOG.info("find: this=" + this);
+		LOG.info("find: primaryKey=" + primaryKey);
+		try {
+			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
+			if (entityObject == null)
+				return null;
+
+			return (T) entityObject;
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
+		}
 	}
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
-		// TODO Auto-generated method stub
-		return null;
+		LOG.info("find: this=" + this);
+		LOG.info("find: primaryKey=" + primaryKey);
+		try {
+			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
+			if (entityObject == null)
+				return null;
+
+			return (T) entityObject;
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
+		}
 	}
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
-		// TODO Auto-generated method stub
-		return null;
+		LOG.info("find: this=" + this);
+		LOG.info("find: primaryKey=" + primaryKey);
+		try {
+			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
+			if (entityObject == null)
+				return null;
+
+			return (T) entityObject;
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
+		}
 	}
 
 	@Override
@@ -375,8 +408,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public Object getDelegate() {
-		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 
 	@Override
@@ -406,7 +438,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
-		return new MiniCriteriaBuilder(this);
+		CriteriaBuilder criteriaBuilder = new MiniCriteriaBuilder(getMetamodel(), entities);
+		return criteriaBuilder;
 	}
 
 	@Override

@@ -18,6 +18,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.metamodel.MetamodelFactory;
 import org.minijpa.metadata.EntityContext;
@@ -32,6 +33,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	private Logger LOG = LoggerFactory.getLogger(MiniEntityManagerFactory.class);
 	private EntityManagerType entityManagerType;
 	private PersistenceUnitInfo persistenceUnitInfo;
+	private Map<String, Object> properties = new HashMap<>();
 	private Map map;
 	/**
 	 * The key used is the full class name.
@@ -149,18 +151,36 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
-		// TODO Auto-generated method stub
-		return null;
+		synchronized (persistenceUnitInfo) {
+			if (entities == null)
+				try {
+					entities = createEntities();
+				} catch (Exception e) {
+					LOG.error("Unable to read entities: " + e.getMessage());
+				}
+		}
+
+		return new MiniCriteriaBuilder(getMetamodel(), entities);
 	}
 
 	@Override
 	public Metamodel getMetamodel() {
-		if (metamodel == null)
+		if (metamodel == null) {
+			synchronized (persistenceUnitInfo) {
+				if (entities == null)
+					try {
+						entities = createEntities();
+					} catch (Exception e) {
+						LOG.error("Unable to read entities: " + e.getMessage());
+					}
+			}
+
 			try {
 				metamodel = new MetamodelFactory(entities).build();
 			} catch (Exception e) {
 				LOG.error(e.getMessage());
 			}
+		}
 
 		return metamodel;
 	}
@@ -179,8 +199,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 
 	@Override
 	public Map<String, Object> getProperties() {
-		// TODO Auto-generated method stub
-		return null;
+		return properties;
 	}
 
 	@Override

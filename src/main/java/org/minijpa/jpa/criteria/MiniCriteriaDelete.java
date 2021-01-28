@@ -2,27 +2,28 @@ package org.minijpa.jpa.criteria;
 
 import java.util.Map;
 
-import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jpa.MiniEntityManager;
 
 public class MiniCriteriaDelete<T> implements CriteriaDelete<T> {
 	private Class<T> resultClass;
-	private EntityManager em;
+	private Metamodel metamodel;
+	private Map<String, MetaEntity> entities;
 	private Root<T> root;
 	private Predicate restriction;
 
-	public MiniCriteriaDelete(Class<T> resultClass, EntityManager entityManager) {
+	public MiniCriteriaDelete(Class<T> resultClass, Metamodel metamodel, Map<String, MetaEntity> entities) {
 		super();
 		this.resultClass = resultClass;
-		this.em = entityManager;
+		this.metamodel = metamodel;
+		this.entities = entities;
 	}
 
 	@Override
@@ -38,8 +39,8 @@ public class MiniCriteriaDelete<T> implements CriteriaDelete<T> {
 
 	@Override
 	public Root<T> from(Class<T> entityClass) {
-		EntityType<T> entityType = em.getMetamodel().entity(entityClass);
-		Map<String, MetaEntity> entities = ((MiniEntityManager) em).getEntities();
+		EntityType<T> entityType = metamodel.entity(entityClass);
+//		Map<String, MetaEntity> entities = ((MiniEntityManager) em).getEntities();
 		MetaEntity metaEntity = entities.get(entityClass.getName());
 		root = new MiniRoot<T>(entityType, metaEntity);
 		return root;

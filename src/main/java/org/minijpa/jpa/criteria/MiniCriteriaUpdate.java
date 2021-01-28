@@ -3,7 +3,6 @@ package org.minijpa.jpa.criteria;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
@@ -11,22 +10,24 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jpa.MiniEntityManager;
 
 public class MiniCriteriaUpdate<T> implements CriteriaUpdate<T> {
 	private Class<T> resultClass;
-	private EntityManager em;
+	private Metamodel metamodel;
+	private Map<String, MetaEntity> entities;
 	private Root<T> root;
 	private Predicate restriction;
 	private Map<Path<?>, Object> setValues = new HashMap<>();
 
-	public MiniCriteriaUpdate(Class<T> resultClass, EntityManager em) {
+	public MiniCriteriaUpdate(Class<T> resultClass, Metamodel metamodel, Map<String, MetaEntity> entities) {
 		super();
 		this.resultClass = resultClass;
-		this.em = em;
+		this.metamodel = metamodel;
+		this.entities = entities;
 	}
 
 	@Override
@@ -42,8 +43,8 @@ public class MiniCriteriaUpdate<T> implements CriteriaUpdate<T> {
 
 	@Override
 	public Root<T> from(Class<T> entityClass) {
-		EntityType<T> entityType = em.getMetamodel().entity(entityClass);
-		Map<String, MetaEntity> entities = ((MiniEntityManager) em).getEntities();
+		EntityType<T> entityType = metamodel.entity(entityClass);
+//		Map<String, MetaEntity> entities = ((MiniEntityManager) em).getEntities();
 		MetaEntity metaEntity = entities.get(entityClass.getName());
 		root = new MiniRoot<T>(entityType, metaEntity);
 		return root;
