@@ -785,8 +785,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
 	@Override
 	public <T> In<T> in(Expression<? extends T> expression) {
-		// TODO Auto-generated method stub
-		return null;
+		return new InPredicate<T>(expression, false, false);
 	}
 
 	@Override

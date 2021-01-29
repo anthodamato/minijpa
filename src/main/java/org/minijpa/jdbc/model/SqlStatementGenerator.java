@@ -16,6 +16,7 @@ import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.BinaryLogicCondition;
 import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
+import org.minijpa.jdbc.model.condition.InCondition;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.model.condition.UnaryLogicCondition;
 import org.minijpa.jdbc.model.join.FromJoin;
@@ -216,7 +217,7 @@ public class SqlStatementGenerator {
 			BinaryCondition binaryCondition = (BinaryCondition) condition;
 
 			StringBuilder sb = new StringBuilder();
-			if (binaryCondition.isNegated())
+			if (binaryCondition.isNot())
 				sb.append("not ");
 
 			if (binaryCondition.getLeftColumn().isPresent())
@@ -258,6 +259,23 @@ public class SqlStatementGenerator {
 			if (betweenCondition.getRightExpression().isPresent())
 				sb.append(betweenCondition.getRightExpression().get());
 
+			return sb.toString();
+		}
+
+		if (condition instanceof InCondition) {
+			InCondition inCondition = (InCondition) condition;
+			StringBuilder sb = new StringBuilder();
+			if (inCondition.isNot())
+				sb.append("not ");
+
+			sb.append(exportTableColumn(inCondition.getLeftColumn()));
+			sb.append(" ");
+			sb.append(getOperator(condition.getConditionType()));
+			sb.append(" (");
+
+			String s = inCondition.getRightExpressions().stream().collect(Collectors.joining(", "));
+			sb.append(s);
+			sb.append(")");
 			return sb.toString();
 		}
 
@@ -401,6 +419,8 @@ public class SqlStatementGenerator {
 			return dbJdbc.betweenOperator();
 		case LIKE:
 			return dbJdbc.likeOperator();
+		case IN:
+			return dbJdbc.inOperator();
 		default:
 			break;
 		}

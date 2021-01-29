@@ -10,7 +10,7 @@ public class BinaryCondition implements Condition {
 	private Optional<TableColumn> rightColumn;
 	private Optional<String> leftExpression;
 	private Optional<String> rightExpression;
-	private boolean negated = false;
+	private boolean not = false;
 
 	@Override
 	public ConditionType getConditionType() {
@@ -33,8 +33,8 @@ public class BinaryCondition implements Condition {
 		return rightExpression;
 	}
 
-	public boolean isNegated() {
-		return negated;
+	public boolean isNot() {
+		return not;
 	}
 
 	public static class Builder {
@@ -43,7 +43,7 @@ public class BinaryCondition implements Condition {
 		private TableColumn rightColumn;
 		private String leftExpression;
 		private String rightExpression;
-		private boolean negated = false;
+		private boolean not = false;
 
 		public Builder(ConditionType conditionType) {
 			super();
@@ -70,8 +70,8 @@ public class BinaryCondition implements Condition {
 			return this;
 		}
 
-		public Builder negated() {
-			this.negated = true;
+		public Builder not() {
+			this.not = true;
 			return this;
 		}
 
@@ -82,7 +82,7 @@ public class BinaryCondition implements Condition {
 			condition.rightColumn = Optional.ofNullable(rightColumn);
 			condition.leftExpression = Optional.ofNullable(leftExpression);
 			condition.rightExpression = Optional.ofNullable(rightExpression);
-			condition.negated = negated;
+			condition.not = not;
 			return condition;
 		}
 	}

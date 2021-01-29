@@ -290,4 +290,45 @@ public class EmbBookTest {
 		em.close();
 	}
 
+	@Test
+	public void equalInEmbedded() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		final EntityTransaction tx = em.getTransaction();
+		tx.begin();
+
+		Book book1 = create1stFreudBook();
+		em.persist(book1);
+		Book book2 = create2ndFreudBook();
+		em.persist(book2);
+		Book book3 = create1stJoyceBook();
+		em.persist(book3);
+		Book book4 = create1stLondonBook();
+		em.persist(book4);
+		Book book5 = create2ndLondonBook();
+		em.persist(book5);
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery query = cb.createQuery();
+		Root<Book> root = query.from(Book.class);
+		query.select(root);
+		query.where(cb.equal(root.get("bookFormat").get("format"), "hardcover"));
+		TypedQuery<?> typedQuery = em.createQuery(query);
+		List<?> result = typedQuery.getResultList();
+		Assertions.assertEquals(1, result.size());
+
+		query.where(cb.in(root.get("bookFormat").get("format")).value("hardcover").value("electronic"));
+		typedQuery = em.createQuery(query);
+		result = typedQuery.getResultList();
+		Assertions.assertEquals(3, result.size());
+
+		em.remove(book1);
+		em.remove(book2);
+		em.remove(book3);
+		em.remove(book4);
+		em.remove(book5);
+		tx.commit();
+
+		em.close();
+	}
+
 }

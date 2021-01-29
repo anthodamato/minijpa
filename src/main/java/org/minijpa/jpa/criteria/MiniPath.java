@@ -146,11 +146,13 @@ public class MiniPath<X> implements Path<X> {
 
 	@Override
 	public <Y> Path<Y> get(String attributeName) {
-		MetaAttribute metaAttribute = metaEntity.getAttribute(attributeName);
-		if (metaAttribute == null)
-			throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist");
+		if (this.metaAttribute.isEmbedded()) {
+			MetaAttribute attribute = this.metaAttribute.findChildByName(attributeName);
+			if (attribute != null)
+				return new MiniPath<Y>(attribute, metaEntity);
+		}
 
-		return new MiniPath<Y>(metaAttribute, metaEntity);
+		throw new IllegalArgumentException("Attribute '" + attributeName + "' not found");
 	}
 
 	@Override

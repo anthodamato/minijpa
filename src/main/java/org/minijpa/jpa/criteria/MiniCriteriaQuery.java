@@ -25,7 +25,6 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 	private Class<T> resultClass;
 	private Metamodel metamodel;
 	private Map<String, MetaEntity> entities;
-//	private EntityManager em;
 	private Set<Root<?>> roots = new HashSet<>();
 	protected Selection<? extends T> selection;
 	private Predicate restriction;
@@ -50,7 +49,6 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 	@Override
 	public <X> Root<X> from(Class<X> entityClass) {
 		EntityType<X> entityType = metamodel.entity(entityClass);
-//		Map<String, MetaEntity> entities = ((MiniEntityManager) em).getEntities();
 		MetaEntity metaEntity = entities.get(entityClass.getName());
 		Root<X> root = new MiniRoot<X>(entityType, metaEntity);
 		roots.add(root);

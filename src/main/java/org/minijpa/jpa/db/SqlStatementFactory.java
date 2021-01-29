@@ -53,6 +53,7 @@ import org.minijpa.jdbc.model.condition.BinaryLogicConditionImpl;
 import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.condition.EmptyCondition;
+import org.minijpa.jdbc.model.condition.InCondition;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.model.condition.UnaryLogicConditionImpl;
 import org.minijpa.jdbc.model.join.FromJoin;
@@ -68,6 +69,7 @@ import org.minijpa.jpa.criteria.BooleanExprPredicate;
 import org.minijpa.jpa.criteria.ComparisonPredicate;
 import org.minijpa.jpa.criteria.CountExpression;
 import org.minijpa.jpa.criteria.ExprPredicate;
+import org.minijpa.jpa.criteria.InPredicate;
 import org.minijpa.jpa.criteria.LikePatternExprPredicate;
 import org.minijpa.jpa.criteria.LikePatternPredicate;
 import org.minijpa.jpa.criteria.MaxExpression;
@@ -461,6 +463,8 @@ public class SqlStatementFactory {
 		case LIKE_PATTERN:
 		case LIKE_PATTERN_EXPR:
 			return ConditionType.LIKE;
+		case IN:
+			return ConditionType.IN;
 		default:
 			break;
 		}
@@ -668,9 +672,37 @@ public class SqlStatementFactory {
 		BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
 				.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(pattern));
 		if (likePatternPredicate.isNot())
-			builder.negated();
+			builder.not();
 
 		return Optional.of(builder.build());
+	}
+
+	private Optional<Condition> translateInPredicate(InPredicate<?> inPredicate, List<QueryParameter> parameters,
+			Query query) {
+		Expression<?> expression = inPredicate.getExpression();
+		LOG.info("translateInPredicate: expression=" + expression);
+		TableColumn tableColumn = null;
+		if (expression instanceof MiniPath<?>) {
+			MiniPath<?> miniPath = (MiniPath<?>) expression;
+			MetaAttribute attribute = miniPath.getMetaAttribute();
+			tableColumn = createTableColumnFromPath(miniPath);
+
+			List<String> list = inPredicate.getValues().stream().map(v -> {
+				return QM;
+			}).collect(Collectors.toList());
+
+			List<QueryParameter> queryParameters = inPredicate.getValues().stream().map(v -> {
+				return new QueryParameter(attribute.getColumnName(), v, attribute.getType(), attribute.getSqlType());
+			}).collect(Collectors.toList());
+			parameters.addAll(queryParameters);
+
+			if (inPredicate.isNot())
+				return Optional.of(new InCondition(tableColumn, list, true));
+
+			return Optional.of(new InCondition(tableColumn, list));
+		}
+
+		return Optional.empty();
 	}
 
 	private Optional<Condition> translateLikePatternExprPredicate(LikePatternExprPredicate likePatternExprPredicate,
@@ -686,7 +718,7 @@ public class SqlStatementFactory {
 		BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
 				.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(QM));
 		if (likePatternExprPredicate.isNot())
-			builder.negated();
+			builder.not();
 
 		return Optional.of(builder.build());
 	}
@@ -727,6 +759,8 @@ public class SqlStatementFactory {
 		} else if (predicateType == PredicateType.EMPTY_CONJUNCTION
 				|| predicateType == PredicateType.EMPTY_DISJUNCTION) {
 			return Optional.of(new EmptyCondition(getOperator(predicateType)));
+		} else if (predicateType == PredicateType.IN) {
+			return translateInPredicate((InPredicate<?>) predicate, parameters, query);
 		}
 
 		return Optional.empty();

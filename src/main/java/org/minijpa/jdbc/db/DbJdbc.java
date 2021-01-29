@@ -87,4 +87,8 @@ public interface DbJdbc {
 		return "LIKE";
 	}
 
+	public default String inOperator() {
+		return "in";
+	}
+
 }
