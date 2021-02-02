@@ -3,4 +3,5 @@
 .settings/
 target/
 derby.log
+dependency-reduced-pom.xml
 
