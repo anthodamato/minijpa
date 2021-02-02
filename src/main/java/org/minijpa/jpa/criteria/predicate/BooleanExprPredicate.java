@@ -1,17 +1,20 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.predicate;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
+import org.minijpa.jpa.criteria.AbstractExpression;
 
-public class EmptyPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
+public class BooleanExprPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
 	private PredicateType predicateType;
+	private Expression<Boolean> x;
 
-	public EmptyPredicate(PredicateType predicateType) {
+	public BooleanExprPredicate(PredicateType predicateType, Expression<Boolean> x) {
 		super(Boolean.class);
 		this.predicateType = predicateType;
+		this.x = x;
 	}
 
 	@Override
@@ -37,13 +40,17 @@ public class EmptyPredicate extends AbstractExpression<Boolean> implements Predi
 
 	@Override
 	public List<Expression<Boolean>> getExpressions() {
-		return Collections.emptyList();
+		return Arrays.asList(x);
 	}
 
 	@Override
 	public Predicate not() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public Expression<Boolean> getX() {
+		return x;
 	}
 
 }

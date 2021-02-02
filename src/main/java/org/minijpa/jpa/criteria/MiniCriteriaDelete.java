@@ -1,5 +1,7 @@
 package org.minijpa.jpa.criteria;
 
+import org.minijpa.jpa.criteria.predicate.PredicateType;
+import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
 import java.util.Map;
 
 import javax.persistence.criteria.CriteriaDelete;

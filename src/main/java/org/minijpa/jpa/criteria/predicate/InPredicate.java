@@ -1,4 +1,4 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.predicate;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,10 +1,11 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.predicate;
 
 import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
+import org.minijpa.jpa.criteria.AbstractExpression;
 
 public class ExprPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
 	private PredicateType predicateType;

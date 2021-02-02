@@ -1,10 +1,13 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.predicate;
 
+import org.minijpa.jpa.criteria.predicate.PredicateTypeInfo;
+import org.minijpa.jpa.criteria.predicate.PredicateType;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
+import org.minijpa.jpa.criteria.AbstractExpression;
 
 public class LikePatternExprPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
 	private Expression<?> x;

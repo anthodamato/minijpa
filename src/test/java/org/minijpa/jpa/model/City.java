@@ -7,37 +7,47 @@ import javax.persistence.OneToOne;
 
 @Entity
 public class City {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	private String name;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-	@OneToOne
-	private Region region;
+    private String name;
+    private Integer population;
 
-	public Long getId() {
-		return id;
-	}
+    @OneToOne
+    private Region region;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+	return name;
+    }
 
-	public Region getRegion() {
-		return region;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public void setRegion(Region region) {
-		this.region = region;
-	}
+    public Region getRegion() {
+	return region;
+    }
+
+    public void setRegion(Region region) {
+	this.region = region;
+    }
+
+    public Integer getPopulation() {
+	return population;
+    }
+
+    public void setPopulation(Integer population) {
+	this.population = population;
+    }
 
 }

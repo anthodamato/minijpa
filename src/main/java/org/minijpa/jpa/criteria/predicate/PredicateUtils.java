@@ -1,11 +1,19 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.predicate;
 
+import org.minijpa.jpa.criteria.predicate.ExprPredicate;
+import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
+import org.minijpa.jpa.criteria.predicate.ComparisonPredicate;
+import org.minijpa.jpa.criteria.predicate.BinaryBooleanExprPredicate;
+import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
+import org.minijpa.jpa.criteria.predicate.BooleanExprPredicate;
+import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
+import org.minijpa.jpa.criteria.MiniParameterExpression;
 
 public class PredicateUtils {
 

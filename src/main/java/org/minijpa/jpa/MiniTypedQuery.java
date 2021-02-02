@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 	private Logger LOG = LoggerFactory.getLogger(MiniTypedQuery.class);
-	protected CriteriaQuery<?> criteriaQuery;
+	private final CriteriaQuery<?> criteriaQuery;
 
 	public MiniTypedQuery(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
 		super();
