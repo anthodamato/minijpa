@@ -56,6 +56,9 @@ import org.minijpa.jdbc.model.condition.EmptyCondition;
 import org.minijpa.jdbc.model.condition.InCondition;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.model.condition.UnaryLogicConditionImpl;
+import org.minijpa.jdbc.model.expression.SqlBinaryExpression;
+import org.minijpa.jdbc.model.expression.SqlBinaryExpressionBuilder;
+import org.minijpa.jdbc.model.expression.SqlExpressionOperator;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
@@ -64,6 +67,8 @@ import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
 import org.minijpa.jpa.criteria.AggregateFunctionExpression;
 import org.minijpa.jpa.criteria.AggregateFunctionType;
+import org.minijpa.jpa.criteria.BinaryExpression;
+import org.minijpa.jpa.criteria.ExpressionOperator;
 import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
 import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
 import org.minijpa.jpa.criteria.predicate.BinaryBooleanExprPredicate;
@@ -287,6 +292,29 @@ public class SqlStatementFactory {
 		MetaAttribute metaAttribute = miniPath.getMetaAttribute();
 		return Optional.of(new BasicAggregateFunction(getAggregateFunction(aggregateFunctionExpression.getAggregateFunctionType()), new TableColumn(fromTable, new Column(metaAttribute.getColumnName())), false));
 	    }
+	} else if (selection instanceof BinaryExpression) {
+	    BinaryExpression binaryExpression = (BinaryExpression) selection;
+	    SqlBinaryExpressionBuilder builder = new SqlBinaryExpressionBuilder(getSqlExpressionOperator(binaryExpression.getExpressionOperator()));
+	    if (binaryExpression.getX().isPresent()) {
+		MiniPath<?> miniPath = (MiniPath<?>) binaryExpression.getX().get();
+		MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+		builder.setLeftTableColumn(new TableColumn(FromTable.of(miniPath.getMetaEntity()), new Column(metaAttribute.getColumnName())));
+	    }
+
+	    if (binaryExpression.getxValue().isPresent())
+		builder.setLeftExpression(QM);
+
+	    if (binaryExpression.getY().isPresent()) {
+		MiniPath<?> miniPath = (MiniPath<?>) binaryExpression.getY().get();
+		MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+		builder.setRightTableColumn(new TableColumn(FromTable.of(miniPath.getMetaEntity()), new Column(metaAttribute.getColumnName())));
+	    }
+
+	    if (binaryExpression.getyValue().isPresent())
+		builder.setRightExpression(QM);
+
+	    SqlBinaryExpression sqlBinaryExpression = builder.build();
+	    return Optional.of(sqlBinaryExpression);
 	}
 
 	return Optional.empty();
@@ -341,6 +369,20 @@ public class SqlStatementFactory {
 		    return Optional.of(columnNameValue);
 		}
 	    }
+	} else if (selection instanceof BinaryExpression) {
+	    BinaryExpression binaryExpression = (BinaryExpression) selection;
+	    MiniPath<?> miniPath = null;
+	    if (binaryExpression.getX().isPresent())
+		miniPath = (MiniPath<?>) binaryExpression.getX().get();
+	    else if (binaryExpression.getY().isPresent())
+		miniPath = (MiniPath<?>) binaryExpression.getY().get();
+
+	    if (miniPath == null)
+		throw new IllegalArgumentException("Binary expression without data type");
+
+	    MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+	    ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
+	    return Optional.of(columnNameValue);
 	}
 
 	return Optional.empty();
@@ -468,6 +510,25 @@ public class SqlStatementFactory {
 	}
 
 	throw new IllegalArgumentException("Unknown aggregate function type for predicate type: " + aggregateFunctionType);
+    }
+
+    private SqlExpressionOperator getSqlExpressionOperator(ExpressionOperator expressionOperator) {
+	switch (expressionOperator) {
+	    case DIFF:
+		return SqlExpressionOperator.DIFF;
+	    case MINUS:
+		return SqlExpressionOperator.MINUS;
+	    case PROD:
+		return SqlExpressionOperator.PROD;
+	    case QUOT:
+		return SqlExpressionOperator.QUOT;
+	    case SUM:
+		return SqlExpressionOperator.SUM;
+	    default:
+		break;
+	}
+
+	throw new IllegalArgumentException("Unknown  operator for expression type: " + expressionOperator);
     }
 
     private Optional<Condition> translateComparisonPredicate(ComparisonPredicate comparisonPredicate,

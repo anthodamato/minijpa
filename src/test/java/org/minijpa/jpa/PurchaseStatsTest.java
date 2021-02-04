@@ -60,6 +60,8 @@ public class PurchaseStatsTest {
 	CriteriaQuery criteriaQuery = cb.createQuery();
 	Root<PurchaseStats> root = criteriaQuery.from(PurchaseStats.class);
 	Expression<?> sumExpr = cb.sum(root.get("debitCard"), root.get("creditCard"));
+	Class c = sumExpr.getJavaType();
+	Assertions.assertEquals(c, Double.class);
 	Assertions.assertNotNull(sumExpr);
 	criteriaQuery.select(sumExpr);
 

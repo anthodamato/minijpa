@@ -60,28 +60,28 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public CriteriaQuery<Object> createQuery() {
-	return new MiniCriteriaQuery<Object>(metamodel, entities);
+	return new MiniCriteriaQuery<>(metamodel, entities);
     }
 
     @Override
     public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
 	LOG.info("createQuery: resultClass=" + resultClass);
-	return new MiniCriteriaQuery<T>(resultClass, metamodel, entities);
+	return new MiniCriteriaQuery<>(resultClass, metamodel, entities);
     }
 
     @Override
     public CriteriaQuery<Tuple> createTupleQuery() {
-	return new MiniCriteriaQuery<Tuple>(Tuple.class, metamodel, entities);
+	return new MiniCriteriaQuery<>(Tuple.class, metamodel, entities);
     }
 
     @Override
     public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity) {
-	return new MiniCriteriaUpdate<T>(targetEntity, metamodel, entities);
+	return new MiniCriteriaUpdate<>(targetEntity, metamodel, entities);
     }
 
     @Override
     public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
-	return new MiniCriteriaDelete<T>(targetEntity, metamodel, entities);
+	return new MiniCriteriaDelete<>(targetEntity, metamodel, entities);
     }
 
     @Override
@@ -378,74 +378,62 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <N extends Number> Expression<N> sum(Expression<? extends N> x, Expression<? extends N> y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.SUM, x, y);
     }
 
     @Override
     public <N extends Number> Expression<N> sum(Expression<? extends N> x, N y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.SUM, x, y);
     }
 
     @Override
     public <N extends Number> Expression<N> sum(N x, Expression<? extends N> y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.SUM, x, y);
     }
 
     @Override
     public <N extends Number> Expression<N> prod(Expression<? extends N> x, Expression<? extends N> y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.PROD, x, y);
     }
 
     @Override
     public <N extends Number> Expression<N> prod(Expression<? extends N> x, N y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.PROD, x, y);
     }
 
     @Override
     public <N extends Number> Expression<N> prod(N x, Expression<? extends N> y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.PROD, x, y);
     }
 
     @Override
     public <N extends Number> Expression<N> diff(Expression<? extends N> x, Expression<? extends N> y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.DIFF, x, y);
     }
 
     @Override
     public <N extends Number> Expression<N> diff(Expression<? extends N> x, N y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.DIFF, x, y);
     }
 
     @Override
     public <N extends Number> Expression<N> diff(N x, Expression<? extends N> y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.DIFF, x, y);
     }
 
     @Override
     public Expression<Number> quot(Expression<? extends Number> x, Expression<? extends Number> y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.QUOT, x, y);
     }
 
     @Override
     public Expression<Number> quot(Expression<? extends Number> x, Number y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.QUOT, x, y);
     }
 
     @Override
     public Expression<Number> quot(Number x, Expression<? extends Number> y) {
-	// TODO Auto-generated method stub
-	return null;
+	return new BinaryExpression(ExpressionOperator.QUOT, x, y);
     }
 
     @Override
@@ -528,12 +516,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <T> ParameterExpression<T> parameter(Class<T> paramClass) {
-	return new MiniParameterExpression<T>(paramClass);
+	return new MiniParameterExpression<>(paramClass);
     }
 
     @Override
     public <T> ParameterExpression<T> parameter(Class<T> paramClass, String name) {
-	return new MiniParameterExpression<T>(paramClass, name);
+	return new MiniParameterExpression<>(paramClass, name);
     }
 
     @Override

@@ -16,6 +16,9 @@ import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.condition.InCondition;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.model.condition.UnaryLogicCondition;
+import org.minijpa.jdbc.model.expression.SqlBinaryExpression;
+import org.minijpa.jdbc.model.expression.SqlExpression;
+import org.minijpa.jdbc.model.expression.SqlExpressionOperator;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.JoinType;
 import org.slf4j.Logger;
@@ -23,9 +26,9 @@ import org.slf4j.LoggerFactory;
 
 public class SqlStatementGenerator {
 
-    private Logger LOG = LoggerFactory.getLogger(SqlStatementGenerator.class);
+    private final Logger LOG = LoggerFactory.getLogger(SqlStatementGenerator.class);
 
-    private DbJdbc dbJdbc;
+    private final DbJdbc dbJdbc;
 
     public SqlStatementGenerator(DbJdbc dbJdbc) {
 	super();
@@ -144,6 +147,51 @@ public class SqlStatementGenerator {
 	}
 
 	throw new IllegalArgumentException("Aggregate function '" + aggregateFunction + "' not supported");
+    }
+
+    private String getSqlOperator(SqlExpressionOperator operator) {
+	switch (operator) {
+	    case SUM:
+		return "+";
+	    case PROD:
+		return "*";
+	    case MINUS:
+		return "-";
+	    case DIFF:
+		return "-";
+	    case QUOT:
+		return "/";
+
+	    default:
+		break;
+	}
+
+	throw new IllegalArgumentException("Sql operator '" + operator + "' not supported");
+    }
+
+    private String exportBinaryExpression(SqlBinaryExpression sqlBinaryExpression) {
+	StringBuilder sb = new StringBuilder();
+	if (sqlBinaryExpression.getLeftTableColumn().isPresent())
+	    sb.append(exportTableColumn(sqlBinaryExpression.getLeftTableColumn().get()));
+
+	if (sqlBinaryExpression.getLeftExpression().isPresent())
+	    sb.append(sqlBinaryExpression.getLeftExpression());
+
+	sb.append(getSqlOperator(sqlBinaryExpression.getOperator()));
+	if (sqlBinaryExpression.getRightTableColumn().isPresent())
+	    sb.append(exportTableColumn(sqlBinaryExpression.getRightTableColumn().get()));
+
+	if (sqlBinaryExpression.getRightExpression().isPresent())
+	    sb.append(sqlBinaryExpression.getRightExpression());
+
+	return sb.toString();
+    }
+
+    private String exportExpression(SqlExpression sqlExpression) {
+	if (sqlExpression instanceof SqlBinaryExpression)
+	    return exportBinaryExpression((SqlBinaryExpression) sqlExpression);
+
+	throw new IllegalArgumentException("Expression '" + sqlExpression + "' not supported");
     }
 
     private String exportCondition(Condition condition) {
@@ -349,6 +397,8 @@ public class SqlStatementGenerator {
 		return exportTableColumn((TableColumn) c);
 	    if (c instanceof AggregateFunction)
 		return exportAggregateFunction((AggregateFunction) c);
+	    if (c instanceof SqlExpression)
+		return exportExpression((SqlExpression) c);
 
 	    throw new IllegalArgumentException("Value type '" + c + "'not supported");
 	}).collect(Collectors.joining(", "));
