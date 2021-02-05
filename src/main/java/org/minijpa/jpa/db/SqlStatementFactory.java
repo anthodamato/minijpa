@@ -91,9 +91,9 @@ public class SqlStatementFactory {
 
     public static final String QM = "?";
 
-    private Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
-    private AttributeValueConverter attributeValueConverter = new EmbeddedIdAttributeValueConverter();
-    private MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
+    private final Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
+    private final AttributeValueConverter attributeValueConverter = new EmbeddedIdAttributeValueConverter();
+    private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
     public SqlInsert generatePlainInsert(Object entityInstance, MetaEntity entity, List<AttributeValue> attrValues)
 	    throws Exception {
@@ -140,9 +140,7 @@ public class SqlStatementFactory {
 
     public SqlSelect generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
 	    Object foreignKeyInstance) throws Exception {
-	List<AttributeValue> attributeValues = new ArrayList<>();
 	AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKeyInstance);
-	attributeValues.add(attrValue);
 	List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
 
 	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attrValue);
@@ -302,7 +300,10 @@ public class SqlStatementFactory {
 	    }
 
 	    if (binaryExpression.getxValue().isPresent())
-		builder.setLeftExpression(QM);
+		if (requireQM(binaryExpression.getxValue().get()))
+		    builder.setLeftExpression(QM);
+		else
+		    builder.setLeftExpression(buildValue(binaryExpression.getxValue().get()));
 
 	    if (binaryExpression.getY().isPresent()) {
 		MiniPath<?> miniPath = (MiniPath<?>) binaryExpression.getY().get();
@@ -311,7 +312,10 @@ public class SqlStatementFactory {
 	    }
 
 	    if (binaryExpression.getyValue().isPresent())
-		builder.setRightExpression(QM);
+		if (requireQM(binaryExpression.getyValue().get()))
+		    builder.setRightExpression(QM);
+		else
+		    builder.setRightExpression(buildValue(binaryExpression.getyValue().get()));
 
 	    SqlBinaryExpression sqlBinaryExpression = builder.build();
 	    return Optional.of(sqlBinaryExpression);
@@ -617,7 +621,7 @@ public class SqlStatementFactory {
     }
 
     private Optional<Condition> translateBetweenValuesPredicate(BetweenValuesPredicate betweenValuesPredicate,
-	    List<QueryParameter> parameters, Query query) {
+	    List<QueryParameter> parameters) {
 	Object x = betweenValuesPredicate.getX();
 	Object y = betweenValuesPredicate.getY();
 	MiniPath<?> miniPath = (MiniPath<?>) betweenValuesPredicate.getV();
@@ -792,7 +796,7 @@ public class SqlStatementFactory {
 	    return translateBetweenExpressionsPredicate(betweenExpressionsPredicate, parameters, query);
 	} else if (predicateType == PredicateType.BETWEEN_VALUES) {
 	    BetweenValuesPredicate betweenValuesPredicate = (BetweenValuesPredicate) predicate;
-	    return translateBetweenValuesPredicate(betweenValuesPredicate, parameters, query);
+	    return translateBetweenValuesPredicate(betweenValuesPredicate, parameters);
 	} else if (predicateType == PredicateType.LIKE_PATTERN) {
 	    LikePatternPredicate likePatternPredicate = (LikePatternPredicate) predicate;
 	    return translateLikePatternPredicate(likePatternPredicate, query);

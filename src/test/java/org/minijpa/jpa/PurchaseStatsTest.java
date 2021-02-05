@@ -76,6 +76,17 @@ public class PurchaseStatsTest {
 	Assertions.assertNotNull(result);
 	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList(40d, null), result));
 
+	// sum of column and double value
+	sumExpr = cb.sum(root.get("debitCard"), 10.456d);
+	c = sumExpr.getJavaType();
+	Assertions.assertEquals(c, Double.class);
+	Assertions.assertNotNull(sumExpr);
+	criteriaQuery.select(sumExpr);
+	query = em.createQuery(criteriaQuery);
+	result = query.getResultList();
+	Assertions.assertNotNull(result);
+	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList(30.456d, 40.456d), result));
+
 	em.remove(ps1);
 	em.remove(ps2);
 	tx.commit();

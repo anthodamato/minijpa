@@ -175,14 +175,14 @@ public class SqlStatementGenerator {
 	    sb.append(exportTableColumn(sqlBinaryExpression.getLeftTableColumn().get()));
 
 	if (sqlBinaryExpression.getLeftExpression().isPresent())
-	    sb.append(sqlBinaryExpression.getLeftExpression());
+	    sb.append(sqlBinaryExpression.getLeftExpression().get());
 
 	sb.append(getSqlOperator(sqlBinaryExpression.getOperator()));
 	if (sqlBinaryExpression.getRightTableColumn().isPresent())
 	    sb.append(exportTableColumn(sqlBinaryExpression.getRightTableColumn().get()));
 
 	if (sqlBinaryExpression.getRightExpression().isPresent())
-	    sb.append(sqlBinaryExpression.getRightExpression());
+	    sb.append(sqlBinaryExpression.getRightExpression().get());
 
 	return sb.toString();
     }

@@ -45,7 +45,6 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
     @SuppressWarnings("unchecked")
     public MiniCriteriaQuery(Metamodel metamodel, Map<String, MetaEntity> entities) {
 	super();
-//		this.resultClass = (Class<T>) Object[].class;
 	this.metamodel = metamodel;
 	this.entities = entities;
     }
