@@ -49,9 +49,9 @@ import org.slf4j.LoggerFactory;
 
 public class MiniCriteriaBuilder implements CriteriaBuilder {
 
-    private Logger LOG = LoggerFactory.getLogger(MiniCriteriaBuilder.class);
-    private Metamodel metamodel;
-    private Map<String, MetaEntity> entities;
+    private final Logger LOG = LoggerFactory.getLogger(MiniCriteriaBuilder.class);
+    private final Metamodel metamodel;
+    private final Map<String, MetaEntity> entities;
 
     public MiniCriteriaBuilder(Metamodel metamodel, Map<String, MetaEntity> entities) {
 	super();

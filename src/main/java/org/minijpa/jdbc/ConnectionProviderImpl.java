@@ -12,55 +12,62 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConnectionProviderImpl implements ConnectionProvider {
-	private Logger LOG = LoggerFactory.getLogger(ConnectionProviderImpl.class);
 
-	private PersistenceUnitInfo persistenceUnitInfo;
+    private final Logger LOG = LoggerFactory.getLogger(ConnectionProviderImpl.class);
 
-	public ConnectionProviderImpl(PersistenceUnitInfo persistenceUnitInfo) {
-		super();
-		this.persistenceUnitInfo = persistenceUnitInfo;
+    private final PersistenceUnitInfo persistenceUnitInfo;
+
+    public ConnectionProviderImpl(PersistenceUnitInfo persistenceUnitInfo) {
+	super();
+	this.persistenceUnitInfo = persistenceUnitInfo;
+    }
+
+    @Override
+    public Connection getConnection() throws SQLException {
+	DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
+	if (dataSource != null)
+	    return dataSource.getConnection();
+
+	dataSource = persistenceUnitInfo.getJtaDataSource();
+	if (dataSource != null)
+	    return dataSource.getConnection();
+
+	Properties connectionProps = new Properties();
+	Properties properties = persistenceUnitInfo.getProperties();
+	String user = (String) properties.get("javax.persistence.jdbc.user");
+	String password = (String) properties.get("javax.persistence.jdbc.password");
+	if (user != null && password != null) {
+	    connectionProps.put("user", user);
+	    connectionProps.put("password", password);
 	}
 
-	public Connection getConnection() throws SQLException {
-		DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
-		if (dataSource != null)
-			return dataSource.getConnection();
+	String url = (String) properties.get("javax.persistence.jdbc.url");
+	Connection connection = DriverManager.getConnection(url, connectionProps);
+	connection.setAutoCommit(false);
+	return connection;
+    }
 
-		dataSource = persistenceUnitInfo.getJtaDataSource();
-		if (dataSource != null)
-			return dataSource.getConnection();
+    /**
+     *
+     * @throws Exception
+     */
+    @Override
+    public void init() throws Exception {
+	DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
+	if (dataSource != null)
+	    return;
 
-		Properties connectionProps = new Properties();
-		Properties properties = persistenceUnitInfo.getProperties();
-		String user = (String) properties.get("javax.persistence.jdbc.user");
-		String password = (String) properties.get("javax.persistence.jdbc.password");
-		if (user != null && password != null) {
-			connectionProps.put("user", user);
-			connectionProps.put("password", password);
-		}
+	dataSource = persistenceUnitInfo.getJtaDataSource();
+	if (dataSource != null)
+	    return;
 
-		String url = (String) properties.get("javax.persistence.jdbc.url");
-		Connection connection = DriverManager.getConnection(url, connectionProps);
-		connection.setAutoCommit(false);
-		return connection;
-	}
+	Properties properties = persistenceUnitInfo.getProperties();
+	String driverClass = (String) properties.get("javax.persistence.jdbc.driver");
+	if (driverClass != null)
+	    Class.forName(driverClass).newInstance();
 
-	public void init() throws Exception {
-		DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
-		if (dataSource != null)
-			return;
-
-		dataSource = persistenceUnitInfo.getJtaDataSource();
-		if (dataSource != null)
-			return;
-
-		Properties properties = persistenceUnitInfo.getProperties();
-		String driverClass = (String) properties.get("javax.persistence.jdbc.driver");
-		if (driverClass != null)
-			Class.forName(driverClass).newInstance();
-
-		String url = (String) properties.get("javax.persistence.jdbc.url");
-		if (url == null)
-			throw new IllegalArgumentException("'javax.persistence.jdbc.url' property not found");
-	}
+	String url = (String) properties.get("javax.persistence.jdbc.url");
+	if (url == null)
+	    throw new IllegalArgumentException("'javax.persistence.jdbc.url' property not found");
+    }
 }
