@@ -1,75 +1,68 @@
 package org.minijpa.jpa.criteria.predicate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import org.minijpa.jpa.criteria.AbstractExpression;
 
-public class LikePatternPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
-	private Expression<?> x;
-	private String pattern;
-	private Character escapeChar;
-	private Expression<java.lang.Character> escapeCharEx;
-	private boolean not = false;
-	private boolean negated = false;
-	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
+public class LikePatternPredicate extends AbstractPredicate implements PredicateExpressionInfo, PredicateTypeInfo {
 
-	public LikePatternPredicate(Expression<?> x, String pattern, Character escapeChar,
-			Expression<Character> escapeCharEx, boolean not, boolean negated) {
-		super(Boolean.class);
-		this.x = x;
-		this.pattern = pattern;
-		this.escapeChar = escapeChar;
-		this.escapeCharEx = escapeCharEx;
-		this.not = not;
-		this.negated = negated;
-	}
+    private Expression<?> x;
+    private String pattern;
+    private Character escapeChar;
+    private Expression<java.lang.Character> escapeCharEx;
+    private final List<Expression<Boolean>> expressions = new ArrayList<>();
 
-	@Override
-	public PredicateType getPredicateType() {
-		return PredicateType.LIKE_PATTERN;
-	}
+    public LikePatternPredicate(Expression<?> x, String pattern, Character escapeChar,
+	    Expression<Character> escapeCharEx, boolean not, boolean negated) {
+	super(not, negated);
+	this.x = x;
+	this.pattern = pattern;
+	this.escapeChar = escapeChar;
+	this.escapeCharEx = escapeCharEx;
+    }
 
-	@Override
-	public BooleanOperator getOperator() {
-		return BooleanOperator.AND;
-	}
+    @Override
+    public PredicateType getPredicateType() {
+	return PredicateType.LIKE_PATTERN;
+    }
 
-	@Override
-	public boolean isNegated() {
-		return negated;
-	}
+    @Override
+    public BooleanOperator getOperator() {
+	return BooleanOperator.AND;
+    }
 
-	@Override
-	public List<Expression<Boolean>> getExpressions() {
-		return new ArrayList<Expression<Boolean>>(expressions);
-	}
+    @Override
+    public List<Expression<?>> getSimpleExpressions() {
+	return Arrays.asList(x);
+    }
 
-	@Override
-	public Predicate not() {
-		return new LikePatternPredicate(x, pattern, escapeChar, escapeCharEx, !not, true);
-	}
+    @Override
+    public List<Expression<Boolean>> getExpressions() {
+	return new ArrayList<>(expressions);
+    }
 
-	public Expression<?> getX() {
-		return x;
-	}
+    @Override
+    public Predicate not() {
+	return new LikePatternPredicate(x, pattern, escapeChar, escapeCharEx, !isNot(), true);
+    }
 
-	public String getPattern() {
-		return pattern;
-	}
+    public Expression<?> getX() {
+	return x;
+    }
 
-	public Character getEscapeChar() {
-		return escapeChar;
-	}
+    public String getPattern() {
+	return pattern;
+    }
 
-	public Expression<java.lang.Character> getEscapeCharEx() {
-		return escapeCharEx;
-	}
+    public Character getEscapeChar() {
+	return escapeChar;
+    }
 
-	public boolean isNot() {
-		return not;
-	}
+    public Expression<java.lang.Character> getEscapeCharEx() {
+	return escapeCharEx;
+    }
 
 }

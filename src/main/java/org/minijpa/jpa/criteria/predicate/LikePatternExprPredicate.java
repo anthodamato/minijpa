@@ -1,77 +1,68 @@
 package org.minijpa.jpa.criteria.predicate;
 
-import org.minijpa.jpa.criteria.predicate.PredicateTypeInfo;
-import org.minijpa.jpa.criteria.predicate.PredicateType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import org.minijpa.jpa.criteria.AbstractExpression;
 
-public class LikePatternExprPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
-	private Expression<?> x;
-	private Expression<String> patternEx;
-	private Character escapeChar;
-	private Expression<java.lang.Character> escapeCharEx;
-	private boolean not = false;
-	private boolean negated = false;
-	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
+public class LikePatternExprPredicate extends AbstractPredicate implements PredicateExpressionInfo, PredicateTypeInfo {
 
-	public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx, Character escapeChar,
-			Expression<Character> escapeCharEx, boolean not, boolean negated) {
-		super(Boolean.class);
-		this.x = x;
-		this.patternEx = patternEx;
-		this.escapeChar = escapeChar;
-		this.escapeCharEx = escapeCharEx;
-		this.not = not;
-		this.negated = negated;
-	}
+    private Expression<?> x;
+    private Expression<String> patternEx;
+    private Character escapeChar;
+    private Expression<java.lang.Character> escapeCharEx;
+    private final List<Expression<Boolean>> expressions = new ArrayList<>();
 
-	@Override
-	public PredicateType getPredicateType() {
-		return PredicateType.LIKE_PATTERN_EXPR;
-	}
+    public LikePatternExprPredicate(Expression<?> x, Expression<String> patternEx, Character escapeChar,
+	    Expression<Character> escapeCharEx, boolean not, boolean negated) {
+	super(not, negated);
+	this.x = x;
+	this.patternEx = patternEx;
+	this.escapeChar = escapeChar;
+	this.escapeCharEx = escapeCharEx;
+    }
 
-	@Override
-	public BooleanOperator getOperator() {
-		return BooleanOperator.AND;
-	}
+    @Override
+    public PredicateType getPredicateType() {
+	return PredicateType.LIKE_PATTERN_EXPR;
+    }
 
-	@Override
-	public boolean isNegated() {
-		return negated;
-	}
+    @Override
+    public BooleanOperator getOperator() {
+	return BooleanOperator.AND;
+    }
 
-	@Override
-	public List<Expression<Boolean>> getExpressions() {
-		return new ArrayList<Expression<Boolean>>(expressions);
-	}
+    @Override
+    public List<Expression<?>> getSimpleExpressions() {
+	return Arrays.asList(x);
+    }
 
-	@Override
-	public Predicate not() {
-		return new LikePatternExprPredicate(x, patternEx, escapeChar, escapeCharEx, !not, true);
-	}
+    @Override
+    public List<Expression<Boolean>> getExpressions() {
+	return new ArrayList<>(expressions);
+    }
 
-	public Expression<?> getX() {
-		return x;
-	}
+    @Override
+    public Predicate not() {
+	return new LikePatternExprPredicate(x, patternEx, escapeChar, escapeCharEx, !isNot(), true);
+    }
 
-	public Character getEscapeChar() {
-		return escapeChar;
-	}
+    public Expression<?> getX() {
+	return x;
+    }
 
-	public Expression<Character> getEscapeCharEx() {
-		return escapeCharEx;
-	}
+    public Character getEscapeChar() {
+	return escapeChar;
+    }
 
-	public Expression<String> getPatternEx() {
-		return patternEx;
-	}
+    public Expression<Character> getEscapeCharEx() {
+	return escapeCharEx;
+    }
 
-	public boolean isNot() {
-		return not;
-	}
+    public Expression<String> getPatternEx() {
+	return patternEx;
+    }
 
 }

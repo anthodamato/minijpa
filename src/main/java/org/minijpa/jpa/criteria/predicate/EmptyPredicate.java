@@ -5,46 +5,50 @@ import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import org.minijpa.jpa.criteria.AbstractExpression;
 
-public class EmptyPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
-	private PredicateType predicateType;
+public class EmptyPredicate extends AbstractPredicate implements PredicateExpressionInfo, PredicateTypeInfo {
 
-	public EmptyPredicate(PredicateType predicateType) {
-		super(Boolean.class);
-		this.predicateType = predicateType;
-	}
+    private PredicateType predicateType;
 
-	@Override
-	public PredicateType getPredicateType() {
-		return predicateType;
-	}
+    public EmptyPredicate(PredicateType predicateType) {
+	super(false, false);
+	this.predicateType = predicateType;
+    }
 
-	@Override
-	public BooleanOperator getOperator() {
-		if (predicateType == PredicateType.OR)
-			return BooleanOperator.OR;
+    public EmptyPredicate(PredicateType predicateType, boolean not, boolean negated) {
+	super(not, negated);
+	this.predicateType = predicateType;
+    }
 
-		if (predicateType == PredicateType.AND)
-			return BooleanOperator.AND;
+    @Override
+    public PredicateType getPredicateType() {
+	return predicateType;
+    }
 
-		return BooleanOperator.AND;
-	}
+    @Override
+    public List<Expression<?>> getSimpleExpressions() {
+	return Collections.emptyList();
+    }
 
-	@Override
-	public boolean isNegated() {
-		return predicateType == PredicateType.NOT;
-	}
+    @Override
+    public BooleanOperator getOperator() {
+	if (predicateType == PredicateType.OR)
+	    return BooleanOperator.OR;
 
-	@Override
-	public List<Expression<Boolean>> getExpressions() {
-		return Collections.emptyList();
-	}
+	if (predicateType == PredicateType.AND)
+	    return BooleanOperator.AND;
 
-	@Override
-	public Predicate not() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	return BooleanOperator.AND;
+    }
+
+    @Override
+    public List<Expression<Boolean>> getExpressions() {
+	return Collections.emptyList();
+    }
+
+    @Override
+    public Predicate not() {
+	return new EmptyPredicate(predicateType, !isNot(), true);
+    }
 
 }

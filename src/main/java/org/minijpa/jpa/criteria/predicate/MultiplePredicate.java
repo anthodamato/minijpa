@@ -1,56 +1,70 @@
 package org.minijpa.jpa.criteria.predicate;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import org.minijpa.jpa.criteria.AbstractExpression;
 
-public class MultiplePredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
-	private PredicateType predicateType;
-	private Predicate[] restrictions;
+public class MultiplePredicate extends AbstractPredicate implements PredicateExpressionInfo, PredicateTypeInfo {
 
-	public MultiplePredicate(PredicateType predicateType, Predicate[] restrictions) {
-		super(Boolean.class);
-		this.predicateType = predicateType;
-		this.restrictions = restrictions;
-	}
+    private PredicateType predicateType;
+    private Predicate[] restrictions;
+    private List<Expression<?>> simpleExpressions;
 
-	@Override
-	public PredicateType getPredicateType() {
-		return predicateType;
-	}
+    public MultiplePredicate(PredicateType predicateType, Predicate[] restrictions) {
+	super(false, false);
+	this.predicateType = predicateType;
+	this.restrictions = restrictions;
+    }
 
-	@Override
-	public BooleanOperator getOperator() {
-		if (predicateType == PredicateType.OR)
-			return BooleanOperator.OR;
+    public MultiplePredicate(PredicateType predicateType, Predicate[] restrictions, boolean not, boolean negated) {
+	super(not, negated);
+	this.predicateType = predicateType;
+	this.restrictions = restrictions;
+    }
 
-		if (predicateType == PredicateType.AND)
-			return BooleanOperator.AND;
+    @Override
+    public PredicateType getPredicateType() {
+	return predicateType;
+    }
 
-		return BooleanOperator.AND;
-	}
+    @Override
+    public List<Expression<?>> getSimpleExpressions() {
+	if (simpleExpressions != null)
+	    return simpleExpressions;
 
-	@Override
-	public boolean isNegated() {
-		return predicateType == PredicateType.NOT;
-	}
+	simpleExpressions = new ArrayList<>();
+	PredicateUtils.findExpressions(restrictions, simpleExpressions);
+	return simpleExpressions;
+    }
 
-	@Override
-	public List<Expression<Boolean>> getExpressions() {
-		return Collections.emptyList();
-	}
+    @Override
+    public BooleanOperator getOperator() {
+	if (predicateType == PredicateType.OR)
+	    return BooleanOperator.OR;
 
-	@Override
-	public Predicate not() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	if (predicateType == PredicateType.AND)
+	    return BooleanOperator.AND;
 
-	public Predicate[] getRestrictions() {
-		return restrictions;
-	}
+	return BooleanOperator.AND;
+    }
+
+    @Override
+    public List<Expression<Boolean>> getExpressions() {
+	List<Expression<Boolean>> expressions = new ArrayList<>();
+	PredicateUtils.findTopLevelExpressions(this, expressions);
+	return expressions;
+    }
+
+    @Override
+    public Predicate not() {
+	return new MultiplePredicate(predicateType, restrictions, !isNot(), true);
+    }
+
+    public Predicate[] getRestrictions() {
+	return restrictions;
+    }
 
 }

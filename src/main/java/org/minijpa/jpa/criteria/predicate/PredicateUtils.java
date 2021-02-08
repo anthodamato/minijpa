@@ -1,13 +1,7 @@
 package org.minijpa.jpa.criteria.predicate;
 
-import org.minijpa.jpa.criteria.predicate.ExprPredicate;
-import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
-import org.minijpa.jpa.criteria.predicate.ComparisonPredicate;
-import org.minijpa.jpa.criteria.predicate.BinaryBooleanExprPredicate;
-import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
-import org.minijpa.jpa.criteria.predicate.BooleanExprPredicate;
-import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.criteria.Expression;
@@ -17,54 +11,42 @@ import org.minijpa.jpa.criteria.MiniParameterExpression;
 
 public class PredicateUtils {
 
-	private static void checkExpressionAsParameter(Expression<?> x, Set<ParameterExpression<?>> parameterExpressions) {
-		if (x != null && x instanceof MiniParameterExpression<?>) {
-			parameterExpressions.add((ParameterExpression<?>) x);
-		}
-	}
+    private static void checkExpressionAsParameter(Expression<?> x, Set<ParameterExpression<?>> parameterExpressions) {
+	if (x != null && x instanceof MiniParameterExpression<?>)
+	    parameterExpressions.add((ParameterExpression<?>) x);
+    }
 
-	private static void findParameters(Predicate predicate, Set<ParameterExpression<?>> parameterExpressions) {
-		if (predicate instanceof MultiplePredicate) {
-			MultiplePredicate multiplePredicate = (MultiplePredicate) predicate;
-			Predicate[] predicates = multiplePredicate.getRestrictions();
-			for (Predicate p : predicates) {
-				findParameters(p, parameterExpressions);
-			}
-		} else if (predicate instanceof ComparisonPredicate) {
-			ComparisonPredicate comparisonPredicate = (ComparisonPredicate) predicate;
-			checkExpressionAsParameter(comparisonPredicate.getX(), parameterExpressions);
-			checkExpressionAsParameter(comparisonPredicate.getY(), parameterExpressions);
-		} else if (predicate instanceof BetweenExpressionsPredicate) {
-			BetweenExpressionsPredicate betweenExpressionsPredicate = (BetweenExpressionsPredicate) predicate;
-			checkExpressionAsParameter(betweenExpressionsPredicate.getX(), parameterExpressions);
-			checkExpressionAsParameter(betweenExpressionsPredicate.getY(), parameterExpressions);
-			checkExpressionAsParameter(betweenExpressionsPredicate.getV(), parameterExpressions);
-		} else if (predicate instanceof BetweenValuesPredicate) {
-			BetweenValuesPredicate betweenValuesPredicate = (BetweenValuesPredicate) predicate;
-			checkExpressionAsParameter(betweenValuesPredicate.getV(), parameterExpressions);
-		} else if (predicate instanceof BinaryBooleanExprPredicate) {
-			BinaryBooleanExprPredicate binaryBooleanExprPredicate = (BinaryBooleanExprPredicate) predicate;
-			checkExpressionAsParameter(binaryBooleanExprPredicate.getX(), parameterExpressions);
-			checkExpressionAsParameter(binaryBooleanExprPredicate.getY(), parameterExpressions);
-		} else if (predicate instanceof BooleanExprPredicate) {
-			BooleanExprPredicate booleanExprPredicate = (BooleanExprPredicate) predicate;
-			checkExpressionAsParameter(booleanExprPredicate.getX(), parameterExpressions);
-		} else if (predicate instanceof ExprPredicate) {
-			ExprPredicate exprPredicate = (ExprPredicate) predicate;
-			checkExpressionAsParameter(exprPredicate.getX(), parameterExpressions);
-		} else if (predicate instanceof LikePatternExprPredicate) {
-			LikePatternExprPredicate likePatternExprPredicate = (LikePatternExprPredicate) predicate;
-			checkExpressionAsParameter(likePatternExprPredicate.getX(), parameterExpressions);
-		} else if (predicate instanceof LikePatternPredicate) {
-			LikePatternPredicate likePatternPredicate = (LikePatternPredicate) predicate;
-			checkExpressionAsParameter(likePatternPredicate.getX(), parameterExpressions);
-		}
-	}
+    private static void findExpressions(Predicate predicate, List<Expression<?>> expressions) {
+	List<Expression<Boolean>> exprs = predicate.getExpressions();
+	if (exprs == null || exprs.isEmpty())
+	    expressions.addAll(((PredicateExpressionInfo) predicate).getSimpleExpressions());
+	else
+	    exprs.stream().filter(e -> (e instanceof Predicate)).forEachOrdered(e -> {
+		findExpressions((Predicate) e, expressions);
+	    });
+    }
 
-	public static Set<ParameterExpression<?>> findParameters(Predicate predicate) {
-		Set<ParameterExpression<?>> parameterExpressions = new HashSet<>();
-		findParameters(predicate, parameterExpressions);
-		return parameterExpressions;
+    public static void findExpressions(Predicate[] predicates, List<Expression<?>> expressions) {
+	for (Predicate p : predicates) {
+	    findExpressions(p, expressions);
 	}
+    }
 
+    public static Set<ParameterExpression<?>> findParameters(Predicate predicate) {
+	Set<ParameterExpression<?>> parameterExpressions = new HashSet<>();
+	PredicateExpressionInfo predicateExpressionInfo = (PredicateExpressionInfo) predicate;
+	predicateExpressionInfo.getSimpleExpressions().stream().forEach(e -> {
+	    checkExpressionAsParameter(e, parameterExpressions);
+	});
+
+	return parameterExpressions;
+    }
+
+    public static void findTopLevelExpressions(MultiplePredicate multiplePredicate, List<Expression<Boolean>> expressions) {
+	Predicate[] predicates = multiplePredicate.getRestrictions();
+	for (Predicate p : predicates) {
+	    if (p instanceof MultiplePredicate)
+		expressions.add(p);
+	}
+    }
 }

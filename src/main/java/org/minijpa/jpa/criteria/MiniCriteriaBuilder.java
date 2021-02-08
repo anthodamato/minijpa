@@ -43,6 +43,7 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.Metamodel;
 
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jpa.criteria.predicate.AbstractPredicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,6 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
-	LOG.info("createQuery: resultClass=" + resultClass);
 	return new MiniCriteriaQuery<>(resultClass, metamodel, entities);
     }
 
@@ -212,8 +212,8 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Predicate not(Expression<Boolean> restriction) {
-	if (restriction instanceof ComparisonPredicate)
-	    return ((ComparisonPredicate) restriction).not();
+	if (restriction instanceof AbstractPredicate)
+	    return ((AbstractPredicate) restriction).not();
 
 	return new BooleanExprPredicate(PredicateType.NOT, restriction);
     }

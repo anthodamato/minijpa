@@ -5,58 +5,64 @@ import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import org.minijpa.jpa.criteria.AbstractExpression;
 
-public class BinaryBooleanExprPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
-	private PredicateType predicateType;
-	private Expression<Boolean> x;
-	private Expression<Boolean> y;
+public class BinaryBooleanExprPredicate extends AbstractPredicate implements PredicateExpressionInfo, PredicateTypeInfo {
 
-	public BinaryBooleanExprPredicate(PredicateType predicateType, Expression<Boolean> x, Expression<Boolean> y) {
-		super(Boolean.class);
-		this.predicateType = predicateType;
-		this.x = x;
-		this.y = y;
-	}
+    private PredicateType predicateType;
+    private Expression<Boolean> x;
+    private Expression<Boolean> y;
 
-	@Override
-	public PredicateType getPredicateType() {
-		return predicateType;
-	}
+    public BinaryBooleanExprPredicate(PredicateType predicateType, Expression<Boolean> x, Expression<Boolean> y) {
+	super(false, false);
+	this.predicateType = predicateType;
+	this.x = x;
+	this.y = y;
+    }
 
-	@Override
-	public BooleanOperator getOperator() {
-		if (predicateType == PredicateType.OR)
-			return BooleanOperator.OR;
+    public BinaryBooleanExprPredicate(PredicateType predicateType, Expression<Boolean> x, Expression<Boolean> y, boolean not, boolean negated) {
+	super(not, negated);
+	this.predicateType = predicateType;
+	this.x = x;
+	this.y = y;
+    }
 
-		if (predicateType == PredicateType.AND)
-			return BooleanOperator.AND;
+    @Override
+    public PredicateType getPredicateType() {
+	return predicateType;
+    }
 
-		return BooleanOperator.AND;
-	}
+    @Override
+    public List<Expression<?>> getSimpleExpressions() {
+	return Arrays.asList(x, y);
+    }
 
-	@Override
-	public boolean isNegated() {
-		return predicateType == PredicateType.NOT;
-	}
+    @Override
+    public BooleanOperator getOperator() {
+	if (predicateType == PredicateType.OR)
+	    return BooleanOperator.OR;
 
-	@Override
-	public List<Expression<Boolean>> getExpressions() {
-		return Arrays.asList(x, y);
-	}
+	if (predicateType == PredicateType.AND)
+	    return BooleanOperator.AND;
 
-	@Override
-	public Predicate not() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	return BooleanOperator.AND;
+    }
 
-	public Expression<Boolean> getX() {
-		return x;
-	}
+    @Override
+    public List<Expression<Boolean>> getExpressions() {
+	return Arrays.asList(x, y);
+    }
 
-	public Expression<Boolean> getY() {
-		return y;
-	}
+    @Override
+    public Predicate not() {
+	return new BinaryBooleanExprPredicate(predicateType, x, y, !isNot(), true);
+    }
+
+    public Expression<Boolean> getX() {
+	return x;
+    }
+
+    public Expression<Boolean> getY() {
+	return y;
+    }
 
 }

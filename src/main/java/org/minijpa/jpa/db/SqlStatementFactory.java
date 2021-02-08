@@ -921,7 +921,6 @@ public class SqlStatementFactory {
 	    optionalCondition = createConditions(restriction, parameters, query);
 
 	return new SqlUpdate(fromTable, Optional.of(parameters), columns, optionalCondition);
-
     }
 
     public SqlDelete delete(Query query) {

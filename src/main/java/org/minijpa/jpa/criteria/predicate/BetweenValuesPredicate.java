@@ -1,61 +1,68 @@
 package org.minijpa.jpa.criteria.predicate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import org.minijpa.jpa.criteria.AbstractExpression;
 
-public class BetweenValuesPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
-	private Expression<?> v;
-	private Object x;
-	private Object y;
-	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
+public class BetweenValuesPredicate extends AbstractPredicate implements PredicateTypeInfo, PredicateExpressionInfo {
 
-	public BetweenValuesPredicate(Expression<?> v, Object x, Object y) {
-		super(Boolean.class);
-		this.v = v;
-		this.x = x;
-		this.y = y;
-	}
+    private final Expression<?> v;
+    private final Object x;
+    private final Object y;
+    private final List<Expression<Boolean>> expressions = new ArrayList<>();
 
-	@Override
-	public PredicateType getPredicateType() {
-		return PredicateType.BETWEEN_VALUES;
-	}
+    public BetweenValuesPredicate(Expression<?> v, Object x, Object y) {
+	super(false, false);
+	this.v = v;
+	this.x = x;
+	this.y = y;
+    }
 
-	@Override
-	public BooleanOperator getOperator() {
-		return BooleanOperator.AND;
-	}
+    public BetweenValuesPredicate(Expression<?> v, Object x, Object y, boolean not, boolean negated) {
+	super(not, negated);
+	this.v = v;
+	this.x = x;
+	this.y = y;
+    }
 
-	@Override
-	public boolean isNegated() {
-		return false;
-	}
+    @Override
+    public PredicateType getPredicateType() {
+	return PredicateType.BETWEEN_VALUES;
+    }
 
-	@Override
-	public List<Expression<Boolean>> getExpressions() {
-		return new ArrayList<Expression<Boolean>>(expressions);
-	}
+    @Override
+    public BooleanOperator getOperator() {
+	return BooleanOperator.AND;
+    }
 
-	@Override
-	public Predicate not() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public List<Expression<?>> getSimpleExpressions() {
+	return Arrays.asList(v);
+    }
 
-	public Expression<?> getV() {
-		return v;
-	}
+    @Override
+    public List<Expression<Boolean>> getExpressions() {
+	return new ArrayList<>(expressions);
+    }
 
-	public Object getX() {
-		return x;
-	}
+    @Override
+    public Predicate not() {
+	return new BetweenValuesPredicate(v, x, y, !isNot(), true);
+    }
 
-	public Object getY() {
-		return y;
-	}
+    public Expression<?> getV() {
+	return v;
+    }
+
+    public Object getX() {
+	return x;
+    }
+
+    public Object getY() {
+	return y;
+    }
 
 }

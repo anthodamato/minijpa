@@ -1,79 +1,78 @@
 package org.minijpa.jpa.criteria.predicate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import org.minijpa.jpa.criteria.AbstractExpression;
 
-public class ComparisonPredicate extends AbstractExpression<Boolean> implements Predicate, PredicateTypeInfo {
-	private PredicateType predicateType;
-	private Expression<?> x;
-	private Expression<?> y;
-	private Object value;
-	private boolean negated = false;
-	private List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
+public class ComparisonPredicate extends AbstractPredicate implements PredicateExpressionInfo, PredicateTypeInfo {
 
-	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value) {
-		super(Boolean.class);
-		this.predicateType = predicateType;
-		this.x = x;
-		this.y = y;
-		this.value = value;
-	}
+    private PredicateType predicateType;
+    private Expression<?> x;
+    private Expression<?> y;
+    private Object value;
+    private final List<Expression<Boolean>> expressions = new ArrayList<>();
 
-	public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value,
-			boolean negated) {
-		super(Boolean.class);
-		this.predicateType = predicateType;
-		this.x = x;
-		this.y = y;
-		this.value = value;
-		this.negated = negated;
-	}
+    public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value) {
+	super(false, false);
+	this.predicateType = predicateType;
+	this.x = x;
+	this.y = y;
+	this.value = value;
+    }
 
-	@Override
-	public PredicateType getPredicateType() {
-		return predicateType;
-	}
+    public ComparisonPredicate(PredicateType predicateType, Expression<?> x, Expression<?> y, Object value,
+	    boolean not, boolean negated) {
+	super(not, negated);
+	this.predicateType = predicateType;
+	this.x = x;
+	this.y = y;
+	this.value = value;
+    }
 
-	@Override
-	public BooleanOperator getOperator() {
-		if (predicateType == PredicateType.OR)
-			return BooleanOperator.OR;
+    @Override
+    public PredicateType getPredicateType() {
+	return predicateType;
+    }
 
-		if (predicateType == PredicateType.AND)
-			return BooleanOperator.AND;
+    @Override
+    public List<Expression<?>> getSimpleExpressions() {
+	return Arrays.asList(x, y);
+    }
 
-		return BooleanOperator.AND;
-	}
+    @Override
+    public BooleanOperator getOperator() {
+	if (predicateType == PredicateType.OR)
+	    return BooleanOperator.OR;
 
-	@Override
-	public boolean isNegated() {
-		return negated;
-	}
+	if (predicateType == PredicateType.AND)
+	    return BooleanOperator.AND;
 
-	@Override
-	public List<Expression<Boolean>> getExpressions() {
-		return new ArrayList<Expression<Boolean>>(expressions);
-	}
+	return BooleanOperator.AND;
+    }
 
-	@Override
-	public Predicate not() {
-		return new ComparisonPredicate(predicateType, x, y, value, !negated);
-	}
+    @Override
+    public List<Expression<Boolean>> getExpressions() {
+	return new ArrayList<>(expressions);
+    }
 
-	public Expression<?> getX() {
-		return x;
-	}
+    @Override
+    public Predicate not() {
+	return new ComparisonPredicate(predicateType, x, y, value, !isNot(), true);
+    }
 
-	public Expression<?> getY() {
-		return y;
-	}
+    public Expression<?> getX() {
+	return x;
+    }
 
-	public Object getValue() {
-		return value;
-	}
+    public Expression<?> getY() {
+	return y;
+    }
+
+    public Object getValue() {
+	return value;
+    }
 
 }
