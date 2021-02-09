@@ -3,43 +3,46 @@ package org.minijpa.jpa.model;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "stove")
 public class Stove {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	private String model;
-	private Integer numberOfBurners;
-	private Boolean induction;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-	public String getModel() {
-		return model;
-	}
+    private String model;
+    private Integer numberOfBurners;
+    private Boolean induction;
 
-	public void setModel(String model) {
-		this.model = model;
-	}
+    public String getModel() {
+	return model;
+    }
 
-	public Integer getNumberOfBurners() {
-		return numberOfBurners;
-	}
+    public void setModel(String model) {
+	this.model = model;
+    }
 
-	public void setNumberOfBurners(Integer numberOfBurners) {
-		this.numberOfBurners = numberOfBurners;
-	}
+    public Integer getNumberOfBurners() {
+	return numberOfBurners;
+    }
 
-	public Boolean getInduction() {
-		return induction;
-	}
+    public void setNumberOfBurners(Integer numberOfBurners) {
+	this.numberOfBurners = numberOfBurners;
+    }
 
-	public void setInduction(Boolean induction) {
-		this.induction = induction;
-	}
+    public Boolean getInduction() {
+	return induction;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public void setInduction(Boolean induction) {
+	this.induction = induction;
+    }
+
+    public Long getId() {
+	return id;
+    }
 
 }

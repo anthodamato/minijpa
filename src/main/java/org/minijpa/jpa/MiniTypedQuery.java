@@ -27,6 +27,7 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 
     private Logger LOG = LoggerFactory.getLogger(MiniTypedQuery.class);
     private final CriteriaQuery<?> criteriaQuery;
+    private Set<Parameter<?>> parameters;
 
     public MiniTypedQuery(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
 	super();
@@ -89,10 +90,11 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 	return parameters;
     }
 
-//	@Override
-//	public Parameter<?> getParameter(String name) {
-//		return CriteriaUtils.findParameterByName(parameters, name);
-//	}
+    @Override
+    public Parameter<?> getParameter(String name) {
+	return CriteriaUtils.findParameterByName(parameters, name);
+    }
+
     @Override
     public <T> Parameter<T> getParameter(String name, Class<T> type) {
 	// TODO Auto-generated method stub
@@ -121,11 +123,6 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
     public <T> T getParameterValue(Parameter<T> param) {
 	// TODO Auto-generated method stub
 	return null;
-    }
-
-    @Override
-    public Object getParameterValue(String name) {
-	return namedParameters.get(name);
     }
 
     @Override
@@ -210,7 +207,7 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 
     @Override
     public TypedQuery<X> setParameter(String name, Object value) {
-	namedParameters.put(name, value);
+	super.setParameter(name, value);
 	return this;
     }
 

@@ -37,12 +37,12 @@ import org.slf4j.LoggerFactory;
 
 public class MiniEntityManager extends AbstractEntityManager {
 
-    private Logger LOG = LoggerFactory.getLogger(MiniEntityManager.class);
-    private EntityManagerType entityManagerType;
-    private EntityManagerFactory entityManagerFactory;
+    private final Logger LOG = LoggerFactory.getLogger(MiniEntityManager.class);
+    private final EntityManagerType entityManagerType;
+    private final EntityManagerFactory entityManagerFactory;
     private EntityTransaction entityTransaction;
-    private DbConfiguration dbConfiguration;
-    private JdbcEntityManagerImpl jdbcEntityManager;
+    private final DbConfiguration dbConfiguration;
+    private final JdbcEntityManagerImpl jdbcEntityManager;
     private FlushModeType flushModeType = FlushModeType.AUTO;
     private boolean open = true;
 
@@ -353,8 +353,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public Query createNativeQuery(String sqlString) {
-	// TODO Auto-generated method stub
-	return null;
+	return new MiniNativeQuery(sqlString, this, jdbcEntityManager);
     }
 
     @Override
