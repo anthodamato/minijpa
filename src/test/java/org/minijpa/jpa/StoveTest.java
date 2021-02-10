@@ -181,4 +181,41 @@ public class StoveTest {
 	}
     }
 
+    @Test
+    public void positionalParameter() {
+	final EntityManager em = emf.createEntityManager();
+	EntityTransaction tx = em.getTransaction();
+	try {
+	    tx.begin();
+
+	    Stove stove = create4BurnersStove();
+	    em.persist(stove);
+	    Stove s_4 = em.find(Stove.class, stove.getId());
+	    Assertions.assertTrue(stove == s_4);
+
+	    stove = create8BurnersStove();
+	    em.persist(stove);
+	    Stove s_8 = em.find(Stove.class, stove.getId());
+	    Assertions.assertTrue(stove == s_8);
+
+	    stove = createInductionStove();
+	    em.persist(stove);
+	    Stove s_induction = em.find(Stove.class, stove.getId());
+	    Assertions.assertTrue(stove == s_induction);
+
+	    Query query = em.createNativeQuery("select * from stove where induction=?3 and model=?2");
+	    query.setParameter(3, true);
+	    query.setParameter(2, "Smeg");
+	    List stoves = query.getResultList();
+	    Assertions.assertEquals(1, stoves.size());
+
+	    em.remove(s_4);
+	    em.remove(s_8);
+	    em.remove(s_induction);
+	    tx.commit();
+	} finally {
+	    em.close();
+	}
+    }
+
 }

@@ -288,7 +288,6 @@ public abstract class AbstractJdbcRunner {
 	    for (int i = 0; i < parameterValues.size(); ++i) {
 		preparedStatement.setObject(i + 1, parameterValues.get(i));
 	    }
-//	    setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
 
 	    LOG.info("Running `" + sql + "`");
 	    List<Object> objects = new ArrayList<>();

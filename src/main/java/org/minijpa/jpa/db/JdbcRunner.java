@@ -17,14 +17,15 @@ import org.minijpa.jdbc.ColumnNameValue;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JdbcRunner extends AbstractJdbcRunner {
 
-    private Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
-    private JdbcEntityManager jdbcEntityManager;
+    private final Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
+    private final JdbcEntityManager jdbcEntityManager;
 
     public JdbcRunner(JdbcEntityManager jdbcEntityManager) {
 	super();
@@ -66,21 +67,15 @@ public class JdbcRunner extends AbstractJdbcRunner {
 	}
     }
 
-    public List<Object> runQuery(Connection connection, String sql, Query query) throws Exception {
+    public List<Object> runQuery(Connection connection, String sqlString, Query query) throws Exception {
 	List<Object> parameterValues = new ArrayList<>();
 	Set<Parameter<?>> parameters = query.getParameters();
 	if (parameters.isEmpty())
-	    return runQuery(connection, sql, parameterValues);
+	    return runQuery(connection, sqlString, parameterValues);
 
-	for (Parameter<?> p : parameters) {
-	    if (p.getName() != null) {
-		sql = sql.replaceAll(":" + p.getName(), "?");
-		parameterValues.add(query.getParameterValue(p.getName()));
-	    } else if (p.getPosition() != null) {
-
-	    }
-	}
-
+	List<ParameterUtils.IndexParameter> indexParameters = ParameterUtils.findIndexParameters(query, sqlString);
+	String sql = ParameterUtils.replaceParameterPlaceholders(query, sqlString, indexParameters);
+	parameterValues = ParameterUtils.sortParameterValues(query, indexParameters);
 	return runQuery(connection, sql, parameterValues);
     }
 }

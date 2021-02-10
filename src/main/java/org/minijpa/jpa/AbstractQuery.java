@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.FlushModeType;
@@ -18,7 +19,6 @@ public abstract class AbstractQuery implements Query {
 
     protected JdbcEntityManager jdbcEntityManager;
     protected FlushModeType flushModeType = FlushModeType.AUTO;
-//    private final Map<String, Object> namedParameters = new HashMap<>();
     private Set<Parameter<?>> parameters;
     private final Map<Parameter<?>, Object> parameterValues = new HashMap<>();
 
@@ -121,7 +121,11 @@ public abstract class AbstractQuery implements Query {
 
     @Override
     public Parameter<?> getParameter(String name) {
-	return null;
+	Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);
+	if (optional.isEmpty())
+	    throw new IllegalArgumentException("Parameter '" + name + "' not found");
+
+	return optional.get();
     }
 
     @Override
@@ -132,8 +136,11 @@ public abstract class AbstractQuery implements Query {
 
     @Override
     public Parameter<?> getParameter(int position) {
-	// TODO Auto-generated method stub
-	return null;
+	Optional<Parameter<?>> optional = ParameterUtils.findParameterByPosition(position, parameterValues);
+	if (optional.isEmpty())
+	    throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
+
+	return optional.get();
     }
 
     @Override
@@ -150,19 +157,28 @@ public abstract class AbstractQuery implements Query {
 
     @Override
     public <T> T getParameterValue(Parameter<T> param) {
-	// TODO Auto-generated method stub
-	return null;
+	if (!parameterValues.containsKey(param))
+	    throw new IllegalArgumentException("Parameter not found: " + param);
+
+	return (T) parameterValues.get(param);
     }
 
     @Override
     public Object getParameterValue(String name) {
-	return ParameterUtils.getParameterValue(name, parameterValues);
+	Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);
+	if (optional.isEmpty())
+	    throw new IllegalArgumentException("Parameter '" + name + "' not found");
+
+	return parameterValues.get(optional.get());
     }
 
     @Override
     public Object getParameterValue(int position) {
-	// TODO Auto-generated method stub
-	return null;
+	Optional<Parameter<?>> optional = ParameterUtils.findParameterByPosition(position, parameterValues);
+	if (optional.isEmpty())
+	    throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
+
+	return parameterValues.get(optional.get());
     }
 
     @Override
