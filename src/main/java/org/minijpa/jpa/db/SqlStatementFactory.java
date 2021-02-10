@@ -425,6 +425,8 @@ public class SqlStatementFactory {
 	Object value = null;
 	if (parameterExpression.getName() != null)
 	    value = query.getParameterValue(parameterExpression.getName());
+	else if (parameterExpression.getPosition() != null)
+	    value = query.getParameter(parameterExpression.getPosition());
 
 	QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), value, attribute.getType(),
 		attribute.getSqlType());
