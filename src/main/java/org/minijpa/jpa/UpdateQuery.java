@@ -8,7 +8,6 @@ import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.criteria.CriteriaUpdate;
-import org.minijpa.jpa.criteria.CriteriaUtils;
 
 import org.minijpa.jpa.db.JdbcEntityManager;
 import org.slf4j.Logger;
@@ -19,7 +18,6 @@ public class UpdateQuery extends AbstractQuery {
     private final Logger LOG = LoggerFactory.getLogger(UpdateQuery.class);
     private final CriteriaUpdate<?> criteriaUpdate;
     private final EntityManager entityManager;
-    private Set<Parameter<?>> parameters;
 
     public UpdateQuery(CriteriaUpdate<?> criteriaUpdate, EntityManager entityManager,
 	    JdbcEntityManager jdbcEntityManager) {
@@ -31,11 +29,6 @@ public class UpdateQuery extends AbstractQuery {
 
     public CriteriaUpdate<?> getCriteriaUpdate() {
 	return criteriaUpdate;
-    }
-
-    @Override
-    public Parameter<?> getParameter(String name) {
-	return CriteriaUtils.findParameterByName(parameters, name);
     }
 
     @Override

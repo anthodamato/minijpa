@@ -1,11 +1,9 @@
 package org.minijpa.jpa;
 
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -16,18 +14,14 @@ import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-
-import org.minijpa.jpa.criteria.CriteriaUtils;
 import org.minijpa.jpa.db.JdbcEntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 
-    private Logger LOG = LoggerFactory.getLogger(MiniTypedQuery.class);
+    private final Logger LOG = LoggerFactory.getLogger(MiniTypedQuery.class);
     private final CriteriaQuery<?> criteriaQuery;
-    private Set<Parameter<?>> parameters;
 
     public MiniTypedQuery(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
 	super();
@@ -80,61 +74,11 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
     }
 
     @Override
-    public Set<Parameter<?>> getParameters() {
-	if (this.parameters == null) {
-	    Predicate predicate = criteriaQuery.getRestriction();
-	    Set<Parameter<?>> params = CriteriaUtils.findParameters(predicate);
-	    this.parameters = Collections.unmodifiableSet(params);
-	}
-
-	return parameters;
-    }
-
-    @Override
-    public Parameter<?> getParameter(String name) {
-	return CriteriaUtils.findParameterByName(parameters, name);
-    }
-
-    @Override
-    public <T> Parameter<T> getParameter(String name, Class<T> type) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Parameter<?> getParameter(int position) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public <T> Parameter<T> getParameter(int position, Class<T> type) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
     public boolean isBound(Parameter<?> param) {
 	// TODO Auto-generated method stub
 	return false;
     }
 
-    @Override
-    public <T> T getParameterValue(Parameter<T> param) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Object getParameterValue(int position) {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-//	@Override
-//	public FlushModeType getFlushMode() {
-//		return flushModeType;
-//	}
     @Override
     public LockModeType getLockMode() {
 	// TODO Auto-generated method stub
@@ -189,20 +133,20 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 
     @Override
     public <T> TypedQuery<X> setParameter(Parameter<T> param, T value) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setParameter(param, value);
+	return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setParameter(param, value, temporalType);
+	return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setParameter(param, value, temporalType);
+	return this;
     }
 
     @Override
@@ -213,32 +157,32 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 
     @Override
     public TypedQuery<X> setParameter(String name, Calendar value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setParameter(name, value, temporalType);
+	return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(String name, Date value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setParameter(name, value, temporalType);
+	return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(int position, Object value) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setParameter(position, value);
+	return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(int position, Calendar value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setParameter(position, value, temporalType);
+	return this;
     }
 
     @Override
     public TypedQuery<X> setParameter(int position, Date value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setParameter(position, value, temporalType);
+	return this;
     }
 
     @Override

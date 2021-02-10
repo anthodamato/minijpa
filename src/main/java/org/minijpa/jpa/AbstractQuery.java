@@ -19,7 +19,6 @@ public abstract class AbstractQuery implements Query {
 
     protected JdbcEntityManager jdbcEntityManager;
     protected FlushModeType flushModeType = FlushModeType.AUTO;
-    private Set<Parameter<?>> parameters;
     private final Map<Parameter<?>, Object> parameterValues = new HashMap<>();
 
     @Override

@@ -1,14 +1,11 @@
 package org.minijpa.jpa;
 
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.criteria.CriteriaDelete;
-import org.minijpa.jpa.criteria.CriteriaUtils;
 
 import org.minijpa.jpa.db.JdbcEntityManager;
 import org.slf4j.Logger;
@@ -16,10 +13,9 @@ import org.slf4j.LoggerFactory;
 
 public class DeleteQuery extends AbstractQuery {
 
-    private Logger LOG = LoggerFactory.getLogger(DeleteQuery.class);
-    private CriteriaDelete<?> criteriaDelete;
-    private EntityManager entityManager;
-    private Set<Parameter<?>> parameters;
+    private final Logger LOG = LoggerFactory.getLogger(DeleteQuery.class);
+    private final CriteriaDelete<?> criteriaDelete;
+    private final EntityManager entityManager;
 
     public DeleteQuery(CriteriaDelete<?> criteriaDelete, EntityManager entityManager,
 	    JdbcEntityManager jdbcEntityManager) {
@@ -31,11 +27,6 @@ public class DeleteQuery extends AbstractQuery {
 
     public CriteriaDelete<?> getCriteriaDelete() {
 	return criteriaDelete;
-    }
-
-    @Override
-    public Parameter<?> getParameter(String name) {
-	return CriteriaUtils.findParameterByName(parameters, name);
     }
 
     @Override
