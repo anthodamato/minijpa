@@ -1,25 +1,38 @@
 package org.minijpa.jdbc;
 
 public class PkGeneration {
-	private PkGenerationType strategy = PkGenerationType.AUTO;
-	private String generator;
 
-	public PkGeneration() {
-		super();
-	}
+    private PkStrategy pkStrategy = PkStrategy.PLAIN;
+    private PkGenerationType strategy = PkGenerationType.AUTO;
+    private String generator;
+    private PkSequenceGenerator pkSequenceGenerator;
 
-	public PkGeneration(PkGenerationType strategy, String generator) {
-		super();
-		this.strategy = strategy;
-		this.generator = generator;
-	}
+    public PkStrategy getPkStrategy() {
+	return pkStrategy;
+    }
 
-	public PkGenerationType getStrategy() {
-		return strategy;
-	}
+    public void setPkStrategy(PkStrategy pkStrategy) {
+	this.pkStrategy = pkStrategy;
+    }
 
-	public String getGenerator() {
-		return generator;
-	}
+    public PkGenerationType getStrategy() {
+	return strategy;
+    }
+
+    public void setGenerator(String generator) {
+	this.generator = generator;
+    }
+
+    public String getGenerator() {
+	return generator;
+    }
+
+    public PkSequenceGenerator getPkSequenceGenerator() {
+	return pkSequenceGenerator;
+    }
+
+    public void setPkSequenceGenerator(PkSequenceGenerator pkSequenceGenerator) {
+	this.pkSequenceGenerator = pkSequenceGenerator;
+    }
 
 }

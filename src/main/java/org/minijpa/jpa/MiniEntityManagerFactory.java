@@ -16,8 +16,8 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitInfo;
 
-import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.metamodel.MetamodelFactory;
@@ -31,11 +31,11 @@ import org.slf4j.LoggerFactory;
 
 public class MiniEntityManagerFactory implements EntityManagerFactory {
 
-    private Logger LOG = LoggerFactory.getLogger(MiniEntityManagerFactory.class);
-    private EntityManagerType entityManagerType;
-    private PersistenceUnitInfo persistenceUnitInfo;
-    private Map<String, Object> properties = new HashMap<>();
-    private Map map;
+    private final Logger LOG = LoggerFactory.getLogger(MiniEntityManagerFactory.class);
+    private final EntityManagerType entityManagerType;
+    private final PersistenceUnitInfo persistenceUnitInfo;
+    private final Map<String, Object> properties = new HashMap<>();
+    private final Map map;
     /**
      * The key used is the full class name.
      */
@@ -74,25 +74,24 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	}
 
 	LOG.info("Parsing entities...");
-	Map<String, MetaEntity> entities = new HashMap<>();
-	DbTypeMapper dbTypeMapper = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo)
-		.getDbTypeMapper();
-	Parser parser = new Parser(dbTypeMapper);
+	Map<String, MetaEntity> entityMap = new HashMap<>();
+	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+	Parser parser = new Parser(dbConfiguration);
 	for (String className : persistenceUnitInfo.getManagedClassNames()) {
 	    EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
-	    MetaEntity metaEntity = parser.parse(enhEntity, entities.values());
-	    entities.put(enhEntity.getClassName(), metaEntity);
+	    MetaEntity metaEntity = parser.parse(enhEntity, entityMap.values());
+	    entityMap.put(enhEntity.getClassName(), metaEntity);
 	}
 
 	// replaces the existing meta entities
-	entities.putAll(existingMetaEntities);
+	entityMap.putAll(existingMetaEntities);
 
-	parser.fillRelationships(entities);
+	parser.fillRelationships(entityMap);
 
 	EntityDelegate.getInstance()
-		.addEntityContext(new EntityContext(persistenceUnitInfo.getPersistenceUnitName(), entities));
+		.addEntityContext(new EntityContext(persistenceUnitInfo.getPersistenceUnitName(), entityMap));
 
-	return entities;
+	return entityMap;
     }
 
     @Override

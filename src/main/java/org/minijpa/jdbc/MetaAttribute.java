@@ -14,7 +14,7 @@ public class MetaAttribute extends AbstractAttribute {
 	private Method readMethod;
 	private Method writeMethod;
 	private boolean id;
-	private PkGeneration generatedValue;
+	private PkGeneration pkGeneration;
 	private boolean embedded;
 	private List<MetaAttribute> embeddedAttributes;
 	private Relationship relationship;
@@ -39,8 +39,8 @@ public class MetaAttribute extends AbstractAttribute {
 		return id;
 	}
 
-	public PkGeneration getGeneratedValue() {
-		return generatedValue;
+	public PkGeneration getPkGeneration() {
+		return pkGeneration;
 	}
 
 	public boolean isEmbedded() {
@@ -133,7 +133,7 @@ public class MetaAttribute extends AbstractAttribute {
 		private Method writeMethod;
 		private boolean id;
 		private Integer sqlType;
-		private PkGeneration generatedValue;
+		private PkGeneration pkGeneration;
 		private boolean embedded;
 		private List<MetaAttribute> embeddedAttributes;
 		private Relationship relationship;
@@ -186,8 +186,8 @@ public class MetaAttribute extends AbstractAttribute {
 			return this;
 		}
 
-		public Builder withGeneratedValue(PkGeneration generatedValue) {
-			this.generatedValue = generatedValue;
+		public Builder withPkGeneration(PkGeneration generatedValue) {
+			this.pkGeneration = generatedValue;
 			return this;
 		}
 
@@ -242,7 +242,7 @@ public class MetaAttribute extends AbstractAttribute {
 			attribute.writeMethod = writeMethod;
 			attribute.id = id;
 			attribute.sqlType = sqlType;
-			attribute.generatedValue = generatedValue;
+			attribute.pkGeneration = pkGeneration;
 			attribute.embedded = embedded;
 			attribute.embeddedAttributes = embeddedAttributes;
 			attribute.relationship = relationship;

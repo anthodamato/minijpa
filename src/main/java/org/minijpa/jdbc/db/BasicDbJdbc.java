@@ -2,31 +2,31 @@ package org.minijpa.jdbc.db;
 
 import org.minijpa.jdbc.DefaultNameTranslator;
 import org.minijpa.jdbc.NameTranslator;
-import org.minijpa.jdbc.PkGeneration;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
 
 public abstract class BasicDbJdbc implements DbJdbc {
-	private NameTranslator nameTranslator = new DefaultNameTranslator();
 
-	@Override
-	public NameTranslator getNameTranslator() {
-		return nameTranslator;
-	}
+    private final NameTranslator nameTranslator = new DefaultNameTranslator();
 
-	@Override
-	public PkStrategy findPkStrategy(PkGeneration generatedValue) {
-		if (generatedValue == null)
-			return PkStrategy.PLAIN;
+    @Override
+    public NameTranslator getNameTranslator() {
+	return nameTranslator;
+    }
 
-		if (generatedValue.getStrategy() == PkGenerationType.IDENTITY)
-			return PkStrategy.IDENTITY;
+    @Override
+    public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {
+	if (pkGenerationType == null)
+	    return PkStrategy.PLAIN;
 
-		if (generatedValue.getStrategy() == PkGenerationType.SEQUENCE
-				|| generatedValue.getStrategy() == PkGenerationType.AUTO)
-			return PkStrategy.SEQUENCE;
+	if (pkGenerationType == PkGenerationType.IDENTITY)
+	    return PkStrategy.IDENTITY;
 
-		return PkStrategy.PLAIN;
-	}
+	if (pkGenerationType == PkGenerationType.SEQUENCE
+		|| pkGenerationType == PkGenerationType.AUTO)
+	    return PkStrategy.SEQUENCE;
+
+	return PkStrategy.PLAIN;
+    }
 
 }

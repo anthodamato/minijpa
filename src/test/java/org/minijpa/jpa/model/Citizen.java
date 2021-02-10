@@ -3,44 +3,48 @@ package org.minijpa.jpa.model;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "citizen")
 public class Citizen {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	@Column(name = "first_name")
-	private String name;
+    @Id
+    @SequenceGenerator(name = "SEQ", sequenceName = "SEQ_GEN_SEQUENCE", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ")
+    private Long id;
 
-	@Column(name = "last_name")
-	private String lastName;
+    @Column(name = "first_name")
+    private String name;
 
-	public Long getId() {
-		return id;
-	}
+    @Column(name = "last_name")
+    private String lastName;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+	return name;
+    }
 
-	public String getLastName() {
-		return lastName;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
+    public String getLastName() {
+	return lastName;
+    }
+
+    public void setLastName(String lastName) {
+	this.lastName = lastName;
+    }
 
 }

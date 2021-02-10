@@ -269,6 +269,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
      * @param parentInstance the parent instance
      * @param a the attribute to load
      * @return the instance loaded. It can be a collection
+     * @throws java.lang.Exception
      */
     @Override
     public Object load(Object parentInstance, MetaAttribute a) throws Exception {
@@ -334,7 +335,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	SqlInsert sqlInsert = null;
 	MetaAttribute id = entity.getId();
-	PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(id.getGeneratedValue());
+//	PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(id.getPkGeneration());
+	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
 	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
 	if (pkStrategy == PkStrategy.IDENTITY)
 	    sqlInsert = sqlStatementFactory.generateInsertIdentityStrategy(entity, attrValues);
@@ -365,7 +367,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	if (idValue != null)
 	    return idValue;
 
-	PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(id.getGeneratedValue());
+//	PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(id.getPkGeneration());
+	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
 	if (pkStrategy == PkStrategy.SEQUENCE) {
 	    String seqStm = dbConfiguration.getDbJdbc().sequenceNextValueStatement(entity);
 	    Long longValue = jdbcRunner.generateNextSequenceValue(connectionHolder.getConnection(), seqStm);

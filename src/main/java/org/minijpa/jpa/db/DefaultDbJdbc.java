@@ -1,14 +1,14 @@
 package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.PkGeneration;
+import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.db.BasicDbJdbc;
 
 public class DefaultDbJdbc extends BasicDbJdbc {
 
 	@Override
-	public PkStrategy findPkStrategy(PkGeneration generatedValue) {
+	public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {
 		return PkStrategy.PLAIN;
 	}
 
