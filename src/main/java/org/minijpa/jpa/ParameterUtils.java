@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiPredicate;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 
@@ -21,25 +20,12 @@ import javax.persistence.Query;
  */
 public class ParameterUtils {
 
-    private static BiPredicate<Parameter, Object> findByName = (p, v) -> (p.getName() != null && p.getName().compareTo((String) v) == 0);
-    private static BiPredicate<Parameter, Object> findByPosition = (p, v) -> (p.getPosition() != null && p.getPosition().compareTo((Integer) v) == 0);
-
-    private static Optional<Parameter<?>> findParameterBy(Object value, Map<Parameter<?>, Object> parameterValues, BiPredicate<Parameter, Object> findPredicate) {
-	Set<Parameter<?>> parameters = parameterValues.keySet();
-	for (Parameter<?> p : parameters) {
-	    if (findPredicate.test(p, value))
-		return Optional.of(p);
-	}
-
-	return Optional.empty();
-    }
-
     public static Optional<Parameter<?>> findParameterByName(String name, Map<Parameter<?>, Object> parameterValues) {
-	return findParameterBy(name, parameterValues, findByName);
+	return parameterValues.keySet().stream().filter(p -> p.getName() != null && p.getName().compareTo(name) == 0).findFirst();
     }
 
     public static Optional<Parameter<?>> findParameterByPosition(int position, Map<Parameter<?>, Object> parameterValues) {
-	return findParameterBy(position, parameterValues, findByPosition);
+	return parameterValues.keySet().stream().filter(p -> p.getPosition() != null && p.getPosition().compareTo(position) == 0).findFirst();
     }
 
     private static List<IndexParameter> findIndexParameters(String sqlString, String ph, Parameter<?> p) {
@@ -102,7 +88,7 @@ public class ParameterUtils {
 
     public static class IndexParameter {
 
-	private int index;
+	private final int index;
 	private Parameter<?> parameter;
 	private String placeholder;
 
@@ -117,13 +103,5 @@ public class ParameterUtils {
 	}
 
     }
-//    public static Object getParameterValue(String name, Map<Parameter<?>, Object> parameterValues) {
-//	Set<Parameter<?>> parameters = parameterValues.keySet();
-//	for (Parameter<?> p : parameters) {
-//	    if (p.getName() != null && p.getName().equals(name))
-//		return parameterValues.get(p);
-//	}
-//
-//	return null;
-//    }
+
 }

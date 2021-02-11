@@ -272,9 +272,10 @@ public class Parser {
 	else if (manyToOne != null)
 	    builder.withRelationship(createManyToOne(manyToOne, joinColumn, null));
 	else if (oneToMany != null) {
-	    Class<?> collectionClass = findAttributeImpl(c, readMethod);
-	    if (collectionClass == null)
-		collectionClass = CollectionUtils.findImplementationClass(attributeClass);
+	    Class<?> collectionClass = null;
+//	    Class<?> collectionClass = findAttributeImpl(c, readMethod);
+//	    if (collectionClass == null)
+//		collectionClass = CollectionUtils.findImplementationClass(attributeClass);
 
 	    Class<?> targetEntity = oneToMany.targetEntity();
 	    if (targetEntity == null || targetEntity == Void.TYPE)
@@ -613,10 +614,10 @@ public class Parser {
     private Class<?> findAttributeImpl(Class<?> parentClass, Method readMethod) throws Exception {
 	Object object = parentClass.newInstance();
 
-	Map<Class<?>, Map<Object, Object>> pendingNewEntities = new HashMap<>();
-	Map<Object, Object> map = new HashMap<>();
-	map.put(object, object);
-	pendingNewEntities.put(parentClass, map);
+//	Map<Class<?>, Map<Object, Object>> pendingNewEntities = new HashMap<>();
+//	Map<Object, Object> map = new HashMap<>();
+//	map.put(object, object);
+//	pendingNewEntities.put(parentClass, map);
 	Object getResult = readMethod.invoke(object);
 
 	if (getResult != null)
