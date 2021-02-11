@@ -403,4 +403,28 @@
         </properties>
     </persistence-unit>
 
+    <persistence-unit name="order_many_to_many">
+        <description>Orders</description>
+        <class>org.minijpa.jpa.model.Customer</class>
+        <class>org.minijpa.jpa.model.Order</class>
+        <class>org.minijpa.jpa.model.Product</class>
+        <properties>
+            <property name="hibernate.dialect"
+                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:derby:memory:orders;create=true" />
+            <property name="javax.persistence.jdbc.driver"
+                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+            <property 
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="script" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-script-source" 
+                value="META-INF/create_orders_db.sql" />
+        </properties>
+    </persistence-unit>
+
 </persistence>
