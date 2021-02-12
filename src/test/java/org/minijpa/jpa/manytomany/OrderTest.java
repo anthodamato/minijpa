@@ -14,7 +14,9 @@ import java.util.Arrays;
 import java.util.Set;
 import org.junit.jupiter.api.Assertions;
 import org.minijpa.jpa.model.Customer;
+import org.minijpa.jpa.model.DeliveryType;
 import org.minijpa.jpa.model.Order;
+import org.minijpa.jpa.model.OrderStatus;
 import org.minijpa.jpa.model.Product;
 
 /**
@@ -59,6 +61,7 @@ public class OrderTest {
 	    order1.setCustomer(customer);
 	    order1.setDateOf(OffsetDateTime.now());
 	    order1.setProducts(Arrays.asList(product1, product2));
+	    order1.setDeliveryType(DeliveryType.STANDARD);
 	    em.persist(order1);
 
 	    Product product3 = new Product();
@@ -69,6 +72,7 @@ public class OrderTest {
 	    order2.setCustomer(customer);
 	    order2.setDateOf(OffsetDateTime.now());
 	    order2.setProducts(Arrays.asList(product1, product3));
+	    order2.setDeliveryType(DeliveryType.EXPRESS);
 	    em.persist(order2);
 
 	    Set<Order> orders = product1.getOrders();
@@ -76,11 +80,25 @@ public class OrderTest {
 	    tx.commit();
 
 	    em.detach(product1);
-
 	    Product p = em.find(Product.class, product1.getId());
 	    orders = p.getOrders();
 	    Assertions.assertNotNull(orders);
 	    Assertions.assertEquals(2, orders.size());
+
+	    em.detach(order1);
+	    Order o = em.find(Order.class, order1.getId());
+	    Assertions.assertNotNull(o.getStatus());
+	    Assertions.assertEquals(OrderStatus.NEW, o.getStatus());
+
+	    tx.begin();
+	    o.setStatus(OrderStatus.APPROVED);
+	    em.persist(o);
+	    tx.commit();
+
+	    em.detach(o);
+	    o = em.find(Order.class, order1.getId());
+	    Assertions.assertNotNull(o.getStatus());
+	    Assertions.assertEquals(OrderStatus.APPROVED, o.getStatus());
 	} finally {
 	    em.close();
 	}

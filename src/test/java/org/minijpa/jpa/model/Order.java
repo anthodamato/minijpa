@@ -9,6 +9,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
@@ -32,6 +34,10 @@ public class Order {
     private Customer customer;
     @ManyToMany
     private List<Product> products;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status = OrderStatus.NEW;
+    @Enumerated(EnumType.ORDINAL)
+    private DeliveryType deliveryType;
 
     public Long getId() {
 	return id;
@@ -61,4 +67,19 @@ public class Order {
 	this.products = products;
     }
 
+    public OrderStatus getStatus() {
+	return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+	this.status = status;
+    }
+
+    public DeliveryType getDeliveryType() {
+	return deliveryType;
+    }
+
+    public void setDeliveryType(DeliveryType deliveryType) {
+	this.deliveryType = deliveryType;
+    }
 }
