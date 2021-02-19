@@ -16,7 +16,6 @@ import org.minijpa.metadata.enhancer.Enhanced;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
@@ -24,15 +23,6 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
 import javassist.NotFoundException;
-import javassist.expr.Cast;
-import javassist.expr.ConstructorCall;
-import javassist.expr.ExprEditor;
-import javassist.expr.FieldAccess;
-import javassist.expr.Handler;
-import javassist.expr.Instanceof;
-import javassist.expr.MethodCall;
-import javassist.expr.NewArray;
-import javassist.expr.NewExpr;
 
 public class EntityEnhancer {
 
@@ -122,79 +112,6 @@ public class EntityEnhancer {
 	return false;
     }
 
-    private void printInfo(CtClass ct) throws Exception {
-	CtConstructor[] ctConstructors = ct.getConstructors();
-	for (CtConstructor ctConstructor : ctConstructors) {
-
-	    ctConstructor.instrument(new ExprEditor() {
-		@Override
-		public void edit(NewExpr e) throws CannotCompileException {
-		    LOG.info("printInfo.constructor.edit(NewExpr): e.getClassName()=" + e.getClassName());
-		    try {
-			LOG.info("printInfo.constructor.edit(NewExpr): e.getConstructor().getName()="
-				+ e.getConstructor().getName());
-		    } catch (NotFoundException e1) {
-		    }
-		    LOG.info("printInfo.constructor.edit(NewExpr): e.getLineNumber()=" + e.getLineNumber());
-		    LOG.info("printInfo.constructor.edit(NewExpr): e.getSignature()=" + e.getSignature());
-		}
-
-		@Override
-		public void edit(NewArray a) throws CannotCompileException {
-		    LOG.info("printInfo.constructor.edit(NewArray): a.getLineNumber()=" + a.getLineNumber());
-		}
-
-		@Override
-		public void edit(MethodCall m) throws CannotCompileException {
-		    LOG.info("printInfo.constructor.edit(MethodCall): m.getLineNumber()=" + m.getLineNumber());
-		    try {
-			LOG.info("printInfo.constructor.edit(MethodCall): m.getMethod().getName()="
-				+ m.getMethod().getName());
-		    } catch (NotFoundException e) {
-		    }
-		}
-
-		@Override
-		public void edit(ConstructorCall c) throws CannotCompileException {
-		    LOG.info("printInfo.constructor.edit(ConstructorCall): c.getLineNumber()=" + c.getLineNumber());
-		    LOG.info("printInfo.constructor.edit(ConstructorCall): c.getMethodName()=" + c.getMethodName());
-		    LOG.info("printInfo.constructor.edit(ConstructorCall): c.getClassName()=" + c.getClassName());
-		    LOG.info("printInfo.constructor.edit(ConstructorCall): c.getSignature()=" + c.getSignature());
-		}
-
-		@Override
-		public void edit(FieldAccess f) throws CannotCompileException {
-		    LOG.info("printInfo.constructor.edit(FieldAccess): f.getFieldName()=" + f.getFieldName());
-		    LOG.info("printInfo.constructor.edit(FieldAccess): f.getLineNumber()=" + f.getLineNumber());
-		    LOG.info("printInfo.constructor.edit(FieldAccess): f.getSignature()=" + f.getSignature());
-		}
-
-		@Override
-		public void edit(Instanceof i) throws CannotCompileException {
-		    try {
-			LOG.info("printInfo.constructor.edit(Cast): i.getType().getName()=" + i.getType().getName());
-		    } catch (NotFoundException e) {
-		    }
-		}
-
-		@Override
-		public void edit(Cast c) throws CannotCompileException {
-		    try {
-			LOG.info("printInfo.constructor.edit(Cast): c.getType().getName()=" + c.getType().getName());
-		    } catch (NotFoundException e) {
-		    }
-		}
-
-		@Override
-		public void edit(Handler h) throws CannotCompileException {
-		    LOG.info("printInfo.constructor.edit(Handler): c.getLineNumber()=" + h.getLineNumber());
-		}
-
-	    });
-
-	}
-    }
-
     private boolean isClassModified(CtClass ctClass) throws NotFoundException {
 	CtClass[] ctInterfaces = ctClass.getInterfaces();
 //		LOG.info("isClassModified: ctInterfaces.length=" + ctInterfaces.length);
@@ -219,10 +136,6 @@ public class EntityEnhancer {
     private List<EnhAttribute> enhance(ManagedData managedData) throws Exception {
 	CtClass ct = managedData.getCtClass();
 	LOG.info("enhance: ct.getName()=" + ct.getName());
-
-//		if (!enhancedDataEntities.contains(managedData)) {
-//			printInfo(ct);
-//		}
 	LOG.info("enhance: ct.isFrozen()=" + ct.isFrozen() + "; isClassModified(ct)=" + isClassModified(ct));
 //		if (ct.isFrozen() && !isClassModified(ct)) {
 //			ct.defrost();

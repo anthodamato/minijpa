@@ -1,5 +1,7 @@
 package org.minijpa.jdbc;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,13 +13,19 @@ import java.util.Set;
 public class CollectionUtils {
 
     /**
-     * Given an attribute class declared as interface, this method returns an implementation class
-     * to use in the lazy attributes.
+     * Given an attribute class declared as interface, this method returns an implementation class to use in the lazy
+     * attributes.
      *
      * @param c
      * @return
      */
-    public static Class<?> findImplementationClass(Class<?> c) {
+    public static Class<?> findCollectionImplementationClass(Class<?> c) {
+	if (!isCollectionClass(c))
+	    throw new IllegalArgumentException("Class '" + c.getName() + "' is not a collection or map class");
+
+	if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers()))
+	    return c;
+
 	if (c == Collection.class || c == Set.class)
 	    return HashSet.class;
 
@@ -28,6 +36,19 @@ public class CollectionUtils {
 	    return HashMap.class;
 
 	return null;
+    }
+
+    public static Object createInstance(Object currentValue, Class<?> collectionClass) throws Exception {
+	if (currentValue != null)
+	    return (Collection<Object>) currentValue;
+
+	Constructor<?>[] cs = collectionClass.getConstructors();
+	for (Constructor<?> c : cs) {
+	    if (c.getParameterCount() == 0)
+		return c.newInstance();
+	}
+
+	throw new IllegalArgumentException("Unable to create a '" + collectionClass.getName() + "' instance");
     }
 
     public static boolean isCollectionName(String name) {

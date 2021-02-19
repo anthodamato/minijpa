@@ -3,6 +3,7 @@ package org.minijpa.metadata.enhancer.javassist;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import javax.persistence.Embeddable;
@@ -37,16 +38,14 @@ import javassist.expr.NewExpr;
 
 public class ClassInspector {
 
-    private Logger LOG = LoggerFactory.getLogger(ClassInspector.class);
-    private boolean log = false;
+    private final Logger LOG = LoggerFactory.getLogger(ClassInspector.class);
 
     public ManagedData inspect(String className, List<ManagedData> inspectedClasses) throws Exception {
 	// already inspected
 	for (ManagedData managedData : inspectedClasses) {
-	    if (log)
-		LOG.info("inspect: managedData=" + managedData + "; managedData.getClassName()="
-			+ managedData.getClassName() + "; attrs=" + managedData.getDataAttributes().stream()
-			.map(a -> a.property.ctField.getName()).collect(Collectors.toList()));
+	    LOG.info("inspect: managedData=" + managedData + "; managedData.getClassName()="
+		    + managedData.getClassName() + "; attrs=" + managedData.getDataAttributes().stream()
+		    .map(a -> a.property.ctField.getName()).collect(Collectors.toList()));
 	    if (managedData.getClassName().equals(className))
 		return managedData;
 	}
@@ -83,8 +82,7 @@ public class ClassInspector {
 	    managedData.mappedSuperclass = optional.get();
 
 	List<Property> properties = findAttributes(ct);
-	if (log)
-	    LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
+	LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
 
 	List<AttributeData> attrs = createDataAttributes(properties, false);
 	managedData.addAttributeDatas(attrs);
@@ -118,24 +116,21 @@ public class ClassInspector {
 	if (superClass.getName().equals("java.lang.Object"))
 	    return Optional.empty();
 
-	if (log)
-	    LOG.info("superClass.getName()=" + superClass.getName());
+	LOG.info("superClass.getName()=" + superClass.getName());
 	Object mappedSuperclassAnnotation = superClass.getAnnotation(MappedSuperclass.class);
 	if (mappedSuperclassAnnotation == null)
 	    return Optional.empty();
 
 	// checks if the mapped superclass id already inspected
 	ManagedData mappedSuperclassEnhEntity = findInspectedMappedSuperclass(inspectedClasses, superClass.getName());
-	if (log)
-	    LOG.info("mappedSuperclassEnhEntity=" + mappedSuperclassEnhEntity);
+	LOG.info("mappedSuperclassEnhEntity=" + mappedSuperclassEnhEntity);
 	if (mappedSuperclassEnhEntity != null)
 	    return Optional.of(mappedSuperclassEnhEntity);
 
 	List<Property> properties = findAttributes(superClass);
 	LOG.info("Found " + properties.size() + " attributes in '" + superClass.getName() + "'");
 	List<AttributeData> attrs = createDataAttributes(properties, false);
-	if (log)
-	    LOG.info("attrs.size()=" + attrs.size());
+	LOG.info("attrs.size()=" + attrs.size());
 	if (attrs.isEmpty())
 	    return Optional.empty();
 
@@ -213,13 +208,12 @@ public class ClassInspector {
 	if (ct.isFrozen())
 	    return methodInfos;
 
-	ExprEditorExt exprEditorExt = new ExprEditorExt();
+	ExprEditorExt exprEditorExt = new ExprEditorExt(ct.getName());
 	CtConstructor[] ctConstructors = ct.getConstructors();
 	for (CtConstructor ctConstructor : ctConstructors) {
 	    ctConstructor.instrument(exprEditorExt);
 	    List<BMTFieldInfo> fieldInfos = exprEditorExt.getFieldInfos();
-	    if (log)
-		LOG.info("inspectConstructorsAndMethods: fieldInfos.size()=" + fieldInfos.size());
+	    LOG.info("inspectConstructorsAndMethods: fieldInfos.size()=" + fieldInfos.size());
 	    if (!fieldInfos.isEmpty()) {
 		BMTMethodInfo methodInfo = new BMTMethodInfo();
 		methodInfo.ctConstructor = ctConstructor;
@@ -238,10 +232,9 @@ public class ClassInspector {
     }
 
     private AttributeData createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
-	if (log)
-	    LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
-		    + "; property.embedded=" + property.embedded + "; property.ctField.getType().getName()="
-		    + property.ctField.getType().getName());
+	LOG.info("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
+		+ "; property.embedded=" + property.embedded + "; property.ctField.getType().getName()="
+		+ property.ctField.getType().getName());
 //		List<AttributeData> embeddedAttributes = null;
 //		CtClass embeddedCtClass = null;
 	ManagedData embeddedData = null;
@@ -276,12 +269,9 @@ public class ClassInspector {
     }
 
     private Optional<Property> readAttribute(CtField ctField, CtClass ctClass) throws Exception {
-	if (log)
-	    LOG.info("readAttribute: ctField.getName()=" + ctField.getName());
-	if (log)
-	    LOG.info("readAttribute: ctField.getModifiers()=" + ctField.getModifiers());
-	if (log)
-	    LOG.info("readAttribute: ctField.getType().getName()=" + ctField.getType().getName());
+	LOG.info("readAttribute: ctField.getName()=" + ctField.getName());
+	LOG.info("readAttribute: ctField.getModifiers()=" + ctField.getModifiers());
+	LOG.info("readAttribute: ctField.getType().getName()=" + ctField.getType().getName());
 //		LOG.info("readAttribute: ctField.getSignature()=" + ctField.getSignature());
 //		LOG.info("readAttribute: ctField.getFieldInfo()=" + ctField.getFieldInfo());
 //		LOG.info("readAttribute: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());
@@ -392,13 +382,22 @@ public class ClassInspector {
 
     private class ExprEditorExt extends ExprEditor {
 
+	private final String className;
 	public final int NO_OP = -1;
 	public final int CONSTRUCTOR_CALL_OP = 0;
 	public final int NEW_EXPR_OP = 1;
 	public final int METHOD_CALL_OP = 2;
+	public final int NEW_ARRAY_OP = 3;
+	public final int INSTANCEOF_OP = 4;
+	public final int CAST_OP = 5;
+	public final int HANDLER_OP = 6;
 	private int latestOpType = NO_OP;
-	private String name;
-	private List<BMTFieldInfo> fieldInfos = new ArrayList<>();
+	private String newExprClassName;
+	private final List<BMTFieldInfo> fieldInfos = new ArrayList<>();
+
+	public ExprEditorExt(String className) {
+	    this.className = className;
+	}
 
 	public List<BMTFieldInfo> getFieldInfos() {
 	    return fieldInfos;
@@ -406,22 +405,19 @@ public class ClassInspector {
 
 	public void clear() {
 	    latestOpType = NO_OP;
-	    name = null;
+	    newExprClassName = null;
 	    fieldInfos.clear();
 	}
 
-//		@Override
-//		public boolean doit(CtClass clazz, MethodInfo minfo) throws CannotCompileException {
-//			return false;
-//		}
 	@Override
 	public void edit(NewExpr e) throws CannotCompileException {
 	    latestOpType = NEW_EXPR_OP;
-	    name = e.getClassName();
+	    newExprClassName = e.getClassName();
 	}
 
 	@Override
 	public void edit(NewArray a) throws CannotCompileException {
+	    latestOpType = NEW_ARRAY_OP;
 	}
 
 	@Override
@@ -437,34 +433,45 @@ public class ClassInspector {
 	@Override
 	public void edit(FieldAccess f) throws CannotCompileException {
 	    LOG.info("ExprEditorExt: f.getFieldName()=" + f.getFieldName());
+	    LOG.info("ExprEditorExt: f.getSignature()=" + f.getSignature());
+	    LOG.info("ExprEditorExt: f.getClassName()=" + f.getClassName());
+	    LOG.info("ExprEditorExt: newExprClassName=" + newExprClassName);
+	    try {
+		CtField ctField = ctField = f.getField();
+		LOG.info("ExprEditorExt: ctField.getName()=" + ctField.getName());
+		CtClass ctClass = ctField.getType();
+		LOG.info("ExprEditorExt: ctClass.getName()=" + ctClass.getName());
+		boolean isEnum = ctClass.isEnum();
+		LOG.info("ExprEditorExt: isEnum=" + isEnum);
+	    } catch (NotFoundException ex) {
+		java.util.logging.Logger.getLogger(ClassInspector.class.getName()).log(Level.SEVERE, null, ex);
+	    }
+
 	    LOG.info("ExprEditorExt: fieldInfos.size()=" + fieldInfos.size());
-	    if (latestOpType == CONSTRUCTOR_CALL_OP) {
-		BMTFieldInfo fieldInfo = new BMTFieldInfo(BMTFieldInfo.ASSIGNMENT, f.getFieldName(), null);
-		fieldInfos.add(fieldInfo);
-	    } else if (latestOpType == NEW_EXPR_OP) {
-		BMTFieldInfo fieldInfo = new BMTFieldInfo(BMTFieldInfo.ASSIGNMENT, f.getFieldName(), name);
-		fieldInfos.add(fieldInfo);
-	    } else if (latestOpType == METHOD_CALL_OP) {
-		BMTFieldInfo fieldInfo = new BMTFieldInfo(BMTFieldInfo.ASSIGNMENT, f.getFieldName(), null);
+	    LOG.info("ExprEditorExt: latestOpType=" + latestOpType);
+	    if (f.getClassName().equals(className)) {
+		BMTFieldInfo fieldInfo = new BMTFieldInfo(BMTFieldInfo.ASSIGNMENT, f.getFieldName(), newExprClassName);
 		fieldInfos.add(fieldInfo);
 	    }
 
 	    latestOpType = NO_OP;
+	    newExprClassName = null;
+	    LOG.info("ExprEditorExt: edit **********************");
 	}
 
 	@Override
 	public void edit(Instanceof i) throws CannotCompileException {
-	    latestOpType = NO_OP;
+	    latestOpType = INSTANCEOF_OP;
 	}
 
 	@Override
 	public void edit(Cast c) throws CannotCompileException {
-	    latestOpType = NO_OP;
+	    latestOpType = CAST_OP;
 	}
 
 	@Override
 	public void edit(Handler h) throws CannotCompileException {
-	    latestOpType = NO_OP;
+	    latestOpType = HANDLER_OP;
 	}
 
     }

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Set;
 import org.junit.jupiter.api.Assertions;
@@ -59,7 +58,6 @@ public class OrderTest {
 
 	    Order order1 = new Order();
 	    order1.setCustomer(customer);
-	    order1.setDateOf(OffsetDateTime.now());
 	    order1.setProducts(Arrays.asList(product1, product2));
 	    order1.setDeliveryType(DeliveryType.STANDARD);
 	    em.persist(order1);
@@ -70,7 +68,6 @@ public class OrderTest {
 
 	    Order order2 = new Order();
 	    order2.setCustomer(customer);
-	    order2.setDateOf(OffsetDateTime.now());
 	    order2.setProducts(Arrays.asList(product1, product3));
 	    order2.setDeliveryType(DeliveryType.EXPRESS);
 	    em.persist(order2);
@@ -99,7 +96,17 @@ public class OrderTest {
 	    o = em.find(Order.class, order1.getId());
 	    Assertions.assertNotNull(o.getStatus());
 	    Assertions.assertEquals(OrderStatus.APPROVED, o.getStatus());
-	} finally {
+//	} catch (Exception e) {
+//	    if (e.getStackTrace() != null) {
+//		System.out.println("stacktrace: ");
+//		for (StackTraceElement element : e.getStackTrace()) {
+//		    System.out.println(element.getClassName() + "." + element.getMethodName() + " - "
+//			    + element.getLineNumber());
+//		}
+//	    }
+
+	} finally 
+	{
 	    em.close();
 	}
     }

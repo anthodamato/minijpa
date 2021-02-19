@@ -1,51 +1,70 @@
 package org.minijpa.jdbc;
 
+import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
+
 public abstract class AbstractAttribute {
-	protected String columnName;
-	/**
-	 * Attribute type: java.lang.Long, java.lang.Date, java.lang.String,
-	 * java.lang.Boolean, java.util.Collection, java.util.List, java.util.Map,
-	 * java.util.Set, etc.
-	 */
-	protected Class<?> type;
-	protected Integer sqlType;
-	protected Class<?> readWriteDbType;
-	protected DbTypeMapper dbTypeMapper;
 
-	public String getColumnName() {
-		return columnName;
-	}
+    protected String columnName;
+    /**
+     * Attribute type: java.lang.Long, java.lang.Date, java.lang.String, java.lang.Boolean, java.util.Collection,
+     * java.util.List, java.util.Map, java.util.Set, etc.
+     */
+    protected Class<?> type;
+    protected Integer sqlType;
+    protected Class<?> readWriteDbType;
+    protected DbTypeMapper dbTypeMapper;
+    protected JdbcAttributeMapper jdbcAttributeMapper;
+    /**
+     * If an attribute type is a collection this is the chosen implementation.
+     */
+    protected Class<?> collectionImplementationClass;
 
-	public void setColumnName(String columnName) {
-		this.columnName = columnName;
-	}
+    public String getColumnName() {
+	return columnName;
+    }
 
-	public Class<?> getType() {
-		return type;
-	}
+    public void setColumnName(String columnName) {
+	this.columnName = columnName;
+    }
 
-	public void setType(Class<?> type) {
-		this.type = type;
-	}
+    public Class<?> getType() {
+	return type;
+    }
 
-	public Integer getSqlType() {
-		return sqlType;
-	}
+    public void setType(Class<?> type) {
+	this.type = type;
+    }
 
-	public void setSqlType(Integer sqlType) {
-		this.sqlType = sqlType;
-	}
+    public Integer getSqlType() {
+	return sqlType;
+    }
 
-	public Class<?> getReadWriteDbType() {
-		return readWriteDbType;
-	}
+    public void setSqlType(Integer sqlType) {
+	this.sqlType = sqlType;
+    }
 
-	public DbTypeMapper getDbTypeMapper() {
-		return dbTypeMapper;
-	}
+    public Class<?> getReadWriteDbType() {
+	return readWriteDbType;
+    }
 
-	public void setDbTypeMapper(DbTypeMapper dbTypeMapper) {
-		this.dbTypeMapper = dbTypeMapper;
-	}
+    public DbTypeMapper getDbTypeMapper() {
+	return dbTypeMapper;
+    }
+
+    public void setDbTypeMapper(DbTypeMapper dbTypeMapper) {
+	this.dbTypeMapper = dbTypeMapper;
+    }
+
+    public JdbcAttributeMapper getJdbcAttributeMapper() {
+	return jdbcAttributeMapper;
+    }
+
+    public Class<?> getCollectionImplementationClass() {
+	return collectionImplementationClass;
+    }
+
+    public void setCollectionImplementationClass(Class<?> collectionImplementationClass) {
+	this.collectionImplementationClass = collectionImplementationClass;
+    }
 
 }

@@ -24,7 +24,7 @@ import org.minijpa.jdbc.model.join.FromJoinImpl;
 
 public class SqlStatementGeneratorTest {
 
-    private SqlStatementGenerator sqlStatementGenerator = new SqlStatementGenerator(new ApacheDerbyJdbc());
+    private final SqlStatementGenerator sqlStatementGenerator = new SqlStatementGenerator(new ApacheDerbyJdbc());
 
     @Test
     public void simpleCondition() {

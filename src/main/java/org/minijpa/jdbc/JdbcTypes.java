@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -48,6 +49,9 @@ public class JdbcTypes {
 	if (c == String.class)
 	    return Types.VARCHAR;
 
+	if (c == OffsetDateTime.class)
+	    return Types.TIMESTAMP_WITH_TIMEZONE;
+
 	if (c.isPrimitive()) {
 	    if (c.getName().equals("byte"))
 		return Types.INTEGER;
@@ -74,7 +78,7 @@ public class JdbcTypes {
 		return Types.CHAR;
 	}
 
-	return null;
+	return Types.NULL;
     }
 
     public static Class classFromSqlType(int type) {
@@ -97,6 +101,8 @@ public class JdbcTypes {
 		return Integer.class;
 	    case Types.VARCHAR:
 		return String.class;
+	    case Types.TIMESTAMP_WITH_TIMEZONE:
+		return OffsetDateTime.class;
 	    default:
 		return null;
 	}

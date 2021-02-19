@@ -3,8 +3,8 @@ package org.minijpa.jdbc.relationship;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
-public final class OneToOne extends Relationship {
-	public OneToOne() {
+public final class OneToOneRelationship extends Relationship {
+	public OneToOneRelationship() {
 		super();
 	}
 
@@ -15,7 +15,7 @@ public final class OneToOne extends Relationship {
 
 	@Override
 	public String toString() {
-		return OneToOne.class.getName() + ": joinColumn=" + joinColumn + "; mappedBy=" + mappedBy + "; fetchType="
+		return OneToOneRelationship.class.getName() + ": joinColumn=" + joinColumn + "; mappedBy=" + mappedBy + "; fetchType="
 				+ fetchType;
 	}
 
@@ -66,7 +66,7 @@ public final class OneToOne extends Relationship {
 			return this;
 		}
 
-		public Builder with(OneToOne oneToOne) {
+		public Builder with(OneToOneRelationship oneToOne) {
 			this.joinColumn = oneToOne.joinColumn;
 			this.mappedBy = oneToOne.mappedBy;
 			this.fetchType = oneToOne.fetchType;
@@ -77,8 +77,8 @@ public final class OneToOne extends Relationship {
 			return this;
 		}
 
-		public OneToOne build() {
-			OneToOne oto = new OneToOne();
+		public OneToOneRelationship build() {
+			OneToOneRelationship oto = new OneToOneRelationship();
 			oto.joinColumn = joinColumn;
 			oto.mappedBy = mappedBy;
 			oto.fetchType = fetchType;

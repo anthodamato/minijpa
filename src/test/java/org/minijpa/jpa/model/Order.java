@@ -29,7 +29,7 @@ public class Order {
     @GeneratedValue
     private Long id;
     @Column(name = "date_of")
-    private OffsetDateTime dateOf;
+    private OffsetDateTime dateOf = OffsetDateTime.now();
     @OneToOne
     private Customer customer;
     @ManyToMany

@@ -4,73 +4,74 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
 public abstract class Relationship {
-	protected FetchType fetchType = FetchType.EAGER;
-	protected String joinColumn;
-	protected MetaEntity owningEntity;
-	// for bidirectional relationships
-	protected MetaAttribute owningAttribute;
 
-	/**
-	 * This is the target entity.
-	 */
-	protected MetaEntity attributeType;
-	// for bidirectional relationships
-	protected MetaAttribute targetAttribute;
-	protected String mappedBy;
-	protected RelationshipJoinTable joinTable;
-	protected Class<?> targetEntityClass;
+    protected FetchType fetchType = FetchType.EAGER;
+    protected String joinColumn;
+    protected MetaEntity owningEntity;
+    // for bidirectional relationships
+    protected MetaAttribute owningAttribute;
 
-	public Relationship() {
-		super();
-	}
+    /**
+     * This is the target entity.
+     */
+    protected MetaEntity attributeType;
+    // for bidirectional relationships
+    protected MetaAttribute targetAttribute;
+    protected String mappedBy;
+    protected RelationshipJoinTable joinTable;
+    protected Class<?> targetEntityClass;
 
-	public FetchType getFetchType() {
-		return fetchType;
-	}
+    public Relationship() {
+	super();
+    }
 
-	public String getJoinColumn() {
-		return joinColumn;
-	}
+    public FetchType getFetchType() {
+	return fetchType;
+    }
 
-	public MetaEntity getOwningEntity() {
-		return owningEntity;
-	}
+    public String getJoinColumn() {
+	return joinColumn;
+    }
 
-	public MetaAttribute getOwningAttribute() {
-		return owningAttribute;
-	}
+    public MetaEntity getOwningEntity() {
+	return owningEntity;
+    }
 
-	public MetaEntity getAttributeType() {
-		return attributeType;
-	}
+    public MetaAttribute getOwningAttribute() {
+	return owningAttribute;
+    }
 
-	public MetaAttribute getTargetAttribute() {
-		return targetAttribute;
-	}
+    public MetaEntity getAttributeType() {
+	return attributeType;
+    }
 
-	public String getMappedBy() {
-		return mappedBy;
-	}
+    public MetaAttribute getTargetAttribute() {
+	return targetAttribute;
+    }
 
-	public boolean isOwner() {
-		return false;
-	}
+    public String getMappedBy() {
+	return mappedBy;
+    }
 
-	public RelationshipJoinTable getJoinTable() {
-		return joinTable;
-	}
+    public boolean isOwner() {
+	return false;
+    }
 
-	public boolean toMany() {
-		return false;
-	}
+    public RelationshipJoinTable getJoinTable() {
+	return joinTable;
+    }
 
-	public Class<?> getTargetEntityClass() {
-		return targetEntityClass;
-	}
+    public boolean toMany() {
+	return false;
+    }
 
-	@Override
-	public String toString() {
-		return Relationship.class.getName() + ": fetchType=" + fetchType + "; joinColumn=" + joinColumn;
-	}
+    public Class<?> getTargetEntityClass() {
+	return targetEntityClass;
+    }
+
+    @Override
+    public String toString() {
+	return Relationship.class.getName() + ": fetchType=" + fetchType + "; joinColumn=" + joinColumn;
+    }
 
 }

@@ -1,5 +1,6 @@
 package org.minijpa.jpa.db;
 
+import org.minijpa.jdbc.mapper.ApacheDerbyDbTypeMapper;
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.DbJdbc;

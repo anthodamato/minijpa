@@ -51,6 +51,7 @@ public interface EntityContainer {
 
 	public boolean isNotFlushedPersist(Object entityInstance, Object primaryKey) throws Exception;
 
+	public List<Object> getNotFlushedEntities();
 	/**
 	 * Save in the PC a persistent and flushed entity.
 	 * 
