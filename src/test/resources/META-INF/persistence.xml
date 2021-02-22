@@ -427,4 +427,27 @@
         </properties>
     </persistence-unit>
 
+    <persistence-unit name="property_many_to_many_uni">
+        <description>Properties</description>
+        <class>org.minijpa.jpa.model.Property</class>
+        <class>org.minijpa.jpa.model.PropertyOwner</class>
+        <properties>
+            <property name="hibernate.dialect"
+                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:derby:memory:orders;create=true" />
+            <property name="javax.persistence.jdbc.driver"
+                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+            <property 
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="script" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-script-source" 
+                value="META-INF/create_property_db.sql" />
+        </properties>
+    </persistence-unit>
+
 </persistence>

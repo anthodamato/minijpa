@@ -57,7 +57,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
     protected ConnectionHolder connectionHolder;
     protected JdbcRunner jdbcRunner;
     protected SqlStatementFactory sqlStatementFactory;
-    private boolean log = true;
     private final SqlStatementGenerator sqlStatementGenerator;
 
     public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, Map<String, MetaEntity> entities,
@@ -102,10 +101,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		sqlSelect);
 	if (attributeValues == null)
 	    return null;
-
-	for (Object object : attributeValues.relationshipValues) {
-	    LOG.info("findById: relationshipValues: object=" + object);
-	}
 
 	return createAndSaveEntityInstance(attributeValues, entity, childAttribute, childAttributeValue, primaryKey);
     }
@@ -305,9 +300,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		    return collectionResult;
 		} else {
 		    MetaEntity entity = a.getRelationship().getAttributeType();
-		    LOG.info("load (lazy): to Many entity=" + entity);
 		    MetaEntity e = entities.get(parentInstance.getClass().getName());
-		    LOG.info("load (lazy): to Many e=" + e);
 		    Object pk = AttributeUtil.getIdValue(e, parentInstance);
 		    SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTableFromTarget(entity, e.getId(), pk,
 			    a.getRelationship().getJoinTable());
@@ -342,9 +335,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	// It's an insert.
 	// checks specific relationship attributes ('one to many' with join table) even
-	// if there are no notified changes. If they get changed then they'll be made
-	// persistent.
-	// collect join table attributes
+	// if there are no notified changes. If they get changed then they'll be made persistent.
+	// Collect join table attributes
 	Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
 	for (MetaAttribute a : entity.getAttributes()) {
 	    if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner()) {
@@ -436,6 +428,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
     @Override
     public void flush() throws Exception {
+	LOG.info("Flushing entities...");
 	// makes updates
 	Set<Class<?>> classes = entityContainer.getFlushedPersistClasses();
 	for (Class<?> c : classes) {
@@ -454,7 +447,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	for (Object entityInstance : notFlushedEntities) {
 	    LOG.info("flush: entityInstance=" + entityInstance);
 	    MetaEntity me = entities.get(entityInstance.getClass().getName());
-	    LOG.info("flush: me=" + me);
 	    Object idValue = AttributeUtil.getIdValue(me, entityInstance);
 	    LOG.info("flush: idValue=" + idValue);
 	    if (entityContainer.isNotFlushedPersist(entityInstance)) {
@@ -466,44 +458,12 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 		remove(entityInstance, me);
 		entityContainer.removeNotFlushedRemove(entityInstance, idValue);
 	    }
-
-	    LOG.info("flush: 2 me=" + me);
 	}
 
 	LOG.info("flush: done");
 
-	// saves not flushed entities
-//	classes = entityContainer.getNotFlushedPersistClasses();
-//	for (Class<?> c : classes) {
-//	    Map<Object, Object> map = entityContainer.getNotFlushedPersistEntities(c);
-//	    MetaEntity me = entities.get(c.getName());
-//	    // the map is not a new instance, the removal must be done after the first loop
-//	    Set<Map.Entry<Object, Object>> set = new HashSet<>(map.entrySet());
-//
-//	    for (Map.Entry<Object, Object> entry : set) {
-//		LOG.info("flush: entry.getValue()=" + entry.getValue());
-//		persist(me, entry.getValue());
-//		entityContainer.addFlushedPersist(entry.getValue());
-//		entityInstanceBuilder.removeChanges(entry.getValue());
-//		entityContainer.removeNotFlushedPersist(entry.getValue(), entry.getKey());
-//	    }
-//	}
 	// saves pendings
 	savePendings();
-
-	// flushes entities for removal
-//	classes = entityContainer.getNotFlushedRemoveClasses();
-//	LOG.info("flush: remove - classes=" + classes);
-//	for (Class<?> c : classes) {
-//	    Map<Object, Object> map = entityContainer.getNotFlushedRemoveEntities(c);
-//	    MetaEntity me = entities.get(c.getName());
-//	    Set<Map.Entry<Object, Object>> set = new HashSet<>(map.entrySet());
-//
-//	    for (Map.Entry<Object, Object> entry : set) {
-//		remove(entry.getValue(), me);
-//		entityContainer.removeNotFlushedRemove(entry.getValue(), entry.getKey());
-//	    }
-//	}
     }
 
     /**
@@ -645,7 +605,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
     @Override
     public List<?> select(String sqlString, Query query) throws Exception {
-	LOG.info("select: sql=" + sqlString);
 	return jdbcRunner.runQuery(connectionHolder.getConnection(), sqlString, query);
     }
 
@@ -661,8 +620,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery);
 	String sql = sqlStatementGenerator.export(sqlUpdate);
-	LOG.info("update: sql=" + sql);
-
 	return jdbcRunner.persist(sqlUpdate, connectionHolder.getConnection(), sql);
     }
 
@@ -673,8 +630,6 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 
 	SqlDelete sqlDelete = sqlStatementFactory.delete(deleteQuery);
 	String sql = sqlStatementGenerator.export(sqlDelete);
-	LOG.info("update: sql=" + sql);
-
 	return jdbcRunner.delete(sql, sqlDelete, connectionHolder.getConnection());
     }
 

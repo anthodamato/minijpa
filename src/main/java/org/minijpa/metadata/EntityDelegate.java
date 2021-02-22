@@ -1,5 +1,6 @@
 package org.minijpa.metadata;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -168,7 +169,7 @@ public final class EntityDelegate implements EntityListener {
 	    Object value = null;
 	    try {
 		value = attribute.getReadMethod().invoke(entityInstance);
-	    } catch (Exception e) {
+	    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 		LOG.error(e.getMessage());
 		continue;
 	    }
