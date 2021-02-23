@@ -24,6 +24,7 @@ public class MetaAttribute extends AbstractAttribute {
     private Field javaMember;
     // calculated fields
     private List<MetaAttribute> expandedAttributeList;
+    private boolean nullable = true;
 
     public String getName() {
 	return name;
@@ -63,6 +64,14 @@ public class MetaAttribute extends AbstractAttribute {
 
     public Field getJavaMember() {
 	return javaMember;
+    }
+
+    public boolean isCollection() {
+	return collection;
+    }
+
+    public boolean isNullable() {
+	return nullable;
     }
 
     public MetaAttribute findChildByName(String attributeName) {
@@ -115,10 +124,6 @@ public class MetaAttribute extends AbstractAttribute {
 	return relationship.getFetchType() == FetchType.LAZY;
     }
 
-    public boolean isCollection() {
-	return collection;
-    }
-
     @Override
     public String toString() {
 	return "(Name=" + name + "; columnName=" + columnName + "; embedded=" + embedded + ")";
@@ -126,7 +131,7 @@ public class MetaAttribute extends AbstractAttribute {
 
     public static class Builder {
 
-	private String name;
+	private final String name;
 	private String columnName;
 	private Class<?> type;
 	private Class<?> readWriteDbType;
@@ -143,6 +148,7 @@ public class MetaAttribute extends AbstractAttribute {
 	private Field javaMember;
 	private JdbcAttributeMapper jdbcAttributeMapper;
 	private Class<?> collectionImplementationClass;
+	private boolean nullable = true;
 
 	public Builder(String name) {
 	    super();
@@ -230,6 +236,11 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
+	public Builder isNullable(boolean nullable) {
+	    this.nullable = nullable;
+	    return this;
+	}
+
 	public MetaAttribute build() {
 	    MetaAttribute attribute = new MetaAttribute();
 	    attribute.name = name;
@@ -249,6 +260,7 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.javaMember = javaMember;
 	    attribute.jdbcAttributeMapper = jdbcAttributeMapper;
 	    attribute.collectionImplementationClass = collectionImplementationClass;
+	    attribute.nullable = nullable;
 	    return attribute;
 	}
     }

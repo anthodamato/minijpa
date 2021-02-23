@@ -1,5 +1,5 @@
 package org.minijpa.jdbc.db;
 
-public enum TinyFlushMode {
+public enum MiniFlushMode {
 	AUTO, COMMIT;
 }

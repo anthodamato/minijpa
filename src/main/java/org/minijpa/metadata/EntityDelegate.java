@@ -180,8 +180,6 @@ public final class EntityDelegate implements EntityListener {
     }
 
     public Optional<List<AttributeValue>> getChanges(MetaEntity entity, Object entityInstance) {
-//		LOG.info("getChanges: this=" + this + "; getClass().getClassLoader()=" + getClass().getClassLoader()
-//				+ "; Thread.currentThread()=" + Thread.currentThread());
 	Map<Object, List<AttributeValue>> map = changes.get(entity);
 	List<AttributeValue> instanceAttrs = map.get(entityInstance);
 	LOG.info("getChanges: instanceAttrs=" + instanceAttrs + "; entityInstance=" + entityInstance + "; entity="

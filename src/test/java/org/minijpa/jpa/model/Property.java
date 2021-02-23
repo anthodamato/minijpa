@@ -6,10 +6,12 @@
 package org.minijpa.jpa.model;
 
 import java.util.Collection;
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
@@ -27,13 +29,14 @@ public class Property {
     @Id
     private Long id;
 
+    @Basic(optional = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "property_type")
+    @Column(name = "property_type", nullable = false)
     private PropertyType propertyType;
 
     private String address;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private Collection<PropertyOwner> owners;
 
     public Long getId() {

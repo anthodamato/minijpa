@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.persistence.Basic;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
@@ -215,11 +216,6 @@ public class Parser {
 	if (jdbcAttributeMapper != null)
 	    return jdbcAttributeMapper;
 
-//	if (attributeClass.isEnum() && sqlType == Types.VARCHAR)
-//	    return jdbcStringEnumMapper;
-//
-//	if (attributeClass.isEnum() && sqlType == Types.INTEGER)
-//	    return jdbcOrdinalEnumMapper;
 	return null;
     }
 
@@ -336,6 +332,13 @@ public class Parser {
 		targetEntity = ReflectionUtil.findTargetEntity(field);
 
 	    builder.withRelationship(manyToManyHelper.createManyToMany(manyToMany, joinColumn, null, collectionClass, targetEntity));
+	}
+
+	// Basic annotation
+	Basic basic = field.getAnnotation(Basic.class);
+	if (basic != null && !id) {
+	    if (!basic.optional())
+		builder.isNullable(false);
 	}
 
 	MetaAttribute attribute = builder.build();

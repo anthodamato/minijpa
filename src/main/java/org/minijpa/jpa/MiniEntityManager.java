@@ -19,12 +19,12 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitInfo;
-
 import org.minijpa.jdbc.ConnectionHolderImpl;
 import org.minijpa.jdbc.ConnectionProviderImpl;
+
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.db.TinyFlushMode;
+import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.JdbcEntityManagerImpl;
@@ -67,17 +67,16 @@ public class MiniEntityManager extends AbstractEntityManager {
 //	}
     @Override
     public void persist(Object entity) {
-	LOG.info("persist: entities=" + entities);
 	MetaEntity e = entities.get(entity.getClass().getName());
 	if (e == null)
 	    throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
-	TinyFlushMode tinyFlushMode = flushModeType == FlushModeType.AUTO ? TinyFlushMode.AUTO : TinyFlushMode.COMMIT;
+	MiniFlushMode tinyFlushMode = flushModeType == FlushModeType.AUTO ? MiniFlushMode.AUTO : MiniFlushMode.COMMIT;
 	try {
 	    jdbcEntityManager.persist(e, entity, tinyFlushMode);
 	} catch (Exception ex) {
-	    LOG.error(ex.getClass().getName());
-	    LOG.error(ex.getMessage());
+//	    LOG.error(ex.getClass().getName());
+//	    LOG.error(ex.getMessage());
 	    entityTransaction.setRollbackOnly();
 	    throw new PersistenceException(ex.getMessage());
 	}

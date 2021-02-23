@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
@@ -31,7 +32,7 @@ import org.minijpa.jdbc.db.AttributeLoader;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.EntityContainer;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
-import org.minijpa.jdbc.db.TinyFlushMode;
+import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlInsert;
 import org.minijpa.jdbc.model.SqlSelect;
@@ -283,40 +284,33 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	if (relationship != null)
 	    targetAttribute = relationship.getTargetAttribute();
 
-	if (relationship != null && relationship.toMany()) {
-	    LOG.info("load (lazy): to Many targetAttribute=" + targetAttribute + "; relationship.getJoinTable()="
-		    + relationship.getJoinTable());
-	    if (relationship.getJoinTable() != null)
-		if (relationship.getMappedBy() == null) {
-		    MetaEntity entity = a.getRelationship().getAttributeType();
-		    MetaEntity e = entities.get(parentInstance.getClass().getName());
-		    Object pk = AttributeUtil.getIdValue(e, parentInstance);
-		    SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
-			    a.getRelationship().getJoinTable());
-		    String sql = sqlStatementGenerator.export(sqlSelect);
-		    Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(value, a.getCollectionImplementationClass());
-		    jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null, collectionResult);
-		    LOG.info("load (lazy): to Many collectionResult.size()=" + collectionResult.size());
-		    return collectionResult;
-		} else {
-		    MetaEntity entity = a.getRelationship().getAttributeType();
-		    MetaEntity e = entities.get(parentInstance.getClass().getName());
-		    Object pk = AttributeUtil.getIdValue(e, parentInstance);
-		    SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTableFromTarget(entity, e.getId(), pk,
-			    a.getRelationship().getJoinTable());
-		    String sql = sqlStatementGenerator.export(sqlSelect);
-		    Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(value, a.getCollectionImplementationClass());
-		    jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null, collectionResult);
-		    LOG.info("load (lazy): to Many collectionResult.size()=" + collectionResult.size());
-		    return collectionResult;
-		}
+	LOG.info("load (lazy): targetAttribute=" + targetAttribute);
+	if (relationship == null || !relationship.toMany())
+	    return loadAttributeValueWithTableFK(parentInstance, a, targetAttribute, parentInstance);
 
+	LOG.info("load (lazy): to Many targetAttribute=" + targetAttribute + "; relationship.getJoinTable()="
+		+ relationship.getJoinTable());
+	if (relationship.getJoinTable() == null)
 	    return findCollectionByForeignKey(relationship.getTargetEntityClass(), parentInstance,
 		    relationship.getOwningAttribute(), targetAttribute, parentInstance);
+
+	SqlSelect sqlSelect = null;
+	MetaEntity entity = a.getRelationship().getAttributeType();
+	MetaEntity e = entities.get(parentInstance.getClass().getName());
+	Object pk = AttributeUtil.getIdValue(e, parentInstance);
+	if (relationship.getMappedBy() == null) {
+	    sqlSelect = sqlStatementFactory.generateSelectByJoinTable(entity, e.getId(), pk,
+		    a.getRelationship().getJoinTable());
+	} else {
+	    sqlSelect = sqlStatementFactory.generateSelectByJoinTableFromTarget(entity, e.getId(), pk,
+		    a.getRelationship().getJoinTable());
 	}
 
-	LOG.info("load (lazy): owningAttribute=" + targetAttribute);
-	return loadAttributeValueWithTableFK(parentInstance, a, targetAttribute, parentInstance);
+	String sql = sqlStatementGenerator.export(sqlSelect);
+	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(value, a.getCollectionImplementationClass());
+	jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null, collectionResult);
+	LOG.info("load (lazy): to Many collectionResult.size()=" + collectionResult.size());
+	return collectionResult;
     }
 
     private void persist(MetaEntity entity, Object entityInstance, List<AttributeValue> attrValues) throws Exception {
@@ -394,22 +388,23 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
     }
 
     @Override
-    public void persist(MetaEntity entity, Object entityInstance, TinyFlushMode tinyFlushMode) throws Exception {
-	boolean persistOnDb = canPersistOnDb(entityInstance);
+    public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
+	Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(entity, entityInstance);
+	checkNullableAttributes(entity, entityInstance, optionalAV);
 	Object idValue = generatePersistentIdentity(entity, entityInstance);
 	if (idValue != null) {
 	    entityContainer.addNotFlushedPersist(entityInstance, idValue);
+	    boolean persistOnDb = canPersistOnDb(entityInstance);
 	    if (!persistOnDb)
 		entityContainer.addPendingNew(entityInstance);
 	} else {
-	    persist(entity, entityInstance);
+	    persist(entity, entityInstance, optionalAV);
 	    entityContainer.addFlushedPersist(entityInstance);
 	    entityInstanceBuilder.removeChanges(entityInstance);
 	}
     }
 
-    private void persist(MetaEntity entity, Object entityInstance) throws Exception {
-	Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(entity, entityInstance);
+    private void persist(MetaEntity entity, Object entityInstance, Optional<List<AttributeValue>> optional) throws Exception {
 	LOG.info("persist: changes=" + optional.isPresent());
 	List<AttributeValue> attributeValues = null;
 	if (optional.isPresent())
@@ -426,6 +421,35 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	persist(entity, entityInstance, values);
     }
 
+    /**
+     * The modified attributes must include the not nullable attributes.
+     *
+     * @param entity the meta entity
+     * @param optional the modified attributes
+     * @throws PersistenceException
+     */
+    private void checkNullableAttributes(MetaEntity entity, Object entityInstance, Optional<List<AttributeValue>> optional) throws Exception {
+	if (entityContainer.isFlushedPersist(entityInstance)) {
+	    // It's an update.
+	    // TODO. It should check that no not nullable attrs will be set to null.
+	    return;
+	}
+
+	List<MetaAttribute> notNullableAttributes = entity.notNullableAttributes();
+	if (notNullableAttributes.isEmpty())
+	    return;
+
+	if (optional.isEmpty())
+	    throw new PersistenceException("Attribute '" + notNullableAttributes.get(0).getName() + "' is null");
+
+	List<AttributeValue> attributeValues = optional.get();
+	notNullableAttributes.stream().forEach(a -> {
+	    Optional<AttributeValue> o = attributeValues.stream().filter(av -> av.getAttribute() == a).findFirst();
+	    if (o.isEmpty())
+		throw new PersistenceException("Attribute '" + a.getName() + "' is null");
+	});
+    }
+
     @Override
     public void flush() throws Exception {
 	LOG.info("Flushing entities...");
@@ -437,7 +461,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	    for (Map.Entry<Object, Object> entry : map.entrySet()) {
 		Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(me, entry.getValue());
 		if (optional.isPresent()) {
-		    persist(me, entry.getValue());
+		    Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(me, entry.getValue());
+		    persist(me, entry.getValue(), optionalAV);
 		    entityInstanceBuilder.removeChanges(entry.getValue());
 		}
 	    }
@@ -450,7 +475,8 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	    Object idValue = AttributeUtil.getIdValue(me, entityInstance);
 	    LOG.info("flush: idValue=" + idValue);
 	    if (entityContainer.isNotFlushedPersist(entityInstance)) {
-		persist(me, entityInstance);
+		Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(me, entityInstance);
+		persist(me, entityInstance, optionalAV);
 		entityContainer.addFlushedPersist(entityInstance);
 		entityInstanceBuilder.removeChanges(entityInstance);
 		entityContainer.removeNotFlushedPersist(entityInstance, idValue);
@@ -496,13 +522,7 @@ public class JdbcEntityManagerImpl implements AttributeLoader, JdbcEntityManager
 	if (!persistOnDb)
 	    return false;
 
-	LOG.info("persist: changes.size()=" + changes.size() + "; "
-		+ changes.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
-	LOG.info("persist: entityInstance=" + entityInstance);
-	List<AttributeValue> values = attributeValueConverter.convert(changes);
-	LOG.info("persist: values.size()=" + values.size() + "; "
-		+ values.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
-	persist(entity, entityInstance, values);
+	persist(entity, entityInstance, Optional.of(changes));
 	entityContainer.addFlushedPersist(entityInstance);
 	entityInstanceBuilder.removeChanges(entityInstance);
 	return true;
