@@ -19,6 +19,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
@@ -324,14 +325,16 @@ public class Parser {
 	    if (targetEntity == null || targetEntity == Void.TYPE)
 		targetEntity = ReflectionUtil.findTargetEntity(field);
 
-	    builder.withRelationship(oneToManyHelper.createOneToMany(oneToMany, joinColumn, null, collectionClass, targetEntity));
+	    JoinTable joinTable = field.getAnnotation(JoinTable.class);
+	    builder.withRelationship(oneToManyHelper.createOneToMany(oneToMany, joinColumn, null, collectionClass, targetEntity, joinTable));
 	} else if (manyToMany != null) {
 	    Class<?> collectionClass = null;
 	    Class<?> targetEntity = manyToMany.targetEntity();
 	    if (targetEntity == null || targetEntity == Void.TYPE)
 		targetEntity = ReflectionUtil.findTargetEntity(field);
 
-	    builder.withRelationship(manyToManyHelper.createManyToMany(manyToMany, joinColumn, null, collectionClass, targetEntity));
+	    JoinTable joinTable = field.getAnnotation(JoinTable.class);
+	    builder.withRelationship(manyToManyHelper.createManyToMany(manyToMany, joinColumn, null, collectionClass, targetEntity, joinTable));
 	}
 
 	// Basic annotation

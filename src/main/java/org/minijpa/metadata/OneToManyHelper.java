@@ -10,13 +10,16 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
+import org.minijpa.jdbc.relationship.JoinTableAttributes;
 import org.minijpa.jdbc.relationship.OneToManyRelationship;
+import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 
 /**
@@ -26,7 +29,7 @@ import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 public class OneToManyHelper extends RelationshipHelper {
 
     public OneToManyRelationship createOneToMany(OneToMany oneToMany, JoinColumn joinColumn,
-	    String joinColumnName, Class<?> collectionClass, Class<?> targetEntity) {
+	    String joinColumnName, Class<?> collectionClass, Class<?> targetEntity, JoinTable joinTable) {
 	OneToManyRelationship.Builder builder = new OneToManyRelationship.Builder();
 	if (joinColumn != null)
 	    builder = builder.withJoinColumn(joinColumn.name());
@@ -39,6 +42,11 @@ public class OneToManyHelper extends RelationshipHelper {
 		builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.EAGER);
 	    else if (oneToMany.fetch() == FetchType.LAZY)
 		builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.LAZY);
+
+	if (joinTable != null) {
+	    JoinTableAttributes joinTableAttributes = new JoinTableAttributes(joinTable.schema(), joinTable.name());
+	    builder.withJoinTableAttributes(joinTableAttributes);
+	}
 
 	builder = builder.withCollectionClass(collectionClass);
 	builder = builder.withTargetEntityClass(targetEntity);
@@ -77,17 +85,26 @@ public class OneToManyHelper extends RelationshipHelper {
 	return owner.getTableName() + "_" + target.getTableName();
     }
 
+    private JoinTableAttributes createJoinTableAttributes(Relationship relationship, MetaEntity entity, MetaEntity toEntity) {
+	JoinTableAttributes joinTableAttributes = relationship.getJoinTableAttributes();
+	if (joinTableAttributes != null)
+	    return joinTableAttributes;
+
+	String joinTableName = createDefaultOneToManyJoinTable(entity, toEntity);
+	return new JoinTableAttributes(null, joinTableName);
+    }
+
     public OneToManyRelationship finalizeRelationship(OneToManyRelationship oneToManyRelationship, MetaAttribute a, MetaEntity entity, MetaEntity toEntity, DbConfiguration dbConfiguration, AliasGenerator aliasGenerator, Map<String, MetaEntity> entities) {
 	OneToManyRelationship.Builder builder = new OneToManyRelationship.Builder().with(oneToManyRelationship);
 	builder = builder.withAttributeType(toEntity);
 	if (oneToManyRelationship.isOwner())
 	    if (oneToManyRelationship.getJoinColumn() == null) {
-		String joinTableName = createDefaultOneToManyJoinTable(entity, toEntity);
-		String joinTableAlias = aliasGenerator.calculateAlias(joinTableName, entities.values());
+		JoinTableAttributes joinTableAttributes = createJoinTableAttributes(oneToManyRelationship, entity, toEntity);
+		String joinTableAlias = aliasGenerator.calculateAlias(joinTableAttributes.getName(), entities.values());
 		List<JoinColumnAttribute> joinColumnOwningAttributes = createUnidirectionalJoinColumnAttributes(entity, dbConfiguration);
 		List<JoinColumnAttribute> joinColumnTargetAttributes = createJoinColumnTargetAttributes(
 			toEntity, a, dbConfiguration);
-		RelationshipJoinTable relationshipJoinTable = new RelationshipJoinTable(joinTableName,
+		RelationshipJoinTable relationshipJoinTable = new RelationshipJoinTable(joinTableAttributes.getSchema(), joinTableAttributes.getName(),
 			joinTableAlias, joinColumnOwningAttributes, joinColumnTargetAttributes, entity.getId(),
 			toEntity.getId());
 		builder = builder.withJoinTable(relationshipJoinTable);

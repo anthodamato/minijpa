@@ -6,47 +6,50 @@ import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 
 public class RelationshipJoinTable {
-	private String tableName;
-	private String alias;
-	private List<JoinColumnAttribute> joinColumnOwningAttributes;
-	private List<JoinColumnAttribute> joinColumnTargetAttributes;
-	private MetaAttribute owningAttribute;
-	private MetaAttribute targetAttribute;
 
-	public RelationshipJoinTable(String tableName, String alias, List<JoinColumnAttribute> joinColumnOwningAttributes,
-			List<JoinColumnAttribute> joinColumnTargetAttributes, MetaAttribute owningAttribute,
-			MetaAttribute targetAttribute) {
-		super();
-		this.tableName = tableName;
-		this.alias = alias;
-		this.joinColumnOwningAttributes = joinColumnOwningAttributes;
-		this.joinColumnTargetAttributes = joinColumnTargetAttributes;
-		this.owningAttribute = owningAttribute;
-		this.targetAttribute = targetAttribute;
-	}
+    private String schema;
+    private String tableName;
+    private String alias;
+    private List<JoinColumnAttribute> joinColumnOwningAttributes;
+    private List<JoinColumnAttribute> joinColumnTargetAttributes;
+    private MetaAttribute owningAttribute;
+    private MetaAttribute targetAttribute;
 
-	public String getTableName() {
-		return tableName;
-	}
+    public RelationshipJoinTable(String schema, String tableName, String alias, List<JoinColumnAttribute> joinColumnOwningAttributes,
+	    List<JoinColumnAttribute> joinColumnTargetAttributes, MetaAttribute owningAttribute,
+	    MetaAttribute targetAttribute) {
+	super();
+	this.schema = schema;
+	this.tableName = tableName;
+	this.alias = alias;
+	this.joinColumnOwningAttributes = joinColumnOwningAttributes;
+	this.joinColumnTargetAttributes = joinColumnTargetAttributes;
+	this.owningAttribute = owningAttribute;
+	this.targetAttribute = targetAttribute;
+    }
 
-	public String getAlias() {
-		return alias;
-	}
+    public String getTableName() {
+	return tableName;
+    }
 
-	public List<JoinColumnAttribute> getJoinColumnOwningAttributes() {
-		return joinColumnOwningAttributes;
-	}
+    public String getAlias() {
+	return alias;
+    }
 
-	public List<JoinColumnAttribute> getJoinColumnTargetAttributes() {
-		return joinColumnTargetAttributes;
-	}
+    public List<JoinColumnAttribute> getJoinColumnOwningAttributes() {
+	return joinColumnOwningAttributes;
+    }
 
-	public MetaAttribute getOwningAttribute() {
-		return owningAttribute;
-	}
+    public List<JoinColumnAttribute> getJoinColumnTargetAttributes() {
+	return joinColumnTargetAttributes;
+    }
 
-	public MetaAttribute getTargetAttribute() {
-		return targetAttribute;
-	}
+    public MetaAttribute getOwningAttribute() {
+	return owningAttribute;
+    }
+
+    public MetaAttribute getTargetAttribute() {
+	return targetAttribute;
+    }
 
 }

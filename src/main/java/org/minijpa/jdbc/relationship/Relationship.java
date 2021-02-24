@@ -20,6 +20,7 @@ public abstract class Relationship {
     protected String mappedBy;
     protected RelationshipJoinTable joinTable;
     protected Class<?> targetEntityClass;
+    protected JoinTableAttributes joinTableAttributes;
 
     public Relationship() {
 	super();
@@ -67,6 +68,10 @@ public abstract class Relationship {
 
     public Class<?> getTargetEntityClass() {
 	return targetEntityClass;
+    }
+
+    public JoinTableAttributes getJoinTableAttributes() {
+	return joinTableAttributes;
     }
 
     @Override
