@@ -5,41 +5,44 @@ import java.util.Collection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 
 @Entity
 public class Store {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	private String name;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-	@OneToMany
-	private Collection<Item> items;
+    private String name;
 
-	public Long getId() {
-		return id;
-	}
+    @OneToMany
+    @JoinTable(name = "store_items")
+    private Collection<Item> items;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+	return name;
+    }
 
-	public Collection<Item> getItems() {
-		return items;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public void setItems(Collection<Item> items) {
-		this.items = items;
-	}
+    public Collection<Item> getItems() {
+	return items;
+    }
+
+    public void setItems(Collection<Item> items) {
+	this.items = items;
+    }
 
 }

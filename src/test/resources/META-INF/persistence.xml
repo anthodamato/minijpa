@@ -450,4 +450,28 @@
         </properties>
     </persistence-unit>
 
+    <persistence-unit name="embed_many_to_one">
+        <description>Properties</description>
+        <class>org.minijpa.jpa.model.JobEmployee</class>
+        <class>org.minijpa.jpa.model.ProgramManager</class>
+        <properties>
+            <property name="hibernate.dialect"
+                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:derby:memory:orders;create=true" />
+            <property name="javax.persistence.jdbc.driver"
+                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+            <property name="hibernate.hbm2ddl.auto" value="update" />
+            <property 
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="script" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-script-source" 
+                value="META-INF/create_embed_many_to_one_db.sql" />
+        </properties>
+    </persistence-unit>
+
 </persistence>

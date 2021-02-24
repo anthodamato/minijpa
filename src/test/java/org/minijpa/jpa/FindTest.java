@@ -437,10 +437,10 @@ public class FindTest {
 	    cq.select(root);
 
 	    TypedQuery<Address> typedQuery = em.createQuery(cq);
-	    List<Address> citizens = typedQuery.getResultList();
+	    List<Address> addresses = typedQuery.getResultList();
 
-	    Assertions.assertEquals(1, citizens.size());
-	    CollectionUtils.containsAll(citizens, Arrays.asList(a_RegentSt));
+	    Assertions.assertEquals(1, addresses.size());
+	    Assertions.assertTrue(CollectionUtils.containsAll(addresses, Arrays.asList(a_RomfordRd)));
 
 	    // postcode is not null
 	    Predicate isNotNull = cb.isNull(root.get("postcode"));
@@ -449,10 +449,10 @@ public class FindTest {
 	    cq.select(root);
 
 	    typedQuery = em.createQuery(cq);
-	    citizens = typedQuery.getResultList();
+	    addresses = typedQuery.getResultList();
 
-	    Assertions.assertEquals(1, citizens.size());
-	    CollectionUtils.containsAll(citizens, Arrays.asList(a_RomfordRd));
+	    Assertions.assertEquals(1, addresses.size());
+	    Assertions.assertTrue(CollectionUtils.containsAll(addresses, Arrays.asList(a_RomfordRd)));
 
 	    em.remove(a_RegentSt);
 	    em.remove(a_RomfordRd);
