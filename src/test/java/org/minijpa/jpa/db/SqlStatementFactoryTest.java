@@ -123,7 +123,7 @@ public class SqlStatementFactoryTest {
 
 		String sql = new SqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 		Assertions.assertEquals(
-				"select i.id, i.model, i.name from Item AS i INNER JOIN Store_Item AS si ON i.id = si.items_id where si.Store_id = ?",
+				"select i.id, i.model, i.name from Item AS i INNER JOIN store_items AS si ON i.id = si.items_id where si.Store_id = ?",
 				sql);
 
 		em.close();

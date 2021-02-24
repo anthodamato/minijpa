@@ -22,7 +22,7 @@ import org.minijpa.jpa.model.ProgramManager;
  *
  * @author adamato
  */
-public class EmbedManyToOne {
+public class EmbedManyToOneTest {
 
     private static EntityManagerFactory emf;
 
