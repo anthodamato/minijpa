@@ -13,48 +13,53 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  * @author adamato
  *
  */
 public class OneToOneBidLazyTest {
-	private Logger LOG = LoggerFactory.getLogger(OneToOneBidLazyTest.class);
 
-	@Test
-	public void persist() throws Exception {
-		EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid_lazy");
-		final EntityManager em = emf.createEntityManager();
-		try {
-			final EntityTransaction tx = em.getTransaction();
-			tx.begin();
+    private Logger LOG = LoggerFactory.getLogger(OneToOneBidLazyTest.class);
 
-			State state = new State();
-			state.setName("England");
+    @Test
+    public void persist() throws Exception {
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid_lazy");
+	final EntityManager em = emf.createEntityManager();
+	try {
+	    final EntityTransaction tx = em.getTransaction();
+	    tx.begin();
 
-			Capital capital = new Capital();
-			capital.setName("London");
+	    State state = new State();
+	    state.setName("England");
 
-			state.setCapital(capital);
+	    Capital capital = new Capital();
+	    capital.setName("London");
 
-			em.persist(capital);
-			em.persist(state);
+	    state.setCapital(capital);
 
-			tx.commit();
+	    em.persist(capital);
+	    em.persist(state);
 
-			em.detach(capital);
-			em.detach(state);
-			State s = em.find(State.class, state.getId());
+	    tx.commit();
 
-			Assertions.assertFalse(s == state);
-			Assertions.assertEquals("England", state.getName());
-			LOG.info("Loading s.getCapital()");
-			Capital c = s.getCapital();
-			Assertions.assertNotNull(c);
-			Assertions.assertEquals("London", c.getName());
-		} finally {
-			em.close();
-			emf.close();
-		}
+	    em.detach(capital);
+	    em.detach(state);
+	    LOG.info("Loading s --------------------------");
+	    State s = em.find(State.class, state.getId());
+
+	    Assertions.assertFalse(s == state);
+	    Assertions.assertEquals("England", state.getName());
+	    LOG.info("Loading s.getCapital()");
+	    Capital c = s.getCapital();
+	    Assertions.assertNotNull(c);
+	    Assertions.assertEquals("London", c.getName());
+	    em.remove(c);
+	    em.remove(s);
+	    em.flush();
+	} finally {
+	    em.close();
+	    emf.close();
 	}
+    }
 
 }

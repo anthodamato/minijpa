@@ -9,56 +9,57 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
 public class EntityContext {
-	private String persistenceUnitName;
-	private Map<String, MetaEntity> entities;
 
-	public EntityContext(String persistenceUnitName, Map<String, MetaEntity> entities) {
-		super();
-		this.persistenceUnitName = persistenceUnitName;
-		this.entities = entities;
+    private final String persistenceUnitName;
+    private final Map<String, MetaEntity> entities;
+
+    public EntityContext(String persistenceUnitName, Map<String, MetaEntity> entities) {
+	super();
+	this.persistenceUnitName = persistenceUnitName;
+	this.entities = entities;
+    }
+
+    public MetaEntity getEntity(String entityClassName) {
+	return entities.get(entityClassName);
+    }
+
+    public MetaAttribute findEmbeddedAttribute(String className) {
+	for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+	    MetaEntity entity = entry.getValue();
+	    MetaAttribute attribute = findEmbeddedAttribute(className, entity.getAttributes());
+	    if (attribute != null)
+		return attribute;
 	}
 
-	public MetaEntity getEntity(String entityClassName) {
-		return entities.get(entityClassName);
-	}
+	return null;
+    }
 
-	public MetaAttribute findEmbeddedAttribute(String className) {
-		for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
-			MetaEntity entity = entry.getValue();
-			MetaAttribute attribute = findEmbeddedAttribute(className, entity.getAttributes());
-			if (attribute != null)
-				return attribute;
+    private MetaAttribute findEmbeddedAttribute(String className, List<MetaAttribute> attributes) {
+	for (MetaAttribute attribute : attributes) {
+	    if (attribute.isEmbedded()) {
+		if (attribute.getType().getName().equals(className)) {
+		    return attribute;
 		}
 
-		return null;
+		MetaAttribute a = findEmbeddedAttribute(className, attribute.getChildren());
+		if (a != null)
+		    return a;
+	    }
 	}
 
-	private MetaAttribute findEmbeddedAttribute(String className, List<MetaAttribute> attributes) {
-		for (MetaAttribute attribute : attributes) {
-			if (attribute.isEmbedded()) {
-				if (attribute.getType().getName().equals(className)) {
-					return attribute;
-				}
+	return null;
+    }
 
-				MetaAttribute a = findEmbeddedAttribute(className, attribute.getEmbeddedAttributes());
-				if (a != null)
-					return a;
-			}
-		}
+    public String getPersistenceUnitName() {
+	return persistenceUnitName;
+    }
 
-		return null;
-	}
+    public Set<MetaEntity> getMetaEntities() {
+	return new HashSet<>(entities.values());
+    }
 
-	public String getPersistenceUnitName() {
-		return persistenceUnitName;
-	}
-
-	public Set<MetaEntity> getMetaEntities() {
-		return new HashSet<>(entities.values());
-	}
-
-	public Map<String, MetaEntity> getEntities() {
-		return entities;
-	}
+    public Map<String, MetaEntity> getEntities() {
+	return entities;
+    }
 
 }

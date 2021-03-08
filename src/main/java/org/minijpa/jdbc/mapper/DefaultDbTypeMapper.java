@@ -21,6 +21,8 @@ public class DefaultDbTypeMapper implements DbTypeMapper {
     protected JdbcAttributeMapper jdbcOffsetDateTimeMapper = new JdbcOffsetDateTimeMapper();
     protected JdbcAttributeMapper jdbcStringEnumMapper = new JdbcStringEnumMapper();
     protected JdbcAttributeMapper jdbcOrdinalEnumMapper = new JdbcOrdinalEnumMapper();
+    protected JdbcAttributeMapper jdbcCharacterArrayMapper = new JdbcCharacterArrayMapper();
+    protected JdbcAttributeMapper jdbcCharacterMapper = new JdbcCharacterMapper();
 
     @Override
     public Class<?> map(Class<?> attributeType, Integer jdbcType) {
@@ -82,6 +84,35 @@ public class DefaultDbTypeMapper implements DbTypeMapper {
 
 	if (attributeType.isEnum() && jdbcType == Types.INTEGER)
 	    return jdbcOrdinalEnumMapper;
+
+	if (attributeType.isPrimitive()) {
+	    if (attributeType.getName().equals("byte"))
+		return jdbcIntegerMapper;
+
+	    if (attributeType.getName().equals("short"))
+		return jdbcIntegerMapper;
+
+	    if (attributeType.getName().equals("int"))
+		return jdbcIntegerMapper;
+
+	    if (attributeType.getName().equals("long"))
+		return jdbcIntegerMapper;
+
+	    if (attributeType.getName().equals("float"))
+		return jdbcFloatMapper;
+
+	    if (attributeType.getName().equals("double"))
+		return jdbcDoubleMapper;
+
+	    if (attributeType.getName().equals("boolean"))
+		return jdbcBooleanMapper;
+
+	    if (attributeType.getName().equals("char"))
+		return jdbcCharacterMapper;
+	}
+
+	if (attributeType.isArray() && attributeType.getComponentType() == Character.class)
+	    return jdbcCharacterArrayMapper;
 
 	return null;
     }

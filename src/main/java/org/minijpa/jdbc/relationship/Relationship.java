@@ -66,6 +66,10 @@ public abstract class Relationship {
 	return false;
     }
 
+    public boolean toOne() {
+	return false;
+    }
+
     public Class<?> getTargetEntityClass() {
 	return targetEntityClass;
     }

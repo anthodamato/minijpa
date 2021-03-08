@@ -20,9 +20,7 @@ public class ParserTest {
     @Test
     public void parse() throws Exception {
 	String className = "org.minijpa.jpa.model.Citizen";
-	EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
-	List<MetaEntity> parsedEntities = new ArrayList<>();
-	MetaEntity entity = parser.parse(enhEntity, parsedEntities);
+	MetaEntity entity = MetaEntityUtils.parse(className);
 
 	Assertions.assertNotNull(entity);
 	Assertions.assertNotNull(entity.getEntityClass());

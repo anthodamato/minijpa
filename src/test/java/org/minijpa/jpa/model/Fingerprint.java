@@ -7,37 +7,38 @@ import javax.persistence.OneToOne;
 
 @Entity
 public class Fingerprint {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	private String type;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-	@OneToOne(mappedBy = "fingerprint")
-	private Person person;
+    private String type;
 
-	public Long getId() {
-		return id;
-	}
+    @OneToOne(mappedBy = "fingerprint")
+    private Person person;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public Person getPerson() {
-		return person;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setPerson(Person person) {
-		this.person = person;
-	}
+    public Person getPerson() {
+	return person;
+    }
 
-	public String getType() {
-		return type;
-	}
+    public void setPerson(Person person) {
+	this.person = person;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public String getType() {
+	return type;
+    }
+
+    public void setType(String type) {
+	this.type = type;
+    }
 
 }

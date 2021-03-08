@@ -201,7 +201,8 @@ public class SqlStatementFactory {
 		.withParameters(parameters).withResult(entity).build();
     }
 
-    public SqlSelect generateSelectByJoinTableFromTarget(MetaEntity entity, MetaAttribute owningId, Object joinTableForeignKey, RelationshipJoinTable relationshipJoinTable) throws Exception {
+    public SqlSelect generateSelectByJoinTableFromTarget(MetaEntity entity, MetaAttribute owningId,
+	    Object joinTableForeignKey, RelationshipJoinTable relationshipJoinTable) throws Exception {
 	// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
 	// where j.t2=fk
 	List<MetaAttribute> idAttributes = entity.getId().expand();
@@ -215,6 +216,7 @@ public class SqlStatementFactory {
 
 	idTargetColumns.stream().forEach(c -> LOG.info("generateSelectByJoinTableFromTarget: c.getName()=" + c.getName()));
 	LOG.info("generateSelectByJoinTableFromTarget: owningId=" + owningId);
+	LOG.info("generateSelectByJoinTableFromTarget: joinTableForeignKey=" + joinTableForeignKey);
 	LOG.info("generateSelectByJoinTableFromTarget: relationshipJoinTable.getTableName()=" + relationshipJoinTable.getTableName());
 	FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
 	FromJoin fromJoin = new FromJoinImpl(joinTable, idColumns, idTargetColumns);
@@ -223,6 +225,7 @@ public class SqlStatementFactory {
 	List<JoinColumnAttribute> joinColumnTargetAttributes = relationshipJoinTable.getJoinColumnTargetAttributes();
 	List<AttributeValue> owningIdAttributeValues = attributeValueConverter
 		.convert(new AttributeValue(owningId, joinTableForeignKey));
+	LOG.info("generateSelectByJoinTableFromTarget: owningIdAttributeValues=" + owningIdAttributeValues);
 
 	List<AbstractAttributeValue> attributeValues = new ArrayList<>();
 	for (AttributeValue av : owningIdAttributeValues) {

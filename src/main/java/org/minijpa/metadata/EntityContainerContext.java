@@ -1,38 +1,42 @@
 package org.minijpa.metadata;
 
 import java.util.Map;
+import org.minijpa.jdbc.EntityLoader;
 
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.AttributeLoader;
-import org.minijpa.jdbc.db.EntityContainer;
+import org.minijpa.jpa.db.EntityContainer;
 
 public class EntityContainerContext {
-	private Map<String, MetaEntity> entities;
-	private EntityContainer entityContainer;
-	private AttributeLoader attributeLoader;
 
-	public EntityContainerContext(Map<String, MetaEntity> entities, EntityContainer entityContainer,
-			AttributeLoader attributeLoader) {
-		super();
-		this.entities = entities;
-		this.entityContainer = entityContainer;
-		this.attributeLoader = attributeLoader;
-	}
+    private Map<String, MetaEntity> entities;
+    private EntityContainer entityContainer;
+    private EntityLoader entityLoader;
 
-	public Map<String, MetaEntity> getEntities() {
-		return entities;
-	}
+    public EntityContainerContext(Map<String, MetaEntity> entities, EntityContainer entityContainer,
+	    EntityLoader entityLoader) {
+	super();
+	this.entities = entities;
+	this.entityContainer = entityContainer;
+	this.entityLoader = entityLoader;
+    }
 
-	public EntityContainer getEntityContainer() {
-		return entityContainer;
-	}
+    public Map<String, MetaEntity> getEntities() {
+	return entities;
+    }
 
-	public AttributeLoader getAttributeLoader() {
-		return attributeLoader;
-	}
+    public EntityContainer getEntityContainer() {
+	return entityContainer;
+    }
 
-	public MetaEntity getEntity(String entityClassName) {
-		return entities.get(entityClassName);
-	}
+    public EntityLoader getEntityLoader() {
+	return entityLoader;
+    }
 
+    public MetaEntity getEntity(String entityClassName) {
+	return entities.get(entityClassName);
+    }
+
+    public boolean isManaged(Object entityInstance) throws Exception {
+	return entityContainer.isManaged(entityInstance);
+    }
 }

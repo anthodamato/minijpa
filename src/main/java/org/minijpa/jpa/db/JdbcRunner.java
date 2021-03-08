@@ -14,8 +14,6 @@ import javax.persistence.criteria.CompoundSelection;
 
 import org.minijpa.jdbc.AbstractJdbcRunner;
 import org.minijpa.jdbc.ColumnNameValue;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
@@ -25,19 +23,6 @@ import org.slf4j.LoggerFactory;
 public class JdbcRunner extends AbstractJdbcRunner {
 
     private final Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
-    private final JdbcEntityManager jdbcEntityManager;
-
-    public JdbcRunner(JdbcEntityManager jdbcEntityManager) {
-	super();
-	this.jdbcEntityManager = jdbcEntityManager;
-    }
-
-    @Override
-    public Object createEntityInstance(AttributeValues attributeValues, MetaEntity entity, MetaAttribute childAttribute,
-	    Object childAttributeValue) throws Exception {
-	return jdbcEntityManager.createAndSaveEntityInstance(attributeValues, entity, childAttribute,
-		childAttributeValue);
-    }
 
     public List<Tuple> runTupleQuery(Connection connection, String sql, SqlSelect sqlSelect,
 	    CompoundSelection<?> compoundSelection) throws Exception {

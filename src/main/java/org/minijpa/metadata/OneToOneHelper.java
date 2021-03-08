@@ -42,7 +42,8 @@ public class OneToOneHelper {
 	return owningAttribute.getName() + "_" + toEntity.getId().getColumnName();
     }
 
-    public OneToOneRelationship finalizeRelationship(OneToOneRelationship oneToOneRelationship, MetaAttribute a, MetaEntity entity, MetaEntity toEntity, DbConfiguration dbConfiguration) {
+    public OneToOneRelationship finalizeRelationship(OneToOneRelationship oneToOneRelationship, MetaAttribute a,
+	    MetaEntity entity, MetaEntity toEntity, DbConfiguration dbConfiguration) {
 	OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder().with(oneToOneRelationship);
 	if (oneToOneRelationship.isOwner()) {
 	    String joinColumnName = oneToOneRelationship.getJoinColumn();
@@ -57,7 +58,7 @@ public class OneToOneHelper {
 		    .withReadWriteDbType(toEntity.getId().getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
 		    .withSqlType(toEntity.getId().getSqlType()).withForeignKeyAttribute(a).withJdbcAttributeMapper(jdbcAttributeMapper).build();
 	    entity.getJoinColumnAttributes().add(joinColumnAttribute);
-	    builder = builder.withTargetAttribute(toEntity.findAttributeWithMappedBy(a.getName()));
+	    builder = builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
 	} else {
 	    builder = builder.withOwningEntity(toEntity);
 	    builder = builder.withOwningAttribute(toEntity.getAttribute(oneToOneRelationship.getMappedBy()));

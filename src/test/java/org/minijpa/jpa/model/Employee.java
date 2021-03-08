@@ -9,46 +9,47 @@ import javax.persistence.ManyToOne;
 
 @Entity
 public class Employee {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	private BigDecimal salary;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-	private String name;
+    private BigDecimal salary;
 
-	@ManyToOne
-	private Department department;
+    private String name;
 
-	public Long getId() {
-		return id;
-	}
+    @ManyToOne
+    private Department department;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+	return name;
+    }
 
-	public BigDecimal getSalary() {
-		return salary;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public void setSalary(BigDecimal salary) {
-		this.salary = salary;
-	}
+    public BigDecimal getSalary() {
+	return salary;
+    }
 
-	public Department getDepartment() {
-		return department;
-	}
+    public void setSalary(BigDecimal salary) {
+	this.salary = salary;
+    }
 
-	public void setDepartment(Department department) {
-		this.department = department;
-	}
+    public Department getDepartment() {
+	return department;
+    }
+
+    public void setDepartment(Department department) {
+	this.department = department;
+    }
 }

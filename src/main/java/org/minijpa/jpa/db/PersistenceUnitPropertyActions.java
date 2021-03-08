@@ -7,7 +7,6 @@ import java.util.Properties;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
-import org.minijpa.jdbc.ConnectionProviderImpl;
 import org.minijpa.jdbc.ScriptRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -12,6 +12,9 @@ public class MetaEntity {
     private String tableName;
     private String alias;
     private MetaAttribute id;
+    /**
+     * Collection of simple, relationship and embeddable attributes.
+     */
     private List<MetaAttribute> attributes;
     private final List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
     // used to build the metamodel. The 'attributes' field contains the
@@ -93,7 +96,7 @@ public class MetaEntity {
 	return list;
     }
 
-    public MetaAttribute findAttributeWithMappedBy(String mappedBy) {
+    public MetaAttribute findAttributeByMappedBy(String mappedBy) {
 	for (MetaAttribute attribute : attributes) {
 	    if (attribute.getRelationship() != null && mappedBy.equals(attribute.getRelationship().getMappedBy()))
 		return attribute;

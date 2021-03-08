@@ -11,47 +11,52 @@ import org.minijpa.jpa.model.Fingerprint;
 import org.minijpa.jpa.model.Person;
 
 /**
- * 
+ *
  * @author adamato
  *
  */
 public class OneToOneBidTest {
 
-	@Test
-	public void persist() throws Exception {
-		EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid");
-		final EntityManager em = emf.createEntityManager();
-		try {
-			final EntityTransaction tx = em.getTransaction();
-			tx.begin();
+    @Test
+    public void persist() throws Exception {
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid");
+	final EntityManager em = emf.createEntityManager();
+	try {
+	    final EntityTransaction tx = em.getTransaction();
+	    tx.begin();
 
-			Person person = new Person();
-			person.setName("John Smith");
+	    Person person = new Person();
+	    person.setName("John Smith");
 
-			Fingerprint fingerprint = new Fingerprint();
-			fingerprint.setType("arch");
-			fingerprint.setPerson(person);
-			person.setFingerprint(fingerprint);
+	    Fingerprint fingerprint = new Fingerprint();
+	    fingerprint.setType("arch");
+	    fingerprint.setPerson(person);
+	    person.setFingerprint(fingerprint);
 
-			em.persist(person);
-			em.persist(fingerprint);
+	    em.persist(person);
+	    em.persist(fingerprint);
 
-			tx.commit();
+	    tx.commit();
 
-			em.detach(person);
+	    em.detach(person);
+	    em.detach(fingerprint);
 
-			Person p = em.find(Person.class, person.getId());
-			Assertions.assertNotNull(p);
-			Assertions.assertFalse(p == person);
-			Assertions.assertEquals(person.getId(), p.getId());
-			Assertions.assertNotNull(p.getFingerprint());
-			Assertions.assertEquals("John Smith", p.getName());
-			Assertions.assertEquals("arch", p.getFingerprint().getType());
+	    Person p = em.find(Person.class, person.getId());
+	    Fingerprint f = em.find(Fingerprint.class, fingerprint.getId());
+	    Assertions.assertNotNull(p);
+	    Assertions.assertFalse(p == person);
+	    Assertions.assertEquals(person.getId(), p.getId());
+	    Assertions.assertNotNull(p.getFingerprint());
+	    Assertions.assertEquals(p.getFingerprint(), f);
+	    Assertions.assertNotNull(p.getFingerprint().getPerson());
+	    Assertions.assertEquals(p, p.getFingerprint().getPerson());
+	    Assertions.assertEquals("John Smith", p.getName());
+	    Assertions.assertEquals("arch", p.getFingerprint().getType());
 
-		} finally {
-			em.close();
-			emf.close();
-		}
+	} finally {
+	    em.close();
+	    emf.close();
 	}
+    }
 
 }

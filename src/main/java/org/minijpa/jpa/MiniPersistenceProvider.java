@@ -8,7 +8,7 @@ import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
 
-import org.minijpa.jdbc.ConnectionProviderImpl;
+import org.minijpa.jpa.db.ConnectionProviderImpl;
 import org.minijpa.jdbc.DbMetaData;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationFactory;

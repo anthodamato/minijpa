@@ -105,8 +105,7 @@ public class OrderTest {
 //		}
 //	    }
 
-	} finally 
-	{
+	} finally {
 	    em.close();
 	}
     }

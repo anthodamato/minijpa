@@ -20,7 +20,7 @@ import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitInfo;
 import org.minijpa.jdbc.ConnectionHolderImpl;
-import org.minijpa.jdbc.ConnectionProviderImpl;
+import org.minijpa.jpa.db.ConnectionProviderImpl;
 
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
@@ -28,7 +28,6 @@ import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.JdbcEntityManagerImpl;
-import org.minijpa.metadata.EmbeddedAttributeValueConverter;
 import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.EntityDelegateInstanceBuilder;
@@ -57,9 +56,10 @@ public class MiniEntityManager extends AbstractEntityManager {
 	this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 	this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 	this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, entities, persistenceContext,
-		new EntityDelegateInstanceBuilder(), new EmbeddedAttributeValueConverter(), connectionHolder);
+		new EntityDelegateInstanceBuilder(), connectionHolder);
 	EntityDelegate.getInstance()
-		.addEntityManagerContext(new EntityContainerContext(entities, persistenceContext, jdbcEntityManager));
+		.addEntityManagerContext(new EntityContainerContext(entities, persistenceContext,
+			jdbcEntityManager.getEntityLoader()));
     }
 
 //	public Connection connection() {
@@ -131,7 +131,6 @@ public class MiniEntityManager extends AbstractEntityManager {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey) {
-	LOG.info("find: this=" + this);
 	LOG.info("find: primaryKey=" + primaryKey);
 	try {
 	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
@@ -141,6 +140,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    return (T) entityObject;
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
+	    entityTransaction.setRollbackOnly();
 	    throw new PersistenceException(e.getMessage());
 	}
     }

@@ -4,9 +4,9 @@ import java.util.List;
 
 import javax.persistence.Query;
 
-import org.minijpa.jdbc.AbstractJdbcRunner;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.QueryResultValues;
 import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.UpdateQuery;
@@ -17,8 +17,8 @@ public interface JdbcEntityManager {
 
     public void flush() throws Exception;
 
-    public Object createAndSaveEntityInstance(AbstractJdbcRunner.AttributeValues attributeValues, MetaEntity entity,
-	    MetaAttribute childAttribute, Object childAttributeValue) throws Exception;
+//    public Object createAndSaveEntityInstance(QueryResultValues attributeValues, MetaEntity entity,
+//	    MetaAttribute childAttribute, Object childAttributeValue) throws Exception;
 
     public List<?> select(Query query) throws Exception;
 
@@ -29,5 +29,7 @@ public interface JdbcEntityManager {
     public int update(UpdateQuery updateQuery) throws Exception;
 
     public int delete(DeleteQuery deleteQuery) throws Exception;
+
+    public void remove(Object entity) throws Exception;
 
 }

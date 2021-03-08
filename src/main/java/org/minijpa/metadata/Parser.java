@@ -146,7 +146,7 @@ public class Parser {
 		    .filter(a -> a.isEmbedded() && a.getType().getName().equals(enhEmbeddable.getClassName()))
 		    .findFirst();
 	    MetaAttribute metaAttribute = optional.get();
-	    optional = metaAttribute.getEmbeddedAttributes().stream()
+	    optional = metaAttribute.getChildren().stream()
 		    .filter(a -> a.getName().equals(enhAttribute.getName())).findFirst();
 	    if (optional.isPresent())
 		embeddedAttributes.add(optional.get());
@@ -305,7 +305,7 @@ public class Parser {
 	MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
 		.withType(attributeClass).withReadWriteDbType(readWriteType).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
 		.withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id).withSqlType(sqlType)
-		.isEmbedded(embedded).withEmbeddedAttributes(embeddedAttributes).isCollection(isCollection)
+		.isEmbedded(embedded).withChildren(embeddedAttributes).isCollection(isCollection)
 		.withJavaMember(field).withJdbcAttributeMapper(jdbcAttributeMapper).withCollectionImplementationClass(collectionImplementationClass);
 	if (id)
 	    builder.withPkGeneration(new PkGeneration());
@@ -351,8 +351,12 @@ public class Parser {
 
     private PkGeneration buildPkGeneration(Field field) {
 	GeneratedValue generatedValue = field.getAnnotation(GeneratedValue.class);
-	if (generatedValue == null)
-	    return null;
+	if (generatedValue == null) {
+	    PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(PkGenerationType.PLAIN);
+	    PkGeneration pkGeneration = new PkGeneration();
+	    pkGeneration.setPkStrategy(pkStrategy);
+	    return pkGeneration;
+	}
 
 	PkGenerationType pkGenerationType = decodePkGenerationType(generatedValue.strategy());
 	PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(pkGenerationType);
@@ -409,7 +413,7 @@ public class Parser {
 	for (MetaAttribute a : attributes) {
 	    LOG.info("finalizeRelationships: a=" + a);
 	    if (a.isEmbedded()) {
-		finalizeRelationships(entity, entities, a.getEmbeddedAttributes());
+		finalizeRelationships(entity, entities, a.getChildren());
 		return;
 	    }
 

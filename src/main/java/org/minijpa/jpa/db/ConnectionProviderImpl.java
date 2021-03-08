@@ -1,4 +1,4 @@
-package org.minijpa.jdbc;
+package org.minijpa.jpa.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
+import org.minijpa.jdbc.ConnectionProvider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

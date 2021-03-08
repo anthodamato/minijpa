@@ -12,7 +12,8 @@ import javax.persistence.EntityExistsException;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.EntityContainer;
+import org.minijpa.jdbc.db.EntityInstanceBuilder;
+import org.minijpa.jpa.db.EntityContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,6 +206,46 @@ public class MiniPersistenceContext implements EntityContainer {
 	return entityInstance;
     }
 
+    /**
+     * Finds over the 'owningEntity' entities those ones with the given foreign key.
+     *
+     * @param owningEntity
+     * @param targetEntity
+     * @param foreignKeyAttribute
+     * @param foreignKey
+     * @param entityInstanceBuilder
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public List<Object> findByForeignKey(MetaEntity owningEntity, MetaEntity targetEntity,
+	    MetaAttribute foreignKeyAttribute, Object foreignKey, EntityInstanceBuilder entityInstanceBuilder) throws Exception {
+	List<Object> result = new ArrayList<>();
+	Map<Object, Object> notFlushedEntitiesMap = getEntityMap(owningEntity.getEntityClass(), notFlushedPersistEntities);
+	LOG.info("findByForeignKey: owningEntity.getEntityClass()=" + owningEntity.getEntityClass());
+	LOG.info("findByForeignKey: notFlushedEntitiesMap.size()=" + notFlushedEntitiesMap.size());
+	for (Map.Entry<Object, Object> e : notFlushedEntitiesMap.entrySet()) {
+	    LOG.info("findByForeignKey: e.getValue()=" + e.getValue());
+	    Object fkv = entityInstanceBuilder.getAttributeValue(e.getValue(), foreignKeyAttribute);
+	    Object fk = AttributeUtil.getIdValue(targetEntity, fkv);
+	    if (foreignKey.equals(fk))
+		result.add(e.getValue());
+	}
+
+	Map<Object, Object> flushedEntitiesMap = getEntityMap(owningEntity.getEntityClass(), flushedPersistEntities);
+	LOG.info("findByForeignKey: flushedEntitiesMap.size()=" + flushedEntitiesMap.size());
+	for (Map.Entry<Object, Object> e : flushedEntitiesMap.entrySet()) {
+	    LOG.info("findByForeignKey: e.getValue()=" + e.getValue());
+	    Object fkv = entityInstanceBuilder.getAttributeValue(e.getValue(), foreignKeyAttribute);
+	    LOG.info("findByForeignKey: fkv=" + fkv);
+	    Object fk = AttributeUtil.getIdValue(targetEntity, fkv);
+	    if (foreignKey.equals(fk))
+		result.add(e.getValue());
+	}
+
+	return result;
+    }
+
     @Override
     public boolean isManaged(Object entityInstance) throws Exception {
 	Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
@@ -350,32 +391,55 @@ public class MiniPersistenceContext implements EntityContainer {
 
     @Override
     public void saveForeignKey(Object parentInstance, MetaAttribute attribute, Object value) {
+	LOG.info("saveForeignKey: this=" + this);
+	LOG.info("saveForeignKey: parentInstance.getClass()=" + parentInstance.getClass() + "; parentInstance=" + parentInstance);
 	Map<Object, Map<MetaAttribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
+	LOG.info("saveForeignKey: 1 map=" + map);
 	if (map == null) {
 	    map = new HashMap<>();
 	    foreignKeyValues.put(parentInstance.getClass(), map);
 	}
 
+	LOG.info("saveForeignKey: 2 map=" + map);
 	Map<MetaAttribute, Object> parentMap = map.get(parentInstance);
 	if (parentMap == null) {
 	    parentMap = new HashMap<>();
 	    map.put(parentInstance, parentMap);
 	}
 
+	LOG.info("saveForeignKey: 3 map=" + map);
+	LOG.info("saveForeignKey: parentMap=" + parentMap + "; attribute=" + attribute);
 	parentMap.put(attribute, value);
     }
 
     @Override
     public Object getForeignKeyValue(Object parentInstance, MetaAttribute attribute) {
+	LOG.info("getForeignKeyValue: this=" + this);
+	LOG.info("getForeignKeyValue: parentInstance.getClass()=" + parentInstance.getClass() + "; parentInstance=" + parentInstance);
 	Map<Object, Map<MetaAttribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
+	LOG.info("getForeignKeyValue: map=" + map);
 	if (map == null)
 	    return null;
 
 	Map<MetaAttribute, Object> parentMap = map.get(parentInstance);
+	LOG.info("getForeignKeyValue: parentMap=" + parentMap + "; attribute=" + attribute);
 	if (parentMap == null)
 	    return null;
 
 	return parentMap.get(attribute);
+    }
+
+    @Override
+    public void removeForeignKey(Object parentInstance, MetaAttribute attribute) {
+	Map<Object, Map<MetaAttribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
+	if (map == null)
+	    return;
+
+	Map<MetaAttribute, Object> parentMap = map.get(parentInstance);
+	if (parentMap == null)
+	    return;
+
+	parentMap.remove(attribute);
     }
 
     /**

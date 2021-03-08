@@ -1,6 +1,5 @@
 package org.minijpa.metadata;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,10 +8,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.minijpa.jdbc.AttributeValue;
+import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.AttributeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,20 +24,20 @@ public final class EntityDelegate implements EntityListener {
     private final EntityContainerContextManager entityContainerContextManager = new EntityContainerContextManager();
 
     /**
-     * (key, value) is (Entity, Map<entity instance, List<AttrValue>>>)
+     * (key, value) is (MetaEntity, Map<entity instance, List<AttributeValue>>>)
      *
      * Collects entity attributes changes.
      */
-    private final Map<MetaEntity, Map<Object, List<AttributeValue>>> changes = new HashMap<>();
+//    private final Map<MetaEntity, Map<Object, List<AttributeValue>>> changes = new HashMap<>();
     /**
      * (key, value) is (Map<embedded instance, List<AttrValue>>>)
      *
      * Collects embedded attributes changes.
      */
-    private final Map<Object, List<AttributeValue>> embeddedChanges = new HashMap<>();
-
+//    private final Map<Object, List<AttributeValue>> embeddedChanges = new HashMap<>();
     private final List<Object> ignoreEntityInstances = new ArrayList<>();
 
+    private final EntityModificationRepository entityModificationRepository = new EntityModificationRepositoryImpl();
     /**
      * The loaded lazy attributes. <br>
      * (key, value) is (Map<owner entity instance class, Map<owner entity instance, Set<Attribute>>>)
@@ -58,15 +56,6 @@ public final class EntityDelegate implements EntityListener {
      */
     private synchronized void initDataStructures(Set<MetaEntity> entities) {
 	for (MetaEntity entity : entities) {
-	    Map<Object, List<AttributeValue>> map = changes.get(entity);
-	    if (map == null) {
-		map = new HashMap<>();
-		changes.put(entity, map);
-		LOG.info("initDataStructures: entity=" + entity);
-	    }
-	}
-
-	for (MetaEntity entity : entities) {
 	    Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entity.getEntityClass());
 	    if (map == null) {
 		map = new HashMap<>();
@@ -82,121 +71,17 @@ public final class EntityDelegate implements EntityListener {
 		return;
 	}
 
-	MetaEntity entity = entityContextManager.getEntity(owningEntityInstance.getClass().getName());
-//		LOG.info("set: this=" + this + "; getClass().getClassLoader()=" + getClass().getClassLoader()
-//				+ "; Thread.currentThread()=" + Thread.currentThread());
 	LOG.info("set: owningEntityInstance=" + owningEntityInstance + "; attributeName=" + attributeName + "; value="
-		+ value + "; entity=" + entity);
-	if (entity == null) {
-	    // it's an embedded attribute
-	    List<AttributeValue> instanceAttrs = embeddedChanges.get(owningEntityInstance);
-	    LOG.info("set: embedded instanceAttrs=" + instanceAttrs);
-	    if (instanceAttrs == null) {
-		instanceAttrs = new ArrayList<>();
-		embeddedChanges.put(owningEntityInstance, instanceAttrs);
-	    }
-
-	    MetaAttribute parentAttribute = entityContextManager
-		    .findEmbeddedAttribute(owningEntityInstance.getClass().getName());
-	    LOG.info("set: parentAttribute=" + parentAttribute);
-	    MetaAttribute attribute = parentAttribute.findChildByName(attributeName);
-	    Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
-		    .findFirst();
-	    if (optional.isPresent()) {
-		AttributeValue attrValue = optional.get();
-		attrValue.setValue(value);
-	    } else {
-		AttributeValue attrValue = new AttributeValue(attribute, value);
-		instanceAttrs.add(attrValue);
-	    }
-
-	    return;
-	}
-
-	Map<Object, List<AttributeValue>> map = changes.get(entity);
-	List<AttributeValue> instanceAttrs = map.get(owningEntityInstance);
-	if (instanceAttrs == null) {
-	    instanceAttrs = new ArrayList<>();
-	    map.put(owningEntityInstance, instanceAttrs);
-	}
-
-	LOG.info("set: instanceAttrs=" + instanceAttrs + "; entityInstance=" + owningEntityInstance + "; entity="
-		+ entity + "; map=" + map);
-	MetaAttribute attribute = entity.getAttribute(attributeName);
-	LOG.info("set: attributeName=" + attributeName + "; attribute=" + attribute);
-	Optional<AttributeValue> optional = instanceAttrs.stream().filter(a -> a.getAttribute() == attribute)
-		.findFirst();
-	LOG.info("set: optional.isPresent()=" + optional.isPresent());
-	if (optional.isPresent()) {
-	    AttributeValue attrValue = optional.get();
-	    attrValue.setValue(value);
-	} else {
-	    AttributeValue attrValue = new AttributeValue(attribute, value);
-	    instanceAttrs.add(attrValue);
-	    LOG.info("set: attrValue=" + attrValue + "; instanceAttrs=" + instanceAttrs);
-	}
-    }
-
-    public Optional<List<AttributeValue>> findEmbeddedAttrValues(Object embeddedInstance) {
-	LOG.info("findEmbeddedAttrValues: embeddedChanges.size()=" + embeddedChanges.size());
-	for (Map.Entry<Object, List<AttributeValue>> entry : embeddedChanges.entrySet()) {
-	    LOG.info("findEmbeddedAttrValues: entry.getKey()=" + entry.getKey());
-	}
-
-	List<AttributeValue> attrValues = embeddedChanges.get(embeddedInstance);
-	if (attrValues == null)
-	    return Optional.empty();
-
-	return Optional.of(attrValues);
+		+ value);
+	entityModificationRepository.save(owningEntityInstance, attributeName, value);
     }
 
     public void removeChanges(Object entityInstance) {
-	MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
-	if (entity == null)
-	    return;
-
-	removeEmbeddedChanges(entity.getAttributes(), entityInstance);
-	Map<Object, List<AttributeValue>> map = changes.get(entity);
-	LOG.info("removeChanges: map=" + map);
-	map.remove(entityInstance);
+	entityModificationRepository.remove(entityInstance);
     }
 
-    private void removeEmbeddedChanges(List<MetaAttribute> attributes, Object entityInstance) {
-	for (MetaAttribute attribute : attributes) {
-	    if (attribute.isId() || !attribute.isEmbedded())
-		continue;
-
-	    Object value = null;
-	    try {
-		value = attribute.getReadMethod().invoke(entityInstance);
-	    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-		LOG.error(e.getMessage());
-		continue;
-	    }
-
-	    embeddedChanges.remove(value);
-	    removeEmbeddedChanges(attribute.getEmbeddedAttributes(), value);
-	}
-    }
-
-    public Optional<List<AttributeValue>> getChanges(MetaEntity entity, Object entityInstance) {
-	Map<Object, List<AttributeValue>> map = changes.get(entity);
-	List<AttributeValue> instanceAttrs = map.get(entityInstance);
-	LOG.info("getChanges: instanceAttrs=" + instanceAttrs + "; entityInstance=" + entityInstance + "; entity="
-		+ entity + "; map=" + map);
-	if (instanceAttrs == null)
-	    return Optional.empty();
-
-	return Optional.of(instanceAttrs);
-    }
-
-    public Set<MetaEntity> getChangeMetaEntities() {
-	return changes.keySet();
-    }
-
-    public Set<Object> getChangeEntities(MetaEntity metaEntity) {
-	Map<Object, List<AttributeValue>> map = changes.get(metaEntity);
-	return map.keySet();
+    public Optional<Map<String, Object>> getChanges(Object entityInstance) {
+	return entityModificationRepository.get(entityInstance);
     }
 
     @Override
@@ -242,6 +127,8 @@ public final class EntityDelegate implements EntityListener {
     @Override
     public Object get(Object value, String attributeName, Object entityInstance) {
 	LOG.info("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName + "; value=" + value);
+	LOG.info("get: entityContainerContextManager.isEmpty()=" + entityContainerContextManager.isEmpty());
+	LOG.info("get: entityContainerContextManager.isLoadedFromDb(entityInstance)=" + entityContainerContextManager.isLoadedFromDb(entityInstance));
 	if (entityContainerContextManager.isEmpty() || !entityContainerContextManager.isLoadedFromDb(entityInstance))
 	    return value;
 
@@ -249,14 +136,14 @@ public final class EntityDelegate implements EntityListener {
 	MetaAttribute a = entity.getAttribute(attributeName);
 	LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
 	if (a.isLazy() && !isLazyAttributeLoaded(entityInstance, a)) {
-	    AttributeLoader attributeLoader = entityContainerContextManager
-		    .findByEntity(entityInstance.getClass().getName());
 	    try {
-		value = attributeLoader.load(entityInstance, a, value);
+		EntityLoader entityLoader = entityContainerContextManager
+			.findByEntityContainer(entityInstance);
+		value = entityLoader.loadAttribute(entityInstance, a, value);
 		setLazyAttributeLoaded(entityInstance, a);
 	    } catch (Exception e) {
 		LOG.error(e.getMessage());
-		throw new IllegalArgumentException(e.getMessage());
+		throw new IllegalStateException(e.getMessage());
 	    }
 	}
 
@@ -361,11 +248,28 @@ public final class EntityDelegate implements EntityListener {
 	    entityContainerContexts.add(entityManagerContext);
 	}
 
-	public AttributeLoader findByEntity(String className) {
+//	public AttributeLoader findByEntity(String className) {
+//	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
+//		MetaEntity entity = entityContainerContext.getEntity(className);
+//		if (entity != null)
+//		    return entityContainerContext.getAttributeLoader();
+//	    }
+//
+//	    return null;
+//	}
+//	public EntityLoader findByEntity(String className) {
+//	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
+//		MetaEntity entity = entityContainerContext.getEntity(className);
+//		if (entity != null)
+//		    return entityContainerContext.getEntityLoader();
+//	    }
+//
+//	    return null;
+//	}
+	public EntityLoader findByEntityContainer(Object entityInstance) throws Exception {
 	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-		MetaEntity entity = entityContainerContext.getEntity(className);
-		if (entity != null)
-		    return entityContainerContext.getAttributeLoader();
+		if (entityContainerContext.isManaged(entityInstance))
+		    return entityContainerContext.getEntityLoader();
 	    }
 
 	    return null;
@@ -378,6 +282,15 @@ public final class EntityDelegate implements EntityListener {
 	public boolean isLoadedFromDb(Object entityInstance) {
 	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
 		if (entityContainerContext.getEntityContainer().isLoadedFromDb(entityInstance))
+		    return true;
+	    }
+
+	    return false;
+	}
+
+	public boolean isFlushedPersist(Object entityInstance) throws Exception {
+	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
+		if (entityContainerContext.getEntityContainer().isFlushedPersist(entityInstance))
 		    return true;
 	    }
 

@@ -18,7 +18,10 @@ public class MetaAttribute extends AbstractAttribute {
     private boolean id;
     private PkGeneration pkGeneration;
     private boolean embedded;
-    private List<MetaAttribute> embeddedAttributes;
+    /**
+     * Children attributes in case of embedded.
+     */
+    private List<MetaAttribute> children;
     private Relationship relationship;
     private boolean collection = false;
     private Field javaMember;
@@ -50,8 +53,8 @@ public class MetaAttribute extends AbstractAttribute {
 	return embedded;
     }
 
-    public List<MetaAttribute> getEmbeddedAttributes() {
-	return embeddedAttributes;
+    public List<MetaAttribute> getChildren() {
+	return children;
     }
 
     public Relationship getRelationship() {
@@ -75,10 +78,10 @@ public class MetaAttribute extends AbstractAttribute {
     }
 
     public MetaAttribute findChildByName(String attributeName) {
-	if (getEmbeddedAttributes() == null)
+	if (getChildren() == null)
 	    return null;
 
-	for (MetaAttribute a : getEmbeddedAttributes()) {
+	for (MetaAttribute a : getChildren()) {
 	    if (a.getName().equals(attributeName))
 		return a;
 	}
@@ -86,13 +89,12 @@ public class MetaAttribute extends AbstractAttribute {
 	return null;
     }
 
-    protected boolean expandRelationship() {
-	if (relationship == null)
-	    return true;
-
-	return false;
-    }
-
+//    protected boolean expandRelationship() {
+//	if (relationship == null)
+//	    return true;
+//
+//	return false;
+//    }
     public List<MetaAttribute> expand() {
 	if (expandedAttributeList != null)
 	    return expandedAttributeList;
@@ -100,10 +102,10 @@ public class MetaAttribute extends AbstractAttribute {
 	List<MetaAttribute> list = new ArrayList<>();
 //		LOG.info("expandAttribute: embedded=" + embedded + "; name=" + name);
 	if (embedded)
-	    for (MetaAttribute a : embeddedAttributes) {
+	    for (MetaAttribute a : children) {
 		list.addAll(a.expand());
 	    }
-	else if (expandRelationship())
+	else if (relationship == null)
 	    list.add(this);
 
 	expandedAttributeList = Collections.unmodifiableList(list);
@@ -126,7 +128,7 @@ public class MetaAttribute extends AbstractAttribute {
 
     @Override
     public String toString() {
-	return "(Name=" + name + "; columnName=" + columnName + "; embedded=" + embedded + ")";
+	return super.toString() + "; (Name=" + name + "; columnName=" + columnName + "; embedded=" + embedded + ")";
     }
 
     public static class Builder {
@@ -142,7 +144,7 @@ public class MetaAttribute extends AbstractAttribute {
 	private Integer sqlType;
 	private PkGeneration pkGeneration;
 	private boolean embedded;
-	private List<MetaAttribute> embeddedAttributes;
+	private List<MetaAttribute> children;
 	private Relationship relationship;
 	private boolean collection = false;
 	private Field javaMember;
@@ -206,8 +208,8 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
-	public Builder withEmbeddedAttributes(List<MetaAttribute> embeddedAttributes) {
-	    this.embeddedAttributes = embeddedAttributes;
+	public Builder withChildren(List<MetaAttribute> children) {
+	    this.children = children;
 	    return this;
 	}
 
@@ -254,7 +256,7 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.sqlType = sqlType;
 	    attribute.pkGeneration = pkGeneration;
 	    attribute.embedded = embedded;
-	    attribute.embeddedAttributes = embeddedAttributes;
+	    attribute.children = children;
 	    attribute.relationship = relationship;
 	    attribute.collection = collection;
 	    attribute.javaMember = javaMember;

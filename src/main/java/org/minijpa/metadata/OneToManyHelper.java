@@ -12,6 +12,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
+import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
@@ -94,7 +95,9 @@ public class OneToManyHelper extends RelationshipHelper {
 	return new JoinTableAttributes(null, joinTableName);
     }
 
-    public OneToManyRelationship finalizeRelationship(OneToManyRelationship oneToManyRelationship, MetaAttribute a, MetaEntity entity, MetaEntity toEntity, DbConfiguration dbConfiguration, AliasGenerator aliasGenerator, Map<String, MetaEntity> entities) {
+    public OneToManyRelationship finalizeRelationship(OneToManyRelationship oneToManyRelationship,
+	    MetaAttribute a, MetaEntity entity, MetaEntity toEntity, DbConfiguration dbConfiguration,
+	    AliasGenerator aliasGenerator, Map<String, MetaEntity> entities) {
 	OneToManyRelationship.Builder builder = new OneToManyRelationship.Builder().with(oneToManyRelationship);
 	builder = builder.withAttributeType(toEntity);
 	if (oneToManyRelationship.isOwner())
@@ -120,9 +123,9 @@ public class OneToManyHelper extends RelationshipHelper {
 	    }
 	else {
 	    builder = builder.withOwningEntity(toEntity);
-	    builder = builder.withOwningAttribute(toEntity.getAttribute(oneToManyRelationship.getMappedBy()));
-	    MetaAttribute attribute = toEntity.getAttribute(oneToManyRelationship.getMappedBy());
-	    builder = builder.withTargetAttribute(attribute);
+	    MetaAttribute owningAttribute = AttributeUtil.findAttributeFromPath(oneToManyRelationship.getMappedBy(), toEntity);
+	    builder = builder.withOwningAttribute(owningAttribute);
+	    builder = builder.withTargetAttribute(owningAttribute);
 	}
 
 	return builder.build();

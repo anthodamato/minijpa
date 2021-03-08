@@ -23,6 +23,12 @@ public class ApacheDerbyDbTypeMapper extends DefaultDbTypeMapper {
 	if (attributeType.isEnum() && jdbcType == Types.INTEGER)
 	    return Integer.class;
 
+	if (attributeType.isPrimitive()) {
+	    String typeName = attributeType.getName();
+	    if (typeName.equals("int") || typeName.equals("byte") || typeName.equals("short") || typeName.equals("long"))
+		return Integer.class;
+	}
+
 	return attributeType;
     }
 
