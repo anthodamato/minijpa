@@ -277,7 +277,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		entityContainer.addFlushedPersist(entityInstance);
 		entityInstanceBuilder.removeChanges(entityInstance);
 		entityContainer.removeNotFlushedPersist(entityInstance, idValue);
-//		entityContainer.setLoadedFromDb(entityInstance);
 	    } else if (entityContainer.isNotFlushedRemove(entityInstance.getClass(), idValue)) {
 		remove(entityInstance, me);
 		entityContainer.removeNotFlushedRemove(entityInstance, idValue);

@@ -1,12 +1,9 @@
 package org.minijpa.metadata;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.MetaAttribute;
@@ -23,45 +20,12 @@ public final class EntityDelegate implements EntityListener {
     private final EntityContextManager entityContextManager = new EntityContextManager();
     private final EntityContainerContextManager entityContainerContextManager = new EntityContainerContextManager();
 
-    /**
-     * (key, value) is (MetaEntity, Map<entity instance, List<AttributeValue>>>)
-     *
-     * Collects entity attributes changes.
-     */
-//    private final Map<MetaEntity, Map<Object, List<AttributeValue>>> changes = new HashMap<>();
-    /**
-     * (key, value) is (Map<embedded instance, List<AttrValue>>>)
-     *
-     * Collects embedded attributes changes.
-     */
-//    private final Map<Object, List<AttributeValue>> embeddedChanges = new HashMap<>();
     private final List<Object> ignoreEntityInstances = new ArrayList<>();
 
     private final EntityModificationRepository entityModificationRepository = new EntityModificationRepositoryImpl();
-    /**
-     * The loaded lazy attributes. <br>
-     * (key, value) is (Map<owner entity instance class, Map<owner entity instance, Set<Attribute>>>)
-     */
-    private final Map<Class<?>, Map<Object, Set<MetaAttribute>>> loadedLazyAttributes = new HashMap<>();
 
     public static EntityDelegate getInstance() {
 	return entityDelegate;
-    }
-
-    /**
-     * This method is called just one time to setup the data structures. If the related data structures are created
-     * dynamically and multiple entity managers are used race conditions may occur.
-     *
-     * @param entities
-     */
-    private synchronized void initDataStructures(Set<MetaEntity> entities) {
-	for (MetaEntity entity : entities) {
-	    Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entity.getEntityClass());
-	    if (map == null) {
-		map = new HashMap<>();
-		loadedLazyAttributes.put(entity.getEntityClass(), map);
-	    }
-	}
     }
 
     @Override
@@ -82,6 +46,10 @@ public final class EntityDelegate implements EntityListener {
 
     public Optional<Map<String, Object>> getChanges(Object entityInstance) {
 	return entityModificationRepository.get(entityInstance);
+    }
+
+    public void removeEntity(Object entityInstance) {
+	entityModificationRepository.removeEntity(entityInstance);
     }
 
     @Override
@@ -135,12 +103,12 @@ public final class EntityDelegate implements EntityListener {
 	MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
 	MetaAttribute a = entity.getAttribute(attributeName);
 	LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
-	if (a.isLazy() && !isLazyAttributeLoaded(entityInstance, a)) {
+	if (a.isLazy() && !entityModificationRepository.isLazyAttributeLoaded(entityInstance, a)) {
 	    try {
 		EntityLoader entityLoader = entityContainerContextManager
 			.findByEntityContainer(entityInstance);
 		value = entityLoader.loadAttribute(entityInstance, a, value);
-		setLazyAttributeLoaded(entityInstance, a);
+		entityModificationRepository.setLazyAttributeLoaded(entityInstance, a);
 	    } catch (Exception e) {
 		LOG.error(e.getMessage());
 		throw new IllegalStateException(e.getMessage());
@@ -148,37 +116,6 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	return value;
-    }
-
-    private boolean isLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
-	Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-	Set<MetaAttribute> attributes = map.get(entityInstance);
-	if (attributes == null)
-	    return false;
-
-	return attributes.contains(a);
-    }
-
-    public void setLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
-	Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-	Set<MetaAttribute> attributes = map.get(entityInstance);
-	if (attributes == null) {
-	    attributes = new HashSet<>();
-	    map.put(entityInstance, attributes);
-	}
-
-	attributes.add(a);
-    }
-
-    public void removeLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
-	Map<Object, Set<MetaAttribute>> map = loadedLazyAttributes.get(entityInstance.getClass());
-	Set<MetaAttribute> attributes = map.get(entityInstance);
-	if (attributes == null)
-	    return;
-
-	attributes.remove(a);
-	if (attributes.isEmpty())
-	    map.remove(entityInstance);
     }
 
     public void addIgnoreEntityInstance(Object object) {
@@ -225,7 +162,6 @@ public final class EntityDelegate implements EntityListener {
 
     public void addEntityContext(EntityContext entityContext) {
 	entityContextManager.add(entityContext);
-	initDataStructures(entityContext.getMetaEntities());
     }
 
     public Optional<MetaEntity> getMetaEntity(String className) {

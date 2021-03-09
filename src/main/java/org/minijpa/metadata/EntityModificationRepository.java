@@ -7,6 +7,7 @@ package org.minijpa.metadata;
 
 import java.util.Map;
 import java.util.Optional;
+import org.minijpa.jdbc.MetaAttribute;
 
 /**
  *
@@ -19,4 +20,12 @@ public interface EntityModificationRepository {
     public Optional<Map<String, Object>> get(Object entityInstance);
 
     public void remove(Object entityInstance);
+
+    public boolean isLazyAttributeLoaded(Object entityInstance, MetaAttribute a);
+
+    public void setLazyAttributeLoaded(Object entityInstance, MetaAttribute a);
+
+    public void removeLazyAttributeLoaded(Object entityInstance, MetaAttribute a);
+
+    public void removeEntity(Object entityInstance);
 }

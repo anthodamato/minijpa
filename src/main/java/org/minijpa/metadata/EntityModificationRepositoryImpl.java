@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.minijpa.jdbc.MetaAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,75 +19,113 @@ import org.slf4j.LoggerFactory;
  * @author adamato
  */
 public class EntityModificationRepositoryImpl implements EntityModificationRepository {
-
+    
     private final Logger LOG = LoggerFactory.getLogger(EntityModificationRepositoryImpl.class);
-//    private final List<Content> entityInstanceSet = new LinkedList<>();
-    private final Set<Content> entityInstanceSet = new HashSet<>();
-
+    private final Set<Content> entityInstanceModifications = new HashSet<>();
+    private final Set<LazyAttributeContent> lazyAttributeContents = new HashSet<>();
+    
     @Override
     public void save(Object owningEntityInstance, String attributeName, Object value) {
-//	int index = indexOf(owningEntityInstance);
-//	if (index == -1) {
-//	    Content content = new Content(owningEntityInstance);
-//	    entityInstanceSet.add(content);
-//	    content.attributeChanges.put(attributeName, value);
-//	}
-
-	Optional<Content> optional = find(owningEntityInstance);
+	Optional<Content> optional = findModified(owningEntityInstance);
 	LOG.info("save: optional.isPresent()=" + optional.isPresent());
 	if (optional.isEmpty()) {
 	    Content content = new Content(owningEntityInstance);
-	    entityInstanceSet.add(content);
+	    entityInstanceModifications.add(content);
 	    content.attributeChanges.put(attributeName, value);
 	} else {
 	    Content content = optional.get();
 	    content.attributeChanges.put(attributeName, value);
 	}
     }
-
+    
     @Override
     public Optional<Map<String, Object>> get(Object entityInstance) {
-	Optional<Content> optional = find(entityInstance);
+	Optional<Content> optional = findModified(entityInstance);
 	if (optional.isEmpty())
-//	int index = indexOf(entityInstance);
-//	if (index == -1)
 	    return Optional.empty();
-
+	
 	return Optional.of(optional.get().attributeChanges);
     }
-
+    
     @Override
     public void remove(Object entityInstance) {
-	Optional<Content> optional = find(entityInstance);
+	Optional<Content> optional = findModified(entityInstance);
 	if (optional.isEmpty())
 	    return;
-
-//	int index = indexOf(entityInstance);
-//	if (index == -1)
-//	    return;
-	entityInstanceSet.remove(optional.get());
+	
+	entityInstanceModifications.remove(optional.get());
     }
-
-//    private int indexOf(Object owningEntityInstance) {
-//	for (int i = 0; i < entityInstanceSet.size(); ++i) {
-//	    if (entityInstanceSet.get(i).owningEntityInstance == owningEntityInstance)
-//		return i;
-//	}
-//
-//	return -1;
-//    }
-    private Optional<Content> find(Object owningEntityInstance) {
-	return entityInstanceSet.stream().filter(e -> e.owningEntityInstance == owningEntityInstance).findFirst();
+    
+    private Optional<Content> findModified(Object owningEntityInstance) {
+	return entityInstanceModifications.stream().filter(e -> e.owningEntityInstance == owningEntityInstance).findFirst();
     }
-
+    
+    private Optional<LazyAttributeContent> findLazyContent(Object owningEntityInstance) {
+	return lazyAttributeContents.stream().filter(e -> e.owningEntityInstance == owningEntityInstance).findFirst();
+    }
+    
+    @Override
+    public boolean isLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
+	Optional<LazyAttributeContent> optional = findLazyContent(entityInstance);
+	if (optional.isEmpty())
+	    return false;
+	
+	LazyAttributeContent lazyAttributeContent = optional.get();
+	return lazyAttributeContent.attributes.contains(a);
+    }
+    
+    @Override
+    public void setLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
+	Optional<LazyAttributeContent> optional = findLazyContent(entityInstance);
+	if (optional.isEmpty()) {
+	    LazyAttributeContent lazyAttributeContent = new LazyAttributeContent(entityInstance);
+	    lazyAttributeContent.attributes.add(a);
+	    return;
+	}
+	
+	LazyAttributeContent lazyAttributeContent = optional.get();
+	lazyAttributeContent.attributes.add(a);
+    }
+    
+    @Override
+    public void removeLazyAttributeLoaded(Object entityInstance, MetaAttribute a) {
+	Optional<LazyAttributeContent> optional = findLazyContent(entityInstance);
+	if (optional.isEmpty())
+	    return;
+	
+	LazyAttributeContent lazyAttributeContent = optional.get();
+	lazyAttributeContent.attributes.remove(a);
+	if (lazyAttributeContent.attributes.isEmpty())
+	    lazyAttributeContents.remove(lazyAttributeContent);
+    }
+    
+    @Override
+    public void removeEntity(Object entityInstance) {
+	Optional<LazyAttributeContent> optional = findLazyContent(entityInstance);
+	if (optional.isEmpty())
+	    return;
+	
+	lazyAttributeContents.remove(optional.get());
+	remove(entityInstance);
+    }
+    
     private class Content {
-
+	
 	private Object owningEntityInstance;
 	private Map<String, Object> attributeChanges = new HashMap<>();
-
+	
 	public Content(Object owningEntityInstance) {
 	    this.owningEntityInstance = owningEntityInstance;
 	}
-
+    }
+    
+    private class LazyAttributeContent {
+	
+	private Object owningEntityInstance;
+	private Set<MetaAttribute> attributes = new HashSet<>();
+	
+	public LazyAttributeContent(Object owningEntityInstance) {
+	    this.owningEntityInstance = owningEntityInstance;
+	}
     }
 }
