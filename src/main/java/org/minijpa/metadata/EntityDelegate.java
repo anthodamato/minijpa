@@ -35,8 +35,8 @@ public final class EntityDelegate implements EntityListener {
 		return;
 	}
 
-	LOG.info("set: owningEntityInstance=" + owningEntityInstance + "; attributeName=" + attributeName + "; value="
-		+ value);
+//	LOG.info("set: owningEntityInstance=" + owningEntityInstance + "; attributeName=" + attributeName + "; value="
+//		+ value);
 	entityModificationRepository.save(owningEntityInstance, attributeName, value);
     }
 
@@ -94,15 +94,15 @@ public final class EntityDelegate implements EntityListener {
 
     @Override
     public Object get(Object value, String attributeName, Object entityInstance) {
-	LOG.info("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName + "; value=" + value);
-	LOG.info("get: entityContainerContextManager.isEmpty()=" + entityContainerContextManager.isEmpty());
-	LOG.info("get: entityContainerContextManager.isLoadedFromDb(entityInstance)=" + entityContainerContextManager.isLoadedFromDb(entityInstance));
+//	LOG.info("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName + "; value=" + value);
+//	LOG.info("get: entityContainerContextManager.isEmpty()=" + entityContainerContextManager.isEmpty());
+//	LOG.info("get: entityContainerContextManager.isLoadedFromDb(entityInstance)=" + entityContainerContextManager.isLoadedFromDb(entityInstance));
 	if (entityContainerContextManager.isEmpty() || !entityContainerContextManager.isLoadedFromDb(entityInstance))
 	    return value;
 
 	MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
 	MetaAttribute a = entity.getAttribute(attributeName);
-	LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
+//	LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
 	if (a.isLazy() && !entityModificationRepository.isLazyAttributeLoaded(entityInstance, a)) {
 	    try {
 		EntityLoader entityLoader = entityContainerContextManager

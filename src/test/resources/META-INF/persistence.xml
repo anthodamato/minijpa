@@ -95,8 +95,6 @@
         <class>org.minijpa.jpa.model.Square</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -119,8 +117,6 @@
         <class>org.minijpa.jpa.model.Book</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -143,8 +139,6 @@
         <class>org.minijpa.jpa.model.HotelBooking</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -168,8 +162,6 @@
         <class>org.minijpa.jpa.model.Region</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -193,8 +185,6 @@
         <class>org.minijpa.jpa.model.Fingerprint</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -218,8 +208,6 @@
         <class>org.minijpa.jpa.model.Capital</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -242,8 +230,6 @@
         <class>org.minijpa.jpa.model.Store</class>
         <class>org.minijpa.jpa.model.Item</class>
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -265,8 +251,6 @@
         <class>org.minijpa.jpa.model.HotelBookingDetail</class>
         <class>org.minijpa.jpa.model.HotelCustomer</class>
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -289,8 +273,6 @@
         <class>org.minijpa.jpa.model.Capital</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -314,8 +296,6 @@
         <class>org.minijpa.jpa.model.Department</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:books;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -338,8 +318,6 @@
         <class>org.minijpa.jpa.model.Stove</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:stoves;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -362,8 +340,6 @@
         <class>org.minijpa.jpa.model.Holiday</class>
 
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:holidays;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -385,8 +361,6 @@
         <description>Purchase Stats</description>
         <class>org.minijpa.jpa.model.PurchaseStats</class>
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:purchase_stats;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -409,8 +383,6 @@
         <class>org.minijpa.jpa.model.Order</class>
         <class>org.minijpa.jpa.model.Product</class>
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:orders;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -432,8 +404,6 @@
         <class>org.minijpa.jpa.model.Property</class>
         <class>org.minijpa.jpa.model.PropertyOwner</class>
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:orders;create=true" />
             <property name="javax.persistence.jdbc.driver"
@@ -455,13 +425,10 @@
         <class>org.minijpa.jpa.model.JobEmployee</class>
         <class>org.minijpa.jpa.model.ProgramManager</class>
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:orders;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property name="hibernate.hbm2ddl.auto" value="update" />
             <property 
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -471,6 +438,27 @@
             <property 
                 name="javax.persistence.schema-generation.create-script-source" 
                 value="META-INF/create_embed_many_to_one_db.sql" />
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="long_running">
+        <description>Properties</description>
+        <class>org.minijpa.jpa.model.RandomData</class>
+        <class>org.minijpa.jpa.model.RandomGroup</class>
+        <properties>
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:derby:memory:longrunning;create=true" />
+            <property name="javax.persistence.jdbc.driver"
+                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+            <property 
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="script" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-script-source" 
+                value="META-INF/create_long_running_db.sql" />
         </properties>
     </persistence-unit>
 

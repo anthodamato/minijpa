@@ -263,7 +263,7 @@ public class MiniPersistenceContext implements EntityContainer {
 	if (mapEntities == null)
 	    return false;
 
-	LOG.info("isManaged: mapEntities=" + mapEntities);
+//	LOG.info("isManaged: mapEntities=" + mapEntities);
 	MetaEntity e = entities.get(entityInstance.getClass().getName());
 //		if (e == null)
 //			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");

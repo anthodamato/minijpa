@@ -23,7 +23,7 @@ public abstract class RelationshipHelper {
 	    String joinColumn, DbConfiguration dbConfiguration) {
 	String jc = joinColumn;
 	if (jc == null)
-	    jc = entity.getTableName() + "_" + attribute.getColumnName();
+	    jc = entity.getName() + "_" + attribute.getColumnName();
 
 	JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper().mapJdbcAttribute(attribute.getType(), attribute.getSqlType());
 	return new JoinColumnAttribute.Builder().withColumnName(jc).withType(attribute.getType())

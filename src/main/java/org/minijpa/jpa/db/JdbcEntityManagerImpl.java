@@ -122,9 +122,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	// Collect join table attributes
 	Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
 	for (MetaAttribute a : entity.getAttributes()) {
-	    LOG.info("persist: a.getRelationship()=" + a.getRelationship());
-	    if (a.getRelationship() != null)
-		LOG.info("persist: a.getRelationship().getJoinTable()=" + a.getRelationship().getJoinTable());
+//	    LOG.info("persist: a.getRelationship()=" + a.getRelationship());
+//	    if (a.getRelationship() != null)
+//		LOG.info("persist: a.getRelationship().getJoinTable()=" + a.getRelationship().getJoinTable());
 
 	    if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner()) {
 		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
@@ -138,9 +138,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	SqlInsert sqlInsert = null;
 	MetaAttribute id = entity.getId();
-	LOG.info("persist: id.getPkGeneration()=" + id.getPkGeneration());
+//	LOG.info("persist: id.getPkGeneration()=" + id.getPkGeneration());
 	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
-	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
+//	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
 	if (pkStrategy == PkStrategy.IDENTITY)
 	    sqlInsert = sqlStatementFactory.generateInsertIdentityStrategy(entity, attrValues);
 	else
@@ -152,7 +152,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	entity.getId().getWriteMethod().invoke(entityInstance, pk);
 
 	// persist join table attributes
-	LOG.info("persist: joinTableAttrs.size()=" + joinTableAttrs.size());
+//	LOG.info("persist: joinTableAttrs.size()=" + joinTableAttrs.size());
 	for (Map.Entry<MetaAttribute, Object> entry : joinTableAttrs.entrySet()) {
 	    MetaAttribute a = entry.getKey();
 	    List<Object> ees = CollectionUtils.getCollectionAsList(entry.getValue());
@@ -202,19 +202,18 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
     private void persist(MetaEntity entity, Object entityInstance, Optional<List<AttributeValue>> optional) throws Exception {
-	LOG.info("persist: entityInstance=" + entityInstance);
-	LOG.info("persist: changes=" + optional.isPresent());
+//	LOG.info("persist: entityInstance=" + entityInstance);
+//	LOG.info("persist: changes=" + optional.isPresent());
 	List<AttributeValue> attributeValues = null;
 	if (optional.isPresent())
 	    attributeValues = optional.get();
 	else
 	    attributeValues = new ArrayList<>();
 
-	LOG.info("persist: changes.size()=" + attributeValues.size() + "; "
-		+ attributeValues.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
-//	List<AttributeValue> values = attributeValueConverter.convert(attributeValues);
-	LOG.info("persist: values.size()=" + attributeValues.size() + "; "
-		+ attributeValues.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
+//	LOG.info("persist: changes.size()=" + attributeValues.size() + "; "
+//		+ attributeValues.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
+//	LOG.info("persist: values.size()=" + attributeValues.size() + "; "
+//		+ attributeValues.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
 	persist(entity, entityInstance, attributeValues);
     }
 

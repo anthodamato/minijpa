@@ -249,8 +249,8 @@ public class SqlStatementFactory {
 
     public SqlInsert generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, Object owningInstance,
 	    Object targetInstance) throws Exception {
-	LOG.info("generateJoinTableInsert: owningInstance=" + owningInstance);
-	LOG.info("generateJoinTableInsert: targetInstance=" + targetInstance);
+//	LOG.info("generateJoinTableInsert: owningInstance=" + owningInstance);
+//	LOG.info("generateJoinTableInsert: targetInstance=" + targetInstance);
 	List<QueryParameter> parameters = new ArrayList<>();
 	MetaAttribute owningId = relationshipJoinTable.getOwningAttribute();
 	parameters

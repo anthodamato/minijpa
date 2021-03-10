@@ -22,14 +22,14 @@ public abstract class AbstractJdbcRunner {
     private final Logger LOG = LoggerFactory.getLogger(AbstractJdbcRunner.class);
 
     private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter, int index) throws SQLException {
-	LOG.info("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
-		+ queryParameter.getSqlType());
+//	LOG.info("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
+//		+ queryParameter.getSqlType());
 	if (queryParameter.getValue() == null) {
 	    preparedStatement.setNull(index, queryParameter.getSqlType());
 	    return;
 	}
 
-	LOG.info("setPreparedStatementQM: queryParameter.getJdbcAttributeMapper()=" + queryParameter.getJdbcAttributeMapper());
+//	LOG.info("setPreparedStatementQM: queryParameter.getJdbcAttributeMapper()=" + queryParameter.getJdbcAttributeMapper());
 	queryParameter.getJdbcAttributeMapper().setObject(preparedStatement, index, queryParameter.getValue());
     }
 
@@ -40,8 +40,8 @@ public abstract class AbstractJdbcRunner {
 
 	int index = 1;
 	for (QueryParameter queryParameter : queryParameters) {
-	    LOG.info("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
-		    + queryParameter.getValue());
+//	    LOG.info("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
+//		    + queryParameter.getValue());
 	    setPreparedStatementQM(preparedStatement, queryParameter, index);
 	    ++index;
 	}
@@ -67,10 +67,11 @@ public abstract class AbstractJdbcRunner {
     }
 
     public Object persist(String sql, SqlInsert sqlInsert, Connection connection) throws SQLException {
-	LOG.info("persist: sql=" + sql);
+//	LOG.info("persist: sql=" + sql);
 	PreparedStatement preparedStatement = null;
 	ResultSet resultSet = null;
 	try {
+	    LOG.info("Running `" + sql + "`");
 	    preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 	    setPreparedStatementParameters(preparedStatement, sqlInsert.getParameters());
 	    preparedStatement.execute();
@@ -81,7 +82,7 @@ public abstract class AbstractJdbcRunner {
 	    resultSet = preparedStatement.getGeneratedKeys();
 	    if (resultSet != null && resultSet.next()) {
 		pk = resultSet.getLong(1);
-		LOG.info("persist: getGeneratedKeys() pk=" + pk);
+//		LOG.info("persist: getGeneratedKeys() pk=" + pk);
 	    }
 
 	    return pk;
