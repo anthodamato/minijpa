@@ -11,38 +11,39 @@ import org.minijpa.jpa.model.Address;
 import org.minijpa.jpa.model.Citizen;
 
 public class RemoveTest {
-	@Test
-	public void remove() throws Exception {
-		EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
-		final EntityManager em = emf.createEntityManager();
-		try {
-			final EntityTransaction tx = em.getTransaction();
-			tx.begin();
 
-			Citizen citizen = new Citizen();
-			citizen.setName("Marc");
-			em.persist(citizen);
+    @Test
+    public void remove() throws Exception {
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
+	final EntityManager em = emf.createEntityManager();
+	try {
+	    final EntityTransaction tx = em.getTransaction();
+	    tx.begin();
 
-			Address address = new Address();
-			address.setName("Regent St");
-			em.persist(address);
+	    Citizen citizen = new Citizen();
+	    citizen.setName("Marc");
+	    em.persist(citizen);
 
-			tx.commit();
+	    Address address = new Address();
+	    address.setName("Regent St");
+	    em.persist(address);
 
-//			Citizen c = em.find(Citizen.class, citizen.getId());
-//			Assertions.assertNotNull(c);
+	    tx.commit();
 
-			em.remove(citizen);
+	    tx.begin();
+	    em.remove(citizen);
+	    em.remove(address);
+	    tx.commit();
 
-			Citizen c = em.find(Citizen.class, citizen.getId());
-			Assertions.assertNull(c);
+	    Citizen c = em.find(Citizen.class, citizen.getId());
+	    Assertions.assertNull(c);
 
-			c = em.find(Citizen.class, address.getId());
-			Assertions.assertNull(c);
-		} finally {
-			em.close();
-			emf.close();
-		}
+	    c = em.find(Citizen.class, address.getId());
+	    Assertions.assertNull(c);
+	} finally {
+	    em.close();
+	    emf.close();
 	}
+    }
 
 }

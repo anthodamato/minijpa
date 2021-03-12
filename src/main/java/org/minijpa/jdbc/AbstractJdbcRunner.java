@@ -18,9 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractJdbcRunner {
-
+    
     private final Logger LOG = LoggerFactory.getLogger(AbstractJdbcRunner.class);
-
+    
     private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter, int index) throws SQLException {
 //	LOG.info("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
 //		+ queryParameter.getSqlType());
@@ -32,12 +32,12 @@ public abstract class AbstractJdbcRunner {
 //	LOG.info("setPreparedStatementQM: queryParameter.getJdbcAttributeMapper()=" + queryParameter.getJdbcAttributeMapper());
 	queryParameter.getJdbcAttributeMapper().setObject(preparedStatement, index, queryParameter.getValue());
     }
-
+    
     protected void setPreparedStatementParameters(PreparedStatement preparedStatement,
 	    List<QueryParameter> queryParameters) throws SQLException {
 	if (queryParameters.isEmpty())
 	    return;
-
+	
 	int index = 1;
 	for (QueryParameter queryParameter : queryParameters) {
 //	    LOG.info("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
@@ -46,18 +46,18 @@ public abstract class AbstractJdbcRunner {
 	    ++index;
 	}
     }
-
+    
     public int persist(SqlUpdate sqlUpdate, Connection connection, String sql) throws SQLException {
 	LOG.info("persist: sql=" + sql);
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 	    if (sqlUpdate.getParameters().isPresent())
 		setPreparedStatementParameters(preparedStatement, sqlUpdate.getParameters().get());
-
+	    
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
     }
-
+    
     public int persist(Connection connection, String sql) throws SQLException {
 	LOG.info("persist: sql=" + sql);
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -65,7 +65,7 @@ public abstract class AbstractJdbcRunner {
 	    return preparedStatement.getUpdateCount();
 	}
     }
-
+    
     public Object persist(String sql, SqlInsert sqlInsert, Connection connection) throws SQLException {
 //	LOG.info("persist: sql=" + sql);
 	PreparedStatement preparedStatement = null;
@@ -77,35 +77,35 @@ public abstract class AbstractJdbcRunner {
 	    preparedStatement.execute();
 	    if (sqlInsert.getIdValue() != null)
 		return sqlInsert.getIdValue();
-
+	    
 	    Object pk = null;
 	    resultSet = preparedStatement.getGeneratedKeys();
 	    if (resultSet != null && resultSet.next()) {
 		pk = resultSet.getLong(1);
 //		LOG.info("persist: getGeneratedKeys() pk=" + pk);
 	    }
-
+	    
 	    return pk;
 	} finally {
 	    if (resultSet != null)
 		resultSet.close();
-
+	    
 	    if (preparedStatement != null)
 		preparedStatement.close();
 	}
     }
-
+    
     public int delete(String sql, SqlDelete sqlDelete, Connection connection) throws SQLException {
 	LOG.info("persist: sql=" + sql);
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 	    if (sqlDelete.getParameters().isPresent())
 		setPreparedStatementParameters(preparedStatement, sqlDelete.getParameters().get());
-
+	    
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
     }
-
+    
     public QueryResultValues findById(String sql, Connection connection, SqlSelect sqlSelect) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
@@ -113,13 +113,13 @@ public abstract class AbstractJdbcRunner {
 	    LOG.info("findById: sql=" + sql);
 	    preparedStatement = connection.prepareStatement(sql);
 	    setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
-
+	    
 	    rs = preparedStatement.executeQuery();
 	    boolean next = rs.next();
 	    LOG.info("findById: next=" + next);
 	    if (!next)
 		return null;
-
+	    
 	    QueryResultValues attributeValues = new QueryResultValues();
 	    Object value = null;
 	    MetaAttribute metaAttribute = null;
@@ -136,20 +136,20 @@ public abstract class AbstractJdbcRunner {
 		    attributeValues.values.add(metaAttribute.dbTypeMapper.convert(value,
 			    metaAttribute.getReadWriteDbType(), metaAttribute.getType()));
 		}
-
+		
 		++i;
 	    }
-
+	    
 	    return attributeValues;
 	} finally {
 	    if (rs != null)
 		rs.close();
-
+	    
 	    if (preparedStatement != null)
 		preparedStatement.close();
 	}
     }
-
+    
     public void findCollection(Connection connection, String sql, SqlSelect sqlSelect,
 	    MetaAttribute childAttribute, Object childAttributeValue, Collection<Object> collectionResult,
 	    EntityLoader entityLoader) throws Exception {
@@ -159,7 +159,7 @@ public abstract class AbstractJdbcRunner {
 	    LOG.info("findCollection: sql=`" + sql + "`");
 	    preparedStatement = connection.prepareStatement(sql);
 	    setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
-
+	    
 	    LOG.info("Running `" + sql + "`");
 	    rs = preparedStatement.executeQuery();
 	    while (rs.next()) {
@@ -172,12 +172,12 @@ public abstract class AbstractJdbcRunner {
 	} finally {
 	    if (rs != null)
 		rs.close();
-
+	    
 	    if (preparedStatement != null)
 		preparedStatement.close();
 	}
     }
-
+    
     private QueryResultValues createAttributeValuesFromResultSet(List<ColumnNameValue> columnNameValues, ResultSet rs)
 	    throws Exception {
 	QueryResultValues attributeValues = new QueryResultValues();
@@ -185,8 +185,6 @@ public abstract class AbstractJdbcRunner {
 	MetaAttribute metaAttribute = null;
 	int i = 1;
 	for (ColumnNameValue cnv : columnNameValues) {
-	    LOG.info("createAttributeValuesFromResultSet: cnv.getForeignKeyAttribute()="
-		    + cnv.getForeignKeyAttribute());
 	    if (cnv.getForeignKeyAttribute() != null) {
 		attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
 		attributeValues.relationshipValues.add(rs.getObject(i, cnv.getReadWriteDbType()));
@@ -197,33 +195,34 @@ public abstract class AbstractJdbcRunner {
 		LOG.info("createAttributeValuesFromResultSet: metaAttribute.getReadWriteDbType()="
 			+ metaAttribute.getReadWriteDbType());
 		value = rs.getObject(i, metaAttribute.getReadWriteDbType());
+		LOG.info("createAttributeValuesFromResultSet: value=" + value);
 		attributeValues.values.add(metaAttribute.dbTypeMapper.convert(value, metaAttribute.getReadWriteDbType(),
 			metaAttribute.getType()));
 	    }
-
+	    
 	    ++i;
 	}
-
+	
 	return attributeValues;
     }
-
+    
     protected Object[] createRecord(int nc, List<ColumnNameValue> fetchParameters, ResultSet rs) throws Exception {
 	Object[] values = new Object[nc];
 	for (int i = 0; i < nc; ++i) {
 	    Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
 	    values[i] = rs.getObject(i + 1, readWriteType);
 	}
-
+	
 	return values;
     }
-
+    
     public List<Object> runQuery(Connection connection, String sql, SqlSelect sqlSelect) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
 	    preparedStatement = connection.prepareStatement(sql);
 	    setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
-
+	    
 	    LOG.info("Running `" + sql + "`");
 	    List<Object> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
@@ -239,17 +238,17 @@ public abstract class AbstractJdbcRunner {
 		    objects.add(values);
 		}
 	    }
-
+	    
 	    return objects;
 	} finally {
 	    if (rs != null)
 		rs.close();
-
+	    
 	    if (preparedStatement != null)
 		preparedStatement.close();
 	}
     }
-
+    
     public List<Object> runQuery(Connection connection, String sql, List<Object> parameterValues) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
@@ -258,7 +257,7 @@ public abstract class AbstractJdbcRunner {
 	    for (int i = 0; i < parameterValues.size(); ++i) {
 		preparedStatement.setObject(i + 1, parameterValues.get(i));
 	    }
-
+	    
 	    LOG.info("Running `" + sql + "`");
 	    List<Object> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
@@ -282,17 +281,17 @@ public abstract class AbstractJdbcRunner {
 		    objects.add(values);
 		}
 	    }
-
+	    
 	    return objects;
 	} finally {
 	    if (rs != null)
 		rs.close();
-
+	    
 	    if (preparedStatement != null)
 		preparedStatement.close();
 	}
     }
-
+    
     public void logAttributeValues(QueryResultValues attributeValues) {
 	for (int i = 0; i < attributeValues.attributes.size(); ++i) {
 	    MetaAttribute attribute = attributeValues.attributes.get(i);
@@ -301,7 +300,7 @@ public abstract class AbstractJdbcRunner {
 	    LOG.info("logAttributeValues: " + i + " value=" + value);
 	}
     }
-
+    
     public Long generateNextSequenceValue(Connection connection, String sql) throws SQLException {
 	LOG.info("generateSequenceNextValue: sql=" + sql);
 	Long value = null;
@@ -316,12 +315,12 @@ public abstract class AbstractJdbcRunner {
 	} finally {
 	    if (rs != null)
 		rs.close();
-
+	    
 	    if (preparedStatement != null)
 		preparedStatement.close();
 	}
-
+	
 	return value;
     }
-
+    
 }

@@ -116,8 +116,8 @@ public class MiniPersistenceContext implements EntityContainer {
     @Override
     public void addFlushedPersist(Object entityInstance) throws Exception {
 	MetaEntity e = entities.get(entityInstance.getClass().getName());
-	LOG.info("save: entityInstance.getClass().getName()=" + entityInstance.getClass().getName());
-	LOG.info("save: e=" + e);
+//	LOG.info("save: entityInstance.getClass().getName()=" + entityInstance.getClass().getName());
+//	LOG.info("save: e=" + e);
 	if (e == null)
 	    throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 

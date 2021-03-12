@@ -22,7 +22,7 @@ public final class EntityDelegate implements EntityListener {
 
     private final List<Object> ignoreEntityInstances = new ArrayList<>();
 
-    private final EntityModificationRepository entityModificationRepository = new EntityModificationRepositoryImpl();
+    private final EntityModificationRepository entityModificationRepository = new EntityModificationCacheRepositoryImpl();
 
     public static EntityDelegate getInstance() {
 	return entityDelegate;
@@ -45,6 +45,7 @@ public final class EntityDelegate implements EntityListener {
     }
 
     public Optional<Map<String, Object>> getChanges(Object entityInstance) {
+//	LOG.info("getChanges: entityInstance=" + entityInstance);
 	return entityModificationRepository.get(entityInstance);
     }
 

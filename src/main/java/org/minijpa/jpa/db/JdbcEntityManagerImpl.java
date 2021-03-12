@@ -128,8 +128,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	    if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner()) {
 		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
-		LOG.info("persist: attributeInstance=" + attributeInstance);
-		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
+//		LOG.info("persist: attributeInstance=" + attributeInstance);
+//		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
 		if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
 			&& !CollectionUtils.isCollectionEmpty(attributeInstance))
 		    joinTableAttrs.put(a, attributeInstance);
@@ -184,6 +184,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     @Override
     public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
 	Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(entity, entityInstance);
+//	LOG.info("persist: optionalAV.isPresent()=" + optionalAV.isPresent());
 	checkNullableAttributes(entity, entityInstance, optionalAV);
 	Object idValue = generatePersistentIdentity(entity, entityInstance);
 	LOG.info("persist: idValue=" + idValue);

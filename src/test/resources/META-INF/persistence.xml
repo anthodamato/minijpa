@@ -118,7 +118,7 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:emb_books;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
@@ -140,7 +140,7 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:emb_booking;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
@@ -163,7 +163,7 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:cities_uni;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
@@ -186,7 +186,7 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:onetoone_bid;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
@@ -209,7 +209,7 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:onetoone_bid_lazy;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
@@ -231,7 +231,7 @@
         <class>org.minijpa.jpa.model.Item</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:onetomany_uni;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
             <property
@@ -252,7 +252,7 @@
         <class>org.minijpa.jpa.model.HotelCustomer</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:otm_emb_booking;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
             <property
@@ -274,7 +274,7 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:onetoone_bid_lazy;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
@@ -297,7 +297,7 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
+                      value="jdbc:derby:memory:manytoone_bid;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
@@ -405,7 +405,7 @@
         <class>org.minijpa.jpa.model.PropertyOwner</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:orders;create=true" />
+                      value="jdbc:derby:memory:property_many_to_many_uni;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
             <property 
@@ -426,7 +426,7 @@
         <class>org.minijpa.jpa.model.ProgramManager</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:orders;create=true" />
+                      value="jdbc:derby:memory:embed_many_to_one;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
             <property 
