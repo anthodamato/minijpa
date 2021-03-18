@@ -21,13 +21,15 @@ public final class OneToOneRelationship extends Relationship {
 
     @Override
     public String toString() {
-	return OneToOneRelationship.class.getName() + ": joinColumn=" + joinColumn + "; mappedBy=" + mappedBy + "; fetchType="
+	return OneToOneRelationship.class.getName() + ": joinColumn=" + joinColumn
+		+ "; joinColumnTable=" + joinColumnTable + "; mappedBy=" + mappedBy + "; fetchType="
 		+ fetchType;
     }
 
     public static class Builder {
 
 	private String joinColumn;
+	private String joinColumnTable;
 	private String mappedBy;
 	private FetchType fetchType = FetchType.EAGER;
 	private MetaEntity owningEntity;
@@ -40,6 +42,11 @@ public final class OneToOneRelationship extends Relationship {
 
 	public Builder withJoinColumn(String joinColumn) {
 	    this.joinColumn = joinColumn;
+	    return this;
+	}
+
+	public Builder withJoinColumnTable(String joinColumnTable) {
+	    this.joinColumnTable = joinColumnTable;
 	    return this;
 	}
 
@@ -75,6 +82,7 @@ public final class OneToOneRelationship extends Relationship {
 
 	public Builder with(OneToOneRelationship oneToOne) {
 	    this.joinColumn = oneToOne.joinColumn;
+	    this.joinColumnTable = oneToOne.joinColumnTable;
 	    this.mappedBy = oneToOne.mappedBy;
 	    this.fetchType = oneToOne.fetchType;
 	    this.owningEntity = oneToOne.owningEntity;
@@ -87,6 +95,7 @@ public final class OneToOneRelationship extends Relationship {
 	public OneToOneRelationship build() {
 	    OneToOneRelationship oto = new OneToOneRelationship();
 	    oto.joinColumn = joinColumn;
+	    oto.joinColumnTable = joinColumnTable;
 	    oto.mappedBy = mappedBy;
 	    oto.fetchType = fetchType;
 	    oto.owningEntity = owningEntity;

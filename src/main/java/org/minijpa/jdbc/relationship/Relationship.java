@@ -7,6 +7,7 @@ public abstract class Relationship {
 
     protected FetchType fetchType = FetchType.EAGER;
     protected String joinColumn;
+    protected String joinColumnTable;
     protected MetaEntity owningEntity;
     // for bidirectional relationships
     protected MetaAttribute owningAttribute;
@@ -32,6 +33,10 @@ public abstract class Relationship {
 
     public String getJoinColumn() {
 	return joinColumn;
+    }
+
+    public String getJoinColumnTable() {
+	return joinColumnTable;
     }
 
     public MetaEntity getOwningEntity() {

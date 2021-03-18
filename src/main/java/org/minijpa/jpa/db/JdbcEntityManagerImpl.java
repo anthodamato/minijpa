@@ -17,6 +17,7 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.AttributeValue;
+import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
@@ -24,6 +25,7 @@ import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkStrategy;
+import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.db.MiniFlushMode;
@@ -32,6 +34,7 @@ import org.minijpa.jdbc.model.SqlInsert;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlUpdate;
+import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.relationship.FetchType;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.DeleteQuery;
@@ -102,7 +105,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	entityLoader.refresh(entity, entityInstance, primaryKey);
     }
 
-    private void persist(MetaEntity entity, Object entityInstance, List<AttributeValue> attrValues) throws Exception {
+    private void persist(MetaEntity entity, Object entityInstance, List<AttributeValue> attrValues,
+	    AttributeValueArray attributeValueArray) throws Exception {
 	if (entityContainer.isFlushedPersist(entityInstance)) {
 	    // It's an update.
 	    if (attrValues.isEmpty())
@@ -110,9 +114,16 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	    Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 	    LOG.info("persist: idValue=" + idValue);
-	    SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attrValues, idValue);
+//	    SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attrValues, idValue);
+	    List<QueryParameter> idParameters = sqlStatementFactory.convertAVToQP(entity.getId(), idValue);
+	    List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+	    SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attributeValueArray.getAttributes(),
+		    idColumns);
+	    attributeValueArray.add(entity.getId(), idValue);
+	    List<QueryParameter> parameters = sqlStatementFactory.convertAVToQP(attributeValueArray);
+
 	    String sql = sqlStatementGenerator.export(sqlUpdate);
-	    jdbcRunner.persist(sqlUpdate, connectionHolder.getConnection(), sql);
+	    jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
 	    return;
 	}
 
@@ -141,15 +152,33 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 //	LOG.info("persist: id.getPkGeneration()=" + id.getPkGeneration());
 	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
 //	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
-	if (pkStrategy == PkStrategy.IDENTITY)
-	    sqlInsert = sqlStatementFactory.generateInsertIdentityStrategy(entity, attrValues);
-	else
-	    sqlInsert = sqlStatementFactory.generatePlainInsert(entityInstance, entity, attrValues);
+	if (pkStrategy == PkStrategy.IDENTITY) {
+	    List<QueryParameter> parameters = sqlStatementFactory.queryParametersFromAV(attrValues);
+	    List<String> columns = parameters.stream().map(p -> {
+		return p.getColumnName();
+	    }).collect(Collectors.toList());
 
-	String sql = sqlStatementGenerator.export(sqlInsert);
-	Object pk = jdbcRunner.persist(sql, sqlInsert, connectionHolder.getConnection());
-	LOG.info("persist: pk=" + pk);
-	entity.getId().getWriteMethod().invoke(entityInstance, pk);
+	    sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
+	    String sql = sqlStatementGenerator.export(sqlInsert);
+	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
+	    LOG.info("persist: pk=" + pk);
+	    entity.getId().getWriteMethod().invoke(entityInstance, pk);
+	} else {
+	    Object idValue = id.getReadMethod().invoke(entityInstance);
+	    List<AttributeValue> attrValuesWithId = new ArrayList<>();
+	    AttributeValue attrValueId = new AttributeValue(id, idValue);
+	    attrValuesWithId.add(attrValueId);
+	    attrValuesWithId.addAll(attrValues);
+	    List<QueryParameter> parameters = sqlStatementFactory.queryParametersFromAV(attrValuesWithId);
+	    List<String> columns = parameters.stream().map(p -> {
+		return p.getColumnName();
+	    }).collect(Collectors.toList());
+
+	    sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
+	    String sql = sqlStatementGenerator.export(sqlInsert);
+	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
+	    LOG.info("persist: pk=" + pk);
+	}
 
 	// persist join table attributes
 //	LOG.info("persist: joinTableAttrs.size()=" + joinTableAttrs.size());
@@ -184,25 +213,26 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     @Override
     public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
 	Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(entity, entityInstance);
-//	LOG.info("persist: optionalAV.isPresent()=" + optionalAV.isPresent());
-	checkNullableAttributes(entity, entityInstance, optionalAV);
+	AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(entity, entityInstance);
+	checkNullableAttributes(entity, entityInstance, attributeValueArray);
 	Object idValue = generatePersistentIdentity(entity, entityInstance);
 	LOG.info("persist: idValue=" + idValue);
 	if (idValue != null) {
 	    entityContainer.addNotFlushedPersist(entityInstance, idValue);
-	    LOG.info("persist: idValue=" + idValue);
+//	    LOG.info("persist: idValue=" + idValue);
 //	    boolean persistOnDb = canPersistOnDb(entityInstance);
 //	    LOG.info("persist: persistOnDb=" + persistOnDb);
 //	    if (!persistOnDb)
 //		entityContainer.addPendingNew(entityInstance);
 	} else {
-	    persist(entity, entityInstance, optionalAV);
+	    persist(entity, entityInstance, optionalAV, attributeValueArray);
 	    entityContainer.addFlushedPersist(entityInstance);
 	    entityInstanceBuilder.removeChanges(entityInstance);
 	}
     }
 
-    private void persist(MetaEntity entity, Object entityInstance, Optional<List<AttributeValue>> optional) throws Exception {
+    private void persist(MetaEntity entity, Object entityInstance, Optional<List<AttributeValue>> optional,
+	    AttributeValueArray attributeValueArray) throws Exception {
 //	LOG.info("persist: entityInstance=" + entityInstance);
 //	LOG.info("persist: changes=" + optional.isPresent());
 	List<AttributeValue> attributeValues = null;
@@ -215,7 +245,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 //		+ attributeValues.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
 //	LOG.info("persist: values.size()=" + attributeValues.size() + "; "
 //		+ attributeValues.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
-	persist(entity, entityInstance, attributeValues);
+	persist(entity, entityInstance, attributeValues, attributeValueArray);
     }
 
     /**
@@ -225,7 +255,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
      * @param optional the modified attributes
      * @throws PersistenceException
      */
-    private void checkNullableAttributes(MetaEntity entity, Object entityInstance, Optional<List<AttributeValue>> optional) throws Exception {
+    private void checkNullableAttributes(MetaEntity entity, Object entityInstance,
+	    AttributeValueArray attributeValueArray) throws Exception {
 	if (entityContainer.isFlushedPersist(entityInstance)) {
 	    // It's an update.
 	    // TODO. It should check that no not nullable attrs will be set to null.
@@ -236,12 +267,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	if (notNullableAttributes.isEmpty())
 	    return;
 
-	if (optional.isEmpty())
+	if (attributeValueArray.isEmpty())
 	    throw new PersistenceException("Attribute '" + notNullableAttributes.get(0).getName() + "' is null");
 
-	List<AttributeValue> attributeValues = optional.get();
+//	List<AttributeValue> attributeValues = optional.get();
 	notNullableAttributes.stream().forEach(a -> {
-	    Optional<AttributeValue> o = attributeValues.stream().filter(av -> av.getAttribute() == a).findFirst();
+	    Optional<MetaAttribute> o = attributeValueArray.getAttributes().stream().filter(av -> av == a).findFirst();
 	    if (o.isEmpty())
 		throw new PersistenceException("Attribute '" + a.getName() + "' is null");
 	});
@@ -259,7 +290,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(me, entry.getValue());
 		if (optional.isPresent()) {
 		    Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(me, entry.getValue());
-		    persist(me, entry.getValue(), optionalAV);
+		    AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entry.getValue());
+		    persist(me, entry.getValue(), optionalAV, attributeValueArray);
 		    entityInstanceBuilder.removeChanges(entry.getValue());
 		}
 	    }
@@ -273,7 +305,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    LOG.info("flush: idValue=" + idValue);
 	    if (entityContainer.isNotFlushedPersist(entityInstance)) {
 		Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(me, entityInstance);
-		persist(me, entityInstance, optionalAV);
+		AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		persist(me, entityInstance, optionalAV, attributeValueArray);
 		entityContainer.addFlushedPersist(entityInstance);
 		entityInstanceBuilder.removeChanges(entityInstance);
 		entityContainer.removeNotFlushedPersist(entityInstance, idValue);
@@ -313,14 +346,14 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	return true;
     }
 
-    private boolean persistOnDb(MetaEntity entity, Object entityInstance, List<AttributeValue> changes)
-	    throws Exception {
+    private boolean persistOnDb(MetaEntity entity, Object entityInstance, List<AttributeValue> changes,
+	    AttributeValueArray attributeValueArray) throws Exception {
 	boolean persistOnDb = canPersistOnDb(entityInstance);
 	LOG.info("persistOnDb: persistOnDb=" + persistOnDb + "; entityInstance=" + entityInstance);
 	if (!persistOnDb)
 	    return false;
 
-	persist(entity, entityInstance, Optional.of(changes));
+	persist(entity, entityInstance, Optional.of(changes), attributeValueArray);
 	entityContainer.addFlushedPersist(entityInstance);
 	entityInstanceBuilder.removeChanges(entityInstance);
 	return true;
@@ -329,9 +362,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     private void remove(Object entityInstance, MetaEntity e) throws Exception {
 	Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 	LOG.info("remove: idValue=" + idValue);
-	SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(e, idValue);
+
+	List<QueryParameter> idParameters = sqlStatementFactory.convertAVToQP(e.getId(), idValue);
+	List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+
+	SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(e, idColumns);
 	String sql = sqlStatementGenerator.export(sqlDelete);
-	jdbcRunner.delete(sql, sqlDelete, connectionHolder.getConnection());
+	jdbcRunner.delete(sql, connectionHolder.getConnection(), idParameters);
     }
 
     @Override
@@ -358,12 +395,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	for (Object entityInstance : list) {
 	    MetaEntity e = entities.get(entityInstance.getClass().getName());
 	    Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(e, entityInstance);
+	    AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(e, entityInstance);
 	    if (!optional.isPresent()) {
 		entityContainer.removePendingNew(entityInstance);
 		continue;
 	    }
 
-	    boolean stored = persistOnDb(e, entityInstance, optional.get());
+	    boolean stored = persistOnDb(e, entityInstance, optional.get(), attributeValueArray);
 	    if (stored)
 		entityContainer.removePendingNew(entityInstance);
 	}
@@ -387,10 +425,11 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	// persist every entity instance
 	RelationshipJoinTable relationshipJoinTable = a.getRelationship().getJoinTable();
 	for (Object instance : ees) {
-	    SqlInsert sqlInsert = sqlStatementFactory.generateJoinTableInsert(relationshipJoinTable, entityInstance,
-		    instance);
+	    List<QueryParameter> parameters = sqlStatementFactory.createRelationshipJoinTableParameters(relationshipJoinTable, entityInstance, instance);
+	    List<String> columnNames = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+	    SqlInsert sqlInsert = sqlStatementFactory.generateJoinTableInsert(relationshipJoinTable, columnNames);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
-	    jdbcRunner.persist(sql, sqlInsert, connectionHolder.getConnection());
+	    jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
 	}
     }
 
@@ -400,13 +439,14 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	if (criteriaQuery.getSelection() == null)
 	    throw new IllegalStateException("Selection not defined or not inferable");
 
-	SqlSelect sqlSelect = sqlStatementFactory.select(query);
+	StatementParameters statementParameters = sqlStatementFactory.select(query);
+	SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
 	String sql = sqlStatementGenerator.export(sqlSelect);
 	LOG.info("select: sql=" + sql);
 	if (sqlSelect.getResult() != null) {
 	    Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
 	    jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null, collectionResult,
-		    entityLoader);
+		    entityLoader, statementParameters.getParameters());
 	    return (List<?>) collectionResult;
 	}
 
@@ -416,11 +456,11 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 			"Selection '" + criteriaQuery.getSelection() + "' is not a compound selection");
 
 	    return jdbcRunner.runTupleQuery(connectionHolder.getConnection(), sql, sqlSelect,
-		    (CompoundSelection<?>) criteriaQuery.getSelection());
+		    (CompoundSelection<?>) criteriaQuery.getSelection(), statementParameters.getParameters());
 	}
 
 	// returns an aggregate expression result (max, min, etc)
-	return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect);
+	return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect, statementParameters.getParameters());
     }
 
     @Override
@@ -438,9 +478,10 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	if (updateQuery.getCriteriaUpdate().getRoot() == null)
 	    throw new IllegalArgumentException("Criteria Update Root not defined");
 
-	SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery);
+	List<QueryParameter> parameters = sqlStatementFactory.createUpdateParameters(updateQuery);
+	SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery, parameters);
 	String sql = sqlStatementGenerator.export(sqlUpdate);
-	return jdbcRunner.persist(sqlUpdate, connectionHolder.getConnection(), sql);
+	return jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
     }
 
     @Override
@@ -448,9 +489,10 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	if (deleteQuery.getCriteriaDelete().getRoot() == null)
 	    throw new IllegalArgumentException("Criteria Delete Root not defined");
 
-	SqlDelete sqlDelete = sqlStatementFactory.delete(deleteQuery);
+	StatementParameters statementParameters = sqlStatementFactory.delete(deleteQuery);
+	SqlDelete sqlDelete = (SqlDelete) statementParameters.getSqlStatement();
 	String sql = sqlStatementGenerator.export(sqlDelete);
-	return jdbcRunner.delete(sql, sqlDelete, connectionHolder.getConnection());
+	return jdbcRunner.delete(sql, connectionHolder.getConnection(), statementParameters.getParameters());
     }
 
 }

@@ -44,7 +44,7 @@ public class SqlStatementGenerator {
 	sb.append(cols);
 	sb.append(") values (");
 
-	for (int i = 0; i < sqlInsert.getParameters().size(); ++i) {
+	for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
 	    if (i > 0)
 		sb.append(",");
 

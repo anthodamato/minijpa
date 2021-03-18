@@ -10,7 +10,8 @@ public class QueryParameter {
     private Integer sqlType;
     private JdbcAttributeMapper jdbcAttributeMapper;
 
-    public QueryParameter(String columnName, Object value, Class<?> type, Integer sqlType, JdbcAttributeMapper jdbcAttributeMapper) {
+    public QueryParameter(String columnName, Object value, Class<?> type, Integer sqlType,
+	    JdbcAttributeMapper jdbcAttributeMapper) {
 	super();
 	this.columnName = columnName;
 	this.value = value;

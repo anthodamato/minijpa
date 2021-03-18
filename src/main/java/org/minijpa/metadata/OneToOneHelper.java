@@ -24,16 +24,16 @@ public class OneToOneHelper {
     public OneToOneRelationship createOneToOne(OneToOne oneToOne, JoinColumn joinColumn) {
 	OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder();
 	if (joinColumn != null)
-	    builder = builder.withJoinColumn(joinColumn.name());
+	    builder.withJoinColumn(joinColumn.name());
 
 	if (oneToOne.mappedBy() != null && !oneToOne.mappedBy().isEmpty())
-	    builder = builder.withMappedBy(oneToOne.mappedBy());
+	    builder.withMappedBy(oneToOne.mappedBy());
 
 	if (oneToOne.fetch() != null)
 	    if (oneToOne.fetch() == FetchType.EAGER)
-		builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.EAGER);
+		builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.EAGER);
 	    else if (oneToOne.fetch() == FetchType.LAZY)
-		builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.LAZY);
+		builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.LAZY);
 
 	return builder.build();
     }
@@ -49,7 +49,7 @@ public class OneToOneHelper {
 	    String joinColumnName = oneToOneRelationship.getJoinColumn();
 	    if (oneToOneRelationship.getJoinColumn() == null) {
 		joinColumnName = createDefaultJoinColumn(a, toEntity);
-		builder = builder.withJoinColumn(joinColumnName);
+		builder.withJoinColumn(joinColumnName);
 	    }
 
 	    JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper().mapJdbcAttribute(toEntity.getId().getType(), toEntity.getId().getSqlType());
@@ -58,10 +58,10 @@ public class OneToOneHelper {
 		    .withReadWriteDbType(toEntity.getId().getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
 		    .withSqlType(toEntity.getId().getSqlType()).withForeignKeyAttribute(a).withJdbcAttributeMapper(jdbcAttributeMapper).build();
 	    entity.getJoinColumnAttributes().add(joinColumnAttribute);
-	    builder = builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
+	    builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
 	} else {
-	    builder = builder.withOwningEntity(toEntity);
-	    builder = builder.withOwningAttribute(toEntity.getAttribute(oneToOneRelationship.getMappedBy()));
+	    builder.withOwningEntity(toEntity);
+	    builder.withOwningAttribute(toEntity.getAttribute(oneToOneRelationship.getMappedBy()));
 	}
 
 	builder.withAttributeType(toEntity);

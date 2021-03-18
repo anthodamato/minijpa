@@ -7,14 +7,19 @@ package org.minijpa.jpa.db;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.minijpa.jdbc.AttributeValue;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
+import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
+import org.minijpa.jdbc.model.TableColumn;
 
 /**
  *
@@ -48,20 +53,27 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 	this.connectionHolder = connectionHolder;
     }
 
+    public List<QueryParameter> createParameters(Object foreignKey, MetaAttribute foreignKeyAttribute) throws Exception {
+	AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKey);
+	return sqlStatementFactory.queryParametersFromAV(attrValue);
+    }
+
 //    @Override
-    public void createQuery(MetaEntity entity, Object foreignKey, MetaAttribute foreignKeyAttribute) throws Exception {
-	sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, foreignKey);
+    public void createQuery(MetaEntity entity, MetaAttribute foreignKeyAttribute, List<QueryParameter> parameters) throws Exception {
+	List<String> columns = parameters.stream().map(p -> p.getColumnName())
+		.collect(Collectors.toList());
+	sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, columns);
     }
 
     public SqlSelect getQuery() {
 	return sqlSelect;
     }
 
-    public Object run(EntityLoader entityLoader, MetaAttribute metaAttribute) throws Exception {
+    public Object run(EntityLoader entityLoader, MetaAttribute metaAttribute, List<QueryParameter> parameters) throws Exception {
 	String sql = sqlStatementGenerator.export(sqlSelect);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
 	jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null,
-		null, collectionResult, entityLoader);
+		null, collectionResult, entityLoader, parameters);
 	return (List<Object>) collectionResult;
     }
 

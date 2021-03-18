@@ -30,6 +30,7 @@ public final class OneToManyRelationship extends Relationship {
     public static class Builder {
 
 	private String joinColumn;
+	private String joinColumnTable;
 	private String mappedBy;
 	private FetchType fetchType = FetchType.LAZY;
 	private MetaEntity owningEntity;
@@ -46,6 +47,11 @@ public final class OneToManyRelationship extends Relationship {
 
 	public Builder withJoinColumn(String joinColumn) {
 	    this.joinColumn = joinColumn;
+	    return this;
+	}
+
+	public Builder withJoinColumnTable(String joinColumnTable) {
+	    this.joinColumnTable = joinColumnTable;
 	    return this;
 	}
 
@@ -101,6 +107,7 @@ public final class OneToManyRelationship extends Relationship {
 
 	public Builder with(OneToManyRelationship r) {
 	    this.joinColumn = r.joinColumn;
+	    this.joinColumnTable = r.joinColumnTable;
 	    this.mappedBy = r.mappedBy;
 	    this.fetchType = r.fetchType;
 	    this.owningEntity = r.owningEntity;
@@ -117,6 +124,7 @@ public final class OneToManyRelationship extends Relationship {
 	public OneToManyRelationship build() {
 	    OneToManyRelationship r = new OneToManyRelationship();
 	    r.joinColumn = joinColumn;
+	    r.joinColumnTable = joinColumnTable;
 	    r.mappedBy = mappedBy;
 	    r.fetchType = fetchType;
 	    r.owningEntity = owningEntity;

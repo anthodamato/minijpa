@@ -41,4 +41,21 @@ public class EmbeddedIdAttributeValueConverter implements AttributeValueConverte
 	return values;
     }
 
+    @Override
+    public void convert(MetaAttribute attribute, Object value, AttributeValueArray attributeValueArray) throws Exception {
+	if (!attribute.isEmbedded()) {
+	    if (attribute.getRelationship() != null)
+		return;
+
+	    attributeValueArray.add(attribute, value);
+	    return;
+	}
+
+	List<MetaAttribute> attributes = attribute.getChildren();
+	for (MetaAttribute a : attributes) {
+	    Object v = a.getReadMethod().invoke(value);
+	    convert(a, v, attributeValueArray);
+	}
+    }
+
 }

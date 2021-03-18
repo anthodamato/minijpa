@@ -14,6 +14,7 @@ import javax.persistence.criteria.CompoundSelection;
 
 import org.minijpa.jdbc.AbstractJdbcRunner;
 import org.minijpa.jdbc.ColumnNameValue;
+import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
@@ -25,12 +26,12 @@ public class JdbcRunner extends AbstractJdbcRunner {
     private final Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
 
     public List<Tuple> runTupleQuery(Connection connection, String sql, SqlSelect sqlSelect,
-	    CompoundSelection<?> compoundSelection) throws Exception {
+	    CompoundSelection<?> compoundSelection, List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
 	    preparedStatement = connection.prepareStatement(sql);
-	    setPreparedStatementParameters(preparedStatement, sqlSelect.getParameters());
+	    setPreparedStatementParameters(preparedStatement, parameters);
 
 	    LOG.info("Running `" + sql + "`");
 	    List<Tuple> objects = new ArrayList<>();

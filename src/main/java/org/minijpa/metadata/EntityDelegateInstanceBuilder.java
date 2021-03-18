@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.minijpa.jdbc.AttributeValue;
+import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
@@ -136,6 +137,37 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     @Override
     public void removeChanges(Object entityInstance) {
 	EntityDelegate.getInstance().removeChanges(entityInstance);
+    }
+
+    private void unpackEmbedded(MetaAttribute metaAttribute, Object value, AttributeValueArray attributeValueArray) {
+	Optional<Map<String, Object>> optional = EntityDelegate.getInstance().getChanges(value);
+	if (optional.isEmpty())
+	    return;
+
+	for (Map.Entry<String, Object> e : optional.get().entrySet()) {
+	    MetaAttribute a = metaAttribute.findChildByName(e.getKey());
+	    attributeValueArray.add(a, e.getValue());
+	    if (a.isEmbedded())
+		unpackEmbedded(a, e.getValue(), attributeValueArray);
+	}
+    }
+
+    @Override
+    public AttributeValueArray getModifications(MetaEntity entity, Object entityInstance) {
+	AttributeValueArray attributeValueArray = new AttributeValueArray();
+	Optional<Map<String, Object>> optional = EntityDelegate.getInstance().getChanges(entityInstance);
+	if (optional.isEmpty())
+	    return attributeValueArray;
+
+	for (Map.Entry<String, Object> e : optional.get().entrySet()) {
+	    MetaAttribute metaAttribute = entity.getAttribute(e.getKey());
+	    if (metaAttribute.isEmbedded()) {
+		unpackEmbedded(metaAttribute, e.getValue(), attributeValueArray);
+	    } else
+		attributeValueArray.add(metaAttribute, e.getValue());
+	}
+
+	return attributeValueArray;
     }
 
 }

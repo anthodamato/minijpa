@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.minijpa.jdbc.AttributeValue;
+import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
@@ -24,4 +25,5 @@ public interface EntityInstanceBuilder {
 
     public void removeChanges(Object entityInstance);
 
+    public AttributeValueArray getModifications(MetaEntity entity, Object entityInstance);
 }

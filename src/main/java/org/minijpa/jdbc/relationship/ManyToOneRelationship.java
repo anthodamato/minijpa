@@ -27,6 +27,7 @@ public final class ManyToOneRelationship extends Relationship {
     public static class Builder {
 
 	private String joinColumn;
+	private String joinColumnTable;
 	private FetchType fetchType = FetchType.EAGER;
 	private MetaEntity owningEntity;
 	private MetaAttribute owningAttribute;
@@ -37,6 +38,11 @@ public final class ManyToOneRelationship extends Relationship {
 
 	public Builder withJoinColumn(String joinColumn) {
 	    this.joinColumn = joinColumn;
+	    return this;
+	}
+
+	public Builder withJoinColumnTable(String joinColumnTable) {
+	    this.joinColumnTable = joinColumnTable;
 	    return this;
 	}
 
@@ -62,6 +68,7 @@ public final class ManyToOneRelationship extends Relationship {
 
 	public Builder with(ManyToOneRelationship manyToOne) {
 	    this.joinColumn = manyToOne.joinColumn;
+	    this.joinColumnTable = manyToOne.joinColumnTable;
 	    this.fetchType = manyToOne.fetchType;
 	    this.owningEntity = manyToOne.owningEntity;
 	    this.owningAttribute = manyToOne.owningAttribute;
@@ -72,6 +79,7 @@ public final class ManyToOneRelationship extends Relationship {
 	public ManyToOneRelationship build() {
 	    ManyToOneRelationship r = new ManyToOneRelationship();
 	    r.joinColumn = joinColumn;
+	    r.joinColumnTable = joinColumnTable;
 	    r.fetchType = fetchType;
 	    r.owningEntity = owningEntity;
 	    r.owningAttribute = owningAttribute;

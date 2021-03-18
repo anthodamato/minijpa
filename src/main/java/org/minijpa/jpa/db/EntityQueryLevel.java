@@ -5,8 +5,11 @@
  */
 package org.minijpa.jpa.db;
 
+import java.util.List;
+import org.minijpa.jdbc.AttributeValue;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.QueryResultValues;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.model.SqlSelect;
@@ -39,18 +42,21 @@ public class EntityQueryLevel implements QueryLevel {
     }
 
 //    @Override
-    public void createQuery(MetaEntity entity, Object primaryKey) throws Exception {
-	sqlSelect = sqlStatementFactory.generateSelectById(entity, primaryKey);
+    public void createQuery(MetaEntity entity) throws Exception {
+//	sqlSelect = sqlStatementFactory.generateSelectById(entity, primaryKey);
+	sqlSelect = sqlStatementFactory.generateSelectById(entity);
     }
 
     public SqlSelect getQuery() {
 	return sqlSelect;
     }
 
-    public QueryResultValues run() throws Exception {
+    public QueryResultValues run(MetaEntity entity, Object primaryKey) throws Exception {
+	AttributeValue attrValueId = new AttributeValue(entity.getId(), primaryKey);
+	List<QueryParameter> parameters = sqlStatementFactory.queryParametersFromAV(attrValueId);
 	String sql = sqlStatementGenerator.export(sqlSelect);
 	return jdbcRunner.findById(sql, connectionHolder.getConnection(),
-		sqlSelect);
+		sqlSelect, parameters);
     }
 
 //    @Override
