@@ -12,39 +12,40 @@ import org.slf4j.LoggerFactory;
 import javassist.NotFoundException;
 
 public class EntityFileTransformer implements ClassFileTransformer {
-	private Logger LOG = LoggerFactory.getLogger(EntityFileTransformer.class);
-	private BytecodeEnhancer bytecodeEnhancer = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer();
-	private boolean log = false;
 
-	@Override
-	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
-			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		if (className == null || className.startsWith("java/") || className.startsWith("javax/")
-				|| className.startsWith("jdk/") || className.startsWith("sun/") || className.startsWith("com/sun/")
-				|| className.startsWith("org/xml/") || className.startsWith("org/junit/")
-				|| className.startsWith("org/apache/") || className.startsWith("ch/qos/logback/")
-				|| className.startsWith("org/slf4j/") || className.startsWith("javassist/")
-				|| className.startsWith("org/apiguardian/") || className.startsWith("org/opentest4j/")
-				|| className.startsWith("org/springframework/") || className.startsWith("net/bytebuddy/")
-				|| className.startsWith("org/mockito/") || className.startsWith("org/aspectj/")
-				|| className.startsWith("org/w3c/") || className.startsWith("com/zaxxer/"))
-			return null;
+    private final Logger LOG = LoggerFactory.getLogger(EntityFileTransformer.class);
+    private final BytecodeEnhancer bytecodeEnhancer = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer();
+    private boolean log = false;
 
-		if (log)
-			LOG.info("transform: className=" + className);
+    @Override
+    public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
+	    ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
+	if (className == null || className.startsWith("java/") || className.startsWith("javax/")
+		|| className.startsWith("jdk/") || className.startsWith("sun/") || className.startsWith("com/sun/")
+		|| className.startsWith("org/xml/") || className.startsWith("org/junit/")
+		|| className.startsWith("org/apache/") || className.startsWith("ch/qos/logback/")
+		|| className.startsWith("org/slf4j/") || className.startsWith("javassist/")
+		|| className.startsWith("org/apiguardian/") || className.startsWith("org/opentest4j/")
+		|| className.startsWith("org/springframework/") || className.startsWith("net/bytebuddy/")
+		|| className.startsWith("org/mockito/") || className.startsWith("org/aspectj/")
+		|| className.startsWith("org/w3c/") || className.startsWith("com/zaxxer/"))
+	    return null;
 
-		String fullClassName = className.replaceAll("/", ".");
+	if (log)
+	    LOG.info("transform: className=" + className);
 
-		try {
-			return bytecodeEnhancer.toBytecode(fullClassName);
-		} catch (Exception e) {
-			if (e instanceof NotFoundException)
-				return null;
+	String fullClassName = className.replaceAll("/", ".");
 
-			LOG.error(e.getMessage());
-		}
-
+	try {
+	    return bytecodeEnhancer.toBytecode(fullClassName);
+	} catch (Exception e) {
+	    if (e instanceof NotFoundException)
 		return null;
+
+	    LOG.error(e.getMessage());
 	}
+
+	return null;
+    }
 
 }

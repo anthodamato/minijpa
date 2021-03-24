@@ -16,7 +16,7 @@ public class EmbeddedIdAttributeValueConverter implements AttributeValueConverte
 	    return attrValues;
 	}
 
-	List<MetaAttribute> attributes = attrValue.getAttribute().getChildren();
+	List<MetaAttribute> attributes = attrValue.getAttribute().getEmbeddableMetaEntity().getAttributes();
 	List<AttributeValue> attributeValues = new ArrayList<>();
 	for (MetaAttribute a : attributes) {
 	    Object value = a.getReadMethod().invoke(attrValue.getValue());
@@ -51,7 +51,7 @@ public class EmbeddedIdAttributeValueConverter implements AttributeValueConverte
 	    return;
 	}
 
-	List<MetaAttribute> attributes = attribute.getChildren();
+	List<MetaAttribute> attributes = attribute.getEmbeddableMetaEntity().getAttributes();
 	for (MetaAttribute a : attributes) {
 	    Object v = a.getReadMethod().invoke(value);
 	    convert(a, v, attributeValueArray);

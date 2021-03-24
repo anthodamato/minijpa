@@ -116,7 +116,7 @@ public class EntityLoaderImpl implements EntityLoader {
 				Object v = entityInstanceBuilder.getAttributeValue(value, attribute);
 				LOG.info("fillCircularRelationships: v=" + v);
 				if (v == null)
-				    entityInstanceBuilder.setAttributeValue(value, value.getClass(), attribute, entityInstance);
+				    entityInstanceBuilder.setAttributeValue(value, value.getClass(), attribute, entityInstance, toEntity);
 			    }
 			}
 		    }
@@ -176,7 +176,7 @@ public class EntityLoaderImpl implements EntityLoader {
 		joinTableCollectionQueryLevel.createQuery(e, pk, entity.getId(), a.getRelationship(), attributeValues);
 		List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
 		Object result = joinTableCollectionQueryLevel.run(this, a, parameters);
-		entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, result);
+		entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, result, entity);
 	    }
 	}
     }
@@ -192,10 +192,14 @@ public class EntityLoaderImpl implements EntityLoader {
 	if (foreignKeyInstance != null) {
 //	    entityContainer.addFlushedPersist(foreignKeyInstance, foreignKeyValue);
 //	    entityContainer.setLoadedFromDb(foreignKeyInstance);
+//	    LOG.info("loadRelationshipByForeignKey: entity=" + entity);
+//	    LOG.info("loadRelationshipByForeignKey: parentInstance=" + parentInstance);
 	    Object parent = AttributeUtil.findParentInstance(parentInstance, entity.getAttributes(), foreignKeyAttribute, entityInstanceBuilder);
-	    LOG.info("loadRelationshipByForeignKey: parent=" + parent);
+	    MetaEntity parentEntity = AttributeUtil.findParentEntity(parent.getClass().getName(), entity);
+//	    LOG.info("loadRelationshipByForeignKey: parent=" + parent);
+//	    LOG.info("loadRelationshipByForeignKey: e=" + e);
 	    entityInstanceBuilder.setAttributeValue(parent, parent.getClass(),
-		    foreignKeyAttribute, foreignKeyInstance);
+		    foreignKeyAttribute, foreignKeyInstance, parentEntity);
 	}
 
 	return foreignKeyInstance;

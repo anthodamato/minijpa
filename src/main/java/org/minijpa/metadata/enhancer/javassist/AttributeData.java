@@ -1,24 +1,29 @@
 package org.minijpa.metadata.enhancer.javassist;
 
 public class AttributeData {
-	Property property;
-//	private List<AttributeData> embeddedAttributes;
-	boolean parentIsEmbeddedId = false;
-	// only for embedded attributes
-//	private CtClass embeddedCtClass;
-	ManagedData embeddedData;
 
-	public AttributeData(Property property, boolean parentIsEmbeddedId, ManagedData embeddedData) {
-		super();
-		this.property = property;
-//		this.embeddedAttributes = embeddedProperties;
-		this.parentIsEmbeddedId = parentIsEmbeddedId;
-//		this.embeddedCtClass = embeddedCtClass;
-		this.embeddedData = embeddedData;
-	}
+    Property property;
+    boolean parentIsEmbeddedId = false;
+    // only for embedded attributes
+    ManagedData embeddedData;
 
-	public ManagedData getEmbeddedData() {
-		return embeddedData;
-	}
+    public AttributeData(Property property, boolean parentIsEmbeddedId, ManagedData embeddedData) {
+	super();
+	this.property = property;
+	this.parentIsEmbeddedId = parentIsEmbeddedId;
+	this.embeddedData = embeddedData;
+    }
+
+    public ManagedData getEmbeddedData() {
+	return embeddedData;
+    }
+
+    public Property getProperty() {
+	return property;
+    }
+
+    public boolean isParentIsEmbeddedId() {
+	return parentIsEmbeddedId;
+    }
 
 }

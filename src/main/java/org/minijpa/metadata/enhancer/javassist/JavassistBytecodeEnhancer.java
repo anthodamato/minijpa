@@ -40,7 +40,7 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 	Optional<ManagedData> optionalMD = inspectedClasses.stream()
 		.filter(e -> e.getCtClass().getName().equals(className)).findFirst();
 	if (optionalMD.isPresent()) {
-	    LOG.info("enhance: className=" + className + " found in the registry");
+	    LOG.debug("enhance: className=" + className + " found in the registry");
 	    return optionalMD.get().getCtClass().toBytecode();
 	}
 
@@ -52,7 +52,7 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 	if (managedData.mappedSuperclass != null)
 	    inspectedClasses.add(managedData.mappedSuperclass);
 
-	for (AttributeData attributeData : managedData.getDataAttributes()) {
+	for (AttributeData attributeData : managedData.getAttributeDataList()) {
 	    if (attributeData.getEmbeddedData() != null)
 		inspectedClasses.add(attributeData.getEmbeddedData());
 	}
@@ -65,22 +65,30 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 	Optional<EnhEntity> optionalEnhEntity = parsedEntities.stream().filter(e -> e.getClassName().equals(className))
 		.findFirst();
 	if (optionalEnhEntity.isPresent()) {
-	    LOG.info("enhance: className=" + className + " found in registry");
+	    LOG.debug("enhance: className=" + className + " found in registry");
 	    EnhEntity enhEntity = optionalEnhEntity.get();
 	    parsedEntities.add(enhEntity);
 	    return optionalEnhEntity.get();
 	} else {
-	    ManagedData managedData = classInspector.inspect(className, inspectedClasses);
-	    LOG.info("enhance: className=" + className + "; managedData=" + managedData);
+	    ManagedData managedData = null;
+	    Optional<ManagedData> optionalMD = inspectedClasses.stream()
+		    .filter(e -> e.getCtClass().getName().equals(className)).findFirst();
+	    LOG.debug("enhance: className=" + className + "; optionalMD.isPresent()=" + optionalMD.isPresent());
+	    if (optionalMD.isPresent())
+		managedData = optionalMD.get();
+	    else
+		managedData = classInspector.inspect(className, inspectedClasses);
+
+	    LOG.debug("enhance: className=" + className + "; managedData=" + managedData);
 	    EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-	    LOG.info("enhance: className=" + className + "; enhEntity=" + enhEntity);
+	    LOG.debug("enhance: className=" + className + "; enhEntity=" + enhEntity);
 	    parsedEntities.add(enhEntity);
 
 	    inspectedClasses.add(managedData);
 	    if (managedData.mappedSuperclass != null)
 		inspectedClasses.add(managedData.mappedSuperclass);
 
-	    for (AttributeData attributeData : managedData.getDataAttributes()) {
+	    for (AttributeData attributeData : managedData.getAttributeDataList()) {
 		if (attributeData.getEmbeddedData() != null)
 		    inspectedClasses.add(attributeData.getEmbeddedData());
 	    }

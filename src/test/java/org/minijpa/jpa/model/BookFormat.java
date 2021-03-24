@@ -4,23 +4,24 @@ import javax.persistence.Embeddable;
 
 @Embeddable
 public class BookFormat {
-	private String format;
-	private Integer pages;
 
-	public String getFormat() {
-		return format;
-	}
+    private String format;
+    private Integer pages;
 
-	public void setFormat(String format) {
-		this.format = format;
-	}
+    public String getFormat() {
+	return format;
+    }
 
-	public Integer getPages() {
-		return pages;
-	}
+    public void setFormat(String format) {
+	this.format = format;
+    }
 
-	public void setPages(Integer pages) {
-		this.pages = pages;
-	}
+    public Integer getPages() {
+	return pages;
+    }
+
+    public void setPages(Integer pages) {
+	this.pages = pages;
+    }
 
 }

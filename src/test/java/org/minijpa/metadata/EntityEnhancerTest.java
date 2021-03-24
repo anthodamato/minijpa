@@ -17,47 +17,50 @@ import org.minijpa.metadata.enhancer.javassist.EntityEnhancer;
 import org.minijpa.metadata.enhancer.javassist.ManagedData;
 
 public class EntityEnhancerTest {
-	@Test
-	public void mappedSuperclassEnhancement() throws Exception {
-		List<ManagedData> inspectedClasses = new ArrayList<>();
-		Set<EnhEntity> parsedEntities = new HashSet<>();
-		String className = "org.minijpa.metadata.MappedSuperclassEntity";
-		ClassInspector classInspector = new ClassInspector();
-		ManagedData managedData = classInspector.inspect(className, inspectedClasses);
-		Assertions.assertNotNull(managedData);
-		EntityEnhancer entityEnhancer = new EntityEnhancer();
-		EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-		inspectedClasses.add(managedData);
-		parsedEntities.add(enhEntity);
 
-		List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
-		Assertions.assertEquals(4, enhAttributes.size());
-		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
-				Matchers.containsInAnyOrder("prop1", "eS1", "N", "Ns"));
+    @Test
+    public void mappedSuperclassEnhancement() throws Exception {
+	List<ManagedData> inspectedClasses = new ArrayList<>();
+	Set<EnhEntity> parsedEntities = new HashSet<>();
+	String className = "org.minijpa.metadata.MappedSuperclassEntity";
+	ClassInspector classInspector = new ClassInspector();
+	ManagedData managedData = classInspector.inspect(className, inspectedClasses);
+	Assertions.assertNotNull(managedData);
+	Assertions.assertNotNull(managedData.getModificationAttribute());
 
-		checkMappedSuperclass(enhEntity);
+	EntityEnhancer entityEnhancer = new EntityEnhancer();
+	EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
+	inspectedClasses.add(managedData);
+	parsedEntities.add(enhEntity);
 
-		className = "org.minijpa.metadata.MappedSuperclassSecondEntity";
-		managedData = classInspector.inspect(className, inspectedClasses);
-		Assertions.assertNotNull(managedData);
-		enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-		inspectedClasses.add(managedData);
-		parsedEntities.add(enhEntity);
+	List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
+	Assertions.assertEquals(4, enhAttributes.size());
+	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
+		Matchers.containsInAnyOrder("prop1", "eS1", "N", "Ns"));
 
-		enhAttributes = enhEntity.getEnhAttributes();
-		Assertions.assertEquals(3, enhAttributes.size());
-		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
-				Matchers.containsInAnyOrder("attribute", "eS", "URL"));
+	checkMappedSuperclass(enhEntity);
 
-		checkMappedSuperclass(enhEntity);
-	}
+	className = "org.minijpa.metadata.MappedSuperclassSecondEntity";
+	managedData = classInspector.inspect(className, inspectedClasses);
+	Assertions.assertNotNull(managedData);
+	enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
+	inspectedClasses.add(managedData);
+	parsedEntities.add(enhEntity);
 
-	private void checkMappedSuperclass(EnhEntity enhEntity) {
-		Assertions.assertNotNull(enhEntity.getMappedSuperclass());
-		EnhEntity mappedSuperclass = enhEntity.getMappedSuperclass();
-		List<EnhAttribute> enhAttributes = mappedSuperclass.getEnhAttributes();
-		Assertions.assertEquals(2, enhAttributes.size());
-		MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
-				Matchers.containsInAnyOrder("id", "superProperty1"));
-	}
+	enhAttributes = enhEntity.getEnhAttributes();
+	Assertions.assertEquals(3, enhAttributes.size());
+	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
+		Matchers.containsInAnyOrder("attribute", "eS", "URL"));
+
+	checkMappedSuperclass(enhEntity);
+    }
+
+    private void checkMappedSuperclass(EnhEntity enhEntity) {
+	Assertions.assertNotNull(enhEntity.getMappedSuperclass());
+	EnhEntity mappedSuperclass = enhEntity.getMappedSuperclass();
+	List<EnhAttribute> enhAttributes = mappedSuperclass.getEnhAttributes();
+	Assertions.assertEquals(2, enhAttributes.size());
+	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
+		Matchers.containsInAnyOrder("id", "superProperty1"));
+    }
 }

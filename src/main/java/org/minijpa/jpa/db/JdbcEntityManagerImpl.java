@@ -161,7 +161,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
 	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
-	    LOG.info("persist: pk=" + pk);
+//	    LOG.info("persist: pk=" + pk);
 	    entity.getId().getWriteMethod().invoke(entityInstance, pk);
 	} else {
 	    Object idValue = id.getReadMethod().invoke(entityInstance);
@@ -177,7 +177,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
 	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
-	    LOG.info("persist: pk=" + pk);
+//	    LOG.info("persist: pk=" + pk);
 	}
 
 	// persist join table attributes
@@ -227,7 +227,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	} else {
 	    persist(entity, entityInstance, optionalAV, attributeValueArray);
 	    entityContainer.addFlushedPersist(entityInstance);
-	    entityInstanceBuilder.removeChanges(entityInstance);
+	    entityInstanceBuilder.removeChanges(entity, entityInstance);
 	}
     }
 
@@ -292,23 +292,23 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		    Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(me, entry.getValue());
 		    AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entry.getValue());
 		    persist(me, entry.getValue(), optionalAV, attributeValueArray);
-		    entityInstanceBuilder.removeChanges(entry.getValue());
+		    entityInstanceBuilder.removeChanges(me, entry.getValue());
 		}
 	    }
 	}
 
 	List<Object> notFlushedEntities = entityContainer.getNotFlushedEntities();
 	for (Object entityInstance : notFlushedEntities) {
-	    LOG.info("flush: not flushed entityInstance=" + entityInstance);
+//	    LOG.info("flush: not flushed entityInstance=" + entityInstance);
 	    MetaEntity me = entities.get(entityInstance.getClass().getName());
 	    Object idValue = AttributeUtil.getIdValue(me, entityInstance);
-	    LOG.info("flush: idValue=" + idValue);
+//	    LOG.info("flush: idValue=" + idValue);
 	    if (entityContainer.isNotFlushedPersist(entityInstance)) {
 		Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(me, entityInstance);
 		AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
 		persist(me, entityInstance, optionalAV, attributeValueArray);
 		entityContainer.addFlushedPersist(entityInstance);
-		entityInstanceBuilder.removeChanges(entityInstance);
+		entityInstanceBuilder.removeChanges(me, entityInstance);
 		entityContainer.removeNotFlushedPersist(entityInstance, idValue);
 	    } else if (entityContainer.isNotFlushedRemove(entityInstance.getClass(), idValue)) {
 		remove(entityInstance, me);
@@ -355,7 +355,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	persist(entity, entityInstance, Optional.of(changes), attributeValueArray);
 	entityContainer.addFlushedPersist(entityInstance);
-	entityInstanceBuilder.removeChanges(entityInstance);
+	entityInstanceBuilder.removeChanges(entity, entityInstance);
 	return true;
     }
 

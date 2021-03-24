@@ -55,15 +55,12 @@ public class QueryLevelTest {
 	entityContainer.detach(e1);
 	entityContainer.detach(programManager);
 
-	System.out.println("findById: jobInfo=" + jobInfo);
 	Object entityInstance = entityLoader.findById(metaEntityJE, 1);
 	Assertions.assertNotNull(entityInstance);
 	Assertions.assertTrue(entityInstance instanceof JobEmployee);
 
 	e1 = (JobEmployee) entityInstance;
-	System.out.println("----------------------------e1=" + e1);
 	JobInfo info = e1.getJobInfo();
-	System.out.println("----------------------------info=" + info);
 	Assertions.assertNotNull(info);
 	String jd = info.getJobDescription();
 	Assertions.assertEquals("Analyst", jd);
@@ -77,6 +74,8 @@ public class QueryLevelTest {
 	jdbcEntityManager.remove(e1);
 	jdbcEntityManager.remove(programManager);
 	jdbcEntityManager.flush();
+	persistenceUnitEnv.getConnectionHolder().commit();
+	persistenceUnitEnv.getConnectionHolder().closeConnection();
     }
 
     @Test
@@ -114,6 +113,8 @@ public class QueryLevelTest {
 	jdbcEntityManager.remove(c);
 	jdbcEntityManager.remove(s);
 	jdbcEntityManager.flush();
+	persistenceUnitEnv.getConnectionHolder().commit();
+	persistenceUnitEnv.getConnectionHolder().closeConnection();
     }
 
     @Test
@@ -150,6 +151,8 @@ public class QueryLevelTest {
 	jdbcEntityManager.remove(person);
 	jdbcEntityManager.remove(fingerprint);
 	jdbcEntityManager.flush();
+	persistenceUnitEnv.getConnectionHolder().commit();
+	persistenceUnitEnv.getConnectionHolder().closeConnection();
     }
 
 }

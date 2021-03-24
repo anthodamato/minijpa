@@ -6,36 +6,37 @@ import javax.persistence.Entity;
 
 @Entity
 public class HotelBooking {
-	@EmbeddedId
-	private RoomBookingId roomBookingId;
 
-	@Column(name = "customer_id")
-	private Integer customerId;
+    @EmbeddedId
+    private RoomBookingId roomBookingId;
 
-	private Float price;
+    @Column(name = "customer_id")
+    private Integer customerId;
 
-	public RoomBookingId getRoomBookingId() {
-		return roomBookingId;
-	}
+    private Float price;
 
-	public void setRoomBookingId(RoomBookingId roomBookingId) {
-		this.roomBookingId = roomBookingId;
-	}
+    public RoomBookingId getRoomBookingId() {
+	return roomBookingId;
+    }
 
-	public Integer getCustomerId() {
-		return customerId;
-	}
+    public void setRoomBookingId(RoomBookingId roomBookingId) {
+	this.roomBookingId = roomBookingId;
+    }
 
-	public void setCustomerId(Integer customerId) {
-		this.customerId = customerId;
-	}
+    public Integer getCustomerId() {
+	return customerId;
+    }
 
-	public Float getPrice() {
-		return price;
-	}
+    public void setCustomerId(Integer customerId) {
+	this.customerId = customerId;
+    }
 
-	public void setPrice(Float price) {
-		this.price = price;
-	}
+    public Float getPrice() {
+	return price;
+    }
+
+    public void setPrice(Float price) {
+	this.price = price;
+    }
 
 }

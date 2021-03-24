@@ -2,42 +2,55 @@ package org.minijpa.metadata.enhancer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class EnhEntity {
-	private String className;
-	private List<EnhAttribute> enhAttributes = new ArrayList<>();
-	private EnhEntity mappedSuperclass;
-	private List<EnhEntity> embeddables = new ArrayList<>();
 
-	public String getClassName() {
-		return className;
-	}
+    private String className;
+    private List<EnhAttribute> enhAttributes = new ArrayList<>();
+    private EnhEntity mappedSuperclass;
+    private String modificationAttributeGetMethod;
 
-	public void setClassName(String className) {
-		this.className = className;
-	}
+    public String getClassName() {
+	return className;
+    }
 
-	public List<EnhAttribute> getEnhAttributes() {
-		return enhAttributes;
-	}
+    public void setClassName(String className) {
+	this.className = className;
+    }
 
-	public void setEnhAttributes(List<EnhAttribute> enhAttributes) {
-		this.enhAttributes = enhAttributes;
-	}
+    public List<EnhAttribute> getEnhAttributes() {
+	return enhAttributes;
+    }
 
-	public EnhEntity getMappedSuperclass() {
-		return mappedSuperclass;
-	}
+    public void setEnhAttributes(List<EnhAttribute> enhAttributes) {
+	this.enhAttributes = enhAttributes;
+    }
 
-	public void setMappedSuperclass(EnhEntity mappedSuperclass) {
-		this.mappedSuperclass = mappedSuperclass;
-	}
+    public EnhEntity getMappedSuperclass() {
+	return mappedSuperclass;
+    }
 
-	public List<EnhEntity> getEmbeddables() {
-		return embeddables;
-	}
+    public void setMappedSuperclass(EnhEntity mappedSuperclass) {
+	this.mappedSuperclass = mappedSuperclass;
+    }
 
-	public void addEmbeddables(List<EnhEntity> embeddables) {
-		this.embeddables.addAll(embeddables);
+    public String getModificationAttributeGetMethod() {
+	return modificationAttributeGetMethod;
+    }
+
+    public void setModificationAttributeGetMethod(String modificationAttributeGetMethod) {
+	this.modificationAttributeGetMethod = modificationAttributeGetMethod;
+    }
+
+    public void findEmbeddables(Set<EnhEntity> embeddables) {
+	for (EnhAttribute enhAttribute : enhAttributes) {
+	    if (enhAttribute.isEmbedded()) {
+		EnhEntity enhEntity = enhAttribute.getEmbeddedEnhEntity();
+		embeddables.add(enhEntity);
+
+		enhEntity.findEmbeddables(embeddables);
+	    }
 	}
+    }
 }

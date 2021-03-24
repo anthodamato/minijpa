@@ -1,8 +1,10 @@
 package org.minijpa.jdbc;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MetaEntity {
@@ -20,12 +22,10 @@ public class MetaEntity {
     // used to build the metamodel. The 'attributes' field contains the
     // MappedSuperclass attributes
     private MetaEntity mappedSuperclassEntity;
-    // used to build the metamodel. The 'attributes' field contains the
-    // Embeddable attributes
-    private List<MetaEntity> embeddables;
+    private Method modificationAttributeReadMethod;
 
     public MetaEntity(Class<?> entityClass, String name, String tableName, String alias, MetaAttribute id,
-	    List<MetaAttribute> attributes, MetaEntity mappedSuperclassEntity, List<MetaEntity> embeddables) {
+	    List<MetaAttribute> attributes, MetaEntity mappedSuperclassEntity, Method modificationAttributeReadMethod) {
 	super();
 	this.entityClass = entityClass;
 	this.name = name;
@@ -34,7 +34,7 @@ public class MetaEntity {
 	this.id = id;
 	this.attributes = attributes;
 	this.mappedSuperclassEntity = mappedSuperclassEntity;
-	this.embeddables = embeddables;
+	this.modificationAttributeReadMethod = modificationAttributeReadMethod;
     }
 
     public Class<?> getEntityClass() {
@@ -57,6 +57,18 @@ public class MetaEntity {
 	return attributes;
     }
 
+    public List<JoinColumnAttribute> getJoinColumnAttributes() {
+	return joinColumnAttributes;
+    }
+
+    public MetaEntity getMappedSuperclassEntity() {
+	return mappedSuperclassEntity;
+    }
+
+    public Method getModificationAttributeReadMethod() {
+	return modificationAttributeReadMethod;
+    }
+
     public MetaAttribute getAttribute(String name) {
 	for (MetaAttribute attribute : attributes) {
 	    if (attribute.getName().equals(name))
@@ -71,10 +83,6 @@ public class MetaEntity {
 
     public MetaAttribute getId() {
 	return id;
-    }
-
-    public List<MetaEntity> getEmbeddables() {
-	return embeddables;
     }
 
     public List<MetaAttribute> expandAttributes() {
@@ -105,16 +113,8 @@ public class MetaEntity {
 	return null;
     }
 
-    public List<JoinColumnAttribute> getJoinColumnAttributes() {
-	return joinColumnAttributes;
-    }
-
     public List<MetaAttribute> getRelationshipAttributes() {
 	return attributes.stream().filter(a -> a.getRelationship() != null).collect(Collectors.toList());
-    }
-
-    public MetaEntity getMappedSuperclassEntity() {
-	return mappedSuperclassEntity;
     }
 
     public boolean isEmbeddedAttribute(String name) {
@@ -131,4 +131,16 @@ public class MetaEntity {
     public List<MetaAttribute> notNullableAttributes() {
 	return attributes.stream().filter(a -> !a.isNullable()).collect(Collectors.toList());
     }
+
+    public void findEmbeddables(Set<MetaEntity> embeddables) {
+	for (MetaAttribute enhAttribute : attributes) {
+	    if (enhAttribute.isEmbedded()) {
+		MetaEntity metaEntity = enhAttribute.getEmbeddableMetaEntity();
+		embeddables.add(metaEntity);
+
+		metaEntity.findEmbeddables(embeddables);
+	    }
+	}
+    }
+
 }

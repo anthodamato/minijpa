@@ -1,7 +1,9 @@
 package org.minijpa.metadata;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,7 @@ public class ParserTest {
 	Assertions.assertNotNull(entity.getEntityClass());
 	Assertions.assertEquals(Citizen.class, entity.getEntityClass());
 	Assertions.assertEquals("citizen", entity.getTableName());
+	Assertions.assertNotNull(entity.getModificationAttributeReadMethod());
 	Assertions.assertEquals(2, entity.getAttributes().size());
 	MetaAttribute attribute = entity.getAttribute("name");
 	Assertions.assertEquals("first_name", attribute.getColumnName());
@@ -39,17 +42,22 @@ public class ParserTest {
     public void embeddedExample() throws Exception {
 	String className = "org.minijpa.jpa.model.Book";
 	EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
+	Assertions.assertNotNull(enhEntity);
+	Assertions.assertNotNull(enhEntity.getModificationAttributeGetMethod());
 
 	List<MetaEntity> parsedEntities = new ArrayList<>();
 	MetaEntity entity = parser.parse(enhEntity, parsedEntities);
 	Assertions.assertNotNull(entity);
 	Assertions.assertNotNull(entity.getEntityClass());
 	Assertions.assertEquals(Book.class, entity.getEntityClass());
-	List<MetaEntity> embeddables = entity.getEmbeddables();
+	Assertions.assertNotNull(entity.getModificationAttributeReadMethod());
+	Set<MetaEntity> embeddables = new HashSet<>();
+	entity.findEmbeddables(embeddables);
 	Assertions.assertNotNull(embeddables);
 	Assertions.assertEquals(1, embeddables.size());
 
-	entity = embeddables.get(0);
+	entity = embeddables.iterator().next();
+	Assertions.assertNotNull(entity.getModificationAttributeReadMethod());
 	Assertions.assertEquals(2, entity.getAttributes().size());
 	MetaAttribute attribute = entity.getAttribute("format");
 	Assertions.assertEquals("format", attribute.getColumnName());

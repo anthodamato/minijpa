@@ -13,11 +13,12 @@ public class ManagedData {
     public static final int MAPPEDSUPERCLASS = 2;
     private String className;
     private CtClass ctClass;
-    private List<AttributeData> dataAttributes = new ArrayList<>();
+    private final List<AttributeData> attributeDatas = new ArrayList<>();
     public ManagedData mappedSuperclass;
-    private List<ManagedData> embeddables = new ArrayList<>();
+    private final List<ManagedData> embeddables = new ArrayList<>();
     int type = ENTITY;
-    private List<BMTMethodInfo> methodInfos = new ArrayList<>();
+    private final List<BMTMethodInfo> methodInfos = new ArrayList<>();
+    private String modificationAttribute;
 
     public ManagedData() {
 	super();
@@ -26,6 +27,10 @@ public class ManagedData {
     public ManagedData(int type) {
 	super();
 	this.type = type;
+    }
+
+    public int getType() {
+	return type;
     }
 
     String getClassName() {
@@ -44,12 +49,12 @@ public class ManagedData {
 	this.ctClass = ctClass;
     }
 
-    public List<AttributeData> getDataAttributes() {
-	return dataAttributes;
+    public List<AttributeData> getAttributeDataList() {
+	return attributeDatas;
     }
 
     void addAttributeDatas(List<AttributeData> datas) {
-	dataAttributes.addAll(datas);
+	attributeDatas.addAll(datas);
     }
 
     public List<ManagedData> getEmbeddables() {
@@ -60,8 +65,16 @@ public class ManagedData {
 	return methodInfos;
     }
 
-    Optional<AttributeData> findAttribute(String name) {
-	Optional<AttributeData> optional = dataAttributes.stream()
+    public String getModificationAttribute() {
+	return modificationAttribute;
+    }
+
+    public void setModificationAttribute(String modificationAttribute) {
+	this.modificationAttribute = modificationAttribute;
+    }
+
+    public Optional<AttributeData> findAttribute(String name) {
+	Optional<AttributeData> optional = attributeDatas.stream()
 		.filter(a -> a.property.ctField.getName().equals(name)).findFirst();
 	if (optional.isPresent())
 	    return optional;

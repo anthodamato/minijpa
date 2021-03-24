@@ -25,7 +25,7 @@ public class EnhancedEntityExample {
     }
 
     public void setAttribute1(String attribute1) {
-	entityDelegate.set(attribute1, "attribute1", this);
+//	entityDelegate.set(attribute1, "attribute1", this);
 	this.attribute1 = attribute1;
     }
 
@@ -35,7 +35,7 @@ public class EnhancedEntityExample {
     }
 
     public void setAttribute2(String attribute2) {
-	entityDelegate.set(attribute2, "attribute2", this);
+//	entityDelegate.set(attribute2, "attribute2", this);
 	this.attribute2 = attribute2;
     }
 }

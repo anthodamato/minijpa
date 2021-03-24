@@ -8,47 +8,48 @@ import javax.persistence.Id;
 
 @Entity
 public class Book {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	protected Long id;
 
-	private String title;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    protected Long id;
 
-	private String author;
+    private String title;
 
-	@Embedded
-	private BookFormat bookFormat;
+    private String author;
 
-	public Long getId() {
-		return id;
-	}
+    @Embedded
+    private BookFormat bookFormat;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public String getTitle() {
-		return title;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public String getTitle() {
+	return title;
+    }
 
-	public String getAuthor() {
-		return author;
-	}
+    public void setTitle(String title) {
+	this.title = title;
+    }
 
-	public void setAuthor(String author) {
-		this.author = author;
-	}
+    public String getAuthor() {
+	return author;
+    }
 
-	public BookFormat getBookFormat() {
-		return bookFormat;
-	}
+    public void setAuthor(String author) {
+	this.author = author;
+    }
 
-	public void setBookFormat(BookFormat bookFormat) {
-		this.bookFormat = bookFormat;
-	}
+    public BookFormat getBookFormat() {
+	return bookFormat;
+    }
+
+    public void setBookFormat(BookFormat bookFormat) {
+	this.bookFormat = bookFormat;
+    }
 
 }

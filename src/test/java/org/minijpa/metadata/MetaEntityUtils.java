@@ -47,7 +47,7 @@ public class MetaEntityUtils {
 
     private static void printEmbeddedAttribute(MetaAttribute m) {
 	LOG.info("printMetaEntity: Embedded " + m.toString());
-	List<MetaAttribute> embeddeds = m.getChildren();
+	List<MetaAttribute> embeddeds = m.getEmbeddableMetaEntity().getAttributes();
 	for (MetaAttribute a : embeddeds) {
 	    LOG.info("printMetaEntity: Embedded child " + a.toString());
 	}

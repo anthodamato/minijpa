@@ -35,122 +35,33 @@ public class EntityEnhancer {
     }
 
     public EnhEntity enhance(ManagedData managedData, Set<EnhEntity> parsedEntities) throws Exception {
+	Optional<EnhEntity> optional = parsedEntities.stream().filter(e -> e.getClassName().equals(managedData.getClassName())).findFirst();
+	if (optional.isPresent())
+	    return optional.get();
+
 	EnhEntity enhMappedSuperclassEntity = null;
 	if (managedData.mappedSuperclass != null)
 	    enhMappedSuperclassEntity = enhance(managedData.mappedSuperclass, parsedEntities);
 
-	LOG.info("enhance: managedData.className=" + managedData.getClassName());
 	EnhEntity enhEntity = new EnhEntity();
 	enhEntity.setClassName(managedData.getClassName());
-	List<EnhAttribute> enhAttributes = enhance(managedData);
-	LOG.info("enhance: attributes created for " + managedData.getClassName());
-	enhEntity.setEnhAttributes(enhAttributes);
-	List<EnhEntity> embeddables = findEmbeddables(enhAttributes, parsedEntities);
-	enhEntity.addEmbeddables(embeddables);
-	LOG.info("enhance: completed '" + managedData.getClassName() + "'");
 
-	enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
-	parsedEntities.add(enhEntity);
-
-	return enhEntity;
-    }
-
-    private List<EnhEntity> findEmbeddables(List<EnhAttribute> enhAttributes, Set<EnhEntity> parsedEntities) {
-	List<EnhEntity> embeddables = new ArrayList<>();
-	for (EnhAttribute enhAttribute : enhAttributes) {
-	    LOG.info("findEmbeddables: enhAttribute.getName()=" + enhAttribute.getName()
-		    + "; enhAttribute.isEmbedded()=" + enhAttribute.isEmbedded());
-	    if (!enhAttribute.isEmbedded())
-		continue;
-
-	    EnhEntity embeddable = findInspectedEnhEmbeddables(enhAttribute.getClassName(), parsedEntities);
-	    LOG.info("findEmbeddables: already parsed embeddable=" + embeddable);
-	    if (embeddable == null) {
-		embeddable = new EnhEntity();
-		embeddable.setClassName(enhAttribute.getClassName());
-		embeddable.setEnhAttributes(enhAttribute.getEmbeddedAttributes());
-	    }
-
-	    LOG.info("findEmbeddables: got embeddable=" + embeddable);
-	    embeddables.add(embeddable);
-	}
-
-	return embeddables;
-    }
-
-    private EnhEntity findInspectedEnhEmbeddables(String className, Set<EnhEntity> parsedEntities) {
-	for (EnhEntity enhEntity : parsedEntities) {
-	    if (enhEntity.getClassName().equals(className))
-		return enhEntity;
-	}
-
-	return null;
-    }
-
-    private boolean toEnhance(AttributeData dataAttribute) {
-	if (dataAttribute.property.id)
-	    return false;
-
-	if (dataAttribute.parentIsEmbeddedId)
-	    return false;
-
-	if (!dataAttribute.property.getPropertyMethod.enhance && !dataAttribute.property.setPropertyMethod.enhance)
-	    return false;
-
-	return true;
-    }
-
-    private boolean toEnhance(ManagedData managedData) throws Exception {
-	for (AttributeData dataAttribute : managedData.getDataAttributes()) {
-	    if (toEnhance(dataAttribute))
-		return true;
-	}
-
-	if (!managedData.getMethodInfos().isEmpty())
-	    return true;
-
-	return false;
-    }
-
-    private boolean isClassModified(CtClass ctClass) throws NotFoundException {
-	CtClass[] ctInterfaces = ctClass.getInterfaces();
-//		LOG.info("isClassModified: ctInterfaces.length=" + ctInterfaces.length);
-	for (CtClass ct : ctInterfaces) {
-//			LOG.info("isClassModified: ct.getName()=" + ct.getName());
-	    if (ct.getName().equals(Enhanced.class.getName()))
-		return true;
-	}
-
-	return false;
-    }
-
-    private boolean isClassWritable(CtClass ctClass) {
-	return !ctClass.isFrozen();
-    }
-
-    private boolean canModify(CtClass ctClass) throws NotFoundException {
-//		return !isClassModified(ctClass) && isClassWritable(ctClass);
-	return isClassWritable(ctClass);
-    }
-
-    private List<EnhAttribute> enhance(ManagedData managedData) throws Exception {
 	CtClass ct = managedData.getCtClass();
-	LOG.info("enhance: ct.getName()=" + ct.getName());
-	LOG.info("enhance: ct.isFrozen()=" + ct.isFrozen() + "; isClassModified(ct)=" + isClassModified(ct));
-//		if (ct.isFrozen() && !isClassModified(ct)) {
-//			ct.defrost();
-//		}
-
-	LOG.info("enhance: isClassWritable(ct)=" + isClassWritable(ct));
+	LOG.debug("enhance: ct.getName()=" + ct.getName());
+	LOG.debug("enhance: ct.isFrozen()=" + ct.isFrozen() + "; isClassModified(ct)=" + isClassModified(ct));
+	LOG.debug("enhance: isClassWritable(ct)=" + isClassWritable(ct));
 	boolean modified = false;
 	boolean canModify = canModify(ct);
 	if (!enhancedDataEntities.contains(managedData))
 	    if (toEnhance(managedData)) {
-		LOG.info("Enhancing: " + ct.getName());
+		LOG.debug("Enhancing " + ct.getName());
 		addEntityDelegateField(ct);
+		addModificationField(ct, managedData.getModificationAttribute());
+		CtMethod ctMethod = createModificationGetMethod(ct, managedData.getModificationAttribute(), "java.util.List");
+		enhEntity.setModificationAttributeGetMethod(ctMethod.getName());
 		modified = true;
 	    } else
-		LOG.info("Enhancing: " + ct.getName() + " not necessary");
+		LOG.debug("Enhancement of '" + ct.getName() + "' not needed");
 
 	for (BMTMethodInfo bmtMethodInfo : managedData.getMethodInfos()) {
 	    enhanceConstructor(managedData, bmtMethodInfo);
@@ -158,11 +69,11 @@ public class EntityEnhancer {
 
 	boolean enhanceAttribute = false;
 	List<EnhAttribute> enhAttributes = new ArrayList<>();
-	List<AttributeData> dataAttributes = managedData.getDataAttributes();
-	for (AttributeData dataAttribute : dataAttributes) {
-	    Property property = dataAttribute.property;
-	    LOG.info("Enhancing attribute '" + property.ctField.getName() + "'");
-	    enhanceAttribute = toEnhance(dataAttribute);
+	List<AttributeData> dataAttributes = managedData.getAttributeDataList();
+	for (AttributeData attributeData : dataAttributes) {
+	    Property property = attributeData.property;
+	    LOG.debug("Enhancing attribute '" + property.ctField.getName() + "'");
+	    enhanceAttribute = toEnhance(attributeData);
 	    if (property.setPropertyMethod.add && !enhancedDataEntities.contains(managedData)) {
 		CtMethod ctMethod = createSetMethod(ct, property.ctField, enhanceAttribute);
 		property.setPropertyMethod.enhance = false;
@@ -179,31 +90,76 @@ public class EntityEnhancer {
 		    modifySetMethod(property.setPropertyMethod.method.get(), property.ctField);
 	    }
 
+	    EnhEntity embeddedEnhEntity = null;
 	    List<EnhAttribute> enhEmbeddedAttributes = null;
-	    if (dataAttribute.embeddedData != null)
-		enhEmbeddedAttributes = enhance(dataAttribute.embeddedData);
+	    if (attributeData.embeddedData != null) {
+		embeddedEnhEntity = enhance(attributeData.embeddedData, parsedEntities);
+	    }
 
 	    EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(),
 		    property.ctField.getType().getName(), property.ctField.getType().isPrimitive(),
 		    property.getPropertyMethod.method.get().getName(),
-		    property.setPropertyMethod.method.get().getName(), property.embedded, enhEmbeddedAttributes);
+		    property.setPropertyMethod.method.get().getName(), property.embedded, enhEmbeddedAttributes,
+		    embeddedEnhEntity);
 	    enhAttributes.add(enhAttribute);
 	}
 
-	LOG.info("enhance: modified=" + modified + "; canModify(ct)=" + canModify(ct) + "; ct.isModified()="
+	LOG.debug("enhance: modified=" + modified + "; canModify(ct)=" + canModify(ct) + "; ct.isModified()="
 		+ ct.isModified());
-//		if (modified) {
-//			if (canModify) {
-//				LOG.info("enhance: writing class " + ct.getName());
-////				addEnhancedInterface(ct);
-////				ct.toClass(getClass().getClassLoader(), getClass().getProtectionDomain());
-//			}
-//		}
 
-	LOG.info("enhance: managedData=" + managedData);
+	LOG.debug("enhance: managedData=" + managedData);
 	enhancedDataEntities.add(managedData);
 
-	return enhAttributes;
+	enhEntity.setEnhAttributes(enhAttributes);
+
+	enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
+	parsedEntities.add(enhEntity);
+
+	return enhEntity;
+    }
+
+    private boolean toEnhance(AttributeData dataAttribute) {
+	if (dataAttribute.property.id)
+	    return false;
+
+	if (dataAttribute.parentIsEmbeddedId)
+	    return false;
+
+	if (!dataAttribute.property.getPropertyMethod.enhance && !dataAttribute.property.setPropertyMethod.enhance)
+	    return false;
+
+	return true;
+    }
+
+    private boolean toEnhance(ManagedData managedData) throws Exception {
+	for (AttributeData attributeData : managedData.getAttributeDataList()) {
+	    if (toEnhance(attributeData))
+		return true;
+	}
+
+	if (!managedData.getMethodInfos().isEmpty())
+	    return true;
+
+	return false;
+    }
+
+    private boolean isClassModified(CtClass ctClass) throws NotFoundException {
+	CtClass[] ctInterfaces = ctClass.getInterfaces();
+	for (CtClass ct : ctInterfaces) {
+	    if (ct.getName().equals(Enhanced.class.getName()))
+		return true;
+	}
+
+	return false;
+    }
+
+    private boolean isClassWritable(CtClass ctClass) {
+	return !ctClass.isFrozen();
+    }
+
+    private boolean canModify(CtClass ctClass) throws NotFoundException {
+//		return !isClassModified(ctClass) && isClassWritable(ctClass);
+	return isClassWritable(ctClass);
     }
 
     private void enhanceConstructor(ManagedData managedData, BMTMethodInfo bmtMethodInfo) throws Exception {
@@ -227,17 +183,24 @@ public class EntityEnhancer {
     }
 
     private void addEntityDelegateField(CtClass ct) throws Exception {
-//		LOG.info("addEntityDelegateField: canModify(ct)=" + canModify(ct));
 	if (!canModify(ct))
 	    return;
 
-	LOG.info("addEntityDelegateField: ct.getName()=" + ct.getName());
+	LOG.debug("addEntityDelegateField: ct.getName()=" + ct.getName());
 	ClassPool pool = ClassPool.getDefault();
-	Class<?> delegateClass = EntityDelegate.class;
-	pool.importPackage(delegateClass.getPackage().getName());
+	pool.importPackage(EntityDelegate.class.getPackage().getName());
 	CtField f = CtField.make("private EntityDelegate entityDelegate = EntityDelegate.getInstance();", ct);
-	LOG.info("Adding Entity Delegate");
+	LOG.debug("Adding Entity Delegate");
 	ct.addField(f);
+    }
+
+    private void addModificationField(CtClass ct, String modificationFieldName) throws Exception {
+	if (!canModify(ct))
+	    return;
+
+	CtField f = CtField.make("private java.util.List " + modificationFieldName + " = new java.util.ArrayList();", ct);
+	ct.addField(f);
+	LOG.debug("Created '" + ct.getName() + "' Modification Field");
     }
 
     private void addEnhancedInterface(CtClass ct) throws Exception {
@@ -251,26 +214,25 @@ public class EntityEnhancer {
     private void modifyGetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
 	String mc = ctField.getName() + " = (" + ctMethod.getReturnType().getName() + ") entityDelegate.get("
 		+ ctField.getName() + ",\"" + ctField.getName() + "\", this);";
-	LOG.info("Modifying get method: mc=" + mc);
+	LOG.debug("Modifying get method: mc=" + mc);
 	ctMethod.insertBefore(mc);
     }
 
     private void modifySetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
-	String mc = "entityDelegate.set(" + ctField.getName() + ",\"" + ctField.getName() + "\", this);";
-	LOG.info("Modifying set method: mc=" + mc);
+	String mc = "if(!mds0.contains(\"" + ctField.getName() + "\")) mds0.add(\"" + ctField.getName() + "\");";
+	LOG.debug("Modifying set method: mc=" + mc);
 	ctMethod.insertBefore(mc);
     }
 
     private void modifyConstructorWithCollectionCheck(CtConstructor ctConstructor, CtField ctField) throws Exception {
-	String mc = "if(!" + ctField.getName() + ".isEmpty()) { entityDelegate.set(" + ctField.getName() + ",\""
-		+ ctField.getName() + "\", this); }";
-	LOG.info("Modifying constructor: mc=" + mc);
+	String mc = "if(!" + ctField.getName() + ".isEmpty()) mds0.add(\"" + ctField.getName() + "\");";
+	LOG.debug("Modifying constructor: mc=" + mc);
 	ctConstructor.insertAfter(mc);
     }
 
     private void modifyConstructorWithSimpleField(CtConstructor ctConstructor, CtField ctField) throws Exception {
-	String mc = "entityDelegate.set(" + ctField.getName() + ",\"" + ctField.getName() + "\", this);";
-	LOG.info("Modifying constructor: mc=" + mc);
+	String mc = "mds0.add(\"" + ctField.getName() + "\");";
+	LOG.debug("Modifying constructor: mc=" + mc);
 	ctConstructor.insertAfter(mc);
     }
 
@@ -279,6 +241,13 @@ public class EntityEnhancer {
 	sb.append("set");
 	sb.append(BeanUtil.capitalize(ctField.getName()));
 	sb.append(Integer.toString(counter));
+	return sb.toString();
+    }
+
+    private String buildGetMethodName(String fieldName) {
+	StringBuilder sb = new StringBuilder();
+	sb.append("get");
+	sb.append(BeanUtil.capitalize(fieldName));
 	return sb.toString();
     }
 
@@ -292,17 +261,29 @@ public class EntityEnhancer {
 	sb.append(ctField.getName());
 	sb.append(") {");
 	if (delegate) {
-	    sb.append("entityDelegate.set(");
+	    sb.append("if(!mds0.contains(\"");
 	    sb.append(ctField.getName());
-	    sb.append(",\"");
+	    sb.append("\")) mds0.add(\"");
 	    sb.append(ctField.getName());
-	    sb.append("\", this);");
+	    sb.append("\");");
 	}
 
 	sb.append(" this.");
 	sb.append(ctField.getName());
 	sb.append("=");
 	sb.append(ctField.getName());
+	sb.append("; }");
+	return sb.toString();
+    }
+
+    private String createModificationGetMethodString(String fieldName, String fieldTypeName) {
+	StringBuilder sb = new StringBuilder();
+	sb.append("public ");
+	sb.append(fieldTypeName);
+	sb.append(" ");
+	sb.append(buildGetMethodName(fieldName));
+	sb.append("() { return ");
+	sb.append(fieldName);
 	sb.append("; }");
 	return sb.toString();
     }
@@ -335,7 +316,18 @@ public class EntityEnhancer {
 	String setMethodString = createSetMethodString(ctField, delegate, counter);
 	ctMethod = CtNewMethod.make(setMethodString, ctClass);
 	ctClass.addMethod(ctMethod);
-	LOG.info("createSetMethod: Created new method: " + setMethodString);
+	LOG.debug("createSetMethod: Created new method: " + setMethodString);
+	return ctMethod;
+    }
+
+    private CtMethod createModificationGetMethod(CtClass ctClass, String fieldName, String fieldTypeName) throws Exception {
+	if (!canModify(ctClass))
+	    return null;
+
+	String getMethodString = createModificationGetMethodString(fieldName, fieldTypeName);
+	CtMethod ctMethod = CtNewMethod.make(getMethodString, ctClass);
+	ctClass.addMethod(ctMethod);
+	LOG.debug("Created '" + ctClass.getName() + "' modification method: " + getMethodString);
 	return ctMethod;
     }
 

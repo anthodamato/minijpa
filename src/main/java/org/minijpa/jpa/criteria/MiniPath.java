@@ -147,7 +147,7 @@ public class MiniPath<X> implements Path<X> {
     @Override
     public <Y> Path<Y> get(String attributeName) {
 	if (this.metaAttribute.isEmbedded()) {
-	    MetaAttribute attribute = this.metaAttribute.findChildByName(attributeName);
+	    MetaAttribute attribute = this.metaAttribute.getEmbeddableMetaEntity().getAttribute(attributeName);
 	    if (attribute != null)
 		return new MiniPath<Y>(attribute, metaEntity);
 	}

@@ -1,6 +1,9 @@
 package org.minijpa.metadata;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,26 +40,25 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	    MetaAttribute attribute = attributes.get(i);
 	    LOG.info("setAttributeValues: attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
 	    findAndSetAttributeValue(entity.getEntityClass(), entityInstance, entity.getAttributes(), attribute,
-		    values.get(i));
+		    values.get(i), entity);
 	}
     }
 
     @Override
-    public Object setAttributeValue(Object parentInstance, Class<?> parentClass, MetaAttribute attribute, Object value)
-	    throws Exception {
+    public Object setAttributeValue(Object parentInstance, Class<?> parentClass, MetaAttribute attribute,
+	    Object value, MetaEntity entity) throws Exception {
 	Object parent = parentInstance;
 	if (parent == null) {
 	    parent = parentClass.getDeclaredConstructor().newInstance();
 	}
 
 	LOG.info("setAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
+	LOG.info("setAttributeValue: value=" + value);
 
-	try {
-	    EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
-	    attribute.getWriteMethod().invoke(parent, value);
-	} finally {
-	    EntityDelegate.getInstance().removeIgnoreEntityInstance(parent);
-	}
+	attribute.getWriteMethod().invoke(parent, value);
+	Method m = entity.getModificationAttributeReadMethod();
+	List list = (List) m.invoke(parent);
+	list.remove(attribute.getName());
 
 	return parent;
     }
@@ -66,23 +68,20 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	LOG.info(
 		"getAttributeValue: parent=" + parentInstance + "; a.getReadMethod()=" + attribute.getReadMethod());
 
-	try {
-//			EntityDelegate.getInstance().addIgnoreEntityInstance(parent);
-	    return attribute.getReadMethod().invoke(parentInstance);
-	} finally {
-//			EntityDelegate.getInstance().removeIgnoreEntityInstance(parent);
-	}
-
-//		return parent;
+	return attribute.getReadMethod().invoke(parentInstance);
     }
 
-    private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, List<MetaAttribute> attributes,
-	    MetaAttribute attribute, Object value) throws Exception {
+    private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance,
+	    List<MetaAttribute> attributes, MetaAttribute attribute, Object value, MetaEntity entity)
+	    throws Exception {
 	LOG.info("findAndSetAttributeValue: value=" + value + "; attribute=" + attribute);
+	LOG.info("findAndSetAttributeValue: parentInstance=" + parentInstance + "; parentClass=" + parentClass);
+	LOG.info("findAndSetAttributeValue: entity=" + entity);
 
 	for (MetaAttribute a : attributes) {
+	    LOG.info("findAndSetAttributeValue: a=" + a);
 	    if (a == attribute) {
-		return setAttributeValue(parentInstance, parentClass, attribute, value);
+		return setAttributeValue(parentInstance, parentClass, attribute, value, entity);
 	    }
 	}
 
@@ -91,23 +90,26 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	    if (!a.isEmbedded())
 		continue;
 
-	    Object aInstance = findAndSetAttributeValue(a.getType(), null, a.getChildren(), attribute, value);
+	    LOG.info("findAndSetAttributeValue: embedded a=" + a);
+	    Object aInstance = findAndSetAttributeValue(a.getType(), null,
+		    a.getEmbeddableMetaEntity().getAttributes(), attribute, value, a.getEmbeddableMetaEntity());
 	    if (aInstance != null) {
-		return setAttributeValue(parentInstance, parentClass, a, aInstance);
+		return setAttributeValue(parentInstance, parentClass, a, aInstance, entity);
 	    }
 	}
 
 	return null;
     }
 
-    private List<AttributeValue> unpackEmbedded(MetaAttribute metaAttribute, Object value) {
+    private List<AttributeValue> unpackEmbedded(MetaAttribute metaAttribute, Object value)
+	    throws IllegalAccessException, InvocationTargetException {
 	List<AttributeValue> attrValues = new ArrayList<>();
-	Optional<Map<String, Object>> optional = EntityDelegate.getInstance().getChanges(value);
+	Optional<Map<String, Object>> optional = getEntityModifications(metaAttribute.getEmbeddableMetaEntity(), value);
 	if (optional.isEmpty())
 	    return attrValues;
 
 	for (Map.Entry<String, Object> e : optional.get().entrySet()) {
-	    MetaAttribute a = metaAttribute.findChildByName(e.getKey());
+	    MetaAttribute a = metaAttribute.getEmbeddableMetaEntity().getAttribute(e.getKey());
 	    attrValues.add(new AttributeValue(a, e.getValue()));
 	    if (a.isEmbedded())
 		attrValues.addAll(unpackEmbedded(a, e.getValue()));
@@ -117,8 +119,8 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     }
 
     @Override
-    public Optional<List<AttributeValue>> getChanges(MetaEntity entity, Object entityInstance) {
-	Optional<Map<String, Object>> optional = EntityDelegate.getInstance().getChanges(entityInstance);
+    public Optional<List<AttributeValue>> getChanges(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
+	Optional<Map<String, Object>> optional = getEntityModifications(entity, entityInstance);
 	if (optional.isEmpty())
 	    return Optional.empty();
 
@@ -135,17 +137,19 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     }
 
     @Override
-    public void removeChanges(Object entityInstance) {
-	EntityDelegate.getInstance().removeChanges(entityInstance);
+    public void removeChanges(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
+	Method m = entity.getModificationAttributeReadMethod();
+	List list = (List) m.invoke(entityInstance);
+	list.clear();
     }
 
-    private void unpackEmbedded(MetaAttribute metaAttribute, Object value, AttributeValueArray attributeValueArray) {
-	Optional<Map<String, Object>> optional = EntityDelegate.getInstance().getChanges(value);
+    private void unpackEmbedded(MetaAttribute metaAttribute, Object value, AttributeValueArray attributeValueArray) throws IllegalAccessException, InvocationTargetException {
+	Optional<Map<String, Object>> optional = getEntityModifications(metaAttribute.getEmbeddableMetaEntity(), value);
 	if (optional.isEmpty())
 	    return;
 
 	for (Map.Entry<String, Object> e : optional.get().entrySet()) {
-	    MetaAttribute a = metaAttribute.findChildByName(e.getKey());
+	    MetaAttribute a = metaAttribute.getEmbeddableMetaEntity().getAttribute(e.getKey());
 	    attributeValueArray.add(a, e.getValue());
 	    if (a.isEmbedded())
 		unpackEmbedded(a, e.getValue(), attributeValueArray);
@@ -153,9 +157,9 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     }
 
     @Override
-    public AttributeValueArray getModifications(MetaEntity entity, Object entityInstance) {
+    public AttributeValueArray getModifications(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
 	AttributeValueArray attributeValueArray = new AttributeValueArray();
-	Optional<Map<String, Object>> optional = EntityDelegate.getInstance().getChanges(entityInstance);
+	Optional<Map<String, Object>> optional = getEntityModifications(entity, entityInstance);
 	if (optional.isEmpty())
 	    return attributeValueArray;
 
@@ -170,4 +174,21 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	return attributeValueArray;
     }
 
+    private Optional<Map<String, Object>> getEntityModifications(MetaEntity entity, Object entityInstance)
+	    throws IllegalAccessException, InvocationTargetException {
+	Method m = entity.getModificationAttributeReadMethod();
+	List list = (List) m.invoke(entityInstance);
+	if (list.isEmpty())
+	    return Optional.empty();
+
+	Map<String, Object> map = new HashMap<>();
+	for (Object p : list) {
+	    String v = (String) p;
+	    MetaAttribute attribute = entity.getAttribute(v);
+	    Object value = attribute.getReadMethod().invoke(entityInstance);
+	    map.put(v, value);
+	}
+
+	return Optional.of(map);
+    }
 }

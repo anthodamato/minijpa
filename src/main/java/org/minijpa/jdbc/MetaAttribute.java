@@ -18,16 +18,13 @@ public class MetaAttribute extends AbstractAttribute {
     private boolean id;
     private PkGeneration pkGeneration;
     private boolean embedded;
-    /**
-     * Children attributes in case of embedded.
-     */
-    private List<MetaAttribute> children;
     private Relationship relationship;
     private boolean collection = false;
     private Field javaMember;
     // calculated fields
     private List<MetaAttribute> expandedAttributeList;
     private boolean nullable = true;
+    private MetaEntity embeddableMetaEntity;
 
     public String getName() {
 	return name;
@@ -53,10 +50,6 @@ public class MetaAttribute extends AbstractAttribute {
 	return embedded;
     }
 
-    public List<MetaAttribute> getChildren() {
-	return children;
-    }
-
     public Relationship getRelationship() {
 	return relationship;
     }
@@ -77,16 +70,8 @@ public class MetaAttribute extends AbstractAttribute {
 	return nullable;
     }
 
-    public MetaAttribute findChildByName(String attributeName) {
-	if (getChildren() == null)
-	    return null;
-
-	for (MetaAttribute a : getChildren()) {
-	    if (a.getName().equals(attributeName))
-		return a;
-	}
-
-	return null;
+    public MetaEntity getEmbeddableMetaEntity() {
+	return embeddableMetaEntity;
     }
 
 //    protected boolean expandRelationship() {
@@ -101,11 +86,11 @@ public class MetaAttribute extends AbstractAttribute {
 
 	List<MetaAttribute> list = new ArrayList<>();
 //		LOG.info("expandAttribute: embedded=" + embedded + "; name=" + name);
-	if (embedded)
-	    for (MetaAttribute a : children) {
+	if (embedded) {
+	    for (MetaAttribute a : embeddableMetaEntity.getAttributes()) {
 		list.addAll(a.expand());
 	    }
-	else if (relationship == null)
+	} else if (relationship == null)
 	    list.add(this);
 
 	expandedAttributeList = Collections.unmodifiableList(list);
@@ -144,13 +129,13 @@ public class MetaAttribute extends AbstractAttribute {
 	private Integer sqlType;
 	private PkGeneration pkGeneration;
 	private boolean embedded;
-	private List<MetaAttribute> children;
 	private Relationship relationship;
 	private boolean collection = false;
 	private Field javaMember;
 	private JdbcAttributeMapper jdbcAttributeMapper;
 	private Class<?> collectionImplementationClass;
 	private boolean nullable = true;
+	private MetaEntity embeddableMetaEntity;
 
 	public Builder(String name) {
 	    super();
@@ -208,11 +193,6 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
-	public Builder withChildren(List<MetaAttribute> children) {
-	    this.children = children;
-	    return this;
-	}
-
 	public Builder withRelationship(Relationship relationship) {
 	    this.relationship = relationship;
 	    return this;
@@ -243,6 +223,11 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
+	public Builder withEmbeddableMetaEntity(MetaEntity embeddableMetaEntity) {
+	    this.embeddableMetaEntity = embeddableMetaEntity;
+	    return this;
+	}
+
 	public MetaAttribute build() {
 	    MetaAttribute attribute = new MetaAttribute();
 	    attribute.name = name;
@@ -256,13 +241,13 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.sqlType = sqlType;
 	    attribute.pkGeneration = pkGeneration;
 	    attribute.embedded = embedded;
-	    attribute.children = children;
 	    attribute.relationship = relationship;
 	    attribute.collection = collection;
 	    attribute.javaMember = javaMember;
 	    attribute.jdbcAttributeMapper = jdbcAttributeMapper;
 	    attribute.collectionImplementationClass = collectionImplementationClass;
 	    attribute.nullable = nullable;
+	    attribute.embeddableMetaEntity = embeddableMetaEntity;
 	    return attribute;
 	}
     }

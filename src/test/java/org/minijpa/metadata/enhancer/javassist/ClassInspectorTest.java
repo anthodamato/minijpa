@@ -35,8 +35,8 @@ public class ClassInspectorTest {
 		: managedData1;
 	Assertions.assertNotNull(triangleManagedData);
 
-	Assertions.assertEquals(4, triangleManagedData.getDataAttributes().size());
-	List<String> names = triangleManagedData.getDataAttributes().stream().map(d -> d.property.ctField.getName())
+	Assertions.assertEquals(4, triangleManagedData.getAttributeDataList().size());
+	List<String> names = triangleManagedData.getAttributeDataList().stream().map(d -> d.property.ctField.getName())
 		.collect(Collectors.toList());
 	CollectionUtils.containsAll(Arrays.asList("primitiveLong", "extraProperties", "extraValues", "longValue"),
 		names);

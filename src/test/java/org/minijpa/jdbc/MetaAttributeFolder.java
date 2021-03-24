@@ -18,54 +18,27 @@
  */
 package org.minijpa.jdbc;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class AttributeValueArray {
-
-    private final List<MetaAttribute> attributes = new ArrayList<>();
-    private final List<Object> values = new ArrayList<>();
-
-    public void add(MetaAttribute attribute, Object value) {
-	attributes.add(attribute);
-	values.add(value);
+public class MetaAttributeFolder {
+    
+    private final List<MetaAttribute> attributes;
+    
+    public MetaAttributeFolder(MetaAttribute... attributes) {
+	this.attributes = Arrays.asList(attributes);
     }
-
-    public List<MetaAttribute> getAttributes() {
-	return attributes;
-    }
-
-    public List<Object> getValues() {
-	return values;
-    }
-
-    public MetaAttribute getAttribute(int index) {
-	return attributes.get(index);
-    }
-
-    public Object getValue(int index) {
-	return values.get(index);
-    }
-
-    public Optional<Object> getValue(MetaAttribute attribute) {
-	for (int i = 0; i < size(); ++i) {
-	    if (getAttribute(i) == attribute)
-		return Optional.of(getValue(i));
-	}
-
-	return Optional.empty();
-    }
-
-    public boolean isEmpty() {
-	return attributes.isEmpty();
-    }
-
+    
     public int size() {
 	return attributes.size();
+    }
+    
+    public Optional<MetaAttribute> findByName(String name) {
+	return attributes.stream().filter(a -> a.getName().equals(name)).findFirst();
     }
 }

@@ -134,7 +134,7 @@ public class MiniPersistenceContext implements EntityContainer {
 	if (mapEntities.get(idValue) != null)
 	    return;
 
-	LOG.info("Instance " + entityInstance + " saved in the PC pk=" + idValue);
+//	LOG.info("Instance " + entityInstance + " saved in the PC pk=" + idValue);
 	mapEntities.put(idValue, entityInstance);
 	notFlushedEntities.add(entityInstance);
     }

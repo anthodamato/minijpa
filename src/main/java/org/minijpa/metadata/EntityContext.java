@@ -41,7 +41,8 @@ public class EntityContext {
 		    return attribute;
 		}
 
-		MetaAttribute a = findEmbeddedAttribute(className, attribute.getChildren());
+		MetaAttribute a = findEmbeddedAttribute(className,
+			attribute.getEmbeddableMetaEntity().getAttributes());
 		if (a != null)
 		    return a;
 	    }

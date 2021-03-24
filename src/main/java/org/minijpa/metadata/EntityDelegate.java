@@ -2,7 +2,6 @@ package org.minijpa.metadata;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.minijpa.jdbc.EntityLoader;
@@ -20,77 +19,10 @@ public final class EntityDelegate implements EntityListener {
     private final EntityContextManager entityContextManager = new EntityContextManager();
     private final EntityContainerContextManager entityContainerContextManager = new EntityContainerContextManager();
 
-    private final List<Object> ignoreEntityInstances = new ArrayList<>();
-
     private final EntityModificationRepository entityModificationRepository = new EntityModificationCacheRepositoryImpl();
 
     public static EntityDelegate getInstance() {
 	return entityDelegate;
-    }
-
-    @Override
-    public void set(Object value, String attributeName, Object owningEntityInstance) {
-	for (Object object : ignoreEntityInstances) {
-	    if (object == owningEntityInstance)
-		return;
-	}
-
-//	LOG.info("set: owningEntityInstance=" + owningEntityInstance + "; attributeName=" + attributeName + "; value="
-//		+ value);
-	entityModificationRepository.save(owningEntityInstance, attributeName, value);
-    }
-
-    public void removeChanges(Object entityInstance) {
-	entityModificationRepository.remove(entityInstance);
-    }
-
-    public Optional<Map<String, Object>> getChanges(Object entityInstance) {
-//	LOG.info("getChanges: entityInstance=" + entityInstance);
-	return entityModificationRepository.get(entityInstance);
-    }
-
-    public void removeEntity(Object entityInstance) {
-	entityModificationRepository.removeEntity(entityInstance);
-    }
-
-    @Override
-    public void set(byte value, String attributeName, Object entityInstance) {
-	set(Byte.valueOf(value), attributeName, entityInstance);
-    }
-
-    @Override
-    public void set(short value, String attributeName, Object entityInstance) {
-	set(Short.valueOf(value), attributeName, entityInstance);
-    }
-
-    @Override
-    public void set(int value, String attributeName, Object entityInstance) {
-	set(Integer.valueOf(value), attributeName, entityInstance);
-    }
-
-    @Override
-    public void set(long value, String attributeName, Object entityInstance) {
-	set(Long.valueOf(value), attributeName, entityInstance);
-    }
-
-    @Override
-    public void set(float value, String attributeName, Object entityInstance) {
-	set(Float.valueOf(value), attributeName, entityInstance);
-    }
-
-    @Override
-    public void set(double value, String attributeName, Object entityInstance) {
-	set(Double.valueOf(value), attributeName, entityInstance);
-    }
-
-    @Override
-    public void set(char value, String attributeName, Object entityInstance) {
-	set(Character.valueOf(value), attributeName, entityInstance);
-    }
-
-    @Override
-    public void set(boolean value, String attributeName, Object entityInstance) {
-	set(Boolean.valueOf(value), attributeName, entityInstance);
     }
 
     @Override
@@ -117,14 +49,6 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	return value;
-    }
-
-    public void addIgnoreEntityInstance(Object object) {
-	ignoreEntityInstances.add(object);
-    }
-
-    public void removeIgnoreEntityInstance(Object object) {
-	ignoreEntityInstances.remove(object);
     }
 
     private class EntityContextManager {

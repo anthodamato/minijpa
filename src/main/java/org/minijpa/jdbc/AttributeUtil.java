@@ -14,8 +14,8 @@ public class AttributeUtil {
     public static Object createPK(MetaEntity entity, QueryResultValues attributeValues) throws Exception {
 	MetaAttribute id = entity.getId();
 	if (id.isEmbedded()) {
-	    Object pkObject = id.getType().newInstance();
-	    createPK(entity, attributeValues, id.getChildren(), id, pkObject);
+	    Object pkObject = id.getType().getConstructor().newInstance();
+	    createPK(entity, attributeValues, id.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
 	    return pkObject;
 	}
 
@@ -27,7 +27,7 @@ public class AttributeUtil {
 	    MetaAttribute id, Object pkObject) throws Exception {
 	for (MetaAttribute a : attributes) {
 	    if (a.isEmbedded())
-		createPK(entity, attributeValues, a.getChildren(), id, pkObject);
+		createPK(entity, attributeValues, a.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
 	    else {
 		int index = indexOf(attributeValues.attributes, a.getName());
 		Object value = attributeValues.values.get(index);
@@ -86,14 +86,42 @@ public class AttributeUtil {
 	    if (!a.isEmbedded())
 		continue;
 
-	    MetaAttribute emb = a.findChildByName(attribute.getName());
+	    MetaAttribute emb = a.getEmbeddableMetaEntity().getAttribute(attribute.getName());
 	    if (emb != null)
 		return entityInstanceBuilder.getAttributeValue(parentInstance, a);
 
 	    Object p = entityInstanceBuilder.getAttributeValue(parentInstance, a);
-	    Object parent = findParentInstance(p, a.getChildren(), attribute, entityInstanceBuilder);
+	    Object parent = findParentInstance(p, a.getEmbeddableMetaEntity().getAttributes(),
+		    attribute, entityInstanceBuilder);
 	    if (parent != null)
 		return parent;
+	}
+
+	return null;
+    }
+
+    /**
+     * Finds the parent entity over the parentEntity entity tree. It loops over the embeddables.
+     *
+     * @param entityClassName
+     * @param parentEntity
+     * @return
+     * @throws Exception
+     */
+    public static MetaEntity findParentEntity(String entityClassName, MetaEntity parentEntity) throws Exception {
+	if (parentEntity.getEntityClass().getName().equals(entityClassName))
+	    return parentEntity;
+
+	for (MetaAttribute a : parentEntity.getAttributes()) {
+	    if (!a.isEmbedded())
+		continue;
+
+	    if (a.getEmbeddableMetaEntity().getEntityClass().getName().equals(entityClassName))
+		return a.getEmbeddableMetaEntity();
+
+	    MetaEntity entity = findParentEntity(entityClassName, a.getEmbeddableMetaEntity());
+	    if (entity != null)
+		return entity;
 	}
 
 	return null;
@@ -112,7 +140,7 @@ public class AttributeUtil {
 	MetaAttribute last = a;
 	MetaAttribute tmp = null;
 	for (int i = 1; i < ss.length; ++i) {
-	    List<MetaAttribute> attributes = last.getChildren();
+	    List<MetaAttribute> attributes = last.getEmbeddableMetaEntity().getAttributes();
 	    tmp = null;
 	    for (MetaAttribute attribute : attributes) {
 		if (attribute.getName().equals(ss[i]))
