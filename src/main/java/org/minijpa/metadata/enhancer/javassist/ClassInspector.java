@@ -35,11 +35,17 @@ import javassist.expr.Instanceof;
 import javassist.expr.MethodCall;
 import javassist.expr.NewArray;
 import javassist.expr.NewExpr;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 public class ClassInspector {
 
     private final Logger LOG = LoggerFactory.getLogger(ClassInspector.class);
     private final String modificationAttributePrefix = "mds";
+    private final String lazyLoadedAttributePrefix = "lla";
 
     public ManagedData inspect(String className, List<ManagedData> inspectedClasses) throws Exception {
 	// already inspected
@@ -51,7 +57,7 @@ public class ClassInspector {
 		return managedData;
 	}
 
-	LOG.info("Inspecting " + className);
+	LOG.debug("Inspecting " + className);
 	ClassPool pool = ClassPool.getDefault();
 	CtClass ct = null;
 	try {
@@ -83,23 +89,31 @@ public class ClassInspector {
 	if (optional.isPresent())
 	    managedData.mappedSuperclass = optional.get();
 
-	List<Property> properties = findAttributes(ct);
-	LOG.info("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
+	List<Property> properties = findProperties(ct);
+	LOG.debug("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
 
-	String modificationAttribute = findAvailModificationAttribute(properties, ct);
-	removeModificationAttributeFromProperties(modificationAttribute, properties);
+	Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties, ct);
+	removeAttributeFromProperties(modificationAttribute.get(), properties);
+
+	// lazy loaded attribute tracker	
+	Optional<Property> optionalLazy = properties.stream().filter(p -> p.isLazy()).findFirst();
+	if (optionalLazy.isPresent()) {
+	    Optional<String> lazyLoadedAttribute = findAvailableAttribute(lazyLoadedAttributePrefix, properties, ct);
+	    removeAttributeFromProperties(lazyLoadedAttribute.get(), properties);
+	    managedData.setLazyLoadedAttribute(lazyLoadedAttribute);
+	}
 
 	List<AttributeData> attrs = createDataAttributes(properties, false);
 	managedData.addAttributeDatas(attrs);
 	managedData.setCtClass(ct);
-	managedData.setModificationAttribute(modificationAttribute);
+	managedData.setModificationAttribute(modificationAttribute.get());
 
 	// looks for embeddables
-	LOG.info("Inspects embeddables...");
+	LOG.debug("Inspects embeddables...");
 	List<ManagedData> embeddables = new ArrayList<>();
 	createEmbeddables(attrs, embeddables, inspectedClasses);
 	managedData.getEmbeddables().addAll(embeddables);
-	LOG.info("Found " + embeddables.size() + " embeddables in '" + ct.getName() + "'");
+	LOG.debug("Found " + embeddables.size() + " embeddables in '" + ct.getName() + "'");
 
 	if (!attrs.isEmpty() || managedData.mappedSuperclass != null) {
 	    List<BMTMethodInfo> methodInfos = inspectConstructorsAndMethods(ct);
@@ -113,29 +127,30 @@ public class ClassInspector {
 	return null;
     }
 
-    private String findAvailModificationAttribute(List<Property> properties, CtClass ctClass) {
+    private Optional<String> findAvailableAttribute(String attributePrefix, List<Property> properties,
+	    CtClass ctClass) {
 	for (int i = 0; i < 100; ++i) {
-	    String name = modificationAttributePrefix + Integer.toString(i);
+	    String name = attributePrefix + Integer.toString(i);
 	    Optional<Property> optional = properties.stream().filter(p -> p.getCtField().getName().equals(name)).findFirst();
 	    if (optional.isEmpty())
-		return name;
+		return Optional.of(name);
 
 	    // the class has been already written, the attribute already created
 	    if (ctClass.isFrozen())
-		return name;
+		return Optional.of(name);
 	}
 
-	return null;
+	return Optional.empty();
     }
 
     /**
      * If class written it has to remove the modifcation attribute property.
      *
-     * @param modificationAttribute
+     * @param attributeName
      * @param properties
      */
-    private void removeModificationAttributeFromProperties(String modificationAttribute, List<Property> properties) {
-	Optional<Property> optionalMA = properties.stream().filter(p -> p.getCtField().getName().equals(modificationAttribute)).findFirst();
+    private void removeAttributeFromProperties(String attributeName, List<Property> properties) {
+	Optional<Property> optionalMA = properties.stream().filter(p -> p.getCtField().getName().equals(attributeName)).findFirst();
 	if (optionalMA.isPresent())
 	    properties.remove(optionalMA.get());
     }
@@ -160,9 +175,17 @@ public class ClassInspector {
 	if (mappedSuperclassEnhEntity != null)
 	    return Optional.of(mappedSuperclassEnhEntity);
 
-	List<Property> properties = findAttributes(superClass);
-	String modificationAttribute = findAvailModificationAttribute(properties, superClass);
-	removeModificationAttributeFromProperties(modificationAttribute, properties);
+	List<Property> properties = findProperties(superClass);
+	Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties, superClass);
+	removeAttributeFromProperties(modificationAttribute.get(), properties);
+
+	// lazy loaded attribute tracker
+	Optional<String> lazyLoadedAttribute = Optional.empty();
+	Optional<Property> optionalLazy = properties.stream().filter(p -> p.isLazy()).findFirst();
+	if (optionalLazy.isPresent()) {
+	    lazyLoadedAttribute = findAvailableAttribute(lazyLoadedAttributePrefix, properties, ct);
+	    removeAttributeFromProperties(lazyLoadedAttribute.get(), properties);
+	}
 
 	LOG.info("Found " + properties.size() + " attributes in '" + superClass.getName() + "'");
 	List<AttributeData> attrs = createDataAttributes(properties, false);
@@ -174,7 +197,8 @@ public class ClassInspector {
 	mappedSuperclass.setClassName(superClass.getName());
 	mappedSuperclass.addAttributeDatas(attrs);
 	mappedSuperclass.setCtClass(superClass);
-	mappedSuperclass.setModificationAttribute(modificationAttribute);
+	mappedSuperclass.setModificationAttribute(modificationAttribute.get());
+	mappedSuperclass.setLazyLoadedAttribute(lazyLoadedAttribute);
 
 	List<ManagedData> embeddables = new ArrayList<>();
 	createEmbeddables(attrs, embeddables, inspectedClasses);
@@ -276,13 +300,24 @@ public class ClassInspector {
 //		CtClass embeddedCtClass = null;
 	ManagedData embeddedData = null;
 	if (property.embedded) {
-	    String modificationAttribute = findAvailModificationAttribute(property.embeddedProperties, property.ctField.getType());
-	    removeModificationAttributeFromProperties(modificationAttribute, property.embeddedProperties);
+	    Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix,
+		    property.embeddedProperties, property.ctField.getType());
+	    removeAttributeFromProperties(modificationAttribute.get(), property.embeddedProperties);
+
+	    // lazy loaded attribute tracker
+	    Optional<String> lazyLoadedAttribute = Optional.empty();
+	    Optional<Property> optionalLazy = property.embeddedProperties.stream().filter(p -> p.isLazy()).findFirst();
+	    if (optionalLazy.isPresent()) {
+		lazyLoadedAttribute = findAvailableAttribute(lazyLoadedAttributePrefix, property.embeddedProperties, property.ctField.getType());
+		removeAttributeFromProperties(lazyLoadedAttribute.get(), property.embeddedProperties);
+	    }
+
 	    embeddedData = new ManagedData(ManagedData.EMBEDDABLE);
 	    embeddedData.addAttributeDatas(createDataAttributes(property.embeddedProperties, property.id));
 	    embeddedData.setCtClass(property.ctField.getType());
 	    embeddedData.setClassName(property.ctField.getType().getName());
-	    embeddedData.setModificationAttribute(modificationAttribute);
+	    embeddedData.setModificationAttribute(modificationAttribute.get());
+	    embeddedData.setLazyLoadedAttribute(lazyLoadedAttribute);
 //			embeddedAttributes = createDataAttributes(property.embeddedProperties, property.id);
 //			embeddedCtClass = property.ctField.getType();
 	}
@@ -291,7 +326,7 @@ public class ClassInspector {
 	return attributeData;
     }
 
-    private List<Property> findAttributes(CtClass ctClass) throws Exception {
+    private List<Property> findProperties(CtClass ctClass) throws Exception {
 //		CtBehavior[] ctBehaviors = ctClass.getDeclaredBehaviors();
 //		for(CtBehavior ctBehavior:ctBehaviors) {
 //			LOG.info("findAttributes: ctField.getName()=" + ctBehavior.);
@@ -300,7 +335,7 @@ public class ClassInspector {
 	CtField[] ctFields = ctClass.getDeclaredFields();
 	List<Property> attrs = new ArrayList<>();
 	for (CtField ctField : ctFields) {
-	    Optional<Property> optional = readAttribute(ctField, ctClass);
+	    Optional<Property> optional = readProperty(ctField, ctClass);
 	    if (optional.isPresent())
 		attrs.add(optional.get());
 	}
@@ -308,7 +343,7 @@ public class ClassInspector {
 	return attrs;
     }
 
-    private Optional<Property> readAttribute(CtField ctField, CtClass ctClass) throws Exception {
+    private Optional<Property> readProperty(CtField ctField, CtClass ctClass) throws Exception {
 	LOG.debug("readAttribute: ctField.getName()=" + ctField.getName());
 	LOG.debug("readAttribute: ctField.getModifiers()=" + ctField.getModifiers());
 	LOG.debug("readAttribute: ctField.getType().getName()=" + ctField.getType().getName());
@@ -335,7 +370,7 @@ public class ClassInspector {
 		throw new Exception("@Embeddable annotation missing on '" + ctField.getType().getName() + "'");
 
 	    embedded = true;
-	    embeddedProperties = findAttributes(ctField.getType());
+	    embeddedProperties = findProperties(ctField.getType());
 	    if (embeddedProperties.isEmpty()) {
 		embeddedProperties = null;
 		embedded = false;
@@ -352,9 +387,33 @@ public class ClassInspector {
 	if (!setPropertyMethod.method.isPresent())
 	    setPropertyMethod.add = true;
 
+	boolean lazy = islazy(ctField);
+	LOG.debug("readProperty: lazy=" + lazy);
 	Property property = new Property(id, getPropertyMethod, setPropertyMethod, ctField, embedded,
-		embeddedProperties);
+		embeddedProperties, lazy);
 	return Optional.of(property);
+    }
+
+    private boolean islazy(CtField ctField) throws ClassNotFoundException {
+	OneToOne oneToOne = (OneToOne) ctField.getAnnotation(OneToOne.class);
+	if (oneToOne != null && oneToOne.fetch() != null && oneToOne.fetch() == FetchType.LAZY)
+	    return true;
+
+	OneToMany oneToMany = (OneToMany) ctField.getAnnotation(OneToMany.class);
+	if ((oneToMany != null && oneToMany.fetch() == null)
+		|| (oneToMany != null && oneToMany.fetch() == FetchType.LAZY))
+	    return true;
+
+	ManyToOne manyToOne = (ManyToOne) ctField.getAnnotation(ManyToOne.class);
+	if (manyToOne != null && manyToOne.fetch() != null && manyToOne.fetch() == FetchType.LAZY)
+	    return true;
+
+	ManyToMany manyToMany = (ManyToMany) ctField.getAnnotation(ManyToMany.class);
+	if ((manyToMany != null && manyToMany.fetch() == null)
+		|| (manyToMany != null && manyToMany.fetch() == FetchType.LAZY))
+	    return true;
+
+	return false;
     }
 
     private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws NotFoundException {

@@ -12,9 +12,10 @@ public class Property {
     CtField ctField;
     boolean embedded;
     List<Property> embeddedProperties;
+    boolean lazy;
 
     public Property(boolean id, PropertyMethod getPropertyMethod, PropertyMethod setPropertyMethod, CtField ctField,
-	    boolean embedded, List<Property> embeddedProperties) {
+	    boolean embedded, List<Property> embeddedProperties, boolean lazy) {
 	super();
 	this.id = id;
 	this.getPropertyMethod = getPropertyMethod;
@@ -22,6 +23,7 @@ public class Property {
 	this.ctField = ctField;
 	this.embedded = embedded;
 	this.embeddedProperties = embeddedProperties;
+	this.lazy = lazy;
     }
 
     public boolean isId() {
@@ -46,6 +48,10 @@ public class Property {
 
     public List<Property> getEmbeddedProperties() {
 	return embeddedProperties;
+    }
+
+    public boolean isLazy() {
+	return lazy;
     }
 
 }

@@ -19,6 +19,7 @@ public class ManagedData {
     int type = ENTITY;
     private final List<BMTMethodInfo> methodInfos = new ArrayList<>();
     private String modificationAttribute;
+    private Optional<String> lazyLoadedAttribute = Optional.empty();
 
     public ManagedData() {
 	super();
@@ -71,6 +72,14 @@ public class ManagedData {
 
     public void setModificationAttribute(String modificationAttribute) {
 	this.modificationAttribute = modificationAttribute;
+    }
+
+    public Optional<String> getLazyLoadedAttribute() {
+	return lazyLoadedAttribute;
+    }
+
+    public void setLazyLoadedAttribute(Optional<String> lazyLoadedAttribute) {
+	this.lazyLoadedAttribute = lazyLoadedAttribute;
     }
 
     public Optional<AttributeData> findAttribute(String name) {

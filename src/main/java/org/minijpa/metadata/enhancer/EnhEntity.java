@@ -2,6 +2,7 @@ package org.minijpa.metadata.enhancer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class EnhEntity {
@@ -10,6 +11,7 @@ public class EnhEntity {
     private List<EnhAttribute> enhAttributes = new ArrayList<>();
     private EnhEntity mappedSuperclass;
     private String modificationAttributeGetMethod;
+    private Optional<String> lazyLoadedAttributeGetMethod = Optional.empty();
 
     public String getClassName() {
 	return className;
@@ -41,6 +43,14 @@ public class EnhEntity {
 
     public void setModificationAttributeGetMethod(String modificationAttributeGetMethod) {
 	this.modificationAttributeGetMethod = modificationAttributeGetMethod;
+    }
+
+    public Optional<String> getLazyLoadedAttributeGetMethod() {
+	return lazyLoadedAttributeGetMethod;
+    }
+
+    public void setLazyLoadedAttributeGetMethod(Optional<String> lazyLoadedAttributeGetMethod) {
+	this.lazyLoadedAttributeGetMethod = lazyLoadedAttributeGetMethod;
     }
 
     public void findEmbeddables(Set<EnhEntity> embeddables) {

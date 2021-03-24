@@ -1,5 +1,7 @@
 package org.minijpa.metadata;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -19,8 +21,6 @@ public final class EntityDelegate implements EntityListener {
     private final EntityContextManager entityContextManager = new EntityContextManager();
     private final EntityContainerContextManager entityContainerContextManager = new EntityContainerContextManager();
 
-    private final EntityModificationRepository entityModificationRepository = new EntityModificationCacheRepositoryImpl();
-
     public static EntityDelegate getInstance() {
 	return entityDelegate;
     }
@@ -36,19 +36,38 @@ public final class EntityDelegate implements EntityListener {
 	MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
 	MetaAttribute a = entity.getAttribute(attributeName);
 //	LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
-	if (a.isLazy() && !entityModificationRepository.isLazyAttributeLoaded(entityInstance, a)) {
-	    try {
+	try {
+	    if (a.isLazy() && !lazyAttributeLoaded(entity, a, entityInstance)) {
 		EntityLoader entityLoader = entityContainerContextManager
 			.findByEntityContainer(entityInstance);
 		value = entityLoader.loadAttribute(entityInstance, a, value);
-		entityModificationRepository.setLazyAttributeLoaded(entityInstance, a);
-	    } catch (Exception e) {
-		LOG.error(e.getMessage());
-		throw new IllegalStateException(e.getMessage());
+		lazyAttributeLoaded(entity, a, entityInstance, true);
 	    }
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    throw new IllegalStateException(e.getMessage());
 	}
 
 	return value;
+    }
+
+    private boolean lazyAttributeLoaded(MetaEntity entity, MetaAttribute a, Object entityInstance)
+	    throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	Method m = entity.getLazyLoadedAttributeReadMethod().get();
+	List list = (List) m.invoke(entityInstance);
+	return list.contains(a.getName());
+    }
+
+    private void lazyAttributeLoaded(MetaEntity entity, MetaAttribute a, Object entityInstance, boolean loaded)
+	    throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	Method m = entity.getLazyLoadedAttributeReadMethod().get();
+	List list = (List) m.invoke(entityInstance);
+	if (loaded) {
+	    if (!list.contains(a.getName()))
+		list.add(a.getName());
+	} else {
+	    list.remove(a.getName());
+	}
     }
 
     private class EntityContextManager {

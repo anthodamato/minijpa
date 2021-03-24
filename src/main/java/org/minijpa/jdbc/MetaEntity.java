@@ -23,9 +23,11 @@ public class MetaEntity {
     // MappedSuperclass attributes
     private MetaEntity mappedSuperclassEntity;
     private Method modificationAttributeReadMethod;
+    private Optional<Method> lazyLoadedAttributeReadMethod;
 
     public MetaEntity(Class<?> entityClass, String name, String tableName, String alias, MetaAttribute id,
-	    List<MetaAttribute> attributes, MetaEntity mappedSuperclassEntity, Method modificationAttributeReadMethod) {
+	    List<MetaAttribute> attributes, MetaEntity mappedSuperclassEntity,
+	    Method modificationAttributeReadMethod, Optional<Method> lazyLoadedAttributeReadMethod) {
 	super();
 	this.entityClass = entityClass;
 	this.name = name;
@@ -35,6 +37,7 @@ public class MetaEntity {
 	this.attributes = attributes;
 	this.mappedSuperclassEntity = mappedSuperclassEntity;
 	this.modificationAttributeReadMethod = modificationAttributeReadMethod;
+	this.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
     }
 
     public Class<?> getEntityClass() {
@@ -67,6 +70,10 @@ public class MetaEntity {
 
     public Method getModificationAttributeReadMethod() {
 	return modificationAttributeReadMethod;
+    }
+
+    public Optional<Method> getLazyLoadedAttributeReadMethod() {
+	return lazyLoadedAttributeReadMethod;
     }
 
     public MetaAttribute getAttribute(String name) {

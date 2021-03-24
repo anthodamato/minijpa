@@ -8,37 +8,38 @@ import javax.persistence.OneToOne;
 
 @Entity
 public class State {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	private String name;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-	@OneToOne(fetch = FetchType.LAZY)
-	private Capital capital;
+    private String name;
 
-	public Long getId() {
-		return id;
-	}
+    @OneToOne(fetch = FetchType.LAZY)
+    private Capital capital;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+	return name;
+    }
 
-	public Capital getCapital() {
-		return capital;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public void setCapital(Capital capital) {
-		this.capital = capital;
-	}
+    public Capital getCapital() {
+	return capital;
+    }
+
+    public void setCapital(Capital capital) {
+	this.capital = capital;
+    }
 
 }

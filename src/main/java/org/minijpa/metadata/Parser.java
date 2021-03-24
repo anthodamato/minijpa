@@ -126,8 +126,12 @@ public class Parser {
 	attributes.remove(id);
 
 	Method modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
+	Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
+	if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent())
+	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
+
 	return new MetaEntity(c, name, tableName, alias, id, attributes, mappedSuperclassEntity,
-		modificationAttributeReadMethod);
+		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod);
     }
 
     private MetaEntity parseEmbeddable(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
@@ -150,7 +154,12 @@ public class Parser {
 	if (enhEntity.getModificationAttributeGetMethod() != null)
 	    modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
 
-	return new MetaEntity(c, null, null, null, null, attributes, null, modificationAttributeReadMethod);
+	Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
+	if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent())
+	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
+
+	return new MetaEntity(c, null, null, null, null, attributes, null, modificationAttributeReadMethod,
+		lazyLoadedAttributeReadMethod);
     }
 
     private MetaEntity parseMappedSuperclass(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities)
@@ -171,25 +180,18 @@ public class Parser {
 	attributes.remove(id);
 
 	Method modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
-	return new MetaEntity(c, null, null, null, optionalId.get(), attributes, null, modificationAttributeReadMethod);
+	Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
+	if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent())
+	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
+
+	return new MetaEntity(c, null, null, null, optionalId.get(), attributes, null,
+		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod);
     }
 
     private List<MetaAttribute> readAttributes(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
 	List<MetaAttribute> attributes = new ArrayList<>();
 	for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
 	    MetaAttribute attribute = readAttribute(enhEntity.getClassName(), enhAttribute, parsedEntities);
-	    attributes.add(attribute);
-	}
-
-	return attributes;
-    }
-
-    private List<MetaAttribute> readAttributes(List<EnhAttribute> enhAttributes, String parentClassName,
-	    Collection<MetaEntity> parsedEntities)
-	    throws Exception {
-	List<MetaAttribute> attributes = new ArrayList<>();
-	for (EnhAttribute enhAttribute : enhAttributes) {
-	    MetaAttribute attribute = readAttribute(parentClassName, enhAttribute, parsedEntities);
 	    attributes.add(attribute);
 	}
 

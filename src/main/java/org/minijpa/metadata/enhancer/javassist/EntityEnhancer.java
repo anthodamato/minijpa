@@ -57,15 +57,20 @@ public class EntityEnhancer {
 		LOG.debug("Enhancing " + ct.getName());
 		addEntityDelegateField(ct);
 		addModificationField(ct, managedData.getModificationAttribute());
-		CtMethod ctMethod = createModificationGetMethod(ct, managedData.getModificationAttribute(), "java.util.List");
+		CtMethod ctMethod = createGetMethod(ct, managedData.getModificationAttribute(), "java.util.List");
 		enhEntity.setModificationAttributeGetMethod(ctMethod.getName());
+		// lazy loaded attribute tracking
+		if (managedData.getLazyLoadedAttribute().isPresent()) {
+		    addLazyLoadedField(ct, managedData.getLazyLoadedAttribute().get());
+		    ctMethod = createGetMethod(ct, managedData.getLazyLoadedAttribute().get(), "java.util.List");
+		    enhEntity.setLazyLoadedAttributeGetMethod(Optional.of(ctMethod.getName()));
+		}
+
 		modified = true;
 	    } else
 		LOG.debug("Enhancement of '" + ct.getName() + "' not needed");
 
-	for (BMTMethodInfo bmtMethodInfo : managedData.getMethodInfos()) {
-	    enhanceConstructor(managedData, bmtMethodInfo);
-	}
+	enhanceConstructor(managedData);
 
 	boolean enhanceAttribute = false;
 	List<EnhAttribute> enhAttributes = new ArrayList<>();
@@ -75,7 +80,7 @@ public class EntityEnhancer {
 	    LOG.debug("Enhancing attribute '" + property.ctField.getName() + "'");
 	    enhanceAttribute = toEnhance(attributeData);
 	    if (property.setPropertyMethod.add && !enhancedDataEntities.contains(managedData)) {
-		CtMethod ctMethod = createSetMethod(ct, property.ctField, enhanceAttribute);
+		CtMethod ctMethod = createSetMethod(ct, property.ctField, enhanceAttribute, managedData);
 		property.setPropertyMethod.enhance = false;
 		property.setPropertyMethod.method = Optional.of(ctMethod);
 		modified = true;
@@ -87,7 +92,7 @@ public class EntityEnhancer {
 			modifyGetMethod(property.getPropertyMethod.method.get(), property.ctField);
 
 		if (property.setPropertyMethod.enhance)
-		    modifySetMethod(property.setPropertyMethod.method.get(), property.ctField);
+		    modifySetMethod(property.setPropertyMethod.method.get(), property.ctField, managedData);
 	    }
 
 	    EnhEntity embeddedEnhEntity = null;
@@ -162,23 +167,25 @@ public class EntityEnhancer {
 	return isClassWritable(ctClass);
     }
 
-    private void enhanceConstructor(ManagedData managedData, BMTMethodInfo bmtMethodInfo) throws Exception {
-	if (!canModify(managedData.getCtClass()))
-	    return;
+    private void enhanceConstructor(ManagedData managedData) throws Exception {
+	for (BMTMethodInfo bmtMethodInfo : managedData.getMethodInfos()) {
+	    if (!canModify(managedData.getCtClass()))
+		return;
 
-	for (BMTFieldInfo bmtFieldInfo : bmtMethodInfo.getBmtFieldInfos()) {
-	    Optional<AttributeData> optional = managedData.findAttribute(bmtFieldInfo.name);
-	    if (!optional.isPresent())
-		throw new Exception("Field '" + bmtFieldInfo.name + "' not found");
+	    for (BMTFieldInfo bmtFieldInfo : bmtMethodInfo.getBmtFieldInfos()) {
+		Optional<AttributeData> optional = managedData.findAttribute(bmtFieldInfo.name);
+		if (!optional.isPresent())
+		    throw new Exception("Field '" + bmtFieldInfo.name + "' not found");
 
-	    if (bmtFieldInfo.implementation != null)
-		// an implementation class. It can be a collection. NEW_EXPR_OP
-		if (CollectionUtils.isCollectionName(bmtFieldInfo.implementation))
-		    modifyConstructorWithCollectionCheck(bmtMethodInfo.ctConstructor, optional.get().property.ctField);
+		if (bmtFieldInfo.implementation != null)
+		    // an implementation class. It can be a collection. NEW_EXPR_OP
+		    if (CollectionUtils.isCollectionName(bmtFieldInfo.implementation))
+			modifyConstructorWithCollectionCheck(bmtMethodInfo.ctConstructor, optional.get().property.ctField, managedData);
+		    else
+			modifyConstructorWithSimpleField(bmtMethodInfo.ctConstructor, optional.get().property.ctField, managedData);
 		else
-		    modifyConstructorWithSimpleField(bmtMethodInfo.ctConstructor, optional.get().property.ctField);
-	    else
-		modifyConstructorWithSimpleField(bmtMethodInfo.ctConstructor, optional.get().property.ctField);
+		    modifyConstructorWithSimpleField(bmtMethodInfo.ctConstructor, optional.get().property.ctField, managedData);
+	    }
 	}
     }
 
@@ -203,6 +210,15 @@ public class EntityEnhancer {
 	LOG.debug("Created '" + ct.getName() + "' Modification Field");
     }
 
+    private void addLazyLoadedField(CtClass ct, String fieldName) throws Exception {
+	if (!canModify(ct))
+	    return;
+
+	CtField f = CtField.make("private java.util.List " + fieldName + " = new java.util.ArrayList();", ct);
+	ct.addField(f);
+	LOG.debug("Created '" + ct.getName() + "' Lazy Loaded Field");
+    }
+
     private void addEnhancedInterface(CtClass ct) throws Exception {
 	ClassPool pool = ClassPool.getDefault();
 	Class<?> enhancedClass = Enhanced.class;
@@ -218,20 +234,32 @@ public class EntityEnhancer {
 	ctMethod.insertBefore(mc);
     }
 
-    private void modifySetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
-	String mc = "if(!mds0.contains(\"" + ctField.getName() + "\")) mds0.add(\"" + ctField.getName() + "\");";
+    private void modifySetMethod(CtMethod ctMethod, CtField ctField, ManagedData managedData) throws Exception {
+	StringBuilder sb = new StringBuilder();
+	sb.append("if(!");
+	sb.append(managedData.getModificationAttribute());
+	sb.append(".contains(\"");
+	sb.append(ctField.getName());
+	sb.append("\")) ");
+	sb.append(managedData.getModificationAttribute());
+	sb.append(".add(\"");
+	sb.append(ctField.getName());
+	sb.append("\");");
+	String mc = sb.toString();
 	LOG.debug("Modifying set method: mc=" + mc);
 	ctMethod.insertBefore(mc);
     }
 
-    private void modifyConstructorWithCollectionCheck(CtConstructor ctConstructor, CtField ctField) throws Exception {
-	String mc = "if(!" + ctField.getName() + ".isEmpty()) mds0.add(\"" + ctField.getName() + "\");";
+    private void modifyConstructorWithCollectionCheck(CtConstructor ctConstructor, CtField ctField,
+	    ManagedData managedData) throws Exception {
+	String mc = "if(!" + ctField.getName() + ".isEmpty()) " + managedData.getModificationAttribute() + ".add(\"" + ctField.getName() + "\");";
 	LOG.debug("Modifying constructor: mc=" + mc);
 	ctConstructor.insertAfter(mc);
     }
 
-    private void modifyConstructorWithSimpleField(CtConstructor ctConstructor, CtField ctField) throws Exception {
-	String mc = "mds0.add(\"" + ctField.getName() + "\");";
+    private void modifyConstructorWithSimpleField(CtConstructor ctConstructor, CtField ctField,
+	    ManagedData managedData) throws Exception {
+	String mc = managedData.getModificationAttribute() + ".add(\"" + ctField.getName() + "\");";
 	LOG.debug("Modifying constructor: mc=" + mc);
 	ctConstructor.insertAfter(mc);
     }
@@ -251,7 +279,8 @@ public class EntityEnhancer {
 	return sb.toString();
     }
 
-    private String createSetMethodString(CtField ctField, boolean delegate, int counter) throws Exception {
+    private String createSetMethodString(CtField ctField, boolean delegate, int counter,
+	    ManagedData managedData) throws Exception {
 	StringBuilder sb = new StringBuilder();
 	sb.append("public void ");
 	sb.append(buildSetMethodName(ctField, counter));
@@ -261,9 +290,13 @@ public class EntityEnhancer {
 	sb.append(ctField.getName());
 	sb.append(") {");
 	if (delegate) {
-	    sb.append("if(!mds0.contains(\"");
+	    sb.append("if(!");
+	    sb.append(managedData.getModificationAttribute());
+	    sb.append(".contains(\"");
 	    sb.append(ctField.getName());
-	    sb.append("\")) mds0.add(\"");
+	    sb.append("\")) ");
+	    sb.append(managedData.getModificationAttribute());
+	    sb.append(".add(\"");
 	    sb.append(ctField.getName());
 	    sb.append("\");");
 	}
@@ -276,7 +309,7 @@ public class EntityEnhancer {
 	return sb.toString();
     }
 
-    private String createModificationGetMethodString(String fieldName, String fieldTypeName) {
+    private String createGetMethodString(String fieldName, String fieldTypeName) {
 	StringBuilder sb = new StringBuilder();
 	sb.append("public ");
 	sb.append(fieldTypeName);
@@ -297,7 +330,8 @@ public class EntityEnhancer {
      * @return
      * @throws Exception
      */
-    private CtMethod createSetMethod(CtClass ctClass, CtField ctField, boolean delegate) throws Exception {
+    private CtMethod createSetMethod(CtClass ctClass, CtField ctField, boolean delegate, ManagedData managedData)
+	    throws Exception {
 	int counter = 0;
 	CtMethod ctMethod = null;
 	for (int i = 0; i < 100; ++i) {
@@ -313,21 +347,21 @@ public class EntityEnhancer {
 	if (!canModify(ctClass))
 	    return ctMethod;
 
-	String setMethodString = createSetMethodString(ctField, delegate, counter);
+	String setMethodString = createSetMethodString(ctField, delegate, counter, managedData);
 	ctMethod = CtNewMethod.make(setMethodString, ctClass);
 	ctClass.addMethod(ctMethod);
 	LOG.debug("createSetMethod: Created new method: " + setMethodString);
 	return ctMethod;
     }
 
-    private CtMethod createModificationGetMethod(CtClass ctClass, String fieldName, String fieldTypeName) throws Exception {
+    private CtMethod createGetMethod(CtClass ctClass, String fieldName, String fieldTypeName) throws Exception {
 	if (!canModify(ctClass))
 	    return null;
 
-	String getMethodString = createModificationGetMethodString(fieldName, fieldTypeName);
+	String getMethodString = createGetMethodString(fieldName, fieldTypeName);
 	CtMethod ctMethod = CtNewMethod.make(getMethodString, ctClass);
 	ctClass.addMethod(ctMethod);
-	LOG.debug("Created '" + ctClass.getName() + "' modification method: " + getMethodString);
+	LOG.debug("Created '" + ctClass.getName() + "' method: " + getMethodString);
 	return ctMethod;
     }
 
