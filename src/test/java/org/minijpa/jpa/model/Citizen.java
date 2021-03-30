@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Version;
 
 @Entity
 @Table(name = "citizen")
@@ -23,6 +24,9 @@ public class Citizen {
 
     @Column(name = "last_name")
     private String lastName;
+
+    @Version
+    private Long version;
 
     public Long getId() {
 	return id;
@@ -46,6 +50,14 @@ public class Citizen {
 
     public void setLastName(String lastName) {
 	this.lastName = lastName;
+    }
+
+    public Long getVersion() {
+	return version;
+    }
+
+    public void setVersion(Long version) {
+	this.version = version;
     }
 
     @Override

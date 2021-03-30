@@ -6,35 +6,36 @@ import javax.persistence.Id;
 
 @Entity
 public class Item {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	private String model;
-	private String name;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-	public Long getId() {
-		return id;
-	}
+    private String model;
+    private String name;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public String getModel() {
-		return model;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setModel(String model) {
-		this.model = model;
-	}
+    public String getModel() {
+	return model;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setModel(String model) {
+	this.model = model;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+	return name;
+    }
+
+    public void setName(String name) {
+	this.name = name;
+    }
 
 }

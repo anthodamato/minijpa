@@ -1,4 +1,4 @@
-create table citizen (id integer primary key, first_name varchar(100), last_name varchar(100));
+create table citizen (id integer primary key, first_name varchar(100), last_name varchar(100), version int);
 
 create sequence SEQ_GEN_SEQUENCE;
 

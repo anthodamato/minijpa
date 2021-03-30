@@ -13,49 +13,49 @@ import org.minijpa.jpa.model.Item;
 import org.minijpa.jpa.model.Store;
 
 /**
- * 
+ *
  * @author adamato
  *
  */
 public class OneToManyUniTest {
 
-	@Test
-	public void persist() throws Exception {
-		EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni");
-		final EntityManager em = emf.createEntityManager();
-		Store store = new Store();
-		store.setName("Upton Store");
+    @Test
+    public void persist() throws Exception {
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni");
+	final EntityManager em = emf.createEntityManager();
+	Store store = new Store();
+	store.setName("Upton Store");
 
-		Item item1 = new Item();
-		item1.setName("Notepad");
-		item1.setModel("Free Ink");
+	Item item1 = new Item();
+	item1.setName("Notepad");
+	item1.setModel("Free Ink");
 
-		Item item2 = new Item();
-		item2.setName("Pencil");
-		item2.setModel("Staedtler");
+	Item item2 = new Item();
+	item2.setName("Pencil");
+	item2.setModel("Staedtler");
 
-		store.setItems(Arrays.asList(item1, item2));
+	store.setItems(Arrays.asList(item1, item2));
 
-		final EntityTransaction tx = em.getTransaction();
-		tx.begin();
+	final EntityTransaction tx = em.getTransaction();
+	tx.begin();
 
-		em.persist(item1);
-		em.persist(store);
-		em.persist(item2);
+	em.persist(item1);
+	em.persist(store);
+	em.persist(item2);
 
-		tx.commit();
+	tx.commit();
 
-		Assertions.assertFalse(store.getItems().isEmpty());
+	Assertions.assertFalse(store.getItems().isEmpty());
 
-		em.detach(store);
+	em.detach(store);
 
-		Store s = em.find(Store.class, store.getId());
-		Assertions.assertTrue(!s.getItems().isEmpty());
-		Assertions.assertEquals(2, s.getItems().size());
-		Assertions.assertFalse(s == store);
+	Store s = em.find(Store.class, store.getId());
+	Assertions.assertTrue(!s.getItems().isEmpty());
+	Assertions.assertEquals(2, s.getItems().size());
+	Assertions.assertFalse(s == store);
 
-		em.close();
-		emf.close();
-	}
+	em.close();
+	emf.close();
+    }
 
 }

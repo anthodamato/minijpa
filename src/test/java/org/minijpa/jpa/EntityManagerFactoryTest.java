@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class EntityManagerFactoryTest {
-	@Test
-	public void entityManagerFactory() {
-		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("citizens");
-		Assertions.assertNotNull(entityManagerFactory);
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		Assertions.assertNotNull(entityManager);
-		System.out.println("entityManager=" + entityManager);
-	}
+
+    @Test
+    public void entityManagerFactory() {
+	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("citizens");
+	Assertions.assertNotNull(entityManagerFactory);
+	EntityManager entityManager = entityManagerFactory.createEntityManager();
+	Assertions.assertNotNull(entityManager);
+    }
 }
