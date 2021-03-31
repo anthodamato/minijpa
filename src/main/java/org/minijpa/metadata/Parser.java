@@ -28,9 +28,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Version;
+import org.minijpa.jdbc.AttributeUtil;
 
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.JdbcTypes;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkGeneration;
@@ -82,7 +85,7 @@ public class Parser {
 	if (ec == null)
 	    throw new Exception("@Entity annotation not found: '" + c.getName() + "'");
 
-	LOG.info("Reading '" + enhEntity.getClassName() + "' attributes...");
+	LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
 	List<MetaAttribute> attributes = readAttributes(enhEntity, parsedEntities);
 	MetaEntity mappedSuperclassEntity = null;
 	if (enhEntity.getMappedSuperclass() != null) {
@@ -101,7 +104,7 @@ public class Parser {
 	    attributes.add(mappedSuperclassEntity.getId());
 	}
 
-	LOG.info("Getting '" + c.getName() + "' Id...");
+	LOG.debug("Getting '" + c.getName() + "' Id...");
 	MetaAttribute id = null;
 	if (mappedSuperclassEntity != null)
 	    id = mappedSuperclassEntity.getId();
@@ -130,8 +133,11 @@ public class Parser {
 	if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent())
 	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
 
+	Method lockTypeAttributeReadMethod = c.getMethod(enhEntity.getLockTypeAttributeGetMethod().get());
+	Method lockTypeAttributeWriteMethod = c.getMethod(enhEntity.getLockTypeAttributeSetMethod().get(), LockType.class);
 	return new MetaEntity(c, name, tableName, alias, id, attributes, mappedSuperclassEntity,
-		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod);
+		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod,
+		Optional.of(lockTypeAttributeReadMethod), Optional.of(lockTypeAttributeWriteMethod));
     }
 
     private MetaEntity parseEmbeddable(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
@@ -147,7 +153,7 @@ public class Parser {
 	if (ec == null)
 	    throw new Exception("@Embeddable annotation not found: '" + c.getName() + "'");
 
-	LOG.info("Reading '" + enhEntity.getClassName() + "' attributes...");
+	LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
 	List<MetaAttribute> attributes = readAttributes(enhEntity, parsedEntities);
 
 	Method modificationAttributeReadMethod = null;
@@ -159,7 +165,7 @@ public class Parser {
 	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
 
 	return new MetaEntity(c, null, null, null, null, attributes, null, modificationAttributeReadMethod,
-		lazyLoadedAttributeReadMethod);
+		lazyLoadedAttributeReadMethod, Optional.empty(), Optional.empty());
     }
 
     private MetaEntity parseMappedSuperclass(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities)
@@ -169,7 +175,7 @@ public class Parser {
 	if (ec == null)
 	    throw new Exception("@MappedSuperclass annotation not found: '" + c.getName() + "'");
 
-	LOG.info("Reading mapped superclass '" + enhEntity.getClassName() + "' attributes...");
+	LOG.debug("Reading mapped superclass '" + enhEntity.getClassName() + "' attributes...");
 	List<MetaAttribute> attributes = readAttributes(enhEntity, parsedEntities);
 
 	Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
@@ -185,7 +191,7 @@ public class Parser {
 	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
 
 	return new MetaEntity(c, null, null, null, optionalId.get(), attributes, null,
-		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod);
+		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod, Optional.empty(), Optional.empty());
     }
 
     private List<MetaAttribute> readAttributes(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
@@ -215,7 +221,7 @@ public class Parser {
 	    return Types.INTEGER;
 
 	if (attributeClass.isEnum() && enumerated != null) {
-	    LOG.info("findSqlType: enumerated.value()=" + enumerated.value());
+	    LOG.debug("findSqlType: enumerated.value()=" + enumerated.value());
 
 	    if (enumerated.value() == null)
 		return Types.INTEGER;
@@ -234,7 +240,7 @@ public class Parser {
 	    Collection<MetaEntity> parsedEntities) throws Exception {
 	String columnName = enhAttribute.getName();
 	Class<?> c = Class.forName(parentClassName);
-	LOG.info("Reading attribute '" + columnName + "'");
+	LOG.debug("Reading attribute '" + columnName + "'");
 	Field field = c.getDeclaredField(enhAttribute.getName());
 	Class<?> attributeClass = null;
 	if (enhAttribute.isPrimitiveType())
@@ -251,19 +257,19 @@ public class Parser {
 		columnName = cn;
 	}
 
-	LOG.info("readAttribute: attributeClass=" + attributeClass);
+	LOG.debug("readAttribute: attributeClass=" + attributeClass);
 	Id idAnnotation = field.getAnnotation(Id.class);
 	Enumerated enumerated = field.getAnnotation(Enumerated.class);
-	LOG.info("readAttribute: enumerated=" + enumerated);
+	LOG.debug("readAttribute: enumerated=" + enumerated);
 	Integer sqlType = findSqlType(attributeClass, enumerated);
-	LOG.info("readAttribute: sqlType=" + sqlType);
+	LOG.debug("readAttribute: sqlType=" + sqlType);
 	Class<?> readWriteType = dbConfiguration.getDbTypeMapper().map(attributeClass, sqlType);
 	JdbcAttributeMapper jdbcAttributeMapper = findJdbcAttributeMapper(attributeClass, sqlType);
 	if (idAnnotation != null) {
 	    MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
 		    .withType(attributeClass).withReadWriteDbType(readWriteType).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
 		    .withReadMethod(readMethod).withWriteMethod(writeMethod).isId(true).withSqlType(sqlType)
-		    .withJavaMember(field);
+		    .withJavaMember(field).isBasic(true);
 
 	    PkGeneration gv = buildPkGeneration(field);
 	    builder.withPkGeneration(gv).withJdbcAttributeMapper(jdbcAttributeMapper);
@@ -282,13 +288,16 @@ public class Parser {
 	if (isCollection)
 	    collectionImplementationClass = CollectionUtils.findCollectionImplementationClass(attributeClass);
 
+	boolean version = field.getAnnotation(Version.class) != null;
+
 	MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
 		.withType(attributeClass).withReadWriteDbType(readWriteType).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
 		.withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id).withSqlType(sqlType)
 		.isEmbedded(embedded).isCollection(isCollection)
 		.withJavaMember(field).withJdbcAttributeMapper(jdbcAttributeMapper).
 		withCollectionImplementationClass(collectionImplementationClass).
-		withEmbeddableMetaEntity(embeddableEntity);
+		withEmbeddableMetaEntity(embeddableEntity).isVersion(version).
+		isBasic(AttributeUtil.isBasicAttribute(attributeClass));
 	if (id)
 	    builder.withPkGeneration(new PkGeneration());
 
@@ -327,7 +336,7 @@ public class Parser {
 	}
 
 	MetaAttribute attribute = builder.build();
-	LOG.info("readAttribute: attribute: " + attribute);
+	LOG.debug("readAttribute: attribute: " + attribute);
 	return attribute;
     }
 
@@ -393,7 +402,7 @@ public class Parser {
     private void finalizeRelationships(MetaEntity entity, Map<String, MetaEntity> entities,
 	    List<MetaAttribute> attributes) {
 	for (MetaAttribute a : attributes) {
-	    LOG.info("finalizeRelationships: a=" + a);
+	    LOG.debug("finalizeRelationships: a=" + a);
 	    if (a.isEmbedded()) {
 		finalizeRelationships(entity, entities, a.getEmbeddableMetaEntity().getAttributes());
 		return;
@@ -405,7 +414,7 @@ public class Parser {
 
 	    if (relationship instanceof OneToOneRelationship) {
 		MetaEntity toEntity = entities.get(a.getType().getName());
-		LOG.info("finalizeRelationships: OneToOne toEntity=" + toEntity);
+		LOG.debug("finalizeRelationships: OneToOne toEntity=" + toEntity);
 		if (toEntity == null)
 		    throw new IllegalArgumentException("One to One entity not found (" + a.getType().getName() + ")");
 
@@ -413,7 +422,7 @@ public class Parser {
 		a.setRelationship(oneToOneHelper.finalizeRelationship(oneToOne, a, entity, toEntity, dbConfiguration));
 	    } else if (relationship instanceof ManyToOneRelationship) {
 		MetaEntity toEntity = entities.get(a.getType().getName());
-		LOG.info("finalizeRelationships: ManyToOne toEntity=" + toEntity);
+		LOG.debug("finalizeRelationships: ManyToOne toEntity=" + toEntity);
 		if (toEntity == null)
 		    throw new IllegalArgumentException("Many to One entity not found (" + a.getType().getName() + ")");
 
@@ -421,7 +430,7 @@ public class Parser {
 		a.setRelationship(manyToOneHelper.finalizeRelationship(manyToOne, a, entity, toEntity, dbConfiguration));
 	    } else if (relationship instanceof OneToManyRelationship) {
 		MetaEntity toEntity = entities.get(relationship.getTargetEntityClass().getName());
-		LOG.info("finalizeRelationships: OneToMany toEntity=" + toEntity + "; a.getType().getName()="
+		LOG.debug("finalizeRelationships: OneToMany toEntity=" + toEntity + "; a.getType().getName()="
 			+ a.getType().getName());
 		if (toEntity == null)
 		    throw new IllegalArgumentException("One to Many target entity not found ("
@@ -432,7 +441,7 @@ public class Parser {
 		a.setRelationship(otm);
 	    } else if (relationship instanceof ManyToManyRelationship) {
 		MetaEntity toEntity = entities.get(relationship.getTargetEntityClass().getName());
-		LOG.info("finalizeRelationships: ManyToMany toEntity=" + toEntity + "; a.getType().getName()="
+		LOG.debug("finalizeRelationships: ManyToMany toEntity=" + toEntity + "; a.getType().getName()="
 			+ a.getType().getName());
 		if (toEntity == null)
 		    throw new IllegalArgumentException("Many to Many target entity not found ("
@@ -465,9 +474,9 @@ public class Parser {
 	    List<MetaAttribute> attributes = entity.getAttributes();
 	    for (int i = 0; i < attributes.size(); ++i) {
 		MetaAttribute a = attributes.get(i);
-		LOG.info("printAttributes: a=" + a);
+		LOG.debug("printAttributes: a=" + a);
 		if (a.getRelationship() != null)
-		    LOG.info("printAttributes: a.getRelationship()=" + a.getRelationship());
+		    LOG.debug("printAttributes: a.getRelationship()=" + a.getRelationship());
 	    }
 	}
     }

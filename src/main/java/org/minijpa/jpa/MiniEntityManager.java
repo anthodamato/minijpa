@@ -8,6 +8,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
+import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -20,6 +21,7 @@ import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitInfo;
 import org.minijpa.jdbc.ConnectionHolderImpl;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jpa.db.ConnectionProviderImpl;
 
 import org.minijpa.jdbc.MetaEntity;
@@ -28,6 +30,7 @@ import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.JdbcEntityManagerImpl;
+import org.minijpa.jpa.db.LockTypeUtils;
 import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.EntityDelegateInstanceBuilder;
@@ -78,6 +81,9 @@ public class MiniEntityManager extends AbstractEntityManager {
 //	    LOG.error(ex.getClass().getName());
 //	    LOG.error(ex.getMessage());
 	    entityTransaction.setRollbackOnly();
+	    if (ex instanceof OptimisticLockException)
+		throw (OptimisticLockException) ex;
+
 	    throw new PersistenceException(ex.getMessage());
 	}
     }
@@ -133,7 +139,7 @@ public class MiniEntityManager extends AbstractEntityManager {
     public <T> T find(Class<T> entityClass, Object primaryKey) {
 	LOG.info("find: primaryKey=" + primaryKey);
 	try {
-	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
+	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
 	    if (entityObject == null)
 		return null;
 
@@ -150,7 +156,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	LOG.info("find: this=" + this);
 	LOG.info("find: primaryKey=" + primaryKey);
 	try {
-	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
+	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
 	    if (entityObject == null)
 		return null;
 
@@ -166,7 +172,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 	LOG.info("find: this=" + this);
 	LOG.info("find: primaryKey=" + primaryKey);
 	try {
-	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
+	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
+		    LockTypeUtils.toLockType(lockMode));
 	    if (entityObject == null)
 		return null;
 
@@ -182,7 +189,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 	LOG.info("find: this=" + this);
 	LOG.info("find: primaryKey=" + primaryKey);
 	try {
-	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey);
+	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
+		    LockTypeUtils.toLockType(lockMode));
 	    if (entityObject == null)
 		return null;
 
@@ -205,6 +213,9 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    jdbcEntityManager.flush();
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
+	    if (e instanceof OptimisticLockException)
+		throw (OptimisticLockException) e;
+
 	    throw new PersistenceException(e.getMessage());
 	}
     }
@@ -234,7 +245,7 @@ public class MiniEntityManager extends AbstractEntityManager {
     @Override
     public void refresh(Object entity) {
 	try {
-	    jdbcEntityManager.refresh(entity);
+	    jdbcEntityManager.refresh(entity, LockType.NONE);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
 	    if (e instanceof PersistenceException)
@@ -247,7 +258,7 @@ public class MiniEntityManager extends AbstractEntityManager {
     @Override
     public void refresh(Object entity, Map<String, Object> properties) {
 	try {
-	    jdbcEntityManager.refresh(entity);
+	    jdbcEntityManager.refresh(entity, LockType.NONE);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
 	    if (e instanceof PersistenceException)

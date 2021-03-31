@@ -18,6 +18,16 @@
  */
 package org.minijpa.jdbc;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 
@@ -173,4 +183,109 @@ public class AttributeUtil {
 
 	return last;
     }
+
+    public static boolean isBasicAttribute(Class<?> c) {
+	if (c == String.class)
+	    return true;
+
+	if (c == Long.class)
+	    return true;
+
+	if (c == BigInteger.class)
+	    return true;
+
+	if (c == Boolean.class)
+	    return true;
+
+	if (c == Character.class)
+	    return true;
+
+	if (c == BigDecimal.class)
+	    return true;
+
+	if (c == Double.class)
+	    return true;
+
+	if (c == Float.class)
+	    return true;
+
+	if (c == Integer.class)
+	    return true;
+
+	if (c == Date.class)
+	    return true;
+
+	if (c == LocalDate.class)
+	    return true;
+
+	if (c == LocalDateTime.class)
+	    return true;
+
+	if (c == OffsetDateTime.class)
+	    return true;
+
+	if (c == OffsetTime.class)
+	    return true;
+
+	if (c == Calendar.class)
+	    return true;
+
+	if (c == Timestamp.class)
+	    return true;
+
+	if (c == LocalTime.class)
+	    return true;
+
+	if (c.isPrimitive()) {
+	    if (c.getName().equals("byte"))
+		return true;
+
+	    if (c.getName().equals("short"))
+		return true;
+
+	    if (c.getName().equals("int"))
+		return true;
+
+	    if (c.getName().equals("long"))
+		return true;
+
+	    if (c.getName().equals("float"))
+		return true;
+
+	    if (c.getName().equals("double"))
+		return true;
+
+	    if (c.getName().equals("boolean"))
+		return true;
+
+	    if (c.getName().equals("char"))
+		return true;
+	}
+
+	return false;
+    }
+
+    public static Object increaseVersionValue(MetaEntity metaEntity, Object currentValue) throws Exception {
+	if (!metaEntity.hasVersionAttribute())
+	    return null;
+
+	MetaAttribute attribute = metaEntity.getVersionAttribute().get();
+	Class<?> type = attribute.getType();
+	if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int"))) {
+	    Integer v = (Integer) currentValue;
+	    return v + 1;
+	} else if (type == Short.class || (type.isPrimitive() && type.getName().equals("short"))) {
+	    Short v = (Short) currentValue;
+	    return v + 1;
+	} else if (type == Long.class || (type.isPrimitive() && type.getName().equals("long"))) {
+	    Long v = (Long) currentValue;
+	    return v + 1;
+	} else if (type == Timestamp.class) {
+	    Timestamp v = (Timestamp) currentValue;
+	    return new Timestamp(v.getTime() + 100);
+	}
+
+	return null;
+    }
+
 }

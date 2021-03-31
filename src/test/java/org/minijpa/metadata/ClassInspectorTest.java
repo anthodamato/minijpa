@@ -48,6 +48,7 @@ public class ClassInspectorTest {
 	assertEquals(className, managedData.getCtClass().getName());
 	assertEquals(ManagedData.ENTITY, managedData.getType());
 	assertEquals("mds0", managedData.getModificationAttribute());
+	assertEquals("lta0", managedData.getLockTypeAttribute().get());
 
 	List<AttributeData> attributeDatas = managedData.getAttributeDataList();
 	assertNotNull(attributeDatas);

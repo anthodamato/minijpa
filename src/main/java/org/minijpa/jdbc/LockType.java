@@ -20,18 +20,13 @@ package org.minijpa.jdbc;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface EntityLoader {
-
-    public Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType) throws Exception;
-
-    public Object findByIdNo1StLevelCache(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception;
-
-    public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType) throws Exception;
-
-    public Object build(QueryResultValues queryResultValues, MetaEntity entity, LockType lockType) throws Exception;
-
-    public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value) throws Exception;
-
+public enum LockType {
+    NONE,
+    OPTIMISTIC,
+    OPTIMISTIC_FORCE_INCREMENT,
+    PESSIMISTIC_READ,
+    PESSIMISTIC_WRITE,
+    PESSIMISTIC_FORCE_INCREMENT;
 }

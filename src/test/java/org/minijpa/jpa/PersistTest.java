@@ -162,7 +162,7 @@ public class PersistTest {
 	Assertions.assertEquals(Citizen.class, entityType.getBindableJavaType());
 
 	List<String> names = MetamodelUtils.getAttributeNames(entityType);
-	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList("id", "name", "lastName"), names));
+	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList("id", "name", "lastName", "version"), names));
 
 	MetamodelUtils.checkAttribute(entityType.getAttribute("name"), "name", String.class,
 		PersistentAttributeType.BASIC, false, false);

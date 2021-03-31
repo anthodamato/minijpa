@@ -16,22 +16,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.minijpa.jdbc;
+package org.minijpa.jpa.db;
+
+import javax.persistence.LockModeType;
+import org.minijpa.jdbc.LockType;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface EntityLoader {
+public class LockTypeUtils {
 
-    public Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType) throws Exception;
+    public static LockType toLockType(LockModeType lockModeType) {
+	if (lockModeType == null)
+	    return LockType.NONE;
 
-    public Object findByIdNo1StLevelCache(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception;
-
-    public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType) throws Exception;
-
-    public Object build(QueryResultValues queryResultValues, MetaEntity entity, LockType lockType) throws Exception;
-
-    public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value) throws Exception;
-
+	switch (lockModeType) {
+	    case OPTIMISTIC:
+	    case READ:
+		return LockType.OPTIMISTIC;
+	    case OPTIMISTIC_FORCE_INCREMENT:
+	    case WRITE:
+		return LockType.OPTIMISTIC;
+	    case PESSIMISTIC_READ:
+		return LockType.PESSIMISTIC_READ;
+	    case PESSIMISTIC_WRITE:
+		return LockType.PESSIMISTIC_WRITE;
+	    case PESSIMISTIC_FORCE_INCREMENT:
+		return LockType.PESSIMISTIC_FORCE_INCREMENT;
+	    default:
+		return LockType.NONE;
+	}
+    }
 }

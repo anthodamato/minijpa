@@ -43,6 +43,10 @@ public class MetaAttribute extends AbstractAttribute {
     private List<MetaAttribute> expandedAttributeList;
     private boolean nullable = true;
     private MetaEntity embeddableMetaEntity;
+    // it'a a version attribute
+    private boolean version = false;
+    // it's a basic attribute
+    private boolean basic;
 
     public String getName() {
 	return name;
@@ -90,6 +94,22 @@ public class MetaAttribute extends AbstractAttribute {
 
     public MetaEntity getEmbeddableMetaEntity() {
 	return embeddableMetaEntity;
+    }
+
+    public boolean isVersion() {
+	return version;
+    }
+
+    public void setVersion(boolean version) {
+	this.version = version;
+    }
+
+    public boolean isBasic() {
+	return basic;
+    }
+
+    public void setBasic(boolean basic) {
+	this.basic = basic;
     }
 
 //    protected boolean expandRelationship() {
@@ -154,6 +174,8 @@ public class MetaAttribute extends AbstractAttribute {
 	private Class<?> collectionImplementationClass;
 	private boolean nullable = true;
 	private MetaEntity embeddableMetaEntity;
+	private boolean version = false;
+	private boolean basic;
 
 	public Builder(String name) {
 	    super();
@@ -246,6 +268,16 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
+	public Builder isVersion(boolean version) {
+	    this.version = version;
+	    return this;
+	}
+
+	public Builder isBasic(boolean basic) {
+	    this.basic = basic;
+	    return this;
+	}
+
 	public MetaAttribute build() {
 	    MetaAttribute attribute = new MetaAttribute();
 	    attribute.name = name;
@@ -266,6 +298,8 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.collectionImplementationClass = collectionImplementationClass;
 	    attribute.nullable = nullable;
 	    attribute.embeddableMetaEntity = embeddableMetaEntity;
+	    attribute.version = version;
+	    attribute.basic = basic;
 	    return attribute;
 	}
     }

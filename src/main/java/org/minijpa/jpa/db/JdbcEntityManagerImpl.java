@@ -1,6 +1,8 @@
 package org.minijpa.jpa.db;
 
-import java.util.ArrayList;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.persistence.OptimisticLockException;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -16,12 +19,12 @@ import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.minijpa.jdbc.AttributeUtil;
-import org.minijpa.jdbc.AttributeValue;
 import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.JoinColumnAttribute;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkStrategy;
@@ -81,7 +84,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	return entityLoader;
     }
 
-    public Object findById(Class<?> entityClass, Object primaryKey) throws Exception {
+    public Object findById(Class<?> entityClass, Object primaryKey, LockType lockType) throws Exception {
 	LOG.info("findById: primaryKey=" + primaryKey);
 
 	MetaEntity entity = entities.get(entityClass.getName());
@@ -89,10 +92,10 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
 	LOG.info("findById: entity=" + entity);
-	return entityLoader.findById(entity, primaryKey);
+	return entityLoader.findById(entity, primaryKey, lockType);
     }
 
-    public void refresh(Object entityInstance) throws Exception {
+    public void refresh(Object entityInstance, LockType lockType) throws Exception {
 	Class<?> entityClass = entityInstance.getClass();
 	MetaEntity entity = entities.get(entityClass.getName());
 	if (entity == null)
@@ -102,28 +105,91 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    throw new IllegalArgumentException("Entity '" + entityInstance + "' is not managed");
 
 	Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
-	entityLoader.refresh(entity, entityInstance, primaryKey);
+	entityLoader.refresh(entity, entityInstance, primaryKey, lockType);
     }
 
-    private void persist(MetaEntity entity, Object entityInstance, List<AttributeValue> attrValues,
+    private boolean hasOptimisticLock(MetaEntity entity, Object entityInstance)
+	    throws IllegalAccessException, InvocationTargetException {
+	LockType lockType = (LockType) entity.getLockTypeAttributeReadMethod().get().invoke(entityInstance);
+	if (lockType == LockType.OPTIMISTIC || lockType == LockType.OPTIMISTIC_FORCE_INCREMENT)
+	    return true;
+
+	return entity.getVersionAttribute().isPresent();
+    }
+
+    private void checkOptimisticLock(MetaEntity entity, Object entityInstance, Object idValue)
+	    throws Exception {
+	if (!hasOptimisticLock(entity, entityInstance))
+	    return;
+
+	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+	Object dbEntityInstance = entityLoader.findByIdNo1StLevelCache(entity, idValue, LockType.NONE);
+	Object dbVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(dbEntityInstance);
+	if (dbVersionValue == null || !dbVersionValue.equals(currentVersionValue))
+	    throw new OptimisticLockException("Entity was written by another transaction, version" + dbVersionValue);
+    }
+
+//    private Optional<QueryParameter> generateVersionAttributeParameter(MetaEntity entity, Object entityInstance)
+//	    throws Exception {
+//	LockType lockType = (LockType) entity.getLockTypeAttributeReadMethod().get().invoke(entityInstance);
+//	if (lockType == LockType.NONE || lockType == LockType.PESSIMISTIC_FORCE_INCREMENT
+//		|| lockType == LockType.PESSIMISTIC_READ || lockType == LockType.PESSIMISTIC_WRITE)
+//	    return Optional.empty();
+//	
+//	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+//	Object versionValue = AttributeUtil.increaseVersionValue(entity, currentVersionValue);
+//	List<QueryParameter> parameters = sqlStatementFactory.convertAVToQP(entity.getVersionAttribute().get(),
+//		versionValue);
+//	return Optional.of(parameters.get(0));
+//    }
+    private void updateVersionAttributeValue(MetaEntity entity, Object entityInstance)
+	    throws Exception {
+	if (!hasOptimisticLock(entity, entityInstance))
+	    return;
+
+	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+	Object versionValue = AttributeUtil.increaseVersionValue(entity, currentVersionValue);
+	entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, versionValue);
+    }
+
+    private void createVersionAttributeArrayEntry(MetaEntity entity, Object entityInstance,
+	    AttributeValueArray attributeValueArray) throws Exception {
+	if (!hasOptimisticLock(entity, entityInstance))
+	    return;
+
+	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+	Object versionValue = AttributeUtil.increaseVersionValue(entity, currentVersionValue);
+	attributeValueArray.add(entity.getVersionAttribute().get(), versionValue);
+    }
+
+    private void persist(MetaEntity entity, Object entityInstance,
 	    AttributeValueArray attributeValueArray) throws Exception {
 	if (entityContainer.isFlushedPersist(entityInstance)) {
 	    // It's an update.
-	    if (attrValues.isEmpty())
+	    if (attributeValueArray.isEmpty())
 		return;
 
 	    Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
+	    checkOptimisticLock(entity, entityInstance, idValue);
 	    LOG.info("persist: idValue=" + idValue);
-//	    SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attrValues, idValue);
 	    List<QueryParameter> idParameters = sqlStatementFactory.convertAVToQP(entity.getId(), idValue);
 	    List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+	    createVersionAttributeArrayEntry(entity, entityInstance, attributeValueArray);
 	    SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attributeValueArray.getAttributes(),
 		    idColumns);
 	    attributeValueArray.add(entity.getId(), idValue);
 	    List<QueryParameter> parameters = sqlStatementFactory.convertAVToQP(attributeValueArray);
+//	    Optional<QueryParameter> versionParameter = generateVersionAttributeParameter(entity, entityInstance);
+//	    if (versionParameter.isPresent())
+//		parameters.add(versionParameter.get());
 
 	    String sql = sqlStatementGenerator.export(sqlUpdate);
 	    jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
+	    updateVersionAttributeValue(entity, entityInstance);
+//	    if (versionParameter.isPresent()) {
+//		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, versionParameter.get().getValue());
+//	    }
+
 	    return;
 	}
 
@@ -137,7 +203,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 //	    if (a.getRelationship() != null)
 //		LOG.info("persist: a.getRelationship().getJoinTable()=" + a.getRelationship().getJoinTable());
 
-	    if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner()) {
+	    if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null
+		    && a.getRelationship().isOwner()) {
 		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
 //		LOG.info("persist: attributeInstance=" + attributeInstance);
 //		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
@@ -153,7 +220,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
 //	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
 	if (pkStrategy == PkStrategy.IDENTITY) {
-	    List<QueryParameter> parameters = sqlStatementFactory.queryParametersFromAV(attrValues);
+	    List<QueryParameter> parameters = sqlStatementFactory.convertAVToQP(attributeValueArray);
+	    // version attribute
+	    Optional<QueryParameter> optVersion = generateVersionParameter(entity);
+	    if (optVersion.isPresent())
+		parameters.add(optVersion.get());
+
 	    List<String> columns = parameters.stream().map(p -> {
 		return p.getColumnName();
 	    }).collect(Collectors.toList());
@@ -163,13 +235,19 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
 //	    LOG.info("persist: pk=" + pk);
 	    entity.getId().getWriteMethod().invoke(entityInstance, pk);
+	    if (optVersion.isPresent()) {
+		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
+	    }
 	} else {
 	    Object idValue = id.getReadMethod().invoke(entityInstance);
-	    List<AttributeValue> attrValuesWithId = new ArrayList<>();
-	    AttributeValue attrValueId = new AttributeValue(id, idValue);
-	    attrValuesWithId.add(attrValueId);
-	    attrValuesWithId.addAll(attrValues);
-	    List<QueryParameter> parameters = sqlStatementFactory.queryParametersFromAV(attrValuesWithId);
+	    List<QueryParameter> idParameters = sqlStatementFactory.convertAVToQP(id, idValue);
+	    List<QueryParameter> parameters = sqlStatementFactory.convertAVToQP(attributeValueArray);
+	    parameters.addAll(0, idParameters);
+	    // version attribute
+	    Optional<QueryParameter> optVersion = generateVersionParameter(entity);
+	    if (optVersion.isPresent())
+		parameters.add(optVersion.get());
+
 	    List<String> columns = parameters.stream().map(p -> {
 		return p.getColumnName();
 	    }).collect(Collectors.toList());
@@ -178,6 +256,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    String sql = sqlStatementGenerator.export(sqlInsert);
 	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
 //	    LOG.info("persist: pk=" + pk);
+	    if (optVersion.isPresent()) {
+		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
+	    }
 	}
 
 	// persist join table attributes
@@ -191,6 +272,27 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		// add to pending new attributes
 		entityContainer.addToPendingNewAttributes(a, entityInstance, ees);
 	}
+    }
+
+    private Optional<QueryParameter> generateVersionParameter(MetaEntity metaEntity) throws Exception {
+	if (!metaEntity.hasVersionAttribute())
+	    return Optional.empty();
+
+	Object value = null;
+	MetaAttribute attribute = metaEntity.getVersionAttribute().get();
+	Class<?> type = attribute.getType();
+	if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int"))) {
+	    value = 0;
+	} else if (type == Short.class || (type.isPrimitive() && type.getName().equals("short"))) {
+	    value = Short.valueOf("0");
+	} else if (type == Long.class || (type.isPrimitive() && type.getName().equals("long"))) {
+	    value = 0L;
+	} else if (type == Timestamp.class) {
+	    value = Timestamp.from(Instant.now());
+	}
+
+	List<QueryParameter> parameters = sqlStatementFactory.convertAVToQP(metaEntity.getVersionAttribute().get(), value);
+	return Optional.of(parameters.get(0));
     }
 
     private Object generatePersistentIdentity(MetaEntity entity, Object entityInstance) throws Exception {
@@ -212,7 +314,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     @Override
     public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
-	Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(entity, entityInstance);
 	AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(entity, entityInstance);
 	checkNullableAttributes(entity, entityInstance, attributeValueArray);
 	Object idValue = generatePersistentIdentity(entity, entityInstance);
@@ -225,27 +326,10 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 //	    if (!persistOnDb)
 //		entityContainer.addPendingNew(entityInstance);
 	} else {
-	    persist(entity, entityInstance, optionalAV, attributeValueArray);
+	    persist(entity, entityInstance, attributeValueArray);
 	    entityContainer.addFlushedPersist(entityInstance);
 	    entityInstanceBuilder.removeChanges(entity, entityInstance);
 	}
-    }
-
-    private void persist(MetaEntity entity, Object entityInstance, Optional<List<AttributeValue>> optional,
-	    AttributeValueArray attributeValueArray) throws Exception {
-//	LOG.info("persist: entityInstance=" + entityInstance);
-//	LOG.info("persist: changes=" + optional.isPresent());
-	List<AttributeValue> attributeValues = null;
-	if (optional.isPresent())
-	    attributeValues = optional.get();
-	else
-	    attributeValues = new ArrayList<>();
-
-//	LOG.info("persist: changes.size()=" + attributeValues.size() + "; "
-//		+ attributeValues.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
-//	LOG.info("persist: values.size()=" + attributeValues.size() + "; "
-//		+ attributeValues.stream().map(a -> a.getAttribute().getName()).collect(Collectors.toList()));
-	persist(entity, entityInstance, attributeValues, attributeValueArray);
     }
 
     /**
@@ -280,18 +364,16 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     @Override
     public void flush() throws Exception {
-	LOG.info("Flushing entities...");
+	LOG.debug("Flushing entities...");
 	// makes updates
 	Set<Class<?>> classes = entityContainer.getFlushedPersistClasses();
 	for (Class<?> c : classes) {
 	    Map<Object, Object> map = entityContainer.getFlushedPersistEntities(c);
 	    MetaEntity me = entities.get(c.getName());
 	    for (Map.Entry<Object, Object> entry : map.entrySet()) {
-		Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(me, entry.getValue());
-		if (optional.isPresent()) {
-		    Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(me, entry.getValue());
-		    AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entry.getValue());
-		    persist(me, entry.getValue(), optionalAV, attributeValueArray);
+		AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entry.getValue());
+		if (!attributeValueArray.isEmpty()) {
+		    persist(me, entry.getValue(), attributeValueArray);
 		    entityInstanceBuilder.removeChanges(me, entry.getValue());
 		}
 	    }
@@ -304,9 +386,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    Object idValue = AttributeUtil.getIdValue(me, entityInstance);
 //	    LOG.info("flush: idValue=" + idValue);
 	    if (entityContainer.isNotFlushedPersist(entityInstance)) {
-		Optional<List<AttributeValue>> optionalAV = entityInstanceBuilder.getChanges(me, entityInstance);
 		AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
-		persist(me, entityInstance, optionalAV, attributeValueArray);
+		persist(me, entityInstance, attributeValueArray);
 		entityContainer.addFlushedPersist(entityInstance);
 		entityInstanceBuilder.removeChanges(me, entityInstance);
 		entityContainer.removeNotFlushedPersist(entityInstance, idValue);
@@ -316,7 +397,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    }
 	}
 
-	LOG.info("flush: done");
+	LOG.debug("flush: done");
 
 	// saves pendings
 	savePendings();
@@ -346,14 +427,14 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	return true;
     }
 
-    private boolean persistOnDb(MetaEntity entity, Object entityInstance, List<AttributeValue> changes,
+    private boolean persistOnDb(MetaEntity entity, Object entityInstance,
 	    AttributeValueArray attributeValueArray) throws Exception {
 	boolean persistOnDb = canPersistOnDb(entityInstance);
 	LOG.info("persistOnDb: persistOnDb=" + persistOnDb + "; entityInstance=" + entityInstance);
 	if (!persistOnDb)
 	    return false;
 
-	persist(entity, entityInstance, Optional.of(changes), attributeValueArray);
+	persist(entity, entityInstance, attributeValueArray);
 	entityContainer.addFlushedPersist(entityInstance);
 	entityInstanceBuilder.removeChanges(entity, entityInstance);
 	return true;
@@ -394,14 +475,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	LOG.info("savePendings: list.size()=" + list.size());
 	for (Object entityInstance : list) {
 	    MetaEntity e = entities.get(entityInstance.getClass().getName());
-	    Optional<List<AttributeValue>> optional = entityInstanceBuilder.getChanges(e, entityInstance);
 	    AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(e, entityInstance);
-	    if (!optional.isPresent()) {
+	    if (attributeValueArray.isEmpty()) {
 		entityContainer.removePendingNew(entityInstance);
 		continue;
 	    }
 
-	    boolean stored = persistOnDb(e, entityInstance, optional.get(), attributeValueArray);
+	    boolean stored = persistOnDb(e, entityInstance, attributeValueArray);
 	    if (stored)
 		entityContainer.removePendingNew(entityInstance);
 	}
@@ -439,14 +519,15 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	if (criteriaQuery.getSelection() == null)
 	    throw new IllegalStateException("Selection not defined or not inferable");
 
+	LockType lockType = LockTypeUtils.toLockType(query.getLockMode());
 	StatementParameters statementParameters = sqlStatementFactory.select(query);
 	SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
-	String sql = sqlStatementGenerator.export(sqlSelect);
+	String sql = sqlStatementGenerator.export(sqlSelect, lockType);
 	LOG.info("select: sql=" + sql);
 	if (sqlSelect.getResult() != null) {
 	    Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
 	    jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null, collectionResult,
-		    entityLoader, statementParameters.getParameters());
+		    entityLoader, statementParameters.getParameters(), lockType);
 	    return (List<?>) collectionResult;
 	}
 

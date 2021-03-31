@@ -17,7 +17,7 @@ import org.minijpa.metadata.enhancer.javassist.EntityEnhancer;
 import org.minijpa.metadata.enhancer.javassist.ManagedData;
 
 public class EntityEnhancerTest {
-
+    
     @Test
     public void mappedSuperclassEnhancement() throws Exception {
 	List<ManagedData> inspectedClasses = new ArrayList<>();
@@ -27,34 +27,35 @@ public class EntityEnhancerTest {
 	ManagedData managedData = classInspector.inspect(className, inspectedClasses);
 	Assertions.assertNotNull(managedData);
 	Assertions.assertNotNull(managedData.getModificationAttribute());
-
+	Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
+	
 	EntityEnhancer entityEnhancer = new EntityEnhancer();
 	EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
 	inspectedClasses.add(managedData);
 	parsedEntities.add(enhEntity);
-
+	
 	List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
 	Assertions.assertEquals(4, enhAttributes.size());
 	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
 		Matchers.containsInAnyOrder("prop1", "eS1", "N", "Ns"));
-
+	
 	checkMappedSuperclass(enhEntity);
-
+	
 	className = "org.minijpa.metadata.MappedSuperclassSecondEntity";
 	managedData = classInspector.inspect(className, inspectedClasses);
 	Assertions.assertNotNull(managedData);
 	enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
 	inspectedClasses.add(managedData);
 	parsedEntities.add(enhEntity);
-
+	
 	enhAttributes = enhEntity.getEnhAttributes();
 	Assertions.assertEquals(3, enhAttributes.size());
 	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
 		Matchers.containsInAnyOrder("attribute", "eS", "URL"));
-
+	
 	checkMappedSuperclass(enhEntity);
     }
-
+    
     private void checkMappedSuperclass(EnhEntity enhEntity) {
 	Assertions.assertNotNull(enhEntity.getMappedSuperclass());
 	EnhEntity mappedSuperclass = enhEntity.getMappedSuperclass();

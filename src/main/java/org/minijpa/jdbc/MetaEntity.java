@@ -27,25 +27,28 @@ import java.util.stream.Collectors;
 
 public class MetaEntity {
 
-    private Class<?> entityClass;
-    private String name;
-    private String tableName;
-    private String alias;
-    private MetaAttribute id;
+    private final Class<?> entityClass;
+    private final String name;
+    private final String tableName;
+    private final String alias;
+    private final MetaAttribute id;
     /**
      * Collection of simple, relationship and embeddable attributes.
      */
-    private List<MetaAttribute> attributes;
+    private final List<MetaAttribute> attributes;
     private final List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
     // used to build the metamodel. The 'attributes' field contains the
     // MappedSuperclass attributes
-    private MetaEntity mappedSuperclassEntity;
-    private Method modificationAttributeReadMethod;
-    private Optional<Method> lazyLoadedAttributeReadMethod;
+    private final MetaEntity mappedSuperclassEntity;
+    private final Method modificationAttributeReadMethod;
+    private final Optional<Method> lazyLoadedAttributeReadMethod;
+    private final Optional<Method> lockTypeAttributeReadMethod;
+    private final Optional<Method> lockTypeAttributeWriteMethod;
 
     public MetaEntity(Class<?> entityClass, String name, String tableName, String alias, MetaAttribute id,
 	    List<MetaAttribute> attributes, MetaEntity mappedSuperclassEntity,
-	    Method modificationAttributeReadMethod, Optional<Method> lazyLoadedAttributeReadMethod) {
+	    Method modificationAttributeReadMethod, Optional<Method> lazyLoadedAttributeReadMethod,
+	    Optional<Method> lockTypeAttributeReadMethod, Optional<Method> lockTypeAttributeWriteMethod) {
 	super();
 	this.entityClass = entityClass;
 	this.name = name;
@@ -56,6 +59,8 @@ public class MetaEntity {
 	this.mappedSuperclassEntity = mappedSuperclassEntity;
 	this.modificationAttributeReadMethod = modificationAttributeReadMethod;
 	this.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
+	this.lockTypeAttributeReadMethod = lockTypeAttributeReadMethod;
+	this.lockTypeAttributeWriteMethod = lockTypeAttributeWriteMethod;
     }
 
     public Class<?> getEntityClass() {
@@ -92,6 +97,14 @@ public class MetaEntity {
 
     public Optional<Method> getLazyLoadedAttributeReadMethod() {
 	return lazyLoadedAttributeReadMethod;
+    }
+
+    public Optional<Method> getLockTypeAttributeReadMethod() {
+	return lockTypeAttributeReadMethod;
+    }
+
+    public Optional<Method> getLockTypeAttributeWriteMethod() {
+	return lockTypeAttributeWriteMethod;
     }
 
     public MetaAttribute getAttribute(String name) {
@@ -168,4 +181,11 @@ public class MetaEntity {
 	}
     }
 
+    public boolean hasVersionAttribute() {
+	return attributes.stream().filter(a -> a.isVersion() && a.isBasic() && !a.isId()).findFirst().isPresent();
+    }
+
+    public Optional<MetaAttribute> getVersionAttribute() {
+	return attributes.stream().filter(a -> a.isVersion() && a.isBasic() && !a.isId()).findFirst();
+    }
 }

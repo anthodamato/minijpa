@@ -80,12 +80,6 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
     }
 
     @Override
-    public LockModeType getLockMode() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
     public <T> T unwrap(Class<T> cls) {
 	// TODO Auto-generated method stub
 	return null;
@@ -193,8 +187,8 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 
     @Override
     public TypedQuery<X> setLockMode(LockModeType lockMode) {
-	// TODO Auto-generated method stub
-	return null;
+	super.setLockMode(lockMode);
+	return this;
     }
 
 }

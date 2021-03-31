@@ -9,6 +9,7 @@ import java.util.Collection;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.EntityLoader;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jpa.model.Capital;
 import org.minijpa.jpa.model.Fingerprint;
@@ -55,7 +56,7 @@ public class QueryLevelTest {
 	entityContainer.detach(e1);
 	entityContainer.detach(programManager);
 
-	Object entityInstance = entityLoader.findById(metaEntityJE, 1);
+	Object entityInstance = entityLoader.findById(metaEntityJE, 1, LockType.NONE);
 	Assertions.assertNotNull(entityInstance);
 	Assertions.assertTrue(entityInstance instanceof JobEmployee);
 
@@ -102,7 +103,7 @@ public class QueryLevelTest {
 	entityContainer.detach(capital);
 	entityContainer.detach(state);
 
-	State s = (State) entityLoader.findById(metaEntityState, state.getId());
+	State s = (State) entityLoader.findById(metaEntityState, state.getId(), LockType.NONE);
 
 	Assertions.assertFalse(s == state);
 	Assertions.assertEquals("England", state.getName());
@@ -140,7 +141,7 @@ public class QueryLevelTest {
 
 	entityContainer.detach(person);
 
-	Person p = (Person) entityLoader.findById(metaEntityPerson, person.getId());
+	Person p = (Person) entityLoader.findById(metaEntityPerson, person.getId(), LockType.NONE);
 
 	Assertions.assertNotNull(p);
 	Assertions.assertFalse(p == person);

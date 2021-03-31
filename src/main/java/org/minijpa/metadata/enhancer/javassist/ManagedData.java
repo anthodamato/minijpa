@@ -20,6 +20,8 @@ public class ManagedData {
     private final List<BMTMethodInfo> methodInfos = new ArrayList<>();
     private String modificationAttribute;
     private Optional<String> lazyLoadedAttribute = Optional.empty();
+    // the lock type attribute is created only in entity classes, neither mapped superclass or embedded
+    private Optional<String> lockTypeAttribute = Optional.empty();
 
     public ManagedData() {
 	super();
@@ -80,6 +82,14 @@ public class ManagedData {
 
     public void setLazyLoadedAttribute(Optional<String> lazyLoadedAttribute) {
 	this.lazyLoadedAttribute = lazyLoadedAttribute;
+    }
+
+    public Optional<String> getLockTypeAttribute() {
+	return lockTypeAttribute;
+    }
+
+    public void setLockTypeAttribute(Optional<String> lockTypeAttribute) {
+	this.lockTypeAttribute = lockTypeAttribute;
     }
 
     public Optional<AttributeData> findAttribute(String name) {

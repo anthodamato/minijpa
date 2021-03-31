@@ -13,12 +13,14 @@ import org.minijpa.jdbc.AbstractAttributeValue;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.ColumnNameValue;
 import org.minijpa.jdbc.ColumnNameValueUtil;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.QueryResultValues;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
+import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.relationship.FetchType;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.slf4j.Logger;
@@ -52,7 +54,7 @@ public class EntityLoaderImpl implements EntityLoader {
     }
 
     @Override
-    public Object findById(MetaEntity metaEntity, Object primaryKey) throws Exception {
+    public Object findById(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception {
 	Object entityInstance = entityContainer.find(metaEntity.getEntityClass(), primaryKey);
 	if (entityInstance != null)
 	    return entityInstance;
@@ -60,8 +62,8 @@ public class EntityLoaderImpl implements EntityLoader {
 	if (entityContainer.isNotFlushedRemove(metaEntity.getEntityClass(), primaryKey))
 	    return null;
 
-	entityQueryLevel.createQuery(metaEntity);
-	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey);
+	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity);
+	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect, lockType);
 	if (queryResultValues == null)
 	    return null;
 
@@ -69,7 +71,7 @@ public class EntityLoaderImpl implements EntityLoader {
 
 	List<ColumnNameValue> columnNameValues = ColumnNameValueUtil.createRelationshipAttrsList(
 		queryResultValues.relationshipAttributes, queryResultValues.relationshipValues);
-	loadRelationships(entityInstance, metaEntity, columnNameValues);
+	loadRelationships(entityInstance, metaEntity, columnNameValues, lockType);
 	entityContainer.addFlushedPersist(entityInstance, primaryKey);
 	entityContainer.setLoadedFromDb(entityInstance);
 	fillCircularRelationships(metaEntity, entityInstance);
@@ -77,9 +79,20 @@ public class EntityLoaderImpl implements EntityLoader {
     }
 
     @Override
-    public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey) throws Exception {
-	entityQueryLevel.createQuery(metaEntity);
-	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey);
+    public Object findByIdNo1StLevelCache(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception {
+	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity);
+	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect, lockType);
+	if (queryResultValues == null)
+	    return null;
+
+	Object entityInstance = entityQueryLevel.build(queryResultValues, metaEntity, primaryKey);
+	return entityInstance;
+    }
+
+    @Override
+    public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType) throws Exception {
+	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity);
+	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect, lockType);
 	if (queryResultValues == null)
 	    throw new EntityNotFoundException("Entity '" + entityInstance + "' not found: pk=" + primaryKey);
 
@@ -87,7 +100,7 @@ public class EntityLoaderImpl implements EntityLoader {
 
 	List<ColumnNameValue> columnNameValues = ColumnNameValueUtil.createRelationshipAttrsList(
 		queryResultValues.relationshipAttributes, queryResultValues.relationshipValues);
-	loadRelationships(entityInstance, metaEntity, columnNameValues);
+	loadRelationships(entityInstance, metaEntity, columnNameValues, lockType);
 	entityContainer.addFlushedPersist(entityInstance, primaryKey);
 	entityContainer.setLoadedFromDb(entityInstance);
 	fillCircularRelationships(metaEntity, entityInstance);
@@ -126,7 +139,7 @@ public class EntityLoaderImpl implements EntityLoader {
     }
 
     @Override
-    public Object build(QueryResultValues queryResultValues, MetaEntity entity) throws Exception {
+    public Object build(QueryResultValues queryResultValues, MetaEntity entity, LockType lockType) throws Exception {
 	Object primaryKey = AttributeUtil.createPK(entity, queryResultValues);
 	Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
 	if (entityInstance != null) {
@@ -136,11 +149,12 @@ public class EntityLoaderImpl implements EntityLoader {
 
 	List<ColumnNameValue> columnNameValues = ColumnNameValueUtil.createRelationshipAttrsList(
 		queryResultValues.relationshipAttributes, queryResultValues.relationshipValues);
-	loadRelationships(entityInstance, entity, columnNameValues);
+	loadRelationships(entityInstance, entity, columnNameValues, lockType);
 	return entityInstance;
     }
 
-    private void loadRelationships(Object parentInstance, MetaEntity entity, List<ColumnNameValue> columnNameValues) throws Exception {
+    private void loadRelationships(Object parentInstance, MetaEntity entity,
+	    List<ColumnNameValue> columnNameValues, LockType lockType) throws Exception {
 	// foreign key on the same table
 	LOG.info("loadRelationships: parentInstance=" + parentInstance);
 	for (ColumnNameValue c : columnNameValues) {
@@ -156,7 +170,7 @@ public class EntityLoaderImpl implements EntityLoader {
 		continue;
 	    }
 
-	    loadRelationshipByForeignKey(parentInstance, entity, c.getForeignKeyAttribute(), c.getValue());
+	    loadRelationshipByForeignKey(parentInstance, entity, c.getForeignKeyAttribute(), c.getValue(), lockType);
 	}
 
 	LOG.info("loadRelationships: entity.getRelationshipAttributes()=" + entity.getRelationshipAttributes());
@@ -175,19 +189,19 @@ public class EntityLoaderImpl implements EntityLoader {
 			entity.getId(), a.getRelationship());
 		joinTableCollectionQueryLevel.createQuery(e, pk, entity.getId(), a.getRelationship(), attributeValues);
 		List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
-		Object result = joinTableCollectionQueryLevel.run(this, a, parameters);
+		Object result = joinTableCollectionQueryLevel.run(this, a, parameters, lockType);
 		entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, result, entity);
 	    }
 	}
     }
 
     private Object loadRelationshipByForeignKey(Object parentInstance, MetaEntity entity,
-	    MetaAttribute foreignKeyAttribute, Object foreignKeyValue) throws Exception {
+	    MetaAttribute foreignKeyAttribute, Object foreignKeyValue, LockType lockType) throws Exception {
 	// foreign key on the same table
 	LOG.info("loadRelationshipByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute + "; foreignKeyValue=" + foreignKeyValue);
 	MetaEntity e = entities.get(foreignKeyAttribute.getType().getName());
 	LOG.info("loadRelationshipByForeignKey: e=" + e);
-	Object foreignKeyInstance = findById(e, foreignKeyValue);
+	Object foreignKeyInstance = findById(e, foreignKeyValue, lockType);
 	LOG.info("loadRelationshipByForeignKey: foreignKeyInstance=" + foreignKeyInstance);
 	if (foreignKeyInstance != null) {
 //	    entityContainer.addFlushedPersist(foreignKeyInstance, foreignKeyValue);
@@ -221,7 +235,7 @@ public class EntityLoaderImpl implements EntityLoader {
 	    MetaEntity entity = entities.get(parentInstance.getClass().getName());
 	    Object foreignKey = entityContainer.getForeignKeyValue(parentInstance, a);
 	    LOG.info("loadAttribute: foreignKey=" + foreignKey);
-	    Object result = loadRelationshipByForeignKey(parentInstance, entity, a, foreignKey);
+	    Object result = loadRelationshipByForeignKey(parentInstance, entity, a, foreignKey, LockType.NONE);
 	    entityContainer.removeForeignKey(parentInstance, a);
 	    return result;
 	}
@@ -238,7 +252,7 @@ public class EntityLoaderImpl implements EntityLoader {
 	    List<QueryParameter> parameters = foreignKeyCollectionQueryLevel.createParameters(parentInstance,
 		    relationship.getOwningAttribute());
 	    foreignKeyCollectionQueryLevel.createQuery(entity, relationship.getOwningAttribute(), parameters);
-	    return foreignKeyCollectionQueryLevel.run(this, a, parameters);
+	    return foreignKeyCollectionQueryLevel.run(this, a, parameters, LockType.NONE);
 	}
 
 	MetaEntity entity = relationship.getAttributeType();
@@ -250,6 +264,6 @@ public class EntityLoaderImpl implements EntityLoader {
 	LOG.info("loadAttribute: attributeValues=" + attributeValues);
 	joinTableCollectionQueryLevel.createQuery(entity, pk, e.getId(), relationship, attributeValues);
 	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
-	return joinTableCollectionQueryLevel.run(this, a, parameters);
+	return joinTableCollectionQueryLevel.run(this, a, parameters, LockType.NONE);
     }
 }

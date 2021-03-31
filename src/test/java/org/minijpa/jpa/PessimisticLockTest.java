@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.minijpa.jpa.model.StoreItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public class PessimisticLockTest {
 	emf.close();
     }
 
+    @Disabled
     @Test
     public void pessimisticLock() throws Exception {
 	final EntityManager em = emf.createEntityManager();

@@ -2,13 +2,11 @@ package org.minijpa.metadata;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.minijpa.jdbc.AttributeValue;
 import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
@@ -99,41 +97,6 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	}
 
 	return null;
-    }
-
-    private List<AttributeValue> unpackEmbedded(MetaAttribute metaAttribute, Object value)
-	    throws IllegalAccessException, InvocationTargetException {
-	List<AttributeValue> attrValues = new ArrayList<>();
-	Optional<Map<String, Object>> optional = getEntityModifications(metaAttribute.getEmbeddableMetaEntity(), value);
-	if (optional.isEmpty())
-	    return attrValues;
-
-	for (Map.Entry<String, Object> e : optional.get().entrySet()) {
-	    MetaAttribute a = metaAttribute.getEmbeddableMetaEntity().getAttribute(e.getKey());
-	    attrValues.add(new AttributeValue(a, e.getValue()));
-	    if (a.isEmbedded())
-		attrValues.addAll(unpackEmbedded(a, e.getValue()));
-	}
-
-	return attrValues;
-    }
-
-    @Override
-    public Optional<List<AttributeValue>> getChanges(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
-	Optional<Map<String, Object>> optional = getEntityModifications(entity, entityInstance);
-	if (optional.isEmpty())
-	    return Optional.empty();
-
-	List<AttributeValue> attributeValues = new ArrayList<>();
-	for (Map.Entry<String, Object> e : optional.get().entrySet()) {
-	    MetaAttribute metaAttribute = entity.getAttribute(e.getKey());
-	    if (metaAttribute.isEmbedded()) {
-		attributeValues.addAll(unpackEmbedded(metaAttribute, e.getValue()));
-	    } else
-		attributeValues.add(new AttributeValue(metaAttribute, e.getValue()));
-	}
-
-	return Optional.of(attributeValues);
     }
 
     @Override

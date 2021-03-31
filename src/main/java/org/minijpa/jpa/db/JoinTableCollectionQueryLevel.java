@@ -12,6 +12,7 @@ import org.minijpa.jdbc.AbstractAttributeValue;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
@@ -76,12 +77,13 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 	return sqlSelect;
     }
 
-    public Object run(EntityLoader entityLoader, MetaAttribute metaAttribute, List<QueryParameter> parameters) throws Exception {
-	String sql = sqlStatementGenerator.export(sqlSelect);
+    public Object run(EntityLoader entityLoader, MetaAttribute metaAttribute,
+	    List<QueryParameter> parameters, LockType lockType) throws Exception {
+	String sql = sqlStatementGenerator.export(sqlSelect, lockType);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 		metaAttribute.getCollectionImplementationClass());
 	jdbcRunner.findCollection(connectionHolder.getConnection(), sql,
-		sqlSelect, null, null, collectionResult, entityLoader, parameters);
+		sqlSelect, null, null, collectionResult, entityLoader, parameters, lockType);
 	return collectionResult;
     }
 

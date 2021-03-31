@@ -30,6 +30,8 @@ public class EnhEntity {
     private EnhEntity mappedSuperclass;
     private String modificationAttributeGetMethod;
     private Optional<String> lazyLoadedAttributeGetMethod = Optional.empty();
+    private Optional<String> lockTypeAttributeGetMethod = Optional.empty();
+    private Optional<String> lockTypeAttributeSetMethod = Optional.empty();
 
     public String getClassName() {
 	return className;
@@ -69,6 +71,22 @@ public class EnhEntity {
 
     public void setLazyLoadedAttributeGetMethod(Optional<String> lazyLoadedAttributeGetMethod) {
 	this.lazyLoadedAttributeGetMethod = lazyLoadedAttributeGetMethod;
+    }
+
+    public Optional<String> getLockTypeAttributeGetMethod() {
+	return lockTypeAttributeGetMethod;
+    }
+
+    public void setLockTypeAttributeGetMethod(Optional<String> lockTypeAttributeGetMethod) {
+	this.lockTypeAttributeGetMethod = lockTypeAttributeGetMethod;
+    }
+
+    public Optional<String> getLockTypeAttributeSetMethod() {
+	return lockTypeAttributeSetMethod;
+    }
+
+    public void setLockTypeAttributeSetMethod(Optional<String> lockTypeAttributeSetMethod) {
+	this.lockTypeAttributeSetMethod = lockTypeAttributeSetMethod;
     }
 
     public void findEmbeddables(Set<EnhEntity> embeddables) {

@@ -56,6 +56,7 @@ public class EntityEnhancer {
 	    if (toEnhance(managedData)) {
 		LOG.debug("Enhancing " + ct.getName());
 		addEntityDelegateField(ct);
+		// modification field
 		addModificationField(ct, managedData.getModificationAttribute());
 		CtMethod ctMethod = createGetMethod(ct, managedData.getModificationAttribute(), "java.util.List");
 		enhEntity.setModificationAttributeGetMethod(ctMethod.getName());
@@ -64,6 +65,16 @@ public class EntityEnhancer {
 		    addLazyLoadedField(ct, managedData.getLazyLoadedAttribute().get());
 		    ctMethod = createGetMethod(ct, managedData.getLazyLoadedAttribute().get(), "java.util.List");
 		    enhEntity.setLazyLoadedAttributeGetMethod(Optional.of(ctMethod.getName()));
+		}
+		// lock type field
+		if (managedData.getLockTypeAttribute().isPresent()) {
+		    addLockTypeField(ct, managedData.getLockTypeAttribute().get());
+		    // get method
+		    ctMethod = createGetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
+		    enhEntity.setLockTypeAttributeGetMethod(Optional.of(ctMethod.getName()));
+		    // set method
+		    ctMethod = createSetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
+		    enhEntity.setLockTypeAttributeSetMethod(Optional.of(ctMethod.getName()));
 		}
 
 		modified = true;
@@ -219,6 +230,16 @@ public class EntityEnhancer {
 	LOG.debug("Created '" + ct.getName() + "' Lazy Loaded Field");
     }
 
+    private void addLockTypeField(CtClass ct, String fieldName) throws Exception {
+	if (!canModify(ct))
+	    return;
+
+	String f = "private org.minijpa.jdbc.LockType " + fieldName + " = org.minijpa.jdbc.LockType.NONE;";
+	CtField ctField = CtField.make(f, ct);
+	ct.addField(ctField);
+	LOG.debug("Created '" + ct.getName() + "' Field: " + f);
+    }
+
     private void addEnhancedInterface(CtClass ct) throws Exception {
 	ClassPool pool = ClassPool.getDefault();
 	Class<?> enhancedClass = Enhanced.class;
@@ -264,11 +285,10 @@ public class EntityEnhancer {
 	ctConstructor.insertAfter(mc);
     }
 
-    private String buildSetMethodName(CtField ctField, int counter) {
+    private String buildSetMethodName(String fieldName) {
 	StringBuilder sb = new StringBuilder();
 	sb.append("set");
-	sb.append(BeanUtil.capitalize(ctField.getName()));
-	sb.append(Integer.toString(counter));
+	sb.append(BeanUtil.capitalize(fieldName));
 	return sb.toString();
     }
 
@@ -283,7 +303,7 @@ public class EntityEnhancer {
 	    ManagedData managedData) throws Exception {
 	StringBuilder sb = new StringBuilder();
 	sb.append("public void ");
-	sb.append(buildSetMethodName(ctField, counter));
+	sb.append(buildSetMethodName(ctField.getName() + Integer.toString(counter)));
 	sb.append("(");
 	sb.append(ctField.getType().getName());
 	sb.append(" ");
@@ -305,6 +325,23 @@ public class EntityEnhancer {
 	sb.append(ctField.getName());
 	sb.append("=");
 	sb.append(ctField.getName());
+	sb.append("; }");
+	return sb.toString();
+    }
+
+    private String createSetMethodString(String fieldName, String fieldTypeName) throws Exception {
+	StringBuilder sb = new StringBuilder();
+	sb.append("public void ");
+	sb.append(buildSetMethodName(fieldName));
+	sb.append("(");
+	sb.append(fieldTypeName);
+	sb.append(" ");
+	sb.append(fieldName);
+	sb.append(") {");
+	sb.append(" this.");
+	sb.append(fieldName);
+	sb.append("=");
+	sb.append(fieldName);
 	sb.append("; }");
 	return sb.toString();
     }
@@ -336,7 +373,7 @@ public class EntityEnhancer {
 	CtMethod ctMethod = null;
 	for (int i = 0; i < 100; ++i) {
 	    try {
-		ctMethod = ctClass.getDeclaredMethod(buildSetMethodName(ctField, counter));
+		ctMethod = ctClass.getDeclaredMethod(buildSetMethodName(ctField.getName() + Integer.toString(counter)));
 	    } catch (NotFoundException e) {
 		break;
 	    }
@@ -351,6 +388,18 @@ public class EntityEnhancer {
 	ctMethod = CtNewMethod.make(setMethodString, ctClass);
 	ctClass.addMethod(ctMethod);
 	LOG.debug("createSetMethod: Created new method: " + setMethodString);
+	return ctMethod;
+    }
+
+    private CtMethod createSetMethod(CtClass ctClass, String fieldName, String fieldTypeName)
+	    throws Exception {
+	if (!canModify(ctClass))
+	    return null;
+
+	String setMethodString = createSetMethodString(fieldName, fieldTypeName);
+	CtMethod ctMethod = CtNewMethod.make(setMethodString, ctClass);
+	ctClass.addMethod(ctMethod);
+	LOG.debug("Created '" + ctClass.getName() + "' method: " + setMethodString);
 	return ctMethod;
     }
 

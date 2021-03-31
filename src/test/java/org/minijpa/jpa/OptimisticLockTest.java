@@ -23,7 +23,6 @@ public class OptimisticLockTest {
 
     private Logger LOG = LoggerFactory.getLogger(OptimisticLockTest.class);
     private static EntityManagerFactory emf;
-    private long VERSION_START_VALUE = 0;
 
     @BeforeAll
     public static void beforeAll() {
@@ -46,13 +45,14 @@ public class OptimisticLockTest {
 	em.persist(citizen);
 	tx.commit();
 
-	Assertions.assertEquals(VERSION_START_VALUE, citizen.getVersion());
+	Assertions.assertNotNull(citizen.getVersion());
+	long version0 = citizen.getVersion();
 	em.refresh(citizen);
 
 	em.close();
 
 	Long id = citizen.getId();
-	Assertions.assertEquals(VERSION_START_VALUE, citizen.getVersion());
+	Assertions.assertEquals(version0, citizen.getVersion());
 
 	// first transaction
 	EntityManager em3 = emf.createEntityManager();
@@ -60,20 +60,20 @@ public class OptimisticLockTest {
 	tx3.begin();
 	Citizen citizen3 = em3.find(Citizen.class, id);
 	Assertions.assertFalse(citizen == citizen3);
-	Assertions.assertEquals(VERSION_START_VALUE, citizen3.getVersion());
+	Assertions.assertEquals(version0, citizen3.getVersion());
 
 	// second transaction
 	EntityManager em2 = emf.createEntityManager();
 	EntityTransaction tx2 = em2.getTransaction();
 	tx2.begin();
 	Citizen citizen2 = em2.find(Citizen.class, id);
-	Assertions.assertEquals(VERSION_START_VALUE, citizen2.getVersion());
+	Assertions.assertEquals(version0, citizen2.getVersion());
 	Assertions.assertFalse(citizen3 == citizen2);
 	citizen2.setName("Oliver");
 	em2.flush();
-	Assertions.assertEquals(VERSION_START_VALUE + 1, citizen2.getVersion());
+	Assertions.assertEquals(version0 + 1, citizen2.getVersion());
 	em2.refresh(citizen2);
-	Assertions.assertEquals(VERSION_START_VALUE + 1, citizen2.getVersion());
+	Assertions.assertEquals(version0 + 1, citizen2.getVersion());
 	tx2.commit();
 	em2.close();
 
@@ -84,14 +84,13 @@ public class OptimisticLockTest {
 	    em3.flush();
 	});
 
-	// transaction marked for rollback
-	Assertions.assertEquals(VERSION_START_VALUE, citizen3.getVersion());
+	Assertions.assertEquals(version0, citizen3.getVersion());
 	tx3.rollback();
 
 	em = emf.createEntityManager();
 	citizen = em.find(Citizen.class, id);
 	Assertions.assertEquals("Oliver", citizen.getName());
-	Assertions.assertEquals(VERSION_START_VALUE + 1, citizen.getVersion());
+	Assertions.assertEquals(version0 + 1, citizen.getVersion());
 	em.close();
 
 	em = emf.createEntityManager();

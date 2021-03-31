@@ -3,6 +3,7 @@ package org.minijpa.jdbc.model;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.minijpa.jdbc.LockType;
 
 import org.minijpa.jdbc.db.DbJdbc;
 import org.minijpa.jdbc.model.aggregate.AggregateFunction;
@@ -386,6 +387,10 @@ public class SqlStatementGenerator {
     }
 
     public String export(SqlSelect sqlSelect) {
+	return export(sqlSelect, LockType.NONE);
+    }
+
+    public String export(SqlSelect sqlSelect, LockType lockType) {
 	StringBuilder sb = new StringBuilder("select ");
 	if (sqlSelect.isDistinct())
 	    sb.append("distinct ");

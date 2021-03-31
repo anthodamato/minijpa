@@ -29,13 +29,16 @@ public class ParserTest {
 	Assertions.assertEquals(Citizen.class, entity.getEntityClass());
 	Assertions.assertEquals("citizen", entity.getTableName());
 	Assertions.assertNotNull(entity.getModificationAttributeReadMethod());
-	Assertions.assertEquals(2, entity.getAttributes().size());
+	Assertions.assertEquals(3, entity.getAttributes().size());
 	MetaAttribute attribute = entity.getAttribute("name");
 	Assertions.assertEquals("first_name", attribute.getColumnName());
 	Assertions.assertEquals(String.class, attribute.getType());
 	attribute = entity.getAttribute("lastName");
 	Assertions.assertEquals("last_name", attribute.getColumnName());
 	Assertions.assertEquals(String.class, attribute.getType());
+
+	attribute = entity.getAttribute("version");
+	Assertions.assertTrue(attribute.isVersion());
     }
 
     @Test
@@ -44,6 +47,7 @@ public class ParserTest {
 	EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
 	Assertions.assertNotNull(enhEntity);
 	Assertions.assertNotNull(enhEntity.getModificationAttributeGetMethod());
+	Assertions.assertTrue(enhEntity.getLockTypeAttributeGetMethod().isPresent());
 
 	List<MetaEntity> parsedEntities = new ArrayList<>();
 	MetaEntity entity = parser.parse(enhEntity, parsedEntities);
