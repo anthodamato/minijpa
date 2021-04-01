@@ -69,6 +69,25 @@ public class FindTest {
 	em.close();
     }
 
+    @Test
+    public void rollback() throws Exception {
+	final EntityManager em = emf.createEntityManager();
+	EntityTransaction tx = em.getTransaction();
+	tx.begin();
+	Citizen citizen = new Citizen();
+	citizen.setName("Anthony");
+	em.persist(citizen);
+
+	em.flush();
+	tx.rollback();
+
+	tx.begin();
+	Citizen c = em.find(Citizen.class, citizen.getId());
+	Assertions.assertNull(c);
+	tx.commit();
+	em.close();
+    }
+
     private Citizen createCitizenAnthonySmith() {
 	Citizen citizen = new Citizen();
 	citizen.setName("Anthony");

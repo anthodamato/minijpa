@@ -179,17 +179,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		    idColumns);
 	    attributeValueArray.add(entity.getId(), idValue);
 	    List<QueryParameter> parameters = sqlStatementFactory.convertAVToQP(attributeValueArray);
-//	    Optional<QueryParameter> versionParameter = generateVersionAttributeParameter(entity, entityInstance);
-//	    if (versionParameter.isPresent())
-//		parameters.add(versionParameter.get());
-
 	    String sql = sqlStatementGenerator.export(sqlUpdate);
 	    jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
 	    updateVersionAttributeValue(entity, entityInstance);
-//	    if (versionParameter.isPresent()) {
-//		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, versionParameter.get().getValue());
-//	    }
-
 	    return;
 	}
 

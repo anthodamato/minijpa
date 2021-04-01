@@ -87,6 +87,8 @@ public interface EntityContainer {
 
     public void detach(Object entityInstance) throws Exception;
 
+    public void detachAll() throws Exception;
+
     public boolean isDetached(Object entityInstance) throws Exception;
 
     public void saveForeignKey(Object entityInstance, MetaAttribute attribute, Object value);

@@ -10,22 +10,23 @@ import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.MetaEntity;
 
 public abstract class AbstractEntityManager implements EntityManager {
-	protected Map<String, MetaEntity> entities;
-	protected PersistenceUnitInfo persistenceUnitInfo;
-	protected MiniPersistenceContext persistenceContext;
-	protected PersistenceContextType persistenceContextType = PersistenceContextType.TRANSACTION;
-	protected ConnectionHolder connectionHolder;
 
-	public MiniPersistenceContext getPersistenceContext() {
-		return persistenceContext;
-	}
+    protected Map<String, MetaEntity> entities;
+    protected PersistenceUnitInfo persistenceUnitInfo;
+    protected MiniPersistenceContext persistenceContext;
+    protected PersistenceContextType persistenceContextType = PersistenceContextType.TRANSACTION;
+    protected ConnectionHolder connectionHolder;
 
-	public ConnectionHolder getConnectionHolder() {
-		return connectionHolder;
-	}
+    public MiniPersistenceContext getPersistenceContext() {
+	return persistenceContext;
+    }
 
-	public Map<String, MetaEntity> getEntities() {
-		return entities;
-	}
+    public ConnectionHolder getConnectionHolder() {
+	return connectionHolder;
+    }
+
+    public Map<String, MetaEntity> getEntities() {
+	return entities;
+    }
 
 }

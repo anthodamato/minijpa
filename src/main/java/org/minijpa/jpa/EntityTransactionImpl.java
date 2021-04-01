@@ -1,6 +1,7 @@
 package org.minijpa.jpa;
 
 import java.sql.SQLException;
+import java.util.logging.Level;
 
 import javax.persistence.EntityTransaction;
 
@@ -96,6 +97,12 @@ public class EntityTransactionImpl implements EntityTransaction {
 	    abstractEntityManager.connectionHolder.closeConnection();
 	} catch (SQLException e) {
 	    LOG.error(e.getMessage());
+	}
+
+	try {
+	    abstractEntityManager.persistenceContext.detachAll();
+	} catch (Exception ex) {
+	    java.util.logging.Logger.getLogger(EntityTransactionImpl.class.getName()).log(Level.SEVERE, null, ex);
 	}
 
 	this.active = false;

@@ -396,15 +396,62 @@ public class MiniPersistenceContext implements EntityContainer {
 	if (isDetached(entityInstance, idValue))
 	    return;
 
+	detachInternal(idValue, entityInstance);
+//	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), flushedPersistEntities);
+//	mapEntities.remove(idValue, entityInstance);
+//
+//	mapEntities = getEntityMap(entityInstance.getClass(), detachedEntities);
+////	if (mapEntities.get(idValue) != null)
+////	    return;
+//
+//	mapEntities.put(idValue, entityInstance);
+//	removePendingNew(entityInstance);
+    }
+
+    private void detachInternal(Object idValue, Object entityInstance) {
 	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), flushedPersistEntities);
 	mapEntities.remove(idValue, entityInstance);
 
-	mapEntities = getEntityMap(entityInstance.getClass(), detachedEntities);
-	if (mapEntities.get(idValue) != null)
-	    return;
+	mapEntities = getEntityMap(entityInstance.getClass(), notFlushedPersistEntities);
+	mapEntities.remove(idValue, entityInstance);
 
+	mapEntities = getEntityMap(entityInstance.getClass(), notFlushedRemoveEntities);
+	mapEntities.remove(idValue, entityInstance);
+
+	mapEntities = getEntityMap(entityInstance.getClass(), detachedEntities);
 	mapEntities.put(idValue, entityInstance);
 	removePendingNew(entityInstance);
+	notFlushedEntities.remove(entityInstance);
+    }
+
+    @Override
+    public void detachAll() throws Exception {
+	Set<Class<?>> keys = new HashSet<>(flushedPersistEntities.keySet());
+	for (Class<?> c : keys) {
+	    Map<Object, Object> map = getFlushedPersistEntities(c);
+	    Map<Object, Object> m = new HashMap<>(map);
+	    m.forEach((k, v) -> {
+		detachInternal(k, v);
+	    });
+	}
+
+	keys = new HashSet<>(notFlushedPersistEntities.keySet());
+	for (Class<?> c : keys) {
+	    Map<Object, Object> map = getNotFlushedPersistEntities(c);
+	    Map<Object, Object> m = new HashMap<>(map);
+	    m.forEach((k, v) -> {
+		detachInternal(k, v);
+	    });
+	}
+
+	keys = new HashSet<>(notFlushedRemoveEntities.keySet());
+	for (Class<?> c : keys) {
+	    Map<Object, Object> map = getNotFlushedRemoveEntities(c);
+	    Map<Object, Object> m = new HashMap<>(map);
+	    m.forEach((k, v) -> {
+		detachInternal(k, v);
+	    });
+	}
     }
 
     @Override
