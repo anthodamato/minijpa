@@ -511,15 +511,14 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	if (criteriaQuery.getSelection() == null)
 	    throw new IllegalStateException("Selection not defined or not inferable");
 
-	LockType lockType = LockTypeUtils.toLockType(query.getLockMode());
 	StatementParameters statementParameters = sqlStatementFactory.select(query);
 	SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
-	String sql = sqlStatementGenerator.export(sqlSelect, lockType);
+	String sql = sqlStatementGenerator.export(sqlSelect);
 	LOG.info("select: sql=" + sql);
 	if (sqlSelect.getResult() != null) {
 	    Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
 	    jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null, collectionResult,
-		    entityLoader, statementParameters.getParameters(), lockType);
+		    entityLoader, statementParameters.getParameters());
 	    return (List<?>) collectionResult;
 	}
 

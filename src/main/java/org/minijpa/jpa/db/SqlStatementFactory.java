@@ -33,6 +33,7 @@ import org.minijpa.jdbc.ColumnNameValue;
 import org.minijpa.jdbc.EmbeddedIdAttributeValueConverter;
 import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.JoinColumnAttribute;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
@@ -135,7 +136,7 @@ public class SqlStatementFactory {
 	return metaEntityHelper.convertAVToQP(attributeValues);
     }
 
-    public SqlSelect generateSelectById(MetaEntity entity) throws Exception {
+    public SqlSelect generateSelectById(MetaEntity entity, LockType lockType) throws Exception {
 	SqlSelect sqlSelect = selectByIdMap.get(entity);
 	if (sqlSelect != null)
 	    return sqlSelect;
@@ -151,6 +152,7 @@ public class SqlStatementFactory {
 	Condition condition = Condition.toAnd(conditions);
 	sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
 		.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
+		.withLockType(lockType)
 		.build();
 	selectByIdMap.put(entity, sqlSelect);
 	return sqlSelect;
@@ -953,6 +955,7 @@ public class SqlStatementFactory {
 	if (optionalCondition.isPresent())
 	    conditions = Arrays.asList(optionalCondition.get());
 
+	LockType lockType = LockTypeUtils.toLockType(query.getLockMode());
 	Selection<?> selection = criteriaQuery.getSelection();
 	if (selection instanceof MiniRoot<?>) {
 	    List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
@@ -960,7 +963,7 @@ public class SqlStatementFactory {
 	    FromTable fromTable = FromTable.of(entity);
 	    SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
 		    .withFetchParameters(fetchColumnNameValues).withConditions(conditions)
-		    .withResult(entity).build();
+		    .withResult(entity).withLockType(lockType).build();
 	    return new StatementParameters(sqlSelect, parameters);
 	}
 
@@ -978,6 +981,7 @@ public class SqlStatementFactory {
 	if (criteriaQuery.isDistinct())
 	    builder.distinct();
 
+	builder.withLockType(lockType);
 	SqlSelect sqlSelect = builder.build();
 	return new StatementParameters(sqlSelect, parameters);
     }

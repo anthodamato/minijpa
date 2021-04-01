@@ -1,5 +1,6 @@
 package org.minijpa.jpa.db;
 
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.db.BasicDbJdbc;
@@ -14,4 +15,13 @@ public class ApacheDerbyJdbc extends BasicDbJdbc {
 
 	return "VALUES (NEXT VALUE FOR " + entity.getTableName().toUpperCase() + "_PK_SEQ)";
     }
+
+    @Override
+    public String forUpdate(LockType lockType) {
+	if (lockType == LockType.PESSIMISTIC_WRITE)
+	    return "for update with rs";
+
+	return "";
+    }
+
 }

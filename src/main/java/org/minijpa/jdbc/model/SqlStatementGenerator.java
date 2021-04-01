@@ -3,7 +3,6 @@ package org.minijpa.jdbc.model;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.minijpa.jdbc.LockType;
 
 import org.minijpa.jdbc.db.DbJdbc;
 import org.minijpa.jdbc.model.aggregate.AggregateFunction;
@@ -196,14 +195,14 @@ public class SqlStatementGenerator {
     }
 
     private String exportCondition(Condition condition) {
-	LOG.info("exportCondition: condition=" + condition);
+	LOG.debug("exportCondition: condition=" + condition);
 	if (condition instanceof BinaryLogicCondition) {
 	    BinaryLogicCondition binaryLogicCondition = (BinaryLogicCondition) condition;
 	    StringBuilder sb = new StringBuilder();
 	    if (binaryLogicCondition.nested())
 		sb.append("(");
 
-	    LOG.info("exportCondition: binaryLogicCondition.getConditions().size="
+	    LOG.debug("exportCondition: binaryLogicCondition.getConditions().size="
 		    + binaryLogicCondition.getConditions().size());
 	    String operator = " " + getOperator(condition.getConditionType()) + " ";
 	    String cc = binaryLogicCondition.getConditions().stream().map(c -> {
@@ -387,10 +386,6 @@ public class SqlStatementGenerator {
     }
 
     public String export(SqlSelect sqlSelect) {
-	return export(sqlSelect, LockType.NONE);
-    }
-
-    public String export(SqlSelect sqlSelect, LockType lockType) {
 	StringBuilder sb = new StringBuilder("select ");
 	if (sqlSelect.isDistinct())
 	    sb.append("distinct ");
@@ -431,6 +426,12 @@ public class SqlStatementGenerator {
 		return exportOrderBy(o);
 	    }).collect(Collectors.joining(", "));
 	    sb.append(s);
+	}
+
+	String forUpdate = dbJdbc.forUpdate(sqlSelect.getLockType());
+	if (forUpdate != null && !forUpdate.isEmpty()) {
+	    sb.append(" ");
+	    sb.append(forUpdate);
 	}
 
 	return sb.toString();

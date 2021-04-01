@@ -17,10 +17,8 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
-import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
-import org.minijpa.jdbc.model.TableColumn;
 
 /**
  *
@@ -72,10 +70,10 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 
     public Object run(EntityLoader entityLoader, MetaAttribute metaAttribute,
 	    List<QueryParameter> parameters, LockType lockType) throws Exception {
-	String sql = sqlStatementGenerator.export(sqlSelect, lockType);
+	String sql = sqlStatementGenerator.export(sqlSelect);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
 	jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null,
-		null, collectionResult, entityLoader, parameters, lockType);
+		null, collectionResult, entityLoader, parameters);
 	return (List<Object>) collectionResult;
     }
 

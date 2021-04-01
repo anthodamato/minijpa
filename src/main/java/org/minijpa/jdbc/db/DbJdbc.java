@@ -18,6 +18,7 @@
  */
 package org.minijpa.jdbc.db;
 
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.NameTranslator;
 import org.minijpa.jdbc.PkGenerationType;
@@ -36,6 +37,8 @@ public interface DbJdbc {
     public String sequenceNextValueStatement(MetaEntity entity);
 
     public NameTranslator getNameTranslator();
+
+    public String forUpdate(LockType lockType);
 
     public default String notEqualOperator() {
 	return "<>";

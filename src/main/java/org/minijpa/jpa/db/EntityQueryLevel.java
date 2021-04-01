@@ -41,14 +41,14 @@ public class EntityQueryLevel implements QueryLevel {
     }
 
 //    @Override
-    public SqlSelect createQuery(MetaEntity entity) throws Exception {
-	return sqlStatementFactory.generateSelectById(entity);
+    public SqlSelect createQuery(MetaEntity entity, LockType lockType) throws Exception {
+	return sqlStatementFactory.generateSelectById(entity, lockType);
     }
 
-    public QueryResultValues run(MetaEntity entity, Object primaryKey, SqlSelect sqlSelect, LockType lockType) throws Exception {
+    public QueryResultValues run(MetaEntity entity, Object primaryKey, SqlSelect sqlSelect) throws Exception {
 	AttributeValue attrValueId = new AttributeValue(entity.getId(), primaryKey);
 	List<QueryParameter> parameters = sqlStatementFactory.queryParametersFromAV(attrValueId);
-	String sql = sqlStatementGenerator.export(sqlSelect, lockType);
+	String sql = sqlStatementGenerator.export(sqlSelect);
 	return jdbcRunner.findById(sql, connectionHolder.getConnection(),
 		sqlSelect, parameters);
     }

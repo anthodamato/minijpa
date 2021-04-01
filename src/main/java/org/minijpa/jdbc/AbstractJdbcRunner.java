@@ -165,7 +165,7 @@ public abstract class AbstractJdbcRunner {
 
     public void findCollection(Connection connection, String sql, SqlSelect sqlSelect,
 	    MetaAttribute childAttribute, Object childAttributeValue, Collection<Object> collectionResult,
-	    EntityLoader entityLoader, List<QueryParameter> parameters, LockType lockType) throws Exception {
+	    EntityLoader entityLoader, List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
@@ -179,7 +179,7 @@ public abstract class AbstractJdbcRunner {
 		QueryResultValues attributeValues = createAttributeValuesFromResultSet(sqlSelect.getFetchParameters(),
 			rs);
 		LOG.info("findCollection: attributeValues=" + attributeValues);
-		Object instance = entityLoader.build(attributeValues, sqlSelect.getResult(), lockType);
+		Object instance = entityLoader.build(attributeValues, sqlSelect.getResult(), sqlSelect.getLockType());
 		collectionResult.add(instance);
 	    }
 	} finally {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.minijpa.jdbc.ColumnNameValue;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.Condition;
@@ -19,6 +20,7 @@ public class SqlSelect implements SqlStatement {
     private Optional<GroupBy> groupBy = Optional.empty();
     private Optional<List<OrderBy>> orderByList = Optional.empty();
     private boolean distinct = false;
+    private LockType lockType = LockType.NONE;
 
     private SqlSelect() {
 	super();
@@ -56,9 +58,13 @@ public class SqlSelect implements SqlStatement {
 	return distinct;
     }
 
+    public LockType getLockType() {
+	return lockType;
+    }
+
     public static class SqlSelectBuilder {
 
-	private FromTable fromTable;
+	private final FromTable fromTable;
 	private List<Value> values;
 	private List<Condition> conditions;
 	private List<ColumnNameValue> fetchColumnNameValues;
@@ -66,6 +72,7 @@ public class SqlSelect implements SqlStatement {
 	private MetaEntity result;
 	private List<OrderBy> orderByList;
 	private boolean distinct = false;
+	private LockType lockType = LockType.NONE;
 
 	public SqlSelectBuilder(FromTable fromTable) {
 	    super();
@@ -107,6 +114,16 @@ public class SqlSelect implements SqlStatement {
 	    return this;
 	}
 
+	public SqlSelectBuilder withLockType(LockType lockType) {
+	    if (lockType == LockType.PESSIMISTIC_READ)
+		this.lockType = LockType.PESSIMISTIC_READ;
+
+	    if (lockType == LockType.PESSIMISTIC_WRITE)
+		this.lockType = LockType.PESSIMISTIC_WRITE;
+
+	    return this;
+	}
+
 	public SqlSelect build() {
 	    SqlSelect sqlSelect = new SqlSelect();
 	    sqlSelect.fromTable = fromTable;
@@ -121,6 +138,7 @@ public class SqlSelect implements SqlStatement {
 
 	    sqlSelect.result = result;
 	    sqlSelect.distinct = distinct;
+	    sqlSelect.lockType = lockType;
 	    return sqlSelect;
 	}
     }

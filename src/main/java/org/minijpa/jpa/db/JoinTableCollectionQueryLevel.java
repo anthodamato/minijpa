@@ -35,8 +35,6 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
     private final ConnectionHolder connectionHolder;
     private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
-    private SqlSelect sqlSelect;
-
     public JoinTableCollectionQueryLevel(
 	    SqlStatementFactory sqlStatementFactory, EntityInstanceBuilder entityInstanceBuilder,
 	    SqlStatementGenerator sqlStatementGenerator,
@@ -59,31 +57,27 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
     }
 
 //    @Override
-    public void createQuery(MetaEntity entity, Object primaryKey, MetaAttribute id,
+    public SqlSelect createQuery(MetaEntity entity, Object primaryKey, MetaAttribute id,
 	    Relationship relationship, List<AbstractAttributeValue> attributeValues) throws Exception {
 	if (relationship.isOwner()) {
 	    List<AbstractAttribute> attributes = metaEntityHelper.attributeValuesToAttribute(attributeValues);
 
-	    sqlSelect = sqlStatementFactory.generateSelectByJoinTable(entity,
+	    return sqlStatementFactory.generateSelectByJoinTable(entity,
 		    relationship.getJoinTable(), attributes);
 	} else {
 	    List<AbstractAttribute> attributes = metaEntityHelper.attributeValuesToAttribute(attributeValues);
-	    sqlSelect = sqlStatementFactory.generateSelectByJoinTableFromTarget(entity,
+	    return sqlStatementFactory.generateSelectByJoinTableFromTarget(entity,
 		    relationship.getJoinTable(), attributes);
 	}
     }
 
-    public SqlSelect getQuery() {
-	return sqlSelect;
-    }
-
     public Object run(EntityLoader entityLoader, MetaAttribute metaAttribute,
-	    List<QueryParameter> parameters, LockType lockType) throws Exception {
-	String sql = sqlStatementGenerator.export(sqlSelect, lockType);
+	    List<QueryParameter> parameters, SqlSelect sqlSelect) throws Exception {
+	String sql = sqlStatementGenerator.export(sqlSelect);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 		metaAttribute.getCollectionImplementationClass());
 	jdbcRunner.findCollection(connectionHolder.getConnection(), sql,
-		sqlSelect, null, null, collectionResult, entityLoader, parameters, lockType);
+		sqlSelect, null, null, collectionResult, entityLoader, parameters);
 	return collectionResult;
     }
 

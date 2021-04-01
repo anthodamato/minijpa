@@ -62,8 +62,8 @@ public class EntityLoaderImpl implements EntityLoader {
 	if (entityContainer.isNotFlushedRemove(metaEntity.getEntityClass(), primaryKey))
 	    return null;
 
-	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity);
-	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect, lockType);
+	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity, lockType);
+	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect);
 	if (queryResultValues == null)
 	    return null;
 
@@ -80,8 +80,8 @@ public class EntityLoaderImpl implements EntityLoader {
 
     @Override
     public Object findByIdNo1StLevelCache(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception {
-	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity);
-	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect, lockType);
+	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity, lockType);
+	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect);
 	if (queryResultValues == null)
 	    return null;
 
@@ -91,8 +91,8 @@ public class EntityLoaderImpl implements EntityLoader {
 
     @Override
     public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType) throws Exception {
-	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity);
-	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect, lockType);
+	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity, lockType);
+	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect);
 	if (queryResultValues == null)
 	    throw new EntityNotFoundException("Entity '" + entityInstance + "' not found: pk=" + primaryKey);
 
@@ -187,9 +187,9 @@ public class EntityLoaderImpl implements EntityLoader {
 		Object pk = AttributeUtil.getIdValue(entity, parentInstance);
 		List<AbstractAttributeValue> attributeValues = joinTableCollectionQueryLevel.createAttributeValues(pk,
 			entity.getId(), a.getRelationship());
-		joinTableCollectionQueryLevel.createQuery(e, pk, entity.getId(), a.getRelationship(), attributeValues);
+		SqlSelect sqlSelect = joinTableCollectionQueryLevel.createQuery(e, pk, entity.getId(), a.getRelationship(), attributeValues);
 		List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
-		Object result = joinTableCollectionQueryLevel.run(this, a, parameters, lockType);
+		Object result = joinTableCollectionQueryLevel.run(this, a, parameters, sqlSelect);
 		entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, result, entity);
 	    }
 	}
@@ -262,8 +262,8 @@ public class EntityLoaderImpl implements EntityLoader {
 	List<AbstractAttributeValue> attributeValues = joinTableCollectionQueryLevel.createAttributeValues(pk,
 		e.getId(), relationship);
 	LOG.info("loadAttribute: attributeValues=" + attributeValues);
-	joinTableCollectionQueryLevel.createQuery(entity, pk, e.getId(), relationship, attributeValues);
+	SqlSelect sqlSelect = joinTableCollectionQueryLevel.createQuery(entity, pk, e.getId(), relationship, attributeValues);
 	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
-	return joinTableCollectionQueryLevel.run(this, a, parameters, LockType.NONE);
+	return joinTableCollectionQueryLevel.run(this, a, parameters, sqlSelect);
     }
 }
