@@ -58,23 +58,6 @@ public class MiniPersistenceContext implements EntityContainer {
      */
     private final Map<Class<?>, Map<Object, Object>> detachedEntities = new HashMap<>();
     /**
-     * New entities not ready to be inserted on db. The pk could be missing, so the structure is: Map<entity class name,
-     * Map<entity instance ref, entity instance ref>>
-     */
-    private final Map<Class<?>, Map<Object, Object>> pendingNewEntities = new HashMap<>();
-    /**
-     * New attributes not ready to be inserted on db. For example, they can be attributes that require a join table. The
-     * default 'one to many' relationship requires a join table. If the 'one to many' collection entities have not been
-     * inserted on db (associated to the persistence context) then the attribute is marked as pending new. The structure
-     * is: Map<attribute, Map<entity instance, List<target entity instance>>>.
-     */
-    private final Map<MetaAttribute, Map<Object, List<Object>>> pendingNewAttributes = new HashMap<>();
-
-//	/**
-//	 * Entities not ready to be updated on db.
-//	 */
-//	private Map<Class<?>, Map<Object, Object>> pendingUpdates = new HashMap<>();
-    /**
      * Set of entity instances loaded from Db. If an instance is created then made persistent using the
      * 'EntityManager.persist' method then that instance is not loaded from Db. If the instance is loaded, for example,
      * using the 'EntityManager.find' method then the instance is loaded from Db.
@@ -240,10 +223,10 @@ public class MiniPersistenceContext implements EntityContainer {
 	    MetaAttribute foreignKeyAttribute, Object foreignKey, EntityInstanceBuilder entityInstanceBuilder) throws Exception {
 	List<Object> result = new ArrayList<>();
 	Map<Object, Object> notFlushedEntitiesMap = getEntityMap(owningEntity.getEntityClass(), notFlushedPersistEntities);
-	LOG.info("findByForeignKey: owningEntity.getEntityClass()=" + owningEntity.getEntityClass());
-	LOG.info("findByForeignKey: notFlushedEntitiesMap.size()=" + notFlushedEntitiesMap.size());
+	LOG.debug("findByForeignKey: owningEntity.getEntityClass()=" + owningEntity.getEntityClass());
+	LOG.debug("findByForeignKey: notFlushedEntitiesMap.size()=" + notFlushedEntitiesMap.size());
 	for (Map.Entry<Object, Object> e : notFlushedEntitiesMap.entrySet()) {
-	    LOG.info("findByForeignKey: e.getValue()=" + e.getValue());
+	    LOG.debug("findByForeignKey: e.getValue()=" + e.getValue());
 	    Object fkv = entityInstanceBuilder.getAttributeValue(e.getValue(), foreignKeyAttribute);
 	    Object fk = AttributeUtil.getIdValue(targetEntity, fkv);
 	    if (foreignKey.equals(fk))
@@ -251,11 +234,11 @@ public class MiniPersistenceContext implements EntityContainer {
 	}
 
 	Map<Object, Object> flushedEntitiesMap = getEntityMap(owningEntity.getEntityClass(), flushedPersistEntities);
-	LOG.info("findByForeignKey: flushedEntitiesMap.size()=" + flushedEntitiesMap.size());
+	LOG.debug("findByForeignKey: flushedEntitiesMap.size()=" + flushedEntitiesMap.size());
 	for (Map.Entry<Object, Object> e : flushedEntitiesMap.entrySet()) {
-	    LOG.info("findByForeignKey: e.getValue()=" + e.getValue());
+	    LOG.debug("findByForeignKey: e.getValue()=" + e.getValue());
 	    Object fkv = entityInstanceBuilder.getAttributeValue(e.getValue(), foreignKeyAttribute);
-	    LOG.info("findByForeignKey: fkv=" + fkv);
+	    LOG.debug("findByForeignKey: fkv=" + fkv);
 	    Object fk = AttributeUtil.getIdValue(targetEntity, fkv);
 	    if (foreignKey.equals(fk))
 		result.add(e.getValue());
@@ -350,7 +333,7 @@ public class MiniPersistenceContext implements EntityContainer {
 	    return;
 
 	mapEntities.remove(primaryKey);
-	LOG.info("remove: entityInstance '" + entityInstance + "' removed from persistence context");
+	LOG.debug("remove: entityInstance '" + entityInstance + "' removed from persistence context");
     }
 
     @Override
@@ -397,15 +380,6 @@ public class MiniPersistenceContext implements EntityContainer {
 	    return;
 
 	detachInternal(idValue, entityInstance);
-//	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), flushedPersistEntities);
-//	mapEntities.remove(idValue, entityInstance);
-//
-//	mapEntities = getEntityMap(entityInstance.getClass(), detachedEntities);
-////	if (mapEntities.get(idValue) != null)
-////	    return;
-//
-//	mapEntities.put(idValue, entityInstance);
-//	removePendingNew(entityInstance);
     }
 
     private void detachInternal(Object idValue, Object entityInstance) {
@@ -420,7 +394,6 @@ public class MiniPersistenceContext implements EntityContainer {
 
 	mapEntities = getEntityMap(entityInstance.getClass(), detachedEntities);
 	mapEntities.put(idValue, entityInstance);
-	removePendingNew(entityInstance);
 	notFlushedEntities.remove(entityInstance);
     }
 
@@ -456,38 +429,38 @@ public class MiniPersistenceContext implements EntityContainer {
 
     @Override
     public void saveForeignKey(Object parentInstance, MetaAttribute attribute, Object value) {
-	LOG.info("saveForeignKey: this=" + this);
-	LOG.info("saveForeignKey: parentInstance.getClass()=" + parentInstance.getClass() + "; parentInstance=" + parentInstance);
+	LOG.debug("saveForeignKey: this=" + this);
+	LOG.debug("saveForeignKey: parentInstance.getClass()=" + parentInstance.getClass() + "; parentInstance=" + parentInstance);
 	Map<Object, Map<MetaAttribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
-	LOG.info("saveForeignKey: 1 map=" + map);
+	LOG.debug("saveForeignKey: 1 map=" + map);
 	if (map == null) {
 	    map = new HashMap<>();
 	    foreignKeyValues.put(parentInstance.getClass(), map);
 	}
 
-	LOG.info("saveForeignKey: 2 map=" + map);
+	LOG.debug("saveForeignKey: 2 map=" + map);
 	Map<MetaAttribute, Object> parentMap = map.get(parentInstance);
 	if (parentMap == null) {
 	    parentMap = new HashMap<>();
 	    map.put(parentInstance, parentMap);
 	}
 
-	LOG.info("saveForeignKey: 3 map=" + map);
-	LOG.info("saveForeignKey: parentMap=" + parentMap + "; attribute=" + attribute);
+	LOG.debug("saveForeignKey: 3 map=" + map);
+	LOG.debug("saveForeignKey: parentMap=" + parentMap + "; attribute=" + attribute);
 	parentMap.put(attribute, value);
     }
 
     @Override
     public Object getForeignKeyValue(Object parentInstance, MetaAttribute attribute) {
-	LOG.info("getForeignKeyValue: this=" + this);
-	LOG.info("getForeignKeyValue: parentInstance.getClass()=" + parentInstance.getClass() + "; parentInstance=" + parentInstance);
+	LOG.debug("getForeignKeyValue: this=" + this);
+	LOG.debug("getForeignKeyValue: parentInstance.getClass()=" + parentInstance.getClass() + "; parentInstance=" + parentInstance);
 	Map<Object, Map<MetaAttribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
-	LOG.info("getForeignKeyValue: map=" + map);
+	LOG.debug("getForeignKeyValue: map=" + map);
 	if (map == null)
 	    return null;
 
 	Map<MetaAttribute, Object> parentMap = map.get(parentInstance);
-	LOG.info("getForeignKeyValue: parentMap=" + parentMap + "; attribute=" + attribute);
+	LOG.debug("getForeignKeyValue: parentMap=" + parentMap + "; attribute=" + attribute);
 	if (parentMap == null)
 	    return null;
 
@@ -515,34 +488,6 @@ public class MiniPersistenceContext implements EntityContainer {
 
     }
 
-    @Override
-    public void addPendingNew(Object entityInstance) {
-	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), pendingNewEntities);
-	if (mapEntities.get(entityInstance) != null)
-	    return;
-
-	mapEntities.put(entityInstance, entityInstance);
-    }
-
-    @Override
-    public List<Object> getPendingNew() {
-	List<Object> list = new ArrayList<>();
-	for (Map.Entry<Class<?>, Map<Object, Object>> entry : pendingNewEntities.entrySet()) {
-	    Map<Object, Object> map = entry.getValue();
-	    map.entrySet().forEach(e -> {
-		list.add(e.getValue());
-	    });
-	}
-
-	return list;
-    }
-
-    @Override
-    public void removePendingNew(Object entityInstance) {
-	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), pendingNewEntities);
-	mapEntities.remove(entityInstance);
-    }
-
     private Map<Object, List<Object>> getAttributeMap(Map<MetaAttribute, Map<Object, List<Object>>> attributeInstances,
 	    MetaAttribute attribute) {
 	Map<Object, List<Object>> mapEntities = attributeInstances.get(attribute);
@@ -552,33 +497,6 @@ public class MiniPersistenceContext implements EntityContainer {
 	}
 
 	return mapEntities;
-    }
-
-    @Override
-    public void addToPendingNewAttributes(MetaAttribute attribute, Object entityInstance, List<Object> objects) {
-	Map<Object, List<Object>> map = getAttributeMap(pendingNewAttributes, attribute);
-	if (map.get(entityInstance) != null)
-	    return;
-
-	map.put(entityInstance, objects);
-    }
-
-    @Override
-    public List<MetaAttribute> getPendingNewAttributes() {
-	List<MetaAttribute> attributes = new ArrayList<>();
-	pendingNewAttributes.forEach((k, v) -> attributes.add(k));
-	return attributes;
-    }
-
-    @Override
-    public void removePendingNewAttribute(MetaAttribute attribute, Object entityInstance) {
-	Map<Object, List<Object>> map = getAttributeMap(pendingNewAttributes, attribute);
-	map.remove(entityInstance);
-    }
-
-    @Override
-    public Map<Object, List<Object>> getPendingNewAttributeValue(MetaAttribute attribute) {
-	return pendingNewAttributes.get(attribute);
     }
 
     @Override

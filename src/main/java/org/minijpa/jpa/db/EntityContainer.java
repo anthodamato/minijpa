@@ -97,20 +97,6 @@ public interface EntityContainer {
 
     public void removeForeignKey(Object parentInstance, MetaAttribute attribute);
 
-    public void addPendingNew(Object entityInstance);
-
-    public List<Object> getPendingNew();
-
-    public void removePendingNew(Object entityInstance);
-
-    public void addToPendingNewAttributes(MetaAttribute attribute, Object entityInstance, List<Object> objects);
-
-    public List<MetaAttribute> getPendingNewAttributes();
-
-    public Map<Object, List<Object>> getPendingNewAttributeValue(MetaAttribute attribute);
-
-    public void removePendingNewAttribute(MetaAttribute attribute, Object entityInstance);
-
     public void setLoadedFromDb(Object entityInstance);
 
     public void removeLoadedFromDb(Object entityInstance);

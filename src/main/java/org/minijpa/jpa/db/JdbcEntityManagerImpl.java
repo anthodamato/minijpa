@@ -23,7 +23,6 @@ import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
-import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
@@ -38,7 +37,6 @@ import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.model.StatementParameters;
-import org.minijpa.jdbc.relationship.FetchType;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniTypedQuery;
@@ -260,9 +258,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    List<Object> ees = CollectionUtils.getCollectionAsList(entry.getValue());
 	    if (entityContainer.isManaged(ees))
 		persistJoinTableAttributes(ees, a, entityInstance);
-	    else
-		// add to pending new attributes
-		entityContainer.addToPendingNewAttributes(a, entityInstance, ees);
+//	    else
+//		// add to pending new attributes
+//		entityContainer.addToPendingNewAttributes(a, entityInstance, ees);
 	}
     }
 
@@ -312,11 +310,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	LOG.info("persist: idValue=" + idValue);
 	if (idValue != null) {
 	    entityContainer.addNotFlushedPersist(entityInstance, idValue);
-//	    LOG.info("persist: idValue=" + idValue);
-//	    boolean persistOnDb = canPersistOnDb(entityInstance);
-//	    LOG.info("persist: persistOnDb=" + persistOnDb);
-//	    if (!persistOnDb)
-//		entityContainer.addPendingNew(entityInstance);
 	} else {
 	    persist(entity, entityInstance, attributeValueArray);
 	    entityContainer.addFlushedPersist(entityInstance);
@@ -390,46 +383,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	}
 
 	LOG.debug("flush: done");
-
-	// saves pendings
-	savePendings();
-    }
-
-    /**
-     * Checks the entity instance. It returns true if entity data are enough to insert the instance on db. If the
-     * instance is not ready to be inserted on db then it should be marked as 'pending new' entity.
-     *
-     * @param entityInstance
-     * @return
-     * @throws Exception
-     */
-    protected boolean canPersistOnDb(Object entityInstance) throws Exception {
-	MetaEntity entity = entities.get(entityInstance.getClass().getName());
-	for (JoinColumnAttribute joinColumnAttribute : entity.getJoinColumnAttributes()) {
-	    LOG.info("canPersistOnDb: joinColumnAttribute.getColumnName()=" + joinColumnAttribute.getColumnName());
-	    MetaAttribute a = joinColumnAttribute.getForeignKeyAttribute();
-	    if (a.getRelationship().getFetchType() != FetchType.EAGER)
-		continue;
-
-	    Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
-	    if (attributeInstance == null || !entityContainer.isManaged(attributeInstance))
-		return false;
-	}
-
-	return true;
-    }
-
-    private boolean persistOnDb(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray attributeValueArray) throws Exception {
-	boolean persistOnDb = canPersistOnDb(entityInstance);
-	LOG.info("persistOnDb: persistOnDb=" + persistOnDb + "; entityInstance=" + entityInstance);
-	if (!persistOnDb)
-	    return false;
-
-	persist(entity, entityInstance, attributeValueArray);
-	entityContainer.addFlushedPersist(entityInstance);
-	entityInstanceBuilder.removeChanges(entity, entityInstance);
-	return true;
     }
 
     private void remove(Object entityInstance, MetaEntity e) throws Exception {
@@ -459,37 +412,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		return;
 
 	    remove(entity, e);
-	}
-    }
-
-    private void savePendings() throws Exception {
-	List<Object> list = entityContainer.getPendingNew();
-	LOG.info("savePendings: list.size()=" + list.size());
-	for (Object entityInstance : list) {
-	    MetaEntity e = entities.get(entityInstance.getClass().getName());
-	    AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(e, entityInstance);
-	    if (attributeValueArray.isEmpty()) {
-		entityContainer.removePendingNew(entityInstance);
-		continue;
-	    }
-
-	    boolean stored = persistOnDb(e, entityInstance, attributeValueArray);
-	    if (stored)
-		entityContainer.removePendingNew(entityInstance);
-	}
-
-	List<MetaAttribute> attributes = entityContainer.getPendingNewAttributes();
-	LOG.info("savePendings: attributes.size()=" + attributes.size());
-	for (MetaAttribute a : attributes) {
-	    Map<Object, List<Object>> map = entityContainer.getPendingNewAttributeValue(a);
-	    for (Map.Entry<Object, List<Object>> entry : map.entrySet()) {
-		List<Object> ees = entry.getValue();
-		Object entityInstance = entry.getKey();
-		if (entityContainer.isManaged(ees)) {
-		    persistJoinTableAttributes(ees, a, entityInstance);
-		    entityContainer.removePendingNewAttribute(a, entityInstance);
-		}
-	    }
 	}
     }
 

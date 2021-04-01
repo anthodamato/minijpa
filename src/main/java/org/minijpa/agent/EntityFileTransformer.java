@@ -32,7 +32,7 @@ public class EntityFileTransformer implements ClassFileTransformer {
 	    return null;
 
 	if (log)
-	    LOG.info("transform: className=" + className);
+	    LOG.debug("transform: className=" + className);
 
 	String fullClassName = className.replaceAll("/", ".");
 
