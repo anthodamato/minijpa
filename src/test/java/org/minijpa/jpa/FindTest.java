@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
+import javax.persistence.LockModeType;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -85,6 +86,48 @@ public class FindTest {
 	Citizen c = em.find(Citizen.class, citizen.getId());
 	Assertions.assertNull(c);
 	tx.commit();
+	em.close();
+    }
+
+    @Test
+    public void lockEntity() throws Exception {
+	final EntityManager em = emf.createEntityManager();
+	EntityTransaction tx = em.getTransaction();
+	tx.begin();
+	Citizen citizen = new Citizen();
+	citizen.setName("Anthony");
+	em.persist(citizen);
+	em.flush();
+	tx.commit();
+
+	tx.begin();
+	em.lock(citizen, LockModeType.PESSIMISTIC_WRITE);
+	citizen.setLastName("Smith");
+	em.persist(citizen);
+	em.flush();
+	em.refresh(citizen);
+	Assertions.assertEquals(LockModeType.PESSIMISTIC_WRITE, em.getLockMode(citizen));
+
+//	// new transaction, it should throws a lock timeout exception
+//	final EntityManager em2 = emf.createEntityManager();
+//	EntityTransaction tx2 = em2.getTransaction();
+//	tx2.begin();
+//	Citizen citizen2 = em2.find(Citizen.class, citizen.getId());
+//	citizen2.setLastName("Gould");
+//	tx2.commit();
+//
+//	// previous transaction
+	citizen = em.find(Citizen.class, citizen.getId());
+	Assertions.assertEquals("Smith", citizen.getLastName());
+	em.flush();
+	Assertions.assertEquals(LockModeType.PESSIMISTIC_WRITE, em.getLockMode(citizen));
+	tx.commit();
+
+	tx.begin();
+	Assertions.assertEquals(LockModeType.NONE, em.getLockMode(citizen));
+	em.remove(citizen);
+	tx.commit();
+
 	em.close();
     }
 

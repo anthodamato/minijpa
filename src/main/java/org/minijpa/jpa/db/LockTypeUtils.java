@@ -48,4 +48,24 @@ public class LockTypeUtils {
 		return LockType.NONE;
 	}
     }
+
+    public static LockModeType toLockModeType(LockType lockType) {
+	if (lockType == null)
+	    return LockModeType.NONE;
+
+	switch (lockType) {
+	    case OPTIMISTIC:
+		return LockModeType.OPTIMISTIC;
+	    case OPTIMISTIC_FORCE_INCREMENT:
+		return LockModeType.OPTIMISTIC;
+	    case PESSIMISTIC_READ:
+		return LockModeType.PESSIMISTIC_READ;
+	    case PESSIMISTIC_WRITE:
+		return LockModeType.PESSIMISTIC_WRITE;
+	    case PESSIMISTIC_FORCE_INCREMENT:
+		return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
+	    default:
+		return LockModeType.NONE;
+	}
+    }
 }

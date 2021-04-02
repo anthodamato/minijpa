@@ -1,7 +1,6 @@
 package org.minijpa.jpa;
 
 import java.sql.SQLException;
-import java.util.logging.Level;
 
 import javax.persistence.EntityTransaction;
 
@@ -73,6 +72,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 	}
 
 	this.active = false;
+	abstractEntityManager.persistenceContext.resetLockType();
     }
 
     @Override
@@ -102,7 +102,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 	try {
 	    abstractEntityManager.persistenceContext.detachAll();
 	} catch (Exception ex) {
-	    java.util.logging.Logger.getLogger(EntityTransactionImpl.class.getName()).log(Level.SEVERE, null, ex);
+	    LOG.error(ex.getMessage());
 	}
 
 	this.active = false;

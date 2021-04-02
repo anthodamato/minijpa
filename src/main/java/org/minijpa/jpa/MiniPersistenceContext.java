@@ -18,6 +18,7 @@
  */
 package org.minijpa.jpa;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,9 +26,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import javax.persistence.EntityExistsException;
 
 import org.minijpa.jdbc.AttributeUtil;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
@@ -423,6 +426,23 @@ public class MiniPersistenceContext implements EntityContainer {
 	    Map<Object, Object> m = new HashMap<>(map);
 	    m.forEach((k, v) -> {
 		detachInternal(k, v);
+	    });
+	}
+    }
+
+    @Override
+    public void resetLockType() {
+	Set<Class<?>> keys = new HashSet<>(flushedPersistEntities.keySet());
+	for (Class<?> c : keys) {
+	    MetaEntity e = entities.get(c.getName());
+	    Map<Object, Object> map = getFlushedPersistEntities(c);
+	    Map<Object, Object> m = new HashMap<>(map);
+	    m.forEach((k, v) -> {
+		try {
+		    e.getLockTypeAttributeWriteMethod().get().invoke(v, LockType.NONE);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+		    LOG.error(ex.getMessage());
+		}
 	    });
 	}
     }

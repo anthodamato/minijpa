@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
 
 import javax.persistence.PersistenceException;
@@ -104,6 +105,32 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
 	entityLoader.refresh(entity, entityInstance, primaryKey, lockType);
+    }
+
+    public void lock(Object entityInstance, LockType lockType) throws Exception {
+	Class<?> entityClass = entityInstance.getClass();
+	MetaEntity entity = entities.get(entityClass.getName());
+	if (entity == null)
+	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
+
+	if (!entityContainer.isManaged(entityInstance))
+	    throw new IllegalArgumentException("Entity '" + entityInstance + "' is not managed");
+
+	entity.getLockTypeAttributeWriteMethod().get().invoke(entityInstance, lockType);
+	Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
+	entityLoader.refresh(entity, entityInstance, primaryKey, lockType);
+    }
+
+    public LockType getLockType(Object entityInstance) throws Exception {
+	Class<?> entityClass = entityInstance.getClass();
+	MetaEntity entity = entities.get(entityClass.getName());
+	if (entity == null)
+	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
+
+	if (!entityContainer.isManaged(entityInstance))
+	    throw new IllegalArgumentException("Entity '" + entityInstance + "' is not managed");
+
+	return (LockType) entity.getLockTypeAttributeReadMethod().get().invoke(entityInstance);
     }
 
     private boolean hasOptimisticLock(MetaEntity entity, Object entityInstance)

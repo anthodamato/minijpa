@@ -13,6 +13,7 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.StoredProcedureQuery;
+import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
@@ -232,14 +233,34 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public void lock(Object entity, LockModeType lockMode) {
-	// TODO Auto-generated method stub
+	if (entityTransaction == null || !entityTransaction.isActive())
+	    throw new TransactionRequiredException("Transaction not active");
 
+	try {
+	    jdbcEntityManager.lock(entity, LockTypeUtils.toLockType(lockMode));
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    if (e instanceof PersistenceException)
+		throw (PersistenceException) e;
+
+	    throw new PersistenceException(e.getMessage());
+	}
     }
 
     @Override
     public void lock(Object entity, LockModeType lockMode, Map<String, Object> properties) {
-	// TODO Auto-generated method stub
+	if (entityTransaction == null || !entityTransaction.isActive())
+	    throw new TransactionRequiredException("Transaction not active");
 
+	try {
+	    jdbcEntityManager.lock(entity, LockTypeUtils.toLockType(lockMode));
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    if (e instanceof PersistenceException)
+		throw (PersistenceException) e;
+
+	    throw new PersistenceException(e.getMessage());
+	}
     }
 
     @Override
@@ -270,14 +291,28 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public void refresh(Object entity, LockModeType lockMode) {
-	// TODO Auto-generated method stub
+	try {
+	    jdbcEntityManager.refresh(entity, LockTypeUtils.toLockType(lockMode));
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    if (e instanceof PersistenceException)
+		throw (PersistenceException) e;
 
+	    throw new PersistenceException(e.getMessage());
+	}
     }
 
     @Override
     public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
-	// TODO Auto-generated method stub
+	try {
+	    jdbcEntityManager.refresh(entity, LockTypeUtils.toLockType(lockMode));
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    if (e instanceof PersistenceException)
+		throw (PersistenceException) e;
 
+	    throw new PersistenceException(e.getMessage());
+	}
     }
 
     @Override
@@ -292,7 +327,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    persistenceContext.detach(entity);
 	    LOG.info("Entity " + entity + " detached");
 	} catch (Exception e) {
-	    LOG.error(e.getClass().getName());
 	    LOG.error(e.getMessage());
 	    throw new PersistenceException(e.getMessage());
 	}
@@ -306,8 +340,19 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public LockModeType getLockMode(Object entity) {
-	// TODO Auto-generated method stub
-	return null;
+	if (entityTransaction == null || !entityTransaction.isActive())
+	    throw new TransactionRequiredException("Transaction not active");
+
+	try {
+	    LockType lockType = jdbcEntityManager.getLockType(entity);
+	    return LockTypeUtils.toLockModeType(lockType);
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    if (e instanceof PersistenceException)
+		throw (PersistenceException) e;
+
+	    throw new PersistenceException(e.getMessage());
+	}
     }
 
     @Override
