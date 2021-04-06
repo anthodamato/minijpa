@@ -50,7 +50,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     private final SqlStatementGenerator sqlStatementGenerator;
     private final EntityLoader entityLoader;
     private final EntityWriter entityWriter;
-    private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
+    private final MetaEntityHelper metaEntityHelper;
 
     public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, Map<String, MetaEntity> entities,
 	    EntityContainer entityContainer, EntityInstanceBuilder entityInstanceBuilder,
@@ -64,12 +64,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	this.sqlStatementFactory = new SqlStatementFactory();
 	this.jdbcRunner = new JdbcRunner();
 	this.sqlStatementGenerator = new SqlStatementGenerator(dbConfiguration.getDbJdbc());
+	this.metaEntityHelper = new MetaEntityHelper();
 	this.entityLoader = new EntityLoaderImpl(entities, entityInstanceBuilder, entityContainer,
-		new EntityQueryLevel(sqlStatementFactory, entityInstanceBuilder, entityContainer,
-			sqlStatementGenerator, jdbcRunner, connectionHolder),
-		new ForeignKeyCollectionQueryLevel(sqlStatementFactory, entityInstanceBuilder, sqlStatementGenerator,
+		new EntityQueryLevel(sqlStatementFactory, entityInstanceBuilder,
+			sqlStatementGenerator, metaEntityHelper, jdbcRunner, connectionHolder),
+		new ForeignKeyCollectionQueryLevel(sqlStatementFactory, metaEntityHelper, sqlStatementGenerator,
 			jdbcRunner, connectionHolder),
-		new JoinTableCollectionQueryLevel(sqlStatementFactory, entityInstanceBuilder, sqlStatementGenerator,
+		new JoinTableCollectionQueryLevel(sqlStatementFactory, sqlStatementGenerator,
 			jdbcRunner, connectionHolder));
 	this.entityWriter = new EntityWriterImpl(entityContainer, sqlStatementFactory,
 		sqlStatementGenerator, entityLoader, entityInstanceBuilder, connectionHolder, jdbcRunner);
@@ -148,7 +149,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     @Override
     public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
-	AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(entity, entityInstance);
+	AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(entity, entityInstance);
 	checkNullableAttributes(entity, entityInstance, attributeValueArray);
 	Object idValue = generatePersistentIdentity(entity, entityInstance);
 	LOG.debug("persist: idValue=" + idValue);
@@ -169,7 +170,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
      * @throws PersistenceException
      */
     private void checkNullableAttributes(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray attributeValueArray) throws Exception {
+	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	if (entityContainer.isFlushedPersist(entityInstance)) {
 	    // It's an update.
 	    // TODO. It should check that no not nullable attrs will be set to null.
@@ -200,7 +201,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    Map<Object, Object> map = entityContainer.getFlushedPersistEntities(c);
 	    MetaEntity me = entities.get(c.getName());
 	    for (Map.Entry<Object, Object> entry : map.entrySet()) {
-		AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entry.getValue());
+		AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entry.getValue());
 		if (!attributeValueArray.isEmpty()) {
 		    entityWriter.persist(me, entry.getValue(), attributeValueArray);
 		    entityInstanceBuilder.removeChanges(me, entry.getValue());
@@ -215,7 +216,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    Object idValue = AttributeUtil.getIdValue(me, entityInstance);
 //	    LOG.info("flush: idValue=" + idValue);
 	    if (entityContainer.isNotFlushedPersist(entityInstance)) {
-		AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
 		entityWriter.persist(me, entityInstance, attributeValueArray);
 		entityContainer.addFlushedPersist(entityInstance);
 		entityInstanceBuilder.removeChanges(me, entityInstance);

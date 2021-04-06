@@ -60,87 +60,13 @@ public class MetaEntityHelper {
 	return list;
     }
 
-    public List<ColumnNameValue> convertAttributeValue(AttributeValue av) throws Exception {
-	List<ColumnNameValue> list = new ArrayList<>();
-	MetaAttribute a = av.getAttribute();
-	if (a.isEmbedded() && a.isId()) {
-	    List<AttributeValue> idav = attributeValueConverter.convert(av);
-	    list.addAll(convertAttributeValues(idav));
-	    return list;
-	}
-
-	if (a.getRelationship() != null) {
-	    String joinColumn = a.getRelationship().getJoinColumn();
-	    MetaEntity attributeType = a.getRelationship().getAttributeType();
-	    if (joinColumn != null && attributeType != null) {
-		Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
-		ColumnNameValue columnNameValue = new ColumnNameValue(joinColumn, idValue,
-			attributeType.getId().getType(), attributeType.getId().getReadWriteDbType(),
-			attributeType.getId().getSqlType(), a, null);
-		list.add(columnNameValue);
-	    }
-	} else {
-	    ColumnNameValue columnNameValue = ColumnNameValue.build(av);
-	    list.add(columnNameValue);
-	}
-
-	return list;
-    }
-
-    public List<ColumnNameValue> convertAttributeValues(List<AttributeValue> attributeValues) throws Exception {
-	List<ColumnNameValue> list = new ArrayList<>();
-	for (AttributeValue av : attributeValues) {
-	    list.addAll(convertAttributeValue(av));
-	}
-
-	return list;
-    }
-
-    public List<QueryParameter> convertAbstractAVToQP(List<AbstractAttributeValue> attributeValues) throws Exception {
+    public List<QueryParameter> convertAbstractAVToQP(AttributeValueArray<AbstractAttribute> attributeValueArray) throws Exception {
 	List<QueryParameter> list = new ArrayList<>();
-	for (AbstractAttributeValue av : attributeValues) {
-	    AbstractAttribute a = av.getAttribute();
-	    QueryParameter queryParameter = new QueryParameter(a.getColumnName(), av.getValue(),
+	for (int i = 0; i < attributeValueArray.size(); ++i) {
+	    AbstractAttribute a = attributeValueArray.getAttribute(i);
+	    QueryParameter queryParameter = new QueryParameter(a.getColumnName(), attributeValueArray.getValue(i),
 		    a.getType(), a.getSqlType(), a.jdbcAttributeMapper);
 	    list.add(queryParameter);
-	}
-
-	return list;
-    }
-
-    public List<QueryParameter> convertAVToQP(AttributeValue av) throws Exception {
-	List<QueryParameter> list = new ArrayList<>();
-	MetaAttribute a = av.getAttribute();
-	if (a.isEmbedded() && a.isId()) {
-	    List<AttributeValue> idav = attributeValueConverter.convert(av);
-	    list.addAll(convertAVToQP(idav));
-	    return list;
-	}
-
-	if (a.getRelationship() != null) {
-	    String joinColumn = a.getRelationship().getJoinColumn();
-	    LOG.debug("convertAVToQP: joinColumn=" + joinColumn);
-	    MetaEntity attributeType = a.getRelationship().getAttributeType();
-	    LOG.debug("convertAVToQP: attributeType=" + attributeType);
-	    if (joinColumn != null && attributeType != null) {
-		Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
-		QueryParameter queryParameter = new QueryParameter(joinColumn, idValue, attributeType.getId().getType(),
-			attributeType.getId().getSqlType(), attributeType.getId().jdbcAttributeMapper);
-		list.add(queryParameter);
-	    }
-	} else {
-	    QueryParameter queryParameter = new QueryParameter(a.getColumnName(), av.getValue(),
-		    a.getType(), a.getSqlType(), a.jdbcAttributeMapper);
-	    list.add(queryParameter);
-	}
-
-	return list;
-    }
-
-    public List<QueryParameter> convertAVToQP(List<AttributeValue> attributeValues) throws Exception {
-	List<QueryParameter> list = new ArrayList<>();
-	for (AttributeValue av : attributeValues) {
-	    list.addAll(convertAVToQP(av));
 	}
 
 	return list;
@@ -149,7 +75,7 @@ public class MetaEntityHelper {
     public List<QueryParameter> convertAVToQP(MetaAttribute a, Object value) throws Exception {
 	List<QueryParameter> list = new ArrayList<>();
 	if (a.isEmbedded() && a.isId()) {
-	    AttributeValueArray attributeValueArray = new AttributeValueArray();
+	    AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray();
 	    attributeValueConverter.convert(a, value, attributeValueArray);
 	    list.addAll(convertAVToQP(attributeValueArray));
 	    return list;
@@ -175,7 +101,7 @@ public class MetaEntityHelper {
 	return list;
     }
 
-    public List<QueryParameter> convertAVToQP(AttributeValueArray attributeValueArray) throws Exception {
+    public List<QueryParameter> convertAVToQP(AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	List<QueryParameter> list = new ArrayList<>();
 	for (int i = 0; i < attributeValueArray.size(); ++i) {
 	    list.addAll(convertAVToQP(attributeValueArray.getAttribute(i), attributeValueArray.getValue(i)));
@@ -184,37 +110,17 @@ public class MetaEntityHelper {
 	return list;
     }
 
-    public List<ColumnNameValue> createJoinColumnAVS(List<JoinColumnAttribute> joinColumnAttributes,
-	    MetaAttribute owningId, Object joinTableForeignKey) throws Exception {
-	List<AttributeValue> idAttributeValues = attributeValueConverter
-		.convert(new AttributeValue(owningId, joinTableForeignKey));
-
-	int index = -1;
-	List<ColumnNameValue> columnNameValues = new ArrayList<>();
-	for (AttributeValue av : idAttributeValues) {
-	    index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, av.getAttribute());
-	    MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
-
-	    ColumnNameValue cnv = new ColumnNameValue(joinColumnAttributes.get(index).getColumnName(), av.getValue(),
-		    metaAttribute.getType(), metaAttribute.getReadWriteDbType(), metaAttribute.getSqlType(), null,
-		    metaAttribute);
-	    columnNameValues.add(cnv);
-	}
-
-	return columnNameValues;
-    }
-
     public List<QueryParameter> createJoinColumnAVSToQP(List<JoinColumnAttribute> joinColumnAttributes,
 	    MetaAttribute owningId, Object joinTableForeignKey) throws Exception {
-	List<AttributeValue> idAttributeValues = attributeValueConverter
-		.convert(new AttributeValue(owningId, joinTableForeignKey));
-
+	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray<>();
+	attributeValueConverter.convert(owningId, joinTableForeignKey, attributeValueArray);
 	int index = -1;
 	List<QueryParameter> columnNameValues = new ArrayList<>();
-	for (AttributeValue av : idAttributeValues) {
-	    index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, av.getAttribute());
+	for (int i = 0; i < attributeValueArray.size(); ++i) {
+	    MetaAttribute attribute = attributeValueArray.getAttribute(i);
+	    index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, attribute);
 	    MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
-	    QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(), av.getValue(),
+	    QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(), attributeValueArray.getValue(i),
 		    metaAttribute.getType(), metaAttribute.getSqlType(), metaAttribute.jdbcAttributeMapper);
 	    columnNameValues.add(qp);
 	}
@@ -260,18 +166,8 @@ public class MetaEntityHelper {
 		.collect(Collectors.toList());
     }
 
-    public List<TableColumn> attributesToTableColumns(List<AbstractAttributeValue> attributeValues, FromTable fromTable) {
-	return attributeValues.stream().map(p -> new TableColumn(fromTable, new Column(p.getAttribute().getColumnName())))
-		.collect(Collectors.toList());
-    }
-
-    public List<TableColumn> attributesToTableColumns2(List<AbstractAttribute> attributes, FromTable fromTable) {
+    public List<TableColumn> attributesToTableColumns(List<AbstractAttribute> attributes, FromTable fromTable) {
 	return attributes.stream().map(a -> new TableColumn(fromTable, new Column(a.getColumnName())))
-		.collect(Collectors.toList());
-    }
-
-    public List<AbstractAttribute> attributeValuesToAttribute(List<AbstractAttributeValue> attributeValues) {
-	return attributeValues.stream().map(p -> p.getAttribute())
 		.collect(Collectors.toList());
     }
 
@@ -295,7 +191,7 @@ public class MetaEntityHelper {
     }
 
     public void createVersionAttributeArrayEntry(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray attributeValueArray) throws Exception {
+	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	if (!hasOptimisticLock(entity, entityInstance))
 	    return;
 

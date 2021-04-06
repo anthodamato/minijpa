@@ -8,15 +8,14 @@ package org.minijpa.jpa.db;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.minijpa.jdbc.AttributeValue;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 
@@ -34,7 +33,7 @@ import org.minijpa.jdbc.model.SqlStatementGenerator;
 public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 
     private final SqlStatementFactory sqlStatementFactory;
-    private final EntityInstanceBuilder entityInstanceBuilder;
+    private final MetaEntityHelper metaEntityHelper;
     private final SqlStatementGenerator sqlStatementGenerator;
     private final JdbcRunner jdbcRunner;
     private final ConnectionHolder connectionHolder;
@@ -42,19 +41,18 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
     private SqlSelect sqlSelect;
 
     public ForeignKeyCollectionQueryLevel(
-	    SqlStatementFactory sqlStatementFactory, EntityInstanceBuilder entityInstanceBuilder,
+	    SqlStatementFactory sqlStatementFactory, MetaEntityHelper metaEntityHelper,
 	    SqlStatementGenerator sqlStatementGenerator,
 	    JdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
 	this.sqlStatementFactory = sqlStatementFactory;
-	this.entityInstanceBuilder = entityInstanceBuilder;
+	this.metaEntityHelper = metaEntityHelper;
 	this.sqlStatementGenerator = sqlStatementGenerator;
 	this.jdbcRunner = jdbcRunner;
 	this.connectionHolder = connectionHolder;
     }
 
     public List<QueryParameter> createParameters(Object foreignKey, MetaAttribute foreignKeyAttribute) throws Exception {
-	AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, foreignKey);
-	return sqlStatementFactory.queryParametersFromAV(attrValue);
+	return metaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
     }
 
 //    @Override

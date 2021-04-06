@@ -19,6 +19,7 @@
 package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.AttributeValueArray;
+import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
 /**
@@ -28,7 +29,7 @@ import org.minijpa.jdbc.MetaEntity;
 public interface EntityWriter {
 
     public void persist(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray attributeValueArray) throws Exception;
+	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception;
 
     public void delete(Object entityInstance, MetaEntity e) throws Exception;
 

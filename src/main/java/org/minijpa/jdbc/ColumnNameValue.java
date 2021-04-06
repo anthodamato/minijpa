@@ -40,13 +40,6 @@ public class ColumnNameValue {
 	this.attribute = attribute;
     }
 
-    public static ColumnNameValue build(AttributeValue av) {
-	ColumnNameValue cnv = new ColumnNameValue(av.getAttribute().getColumnName(), av.getValue(),
-		av.getAttribute().getType(), av.getAttribute().getReadWriteDbType(), av.getAttribute().getSqlType(),
-		null, av.getAttribute());
-	return cnv;
-    }
-
     public static ColumnNameValue build(MetaAttribute av) {
 	ColumnNameValue cnv = new ColumnNameValue(av.getColumnName(), null, av.getType(), av.getReadWriteDbType(),
 		av.getSqlType(), null, av);

@@ -73,7 +73,7 @@ public class EntityWriterImpl implements EntityWriter {
 
     @Override
     public void persist(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray attributeValueArray) throws Exception {
+	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	if (entityContainer.isFlushedPersist(entityInstance)) {
 	    update(entity, entityInstance, attributeValueArray);
 	} else {
@@ -94,7 +94,7 @@ public class EntityWriterImpl implements EntityWriter {
     }
 
     protected void update(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray attributeValueArray) throws Exception {
+	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	// It's an update.
 	if (attributeValueArray.isEmpty())
 	    return;
@@ -124,7 +124,7 @@ public class EntityWriterImpl implements EntityWriter {
     }
 
     protected void insert(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray attributeValueArray) throws Exception {
+	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	// It's an insert.
 	// checks specific relationship attributes ('one to many' with join table) even
 	// if there are no notified changes. If they get changed then they'll be made persistent.

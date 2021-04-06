@@ -106,7 +106,8 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	list.clear();
     }
 
-    private void unpackEmbedded(MetaAttribute metaAttribute, Object value, AttributeValueArray attributeValueArray) throws IllegalAccessException, InvocationTargetException {
+    private void unpackEmbedded(MetaAttribute metaAttribute, Object value,
+	    AttributeValueArray<MetaAttribute> attributeValueArray) throws IllegalAccessException, InvocationTargetException {
 	Optional<Map<String, Object>> optional = getEntityModifications(metaAttribute.getEmbeddableMetaEntity(), value);
 	if (optional.isEmpty())
 	    return;
@@ -120,8 +121,8 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     }
 
     @Override
-    public AttributeValueArray getModifications(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
-	AttributeValueArray attributeValueArray = new AttributeValueArray();
+    public AttributeValueArray<MetaAttribute> getModifications(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
+	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray();
 	Optional<Map<String, Object>> optional = getEntityModifications(entity, entityInstance);
 	if (optional.isEmpty())
 	    return attributeValueArray;

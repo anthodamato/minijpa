@@ -24,9 +24,8 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import org.minijpa.jdbc.AbstractAttribute;
 
-import org.minijpa.jdbc.AbstractAttributeValue;
 import org.minijpa.jdbc.AttributeUtil;
-import org.minijpa.jdbc.AttributeValue;
+import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.AttributeValueConverter;
 import org.minijpa.jdbc.ColumnNameValue;
 import org.minijpa.jdbc.EmbeddedIdAttributeValueConverter;
@@ -127,10 +126,6 @@ public class SqlStatementFactory {
 	return insert;
     }
 
-    public List<QueryParameter> queryParametersFromAV(AttributeValue attributeValue) throws Exception {
-	return metaEntityHelper.convertAVToQP(attributeValue);
-    }
-
     public SqlSelect generateSelectById(MetaEntity entity, LockType lockType) throws Exception {
 	SqlSelect sqlSelect = selectByIdMap.get(entity);
 	if (sqlSelect != null)
@@ -184,18 +179,33 @@ public class SqlStatementFactory {
 	return sqlSelect;
     }
 
-    public List<AbstractAttributeValue> expandJoinColumnAttributes(MetaAttribute owningId,
+//    public List<AbstractAttributeValue> expandJoinColumnAttributes(MetaAttribute owningId,
+//	    Object joinTableForeignKey, List<JoinColumnAttribute> allJoinColumnAttributes) throws Exception {
+//	List<AttributeValue> owningIdAttributeValues = attributeValueConverter
+//		.convert(new AttributeValue(owningId, joinTableForeignKey));
+//	List<AbstractAttributeValue> attributeValues = new ArrayList<>();
+//	for (AttributeValue av : owningIdAttributeValues) {
+//	    Optional<JoinColumnAttribute> optional = allJoinColumnAttributes.stream().
+//		    filter(j -> j.getForeignKeyAttribute() == av.getAttribute()).findFirst();
+//	    attributeValues.add(new AbstractAttributeValue(optional.get(), av.getValue()));
+//	}
+//
+//	return attributeValues;
+//    }
+    public AttributeValueArray<AbstractAttribute> expandJoinColumnAttributes(MetaAttribute owningId,
 	    Object joinTableForeignKey, List<JoinColumnAttribute> allJoinColumnAttributes) throws Exception {
-	List<AttributeValue> owningIdAttributeValues = attributeValueConverter
-		.convert(new AttributeValue(owningId, joinTableForeignKey));
-	List<AbstractAttributeValue> attributeValues = new ArrayList<>();
-	for (AttributeValue av : owningIdAttributeValues) {
+	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray<>();
+	attributeValueConverter.convert(owningId, joinTableForeignKey, attributeValueArray);
+
+	AttributeValueArray<AbstractAttribute> result = new AttributeValueArray<>();
+	for (int i = 0; i < attributeValueArray.size(); ++i) {
+	    MetaAttribute attribute = attributeValueArray.getAttribute(i);
 	    Optional<JoinColumnAttribute> optional = allJoinColumnAttributes.stream().
-		    filter(j -> j.getForeignKeyAttribute() == av.getAttribute()).findFirst();
-	    attributeValues.add(new AbstractAttributeValue(optional.get(), av.getValue()));
+		    filter(j -> j.getForeignKeyAttribute() == attribute).findFirst();
+	    result.add(optional.get(), attributeValueArray.getValue(i));
 	}
 
-	return attributeValues;
+	return result;
     }
 
     public SqlSelect generateSelectByJoinTable(MetaEntity entity,
@@ -216,7 +226,7 @@ public class SqlStatementFactory {
 	FromTable fromTable = FromTable.of(entity, fromJoin);
 	// handles multiple column pk
 
-	List<TableColumn> tableColumns = metaEntityHelper.attributesToTableColumns2(attributes, joinTable);
+	List<TableColumn> tableColumns = metaEntityHelper.attributesToTableColumns(attributes, joinTable);
 	List<Condition> conditions = tableColumns.stream().map(t -> {
 	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
 	}).collect(Collectors.toList());
@@ -247,7 +257,7 @@ public class SqlStatementFactory {
 	FromTable fromTable = FromTable.of(entity, fromJoin);
 	// handles multiple column pk
 
-	List<TableColumn> tableColumns = metaEntityHelper.attributesToTableColumns2(attributes, joinTable);
+	List<TableColumn> tableColumns = metaEntityHelper.attributesToTableColumns(attributes, joinTable);
 
 	List<Condition> conditions = tableColumns.stream().map(t -> {
 	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
@@ -296,25 +306,6 @@ public class SqlStatementFactory {
 	FromTable fromTable = FromTable.of(entity);
 	Condition condition = createAttributeEqualCondition(entity, idColumnNames);
 	return new SqlDelete(fromTable, Optional.of(condition));
-    }
-
-    private Condition createAttributeEqualCondition(MetaEntity entity, AttributeValue attributeValue) throws Exception {
-	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attributeValue);
-	if (parameters.size() == 1)
-	    return new BinaryCondition.Builder(ConditionType.EQUAL)
-		    .withLeftColumn(
-			    new TableColumn(FromTable.of(entity), new Column(parameters.get(0).getColumnName())))
-		    .withRightExpression(QM).build();
-
-	List<Condition> conditions = new ArrayList<>();
-	for (QueryParameter parameter : parameters) {
-	    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-		    .withLeftColumn(new TableColumn(FromTable.of(entity), new Column(parameter.getColumnName())))
-		    .withRightExpression(QM).build();
-	    conditions.add(binaryCondition);
-	}
-
-	return new BinaryLogicConditionImpl(ConditionType.AND, conditions);
     }
 
     private Condition createAttributeEqualCondition(MetaEntity entity, List<String> columns) throws Exception {

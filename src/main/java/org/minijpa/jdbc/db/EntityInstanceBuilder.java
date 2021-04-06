@@ -40,6 +40,6 @@ public interface EntityInstanceBuilder {
     public void removeChanges(MetaEntity entity, Object entityInstance)
 	    throws IllegalAccessException, InvocationTargetException;
 
-    public AttributeValueArray getModifications(MetaEntity entity, Object entityInstance)
+    public AttributeValueArray<MetaAttribute> getModifications(MetaEntity entity, Object entityInstance)
 	    throws IllegalAccessException, InvocationTargetException;
 }

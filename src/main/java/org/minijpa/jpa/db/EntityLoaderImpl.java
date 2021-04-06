@@ -9,8 +9,9 @@ import org.minijpa.jdbc.EntityLoader;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityNotFoundException;
-import org.minijpa.jdbc.AbstractAttributeValue;
+import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.AttributeUtil;
+import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.ColumnNameValue;
 import org.minijpa.jdbc.ColumnNameValueUtil;
 import org.minijpa.jdbc.LockType;
@@ -185,10 +186,12 @@ public class EntityLoaderImpl implements EntityLoader {
 	    if (a.getRelationship().isOwner()) {
 		MetaEntity e = a.getRelationship().getAttributeType();
 		Object pk = AttributeUtil.getIdValue(entity, parentInstance);
-		List<AbstractAttributeValue> attributeValues = joinTableCollectionQueryLevel.createAttributeValues(pk,
+//		List<AbstractAttributeValue> attributeValues = joinTableCollectionQueryLevel.createAttributeValues(pk,
+//			entity.getId(), a.getRelationship());
+		AttributeValueArray<AbstractAttribute> attributeValueArray = joinTableCollectionQueryLevel.createAttributeValues(pk,
 			entity.getId(), a.getRelationship());
-		SqlSelect sqlSelect = joinTableCollectionQueryLevel.createQuery(e, pk, entity.getId(), a.getRelationship(), attributeValues);
-		List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
+		SqlSelect sqlSelect = joinTableCollectionQueryLevel.createQuery(e, pk, entity.getId(), a.getRelationship(), attributeValueArray);
+		List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValueArray);
 		Object result = joinTableCollectionQueryLevel.run(this, a, parameters, sqlSelect);
 		entityInstanceBuilder.setAttributeValue(parentInstance, parentInstance.getClass(), a, result, entity);
 	    }
@@ -259,7 +262,7 @@ public class EntityLoaderImpl implements EntityLoader {
 	MetaEntity e = entities.get(parentInstance.getClass().getName());
 	Object pk = AttributeUtil.getIdValue(e, parentInstance);
 	LOG.debug("loadAttribute: pk=" + pk);
-	List<AbstractAttributeValue> attributeValues = joinTableCollectionQueryLevel.createAttributeValues(pk,
+	AttributeValueArray<AbstractAttribute> attributeValues = joinTableCollectionQueryLevel.createAttributeValues(pk,
 		e.getId(), relationship);
 	LOG.debug("loadAttribute: attributeValues=" + attributeValues);
 	SqlSelect sqlSelect = joinTableCollectionQueryLevel.createQuery(entity, pk, e.getId(), relationship, attributeValues);

@@ -60,7 +60,8 @@ public class EntityDelegateInstanceBuilderTest {
 	e1.setJobInfo(jobInfo);
 
 	EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
-	AttributeValueArray attributeValueArray = entityInstanceBuilder.getModifications(metaEntityPM, programManager);
+	AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(
+		metaEntityPM, programManager);
 	Assertions.assertTrue(attributeValueArray.isEmpty());
 
 	attributeValueArray = entityInstanceBuilder.getModifications(metaEntityJE, e1);

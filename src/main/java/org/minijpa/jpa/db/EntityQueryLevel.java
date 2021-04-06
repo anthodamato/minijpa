@@ -6,10 +6,10 @@
 package org.minijpa.jpa.db;
 
 import java.util.List;
-import org.minijpa.jdbc.AttributeValue;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.QueryResultValues;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
@@ -22,20 +22,21 @@ import org.minijpa.jdbc.model.SqlStatementGenerator;
  */
 public class EntityQueryLevel implements QueryLevel {
 
-    private final EntityContainer entityContainer;
     private final SqlStatementFactory sqlStatementFactory;
     private final EntityInstanceBuilder entityInstanceBuilder;
     private final SqlStatementGenerator sqlStatementGenerator;
+    private final MetaEntityHelper metaEntityHelper;
     private final JdbcRunner jdbcRunner;
     private final ConnectionHolder connectionHolder;
 
     public EntityQueryLevel(SqlStatementFactory sqlStatementFactory,
-	    EntityInstanceBuilder entityInstanceBuilder, EntityContainer entityContainer,
-	    SqlStatementGenerator sqlStatementGenerator, JdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
-	this.entityContainer = entityContainer;
+	    EntityInstanceBuilder entityInstanceBuilder,
+	    SqlStatementGenerator sqlStatementGenerator, MetaEntityHelper metaEntityHelper,
+	    JdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
 	this.sqlStatementFactory = sqlStatementFactory;
 	this.entityInstanceBuilder = entityInstanceBuilder;
 	this.sqlStatementGenerator = sqlStatementGenerator;
+	this.metaEntityHelper = metaEntityHelper;
 	this.jdbcRunner = jdbcRunner;
 	this.connectionHolder = connectionHolder;
     }
@@ -46,8 +47,7 @@ public class EntityQueryLevel implements QueryLevel {
     }
 
     public QueryResultValues run(MetaEntity entity, Object primaryKey, SqlSelect sqlSelect) throws Exception {
-	AttributeValue attrValueId = new AttributeValue(entity.getId(), primaryKey);
-	List<QueryParameter> parameters = sqlStatementFactory.queryParametersFromAV(attrValueId);
+	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
 	String sql = sqlStatementGenerator.export(sqlSelect);
 	return jdbcRunner.findById(sql, connectionHolder.getConnection(),
 		sqlSelect, parameters);

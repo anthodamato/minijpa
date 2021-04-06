@@ -20,8 +20,7 @@ import javax.persistence.criteria.Root;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.AbstractAttribute;
-import org.minijpa.jdbc.AbstractAttributeValue;
-import org.minijpa.jdbc.AttributeValue;
+import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
@@ -72,8 +71,7 @@ public class SqlStatementFactoryTest {
 
 	MetaEntity employeeEntity = map.get(Employee.class.getName());
 	MetaAttribute foreignKeyAttribute = employeeEntity.getAttribute("department");
-	AttributeValue attrValue = new AttributeValue(foreignKeyAttribute, department);
-	List<QueryParameter> parameters = sqlStatementFactory.queryParametersFromAV(attrValue);
+	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(foreignKeyAttribute, department);
 	List<String> columns = parameters.stream().map(p -> p.getColumnName())
 		.collect(Collectors.toList());
 
@@ -133,10 +131,10 @@ public class SqlStatementFactoryTest {
 
 	MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
 	RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
-	List<AbstractAttributeValue> attributeValues = sqlStatementFactory.expandJoinColumnAttributes(a, store.getId(),
+	AttributeValueArray<AbstractAttribute> attributeValueArray = sqlStatementFactory.expandJoinColumnAttributes(a, store.getId(),
 		relationshipJoinTable.getJoinColumnOwningAttributes());
-	List<AbstractAttribute> attributes = metaEntityHelper.attributeValuesToAttribute(attributeValues);
-	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
+	List<AbstractAttribute> attributes = attributeValueArray.getAttributes();
+	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValueArray);
 	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
 		relationshipJoinTable, attributes);
 

@@ -26,17 +26,17 @@ import java.util.Optional;
  *
  * @author adamato
  */
-public class AttributeValueArray {
+public class AttributeValueArray<T> {
 
-    private final List<MetaAttribute> attributes = new ArrayList<>();
+    private final List<T> attributes = new ArrayList<>();
     private final List<Object> values = new ArrayList<>();
 
-    public void add(MetaAttribute attribute, Object value) {
+    public void add(T attribute, Object value) {
 	attributes.add(attribute);
 	values.add(value);
     }
 
-    public List<MetaAttribute> getAttributes() {
+    public List<T> getAttributes() {
 	return attributes;
     }
 
@@ -44,7 +44,7 @@ public class AttributeValueArray {
 	return values;
     }
 
-    public MetaAttribute getAttribute(int index) {
+    public T getAttribute(int index) {
 	return attributes.get(index);
     }
 
@@ -52,7 +52,7 @@ public class AttributeValueArray {
 	return values.get(index);
     }
 
-    public Optional<Object> getValue(MetaAttribute attribute) {
+    public Optional<Object> getValue(T attribute) {
 	for (int i = 0; i < size(); ++i) {
 	    if (getAttribute(i) == attribute)
 		return Optional.of(getValue(i));
