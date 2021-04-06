@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
 
 import javax.persistence.PersistenceException;
@@ -199,10 +198,19 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    LOG.info("persist: idValue=" + idValue);
 	    List<QueryParameter> idParameters = sqlStatementFactory.convertAVToQP(entity.getId(), idValue);
 	    List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+	    if (hasOptimisticLock(entity, entityInstance)) {
+		idColumns.add(entity.getVersionAttribute().get().getColumnName());
+	    }
+
 	    createVersionAttributeArrayEntry(entity, entityInstance, attributeValueArray);
 	    SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attributeValueArray.getAttributes(),
 		    idColumns);
 	    attributeValueArray.add(entity.getId(), idValue);
+	    if (hasOptimisticLock(entity, entityInstance)) {
+		Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+		attributeValueArray.add(entity.getVersionAttribute().get(), currentVersionValue);
+	    }
+
 	    List<QueryParameter> parameters = sqlStatementFactory.convertAVToQP(attributeValueArray);
 	    String sql = sqlStatementGenerator.export(sqlUpdate);
 	    jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
@@ -417,6 +425,11 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	LOG.info("remove: idValue=" + idValue);
 
 	List<QueryParameter> idParameters = sqlStatementFactory.convertAVToQP(e.getId(), idValue);
+	if (hasOptimisticLock(e, entityInstance)) {
+	    Object currentVersionValue = e.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+	    idParameters.addAll(sqlStatementFactory.convertAVToQP(e.getVersionAttribute().get(), currentVersionValue));
+	}
+
 	List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 
 	SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(e, idColumns);

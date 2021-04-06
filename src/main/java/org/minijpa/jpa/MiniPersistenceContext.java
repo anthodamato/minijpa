@@ -26,7 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import javax.persistence.EntityExistsException;
 
 import org.minijpa.jdbc.AttributeUtil;
@@ -449,23 +448,19 @@ public class MiniPersistenceContext implements EntityContainer {
 
     @Override
     public void saveForeignKey(Object parentInstance, MetaAttribute attribute, Object value) {
-	LOG.debug("saveForeignKey: this=" + this);
 	LOG.debug("saveForeignKey: parentInstance.getClass()=" + parentInstance.getClass() + "; parentInstance=" + parentInstance);
 	Map<Object, Map<MetaAttribute, Object>> map = foreignKeyValues.get(parentInstance.getClass());
-	LOG.debug("saveForeignKey: 1 map=" + map);
 	if (map == null) {
 	    map = new HashMap<>();
 	    foreignKeyValues.put(parentInstance.getClass(), map);
 	}
 
-	LOG.debug("saveForeignKey: 2 map=" + map);
 	Map<MetaAttribute, Object> parentMap = map.get(parentInstance);
 	if (parentMap == null) {
 	    parentMap = new HashMap<>();
 	    map.put(parentInstance, parentMap);
 	}
 
-	LOG.debug("saveForeignKey: 3 map=" + map);
 	LOG.debug("saveForeignKey: parentMap=" + parentMap + "; attribute=" + attribute);
 	parentMap.put(attribute, value);
     }

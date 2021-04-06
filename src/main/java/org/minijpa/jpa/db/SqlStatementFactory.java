@@ -293,7 +293,8 @@ public class SqlStatementFactory {
 	return metaEntityHelper.convertAVToQP(a, value);
     }
 
-    public SqlUpdate generateUpdate(MetaEntity entity, List<MetaAttribute> attributes, List<String> idColumnNames)
+    public SqlUpdate generateUpdate(MetaEntity entity, List<MetaAttribute> attributes,
+	    List<String> idColumnNames)
 	    throws Exception {
 	FromTable fromTable = FromTable.of(entity);
 	List<TableColumn> columns = attributes.stream().map(a -> {

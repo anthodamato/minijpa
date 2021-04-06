@@ -31,12 +31,12 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	    List<Object> values) throws Exception {
 	for (int i = 0; i < attributes.size(); ++i) {
 	    MetaAttribute attribute = attributes.get(i);
-	    LOG.info("setAttributeValues: 1 attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
+	    LOG.debug("setAttributeValues: 1 attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
 	}
 
 	for (int i = 0; i < attributes.size(); ++i) {
 	    MetaAttribute attribute = attributes.get(i);
-	    LOG.info("setAttributeValues: attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
+	    LOG.debug("setAttributeValues: attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
 	    findAndSetAttributeValue(entity.getEntityClass(), entityInstance, entity.getAttributes(), attribute,
 		    values.get(i), entity);
 	}
@@ -50,8 +50,8 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	    parent = parentClass.getDeclaredConstructor().newInstance();
 	}
 
-	LOG.info("setAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
-	LOG.info("setAttributeValue: value=" + value);
+	LOG.debug("setAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
+	LOG.debug("setAttributeValue: value=" + value);
 
 	attribute.getWriteMethod().invoke(parent, value);
 	Method m = entity.getModificationAttributeReadMethod();
@@ -63,7 +63,7 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 
     @Override
     public Object getAttributeValue(Object parentInstance, MetaAttribute attribute) throws Exception {
-	LOG.info(
+	LOG.debug(
 		"getAttributeValue: parent=" + parentInstance + "; a.getReadMethod()=" + attribute.getReadMethod());
 
 	return attribute.getReadMethod().invoke(parentInstance);
@@ -72,12 +72,12 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     private Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance,
 	    List<MetaAttribute> attributes, MetaAttribute attribute, Object value, MetaEntity entity)
 	    throws Exception {
-	LOG.info("findAndSetAttributeValue: value=" + value + "; attribute=" + attribute);
-	LOG.info("findAndSetAttributeValue: parentInstance=" + parentInstance + "; parentClass=" + parentClass);
-	LOG.info("findAndSetAttributeValue: entity=" + entity);
+	LOG.debug("findAndSetAttributeValue: value=" + value + "; attribute=" + attribute);
+	LOG.debug("findAndSetAttributeValue: parentInstance=" + parentInstance + "; parentClass=" + parentClass);
+	LOG.debug("findAndSetAttributeValue: entity=" + entity);
 
 	for (MetaAttribute a : attributes) {
-	    LOG.info("findAndSetAttributeValue: a=" + a);
+	    LOG.debug("findAndSetAttributeValue: a=" + a);
 	    if (a == attribute) {
 		return setAttributeValue(parentInstance, parentClass, attribute, value, entity);
 	    }
@@ -88,7 +88,7 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	    if (!a.isEmbedded())
 		continue;
 
-	    LOG.info("findAndSetAttributeValue: embedded a=" + a);
+	    LOG.debug("findAndSetAttributeValue: embedded a=" + a);
 	    Object aInstance = findAndSetAttributeValue(a.getType(), null,
 		    a.getEmbeddableMetaEntity().getAttributes(), attribute, value, a.getEmbeddableMetaEntity());
 	    if (aInstance != null) {
