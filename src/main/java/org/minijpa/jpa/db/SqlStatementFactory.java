@@ -27,7 +27,6 @@ import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.AbstractAttributeValue;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.AttributeValue;
-import org.minijpa.jdbc.AttributeValueArray;
 import org.minijpa.jdbc.AttributeValueConverter;
 import org.minijpa.jdbc.ColumnNameValue;
 import org.minijpa.jdbc.EmbeddedIdAttributeValueConverter;
@@ -132,10 +131,6 @@ public class SqlStatementFactory {
 	return metaEntityHelper.convertAVToQP(attributeValue);
     }
 
-    public List<QueryParameter> queryParametersFromAV(List<AttributeValue> attributeValues) throws Exception {
-	return metaEntityHelper.convertAVToQP(attributeValues);
-    }
-
     public SqlSelect generateSelectById(MetaEntity entity, LockType lockType) throws Exception {
 	SqlSelect sqlSelect = selectByIdMap.get(entity);
 	if (sqlSelect != null)
@@ -171,7 +166,7 @@ public class SqlStatementFactory {
 	}
 
 	List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
-	LOG.info("generateSelectByForeignKey: fetchColumnNameValues=" + fetchColumnNameValues);
+//	LOG.info("generateSelectByForeignKey: fetchColumnNameValues=" + fetchColumnNameValues);
 //	LOG.info("generateSelectByForeignKey: parameters=" + parameters);
 	FromTable fromTable = FromTable.of(entity);
 	List<TableColumn> tableColumns = columns.stream().map(c -> new TableColumn(fromTable, new Column(c)))
@@ -189,8 +184,8 @@ public class SqlStatementFactory {
 	return sqlSelect;
     }
 
-    public List<AbstractAttributeValue> expandJoinColumnAttributes(MetaAttribute owningId, Object joinTableForeignKey,
-	    List<JoinColumnAttribute> allJoinColumnAttributes) throws Exception {
+    public List<AbstractAttributeValue> expandJoinColumnAttributes(MetaAttribute owningId,
+	    Object joinTableForeignKey, List<JoinColumnAttribute> allJoinColumnAttributes) throws Exception {
 	List<AttributeValue> owningIdAttributeValues = attributeValueConverter
 		.convert(new AttributeValue(owningId, joinTableForeignKey));
 	List<AbstractAttributeValue> attributeValues = new ArrayList<>();
@@ -283,14 +278,6 @@ public class SqlStatementFactory {
     public SqlInsert generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, List<String> columnNames) throws Exception {
 	List<Column> columns = columnNames.stream().map(c -> new Column(c)).collect(Collectors.toList());
 	return new SqlInsert(new FromTableImpl(relationshipJoinTable.getTableName()), columns);
-    }
-
-    public List<QueryParameter> convertAVToQP(AttributeValueArray attributeValueArray) throws Exception {
-	return metaEntityHelper.convertAVToQP(attributeValueArray);
-    }
-
-    public List<QueryParameter> convertAVToQP(MetaAttribute a, Object value) throws Exception {
-	return metaEntityHelper.convertAVToQP(a, value);
     }
 
     public SqlUpdate generateUpdate(MetaEntity entity, List<MetaAttribute> attributes,

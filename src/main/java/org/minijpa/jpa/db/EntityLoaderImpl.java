@@ -107,19 +107,19 @@ public class EntityLoaderImpl implements EntityLoader {
     }
 
     private void fillCircularRelationships(MetaEntity entity, Object entityInstance) throws Exception {
-	LOG.info("fillCircularRelationships: entity=" + entity);
+	LOG.debug("fillCircularRelationships: entity=" + entity);
 	for (MetaAttribute a : entity.getRelationshipAttributes()) {
 	    if (!a.isEager())
 		continue;
 
 	    if (a.getRelationship().toOne() && a.getRelationship().isOwner()) {
-		LOG.info("fillCircularRelationships: a=" + a);
+		LOG.debug("fillCircularRelationships: a=" + a);
 		Object value = entityInstanceBuilder.getAttributeValue(entityInstance, a);
-		LOG.info("fillCircularRelationships: value=" + value);
+		LOG.debug("fillCircularRelationships: value=" + value);
 		if (value != null) {
 		    MetaAttribute targetAttribute = a.getRelationship().getTargetAttribute();
-		    LOG.info("fillCircularRelationships: targetAttribute=" + targetAttribute);
-		    LOG.info("fillCircularRelationships: a.getRelationship().getAttributeType()=" + a.getRelationship().getAttributeType());
+		    LOG.debug("fillCircularRelationships: targetAttribute=" + targetAttribute);
+		    LOG.debug("fillCircularRelationships: a.getRelationship().getAttributeType()=" + a.getRelationship().getAttributeType());
 		    MetaEntity toEntity = a.getRelationship().getAttributeType();
 		    if (toEntity != null) {
 			MetaAttribute attribute = toEntity.findAttributeByMappedBy(a.getName());
@@ -127,7 +127,7 @@ public class EntityLoaderImpl implements EntityLoader {
 			    // it's bidirectional
 			    if (attribute.getRelationship().toOne()) {
 				Object v = entityInstanceBuilder.getAttributeValue(value, attribute);
-				LOG.info("fillCircularRelationships: v=" + v);
+				LOG.debug("fillCircularRelationships: v=" + v);
 				if (v == null)
 				    entityInstanceBuilder.setAttributeValue(value, value.getClass(), attribute, entityInstance, toEntity);
 			    }
@@ -156,9 +156,9 @@ public class EntityLoaderImpl implements EntityLoader {
     private void loadRelationships(Object parentInstance, MetaEntity entity,
 	    List<ColumnNameValue> columnNameValues, LockType lockType) throws Exception {
 	// foreign key on the same table
-	LOG.info("loadRelationships: parentInstance=" + parentInstance);
+	LOG.debug("loadRelationships: parentInstance=" + parentInstance);
 	for (ColumnNameValue c : columnNameValues) {
-	    LOG.info("loadRelationships: c.getForeignKeyAttribute()=" + c.getForeignKeyAttribute() + "; c.getValue()=" + c.getValue());
+	    LOG.debug("loadRelationships: c.getForeignKeyAttribute()=" + c.getForeignKeyAttribute() + "; c.getValue()=" + c.getValue());
 	    if (c.getForeignKeyAttribute() == null)
 		continue;
 
@@ -166,14 +166,14 @@ public class EntityLoaderImpl implements EntityLoader {
 		    && c.getForeignKeyAttribute().getRelationship().getFetchType() == FetchType.LAZY) {
 		// save the foreign key for lazy attributes
 		entityContainer.saveForeignKey(parentInstance, c.getForeignKeyAttribute(), c.getValue());
-		LOG.info("loadRelationships: saved foreign key c.getValue()=" + c.getValue());
+		LOG.debug("loadRelationships: saved foreign key c.getValue()=" + c.getValue());
 		continue;
 	    }
 
 	    loadRelationshipByForeignKey(parentInstance, entity, c.getForeignKeyAttribute(), c.getValue(), lockType);
 	}
 
-	LOG.info("loadRelationships: entity.getRelationshipAttributes()=" + entity.getRelationshipAttributes());
+	LOG.debug("loadRelationships: entity.getRelationshipAttributes()=" + entity.getRelationshipAttributes());
 	// join table relationships
 	for (MetaAttribute a : entity.getRelationshipAttributes()) {
 	    if (!a.isEager())
@@ -198,20 +198,20 @@ public class EntityLoaderImpl implements EntityLoader {
     private Object loadRelationshipByForeignKey(Object parentInstance, MetaEntity entity,
 	    MetaAttribute foreignKeyAttribute, Object foreignKeyValue, LockType lockType) throws Exception {
 	// foreign key on the same table
-	LOG.info("loadRelationshipByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute + "; foreignKeyValue=" + foreignKeyValue);
+	LOG.debug("loadRelationshipByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute + "; foreignKeyValue=" + foreignKeyValue);
 	MetaEntity e = entities.get(foreignKeyAttribute.getType().getName());
-	LOG.info("loadRelationshipByForeignKey: e=" + e);
+	LOG.debug("loadRelationshipByForeignKey: e=" + e);
 	Object foreignKeyInstance = findById(e, foreignKeyValue, lockType);
-	LOG.info("loadRelationshipByForeignKey: foreignKeyInstance=" + foreignKeyInstance);
+	LOG.debug("loadRelationshipByForeignKey: foreignKeyInstance=" + foreignKeyInstance);
 	if (foreignKeyInstance != null) {
 //	    entityContainer.addFlushedPersist(foreignKeyInstance, foreignKeyValue);
 //	    entityContainer.setLoadedFromDb(foreignKeyInstance);
-//	    LOG.info("loadRelationshipByForeignKey: entity=" + entity);
-//	    LOG.info("loadRelationshipByForeignKey: parentInstance=" + parentInstance);
+//	    LOG.debug("loadRelationshipByForeignKey: entity=" + entity);
+//	    LOG.debug("loadRelationshipByForeignKey: parentInstance=" + parentInstance);
 	    Object parent = AttributeUtil.findParentInstance(parentInstance, entity.getAttributes(), foreignKeyAttribute, entityInstanceBuilder);
 	    MetaEntity parentEntity = AttributeUtil.findParentEntity(parent.getClass().getName(), entity);
-//	    LOG.info("loadRelationshipByForeignKey: parent=" + parent);
-//	    LOG.info("loadRelationshipByForeignKey: e=" + e);
+//	    LOG.debug("loadRelationshipByForeignKey: parent=" + parent);
+//	    LOG.debug("loadRelationshipByForeignKey: e=" + e);
 	    entityInstanceBuilder.setAttributeValue(parent, parent.getClass(),
 		    foreignKeyAttribute, foreignKeyInstance, parentEntity);
 	}
@@ -223,32 +223,32 @@ public class EntityLoaderImpl implements EntityLoader {
     public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value) throws Exception {
 	MetaAttribute targetAttribute = null;
 	Relationship relationship = a.getRelationship();
-	LOG.info("loadAttribute: a=" + a);
-	LOG.info("loadAttribute: value=" + value);
-	LOG.info("loadAttribute: parentInstance=" + parentInstance);
-	LOG.info("loadAttribute: relationship=" + relationship);
+	LOG.debug("loadAttribute: a=" + a);
+	LOG.debug("loadAttribute: value=" + value);
+	LOG.debug("loadAttribute: parentInstance=" + parentInstance);
+	LOG.debug("loadAttribute: relationship=" + relationship);
 	if (relationship != null)
 	    targetAttribute = relationship.getTargetAttribute();
 
-	LOG.info("loadAttribute: targetAttribute=" + targetAttribute);
+	LOG.debug("loadAttribute: targetAttribute=" + targetAttribute);
 	if (relationship == null || !relationship.toMany()) {
 	    MetaEntity entity = entities.get(parentInstance.getClass().getName());
 	    Object foreignKey = entityContainer.getForeignKeyValue(parentInstance, a);
-	    LOG.info("loadAttribute: foreignKey=" + foreignKey);
+	    LOG.debug("loadAttribute: foreignKey=" + foreignKey);
 	    Object result = loadRelationshipByForeignKey(parentInstance, entity, a, foreignKey, LockType.NONE);
 	    entityContainer.removeForeignKey(parentInstance, a);
 	    return result;
 	}
 
-	LOG.info("loadAttribute: to Many targetAttribute=" + targetAttribute + "; relationship.getJoinTable()="
+	LOG.debug("loadAttribute: to Many targetAttribute=" + targetAttribute + "; relationship.getJoinTable()="
 		+ relationship.getJoinTable());
 	if (relationship.getJoinTable() == null) {
 	    MetaEntity entity = entities.get(relationship.getTargetEntityClass().getName());
-	    LOG.info("loadAttribute: entity=" + entity);
+	    LOG.debug("loadAttribute: entity=" + entity);
 	    if (entity == null)
 		throw new IllegalArgumentException("Class '" + relationship.getTargetEntityClass().getName() + "' is not an entity");
 
-	    LOG.info("loadAttribute: relationship.getOwningAttribute()=" + relationship.getOwningAttribute());
+	    LOG.debug("loadAttribute: relationship.getOwningAttribute()=" + relationship.getOwningAttribute());
 	    List<QueryParameter> parameters = foreignKeyCollectionQueryLevel.createParameters(parentInstance,
 		    relationship.getOwningAttribute());
 	    foreignKeyCollectionQueryLevel.createQuery(entity, relationship.getOwningAttribute(), parameters);
@@ -258,10 +258,10 @@ public class EntityLoaderImpl implements EntityLoader {
 	MetaEntity entity = relationship.getAttributeType();
 	MetaEntity e = entities.get(parentInstance.getClass().getName());
 	Object pk = AttributeUtil.getIdValue(e, parentInstance);
-	LOG.info("loadAttribute: pk=" + pk);
+	LOG.debug("loadAttribute: pk=" + pk);
 	List<AbstractAttributeValue> attributeValues = joinTableCollectionQueryLevel.createAttributeValues(pk,
 		e.getId(), relationship);
-	LOG.info("loadAttribute: attributeValues=" + attributeValues);
+	LOG.debug("loadAttribute: attributeValues=" + attributeValues);
 	SqlSelect sqlSelect = joinTableCollectionQueryLevel.createQuery(entity, pk, e.getId(), relationship, attributeValues);
 	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValues);
 	return joinTableCollectionQueryLevel.run(this, a, parameters, sqlSelect);

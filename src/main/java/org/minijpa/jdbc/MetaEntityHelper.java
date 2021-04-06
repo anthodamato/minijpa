@@ -18,8 +18,12 @@
  */
 package org.minijpa.jdbc;
 
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.minijpa.jdbc.model.Column;
@@ -115,9 +119,9 @@ public class MetaEntityHelper {
 
 	if (a.getRelationship() != null) {
 	    String joinColumn = a.getRelationship().getJoinColumn();
-	    LOG.info("convertAVToQP: joinColumn=" + joinColumn);
+	    LOG.debug("convertAVToQP: joinColumn=" + joinColumn);
 	    MetaEntity attributeType = a.getRelationship().getAttributeType();
-	    LOG.info("convertAVToQP: attributeType=" + attributeType);
+	    LOG.debug("convertAVToQP: attributeType=" + attributeType);
 	    if (joinColumn != null && attributeType != null) {
 		Object idValue = attributeType.getId().getReadMethod().invoke(av.getValue());
 		QueryParameter queryParameter = new QueryParameter(joinColumn, idValue, attributeType.getId().getType(),
@@ -153,9 +157,9 @@ public class MetaEntityHelper {
 
 	if (a.getRelationship() != null) {
 	    String joinColumn = a.getRelationship().getJoinColumn();
-	    LOG.info("convertAVToQP: joinColumn=" + joinColumn);
+	    LOG.debug("convertAVToQP: joinColumn=" + joinColumn);
 	    MetaEntity attributeType = a.getRelationship().getAttributeType();
-	    LOG.info("convertAVToQP: attributeType=" + attributeType);
+	    LOG.debug("convertAVToQP: attributeType=" + attributeType);
 	    if (joinColumn != null && attributeType != null) {
 		Object idValue = attributeType.getId().getReadMethod().invoke(value);
 		QueryParameter queryParameter = new QueryParameter(joinColumn, idValue, attributeType.getId().getType(),
@@ -270,4 +274,63 @@ public class MetaEntityHelper {
 	return attributeValues.stream().map(p -> p.getAttribute())
 		.collect(Collectors.toList());
     }
+
+    public boolean hasOptimisticLock(MetaEntity entity, Object entityInstance)
+	    throws IllegalAccessException, InvocationTargetException {
+	LockType lockType = (LockType) entity.getLockTypeAttributeReadMethod().get().invoke(entityInstance);
+	if (lockType == LockType.OPTIMISTIC || lockType == LockType.OPTIMISTIC_FORCE_INCREMENT)
+	    return true;
+
+	return entity.getVersionAttribute().isPresent();
+    }
+
+    public void updateVersionAttributeValue(MetaEntity entity, Object entityInstance)
+	    throws Exception {
+	if (!hasOptimisticLock(entity, entityInstance))
+	    return;
+
+	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+	Object versionValue = AttributeUtil.increaseVersionValue(entity, currentVersionValue);
+	entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, versionValue);
+    }
+
+    public void createVersionAttributeArrayEntry(MetaEntity entity, Object entityInstance,
+	    AttributeValueArray attributeValueArray) throws Exception {
+	if (!hasOptimisticLock(entity, entityInstance))
+	    return;
+
+	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+	Object versionValue = AttributeUtil.increaseVersionValue(entity, currentVersionValue);
+	attributeValueArray.add(entity.getVersionAttribute().get(), versionValue);
+    }
+
+    public LockType getLockType(MetaEntity entity, Object entityInstance) throws Exception {
+	return (LockType) entity.getLockTypeAttributeReadMethod().get().invoke(entityInstance);
+    }
+
+    public void setLockType(MetaEntity entity, Object entityInstance, LockType lockType) throws Exception {
+	entity.getLockTypeAttributeWriteMethod().get().invoke(entityInstance, lockType);
+    }
+
+    public Optional<QueryParameter> generateVersionParameter(MetaEntity metaEntity) throws Exception {
+	if (!metaEntity.hasVersionAttribute())
+	    return Optional.empty();
+
+	Object value = null;
+	MetaAttribute attribute = metaEntity.getVersionAttribute().get();
+	Class<?> type = attribute.getType();
+	if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int"))) {
+	    value = 0;
+	} else if (type == Short.class || (type.isPrimitive() && type.getName().equals("short"))) {
+	    value = Short.valueOf("0");
+	} else if (type == Long.class || (type.isPrimitive() && type.getName().equals("long"))) {
+	    value = 0L;
+	} else if (type == Timestamp.class) {
+	    value = Timestamp.from(Instant.now());
+	}
+
+	List<QueryParameter> parameters = convertAVToQP(metaEntity.getVersionAttribute().get(), value);
+	return Optional.of(parameters.get(0));
+    }
+
 }
