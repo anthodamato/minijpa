@@ -9,6 +9,8 @@ import java.util.Optional;
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.MetaEntityHelper;
+import org.minijpa.jpa.db.EntityStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,16 +29,22 @@ public final class EntityDelegate implements EntityListener {
 
     @Override
     public Object get(Object value, String attributeName, Object entityInstance) {
-//	LOG.info("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName + "; value=" + value);
+	LOG.info("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName + "; value=" + value);
 //	LOG.info("get: entityContainerContextManager.isEmpty()=" + entityContainerContextManager.isEmpty());
 //	LOG.info("get: entityContainerContextManager.isLoadedFromDb(entityInstance)=" + entityContainerContextManager.isLoadedFromDb(entityInstance));
-	if (entityContainerContextManager.isEmpty() || !entityContainerContextManager.isLoadedFromDb(entityInstance))
+	if (entityContainerContextManager.isEmpty())
+//		|| !entityContainerContextManager.isLoadedFromDb(entityInstance))
 	    return value;
 
 	MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
-	MetaAttribute a = entity.getAttribute(attributeName);
-//	LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
+	if (entity == null)
+	    return value;
 	try {
+	    if (MetaEntityHelper.getEntityStatus(entity, entityInstance) != EntityStatus.FLUSHED_LOADED_FROM_DB)
+		return value;
+
+	    MetaAttribute a = entity.getAttribute(attributeName);
+//	LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
 	    if (a.isLazy() && !lazyAttributeLoaded(entity, a, entityInstance)) {
 		EntityLoader entityLoader = entityContainerContextManager
 			.findByEntityContainer(entityInstance);
@@ -159,23 +167,23 @@ public final class EntityDelegate implements EntityListener {
 	    return entityContainerContexts.isEmpty();
 	}
 
-	public boolean isLoadedFromDb(Object entityInstance) {
-	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-		if (entityContainerContext.getEntityContainer().isLoadedFromDb(entityInstance))
-		    return true;
-	    }
+//	public boolean isLoadedFromDb(Object entityInstance) {
+//	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
+//		if (entityContainerContext.getEntityContainer().isLoadedFromDb(entityInstance))
+//		    return true;
+//	    }
+//
+//	    return false;
+//	}
 
-	    return false;
-	}
-
-	public boolean isFlushedPersist(Object entityInstance) throws Exception {
-	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-		if (entityContainerContext.getEntityContainer().isFlushedPersist(entityInstance))
-		    return true;
-	    }
-
-	    return false;
-	}
+//	public boolean isFlushedPersist(Object entityInstance) throws Exception {
+//	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
+//		if (entityContainerContext.getEntityContainer().isFlushedPersist(entityInstance))
+//		    return true;
+//	    }
+//
+//	    return false;
+//	}
     }
 
     public void addEntityManagerContext(EntityContainerContext entityManagerContext) {

@@ -26,6 +26,7 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jpa.db.ConnectionProviderImpl;
 
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
@@ -79,7 +80,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 	try {
 	    jdbcEntityManager.persist(e, entity, tinyFlushMode);
 	} catch (Exception ex) {
-//	    LOG.error(ex.getClass().getName());
 //	    LOG.error(ex.getMessage());
 	    entityTransaction.setRollbackOnly();
 	    if (ex instanceof OptimisticLockException)
@@ -105,14 +105,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    return;
 	}
 
-	try {
-	    if (persistenceContext.isDetached(entity))
-		throw new IllegalArgumentException("Entity '" + entity + "' is detached");
-	} catch (Exception e) {
-	    LOG.error(e.getMessage());
-	    return;
-	}
-
 	if (entityManagerType == EntityManagerType.CONTAINER_MANAGED
 		&& persistenceContextType == PersistenceContextType.TRANSACTION)
 	    if (entityTransaction == null || !entityTransaction.isActive())
@@ -122,6 +114,14 @@ public class MiniEntityManager extends AbstractEntityManager {
 	if (e == null) {
 	    entityTransaction.setRollbackOnly();
 	    throw new IllegalArgumentException("Object '" + entity.getClass().getName() + "' is not an entity");
+	}
+
+	try {
+	    if (MetaEntityHelper.isDetached(e, entity))
+		throw new IllegalArgumentException("Entity '" + entity + "' is detached");
+	} catch (Exception ex) {
+	    LOG.error(ex.getMessage());
+	    return;
 	}
 
 	LOG.info("remove: entity=" + entity);
@@ -138,7 +138,7 @@ public class MiniEntityManager extends AbstractEntityManager {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey) {
-	LOG.info("find: primaryKey=" + primaryKey);
+	LOG.debug("find: primaryKey=" + primaryKey);
 	try {
 	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
 	    if (entityObject == null)

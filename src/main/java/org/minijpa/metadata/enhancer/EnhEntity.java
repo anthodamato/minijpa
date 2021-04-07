@@ -32,6 +32,8 @@ public class EnhEntity {
     private Optional<String> lazyLoadedAttributeGetMethod = Optional.empty();
     private Optional<String> lockTypeAttributeGetMethod = Optional.empty();
     private Optional<String> lockTypeAttributeSetMethod = Optional.empty();
+    private Optional<String> entityStatusAttributeGetMethod = Optional.empty();
+    private Optional<String> entityStatusAttributeSetMethod = Optional.empty();
 
     public String getClassName() {
 	return className;
@@ -87,6 +89,22 @@ public class EnhEntity {
 
     public void setLockTypeAttributeSetMethod(Optional<String> lockTypeAttributeSetMethod) {
 	this.lockTypeAttributeSetMethod = lockTypeAttributeSetMethod;
+    }
+
+    public Optional<String> getEntityStatusAttributeGetMethod() {
+	return entityStatusAttributeGetMethod;
+    }
+
+    public void setEntityStatusAttributeGetMethod(Optional<String> entityStatusAttributeGetMethod) {
+	this.entityStatusAttributeGetMethod = entityStatusAttributeGetMethod;
+    }
+
+    public Optional<String> getEntityStatusAttributeSetMethod() {
+	return entityStatusAttributeSetMethod;
+    }
+
+    public void setEntityStatusAttributeSetMethod(Optional<String> entityStatusAttributeSetMethod) {
+	this.entityStatusAttributeSetMethod = entityStatusAttributeSetMethod;
     }
 
     public void findEmbeddables(Set<EnhEntity> embeddables) {

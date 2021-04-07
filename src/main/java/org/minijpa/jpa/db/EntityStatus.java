@@ -18,18 +18,11 @@
  */
 package org.minijpa.jpa.db;
 
-import org.minijpa.jdbc.AttributeValueArray;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface EntityWriter {
-
-    public void persist(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception;
-
-    public void delete(Object entityInstance, MetaEntity e) throws Exception;
+public enum EntityStatus {
+    NEW, PERSIST_NOT_FLUSHED,
+    FLUSHED, DETACHED, FLUSHED_LOADED_FROM_DB, REMOVED;
 }

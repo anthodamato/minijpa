@@ -19,12 +19,16 @@ import org.minijpa.jpa.model.Person;
 import org.minijpa.jpa.model.ProgramManager;
 import org.minijpa.jpa.model.State;
 import org.minijpa.metadata.MetaEntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author adamato
  */
 public class QueryLevelTest {
+
+    private Logger LOG = LoggerFactory.getLogger(QueryLevelTest.class);
 
     @Test
     public void embedManyToOne() throws Exception {
@@ -48,6 +52,7 @@ public class QueryLevelTest {
 
 	JobEmployee e1 = new JobEmployee();
 	e1.setId(1);
+	LOG.debug("embedManyToOne: e1.getId()=" + e1.getId());
 	e1.setName("Abraham");
 	e1.setJobInfo(jobInfo);
 	jdbcEntityManager.persist(metaEntityJE, e1, null);
@@ -73,7 +78,7 @@ public class QueryLevelTest {
 	Assertions.assertEquals(1, employees.size());
 
 	jdbcEntityManager.remove(e1);
-	jdbcEntityManager.remove(programManager);
+	jdbcEntityManager.remove(pm);
 	jdbcEntityManager.flush();
 	persistenceUnitEnv.getConnectionHolder().commit();
 	persistenceUnitEnv.getConnectionHolder().closeConnection();
@@ -149,7 +154,7 @@ public class QueryLevelTest {
 	Assertions.assertNotNull(p.getFingerprint());
 	Assertions.assertEquals("John Smith", p.getName());
 	Assertions.assertEquals("arch", p.getFingerprint().getType());
-	jdbcEntityManager.remove(person);
+	jdbcEntityManager.remove(p);
 	jdbcEntityManager.remove(fingerprint);
 	jdbcEntityManager.flush();
 	persistenceUnitEnv.getConnectionHolder().commit();

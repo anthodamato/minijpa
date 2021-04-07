@@ -74,7 +74,9 @@ public class EntityWriterImpl implements EntityWriter {
     @Override
     public void persist(MetaEntity entity, Object entityInstance,
 	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
-	if (entityContainer.isFlushedPersist(entityInstance)) {
+	EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(entity, entityInstance);
+	LOG.debug("persist: entityStatus=" + entityStatus);
+	if (MetaEntityHelper.isFlushed(entity, entityInstance)) {
 	    update(entity, entityInstance, attributeValueArray);
 	} else {
 	    insert(entity, entityInstance, attributeValueArray);
@@ -146,7 +148,6 @@ public class EntityWriterImpl implements EntityWriter {
 	    }
 	}
 
-	SqlInsert sqlInsert = null;
 	MetaAttribute id = entity.getId();
 //	LOG.info("persist: id.getPkGeneration()=" + id.getPkGeneration());
 	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
@@ -162,7 +163,7 @@ public class EntityWriterImpl implements EntityWriter {
 		return p.getColumnName();
 	    }).collect(Collectors.toList());
 
-	    sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
+	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
 	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
 //	    LOG.info("persist: pk=" + pk);
@@ -184,7 +185,7 @@ public class EntityWriterImpl implements EntityWriter {
 		return p.getColumnName();
 	    }).collect(Collectors.toList());
 
-	    sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
+	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
 	    jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
 //	    LOG.info("persist: pk=" + pk);

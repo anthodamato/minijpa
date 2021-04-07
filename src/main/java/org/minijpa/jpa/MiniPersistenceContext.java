@@ -26,14 +26,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.EntityExistsException;
 
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.EntityInstanceBuilder;
+import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jpa.db.EntityContainer;
+import org.minijpa.jpa.db.EntityStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,28 +43,11 @@ public class MiniPersistenceContext implements EntityContainer {
     private final Map<String, MetaEntity> entities;
 
     /**
-     * Managed entities. They are persistent on db.
+     * Managed entities
      */
-    private final Map<Class<?>, Map<Object, Object>> flushedPersistEntities = new HashMap<>();
-    /**
-     * Managed entities. They are not persistent on db.
-     */
-    private final Map<Class<?>, Map<Object, Object>> notFlushedPersistEntities = new HashMap<>();
-    /**
-     * Managed entities. They are not persistent on db.
-     */
-    private final Map<Class<?>, Map<Object, Object>> notFlushedRemoveEntities = new HashMap<>();
-    private final List<Object> notFlushedEntities = new LinkedList<>();
-    /**
-     * Detached entities.
-     */
-    private final Map<Class<?>, Map<Object, Object>> detachedEntities = new HashMap<>();
-    /**
-     * Set of entity instances loaded from Db. If an instance is created then made persistent using the
-     * 'EntityManager.persist' method then that instance is not loaded from Db. If the instance is loaded, for example,
-     * using the 'EntityManager.find' method then the instance is loaded from Db.
-     */
-    private final Map<Class<?>, Set<Object>> loadedFromDb = new HashMap<>();
+    private final Map<Class<?>, Map<Object, Object>> managedEntities = new HashMap<>();
+    private final List<Object> managedEntityList = new LinkedList<>();
+
     /**
      * Foreign key values
      *
@@ -88,104 +71,34 @@ public class MiniPersistenceContext implements EntityContainer {
 	return mapEntities;
     }
 
-    private boolean isDetached(Object entityInstance, Object idValue) {
-	Map<Object, Object> mapEntities = detachedEntities.get(entityInstance.getClass());
-	if (mapEntities == null)
-	    return false;
-
-	if (detachedEntities.get(idValue) == null)
-	    return false;
-
-	return true;
+    @Override
+    public void addManaged(Object entityInstance, Object idValue) throws Exception {
+	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
+	mapEntities.put(idValue, entityInstance);
+	managedEntityList.remove(entityInstance);
+	managedEntityList.add(entityInstance);
     }
 
     @Override
-    public boolean isDetached(Object entityInstance) throws Exception {
+    public void removeManaged(Object entityInstance) throws Exception {
 	MetaEntity e = entities.get(entityInstance.getClass().getName());
 	Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-	return isDetached(entityInstance, idValue);
+	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
+	mapEntities.remove(idValue);
+	managedEntityList.remove(entityInstance);
     }
 
     @Override
-    public void addFlushedPersist(Object entityInstance, Object idValue) throws Exception {
-	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), flushedPersistEntities);
-	if (mapEntities.get(idValue) != null)
-	    return;
-
-	LOG.debug("Instance " + entityInstance + " saved in the PC pk=" + idValue);
-	mapEntities.put(idValue, entityInstance);
-    }
-
-    @Override
-    public void addFlushedPersist(Object entityInstance) throws Exception {
+    public void markForRemoval(Object entityInstance) throws Exception {
 	MetaEntity e = entities.get(entityInstance.getClass().getName());
-//	LOG.info("save: entityInstance.getClass().getName()=" + entityInstance.getClass().getName());
-//	LOG.info("save: e=" + e);
-	if (e == null)
-	    throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
-
-	Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-	if (isDetached(entityInstance, idValue))
-	    throw new EntityExistsException("Entity: '" + entityInstance + "' is detached");
-
-	addFlushedPersist(entityInstance, idValue);
+	MetaEntityHelper.setEntityStatus(e, entityInstance, EntityStatus.REMOVED);
+	managedEntityList.remove(entityInstance);
+	managedEntityList.add(entityInstance);
     }
 
     @Override
-    public void addNotFlushedPersist(Object entityInstance, Object idValue) throws Exception {
-	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), notFlushedPersistEntities);
-	if (mapEntities.get(idValue) != null)
-	    return;
-
-//	LOG.info("Instance " + entityInstance + " saved in the PC pk=" + idValue);
-	mapEntities.put(idValue, entityInstance);
-	notFlushedEntities.add(entityInstance);
-    }
-
-    @Override
-    public void addNotFlushedRemove(Object entityInstance, Object idValue) throws Exception {
-	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), notFlushedRemoveEntities);
-	if (mapEntities.get(idValue) != null)
-	    return;
-
-	LOG.info("Instance " + entityInstance + " saved in the PC for removal pk=" + idValue);
-	mapEntities.put(idValue, entityInstance);
-	notFlushedEntities.add(entityInstance);
-    }
-
-    @Override
-    public List<Object> getNotFlushedEntities() {
-	return new ArrayList<>(notFlushedEntities);
-    }
-
-    @Override
-    public Set<Class<?>> getNotFlushedPersistClasses() {
-	return notFlushedPersistEntities.keySet();
-    }
-
-    @Override
-    public Set<Class<?>> getNotFlushedRemoveClasses() {
-	return notFlushedRemoveEntities.keySet();
-    }
-
-    @Override
-    public Map<Object, Object> getNotFlushedPersistEntities(Class<?> c) {
-	return notFlushedPersistEntities.get(c);
-    }
-
-    @Override
-    public Map<Object, Object> getNotFlushedRemoveEntities(Class<?> c) {
-	return notFlushedRemoveEntities.get(c);
-    }
-
-    @Override
-    public Set<Class<?>> getFlushedPersistClasses() {
-	return flushedPersistEntities.keySet();
-    }
-
-    @Override
-    public Map<Object, Object> getFlushedPersistEntities(Class<?> c) {
-	return flushedPersistEntities.get(c);
+    public List<Object> getManagedEntityList() {
+	return new ArrayList<>(managedEntityList);
     }
 
     @Override
@@ -197,82 +110,64 @@ public class MiniPersistenceContext implements EntityContainer {
 	if (primaryKey == null)
 	    throw new IllegalArgumentException("Primary key is null (class '" + entityClass.getName() + "')");
 
-	Map<Object, Object> notFlushedEntitiesMap = getEntityMap(entityClass, notFlushedPersistEntities);
+	Map<Object, Object> notFlushedEntitiesMap = getEntityMap(entityClass, managedEntities);
 	Object entityInstance = notFlushedEntitiesMap.get(primaryKey);
-	LOG.info("find: not flushed entityInstance=" + entityInstance);
-	if (entityInstance != null)
-	    return entityInstance;
-
-	Map<Object, Object> flushedEntitiesMap = getEntityMap(entityClass, flushedPersistEntities);
-	entityInstance = flushedEntitiesMap.get(primaryKey);
-	LOG.info("find: flushed entityInstance=" + entityInstance);
+	LOG.debug("find: managed entityInstance=" + entityInstance);
 	return entityInstance;
     }
 
-    /**
-     * Finds over the 'owningEntity' entities those ones with the given foreign key.
-     *
-     * @param owningEntity
-     * @param targetEntity
-     * @param foreignKeyAttribute
-     * @param foreignKey
-     * @param entityInstanceBuilder
-     * @return
-     * @throws Exception
-     */
-    @Override
-    public List<Object> findByForeignKey(MetaEntity owningEntity, MetaEntity targetEntity,
-	    MetaAttribute foreignKeyAttribute, Object foreignKey, EntityInstanceBuilder entityInstanceBuilder) throws Exception {
-	List<Object> result = new ArrayList<>();
-	Map<Object, Object> notFlushedEntitiesMap = getEntityMap(owningEntity.getEntityClass(), notFlushedPersistEntities);
-	LOG.debug("findByForeignKey: owningEntity.getEntityClass()=" + owningEntity.getEntityClass());
-	LOG.debug("findByForeignKey: notFlushedEntitiesMap.size()=" + notFlushedEntitiesMap.size());
-	for (Map.Entry<Object, Object> e : notFlushedEntitiesMap.entrySet()) {
-	    LOG.debug("findByForeignKey: e.getValue()=" + e.getValue());
-	    Object fkv = entityInstanceBuilder.getAttributeValue(e.getValue(), foreignKeyAttribute);
-	    Object fk = AttributeUtil.getIdValue(targetEntity, fkv);
-	    if (foreignKey.equals(fk))
-		result.add(e.getValue());
-	}
-
-	Map<Object, Object> flushedEntitiesMap = getEntityMap(owningEntity.getEntityClass(), flushedPersistEntities);
-	LOG.debug("findByForeignKey: flushedEntitiesMap.size()=" + flushedEntitiesMap.size());
-	for (Map.Entry<Object, Object> e : flushedEntitiesMap.entrySet()) {
-	    LOG.debug("findByForeignKey: e.getValue()=" + e.getValue());
-	    Object fkv = entityInstanceBuilder.getAttributeValue(e.getValue(), foreignKeyAttribute);
-	    LOG.debug("findByForeignKey: fkv=" + fkv);
-	    Object fk = AttributeUtil.getIdValue(targetEntity, fkv);
-	    if (foreignKey.equals(fk))
-		result.add(e.getValue());
-	}
-
-	return result;
-    }
-
+//    /**
+//     * Finds over the 'owningEntity' entities those ones with the given foreign key.
+//     *
+//     * @param owningEntity
+//     * @param targetEntity
+//     * @param foreignKeyAttribute
+//     * @param foreignKey
+//     * @param entityInstanceBuilder
+//     * @return
+//     * @throws Exception
+//     */
+//    @Override
+//    public List<Object> findByForeignKey(MetaEntity owningEntity, MetaEntity targetEntity,
+//	    MetaAttribute foreignKeyAttribute, Object foreignKey, EntityInstanceBuilder entityInstanceBuilder) throws Exception {
+//	List<Object> result = new ArrayList<>();
+//	Map<Object, Object> notFlushedEntitiesMap = getEntityMap(owningEntity.getEntityClass(), notFlushedPersistEntities);
+//	LOG.debug("findByForeignKey: owningEntity.getEntityClass()=" + owningEntity.getEntityClass());
+//	LOG.debug("findByForeignKey: notFlushedEntitiesMap.size()=" + notFlushedEntitiesMap.size());
+//	for (Map.Entry<Object, Object> e : notFlushedEntitiesMap.entrySet()) {
+//	    LOG.debug("findByForeignKey: e.getValue()=" + e.getValue());
+//	    Object fkv = entityInstanceBuilder.getAttributeValue(e.getValue(), foreignKeyAttribute);
+//	    Object fk = AttributeUtil.getIdValue(targetEntity, fkv);
+//	    if (foreignKey.equals(fk))
+//		result.add(e.getValue());
+//	}
+//
+//	Map<Object, Object> flushedEntitiesMap = getEntityMap(owningEntity.getEntityClass(), flushedEntities);
+//	LOG.debug("findByForeignKey: flushedEntitiesMap.size()=" + flushedEntitiesMap.size());
+//	for (Map.Entry<Object, Object> e : flushedEntitiesMap.entrySet()) {
+//	    LOG.debug("findByForeignKey: e.getValue()=" + e.getValue());
+//	    Object fkv = entityInstanceBuilder.getAttributeValue(e.getValue(), foreignKeyAttribute);
+//	    LOG.debug("findByForeignKey: fkv=" + fkv);
+//	    Object fk = AttributeUtil.getIdValue(targetEntity, fkv);
+//	    if (foreignKey.equals(fk))
+//		result.add(e.getValue());
+//	}
+//
+//	return result;
+//    }
     @Override
     public boolean isManaged(Object entityInstance) throws Exception {
-	Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
-	if (mapEntities != null) {
-	    MetaEntity e = entities.get(entityInstance.getClass().getName());
-	    Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-	    if (idValue == null)
-		return false;
-
-	    if (mapEntities.get(idValue) != null)
-		return true;
-	}
-
-	mapEntities = flushedPersistEntities.get(entityInstance.getClass());
+	Map<Object, Object> mapEntities = managedEntities.get(entityInstance.getClass());
 	if (mapEntities == null)
 	    return false;
 
-//	LOG.info("isManaged: mapEntities=" + mapEntities);
 	MetaEntity e = entities.get(entityInstance.getClass().getName());
-//		if (e == null)
-//			throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
-
 	Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-	if (mapEntities.get(idValue) != null)
+	if (idValue == null)
+	    return false;
+
+	Object ei = mapEntities.get(idValue);
+	if (ei != null && ei == entityInstance)
 	    return true;
 
 	return false;
@@ -289,152 +184,44 @@ public class MiniPersistenceContext implements EntityContainer {
     }
 
     @Override
-    public boolean isFlushedPersist(Object entityInstance) throws Exception {
-	Map<Object, Object> mapEntities = flushedPersistEntities.get(entityInstance.getClass());
-	if (mapEntities == null)
-	    return false;
-
-	MetaEntity e = entities.get(entityInstance.getClass().getName());
-	Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-	if (mapEntities.get(idValue) == null)
-	    return false;
-
-	return true;
-    }
-
-    @Override
-    public boolean isNotFlushedPersist(Object entityInstance) throws Exception {
-	Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
-	if (mapEntities == null)
-	    return false;
-
-	MetaEntity e = entities.get(entityInstance.getClass().getName());
-	Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-	if (mapEntities.get(idValue) == null)
-	    return false;
-
-	return true;
-    }
-
-    @Override
-    public boolean isNotFlushedPersist(Object entityInstance, Object primaryKey) throws Exception {
-	Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
-	if (mapEntities == null)
-	    return false;
-
-	if (mapEntities.get(primaryKey) == null)
-	    return false;
-
-	return true;
-    }
-
-    @Override
-    public void removeFlushed(Object entityInstance, Object primaryKey) {
-	Map<Object, Object> mapEntities = flushedPersistEntities.get(entityInstance.getClass());
-	if (mapEntities == null)
-	    return;
-
-	mapEntities.remove(primaryKey);
-	LOG.debug("remove: entityInstance '" + entityInstance + "' removed from persistence context");
-    }
-
-    @Override
-    public void removeNotFlushedPersist(Object entityInstance, Object primaryKey) throws Exception {
-	Map<Object, Object> mapEntities = notFlushedPersistEntities.get(entityInstance.getClass());
-	if (mapEntities == null)
-	    return;
-
-	mapEntities.remove(primaryKey);
-	notFlushedEntities.remove(entityInstance);
-    }
-
-    @Override
-    public void removeNotFlushedRemove(Object entityInstance, Object primaryKey) throws Exception {
-	Map<Object, Object> mapEntities = notFlushedRemoveEntities.get(entityInstance.getClass());
-	if (mapEntities == null)
-	    return;
-
-	mapEntities.remove(primaryKey);
-	notFlushedEntities.remove(entityInstance);
-    }
-
-    @Override
-    public boolean isNotFlushedRemove(Class<?> c, Object primaryKey) throws Exception {
-	Map<Object, Object> mapEntities = notFlushedRemoveEntities.get(c);
-	if (mapEntities == null)
-	    return false;
-
-	if (mapEntities.get(primaryKey) == null)
-	    return false;
-
-	return true;
-    }
-
-    @Override
     public void detach(Object entityInstance) throws Exception {
 	MetaEntity e = entities.get(entityInstance.getClass().getName());
 	if (e == null)
 	    throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
 	Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-
-	if (isDetached(entityInstance, idValue))
+	if (MetaEntityHelper.isDetached(e, entityInstance))
 	    return;
 
 	detachInternal(idValue, entityInstance);
     }
 
-    private void detachInternal(Object idValue, Object entityInstance) {
-	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), flushedPersistEntities);
+    private void detachInternal(Object idValue, Object entityInstance) throws Exception {
+	Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
 	mapEntities.remove(idValue, entityInstance);
-
-	mapEntities = getEntityMap(entityInstance.getClass(), notFlushedPersistEntities);
-	mapEntities.remove(idValue, entityInstance);
-
-	mapEntities = getEntityMap(entityInstance.getClass(), notFlushedRemoveEntities);
-	mapEntities.remove(idValue, entityInstance);
-
-	mapEntities = getEntityMap(entityInstance.getClass(), detachedEntities);
-	mapEntities.put(idValue, entityInstance);
-	notFlushedEntities.remove(entityInstance);
+	MetaEntity e = entities.get(entityInstance.getClass().getName());
+	MetaEntityHelper.setEntityStatus(e, entityInstance, EntityStatus.DETACHED);
     }
 
     @Override
     public void detachAll() throws Exception {
-	Set<Class<?>> keys = new HashSet<>(flushedPersistEntities.keySet());
+	Set<Class<?>> keys = new HashSet<>(managedEntities.keySet());
 	for (Class<?> c : keys) {
-	    Map<Object, Object> map = getFlushedPersistEntities(c);
+	    Map<Object, Object> map = managedEntities.get(c);
 	    Map<Object, Object> m = new HashMap<>(map);
-	    m.forEach((k, v) -> {
-		detachInternal(k, v);
-	    });
+	    for (Map.Entry<Object, Object> entry : m.entrySet()) {
+		detachInternal(entry.getKey(), entry.getValue());
+	    }
 	}
 
-	keys = new HashSet<>(notFlushedPersistEntities.keySet());
-	for (Class<?> c : keys) {
-	    Map<Object, Object> map = getNotFlushedPersistEntities(c);
-	    Map<Object, Object> m = new HashMap<>(map);
-	    m.forEach((k, v) -> {
-		detachInternal(k, v);
-	    });
-	}
-
-	keys = new HashSet<>(notFlushedRemoveEntities.keySet());
-	for (Class<?> c : keys) {
-	    Map<Object, Object> map = getNotFlushedRemoveEntities(c);
-	    Map<Object, Object> m = new HashMap<>(map);
-	    m.forEach((k, v) -> {
-		detachInternal(k, v);
-	    });
-	}
     }
 
     @Override
     public void resetLockType() {
-	Set<Class<?>> keys = new HashSet<>(flushedPersistEntities.keySet());
+	Set<Class<?>> keys = managedEntities.keySet();
 	for (Class<?> c : keys) {
 	    MetaEntity e = entities.get(c.getName());
-	    Map<Object, Object> map = getFlushedPersistEntities(c);
+	    Map<Object, Object> map = managedEntities.get(c);
 	    Map<Object, Object> m = new HashMap<>(map);
 	    m.forEach((k, v) -> {
 		try {
@@ -500,47 +287,6 @@ public class MiniPersistenceContext implements EntityContainer {
      */
     @Override
     public void close() {
-
-    }
-
-    private Map<Object, List<Object>> getAttributeMap(Map<MetaAttribute, Map<Object, List<Object>>> attributeInstances,
-	    MetaAttribute attribute) {
-	Map<Object, List<Object>> mapEntities = attributeInstances.get(attribute);
-	if (mapEntities == null) {
-	    mapEntities = new HashMap<>();
-	    attributeInstances.put(attribute, mapEntities);
-	}
-
-	return mapEntities;
-    }
-
-    @Override
-    public void setLoadedFromDb(Object entityInstance) {
-	Set<Object> objects = loadedFromDb.get(entityInstance.getClass());
-	if (objects == null) {
-	    objects = new HashSet<>();
-	    loadedFromDb.put(entityInstance.getClass(), objects);
-	}
-
-	objects.add(entityInstance);
-    }
-
-    @Override
-    public void removeLoadedFromDb(Object entityInstance) {
-	Set<Object> objects = loadedFromDb.get(entityInstance.getClass());
-	if (objects == null)
-	    return;
-
-	objects.remove(entityInstance);
-    }
-
-    @Override
-    public boolean isLoadedFromDb(Object entityInstance) {
-	Set<Object> objects = loadedFromDb.get(entityInstance.getClass());
-	if (objects == null)
-	    return false;
-
-	return objects.contains(entityInstance);
     }
 
 }

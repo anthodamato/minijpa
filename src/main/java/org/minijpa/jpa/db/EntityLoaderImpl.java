@@ -60,9 +60,6 @@ public class EntityLoaderImpl implements EntityLoader {
 	if (entityInstance != null)
 	    return entityInstance;
 
-	if (entityContainer.isNotFlushedRemove(metaEntity.getEntityClass(), primaryKey))
-	    return null;
-
 	SqlSelect sqlSelect = entityQueryLevel.createQuery(metaEntity, lockType);
 	QueryResultValues queryResultValues = entityQueryLevel.run(metaEntity, primaryKey, sqlSelect);
 	if (queryResultValues == null)
@@ -73,8 +70,8 @@ public class EntityLoaderImpl implements EntityLoader {
 	List<ColumnNameValue> columnNameValues = ColumnNameValueUtil.createRelationshipAttrsList(
 		queryResultValues.relationshipAttributes, queryResultValues.relationshipValues);
 	loadRelationships(entityInstance, metaEntity, columnNameValues, lockType);
-	entityContainer.addFlushedPersist(entityInstance, primaryKey);
-	entityContainer.setLoadedFromDb(entityInstance);
+	entityContainer.addManaged(entityInstance, primaryKey);
+	MetaEntityHelper.setEntityStatus(metaEntity, entityInstance, EntityStatus.FLUSHED_LOADED_FROM_DB);
 	fillCircularRelationships(metaEntity, entityInstance);
 	return entityInstance;
     }
@@ -102,8 +99,8 @@ public class EntityLoaderImpl implements EntityLoader {
 	List<ColumnNameValue> columnNameValues = ColumnNameValueUtil.createRelationshipAttrsList(
 		queryResultValues.relationshipAttributes, queryResultValues.relationshipValues);
 	loadRelationships(entityInstance, metaEntity, columnNameValues, lockType);
-	entityContainer.addFlushedPersist(entityInstance, primaryKey);
-	entityContainer.setLoadedFromDb(entityInstance);
+	entityContainer.addManaged(entityInstance, primaryKey);
+	MetaEntityHelper.setEntityStatus(metaEntity, entityInstance, EntityStatus.FLUSHED_LOADED_FROM_DB);
 	fillCircularRelationships(metaEntity, entityInstance);
     }
 
@@ -144,7 +141,6 @@ public class EntityLoaderImpl implements EntityLoader {
 	Object primaryKey = AttributeUtil.createPK(entity, queryResultValues);
 	Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
 	if (entityInstance != null) {
-	    entityContainer.setLoadedFromDb(entityInstance);
 	    return entityInstance;
 	}
 
@@ -186,8 +182,6 @@ public class EntityLoaderImpl implements EntityLoader {
 	    if (a.getRelationship().isOwner()) {
 		MetaEntity e = a.getRelationship().getAttributeType();
 		Object pk = AttributeUtil.getIdValue(entity, parentInstance);
-//		List<AbstractAttributeValue> attributeValues = joinTableCollectionQueryLevel.createAttributeValues(pk,
-//			entity.getId(), a.getRelationship());
 		AttributeValueArray<AbstractAttribute> attributeValueArray = joinTableCollectionQueryLevel.createAttributeValues(pk,
 			entity.getId(), a.getRelationship());
 		SqlSelect sqlSelect = joinTableCollectionQueryLevel.createQuery(e, pk, entity.getId(), a.getRelationship(), attributeValueArray);
@@ -207,10 +201,6 @@ public class EntityLoaderImpl implements EntityLoader {
 	Object foreignKeyInstance = findById(e, foreignKeyValue, lockType);
 	LOG.debug("loadRelationshipByForeignKey: foreignKeyInstance=" + foreignKeyInstance);
 	if (foreignKeyInstance != null) {
-//	    entityContainer.addFlushedPersist(foreignKeyInstance, foreignKeyValue);
-//	    entityContainer.setLoadedFromDb(foreignKeyInstance);
-//	    LOG.debug("loadRelationshipByForeignKey: entity=" + entity);
-//	    LOG.debug("loadRelationshipByForeignKey: parentInstance=" + parentInstance);
 	    Object parent = AttributeUtil.findParentInstance(parentInstance, entity.getAttributes(), foreignKeyAttribute, entityInstanceBuilder);
 	    MetaEntity parentEntity = AttributeUtil.findParentEntity(parent.getClass().getName(), entity);
 //	    LOG.debug("loadRelationshipByForeignKey: parent=" + parent);

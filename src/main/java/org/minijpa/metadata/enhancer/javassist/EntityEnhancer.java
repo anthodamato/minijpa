@@ -51,7 +51,7 @@ public class EntityEnhancer {
 	LOG.debug("enhance: ct.isFrozen()=" + ct.isFrozen() + "; isClassModified(ct)=" + isClassModified(ct));
 	LOG.debug("enhance: isClassWritable(ct)=" + isClassWritable(ct));
 	boolean modified = false;
-	boolean canModify = canModify(ct);
+//	boolean canModify = canModify(ct);
 	if (!enhancedDataEntities.contains(managedData))
 	    if (toEnhance(managedData)) {
 		LOG.debug("Enhancing " + ct.getName());
@@ -76,6 +76,16 @@ public class EntityEnhancer {
 		    ctMethod = createSetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
 		    enhEntity.setLockTypeAttributeSetMethod(Optional.of(ctMethod.getName()));
 		}
+		// entity status field
+		if (managedData.getEntityStatusAttribute().isPresent()) {
+		    addEntityStatusField(ct, managedData.getEntityStatusAttribute().get());
+		    // get method
+		    ctMethod = createGetMethod(ct, managedData.getEntityStatusAttribute().get(), "org.minijpa.jpa.db.EntityStatus");
+		    enhEntity.setEntityStatusAttributeGetMethod(Optional.of(ctMethod.getName()));
+		    // set method
+		    ctMethod = createSetMethod(ct, managedData.getEntityStatusAttribute().get(), "org.minijpa.jpa.db.EntityStatus");
+		    enhEntity.setEntityStatusAttributeSetMethod(Optional.of(ctMethod.getName()));
+		}
 
 		modified = true;
 	    } else
@@ -88,8 +98,8 @@ public class EntityEnhancer {
 	List<AttributeData> dataAttributes = managedData.getAttributeDataList();
 	for (AttributeData attributeData : dataAttributes) {
 	    Property property = attributeData.property;
-	    LOG.debug("Enhancing attribute '" + property.ctField.getName() + "'");
 	    enhanceAttribute = toEnhance(attributeData);
+	    LOG.debug("Enhancing attribute '" + property.ctField.getName() + "' " + enhanceAttribute);
 	    if (property.setPropertyMethod.add && !enhancedDataEntities.contains(managedData)) {
 		CtMethod ctMethod = createSetMethod(ct, property.ctField, enhanceAttribute, managedData);
 		property.setPropertyMethod.enhance = false;
@@ -235,6 +245,16 @@ public class EntityEnhancer {
 	    return;
 
 	String f = "private org.minijpa.jdbc.LockType " + fieldName + " = org.minijpa.jdbc.LockType.NONE;";
+	CtField ctField = CtField.make(f, ct);
+	ct.addField(ctField);
+	LOG.debug("Created '" + ct.getName() + "' Field: " + f);
+    }
+
+    private void addEntityStatusField(CtClass ct, String fieldName) throws Exception {
+	if (!canModify(ct))
+	    return;
+
+	String f = "private org.minijpa.jpa.db.EntityStatus " + fieldName + " = org.minijpa.jpa.db.EntityStatus.NEW;";
 	CtField ctField = CtField.make(f, ct);
 	ct.addField(ctField);
 	LOG.debug("Created '" + ct.getName() + "' Field: " + f);

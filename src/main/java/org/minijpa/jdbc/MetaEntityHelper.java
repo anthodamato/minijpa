@@ -30,6 +30,7 @@ import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
+import org.minijpa.jpa.db.EntityStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -180,8 +181,7 @@ public class MetaEntityHelper {
 	return entity.getVersionAttribute().isPresent();
     }
 
-    public void updateVersionAttributeValue(MetaEntity entity, Object entityInstance)
-	    throws Exception {
+    public void updateVersionAttributeValue(MetaEntity entity, Object entityInstance) throws Exception {
 	if (!hasOptimisticLock(entity, entityInstance))
 	    return;
 
@@ -229,4 +229,21 @@ public class MetaEntityHelper {
 	return Optional.of(parameters.get(0));
     }
 
+    public static EntityStatus getEntityStatus(MetaEntity entity, Object entityInstance) throws Exception {
+	return (EntityStatus) entity.getEntityStatusAttributeReadMethod().get().invoke(entityInstance);
+    }
+
+    public static void setEntityStatus(MetaEntity entity, Object entityInstance, EntityStatus entityStatus) throws Exception {
+	entity.getEntityStatusAttributeWriteMethod().get().invoke(entityInstance, entityStatus);
+    }
+
+    public static boolean isFlushed(MetaEntity entity, Object entityInstance) throws Exception {
+	EntityStatus entityStatus = getEntityStatus(entity, entityInstance);
+	return entityStatus == EntityStatus.FLUSHED || entityStatus == EntityStatus.FLUSHED_LOADED_FROM_DB;
+    }
+
+    public static boolean isDetached(MetaEntity entity, Object entityInstance) throws Exception {
+	EntityStatus entityStatus = getEntityStatus(entity, entityInstance);
+	return entityStatus == EntityStatus.DETACHED;
+    }
 }

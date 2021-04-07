@@ -47,6 +47,7 @@ import org.minijpa.jdbc.relationship.ManyToOneRelationship;
 import org.minijpa.jdbc.relationship.OneToManyRelationship;
 import org.minijpa.jdbc.relationship.OneToOneRelationship;
 import org.minijpa.jdbc.relationship.Relationship;
+import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.metadata.enhancer.EnhAttribute;
 import org.minijpa.metadata.enhancer.EnhEntity;
 import org.slf4j.Logger;
@@ -135,9 +136,12 @@ public class Parser {
 
 	Method lockTypeAttributeReadMethod = c.getMethod(enhEntity.getLockTypeAttributeGetMethod().get());
 	Method lockTypeAttributeWriteMethod = c.getMethod(enhEntity.getLockTypeAttributeSetMethod().get(), LockType.class);
+	Method entityStatusAttributeReadMethod = c.getMethod(enhEntity.getEntityStatusAttributeGetMethod().get());
+	Method entityStatusAttributeWriteMethod = c.getMethod(enhEntity.getEntityStatusAttributeSetMethod().get(), EntityStatus.class);
 	return new MetaEntity(c, name, tableName, alias, id, attributes, mappedSuperclassEntity,
 		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod,
-		Optional.of(lockTypeAttributeReadMethod), Optional.of(lockTypeAttributeWriteMethod));
+		Optional.of(lockTypeAttributeReadMethod), Optional.of(lockTypeAttributeWriteMethod),
+		Optional.of(entityStatusAttributeReadMethod), Optional.of(entityStatusAttributeWriteMethod));
     }
 
     private MetaEntity parseEmbeddable(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {
@@ -165,7 +169,7 @@ public class Parser {
 	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
 
 	return new MetaEntity(c, null, null, null, null, attributes, null, modificationAttributeReadMethod,
-		lazyLoadedAttributeReadMethod, Optional.empty(), Optional.empty());
+		lazyLoadedAttributeReadMethod, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     private MetaEntity parseMappedSuperclass(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities)
@@ -191,7 +195,8 @@ public class Parser {
 	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
 
 	return new MetaEntity(c, null, null, null, optionalId.get(), attributes, null,
-		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod, Optional.empty(), Optional.empty());
+		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod,
+		Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     private List<MetaAttribute> readAttributes(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {

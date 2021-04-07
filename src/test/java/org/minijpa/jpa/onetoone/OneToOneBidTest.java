@@ -38,6 +38,7 @@ public class OneToOneBidTest {
 
 	    tx.commit();
 
+	    tx.begin();
 	    em.detach(person);
 	    em.detach(fingerprint);
 
@@ -52,7 +53,9 @@ public class OneToOneBidTest {
 	    Assertions.assertEquals(p, p.getFingerprint().getPerson());
 	    Assertions.assertEquals("John Smith", p.getName());
 	    Assertions.assertEquals("arch", p.getFingerprint().getType());
-
+	    em.remove(p);
+	    em.remove(f);
+	    tx.commit();
 	} finally {
 	    em.close();
 	    emf.close();

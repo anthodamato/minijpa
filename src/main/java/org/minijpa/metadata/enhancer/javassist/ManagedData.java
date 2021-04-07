@@ -22,6 +22,7 @@ public class ManagedData {
     private Optional<String> lazyLoadedAttribute = Optional.empty();
     // the lock type attribute is created only in entity classes, neither mapped superclass or embedded
     private Optional<String> lockTypeAttribute = Optional.empty();
+    private Optional<String> entityStatusAttribute = Optional.empty();
 
     public ManagedData() {
 	super();
@@ -90,6 +91,14 @@ public class ManagedData {
 
     public void setLockTypeAttribute(Optional<String> lockTypeAttribute) {
 	this.lockTypeAttribute = lockTypeAttribute;
+    }
+
+    public Optional<String> getEntityStatusAttribute() {
+	return entityStatusAttribute;
+    }
+
+    public void setEntityStatusAttribute(Optional<String> entityStatusAttribute) {
+	this.entityStatusAttribute = entityStatusAttribute;
     }
 
     public Optional<AttributeData> findAttribute(String name) {

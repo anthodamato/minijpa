@@ -44,11 +44,14 @@ public class MetaEntity {
     private final Optional<Method> lazyLoadedAttributeReadMethod;
     private final Optional<Method> lockTypeAttributeReadMethod;
     private final Optional<Method> lockTypeAttributeWriteMethod;
+    private final Optional<Method> entityStatusAttributeReadMethod;
+    private final Optional<Method> entityStatusAttributeWriteMethod;
 
     public MetaEntity(Class<?> entityClass, String name, String tableName, String alias, MetaAttribute id,
 	    List<MetaAttribute> attributes, MetaEntity mappedSuperclassEntity,
 	    Method modificationAttributeReadMethod, Optional<Method> lazyLoadedAttributeReadMethod,
-	    Optional<Method> lockTypeAttributeReadMethod, Optional<Method> lockTypeAttributeWriteMethod) {
+	    Optional<Method> lockTypeAttributeReadMethod, Optional<Method> lockTypeAttributeWriteMethod,
+	    Optional<Method> entityStatusAttributeReadMethod, Optional<Method> entityStatusAttributeWriteMethod) {
 	super();
 	this.entityClass = entityClass;
 	this.name = name;
@@ -61,6 +64,8 @@ public class MetaEntity {
 	this.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
 	this.lockTypeAttributeReadMethod = lockTypeAttributeReadMethod;
 	this.lockTypeAttributeWriteMethod = lockTypeAttributeWriteMethod;
+	this.entityStatusAttributeReadMethod = entityStatusAttributeReadMethod;
+	this.entityStatusAttributeWriteMethod = entityStatusAttributeWriteMethod;
     }
 
     public Class<?> getEntityClass() {
@@ -105,6 +110,14 @@ public class MetaEntity {
 
     public Optional<Method> getLockTypeAttributeWriteMethod() {
 	return lockTypeAttributeWriteMethod;
+    }
+
+    public Optional<Method> getEntityStatusAttributeReadMethod() {
+	return entityStatusAttributeReadMethod;
+    }
+
+    public Optional<Method> getEntityStatusAttributeWriteMethod() {
+	return entityStatusAttributeWriteMethod;
     }
 
     public MetaAttribute getAttribute(String name) {

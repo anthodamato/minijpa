@@ -65,6 +65,7 @@ public class ClassInspector {
     private final String modificationAttributePrefix = "mds";
     private final String lazyLoadedAttributePrefix = "lla";
     private final String lockTypeAttributePrefix = "lta";
+    private final String entityStatusAttributePrefix = "sts";
     
     public ManagedData inspect(String className, List<ManagedData> inspectedClasses) throws Exception {
 	// already inspected
@@ -117,6 +118,9 @@ public class ClassInspector {
 	// lock type attribute
 	Optional<String> lockTypeAttribute = findAvailableAttribute(lockTypeAttributePrefix, properties, ct);
 	removeAttributeFromProperties(lockTypeAttribute.get(), properties);
+	// entity status attribute
+	Optional<String> entityStatusAttribute = findAvailableAttribute(entityStatusAttributePrefix, properties, ct);
+	removeAttributeFromProperties(entityStatusAttribute.get(), properties);
 
 	// lazy loaded attribute tracker	
 	Optional<Property> optionalLazy = properties.stream().filter(p -> p.isLazy()).findFirst();
@@ -131,6 +135,7 @@ public class ClassInspector {
 	managedData.setCtClass(ct);
 	managedData.setModificationAttribute(modificationAttribute.get());
 	managedData.setLockTypeAttribute(lockTypeAttribute);
+	managedData.setEntityStatusAttribute(entityStatusAttribute);
 
 	// looks for embeddables
 	LOG.debug("Inspects embeddables...");

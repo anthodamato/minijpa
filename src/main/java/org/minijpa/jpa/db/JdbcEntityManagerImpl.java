@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
@@ -133,6 +132,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     private Object generatePersistentIdentity(MetaEntity entity, Object entityInstance) throws Exception {
 	MetaAttribute id = entity.getId();
 	Object idValue = id.getReadMethod().invoke(entityInstance);
+	LOG.debug("generatePersistentIdentity: idValue=" + idValue);
 	if (idValue != null)
 	    return idValue;
 
@@ -154,10 +154,15 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	Object idValue = generatePersistentIdentity(entity, entityInstance);
 	LOG.debug("persist: idValue=" + idValue);
 	if (idValue != null) {
-	    entityContainer.addNotFlushedPersist(entityInstance, idValue);
+	    entityContainer.addManaged(entityInstance, idValue);
+	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(entity, entityInstance);
+	    if (entityStatus == EntityStatus.NEW)
+		MetaEntityHelper.setEntityStatus(entity, entityInstance, EntityStatus.PERSIST_NOT_FLUSHED);
 	} else {
 	    entityWriter.persist(entity, entityInstance, attributeValueArray);
-	    entityContainer.addFlushedPersist(entityInstance);
+	    MetaEntityHelper.setEntityStatus(entity, entityInstance, EntityStatus.FLUSHED);
+	    idValue = AttributeUtil.getIdValue(entity, entityInstance);
+	    entityContainer.addManaged(entityInstance, idValue);
 	    entityInstanceBuilder.removeChanges(entity, entityInstance);
 	}
     }
@@ -171,10 +176,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
      */
     private void checkNullableAttributes(MetaEntity entity, Object entityInstance,
 	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
-	if (entityContainer.isFlushedPersist(entityInstance)) {
-	    // It's an update.
-	    // TODO. It should check that no not nullable attrs will be set to null.
-	    return;
+	if (entityContainer.isManaged(entityInstance)) {
+	    EntityStatus entityStatus = metaEntityHelper.getEntityStatus(entity, entityInstance);
+	    if (entityStatus == EntityStatus.FLUSHED || entityStatus == EntityStatus.FLUSHED_LOADED_FROM_DB) {
+		// It's an update.
+		// TODO. It should check that no not nullable attrs will be set to null.
+		return;
+	    }
 	}
 
 	List<MetaAttribute> notNullableAttributes = entity.notNullableAttributes();
@@ -184,7 +192,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	if (attributeValueArray.isEmpty())
 	    throw new PersistenceException("Attribute '" + notNullableAttributes.get(0).getName() + "' is null");
 
-//	List<AttributeValue> attributeValues = optional.get();
 	notNullableAttributes.stream().forEach(a -> {
 	    Optional<MetaAttribute> o = attributeValueArray.getAttributes().stream().filter(av -> av == a).findFirst();
 	    if (o.isEmpty())
@@ -195,35 +202,35 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     @Override
     public void flush() throws Exception {
 	LOG.debug("Flushing entities...");
-	// makes updates
-	Set<Class<?>> classes = entityContainer.getFlushedPersistClasses();
-	for (Class<?> c : classes) {
-	    Map<Object, Object> map = entityContainer.getFlushedPersistEntities(c);
-	    MetaEntity me = entities.get(c.getName());
-	    for (Map.Entry<Object, Object> entry : map.entrySet()) {
-		AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entry.getValue());
-		if (!attributeValueArray.isEmpty()) {
-		    entityWriter.persist(me, entry.getValue(), attributeValueArray);
-		    entityInstanceBuilder.removeChanges(me, entry.getValue());
-		}
-	    }
-	}
-
-	List<Object> notFlushedEntities = entityContainer.getNotFlushedEntities();
-	for (Object entityInstance : notFlushedEntities) {
-//	    LOG.info("flush: not flushed entityInstance=" + entityInstance);
+	List<Object> managedEntityList = entityContainer.getManagedEntityList();
+	for (Object entityInstance : managedEntityList) {
 	    MetaEntity me = entities.get(entityInstance.getClass().getName());
-	    Object idValue = AttributeUtil.getIdValue(me, entityInstance);
-//	    LOG.info("flush: idValue=" + idValue);
-	    if (entityContainer.isNotFlushedPersist(entityInstance)) {
-		AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
-		entityWriter.persist(me, entityInstance, attributeValueArray);
-		entityContainer.addFlushedPersist(entityInstance);
-		entityInstanceBuilder.removeChanges(me, entityInstance);
-		entityContainer.removeNotFlushedPersist(entityInstance, idValue);
-	    } else if (entityContainer.isNotFlushedRemove(entityInstance.getClass(), idValue)) {
-		entityWriter.delete(entityInstance, me);
-		entityContainer.removeNotFlushedRemove(entityInstance, idValue);
+	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
+	    switch (entityStatus) {
+		case FLUSHED:
+		case FLUSHED_LOADED_FROM_DB: {
+		    // makes updates
+		    AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		    if (!attributeValueArray.isEmpty()) {
+			entityWriter.persist(me, entityInstance, attributeValueArray);
+			entityInstanceBuilder.removeChanges(me, entityInstance);
+		    }
+		}
+		break;
+		case PERSIST_NOT_FLUSHED: {
+		    AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		    entityWriter.persist(me, entityInstance, attributeValueArray);
+		    MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
+		    entityInstanceBuilder.removeChanges(me, entityInstance);
+		    EntityStatus es = MetaEntityHelper.getEntityStatus(me, entityInstance);
+		    LOG.debug("flush: es=" + es);
+		}
+		break;
+		case REMOVED: {
+		    entityWriter.delete(entityInstance, me);
+		    entityContainer.removeManaged(entityInstance);
+		}
+		break;
 	    }
 	}
 
@@ -235,16 +242,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	MetaEntity e = entities.get(entity.getClass().getName());
 	if (entityContainer.isManaged(entity)) {
 	    LOG.debug("Instance " + entity + " is in the persistence context");
-	    Object idValue = AttributeUtil.getIdValue(e, entity);
-	    entityContainer.removeFlushed(entity, idValue);
-	    entityContainer.addNotFlushedRemove(entity, idValue);
+	    entityContainer.markForRemoval(entity);
 	} else {
 	    LOG.debug("Instance " + entity + " not found in the persistence context");
-	    Object idValue = AttributeUtil.getIdValue(e, entity);
-	    if (idValue == null)
-		return;
-
-	    entityWriter.delete(entity, e);
+	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(e, entity);
+	    if (entityStatus == EntityStatus.DETACHED)
+		throw new IllegalArgumentException("Entity '" + entity + "' is detached");
 	}
     }
 
