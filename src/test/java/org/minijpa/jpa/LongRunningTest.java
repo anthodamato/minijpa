@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jpa.model.RandomData;
 import org.minijpa.jpa.model.RandomGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -26,6 +28,7 @@ import org.minijpa.jpa.model.RandomGroup;
  */
 public class LongRunningTest {
 
+    private Logger LOG = LoggerFactory.getLogger(LongRunningTest.class);
     private static EntityManagerFactory emf;
     private final int ngroups = 100;
 
@@ -58,7 +61,7 @@ public class LongRunningTest {
 	} finally {
 	    em.close();
 	    Instant end = Instant.now();
-	    System.out.println("Seconds: " + (end.toEpochMilli() - start.toEpochMilli()) / 1000);
+	    LOG.info("Seconds: " + (end.toEpochMilli() - start.toEpochMilli()) / 1000);
 	}
     }
 

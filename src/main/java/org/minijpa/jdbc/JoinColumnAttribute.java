@@ -28,10 +28,6 @@ public class JoinColumnAttribute extends AbstractAttribute {
 	return foreignKeyAttribute;
     }
 
-    public void setForeignKeyAttribute(MetaAttribute foreignKeyAttribute) {
-	this.foreignKeyAttribute = foreignKeyAttribute;
-    }
-
     public static class Builder {
 
 	private String columnName;

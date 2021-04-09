@@ -123,36 +123,18 @@ public abstract class AbstractJdbcRunner {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
-	    LOG.info("findById: sql=" + sql);
+	    LOG.info("Running `" + sql + "`");
 	    preparedStatement = connection.prepareStatement(sql);
 	    setPreparedStatementParameters(preparedStatement, parameters);
 
 	    rs = preparedStatement.executeQuery();
 	    boolean next = rs.next();
-	    LOG.info("findById: next=" + next);
+	    LOG.debug("findById: next=" + next);
 	    if (!next)
 		return null;
 
-	    QueryResultValues queryResultValues = new QueryResultValues();
-	    Object value = null;
-	    MetaAttribute metaAttribute = null;
-	    int i = 1;
-	    for (ColumnNameValue cnv : sqlSelect.getFetchParameters()) {
-		if (cnv.getForeignKeyAttribute() != null) {
-		    queryResultValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
-		    queryResultValues.relationshipValues.add(rs.getObject(i, cnv.getReadWriteDbType()));
-		} else {
-		    metaAttribute = cnv.getAttribute();
-		    queryResultValues.attributes.add(metaAttribute);
-		    value = rs.getObject(i, metaAttribute.getReadWriteDbType());
-		    LOG.info("findById: value=" + value);
-		    queryResultValues.values.add(metaAttribute.dbTypeMapper.convert(value,
-			    metaAttribute.getReadWriteDbType(), metaAttribute.getType()));
-		}
-
-		++i;
-	    }
-
+	    QueryResultValues queryResultValues = createAttributeValuesFromResultSet(sqlSelect.getFetchParameters(),
+		    rs);
 	    return queryResultValues;
 	} finally {
 	    if (rs != null)
@@ -169,16 +151,15 @@ public abstract class AbstractJdbcRunner {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
-	    LOG.info("findCollection: sql=`" + sql + "`");
+	    LOG.info("Running `" + sql + "`");
 	    preparedStatement = connection.prepareStatement(sql);
 	    setPreparedStatementParameters(preparedStatement, parameters);
 
-	    LOG.info("Running `" + sql + "`");
 	    rs = preparedStatement.executeQuery();
 	    while (rs.next()) {
 		QueryResultValues attributeValues = createAttributeValuesFromResultSet(sqlSelect.getFetchParameters(),
 			rs);
-		LOG.info("findCollection: attributeValues=" + attributeValues);
+		LOG.debug("findCollection: attributeValues=" + attributeValues);
 		Object instance = entityLoader.build(attributeValues, sqlSelect.getResult(), sqlSelect.getLockType());
 		collectionResult.add(instance);
 	    }
@@ -191,35 +172,32 @@ public abstract class AbstractJdbcRunner {
 	}
     }
 
-    private QueryResultValues createAttributeValuesFromResultSet(List<ColumnNameValue> columnNameValues, ResultSet rs)
-	    throws Exception {
-	QueryResultValues attributeValues = new QueryResultValues();
-	Object value = null;
-	MetaAttribute metaAttribute = null;
+    private QueryResultValues createAttributeValuesFromResultSet(
+	    List<FetchParameter> columnNameValues, ResultSet rs) throws Exception {
+	QueryResultValues queryResultValues = new QueryResultValues();
 	int i = 1;
-	for (ColumnNameValue cnv : columnNameValues) {
-	    if (cnv.getForeignKeyAttribute() != null) {
-		attributeValues.relationshipAttributes.add(cnv.getForeignKeyAttribute());
-		attributeValues.relationshipValues.add(rs.getObject(i, cnv.getReadWriteDbType()));
-		LOG.info("createAttributeValuesFromResultSet: cnv.getType()=" + cnv.getType());
-	    } else {
-		attributeValues.attributes.add(cnv.getAttribute());
-		metaAttribute = cnv.getAttribute();
-		LOG.info("createAttributeValuesFromResultSet: metaAttribute.getReadWriteDbType()="
-			+ metaAttribute.getReadWriteDbType());
-		value = rs.getObject(i, metaAttribute.getReadWriteDbType());
-		LOG.info("createAttributeValuesFromResultSet: value=" + value);
-		attributeValues.values.add(metaAttribute.dbTypeMapper.convert(value, metaAttribute.getReadWriteDbType(),
-			metaAttribute.getType()));
-	    }
+	for (FetchParameter cnv : columnNameValues) {
+	    MetaAttribute metaAttribute = cnv.getAttribute();
+	    if (cnv.isJoinColumn())
+		queryResultValues.relationshipAttributes.add(metaAttribute);
+	    else
+		queryResultValues.attributes.add(metaAttribute);
+
+	    Object value = rs.getObject(i, cnv.getReadWriteDbType());
+	    Object v = metaAttribute.dbTypeMapper.convert(value,
+		    cnv.getReadWriteDbType(), cnv.getType());
+	    if (cnv.isJoinColumn())
+		queryResultValues.relationshipValues.add(v);
+	    else
+		queryResultValues.values.add(v);
 
 	    ++i;
 	}
 
-	return attributeValues;
+	return queryResultValues;
     }
 
-    protected Object[] createRecord(int nc, List<ColumnNameValue> fetchParameters, ResultSet rs) throws Exception {
+    protected Object[] createRecord(int nc, List<FetchParameter> fetchParameters, ResultSet rs) throws Exception {
 	Object[] values = new Object[nc];
 	for (int i = 0; i < nc; ++i) {
 	    Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
@@ -229,7 +207,8 @@ public abstract class AbstractJdbcRunner {
 	return values;
     }
 
-    public List<Object> runQuery(Connection connection, String sql, SqlSelect sqlSelect, List<QueryParameter> parameters) throws Exception {
+    public List<Object> runQuery(Connection connection, String sql, SqlSelect sqlSelect,
+	    List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
@@ -240,7 +219,7 @@ public abstract class AbstractJdbcRunner {
 	    List<Object> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
 	    int nc = sqlSelect.getValues().size();
-	    List<ColumnNameValue> fetchParameters = sqlSelect.getFetchParameters();
+	    List<FetchParameter> fetchParameters = sqlSelect.getFetchParameters();
 	    while (rs.next()) {
 		if (nc == 1) {
 		    Class<?> readWriteType = fetchParameters.get(0).getReadWriteDbType();
@@ -309,13 +288,13 @@ public abstract class AbstractJdbcRunner {
 	for (int i = 0; i < attributeValues.attributes.size(); ++i) {
 	    MetaAttribute attribute = attributeValues.attributes.get(i);
 	    Object value = attributeValues.values.get(i);
-	    LOG.info("logAttributeValues: " + i + " attribute.getName()=" + attribute.getName());
-	    LOG.info("logAttributeValues: " + i + " value=" + value);
+	    LOG.debug("logAttributeValues: " + i + " attribute.getName()=" + attribute.getName());
+	    LOG.debug("logAttributeValues: " + i + " value=" + value);
 	}
     }
 
     public Long generateNextSequenceValue(Connection connection, String sql) throws SQLException {
-	LOG.info("generateSequenceNextValue: sql=" + sql);
+	LOG.debug("generateSequenceNextValue: sql=" + sql);
 	Long value = null;
 	ResultSet rs = null;
 	PreparedStatement preparedStatement = null;

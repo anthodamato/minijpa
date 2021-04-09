@@ -20,14 +20,14 @@ package org.minijpa.jdbc.db;
 
 import java.util.List;
 
-import org.minijpa.jdbc.ColumnNameValue;
+import org.minijpa.jdbc.FetchParameter;
 
 public class StatementData {
 
     private String sql;
-    private List<ColumnNameValue> parameters;
+    private List<FetchParameter> parameters;
 
-    public StatementData(String sql, List<ColumnNameValue> parameters) {
+    public StatementData(String sql, List<FetchParameter> parameters) {
 	super();
 	this.sql = sql;
 	this.parameters = parameters;
@@ -37,7 +37,7 @@ public class StatementData {
 	return sql;
     }
 
-    public List<ColumnNameValue> getParameters() {
+    public List<FetchParameter> getParameters() {
 	return parameters;
     }
 

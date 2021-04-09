@@ -18,40 +18,34 @@
  */
 package org.minijpa.jdbc;
 
-public class ColumnNameValue {
+public class FetchParameter {
 
     private String columnName;
-    private Object value;
     private Class<?> type;
     private Class<?> readWriteDbType;
     private Integer sqlType;
-    private MetaAttribute foreignKeyAttribute;
     private MetaAttribute attribute;
+    private boolean joinColumn;
 
-    public ColumnNameValue(String columnName, Object value, Class<?> type, Class<?> readWriteDbType, Integer sqlType,
-	    MetaAttribute foreignKeyAttribute, MetaAttribute attribute) {
+    public FetchParameter(String columnName, Class<?> type, Class<?> readWriteDbType, Integer sqlType,
+	    MetaAttribute attribute, boolean joinColumn) {
 	super();
 	this.columnName = columnName;
-	this.value = value;
 	this.type = type;
 	this.readWriteDbType = readWriteDbType;
 	this.sqlType = sqlType;
-	this.foreignKeyAttribute = foreignKeyAttribute;
 	this.attribute = attribute;
+	this.joinColumn = joinColumn;
     }
 
-    public static ColumnNameValue build(MetaAttribute av) {
-	ColumnNameValue cnv = new ColumnNameValue(av.getColumnName(), null, av.getType(), av.getReadWriteDbType(),
-		av.getSqlType(), null, av);
+    public static FetchParameter build(MetaAttribute av) {
+	FetchParameter cnv = new FetchParameter(av.getColumnName(), av.getType(), av.getReadWriteDbType(),
+		av.getSqlType(), av, false);
 	return cnv;
     }
 
     public String getColumnName() {
 	return columnName;
-    }
-
-    public Object getValue() {
-	return value;
     }
 
     public Class<?> getType() {
@@ -66,12 +60,12 @@ public class ColumnNameValue {
 	return sqlType;
     }
 
-    public MetaAttribute getForeignKeyAttribute() {
-	return foreignKeyAttribute;
-    }
-
     public MetaAttribute getAttribute() {
 	return attribute;
+    }
+
+    public boolean isJoinColumn() {
+	return joinColumn;
     }
 
 }

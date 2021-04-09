@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,9 +25,7 @@ import org.minijpa.jdbc.AbstractAttribute;
 
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.AttributeValueArray;
-import org.minijpa.jdbc.AttributeValueConverter;
-import org.minijpa.jdbc.ColumnNameValue;
-import org.minijpa.jdbc.EmbeddedIdAttributeValueConverter;
+import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.LockType;
@@ -95,43 +92,21 @@ public class SqlStatementFactory {
     public static final String QM = "?";
 
     private final Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
-    private final AttributeValueConverter attributeValueConverter = new EmbeddedIdAttributeValueConverter();
     private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
-    private final Map<MetaEntity, SqlSelect> selectByIdMap = new HashMap<>();
-    private final Map<MetaEntity, Map<MetaAttribute, SqlSelect>> selectByForeignKey = new HashMap<>();
-    private final Map<MetaEntity, Map<List<String>, SqlInsert>> insertMap = new HashMap<>();
+
+    public SqlStatementFactory() {
+    }
 
     public SqlInsert generateInsert(MetaEntity entity, List<String> columns) throws Exception {
-	Map<List<String>, SqlInsert> map = insertMap.get(entity);
-	if (map != null) {
-	    SqlInsert sqlInsert = map.get(columns);
-	    if (sqlInsert != null)
-		return sqlInsert;
-	}
-
 	List<Column> cs = columns.stream().map(c -> {
 	    return new Column(c);
 	}).collect(Collectors.toList());
 
-	SqlInsert insert = new SqlInsert(FromTable.of(entity), cs);
-
-	if (map == null) {
-	    Map<List<String>, SqlInsert> columnMap = new HashMap<>();
-	    columnMap.put(columns, insert);
-	    insertMap.put(entity, columnMap);
-	} else {
-	    map.put(columns, insert);
-	}
-
-	return insert;
+	return new SqlInsert(FromTable.of(entity), cs);
     }
 
     public SqlSelect generateSelectById(MetaEntity entity, LockType lockType) throws Exception {
-	SqlSelect sqlSelect = selectByIdMap.get(entity);
-	if (sqlSelect != null)
-	    return sqlSelect;
-
-	List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
+	List<FetchParameter> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
 
 	FromTable fromTable = FromTable.of(entity);
 	List<TableColumn> tableColumns = metaEntityHelper.toTableColumns(entity.getId().expand(), fromTable);
@@ -140,27 +115,15 @@ public class SqlStatementFactory {
 	}).collect(Collectors.toList());
 
 	Condition condition = Condition.toAnd(conditions);
-	sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
+	return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
 		.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
 		.withLockType(lockType)
 		.build();
-	selectByIdMap.put(entity, sqlSelect);
-	return sqlSelect;
     }
 
     public SqlSelect generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
 	    List<String> columns) throws Exception {
-	Map<MetaAttribute, SqlSelect> map = selectByForeignKey.get(entity);
-	if (map != null) {
-	    SqlSelect sqlSelect = map.get(foreignKeyAttribute);
-	    if (sqlSelect != null)
-		return sqlSelect;
-	} else {
-	    map = new HashMap<>();
-	    selectByForeignKey.put(entity, map);
-	}
-
-	List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
+	List<FetchParameter> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
 //	LOG.info("generateSelectByForeignKey: fetchColumnNameValues=" + fetchColumnNameValues);
 //	LOG.info("generateSelectByForeignKey: parameters=" + parameters);
 	FromTable fromTable = FromTable.of(entity);
@@ -171,31 +134,15 @@ public class SqlStatementFactory {
 	}).collect(Collectors.toList());
 
 	Condition condition = Condition.toAnd(conditions);
-	SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
+	return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
 		.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
 		.withResult(entity).build();
-
-	map.put(foreignKeyAttribute, sqlSelect);
-	return sqlSelect;
     }
 
-//    public List<AbstractAttributeValue> expandJoinColumnAttributes(MetaAttribute owningId,
-//	    Object joinTableForeignKey, List<JoinColumnAttribute> allJoinColumnAttributes) throws Exception {
-//	List<AttributeValue> owningIdAttributeValues = attributeValueConverter
-//		.convert(new AttributeValue(owningId, joinTableForeignKey));
-//	List<AbstractAttributeValue> attributeValues = new ArrayList<>();
-//	for (AttributeValue av : owningIdAttributeValues) {
-//	    Optional<JoinColumnAttribute> optional = allJoinColumnAttributes.stream().
-//		    filter(j -> j.getForeignKeyAttribute() == av.getAttribute()).findFirst();
-//	    attributeValues.add(new AbstractAttributeValue(optional.get(), av.getValue()));
-//	}
-//
-//	return attributeValues;
-//    }
     public AttributeValueArray<AbstractAttribute> expandJoinColumnAttributes(MetaAttribute owningId,
 	    Object joinTableForeignKey, List<JoinColumnAttribute> allJoinColumnAttributes) throws Exception {
 	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray<>();
-	attributeValueConverter.convert(owningId, joinTableForeignKey, attributeValueArray);
+	metaEntityHelper.expand(owningId, joinTableForeignKey, attributeValueArray);
 
 	AttributeValueArray<AbstractAttribute> result = new AttributeValueArray<>();
 	for (int i = 0; i < attributeValueArray.size(); ++i) {
@@ -233,7 +180,7 @@ public class SqlStatementFactory {
 
 	Condition condition = Condition.toAnd(conditions);
 	List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
-	List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
+	List<FetchParameter> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
 	return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
 		.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
 		.withResult(entity).build();
@@ -265,13 +212,14 @@ public class SqlStatementFactory {
 
 	Condition condition = Condition.toAnd(conditions);
 	List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
-	List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
+	List<FetchParameter> fetchColumnNameValues = metaEntityHelper.convertAttributes(expandedAttributes);
 	return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
 		.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
 		.withResult(entity).build();
     }
 
-    public List<QueryParameter> createRelationshipJoinTableParameters(RelationshipJoinTable relationshipJoinTable, Object owningInstance,
+    public List<QueryParameter> createRelationshipJoinTableParameters(
+	    RelationshipJoinTable relationshipJoinTable, Object owningInstance,
 	    Object targetInstance) throws Exception {
 	List<QueryParameter> parameters = new ArrayList<>();
 	MetaAttribute owningId = relationshipJoinTable.getOwningAttribute();
@@ -285,14 +233,14 @@ public class SqlStatementFactory {
 	return parameters;
     }
 
-    public SqlInsert generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable, List<String> columnNames) throws Exception {
+    public SqlInsert generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable,
+	    List<String> columnNames) throws Exception {
 	List<Column> columns = columnNames.stream().map(c -> new Column(c)).collect(Collectors.toList());
 	return new SqlInsert(new FromTableImpl(relationshipJoinTable.getTableName()), columns);
     }
 
     public SqlUpdate generateUpdate(MetaEntity entity, List<MetaAttribute> attributes,
-	    List<String> idColumnNames)
-	    throws Exception {
+	    List<String> idColumnNames) throws Exception {
 	FromTable fromTable = FromTable.of(entity);
 	List<TableColumn> columns = attributes.stream().map(a -> {
 	    return new TableColumn(fromTable, new Column(a.getColumnName()));
@@ -411,31 +359,31 @@ public class SqlStatementFactory {
 	return values;
     }
 
-    private Optional<ColumnNameValue> createFetchParameter(Selection<?> selection) {
+    private Optional<FetchParameter> createFetchParameter(Selection<?> selection) {
 	if (selection == null)
 	    return Optional.empty();
 
 	if (selection instanceof MiniPath<?>) {
 	    MiniPath<?> miniPath = (MiniPath<?>) selection;
 	    MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-	    ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
+	    FetchParameter columnNameValue = FetchParameter.build(metaAttribute);
 	    return Optional.of(columnNameValue);
 	} else if (selection instanceof AggregateFunctionExpression<?>) {
 	    AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
 	    if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.COUNT) {
-		ColumnNameValue cnv = new ColumnNameValue("count", null, Long.class, Long.class,
-			JdbcTypes.sqlTypeFromClass(Long.class), null, null);
+		FetchParameter cnv = new FetchParameter("count", Long.class, Long.class,
+			JdbcTypes.sqlTypeFromClass(Long.class), null, false);
 		return Optional.of(cnv);
 	    } else if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.AVG) {
-		ColumnNameValue cnv = new ColumnNameValue("avg", null, Double.class, Double.class,
-			JdbcTypes.sqlTypeFromClass(Double.class), null, null);
+		FetchParameter cnv = new FetchParameter("avg", Double.class, Double.class,
+			JdbcTypes.sqlTypeFromClass(Double.class), null, false);
 		return Optional.of(cnv);
 	    } else {
 		Expression<?> expr = aggregateFunctionExpression.getX();
 		if (expr instanceof MiniPath<?>) {
 		    MiniPath<?> miniPath = (MiniPath<?>) expr;
 		    MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-		    ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
+		    FetchParameter columnNameValue = FetchParameter.build(metaAttribute);
 		    return Optional.of(columnNameValue);
 		}
 	    }
@@ -451,27 +399,27 @@ public class SqlStatementFactory {
 		throw new IllegalArgumentException("Binary expression without data type");
 
 	    MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-	    ColumnNameValue columnNameValue = ColumnNameValue.build(metaAttribute);
+	    FetchParameter columnNameValue = FetchParameter.build(metaAttribute);
 	    return Optional.of(columnNameValue);
 	}
 
 	return Optional.empty();
     }
 
-    private List<ColumnNameValue> createFetchParameters(Selection<?> selection) {
+    private List<FetchParameter> createFetchParameters(Selection<?> selection) {
 	if (selection == null)
 	    return Collections.emptyList();
 
-	List<ColumnNameValue> values = new ArrayList<>();
+	List<FetchParameter> values = new ArrayList<>();
 	if (selection.isCompoundSelection()) {
 	    List<Selection<?>> selections = selection.getCompoundSelectionItems();
 	    for (Selection<?> s : selections) {
-		Optional<ColumnNameValue> optional = createFetchParameter(s);
+		Optional<FetchParameter> optional = createFetchParameter(s);
 		if (optional.isPresent())
 		    values.add(optional.get());
 	    }
 	} else {
-	    Optional<ColumnNameValue> optional = createFetchParameter(selection);
+	    Optional<FetchParameter> optional = createFetchParameter(selection);
 	    if (optional.isPresent())
 		values.add(optional.get());
 	}
@@ -937,7 +885,7 @@ public class SqlStatementFactory {
 	LockType lockType = LockTypeUtils.toLockType(query.getLockMode());
 	Selection<?> selection = criteriaQuery.getSelection();
 	if (selection instanceof MiniRoot<?>) {
-	    List<ColumnNameValue> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
+	    List<FetchParameter> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
 
 	    FromTable fromTable = FromTable.of(entity);
 	    SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
@@ -948,7 +896,7 @@ public class SqlStatementFactory {
 
 	FromTable fromTable = FromTable.of(entity);
 	List<Value> values = createSelectionValues(fromTable, selection);
-	List<ColumnNameValue> fetchParameters = createFetchParameters(selection);
+	List<FetchParameter> fetchParameters = createFetchParameters(selection);
 	Optional<List<OrderBy>> optionalOrderBy = createOrderByList(criteriaQuery);
 
 	SqlSelect.SqlSelectBuilder builder = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values)

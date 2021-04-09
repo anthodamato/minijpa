@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.minijpa.jdbc.ColumnNameValue;
+import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
@@ -13,7 +13,7 @@ import org.minijpa.jdbc.model.condition.Condition;
 public class SqlSelect implements SqlStatement {
 
     private FromTable fromTable;
-    private List<ColumnNameValue> fetchParameters;
+    private List<FetchParameter> fetchParameters;
     private MetaEntity result;
     private List<Value> values;
     private Optional<List<Condition>> conditions = Optional.empty();
@@ -42,7 +42,7 @@ public class SqlSelect implements SqlStatement {
 	return groupBy;
     }
 
-    public List<ColumnNameValue> getFetchParameters() {
+    public List<FetchParameter> getFetchParameters() {
 	return fetchParameters;
     }
 
@@ -67,7 +67,7 @@ public class SqlSelect implements SqlStatement {
 	private final FromTable fromTable;
 	private List<Value> values;
 	private List<Condition> conditions;
-	private List<ColumnNameValue> fetchColumnNameValues;
+	private List<FetchParameter> fetchColumnNameValues;
 	private GroupBy groupBy;
 	private MetaEntity result;
 	private List<OrderBy> orderByList;
@@ -89,7 +89,7 @@ public class SqlSelect implements SqlStatement {
 	    return this;
 	}
 
-	public SqlSelectBuilder withFetchParameters(List<ColumnNameValue> fetchColumnNameValues) {
+	public SqlSelectBuilder withFetchParameters(List<FetchParameter> fetchColumnNameValues) {
 	    this.fetchColumnNameValues = Collections.unmodifiableList(fetchColumnNameValues);
 	    return this;
 	}

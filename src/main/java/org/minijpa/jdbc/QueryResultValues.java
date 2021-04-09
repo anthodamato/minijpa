@@ -27,9 +27,9 @@ import java.util.List;
  */
 public class QueryResultValues {
 
-    public List<Object> values = new ArrayList<>();
     public List<MetaAttribute> attributes = new ArrayList<>();
-    public List<Object> relationshipValues = new ArrayList<>();
-    public List<MetaAttribute> relationshipAttributes = new ArrayList<>();
+    public List<Object> values = new ArrayList<>();
 
+    public List<MetaAttribute> relationshipAttributes = new ArrayList<>();
+    public List<Object> relationshipValues = new ArrayList<>();
 }

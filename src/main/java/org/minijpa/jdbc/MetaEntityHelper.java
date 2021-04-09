@@ -38,23 +38,21 @@ public class MetaEntityHelper {
 
     private final Logger LOG = LoggerFactory.getLogger(MetaEntityHelper.class);
 
-    private final AttributeValueConverter attributeValueConverter = new EmbeddedIdAttributeValueConverter();
-
-    public List<ColumnNameValue> convertAttributes(List<MetaAttribute> attributes) {
-	List<ColumnNameValue> list = new ArrayList<>();
+    public List<FetchParameter> convertAttributes(List<MetaAttribute> attributes) {
+	List<FetchParameter> list = new ArrayList<>();
 	for (MetaAttribute a : attributes) {
-	    ColumnNameValue columnNameValue = ColumnNameValue.build(a);
+	    FetchParameter columnNameValue = FetchParameter.build(a);
 	    list.add(columnNameValue);
 	}
 
 	return list;
     }
 
-    public List<ColumnNameValue> convertJoinColumnAttributes(List<JoinColumnAttribute> attributes) {
-	List<ColumnNameValue> list = new ArrayList<>();
+    public List<FetchParameter> convertJoinColumnAttributes(List<JoinColumnAttribute> attributes) {
+	List<FetchParameter> list = new ArrayList<>();
 	for (JoinColumnAttribute a : attributes) {
-	    ColumnNameValue columnNameValue = new ColumnNameValue(a.getColumnName(), null, a.getType(), a.getReadWriteDbType(),
-		    a.getSqlType(), a.getForeignKeyAttribute(), null);
+	    FetchParameter columnNameValue = new FetchParameter(a.getColumnName(), a.getType(), a.getReadWriteDbType(),
+		    a.getSqlType(), a.getForeignKeyAttribute(), true);
 	    list.add(columnNameValue);
 	}
 
@@ -77,7 +75,7 @@ public class MetaEntityHelper {
 	List<QueryParameter> list = new ArrayList<>();
 	if (a.isEmbedded() && a.isId()) {
 	    AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray();
-	    attributeValueConverter.convert(a, value, attributeValueArray);
+	    expand(a, value, attributeValueArray);
 	    list.addAll(convertAVToQP(attributeValueArray));
 	    return list;
 	}
@@ -114,7 +112,7 @@ public class MetaEntityHelper {
     public List<QueryParameter> createJoinColumnAVSToQP(List<JoinColumnAttribute> joinColumnAttributes,
 	    MetaAttribute owningId, Object joinTableForeignKey) throws Exception {
 	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray<>();
-	attributeValueConverter.convert(owningId, joinTableForeignKey, attributeValueArray);
+	expand(owningId, joinTableForeignKey, attributeValueArray);
 	int index = -1;
 	List<QueryParameter> columnNameValues = new ArrayList<>();
 	for (int i = 0; i < attributeValueArray.size(); ++i) {
@@ -129,9 +127,9 @@ public class MetaEntityHelper {
 	return columnNameValues;
     }
 
-    public List<ColumnNameValue> convertAllAttributes(MetaEntity entity) {
+    public List<FetchParameter> convertAllAttributes(MetaEntity entity) {
 	List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
-	List<ColumnNameValue> fetchColumnNameValues = convertAttributes(expandedAttributes);
+	List<FetchParameter> fetchColumnNameValues = convertAttributes(expandedAttributes);
 	fetchColumnNameValues.addAll(convertJoinColumnAttributes(entity.getJoinColumnAttributes()));
 	return fetchColumnNameValues;
     }
@@ -198,6 +196,23 @@ public class MetaEntityHelper {
 	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
 	Object versionValue = AttributeUtil.increaseVersionValue(entity, currentVersionValue);
 	attributeValueArray.add(entity.getVersionAttribute().get(), versionValue);
+    }
+
+    public void expand(MetaAttribute attribute, Object value,
+	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	if (!attribute.isEmbedded()) {
+	    if (attribute.getRelationship() != null)
+		return;
+
+	    attributeValueArray.add(attribute, value);
+	    return;
+	}
+
+	List<MetaAttribute> attributes = attribute.getEmbeddableMetaEntity().getAttributes();
+	for (MetaAttribute a : attributes) {
+	    Object v = a.getReadMethod().invoke(value);
+	    expand(a, v, attributeValueArray);
+	}
     }
 
     public LockType getLockType(MetaEntity entity, Object entityInstance) throws Exception {

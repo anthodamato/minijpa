@@ -25,11 +25,20 @@ import java.util.Optional;
 /**
  *
  * @author adamato
+ * @param <T>
  */
 public class AttributeValueArray<T> {
 
     private final List<T> attributes = new ArrayList<>();
     private final List<Object> values = new ArrayList<>();
+
+    public AttributeValueArray(List<T> attributes, List<Object> values) {
+	this.attributes.addAll(attributes);
+	this.values.addAll(values);
+    }
+
+    public AttributeValueArray() {
+    }
 
     public void add(T attribute, Object value) {
 	attributes.add(attribute);
@@ -68,4 +77,13 @@ public class AttributeValueArray<T> {
     public int size() {
 	return attributes.size();
     }
+
+//    public static AttributeValueArray get(List<?> ms, List<Object> values) {
+//	AttributeValueArray attributeValueArray = new AttributeValueArray<>();
+//	for (int i = 0; i < ms.size(); ++i) {
+//	    attributeValueArray.add(ms.get(i), values.get(i));
+//	}
+//
+//	return attributeValueArray;
+//    }
 }

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 
-    private Logger LOG = LoggerFactory.getLogger(EntityDelegateInstanceBuilder.class);
+    private final Logger LOG = LoggerFactory.getLogger(EntityDelegateInstanceBuilder.class);
 
     @Override
     public Object build(MetaEntity entity, Object idValue)
@@ -29,10 +29,10 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     @Override
     public void setAttributeValues(MetaEntity entity, Object entityInstance, List<MetaAttribute> attributes,
 	    List<Object> values) throws Exception {
-	for (int i = 0; i < attributes.size(); ++i) {
-	    MetaAttribute attribute = attributes.get(i);
-	    LOG.debug("setAttributeValues: 1 attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
-	}
+//	for (int i = 0; i < attributes.size(); ++i) {
+//	    MetaAttribute attribute = attributes.get(i);
+//	    LOG.debug("setAttributeValues: 1 attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
+//	}
 
 	for (int i = 0; i < attributes.size(); ++i) {
 	    MetaAttribute attribute = attributes.get(i);

@@ -60,7 +60,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	this.entityContainer = entityContainer;
 	this.entityInstanceBuilder = entityInstanceBuilder;
 	this.connectionHolder = connectionHolder;
-	this.sqlStatementFactory = new SqlStatementFactory();
+	this.sqlStatementFactory = new CachedSqlStatementFactory();
 	this.jdbcRunner = new JdbcRunner();
 	this.sqlStatementGenerator = new SqlStatementGenerator(dbConfiguration.getDbJdbc());
 	this.metaEntityHelper = new MetaEntityHelper();
@@ -177,7 +177,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     private void checkNullableAttributes(MetaEntity entity, Object entityInstance,
 	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	if (entityContainer.isManaged(entityInstance)) {
-	    EntityStatus entityStatus = metaEntityHelper.getEntityStatus(entity, entityInstance);
+	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(entity, entityInstance);
 	    if (entityStatus == EntityStatus.FLUSHED || entityStatus == EntityStatus.FLUSHED_LOADED_FROM_DB) {
 		// It's an update.
 		// TODO. It should check that no not nullable attrs will be set to null.

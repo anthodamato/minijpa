@@ -13,7 +13,7 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 
 import org.minijpa.jdbc.AbstractJdbcRunner;
-import org.minijpa.jdbc.ColumnNameValue;
+import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jpa.ParameterUtils;
@@ -37,7 +37,7 @@ public class JdbcRunner extends AbstractJdbcRunner {
 	    List<Tuple> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
 	    int nc = sqlSelect.getValues().size();
-	    List<ColumnNameValue> fetchParameters = sqlSelect.getFetchParameters();
+	    List<FetchParameter> fetchParameters = sqlSelect.getFetchParameters();
 	    while (rs.next()) {
 		Object[] values = createRecord(nc, fetchParameters, rs);
 		objects.add(new TupleImpl(values, compoundSelection));

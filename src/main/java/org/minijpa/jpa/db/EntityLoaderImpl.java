@@ -12,8 +12,6 @@ import javax.persistence.EntityNotFoundException;
 import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.AttributeValueArray;
-import org.minijpa.jdbc.ColumnNameValue;
-import org.minijpa.jdbc.ColumnNameValueUtil;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
@@ -67,9 +65,9 @@ public class EntityLoaderImpl implements EntityLoader {
 
 	entityInstance = entityQueryLevel.build(queryResultValues, metaEntity, primaryKey);
 
-	List<ColumnNameValue> columnNameValues = ColumnNameValueUtil.createRelationshipAttrsList(
+	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray<>(
 		queryResultValues.relationshipAttributes, queryResultValues.relationshipValues);
-	loadRelationships(entityInstance, metaEntity, columnNameValues, lockType);
+	loadRelationships(entityInstance, metaEntity, attributeValueArray, lockType);
 	entityContainer.addManaged(entityInstance, primaryKey);
 	MetaEntityHelper.setEntityStatus(metaEntity, entityInstance, EntityStatus.FLUSHED_LOADED_FROM_DB);
 	fillCircularRelationships(metaEntity, entityInstance);
@@ -96,9 +94,9 @@ public class EntityLoaderImpl implements EntityLoader {
 
 	entityInstanceBuilder.setAttributeValues(metaEntity, entityInstance, queryResultValues.attributes, queryResultValues.values);
 
-	List<ColumnNameValue> columnNameValues = ColumnNameValueUtil.createRelationshipAttrsList(
+	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray<>(
 		queryResultValues.relationshipAttributes, queryResultValues.relationshipValues);
-	loadRelationships(entityInstance, metaEntity, columnNameValues, lockType);
+	loadRelationships(entityInstance, metaEntity, attributeValueArray, lockType);
 	entityContainer.addManaged(entityInstance, primaryKey);
 	MetaEntityHelper.setEntityStatus(metaEntity, entityInstance, EntityStatus.FLUSHED_LOADED_FROM_DB);
 	fillCircularRelationships(metaEntity, entityInstance);
@@ -144,30 +142,30 @@ public class EntityLoaderImpl implements EntityLoader {
 	    return entityInstance;
 	}
 
-	List<ColumnNameValue> columnNameValues = ColumnNameValueUtil.createRelationshipAttrsList(
+	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray<>(
 		queryResultValues.relationshipAttributes, queryResultValues.relationshipValues);
-	loadRelationships(entityInstance, entity, columnNameValues, lockType);
+	loadRelationships(entityInstance, entity, attributeValueArray, lockType);
 	return entityInstance;
     }
 
     private void loadRelationships(Object parentInstance, MetaEntity entity,
-	    List<ColumnNameValue> columnNameValues, LockType lockType) throws Exception {
+	    AttributeValueArray<MetaAttribute> fkAvs,
+	    LockType lockType) throws Exception {
 	// foreign key on the same table
 	LOG.debug("loadRelationships: parentInstance=" + parentInstance);
-	for (ColumnNameValue c : columnNameValues) {
-	    LOG.debug("loadRelationships: c.getForeignKeyAttribute()=" + c.getForeignKeyAttribute() + "; c.getValue()=" + c.getValue());
-	    if (c.getForeignKeyAttribute() == null)
-		continue;
-
-	    if (c.getForeignKeyAttribute().getRelationship() != null
-		    && c.getForeignKeyAttribute().getRelationship().getFetchType() == FetchType.LAZY) {
+	for (int i = 0; i < fkAvs.size(); ++i) {
+	    MetaAttribute attribute = fkAvs.getAttribute(i);
+	    Object value = fkAvs.getValue(i);
+	    LOG.debug("loadRelationships: attribute=" + attribute + "; value=" + value);
+	    if (attribute.getRelationship() != null
+		    && attribute.getRelationship().getFetchType() == FetchType.LAZY) {
 		// save the foreign key for lazy attributes
-		entityContainer.saveForeignKey(parentInstance, c.getForeignKeyAttribute(), c.getValue());
-		LOG.debug("loadRelationships: saved foreign key c.getValue()=" + c.getValue());
+		entityContainer.saveForeignKey(parentInstance, attribute, value);
+		LOG.debug("loadRelationships: saved foreign key value=" + value);
 		continue;
 	    }
 
-	    loadRelationshipByForeignKey(parentInstance, entity, c.getForeignKeyAttribute(), c.getValue(), lockType);
+	    loadRelationshipByForeignKey(parentInstance, entity, attribute, value, lockType);
 	}
 
 	LOG.debug("loadRelationships: entity.getRelationshipAttributes()=" + entity.getRelationshipAttributes());
@@ -195,7 +193,8 @@ public class EntityLoaderImpl implements EntityLoader {
     private Object loadRelationshipByForeignKey(Object parentInstance, MetaEntity entity,
 	    MetaAttribute foreignKeyAttribute, Object foreignKeyValue, LockType lockType) throws Exception {
 	// foreign key on the same table
-	LOG.debug("loadRelationshipByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute + "; foreignKeyValue=" + foreignKeyValue);
+	LOG.debug("loadRelationshipByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute
+		+ "; foreignKeyValue=" + foreignKeyValue);
 	MetaEntity e = entities.get(foreignKeyAttribute.getType().getName());
 	LOG.debug("loadRelationshipByForeignKey: e=" + e);
 	Object foreignKeyInstance = findById(e, foreignKeyValue, lockType);
