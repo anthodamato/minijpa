@@ -144,7 +144,7 @@ public abstract class AbstractJdbcRunner {
     }
 
     public void findCollection(Connection connection, String sql, SqlSelect sqlSelect,
-	    MetaAttribute childAttribute, Object childAttributeValue, Collection<Object> collectionResult,
+	    Collection<Object> collectionResult,
 	    EntityLoader entityLoader, List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
@@ -152,15 +152,12 @@ public abstract class AbstractJdbcRunner {
 	    LOG.info("Running `" + sql + "`");
 	    preparedStatement = connection.prepareStatement(sql);
 	    setPreparedStatementParameters(preparedStatement, parameters);
+	    LOG.info("findCollection: sqlSelect.getResult()=" + sqlSelect.getResult());
 
 	    rs = preparedStatement.executeQuery();
 	    while (rs.next()) {
-//		QueryResultValues attributeValues = createAttributeValuesFromResultSet(sqlSelect.getFetchParameters(),
-//			rs);
 		ModelValueArray<FetchParameter> modelValueArray = createModelValueArrayFromResultSet(sqlSelect.getFetchParameters(),
 			rs);
-		LOG.debug("findCollection: modelValueArray=" + modelValueArray);
-//		Object instance = entityLoader.build(attributeValues, sqlSelect.getResult(), sqlSelect.getLockType());
 		Object instance = entityLoader.build(modelValueArray, sqlSelect.getResult(), sqlSelect.getLockType());
 		collectionResult.add(instance);
 	    }
@@ -208,9 +205,11 @@ public abstract class AbstractJdbcRunner {
 	    setPreparedStatementParameters(preparedStatement, parameters);
 
 	    LOG.info("Running `" + sql + "`");
+	    LOG.info("runQuery: sqlSelect=" + sqlSelect);
 	    List<Object> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
 	    int nc = sqlSelect.getValues().size();
+	    LOG.info("runQuery: nc=" + nc);
 	    List<FetchParameter> fetchParameters = sqlSelect.getFetchParameters();
 	    while (rs.next()) {
 		if (nc == 1) {

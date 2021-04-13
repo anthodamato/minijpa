@@ -317,8 +317,12 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public void clear() {
-	// TODO Auto-generated method stub
-
+	try {
+	    persistenceContext.detachAll();
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    throw new PersistenceException(e.getMessage());
+	}
     }
 
     @Override
@@ -334,8 +338,16 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public boolean contains(Object entity) {
-	// TODO Auto-generated method stub
-	return false;
+	MetaEntity metaEntity = entities.get(entity.getClass().getName());
+	if (metaEntity == null)
+	    throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
+
+	try {
+	    return persistenceContext.isManaged(entity);
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    throw new PersistenceException(e.getMessage());
+	}
     }
 
     @Override

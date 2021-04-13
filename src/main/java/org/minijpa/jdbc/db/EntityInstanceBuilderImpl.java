@@ -25,24 +25,9 @@ public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
     }
 
     @Override
-    public void writeAttributeValues(MetaEntity entity, Object parentInstance, List<MetaAttribute> attributes,
-	    List<Object> values) throws Exception {
-//	for (int i = 0; i < attributes.size(); ++i) {
-//	    MetaAttribute attribute = attributes.get(i);
-//	    LOG.debug("setAttributeValues: 1 attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
-//	}
-
-	for (int i = 0; i < attributes.size(); ++i) {
-	    MetaAttribute attribute = attributes.get(i);
-	    LOG.debug("writeAttributeValues: attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
-	    findAndSetAttributeValue(entity.getEntityClass(), parentInstance, entity.getAttributes(), attribute,
-		    values.get(i), entity);
-	}
-    }
-
-    @Override
     public void writeAttributeValue(MetaEntity entity, Object parentInstance, MetaAttribute attribute,
 	    Object value) throws Exception {
+	LOG.debug("writeAttributeValue: parentInstance=" + parentInstance);
 	LOG.debug("writeAttributeValue: attribute.getName()=" + attribute.getName() + "; value=" + value);
 	findAndSetAttributeValue(entity.getEntityClass(), parentInstance, entity.getAttributes(), attribute,
 		value, entity);
@@ -63,6 +48,7 @@ public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
 	Method m = entity.getModificationAttributeReadMethod();
 	List list = (List) m.invoke(parent);
 	list.remove(attribute.getName());
+	LOG.debug("writeAttributeValue: list=" + list);
 	return parent;
     }
 
@@ -82,15 +68,16 @@ public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
 
 	// search over all attributes
 	for (MetaAttribute a : attributes) {
+	    LOG.debug("findAndSetAttributeValue: a=" + a + "; a.isEmbedded()=" + a.isEmbedded());
 	    if (a.isEmbedded()) {
-		LOG.debug("findAndSetAttributeValue: embedded a=" + a);
-		Object parent = getAttributeValue(parentInstance, a);
+		Object parent = parentInstance != null ? getAttributeValue(parentInstance, a) : null;
 		Object aInstance = findAndSetAttributeValue(a.getType(), parent,
 			a.getEmbeddableMetaEntity().getAttributes(), attribute, value, a.getEmbeddableMetaEntity());
-		return writeMetaAttributeValue(parentInstance, parentClass, a, aInstance, entity);
+		LOG.debug("findAndSetAttributeValue: embedded aInstance=" + aInstance);
+		if (aInstance != null)
+		    return writeMetaAttributeValue(parentInstance, parentClass, a, aInstance, entity);
 	    } else if (a == attribute) {
-		LOG.debug("findAndSetAttributeValue: a=" + a);
-		return writeMetaAttributeValue(parentInstance, parentClass, attribute, value, entity);
+		return writeMetaAttributeValue(parentInstance, parentClass, a, value, entity);
 	    }
 	}
 

@@ -261,9 +261,10 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
 	String sql = sqlStatementGenerator.export(sqlSelect);
 	LOG.debug("select: sql=" + sql);
+	LOG.debug("select: sqlSelect.getResult()=" + sqlSelect.getResult());
 	if (sqlSelect.getResult() != null) {
 	    Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
-	    jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null, null, collectionResult,
+	    jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, collectionResult,
 		    entityLoader, statementParameters.getParameters());
 	    return (List<?>) collectionResult;
 	}

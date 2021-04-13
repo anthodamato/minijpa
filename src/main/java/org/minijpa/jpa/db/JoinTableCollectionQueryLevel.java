@@ -68,7 +68,7 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 		metaAttribute.getCollectionImplementationClass());
 	jdbcRunner.findCollection(connectionHolder.getConnection(), sql,
-		sqlSelect, null, null, collectionResult, entityLoader, parameters);
+		sqlSelect, collectionResult, entityLoader, parameters);
 	return collectionResult;
     }
 

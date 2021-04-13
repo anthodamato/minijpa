@@ -19,7 +19,6 @@
 package org.minijpa.jdbc.db;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
@@ -34,9 +33,6 @@ public interface EntityInstanceBuilder {
 
     public void writeAttributeValue(MetaEntity entity, Object parentInstance, MetaAttribute attribute,
 	    Object value) throws Exception;
-
-    public void writeAttributeValues(MetaEntity entity, Object entityInstance, List<MetaAttribute> attributes,
-	    List<Object> values) throws Exception;
 
     public Object getAttributeValue(Object parentInstance, MetaAttribute attribute) throws Exception;
 

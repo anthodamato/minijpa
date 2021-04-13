@@ -62,13 +62,13 @@ public class EntityLoaderImpl implements EntityLoader {
 	return entityInstance;
     }
 
-    private void buildEntity(Object entityInstance, ModelValueArray<FetchParameter> attributeValueArray,
+    private void buildEntity(Object entityInstance, ModelValueArray<FetchParameter> modelValueArray,
 	    MetaEntity metaEntity, Object primaryKey, LockType lockType)
 	    throws Exception {
-	for (int i = 0; i < attributeValueArray.size(); ++i) {
-	    FetchParameter fetchParameter = attributeValueArray.getModel(i);
+	for (int i = 0; i < modelValueArray.size(); ++i) {
+	    FetchParameter fetchParameter = modelValueArray.getModel(i);
 	    MetaAttribute attribute = fetchParameter.getAttribute();
-	    Object value = attributeValueArray.getValue(i);
+	    Object value = modelValueArray.getValue(i);
 	    if (fetchParameter.isJoinColumn()) {
 		if (attribute.getRelationship().getFetchType() == FetchType.LAZY) {
 		    // save the foreign key for lazy attributes
@@ -78,7 +78,7 @@ public class EntityLoaderImpl implements EntityLoader {
 		    loadRelationshipByForeignKey(entityInstance, metaEntity, attribute, value, lockType);
 	    } else
 		entityInstanceBuilder.writeAttributeValue(metaEntity, entityInstance,
-			attribute, attributeValueArray.getValue(i));
+			attribute, value);
 	}
 
 	loadJoinTableRelationships(entityInstance, metaEntity, lockType);
@@ -140,10 +140,12 @@ public class EntityLoaderImpl implements EntityLoader {
     @Override
     public Object build(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity, LockType lockType) throws Exception {
 	Object primaryKey = AttributeUtil.buildPK(entity, modelValueArray);
+	LOG.debug("build: primaryKey=" + primaryKey);
 	Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
 	if (entityInstance != null)
 	    return entityInstance;
 
+	entityInstance = entityInstanceBuilder.build(entity, primaryKey);
 	buildEntity(entityInstance, modelValueArray, entity, primaryKey, lockType);
 	return entityInstance;
     }
