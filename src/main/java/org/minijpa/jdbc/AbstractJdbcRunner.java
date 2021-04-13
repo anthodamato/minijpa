@@ -118,8 +118,8 @@ public abstract class AbstractJdbcRunner {
 	}
     }
 
-    public QueryResultValues findById(String sql, Connection connection, SqlSelect sqlSelect,
-	    List<QueryParameter> parameters) throws Exception {
+    public ModelValueArray<FetchParameter> findById(String sql, Connection connection,
+	    List<FetchParameter> fetchParameters, List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
@@ -133,9 +133,7 @@ public abstract class AbstractJdbcRunner {
 	    if (!next)
 		return null;
 
-	    QueryResultValues queryResultValues = createAttributeValuesFromResultSet(sqlSelect.getFetchParameters(),
-		    rs);
-	    return queryResultValues;
+	    return createModelValueArrayFromResultSet(fetchParameters, rs);
 	} finally {
 	    if (rs != null)
 		rs.close();
@@ -157,10 +155,13 @@ public abstract class AbstractJdbcRunner {
 
 	    rs = preparedStatement.executeQuery();
 	    while (rs.next()) {
-		QueryResultValues attributeValues = createAttributeValuesFromResultSet(sqlSelect.getFetchParameters(),
+//		QueryResultValues attributeValues = createAttributeValuesFromResultSet(sqlSelect.getFetchParameters(),
+//			rs);
+		ModelValueArray<FetchParameter> modelValueArray = createModelValueArrayFromResultSet(sqlSelect.getFetchParameters(),
 			rs);
-		LOG.debug("findCollection: attributeValues=" + attributeValues);
-		Object instance = entityLoader.build(attributeValues, sqlSelect.getResult(), sqlSelect.getLockType());
+		LOG.debug("findCollection: modelValueArray=" + modelValueArray);
+//		Object instance = entityLoader.build(attributeValues, sqlSelect.getResult(), sqlSelect.getLockType());
+		Object instance = entityLoader.build(modelValueArray, sqlSelect.getResult(), sqlSelect.getLockType());
 		collectionResult.add(instance);
 	    }
 	} finally {
@@ -172,29 +173,20 @@ public abstract class AbstractJdbcRunner {
 	}
     }
 
-    private QueryResultValues createAttributeValuesFromResultSet(
-	    List<FetchParameter> columnNameValues, ResultSet rs) throws Exception {
-	QueryResultValues queryResultValues = new QueryResultValues();
+    private ModelValueArray<FetchParameter> createModelValueArrayFromResultSet(
+	    List<FetchParameter> fetchParameters, ResultSet rs) throws Exception {
+	ModelValueArray<FetchParameter> attributeValueArray = new ModelValueArray<>();
 	int i = 1;
-	for (FetchParameter cnv : columnNameValues) {
-	    MetaAttribute metaAttribute = cnv.getAttribute();
-	    if (cnv.isJoinColumn())
-		queryResultValues.relationshipAttributes.add(metaAttribute);
-	    else
-		queryResultValues.attributes.add(metaAttribute);
-
-	    Object value = rs.getObject(i, cnv.getReadWriteDbType());
+	for (FetchParameter fetchParameter : fetchParameters) {
+	    MetaAttribute metaAttribute = fetchParameter.getAttribute();
+	    Object value = rs.getObject(i, fetchParameter.getReadWriteDbType());
 	    Object v = metaAttribute.dbTypeMapper.convert(value,
-		    cnv.getReadWriteDbType(), cnv.getType());
-	    if (cnv.isJoinColumn())
-		queryResultValues.relationshipValues.add(v);
-	    else
-		queryResultValues.values.add(v);
-
+		    fetchParameter.getReadWriteDbType(), fetchParameter.getType());
+	    attributeValueArray.add(fetchParameter, v);
 	    ++i;
 	}
 
-	return queryResultValues;
+	return attributeValueArray;
     }
 
     protected Object[] createRecord(int nc, List<FetchParameter> fetchParameters, ResultSet rs) throws Exception {
@@ -281,15 +273,6 @@ public abstract class AbstractJdbcRunner {
 
 	    if (preparedStatement != null)
 		preparedStatement.close();
-	}
-    }
-
-    public void logAttributeValues(QueryResultValues attributeValues) {
-	for (int i = 0; i < attributeValues.attributes.size(); ++i) {
-	    MetaAttribute attribute = attributeValues.attributes.get(i);
-	    Object value = attributeValues.values.get(i);
-	    LOG.debug("logAttributeValues: " + i + " attribute.getName()=" + attribute.getName());
-	    LOG.debug("logAttributeValues: " + i + " value=" + value);
 	}
     }
 

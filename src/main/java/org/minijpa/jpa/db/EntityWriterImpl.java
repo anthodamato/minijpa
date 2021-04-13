@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.persistence.OptimisticLockException;
 import org.minijpa.jdbc.AttributeUtil;
-import org.minijpa.jdbc.AttributeValueArray;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
@@ -73,7 +73,7 @@ public class EntityWriterImpl implements EntityWriter {
 
     @Override
     public void persist(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(entity, entityInstance);
 	LOG.debug("persist: entityStatus=" + entityStatus);
 	if (MetaEntityHelper.isFlushed(entity, entityInstance)) {
@@ -89,14 +89,14 @@ public class EntityWriterImpl implements EntityWriter {
 	    return;
 
 	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
-	Object dbEntityInstance = entityLoader.findByIdNo1StLevelCache(entity, idValue, LockType.NONE);
-	Object dbVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(dbEntityInstance);
+	Object dbVersionValue = entityLoader.queryVersionValue(entity, idValue, LockType.NONE);
+	LOG.debug("checkOptimisticLock: dbVersionValue=" + dbVersionValue + "; currentVersionValue=" + currentVersionValue);
 	if (dbVersionValue == null || !dbVersionValue.equals(currentVersionValue))
 	    throw new OptimisticLockException("Entity was written by another transaction, version" + dbVersionValue);
     }
 
     protected void update(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	// It's an update.
 	if (attributeValueArray.isEmpty())
 	    return;
@@ -111,7 +111,7 @@ public class EntityWriterImpl implements EntityWriter {
 	}
 
 	metaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, attributeValueArray);
-	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attributeValueArray.getAttributes(),
+	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attributeValueArray.getModels(),
 		idColumns);
 	attributeValueArray.add(entity.getId(), idValue);
 	if (metaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
@@ -126,7 +126,7 @@ public class EntityWriterImpl implements EntityWriter {
     }
 
     protected void insert(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	// It's an insert.
 	// checks specific relationship attributes ('one to many' with join table) even
 	// if there are no notified changes. If they get changed then they'll be made persistent.

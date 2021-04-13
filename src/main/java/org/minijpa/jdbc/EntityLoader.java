@@ -26,11 +26,11 @@ public interface EntityLoader {
 
     public Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType) throws Exception;
 
-    public Object findByIdNo1StLevelCache(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception;
+    public Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception;
 
     public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType) throws Exception;
 
-    public Object build(QueryResultValues queryResultValues, MetaEntity entity, LockType lockType) throws Exception;
+    public Object build(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity, LockType lockType) throws Exception;
 
     public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value) throws Exception;
 

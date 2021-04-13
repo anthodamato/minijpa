@@ -12,7 +12,7 @@ import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.minijpa.jdbc.AttributeUtil;
-import org.minijpa.jdbc.AttributeValueArray;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
@@ -149,7 +149,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     @Override
     public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
-	AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(entity, entityInstance);
+	ModelValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(entity, entityInstance);
 	checkNullableAttributes(entity, entityInstance, attributeValueArray);
 	Object idValue = generatePersistentIdentity(entity, entityInstance);
 	LOG.debug("persist: idValue=" + idValue);
@@ -175,7 +175,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
      * @throws PersistenceException
      */
     private void checkNullableAttributes(MetaEntity entity, Object entityInstance,
-	    AttributeValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
 	if (entityContainer.isManaged(entityInstance)) {
 	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(entity, entityInstance);
 	    if (entityStatus == EntityStatus.FLUSHED || entityStatus == EntityStatus.FLUSHED_LOADED_FROM_DB) {
@@ -193,7 +193,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    throw new PersistenceException("Attribute '" + notNullableAttributes.get(0).getName() + "' is null");
 
 	notNullableAttributes.stream().forEach(a -> {
-	    Optional<MetaAttribute> o = attributeValueArray.getAttributes().stream().filter(av -> av == a).findFirst();
+	    Optional<MetaAttribute> o = attributeValueArray.getModels().stream().filter(av -> av == a).findFirst();
 	    if (o.isEmpty())
 		throw new PersistenceException("Attribute '" + a.getName() + "' is null");
 	});
@@ -210,7 +210,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		case FLUSHED:
 		case FLUSHED_LOADED_FROM_DB: {
 		    // makes updates
-		    AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		    ModelValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
 		    if (!attributeValueArray.isEmpty()) {
 			entityWriter.persist(me, entityInstance, attributeValueArray);
 			entityInstanceBuilder.removeChanges(me, entityInstance);
@@ -218,7 +218,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		}
 		break;
 		case PERSIST_NOT_FLUSHED: {
-		    AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		    ModelValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
 		    entityWriter.persist(me, entityInstance, attributeValueArray);
 		    MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
 		    entityInstanceBuilder.removeChanges(me, entityInstance);

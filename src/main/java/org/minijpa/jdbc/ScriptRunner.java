@@ -24,6 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ public class ScriptRunner {
 	List<String> statements = null;
 	try {
 	    statements = readStatements(file);
-	} catch (Exception e) {
+	} catch (IOException e) {
 	    LOG.error(e.getMessage());
 	    return;
 	}
@@ -58,13 +59,14 @@ public class ScriptRunner {
 	    statement.executeBatch();
 	    connection.commit();
 	    statement.close();
-	} catch (Exception e) {
+	} catch (SQLException e) {
 	    LOG.error(e.getMessage());
 	    LOG.error(e.getClass().getName());
 	    try {
 		connection.rollback();
-		statement.close();
-	    } catch (Exception e1) {
+		if (statement != null)
+		    statement.close();
+	    } catch (SQLException e1) {
 		LOG.error(e1.getMessage());
 	    }
 	}

@@ -18,11 +18,12 @@
  */
 package org.minijpa.metadata;
 
+import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.minijpa.jdbc.AttributeValueArray;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaAttributeFolder;
 import org.minijpa.jdbc.MetaEntity;
@@ -59,16 +60,16 @@ public class EntityDelegateInstanceBuilderTest {
 	e1.setName("Abraham");
 	e1.setJobInfo(jobInfo);
 
-	EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
-	AttributeValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(
+	EntityInstanceBuilder entityInstanceBuilder = new EntityInstanceBuilderImpl();
+	ModelValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(
 		metaEntityPM, programManager);
 	Assertions.assertTrue(attributeValueArray.isEmpty());
 
 	attributeValueArray = entityInstanceBuilder.getModifications(metaEntityJE, e1);
 	Assertions.assertEquals(3, attributeValueArray.size());
-	MetaAttribute a0 = attributeValueArray.getAttribute(0);
-	MetaAttribute a1 = attributeValueArray.getAttribute(1);
-	MetaAttribute a2 = attributeValueArray.getAttribute(2);
+	MetaAttribute a0 = attributeValueArray.getModel(0);
+	MetaAttribute a1 = attributeValueArray.getModel(1);
+	MetaAttribute a2 = attributeValueArray.getModel(2);
 
 	MetaAttributeFolder metaAttributeFolder = new MetaAttributeFolder(a0, a1, a2);
 	Assertions.assertTrue(metaAttributeFolder.findByName("name").isPresent());

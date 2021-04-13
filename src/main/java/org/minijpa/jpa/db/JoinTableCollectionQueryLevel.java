@@ -8,7 +8,7 @@ package org.minijpa.jpa.db;
 import java.util.Collection;
 import java.util.List;
 import org.minijpa.jdbc.AbstractAttribute;
-import org.minijpa.jdbc.AttributeValueArray;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
@@ -42,55 +42,34 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 	this.connectionHolder = connectionHolder;
     }
 
-//    public List<AbstractAttributeValue> createAttributeValues(Object primaryKey, MetaAttribute id,
-//	    Relationship relationship) throws Exception {
-//	if (relationship.isOwner())
-//	    return sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
-//		    relationship.getJoinTable().getJoinColumnOwningAttributes());
-//
-//	return sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
-//		relationship.getJoinTable().getJoinColumnTargetAttributes());
-//    }
-    public AttributeValueArray<AbstractAttribute> createAttributeValues(Object primaryKey, MetaAttribute id,
-	    Relationship relationship) throws Exception {
-	if (relationship.isOwner())
-	    return sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
-		    relationship.getJoinTable().getJoinColumnOwningAttributes());
-
-	return sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
-		relationship.getJoinTable().getJoinColumnTargetAttributes());
-    }
-
-//    @Override
-    public SqlSelect createQuery(MetaEntity entity, Object primaryKey, MetaAttribute id,
-	    Relationship relationship, AttributeValueArray<AbstractAttribute> attributeValueArray) throws Exception {
+    public Object run(MetaEntity entity, Object primaryKey, MetaAttribute id,
+	    Relationship relationship,
+	    MetaAttribute metaAttribute,
+	    EntityLoader entityLoader) throws Exception {
+	ModelValueArray<AbstractAttribute> modelValueArray = null;
+	SqlSelect sqlSelect = null;
 	if (relationship.isOwner()) {
-//	    List<AbstractAttribute> attributes = metaEntityHelper.attributeValuesToAttribute(attributeValues);
-	    List<AbstractAttribute> attributes = attributeValueArray.getAttributes();
+	    modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
+		    relationship.getJoinTable().getJoinColumnOwningAttributes());
+	    List<AbstractAttribute> attributes = modelValueArray.getModels();
 
-	    return sqlStatementFactory.generateSelectByJoinTable(entity,
+	    sqlSelect = sqlStatementFactory.generateSelectByJoinTable(entity,
 		    relationship.getJoinTable(), attributes);
 	} else {
-//	    List<AbstractAttribute> attributes = metaEntityHelper.attributeValuesToAttribute(attributeValues);
-	    List<AbstractAttribute> attributes = attributeValueArray.getAttributes();
-	    return sqlStatementFactory.generateSelectByJoinTableFromTarget(entity,
+	    modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
+		    relationship.getJoinTable().getJoinColumnTargetAttributes());
+	    List<AbstractAttribute> attributes = modelValueArray.getModels();
+	    sqlSelect = sqlStatementFactory.generateSelectByJoinTableFromTarget(entity,
 		    relationship.getJoinTable(), attributes);
 	}
-    }
 
-    public Object run(EntityLoader entityLoader, MetaAttribute metaAttribute,
-	    List<QueryParameter> parameters, SqlSelect sqlSelect) throws Exception {
+	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(modelValueArray);
 	String sql = sqlStatementGenerator.export(sqlSelect);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 		metaAttribute.getCollectionImplementationClass());
 	jdbcRunner.findCollection(connectionHolder.getConnection(), sql,
 		sqlSelect, null, null, collectionResult, entityLoader, parameters);
 	return collectionResult;
-    }
-
-//    @Override
-    public Object build() {
-	return null;
     }
 
 }

@@ -21,49 +21,59 @@ package org.minijpa.jdbc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  *
  * @author adamato
  * @param <T>
  */
-public class AttributeValueArray<T> {
+public class ModelValueArray<T> {
 
-    private final List<T> attributes = new ArrayList<>();
+    private final List<T> models = new ArrayList<>();
     private final List<Object> values = new ArrayList<>();
 
-    public AttributeValueArray(List<T> attributes, List<Object> values) {
-	this.attributes.addAll(attributes);
+    public ModelValueArray(List<T> models, List<Object> values) {
+	this.models.addAll(models);
 	this.values.addAll(values);
     }
 
-    public AttributeValueArray() {
+    public ModelValueArray() {
     }
 
-    public void add(T attribute, Object value) {
-	attributes.add(attribute);
+    public void add(T model, Object value) {
+	models.add(model);
 	values.add(value);
     }
 
-    public List<T> getAttributes() {
-	return attributes;
+    public List<T> getModels() {
+	return models;
     }
 
     public List<Object> getValues() {
 	return values;
     }
 
-    public T getAttribute(int index) {
-	return attributes.get(index);
+    public T getModel(int index) {
+	return models.get(index);
     }
 
     public Object getValue(int index) {
 	return values.get(index);
     }
 
-    public Optional<Object> getValue(T attribute) {
+    public Optional<Object> getValue(T model) {
 	for (int i = 0; i < size(); ++i) {
-	    if (getAttribute(i) == attribute)
+	    if (getModel(i) == model)
+		return Optional.of(getValue(i));
+	}
+
+	return Optional.empty();
+    }
+
+    public Optional<Object> getValue(Function<T, ?> p, Object subModel) {
+	for (int i = 0; i < size(); ++i) {
+	    if (p.apply(getModel(i)) == subModel)
 		return Optional.of(getValue(i));
 	}
 
@@ -71,11 +81,11 @@ public class AttributeValueArray<T> {
     }
 
     public boolean isEmpty() {
-	return attributes.isEmpty();
+	return models.isEmpty();
     }
 
     public int size() {
-	return attributes.size();
+	return models.size();
     }
 
 //    public static AttributeValueArray get(List<?> ms, List<Object> values) {

@@ -6,12 +6,13 @@
 package org.minijpa.jpa.db;
 
 import java.util.List;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.ConnectionHolder;
+import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.QueryResultValues;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
@@ -41,23 +42,21 @@ public class EntityQueryLevel implements QueryLevel {
 	this.connectionHolder = connectionHolder;
     }
 
-//    @Override
-    public SqlSelect createQuery(MetaEntity entity, LockType lockType) throws Exception {
-	return sqlStatementFactory.generateSelectById(entity, lockType);
-    }
-
-    public QueryResultValues run(MetaEntity entity, Object primaryKey, SqlSelect sqlSelect) throws Exception {
+    public ModelValueArray<FetchParameter> run(MetaEntity entity, Object primaryKey, LockType lockType) throws Exception {
+	SqlSelect sqlSelect = sqlStatementFactory.generateSelectById(entity, lockType);
 	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
 	String sql = sqlStatementGenerator.export(sqlSelect);
 	return jdbcRunner.findById(sql, connectionHolder.getConnection(),
-		sqlSelect, parameters);
+		sqlSelect.getFetchParameters(), parameters);
     }
 
-//    @Override
-    public Object build(QueryResultValues queryResultValues, MetaEntity entity, Object primaryKey) throws Exception {
-	Object entityObject = entityInstanceBuilder.build(entity, primaryKey);
-	entityInstanceBuilder.setAttributeValues(entity, entityObject, queryResultValues.attributes, queryResultValues.values);
-	return entityObject;
+    public ModelValueArray<FetchParameter> runVersionQuery(MetaEntity entity, Object primaryKey,
+	    LockType lockType) throws Exception {
+	SqlSelect sqlSelect = sqlStatementFactory.generateSelectVersion(entity, lockType);
+	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
+	String sql = sqlStatementGenerator.export(sqlSelect);
+	return jdbcRunner.findById(sql, connectionHolder.getConnection(),
+		sqlSelect.getFetchParameters(), parameters);
     }
 
 }

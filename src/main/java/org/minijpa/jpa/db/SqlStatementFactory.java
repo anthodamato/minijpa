@@ -24,7 +24,7 @@ import javax.persistence.criteria.Selection;
 import org.minijpa.jdbc.AbstractAttribute;
 
 import org.minijpa.jdbc.AttributeUtil;
-import org.minijpa.jdbc.AttributeValueArray;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.JoinColumnAttribute;
@@ -106,7 +106,7 @@ public class SqlStatementFactory {
     }
 
     public SqlSelect generateSelectById(MetaEntity entity, LockType lockType) throws Exception {
-	List<FetchParameter> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
+	List<FetchParameter> fetchParameters = metaEntityHelper.convertAllAttributes(entity);
 
 	FromTable fromTable = FromTable.of(entity);
 	List<TableColumn> tableColumns = metaEntityHelper.toTableColumns(entity.getId().expand(), fromTable);
@@ -116,7 +116,24 @@ public class SqlStatementFactory {
 
 	Condition condition = Condition.toAnd(conditions);
 	return new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
-		.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
+		.withFetchParameters(fetchParameters).withConditions(Arrays.asList(condition))
+		.withLockType(lockType)
+		.build();
+    }
+
+    public SqlSelect generateSelectVersion(MetaEntity entity, LockType lockType) throws Exception {
+	FetchParameter fetchParameter = metaEntityHelper.toFetchParameter(entity.getVersionAttribute().get());
+
+	FromTable fromTable = FromTable.of(entity);
+	List<TableColumn> tableColumns = metaEntityHelper.toTableColumns(entity.getId().expand(), fromTable);
+	List<Condition> conditions = tableColumns.stream().map(t -> {
+	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
+	}).collect(Collectors.toList());
+
+	Condition condition = Condition.toAnd(conditions);
+	return new SqlSelect.SqlSelectBuilder(fromTable)
+		.withValues(Arrays.asList(metaEntityHelper.toValue(entity.getVersionAttribute().get(), fromTable)))
+		.withFetchParameters(Arrays.asList(fetchParameter)).withConditions(Arrays.asList(condition))
 		.withLockType(lockType)
 		.build();
     }
@@ -139,14 +156,14 @@ public class SqlStatementFactory {
 		.withResult(entity).build();
     }
 
-    public AttributeValueArray<AbstractAttribute> expandJoinColumnAttributes(MetaAttribute owningId,
+    public ModelValueArray<AbstractAttribute> expandJoinColumnAttributes(MetaAttribute owningId,
 	    Object joinTableForeignKey, List<JoinColumnAttribute> allJoinColumnAttributes) throws Exception {
-	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray<>();
+	ModelValueArray<MetaAttribute> attributeValueArray = new ModelValueArray<>();
 	metaEntityHelper.expand(owningId, joinTableForeignKey, attributeValueArray);
 
-	AttributeValueArray<AbstractAttribute> result = new AttributeValueArray<>();
+	ModelValueArray<AbstractAttribute> result = new ModelValueArray<>();
 	for (int i = 0; i < attributeValueArray.size(); ++i) {
-	    MetaAttribute attribute = attributeValueArray.getAttribute(i);
+	    MetaAttribute attribute = attributeValueArray.getModel(i);
 	    Optional<JoinColumnAttribute> optional = allJoinColumnAttributes.stream().
 		    filter(j -> j.getForeignKeyAttribute() == attribute).findFirst();
 	    result.add(optional.get(), attributeValueArray.getValue(i));

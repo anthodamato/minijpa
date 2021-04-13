@@ -1,4 +1,4 @@
-package org.minijpa.metadata;
+package org.minijpa.jdbc.db;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -7,27 +7,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.minijpa.jdbc.AttributeValueArray;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
+public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
 
-    private final Logger LOG = LoggerFactory.getLogger(EntityDelegateInstanceBuilder.class);
+    private final Logger LOG = LoggerFactory.getLogger(EntityInstanceBuilderImpl.class);
 
     @Override
-    public Object build(MetaEntity entity, Object idValue)
-	    throws Exception {
+    public Object build(MetaEntity entity, Object idValue) throws Exception {
 	Object entityInstance = entity.getEntityClass().getDeclaredConstructor().newInstance();
 	entity.getId().getWriteMethod().invoke(entityInstance, idValue);
 	return entityInstance;
     }
 
     @Override
-    public void setAttributeValues(MetaEntity entity, Object entityInstance, List<MetaAttribute> attributes,
+    public void writeAttributeValues(MetaEntity entity, Object parentInstance, List<MetaAttribute> attributes,
 	    List<Object> values) throws Exception {
 //	for (int i = 0; i < attributes.size(); ++i) {
 //	    MetaAttribute attribute = attributes.get(i);
@@ -36,28 +34,35 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 
 	for (int i = 0; i < attributes.size(); ++i) {
 	    MetaAttribute attribute = attributes.get(i);
-	    LOG.debug("setAttributeValues: attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
-	    findAndSetAttributeValue(entity.getEntityClass(), entityInstance, entity.getAttributes(), attribute,
+	    LOG.debug("writeAttributeValues: attribute.getName()=" + attribute.getName() + "; values.get(i)=" + values.get(i));
+	    findAndSetAttributeValue(entity.getEntityClass(), parentInstance, entity.getAttributes(), attribute,
 		    values.get(i), entity);
 	}
     }
 
     @Override
-    public Object setAttributeValue(Object parentInstance, Class<?> parentClass, MetaAttribute attribute,
+    public void writeAttributeValue(MetaEntity entity, Object parentInstance, MetaAttribute attribute,
+	    Object value) throws Exception {
+	LOG.debug("writeAttributeValue: attribute.getName()=" + attribute.getName() + "; value=" + value);
+	findAndSetAttributeValue(entity.getEntityClass(), parentInstance, entity.getAttributes(), attribute,
+		value, entity);
+    }
+
+    @Override
+    public Object writeMetaAttributeValue(Object parentInstance, Class<?> parentClass, MetaAttribute attribute,
 	    Object value, MetaEntity entity) throws Exception {
 	Object parent = parentInstance;
 	if (parent == null) {
 	    parent = parentClass.getDeclaredConstructor().newInstance();
 	}
 
-	LOG.debug("setAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
-	LOG.debug("setAttributeValue: value=" + value);
+	LOG.debug("writeAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
+	LOG.debug("writeAttributeValue: value=" + value);
 
 	attribute.getWriteMethod().invoke(parent, value);
 	Method m = entity.getModificationAttributeReadMethod();
 	List list = (List) m.invoke(parent);
 	list.remove(attribute.getName());
-
 	return parent;
     }
 
@@ -65,7 +70,6 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     public Object getAttributeValue(Object parentInstance, MetaAttribute attribute) throws Exception {
 	LOG.debug(
 		"getAttributeValue: parent=" + parentInstance + "; a.getReadMethod()=" + attribute.getReadMethod());
-
 	return attribute.getReadMethod().invoke(parentInstance);
     }
 
@@ -76,23 +80,17 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
 	LOG.debug("findAndSetAttributeValue: parentInstance=" + parentInstance + "; parentClass=" + parentClass);
 	LOG.debug("findAndSetAttributeValue: entity=" + entity);
 
+	// search over all attributes
 	for (MetaAttribute a : attributes) {
-	    LOG.debug("findAndSetAttributeValue: a=" + a);
-	    if (a == attribute) {
-		return setAttributeValue(parentInstance, parentClass, attribute, value, entity);
-	    }
-	}
-
-	// search over embedded attributes
-	for (MetaAttribute a : attributes) {
-	    if (!a.isEmbedded())
-		continue;
-
-	    LOG.debug("findAndSetAttributeValue: embedded a=" + a);
-	    Object aInstance = findAndSetAttributeValue(a.getType(), null,
-		    a.getEmbeddableMetaEntity().getAttributes(), attribute, value, a.getEmbeddableMetaEntity());
-	    if (aInstance != null) {
-		return setAttributeValue(parentInstance, parentClass, a, aInstance, entity);
+	    if (a.isEmbedded()) {
+		LOG.debug("findAndSetAttributeValue: embedded a=" + a);
+		Object parent = getAttributeValue(parentInstance, a);
+		Object aInstance = findAndSetAttributeValue(a.getType(), parent,
+			a.getEmbeddableMetaEntity().getAttributes(), attribute, value, a.getEmbeddableMetaEntity());
+		return writeMetaAttributeValue(parentInstance, parentClass, a, aInstance, entity);
+	    } else if (a == attribute) {
+		LOG.debug("findAndSetAttributeValue: a=" + a);
+		return writeMetaAttributeValue(parentInstance, parentClass, attribute, value, entity);
 	    }
 	}
 
@@ -107,7 +105,7 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     }
 
     private void unpackEmbedded(MetaAttribute metaAttribute, Object value,
-	    AttributeValueArray<MetaAttribute> attributeValueArray) throws IllegalAccessException, InvocationTargetException {
+	    ModelValueArray<MetaAttribute> attributeValueArray) throws IllegalAccessException, InvocationTargetException {
 	Optional<Map<String, Object>> optional = getEntityModifications(metaAttribute.getEmbeddableMetaEntity(), value);
 	if (optional.isEmpty())
 	    return;
@@ -121,8 +119,8 @@ public class EntityDelegateInstanceBuilder implements EntityInstanceBuilder {
     }
 
     @Override
-    public AttributeValueArray<MetaAttribute> getModifications(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
-	AttributeValueArray<MetaAttribute> attributeValueArray = new AttributeValueArray();
+    public ModelValueArray<MetaAttribute> getModifications(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
+	ModelValueArray<MetaAttribute> attributeValueArray = new ModelValueArray();
 	Optional<Map<String, Object>> optional = getEntityModifications(entity, entityInstance);
 	if (optional.isEmpty())
 	    return attributeValueArray;

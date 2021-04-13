@@ -22,7 +22,7 @@ import org.minijpa.jpa.PersistenceProviderHelper;
 import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.EntityContext;
 import org.minijpa.metadata.EntityDelegate;
-import org.minijpa.metadata.EntityDelegateInstanceBuilder;
+import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
 import org.minijpa.metadata.MetaEntityUtils;
 
 /**
@@ -88,7 +88,7 @@ public class PersistenceUnitEnv {
 	Map<String, MetaEntity> entities = MetaEntityUtils.parse(classNames);
 	MiniPersistenceContext miniPersistenceContext = new MiniPersistenceContext(entities);
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-	EntityInstanceBuilder entityInstanceBuilder = new EntityDelegateInstanceBuilder();
+	EntityInstanceBuilder entityInstanceBuilder = new EntityInstanceBuilderImpl();
 	ConnectionHolder connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 
 	Assertions.assertNotNull(dbConfiguration);

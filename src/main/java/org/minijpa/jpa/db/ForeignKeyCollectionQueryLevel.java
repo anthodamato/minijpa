@@ -38,8 +38,6 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
     private final JdbcRunner jdbcRunner;
     private final ConnectionHolder connectionHolder;
 
-    private SqlSelect sqlSelect;
-
     public ForeignKeyCollectionQueryLevel(
 	    SqlStatementFactory sqlStatementFactory, MetaEntityHelper metaEntityHelper,
 	    SqlStatementGenerator sqlStatementGenerator,
@@ -51,33 +49,17 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 	this.connectionHolder = connectionHolder;
     }
 
-    public List<QueryParameter> createParameters(Object foreignKey, MetaAttribute foreignKeyAttribute) throws Exception {
-	return metaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
-    }
-
-//    @Override
-    public void createQuery(MetaEntity entity, MetaAttribute foreignKeyAttribute, List<QueryParameter> parameters) throws Exception {
+    public Object run(MetaEntity entity, MetaAttribute foreignKeyAttribute,
+	    Object foreignKey, LockType lockType, EntityLoader entityLoader) throws Exception {
+	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
 	List<String> columns = parameters.stream().map(p -> p.getColumnName())
 		.collect(Collectors.toList());
-	sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, columns);
-    }
-
-    public SqlSelect getQuery() {
-	return sqlSelect;
-    }
-
-    public Object run(EntityLoader entityLoader, MetaAttribute metaAttribute,
-	    List<QueryParameter> parameters, LockType lockType) throws Exception {
+	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, columns);
 	String sql = sqlStatementGenerator.export(sqlSelect);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
 	jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect, null,
 		null, collectionResult, entityLoader, parameters);
 	return (List<Object>) collectionResult;
-    }
-
-//    @Override
-    public Object build() {
-	return null;
     }
 
 }

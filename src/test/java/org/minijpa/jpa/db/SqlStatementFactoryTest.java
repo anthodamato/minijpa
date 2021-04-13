@@ -20,7 +20,7 @@ import javax.persistence.criteria.Root;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.AbstractAttribute;
-import org.minijpa.jdbc.AttributeValueArray;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
@@ -131,9 +131,9 @@ public class SqlStatementFactoryTest {
 
 	MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
 	RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
-	AttributeValueArray<AbstractAttribute> attributeValueArray = sqlStatementFactory.expandJoinColumnAttributes(a, store.getId(),
+	ModelValueArray<AbstractAttribute> attributeValueArray = sqlStatementFactory.expandJoinColumnAttributes(a, store.getId(),
 		relationshipJoinTable.getJoinColumnOwningAttributes());
-	List<AbstractAttribute> attributes = attributeValueArray.getAttributes();
+	List<AbstractAttribute> attributes = attributeValueArray.getModels();
 	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValueArray);
 	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
 		relationshipJoinTable, attributes);

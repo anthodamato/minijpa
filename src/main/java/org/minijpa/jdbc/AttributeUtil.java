@@ -29,6 +29,8 @@ import java.time.OffsetTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 
 import org.slf4j.Logger;
@@ -39,27 +41,27 @@ public class AttributeUtil {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(AttributeUtil.class);
 
-    public static Object createPK(MetaEntity entity, QueryResultValues attributeValues) throws Exception {
+    private static final Function<FetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f.getAttribute();
+
+    public static Object buildPK(MetaEntity entity, ModelValueArray<FetchParameter> modelValueArray) throws Exception {
 	MetaAttribute id = entity.getId();
 	if (id.isEmbedded()) {
 	    Object pkObject = id.getType().getConstructor().newInstance();
-	    createPK(entity, attributeValues, id.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
+	    buildPK(entity, modelValueArray, id.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
 	    return pkObject;
 	}
 
-	int index = indexOf(attributeValues.attributes, id.getName());
-	return attributeValues.values.get(index);
+	return modelValueArray.getValue(fetchParameterToMetaAttribute, id).get();
     }
 
-    public static void createPK(MetaEntity entity, QueryResultValues attributeValues, List<MetaAttribute> attributes,
-	    MetaAttribute id, Object pkObject) throws Exception {
+    private static void buildPK(MetaEntity entity, ModelValueArray<FetchParameter> modelValueArray,
+	    List<MetaAttribute> attributes, MetaAttribute id, Object pkObject) throws Exception {
 	for (MetaAttribute a : attributes) {
 	    if (a.isEmbedded())
-		createPK(entity, attributeValues, a.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
+		buildPK(entity, modelValueArray, a.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
 	    else {
-		int index = indexOf(attributeValues.attributes, a.getName());
-		Object value = attributeValues.values.get(index);
-		a.getWriteMethod().invoke(pkObject, value);
+		Optional<Object> value = modelValueArray.getValue(fetchParameterToMetaAttribute, a);
+		a.getWriteMethod().invoke(pkObject, value.get());
 	    }
 	}
     }
