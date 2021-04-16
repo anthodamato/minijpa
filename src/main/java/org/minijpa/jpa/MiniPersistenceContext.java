@@ -110,8 +110,16 @@ public class MiniPersistenceContext implements EntityContainer {
 	if (primaryKey == null)
 	    throw new IllegalArgumentException("Primary key is null (class '" + entityClass.getName() + "')");
 
-	Map<Object, Object> notFlushedEntitiesMap = getEntityMap(entityClass, managedEntities);
-	Object entityInstance = notFlushedEntitiesMap.get(primaryKey);
+	Map<Object, Object> map = getEntityMap(entityClass, managedEntities);
+	LOG.debug("find: map.size()=" + map.size());
+	LOG.debug("find: primaryKey.getClass().getName()=" + primaryKey.getClass().getName());
+	for (Map.Entry<Object, Object> entry : map.entrySet()) {
+	    LOG.debug("find: entry.getKey().getClass().getName()=" + entry.getKey().getClass().getName());
+	    LOG.debug("find: entry.getKey()=" + entry.getKey());
+	    LOG.debug("find: entry.getValue()=" + entry.getValue());
+	}
+
+	Object entityInstance = map.get(primaryKey);
 	LOG.debug("find: managed entityInstance=" + entityInstance);
 	return entityInstance;
     }

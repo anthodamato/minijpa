@@ -2,6 +2,7 @@ package org.minijpa.jpa;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
@@ -420,19 +421,17 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public Query createNativeQuery(String sqlString) {
-	return new MiniNativeQuery(sqlString, this, jdbcEntityManager);
+	return new MiniNativeQuery(sqlString, Optional.empty(), Optional.empty(), this, jdbcEntityManager);
     }
 
     @Override
     public Query createNativeQuery(String sqlString, Class resultClass) {
-	// TODO Auto-generated method stub
-	return null;
+	return new MiniNativeQuery(sqlString, Optional.of(resultClass), Optional.empty(), this, jdbcEntityManager);
     }
 
     @Override
     public Query createNativeQuery(String sqlString, String resultSetMapping) {
-	// TODO Auto-generated method stub
-	return null;
+	return new MiniNativeQuery(sqlString, Optional.empty(), Optional.of(resultSetMapping), this, jdbcEntityManager);
     }
 
     @Override

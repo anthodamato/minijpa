@@ -35,13 +35,13 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
     private final SqlStatementFactory sqlStatementFactory;
     private final MetaEntityHelper metaEntityHelper;
     private final SqlStatementGenerator sqlStatementGenerator;
-    private final JdbcRunner jdbcRunner;
+    private final JpaJdbcRunner jdbcRunner;
     private final ConnectionHolder connectionHolder;
 
     public ForeignKeyCollectionQueryLevel(
 	    SqlStatementFactory sqlStatementFactory, MetaEntityHelper metaEntityHelper,
 	    SqlStatementGenerator sqlStatementGenerator,
-	    JdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
+	    JpaJdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
 	this.sqlStatementFactory = sqlStatementFactory;
 	this.metaEntityHelper = metaEntityHelper;
 	this.sqlStatementGenerator = sqlStatementGenerator;

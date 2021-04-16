@@ -102,7 +102,7 @@ public class PersistenceUnitEnv {
 		.addEntityContext(new EntityContext(persistenceUnitInfo.getPersistenceUnitName(), entities));
 
 	MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
-	JdbcRunner jdbcRunner = new JdbcRunner();
+	JpaJdbcRunner jdbcRunner = new JpaJdbcRunner();
 	EntityQueryLevel entityQueryLevel = new EntityQueryLevel(sqlStatementFactory,
 		entityInstanceBuilder, sqlStatementGenerator, metaEntityHelper,
 		jdbcRunner, connectionHolder);

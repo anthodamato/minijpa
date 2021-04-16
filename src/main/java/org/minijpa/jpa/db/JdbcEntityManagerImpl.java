@@ -1,6 +1,8 @@
 package org.minijpa.jpa.db;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,12 +18,14 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
+import org.minijpa.jdbc.EntityMapping;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.db.MiniFlushMode;
@@ -31,6 +35,7 @@ import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jpa.DeleteQuery;
+import org.minijpa.jpa.MiniNativeQuery;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
 import org.slf4j.Logger;
@@ -44,7 +49,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     private final EntityContainer entityContainer;
     private final EntityInstanceBuilder entityInstanceBuilder;
     protected ConnectionHolder connectionHolder;
-    protected JdbcRunner jdbcRunner;
+    protected JpaJdbcRunner jdbcRunner;
     protected SqlStatementFactory sqlStatementFactory;
     private final SqlStatementGenerator sqlStatementGenerator;
     private final EntityLoader entityLoader;
@@ -61,7 +66,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	this.entityInstanceBuilder = entityInstanceBuilder;
 	this.connectionHolder = connectionHolder;
 	this.sqlStatementFactory = new CachedSqlStatementFactory();
-	this.jdbcRunner = new JdbcRunner();
+	this.jdbcRunner = new JpaJdbcRunner();
 	this.sqlStatementGenerator = new SqlStatementGenerator(dbConfiguration.getDbJdbc());
 	this.metaEntityHelper = new MetaEntityHelper();
 	this.entityLoader = new EntityLoaderImpl(entities, entityInstanceBuilder, entityContainer,
@@ -279,12 +284,25 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	}
 
 	// returns an aggregate expression result (max, min, etc)
-	return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect, statementParameters.getParameters());
+	return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect.getFetchParameters(),
+		statementParameters.getParameters());
     }
 
     @Override
-    public List<?> select(String sqlString, Query query) throws Exception {
-	return jdbcRunner.runQuery(connectionHolder.getConnection(), sqlString, query);
+    public List<?> selectNative(MiniNativeQuery query) throws Exception {
+	Optional<QueryResultMapping> queryResultMapping = Optional.empty();
+	if (query.getResultClass().isPresent()) {
+	    EntityMapping entityMapping = new EntityMapping(entities.get(query.getResultClass().get().getName()), Collections.emptyList());
+	    queryResultMapping = Optional.of(new QueryResultMapping(Arrays.asList(entityMapping),
+		    Collections.emptyList(), Collections.emptyList()));
+	}
+
+	if (query.getResultSetMapping().isPresent()) {
+	    queryResultMapping = Optional.empty();
+	}
+
+	return jdbcRunner.runNativeQuery(connectionHolder.getConnection(), query.getSqlString(),
+		query, queryResultMapping, entityLoader);
     }
 
     @Override

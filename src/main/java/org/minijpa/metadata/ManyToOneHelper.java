@@ -13,7 +13,6 @@ import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 import org.minijpa.jdbc.relationship.ManyToOneRelationship;
-import org.minijpa.jdbc.relationship.OneToOneRelationship;
 
 /**
  *

@@ -7,6 +7,7 @@ import javax.persistence.Query;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.DeleteQuery;
+import org.minijpa.jpa.MiniNativeQuery;
 import org.minijpa.jpa.UpdateQuery;
 
 public interface JdbcEntityManager {
@@ -17,7 +18,7 @@ public interface JdbcEntityManager {
 
     public List<?> select(Query query) throws Exception;
 
-    public List<?> select(String sqlString, Query query) throws Exception;
+    public List<?> selectNative(MiniNativeQuery query) throws Exception;
 
     public int update(String sqlString, Query query) throws Exception;
 

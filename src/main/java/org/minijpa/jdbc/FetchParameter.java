@@ -20,12 +20,12 @@ package org.minijpa.jdbc;
 
 public class FetchParameter {
 
-    private String columnName;
-    private Class<?> type;
-    private Class<?> readWriteDbType;
-    private Integer sqlType;
-    private MetaAttribute attribute;
-    private boolean joinColumn;
+    private final String columnName;
+    private final Class<?> type;
+    private final Class<?> readWriteDbType;
+    private final Integer sqlType;
+    private final MetaAttribute attribute;
+    private final boolean joinColumn;
 
     public FetchParameter(String columnName, Class<?> type, Class<?> readWriteDbType, Integer sqlType,
 	    MetaAttribute attribute, boolean joinColumn) {
@@ -38,10 +38,9 @@ public class FetchParameter {
 	this.joinColumn = joinColumn;
     }
 
-    public static FetchParameter build(MetaAttribute av) {
-	FetchParameter cnv = new FetchParameter(av.getColumnName(), av.getType(), av.getReadWriteDbType(),
-		av.getSqlType(), av, false);
-	return cnv;
+    public static FetchParameter build(MetaAttribute attribute) {
+	return new FetchParameter(attribute.getColumnName(), attribute.getType(),
+		attribute.getReadWriteDbType(), attribute.getSqlType(), attribute, false);
     }
 
     public String getColumnName() {

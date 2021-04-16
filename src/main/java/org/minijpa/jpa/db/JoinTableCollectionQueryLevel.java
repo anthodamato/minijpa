@@ -28,14 +28,14 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 
     private final SqlStatementFactory sqlStatementFactory;
     private final SqlStatementGenerator sqlStatementGenerator;
-    private final JdbcRunner jdbcRunner;
+    private final JpaJdbcRunner jdbcRunner;
     private final ConnectionHolder connectionHolder;
     private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
     public JoinTableCollectionQueryLevel(
 	    SqlStatementFactory sqlStatementFactory,
 	    SqlStatementGenerator sqlStatementGenerator,
-	    JdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
+	    JpaJdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
 	this.sqlStatementFactory = sqlStatementFactory;
 	this.sqlStatementGenerator = sqlStatementGenerator;
 	this.jdbcRunner = jdbcRunner;

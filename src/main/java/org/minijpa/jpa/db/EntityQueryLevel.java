@@ -27,13 +27,13 @@ public class EntityQueryLevel implements QueryLevel {
     private final EntityInstanceBuilder entityInstanceBuilder;
     private final SqlStatementGenerator sqlStatementGenerator;
     private final MetaEntityHelper metaEntityHelper;
-    private final JdbcRunner jdbcRunner;
+    private final JpaJdbcRunner jdbcRunner;
     private final ConnectionHolder connectionHolder;
 
     public EntityQueryLevel(SqlStatementFactory sqlStatementFactory,
 	    EntityInstanceBuilder entityInstanceBuilder,
 	    SqlStatementGenerator sqlStatementGenerator, MetaEntityHelper metaEntityHelper,
-	    JdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
+	    JpaJdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
 	this.sqlStatementFactory = sqlStatementFactory;
 	this.entityInstanceBuilder = entityInstanceBuilder;
 	this.sqlStatementGenerator = sqlStatementGenerator;

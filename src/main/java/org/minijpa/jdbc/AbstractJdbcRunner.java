@@ -27,16 +27,18 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.minijpa.jdbc.model.SqlSelect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractJdbcRunner {
+public class AbstractJdbcRunner {
 
     private final Logger LOG = LoggerFactory.getLogger(AbstractJdbcRunner.class);
 
-    private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter, int index) throws SQLException {
+    private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter,
+	    int index) throws SQLException {
 //	LOG.info("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
 //		+ queryParameter.getSqlType());
 	if (queryParameter.getValue() == null) {
@@ -108,11 +110,11 @@ public abstract class AbstractJdbcRunner {
     }
 
     public int delete(String sql, Connection connection, List<QueryParameter> parameters) throws SQLException {
-	LOG.info("persist: sql=" + sql);
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 	    if (!parameters.isEmpty())
 		setPreparedStatementParameters(preparedStatement, parameters);
 
+	    LOG.info("Running `" + sql + "`");
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
@@ -152,8 +154,6 @@ public abstract class AbstractJdbcRunner {
 	    LOG.info("Running `" + sql + "`");
 	    preparedStatement = connection.prepareStatement(sql);
 	    setPreparedStatementParameters(preparedStatement, parameters);
-	    LOG.info("findCollection: sqlSelect.getResult()=" + sqlSelect.getResult());
-
 	    rs = preparedStatement.executeQuery();
 	    while (rs.next()) {
 		ModelValueArray<FetchParameter> modelValueArray = createModelValueArrayFromResultSet(sqlSelect.getFetchParameters(),
@@ -196,7 +196,7 @@ public abstract class AbstractJdbcRunner {
 	return values;
     }
 
-    public List<Object> runQuery(Connection connection, String sql, SqlSelect sqlSelect,
+    public List<Object> runQuery(Connection connection, String sql, List<FetchParameter> fetchParameters,
 	    List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
@@ -205,12 +205,9 @@ public abstract class AbstractJdbcRunner {
 	    setPreparedStatementParameters(preparedStatement, parameters);
 
 	    LOG.info("Running `" + sql + "`");
-	    LOG.info("runQuery: sqlSelect=" + sqlSelect);
 	    List<Object> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
-	    int nc = sqlSelect.getValues().size();
-	    LOG.info("runQuery: nc=" + nc);
-	    List<FetchParameter> fetchParameters = sqlSelect.getFetchParameters();
+	    int nc = fetchParameters.size();
 	    while (rs.next()) {
 		if (nc == 1) {
 		    Class<?> readWriteType = fetchParameters.get(0).getReadWriteDbType();
@@ -232,7 +229,7 @@ public abstract class AbstractJdbcRunner {
 	}
     }
 
-    public List<Object> runQuery(Connection connection, String sql, List<Object> parameterValues) throws Exception {
+    public List<Object> runNativeQuery(Connection connection, String sql, List<Object> parameterValues) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
@@ -246,23 +243,24 @@ public abstract class AbstractJdbcRunner {
 	    rs = preparedStatement.executeQuery();
 	    ResultSetMetaData metaData = rs.getMetaData();
 	    int nc = metaData.getColumnCount();
-	    while (rs.next()) {
-		if (nc == 1) {
-		    int columnType = metaData.getColumnType(1);
-		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
-		    Object instance = rs.getObject(1, readWriteType);
-		    objects.add(instance);
-		} else {
-		    Object[] values = new Object[nc];
-		    for (int i = 0; i < nc; ++i) {
-			int columnType = metaData.getColumnType(i + 1);
-			Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
-			values[i] = rs.getObject(i + 1, readWriteType);
-		    }
+	    if (nc == 1) {
+		rs.next();
+		int columnType = metaData.getColumnType(1);
+		Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
+		Object instance = rs.getObject(1, readWriteType);
+		objects.add(instance);
+		return objects;
+	    }
 
-//		    Object[] values = createRecord(nc, fetchParameters, rs);
-		    objects.add(values);
+	    while (rs.next()) {
+		Object[] values = new Object[nc];
+		for (int i = 0; i < nc; ++i) {
+		    int columnType = metaData.getColumnType(i + 1);
+		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
+		    values[i] = rs.getObject(i + 1, readWriteType);
 		}
+
+		objects.add(values);
 	    }
 
 	    return objects;
@@ -273,6 +271,109 @@ public abstract class AbstractJdbcRunner {
 	    if (preparedStatement != null)
 		preparedStatement.close();
 	}
+    }
+
+    public List<Object> runNativeQuery(Connection connection, String sql, List<Object> parameterValues,
+	    QueryResultMapping queryResultMapping, EntityLoader entityLoader) throws Exception {
+	PreparedStatement preparedStatement = null;
+	ResultSet rs = null;
+	try {
+	    preparedStatement = connection.prepareStatement(sql);
+	    for (int i = 0; i < parameterValues.size(); ++i) {
+		preparedStatement.setObject(i + 1, parameterValues.get(i));
+	    }
+
+	    LOG.info("Running `" + sql + "`");
+	    List<Object> objects = new ArrayList<>();
+	    rs = preparedStatement.executeQuery();
+	    ResultSetMetaData metaData = rs.getMetaData();
+	    int nc = metaData.getColumnCount();
+	    if (nc == 1) {
+		rs.next();
+		Object record = buildRecord(metaData, rs, queryResultMapping, entityLoader);
+		objects.add(record);
+		return objects;
+	    }
+
+	    while (rs.next()) {
+		Object record = buildRecord(metaData, rs, queryResultMapping, entityLoader);
+		objects.add(record);
+	    }
+
+	    return objects;
+	} finally {
+	    if (rs != null)
+		rs.close();
+
+	    if (preparedStatement != null)
+		preparedStatement.close();
+	}
+    }
+
+    private Object buildRecord(
+	    ResultSetMetaData metaData,
+	    ResultSet rs,
+	    QueryResultMapping queryResultMapping,
+	    EntityLoader entityLoader) throws Exception {
+	List<ModelValueArray<FetchParameter>> modelValueArrays = new ArrayList<>();
+	for (int i = 0; i < queryResultMapping.size(); ++i) {
+	    modelValueArrays.add(new ModelValueArray<>());
+	}
+
+	int nc = metaData.getColumnCount();
+	for (int i = 0; i < nc; ++i) {
+	    String columnName = metaData.getColumnName(i + 1);
+//	    int columnType = metaData.getColumnType(i + 1);
+//	    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
+	    int k = 0;
+	    for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
+		Optional<FetchParameter> optional = buildFetchParameter(columnName, entityMapping);
+		if (optional.isPresent()) {
+		    ModelValueArray<FetchParameter> modelValueArray = modelValueArrays.get(k);
+		    Object value = rs.getObject(i + 1, optional.get().getReadWriteDbType());
+		    modelValueArray.add(optional.get(), value);
+		}
+
+		++k;
+	    }
+
+	}
+
+	int k = 0;
+	Object[] result = new Object[queryResultMapping.size()];
+	for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
+	    ModelValueArray<FetchParameter> modelValueArray = modelValueArrays.get(k);
+	    Object entityInstance = entityLoader.build(modelValueArray, entityMapping.getMetaEntity(), LockType.NONE);
+	    if (queryResultMapping.size() == 1)
+		return entityInstance;
+
+	    result[k] = entityInstance;
+	}
+
+	return result;
+    }
+
+    private Optional<FetchParameter> buildFetchParameter(String columnName,
+	    EntityMapping entityMapping) {
+	Optional<MetaAttribute> optional = entityMapping.getAttribute(columnName);
+	if (optional.isPresent()) {
+	    MetaAttribute metaAttribute = optional.get();
+	    FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(),
+		    metaAttribute.getType(), metaAttribute.getReadWriteDbType(),
+		    metaAttribute.getSqlType(), metaAttribute, false);
+	    return Optional.of(fetchParameter);
+	}
+
+	Optional<JoinColumnAttribute> optionalJoinColumn = entityMapping.getJoinColumnAttribute(columnName);
+	if (optionalJoinColumn.isPresent()) {
+	    JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
+	    FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),
+		    joinColumnAttribute.getType(), joinColumnAttribute.getReadWriteDbType(),
+		    joinColumnAttribute.getSqlType(), joinColumnAttribute.getForeignKeyAttribute(), true);
+	    return Optional.of(fetchParameter);
+	}
+
+	return Optional.empty();
     }
 
     public Long generateNextSequenceValue(Connection connection, String sql) throws SQLException {

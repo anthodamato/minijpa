@@ -6,6 +6,7 @@
 package org.minijpa.jpa;
 
 import java.util.List;
+import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.NoResultException;
@@ -25,13 +26,31 @@ public class MiniNativeQuery extends AbstractQuery {
     private final Logger LOG = LoggerFactory.getLogger(MiniNativeQuery.class);
 
     private final String sqlString;
+    private final Optional<Class<?>> resultClass;
+    private final Optional<String> resultSetMapping;
     private final EntityManager entityManager;
 
-    public MiniNativeQuery(String sqlString, EntityManager entityManager,
+    public MiniNativeQuery(String sqlString, Optional<Class<?>> resultClass,
+	    Optional<String> resultSetMapping,
+	    EntityManager entityManager,
 	    JdbcEntityManager jdbcEntityManager) {
 	this.sqlString = sqlString;
+	this.resultClass = resultClass;
+	this.resultSetMapping = resultSetMapping;
 	this.entityManager = entityManager;
 	this.jdbcEntityManager = jdbcEntityManager;
+    }
+
+    public String getSqlString() {
+	return sqlString;
+    }
+
+    public Optional<Class<?>> getResultClass() {
+	return resultClass;
+    }
+
+    public Optional<String> getResultSetMapping() {
+	return resultSetMapping;
     }
 
     @Override
@@ -41,7 +60,7 @@ public class MiniNativeQuery extends AbstractQuery {
 	    if (flushModeType == FlushModeType.AUTO)
 		jdbcEntityManager.flush();
 
-	    list = jdbcEntityManager.select(sqlString, this);
+	    list = jdbcEntityManager.selectNative(this);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
 	    throw new PersistenceException(e.getMessage());
@@ -57,7 +76,7 @@ public class MiniNativeQuery extends AbstractQuery {
 	    if (flushModeType == FlushModeType.AUTO)
 		jdbcEntityManager.flush();
 
-	    list = jdbcEntityManager.select(sqlString, this);
+	    list = jdbcEntityManager.selectNative(this);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
 	    throw new PersistenceException(e.getMessage());

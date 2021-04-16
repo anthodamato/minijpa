@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
@@ -13,17 +14,19 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 
 import org.minijpa.jdbc.AbstractJdbcRunner;
+import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JdbcRunner extends AbstractJdbcRunner {
+public class JpaJdbcRunner extends AbstractJdbcRunner {
 
-    private final Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
+    private final Logger LOG = LoggerFactory.getLogger(JpaJdbcRunner.class);
 
     public List<Tuple> runTupleQuery(Connection connection, String sql, SqlSelect sqlSelect,
 	    CompoundSelection<?> compoundSelection, List<QueryParameter> parameters) throws Exception {
@@ -53,15 +56,28 @@ public class JdbcRunner extends AbstractJdbcRunner {
 	}
     }
 
-    public List<Object> runQuery(Connection connection, String sqlString, Query query) throws Exception {
+    public List<Object> runNativeQuery(Connection connection, String sqlString, Query query,
+	    Optional<QueryResultMapping> queryResultMapping, EntityLoader entityLoader) throws Exception {
+	if (queryResultMapping.isEmpty()) {
+	    List<Object> parameterValues = new ArrayList<>();
+	    Set<Parameter<?>> parameters = query.getParameters();
+	    if (parameters.isEmpty())
+		return super.runNativeQuery(connection, sqlString, parameterValues);
+
+	    List<ParameterUtils.IndexParameter> indexParameters = ParameterUtils.findIndexParameters(query, sqlString);
+	    String sql = ParameterUtils.replaceParameterPlaceholders(query, sqlString, indexParameters);
+	    parameterValues = ParameterUtils.sortParameterValues(query, indexParameters);
+	    return super.runNativeQuery(connection, sql, parameterValues);
+	}
+
 	List<Object> parameterValues = new ArrayList<>();
 	Set<Parameter<?>> parameters = query.getParameters();
 	if (parameters.isEmpty())
-	    return runQuery(connection, sqlString, parameterValues);
+	    return super.runNativeQuery(connection, sqlString, parameterValues, queryResultMapping.get(), entityLoader);
 
 	List<ParameterUtils.IndexParameter> indexParameters = ParameterUtils.findIndexParameters(query, sqlString);
 	String sql = ParameterUtils.replaceParameterPlaceholders(query, sqlString, indexParameters);
 	parameterValues = ParameterUtils.sortParameterValues(query, indexParameters);
-	return runQuery(connection, sql, parameterValues);
+	return super.runNativeQuery(connection, sql, parameterValues, queryResultMapping.get(), entityLoader);
     }
 }
