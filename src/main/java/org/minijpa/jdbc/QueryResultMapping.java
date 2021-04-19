@@ -26,16 +26,21 @@ import java.util.List;
  */
 public class QueryResultMapping {
 
+    private String name;
     private final List<EntityMapping> entityMappings;
     private final List<ConstructorMapping> constructorMappings;
     private final List<SingleColumnMapping> singleColumnMappings;
 
-    public QueryResultMapping(List<EntityMapping> entityMappings,
+    public QueryResultMapping(String name, List<EntityMapping> entityMappings,
 	    List<ConstructorMapping> constructorMappings,
 	    List<SingleColumnMapping> singleColumnMappings) {
 	this.entityMappings = entityMappings;
 	this.constructorMappings = constructorMappings;
 	this.singleColumnMappings = singleColumnMappings;
+    }
+
+    public String getName() {
+	return name;
     }
 
     public List<EntityMapping> getEntityMappings() {

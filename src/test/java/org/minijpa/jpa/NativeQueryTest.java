@@ -14,7 +14,6 @@ import javax.persistence.Query;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jpa.model.Citizen;
 
@@ -36,7 +35,6 @@ public class NativeQueryTest {
 	emf.close();
     }
 
-//    @Disabled
     @Test
     public void nativeQuery() throws Exception {
 	final EntityManager em = emf.createEntityManager();
@@ -55,6 +53,16 @@ public class NativeQueryTest {
 	tx.begin();
 	Query query = em.createNativeQuery("select c.* from citizen c", Citizen.class);
 	List<Citizen> citizens = query.getResultList();
+	Assertions.assertEquals(2, citizens.size());
+	Assertions.assertTrue(citizens.get(0).getName().equals("Peter")
+		|| citizens.get(1).getName().equals("Peter"));
+	Assertions.assertTrue(citizens.get(0).getName().equals("Emily")
+		|| citizens.get(1).getName().equals("Emily"));
+
+	// after detach
+	em.detach(citizenPeter);
+	em.detach(citizenEmily);
+	citizens = query.getResultList();
 	Assertions.assertEquals(2, citizens.size());
 	Assertions.assertTrue(citizens.get(0).getName().equals("Peter")
 		|| citizens.get(1).getName().equals("Peter"));

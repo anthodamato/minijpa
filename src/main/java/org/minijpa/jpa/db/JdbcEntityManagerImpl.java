@@ -293,7 +293,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	Optional<QueryResultMapping> queryResultMapping = Optional.empty();
 	if (query.getResultClass().isPresent()) {
 	    EntityMapping entityMapping = new EntityMapping(entities.get(query.getResultClass().get().getName()), Collections.emptyList());
-	    queryResultMapping = Optional.of(new QueryResultMapping(Arrays.asList(entityMapping),
+	    queryResultMapping = Optional.of(new QueryResultMapping("", Arrays.asList(entityMapping),
 		    Collections.emptyList(), Collections.emptyList()));
 	}
 

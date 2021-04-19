@@ -5,6 +5,7 @@
  */
 package org.minijpa.jpa.model;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 
@@ -15,6 +16,7 @@ import javax.persistence.ManyToOne;
 @Embeddable
 public class JobInfo {
 
+    @Column(name = "jd")
     String jobDescription;
     @ManyToOne
     ProgramManager pm;

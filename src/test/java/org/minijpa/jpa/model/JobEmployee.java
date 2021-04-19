@@ -5,15 +5,40 @@
  */
 package org.minijpa.jpa.model;
 
+import javax.persistence.ColumnResult;
+import javax.persistence.ConstructorResult;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.EntityResult;
+import javax.persistence.FieldResult;
 import javax.persistence.Id;
+import javax.persistence.SqlResultSetMapping;
+import javax.persistence.Table;
 
 /**
  *
  * @author adamato
  */
+@SqlResultSetMapping(name = "JobEmployeeResult", entities = {
+    @EntityResult(entityClass = JobEmployee.class, fields = {
+	@FieldResult(name = "id", column = "e_id"),
+	@FieldResult(name = "name", column = "e_name"),
+	@FieldResult(name = "jobInfo.jobDescription", column = "jd")
+    }),
+    @EntityResult(entityClass = ProgramManager.class, fields = {
+	@FieldResult(name = "id", column = "p_id"),
+	@FieldResult(name = "name", column = "p_name")
+    })
+})
+@SqlResultSetMapping(name = "JobEmployeeResultConstructor", classes = {
+    @ConstructorResult(targetClass = JobEmployeeDetails.class, columns = {
+	@ColumnResult(name = "e_id"),
+	@ColumnResult(name = "e_name"),
+	@ColumnResult(name = "p_name")
+    })
+})
 @Entity
+@Table(name = "job_employee")
 public class JobEmployee {
 
     @Id
