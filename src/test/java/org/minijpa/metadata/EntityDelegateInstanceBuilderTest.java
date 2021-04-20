@@ -45,8 +45,8 @@ public class EntityDelegateInstanceBuilderTest {
     public void modifications() throws Exception {
 	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(new ApacheDerbyConfiguration(),
 		"embed_many_to_one");
-	MetaEntity metaEntityJE = persistenceUnitEnv.getEntities().get("org.minijpa.jpa.model.JobEmployee");
-	MetaEntity metaEntityPM = persistenceUnitEnv.getEntities().get("org.minijpa.jpa.model.ProgramManager");
+	MetaEntity metaEntityJE = persistenceUnitEnv.getPersistenceUnitContext().getEntities().get("org.minijpa.jpa.model.JobEmployee");
+	MetaEntity metaEntityPM = persistenceUnitEnv.getPersistenceUnitContext().getEntities().get("org.minijpa.jpa.model.ProgramManager");
 
 	ProgramManager programManager = new ProgramManager();
 	programManager.setId(2);

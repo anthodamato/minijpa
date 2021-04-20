@@ -6,13 +6,11 @@
 package org.minijpa.jpa.db;
 
 import java.util.List;
-import java.util.Map;
 import javax.persistence.spi.PersistenceUnitInfo;
 import org.junit.jupiter.api.Assertions;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.ConnectionHolderImpl;
 import org.minijpa.jdbc.EntityLoader;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
@@ -20,7 +18,7 @@ import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jpa.MiniPersistenceContext;
 import org.minijpa.jpa.PersistenceProviderHelper;
 import org.minijpa.metadata.EntityContainerContext;
-import org.minijpa.metadata.EntityContext;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
 import org.minijpa.metadata.MetaEntityUtils;
@@ -31,7 +29,7 @@ import org.minijpa.metadata.MetaEntityUtils;
  */
 public class PersistenceUnitEnv {
 
-    private Map<String, MetaEntity> entities;
+    private PersistenceUnitContext persistenceUnitContext;
     private JdbcEntityManager jdbcEntityManager;
     private EntityLoader entityLoader;
     private EntityContainer entityContainer;
@@ -40,12 +38,12 @@ public class PersistenceUnitEnv {
     private PersistenceUnitEnv() {
     }
 
-    public Map<String, MetaEntity> getEntities() {
-	return entities;
+    public PersistenceUnitContext getPersistenceUnitContext() {
+	return persistenceUnitContext;
     }
 
-    public void setEntities(Map<String, MetaEntity> entities) {
-	this.entities = entities;
+    public void setPersistenceUnitContext(PersistenceUnitContext persistenceUnitContext) {
+	this.persistenceUnitContext = persistenceUnitContext;
     }
 
     public JdbcEntityManager getJdbcEntityManager() {
@@ -85,21 +83,21 @@ public class PersistenceUnitEnv {
 		.parseXml("/META-INF/persistence.xml", persistenceUnitName);
 	List<String> classNames = persistenceUnitInfo.getManagedClassNames();
 
-	Map<String, MetaEntity> entities = MetaEntityUtils.parse(classNames);
-	MiniPersistenceContext miniPersistenceContext = new MiniPersistenceContext(entities);
+	PersistenceUnitContext persistenceUnitContext = MetaEntityUtils.parsePersistenceUnitContext(
+		persistenceUnitName, classNames);
+	MiniPersistenceContext miniPersistenceContext = new MiniPersistenceContext(persistenceUnitContext.getEntities());
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 	EntityInstanceBuilder entityInstanceBuilder = new EntityInstanceBuilderImpl();
 	ConnectionHolder connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 
 	Assertions.assertNotNull(dbConfiguration);
-	JdbcEntityManagerImpl jdbcEntityManagerImpl = new JdbcEntityManagerImpl(dbConfiguration, entities, miniPersistenceContext,
+	JdbcEntityManagerImpl jdbcEntityManagerImpl = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, miniPersistenceContext,
 		entityInstanceBuilder, connectionHolder);
 
 	SqlStatementGenerator sqlStatementGenerator = new SqlStatementGenerator(dbConfiguration.getDbJdbc());
 
 	new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
-	EntityDelegate.getInstance()
-		.addEntityContext(new EntityContext(persistenceUnitInfo.getPersistenceUnitName(), entities));
+	EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
 
 	MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 	JpaJdbcRunner jdbcRunner = new JpaJdbcRunner();
@@ -110,15 +108,15 @@ public class PersistenceUnitEnv {
 		sqlStatementFactory, sqlStatementGenerator, jdbcRunner, connectionHolder);
 	ForeignKeyCollectionQueryLevel foreignKeyCollectionQueryLevel = new ForeignKeyCollectionQueryLevel(
 		sqlStatementFactory, metaEntityHelper, sqlStatementGenerator, jdbcRunner, connectionHolder);
-	EntityLoaderImpl entityLoader = new EntityLoaderImpl(entities, entityInstanceBuilder, miniPersistenceContext,
+	EntityLoaderImpl entityLoader = new EntityLoaderImpl(persistenceUnitContext, entityInstanceBuilder, miniPersistenceContext,
 		entityQueryLevel, foreignKeyCollectionQueryLevel, joinTableCollectionQueryLevel);
 
 	EntityDelegate.getInstance()
-		.addEntityManagerContext(new EntityContainerContext(entities, miniPersistenceContext,
+		.addEntityManagerContext(new EntityContainerContext(persistenceUnitContext, miniPersistenceContext,
 			entityLoader));
 
 	PersistenceUnitEnv persistenceUnitEnv = new PersistenceUnitEnv();
-	persistenceUnitEnv.setEntities(entities);
+	persistenceUnitEnv.setPersistenceUnitContext(persistenceUnitContext);
 	persistenceUnitEnv.setJdbcEntityManager(jdbcEntityManagerImpl);
 	persistenceUnitEnv.setEntityLoader(entityLoader);
 	persistenceUnitEnv.setEntityContainer(miniPersistenceContext);

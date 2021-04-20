@@ -9,8 +9,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jpa.db.ApacheDerbyConfiguration;
 import org.minijpa.metadata.enhancer.BytecodeEnhancer;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
@@ -35,7 +37,7 @@ public class MetaEntityUtils {
 	return parser.parse(enhEntity, parsedEntities);
     }
 
-    public static Map<String, MetaEntity> parse(List<String> entities) throws Exception {
+    private static Map<String, MetaEntity> parse(List<String> entities) throws Exception {
 	Map<String, MetaEntity> map = new HashMap<>();
 	for (String className : entities) {
 	    map.put(className, parse(className));
@@ -43,6 +45,12 @@ public class MetaEntityUtils {
 
 	parser.fillRelationships(map);
 	return map;
+    }
+
+    public static PersistenceUnitContext parsePersistenceUnitContext(String persistenceUnitName, List<String> entities) throws Exception {
+	Map<String, MetaEntity> map = parse(entities);
+	Optional<Map<String, QueryResultMapping>> optional = parser.parseSqlResultSetMappings(map);
+	return new PersistenceUnitContext(persistenceUnitName, map, optional);
     }
 
     private static void printEmbeddedAttribute(MetaAttribute m) {

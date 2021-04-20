@@ -26,10 +26,15 @@ import java.util.List;
  */
 public class ConstructorMapping implements ResultMapping {
 
+    private Class<?> targetClass;
     private final List<SingleColumnMapping> singleColumnMappings;
 
-    public ConstructorMapping(List<SingleColumnMapping> singleColumnMappings) {
+    public ConstructorMapping(Class<?> targetClass, List<SingleColumnMapping> singleColumnMappings) {
 	this.singleColumnMappings = singleColumnMappings;
+    }
+
+    public Class<?> getTargetClass() {
+	return targetClass;
     }
 
     public List<SingleColumnMapping> getSingleColumnMappings() {

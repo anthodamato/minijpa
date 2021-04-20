@@ -20,7 +20,7 @@ public final class EntityDelegate implements EntityListener {
 
     private static final EntityDelegate entityDelegate = new EntityDelegate();
 
-    private final EntityContextManager entityContextManager = new EntityContextManager();
+    private final PersistenceUnitContextManager persistenceUnitContextManager = new PersistenceUnitContextManager();
     private final EntityContainerContextManager entityContainerContextManager = new EntityContainerContextManager();
 
     public static EntityDelegate getInstance() {
@@ -36,7 +36,7 @@ public final class EntityDelegate implements EntityListener {
 //		|| !entityContainerContextManager.isLoadedFromDb(entityInstance))
 	    return value;
 
-	MetaEntity entity = entityContextManager.getEntity(entityInstance.getClass().getName());
+	MetaEntity entity = persistenceUnitContextManager.getEntity(entityInstance.getClass().getName());
 	if (entity == null)
 	    return value;
 	try {
@@ -78,16 +78,16 @@ public final class EntityDelegate implements EntityListener {
 	}
     }
 
-    private class EntityContextManager {
+    private class PersistenceUnitContextManager {
 
-	private final List<EntityContext> entityContexts = new ArrayList<>();
+	private final List<PersistenceUnitContext> entityContexts = new ArrayList<>();
 
-	public void add(EntityContext entityContext) {
-	    entityContexts.add(entityContext);
+	public void add(PersistenceUnitContext persistenceUnitContext) {
+	    entityContexts.add(persistenceUnitContext);
 	}
 
 	public MetaEntity getEntity(String entityClassName) {
-	    for (EntityContext entityContext : entityContexts) {
+	    for (PersistenceUnitContext entityContext : entityContexts) {
 		MetaEntity entity = entityContext.getEntity(entityClassName);
 		if (entity != null)
 		    return entity;
@@ -97,7 +97,7 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	public MetaAttribute findEmbeddedAttribute(String className) {
-	    for (EntityContext entityContext : entityContexts) {
+	    for (PersistenceUnitContext entityContext : entityContexts) {
 		MetaAttribute attribute = entityContext.findEmbeddedAttribute(className);
 		if (attribute != null)
 		    return attribute;
@@ -106,26 +106,26 @@ public final class EntityDelegate implements EntityListener {
 	    return null;
 	}
 
-	public Optional<EntityContext> getEntityContext(String persistenceUnitName) {
+	public Optional<PersistenceUnitContext> getEntityContext(String persistenceUnitName) {
 	    return entityContexts.stream().filter(e -> e.getPersistenceUnitName().equals(persistenceUnitName))
 		    .findFirst();
 	}
     }
 
-    public void addEntityContext(EntityContext entityContext) {
-	entityContextManager.add(entityContext);
+    public void addPersistenceUnitContext(PersistenceUnitContext persistenceUnitContext) {
+	persistenceUnitContextManager.add(persistenceUnitContext);
     }
 
     public Optional<MetaEntity> getMetaEntity(String className) {
-	MetaEntity metaEntity = entityContextManager.getEntity(className);
+	MetaEntity metaEntity = persistenceUnitContextManager.getEntity(className);
 	if (metaEntity == null)
 	    return Optional.empty();
 
 	return Optional.of(metaEntity);
     }
 
-    public Optional<EntityContext> getEntityContext(String persistenceUnitName) {
-	return entityContextManager.getEntityContext(persistenceUnitName);
+    public Optional<PersistenceUnitContext> getEntityContext(String persistenceUnitName) {
+	return persistenceUnitContextManager.getEntityContext(persistenceUnitName);
     }
 
     private class EntityContainerContextManager {
@@ -175,7 +175,6 @@ public final class EntityDelegate implements EntityListener {
 //
 //	    return false;
 //	}
-
 //	public boolean isFlushedPersist(Object entityInstance) throws Exception {
 //	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
 //		if (entityContainerContext.getEntityContainer().isFlushedPersist(entityInstance))

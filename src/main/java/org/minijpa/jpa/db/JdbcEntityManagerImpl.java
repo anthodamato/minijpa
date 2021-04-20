@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.persistence.PersistenceException;
@@ -38,6 +37,7 @@ import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniNativeQuery;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     private final Logger LOG = LoggerFactory.getLogger(JdbcEntityManagerImpl.class);
     protected DbConfiguration dbConfiguration;
-    protected Map<String, MetaEntity> entities;
+    protected PersistenceUnitContext persistenceUnitContext;
     private final EntityContainer entityContainer;
     private final EntityInstanceBuilder entityInstanceBuilder;
     protected ConnectionHolder connectionHolder;
@@ -56,12 +56,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     private final EntityWriter entityWriter;
     private final MetaEntityHelper metaEntityHelper;
 
-    public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, Map<String, MetaEntity> entities,
+    public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, PersistenceUnitContext persistenceUnitContext,
 	    EntityContainer entityContainer, EntityInstanceBuilder entityInstanceBuilder,
 	    ConnectionHolder connectionHolder) {
 	super();
 	this.dbConfiguration = dbConfiguration;
-	this.entities = entities;
+	this.persistenceUnitContext = persistenceUnitContext;
 	this.entityContainer = entityContainer;
 	this.entityInstanceBuilder = entityInstanceBuilder;
 	this.connectionHolder = connectionHolder;
@@ -69,7 +69,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	this.jdbcRunner = new JpaJdbcRunner();
 	this.sqlStatementGenerator = new SqlStatementGenerator(dbConfiguration.getDbJdbc());
 	this.metaEntityHelper = new MetaEntityHelper();
-	this.entityLoader = new EntityLoaderImpl(entities, entityInstanceBuilder, entityContainer,
+	this.entityLoader = new EntityLoaderImpl(persistenceUnitContext, entityInstanceBuilder, entityContainer,
 		new EntityQueryLevel(sqlStatementFactory, entityInstanceBuilder,
 			sqlStatementGenerator, metaEntityHelper, jdbcRunner, connectionHolder),
 		new ForeignKeyCollectionQueryLevel(sqlStatementFactory, metaEntityHelper, sqlStatementGenerator,
@@ -87,7 +87,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     public Object findById(Class<?> entityClass, Object primaryKey, LockType lockType) throws Exception {
 	LOG.debug("findById: primaryKey=" + primaryKey);
 
-	MetaEntity entity = entities.get(entityClass.getName());
+	MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	if (entity == null)
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
@@ -97,7 +97,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     public void refresh(Object entityInstance, LockType lockType) throws Exception {
 	Class<?> entityClass = entityInstance.getClass();
-	MetaEntity entity = entities.get(entityClass.getName());
+	MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	if (entity == null)
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
@@ -110,7 +110,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     public void lock(Object entityInstance, LockType lockType) throws Exception {
 	Class<?> entityClass = entityInstance.getClass();
-	MetaEntity entity = entities.get(entityClass.getName());
+	MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	if (entity == null)
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
@@ -124,7 +124,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     public LockType getLockType(Object entityInstance) throws Exception {
 	Class<?> entityClass = entityInstance.getClass();
-	MetaEntity entity = entities.get(entityClass.getName());
+	MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	if (entity == null)
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
@@ -209,7 +209,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	LOG.debug("Flushing entities...");
 	List<Object> managedEntityList = entityContainer.getManagedEntityList();
 	for (Object entityInstance : managedEntityList) {
-	    MetaEntity me = entities.get(entityInstance.getClass().getName());
+	    MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
 	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
 	    switch (entityStatus) {
 		case FLUSHED:
@@ -244,7 +244,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     @Override
     public void remove(Object entity) throws Exception {
-	MetaEntity e = entities.get(entity.getClass().getName());
+	MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
 	if (entityContainer.isManaged(entity)) {
 	    LOG.debug("Instance " + entity + " is in the persistence context");
 	    entityContainer.markForRemoval(entity);
@@ -292,7 +292,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     public List<?> selectNative(MiniNativeQuery query) throws Exception {
 	Optional<QueryResultMapping> queryResultMapping = Optional.empty();
 	if (query.getResultClass().isPresent()) {
-	    EntityMapping entityMapping = new EntityMapping(entities.get(query.getResultClass().get().getName()), Collections.emptyList());
+	    EntityMapping entityMapping = new EntityMapping(
+		    persistenceUnitContext.getEntities().get(
+			    query.getResultClass().get().getName()), Collections.emptyList());
 	    queryResultMapping = Optional.of(new QueryResultMapping("", Arrays.asList(entityMapping),
 		    Collections.emptyList(), Collections.emptyList()));
 	}

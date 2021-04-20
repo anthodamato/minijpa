@@ -1,27 +1,21 @@
 package org.minijpa.metadata;
 
-import java.util.Map;
 import org.minijpa.jdbc.EntityLoader;
 
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jpa.db.EntityContainer;
 
 public class EntityContainerContext {
 
-    private Map<String, MetaEntity> entities;
-    private EntityContainer entityContainer;
-    private EntityLoader entityLoader;
+    private final PersistenceUnitContext persistenceUnitContext;
+    private final EntityContainer entityContainer;
+    private final EntityLoader entityLoader;
 
-    public EntityContainerContext(Map<String, MetaEntity> entities, EntityContainer entityContainer,
+    public EntityContainerContext(PersistenceUnitContext persistenceUnitContext, EntityContainer entityContainer,
 	    EntityLoader entityLoader) {
 	super();
-	this.entities = entities;
+	this.persistenceUnitContext = persistenceUnitContext;
 	this.entityContainer = entityContainer;
 	this.entityLoader = entityLoader;
-    }
-
-    public Map<String, MetaEntity> getEntities() {
-	return entities;
     }
 
     public EntityContainer getEntityContainer() {
@@ -30,10 +24,6 @@ public class EntityContainerContext {
 
     public EntityLoader getEntityLoader() {
 	return entityLoader;
-    }
-
-    public MetaEntity getEntity(String entityClassName) {
-	return entities.get(entityClassName);
     }
 
     public boolean isManaged(Object entityInstance) throws Exception {

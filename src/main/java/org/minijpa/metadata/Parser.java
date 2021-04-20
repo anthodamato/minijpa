@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +41,7 @@ import org.minijpa.jdbc.PkGeneration;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
+import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 import org.minijpa.jdbc.relationship.ManyToManyRelationship;
@@ -62,6 +64,7 @@ public class Parser {
     private final ManyToOneHelper manyToOneHelper = new ManyToOneHelper();
     private final OneToManyHelper oneToManyHelper = new OneToManyHelper();
     private final ManyToManyHelper manyToManyHelper = new ManyToManyHelper();
+    private final JpaParser jpaParser = new JpaParser();
 
     public Parser(DbConfiguration dbConfiguration) {
 	super();
@@ -71,6 +74,29 @@ public class Parser {
     public void fillRelationships(Map<String, MetaEntity> entities) {
 	finalizeRelationships(entities);
 	printAttributes(entities);
+    }
+
+    public Optional<Map<String, QueryResultMapping>> parseSqlResultSetMappings(Map<String, MetaEntity> entities) {
+	Map<String, QueryResultMapping> map = new HashMap<>();
+	for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+	    MetaEntity metaEntity = entry.getValue();
+	    Optional<Map<String, QueryResultMapping>> optional = jpaParser.parseQueryResultMappings(
+		    metaEntity.getEntityClass(), entities);
+	    if (optional.isPresent()) {
+		// checks for uniqueness
+		for (Map.Entry<String, QueryResultMapping> e : optional.get().entrySet()) {
+		    if (map.containsKey(e.getKey()))
+			throw new IllegalStateException("@SqlResultSetMapping '" + e.getKey() + "' already declared");
+		}
+
+		map.putAll(optional.get());
+	    }
+	}
+
+	if (map.isEmpty())
+	    return Optional.empty();
+
+	return Optional.of(map);
     }
 
     public MetaEntity parse(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities) throws Exception {

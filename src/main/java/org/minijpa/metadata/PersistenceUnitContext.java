@@ -1,22 +1,25 @@
 package org.minijpa.metadata;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.QueryResultMapping;
 
-public class EntityContext {
+public class PersistenceUnitContext {
 
     private final String persistenceUnitName;
     private final Map<String, MetaEntity> entities;
+    private final Optional<Map<String, QueryResultMapping>> queryResultMappings;
 
-    public EntityContext(String persistenceUnitName, Map<String, MetaEntity> entities) {
+    public PersistenceUnitContext(String persistenceUnitName, Map<String, MetaEntity> entities,
+	    Optional<Map<String, QueryResultMapping>> queryResultMappings) {
 	super();
 	this.persistenceUnitName = persistenceUnitName;
 	this.entities = entities;
+	this.queryResultMappings = queryResultMappings;
     }
 
     public MetaEntity getEntity(String entityClassName) {
@@ -55,12 +58,12 @@ public class EntityContext {
 	return persistenceUnitName;
     }
 
-    public Set<MetaEntity> getMetaEntities() {
-	return new HashSet<>(entities.values());
-    }
-
     public Map<String, MetaEntity> getEntities() {
 	return entities;
+    }
+
+    public Optional<Map<String, QueryResultMapping>> getQueryResultMappings() {
+	return queryResultMappings;
     }
 
 }

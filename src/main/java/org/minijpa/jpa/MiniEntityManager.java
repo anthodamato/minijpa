@@ -37,6 +37,7 @@ import org.minijpa.jpa.db.LockTypeUtils;
 import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,19 +53,19 @@ public class MiniEntityManager extends AbstractEntityManager {
     private boolean open = true;
 
     public MiniEntityManager(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
-	    Map<String, MetaEntity> entities) {
+	    PersistenceUnitContext persistenceUnitContext) {
 	super();
 	this.entityManagerFactory = entityManagerFactory;
 	this.persistenceUnitInfo = persistenceUnitInfo;
-	this.entities = entities;
+	this.persistenceUnitContext = persistenceUnitContext;
 	this.entityManagerType = ((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType();
-	this.persistenceContext = new MiniPersistenceContext(entities);
+	this.persistenceContext = new MiniPersistenceContext(persistenceUnitContext.getEntities());
 	this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
 	this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
-	this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, entities, persistenceContext,
+	this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, persistenceContext,
 		new EntityInstanceBuilderImpl(), connectionHolder);
 	EntityDelegate.getInstance()
-		.addEntityManagerContext(new EntityContainerContext(entities, persistenceContext,
+		.addEntityManagerContext(new EntityContainerContext(persistenceUnitContext, persistenceContext,
 			jdbcEntityManager.getEntityLoader()));
     }
 
@@ -73,7 +74,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 //	}
     @Override
     public void persist(Object entity) {
-	MetaEntity e = entities.get(entity.getClass().getName());
+	MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
 	if (e == null)
 	    throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
@@ -111,7 +112,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    if (entityTransaction == null || !entityTransaction.isActive())
 		throw new IllegalStateException("Transaction not active");
 
-	MetaEntity e = entities.get(entity.getClass().getName());
+	MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
 	if (e == null) {
 	    entityTransaction.setRollbackOnly();
 	    throw new IllegalArgumentException("Object '" + entity.getClass().getName() + "' is not an entity");
@@ -125,7 +126,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    return;
 	}
 
-	LOG.info("remove: entity=" + entity);
+	LOG.debug("remove: entity=" + entity);
 	try {
 	    jdbcEntityManager.remove(entity);
 	} catch (Exception ex) {
@@ -330,7 +331,7 @@ public class MiniEntityManager extends AbstractEntityManager {
     public void detach(Object entity) {
 	try {
 	    persistenceContext.detach(entity);
-	    LOG.info("Entity " + entity + " detached");
+	    LOG.debug("Entity " + entity + " detached");
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
 	    throw new PersistenceException(e.getMessage());
@@ -339,7 +340,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public boolean contains(Object entity) {
-	MetaEntity metaEntity = entities.get(entity.getClass().getName());
+	MetaEntity metaEntity = persistenceUnitContext.getEntities().get(entity.getClass().getName());
 	if (metaEntity == null)
 	    throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
@@ -506,7 +507,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public CriteriaBuilder getCriteriaBuilder() {
-	CriteriaBuilder criteriaBuilder = new MiniCriteriaBuilder(getMetamodel(), entities);
+	CriteriaBuilder criteriaBuilder = new MiniCriteriaBuilder(getMetamodel(), persistenceUnitContext);
 	return criteriaBuilder;
     }
 

@@ -44,6 +44,7 @@ import javax.persistence.metamodel.Metamodel;
 
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jpa.criteria.predicate.AbstractPredicate;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,37 +52,37 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     private final Logger LOG = LoggerFactory.getLogger(MiniCriteriaBuilder.class);
     private final Metamodel metamodel;
-    private final Map<String, MetaEntity> entities;
+    private final PersistenceUnitContext persistenceUnitContext;
 
-    public MiniCriteriaBuilder(Metamodel metamodel, Map<String, MetaEntity> entities) {
+    public MiniCriteriaBuilder(Metamodel metamodel, PersistenceUnitContext persistenceUnitContext) {
 	super();
 	this.metamodel = metamodel;
-	this.entities = entities;
+	this.persistenceUnitContext = persistenceUnitContext;
     }
 
     @Override
     public CriteriaQuery<Object> createQuery() {
-	return new MiniCriteriaQuery<>(metamodel, entities);
+	return new MiniCriteriaQuery<>(metamodel, persistenceUnitContext);
     }
 
     @Override
     public <T> CriteriaQuery<T> createQuery(Class<T> resultClass) {
-	return new MiniCriteriaQuery<>(resultClass, metamodel, entities);
+	return new MiniCriteriaQuery<>(resultClass, metamodel, persistenceUnitContext);
     }
 
     @Override
     public CriteriaQuery<Tuple> createTupleQuery() {
-	return new MiniCriteriaQuery<>(Tuple.class, metamodel, entities);
+	return new MiniCriteriaQuery<>(Tuple.class, metamodel, persistenceUnitContext);
     }
 
     @Override
     public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity) {
-	return new MiniCriteriaUpdate<>(targetEntity, metamodel, entities);
+	return new MiniCriteriaUpdate<>(targetEntity, metamodel, persistenceUnitContext);
     }
 
     @Override
     public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
-	return new MiniCriteriaDelete<>(targetEntity, metamodel, entities);
+	return new MiniCriteriaDelete<>(targetEntity, metamodel, persistenceUnitContext);
     }
 
     @Override

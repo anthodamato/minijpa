@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.criteria.CriteriaQuery;
@@ -23,36 +22,37 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.metadata.PersistenceUnitContext;
 
 public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 
     private Class<T> resultClass;
     private final Metamodel metamodel;
-    private final Map<String, MetaEntity> entities;
+    private final PersistenceUnitContext persistenceUnitContext;
     private final Set<Root<?>> roots = new HashSet<>();
     protected Selection<? extends T> selection;
     private Predicate restriction;
     private final List<Order> orders = new ArrayList<>();
     private boolean distinct;
 
-    public MiniCriteriaQuery(Class<T> resultClass, Metamodel metamodel, Map<String, MetaEntity> entities) {
+    public MiniCriteriaQuery(Class<T> resultClass, Metamodel metamodel, PersistenceUnitContext persistenceUnitContext) {
 	super();
 	this.resultClass = resultClass;
 	this.metamodel = metamodel;
-	this.entities = entities;
+	this.persistenceUnitContext = persistenceUnitContext;
     }
 
     @SuppressWarnings("unchecked")
-    public MiniCriteriaQuery(Metamodel metamodel, Map<String, MetaEntity> entities) {
+    public MiniCriteriaQuery(Metamodel metamodel, PersistenceUnitContext persistenceUnitContext) {
 	super();
 	this.metamodel = metamodel;
-	this.entities = entities;
+	this.persistenceUnitContext = persistenceUnitContext;
     }
 
     @Override
     public <X> Root<X> from(Class<X> entityClass) {
 	EntityType<X> entityType = metamodel.entity(entityClass);
-	MetaEntity metaEntity = entities.get(entityClass.getName());
+	MetaEntity metaEntity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	Root<X> root = new MiniRoot<>(entityType, metaEntity);
 	roots.add(root);
 	return root;

@@ -6,7 +6,6 @@
 package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.EntityLoader;
-import java.util.Map;
 import javax.persistence.EntityNotFoundException;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.ModelValueArray;
@@ -18,6 +17,7 @@ import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.relationship.FetchType;
 import org.minijpa.jdbc.relationship.Relationship;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,18 +28,18 @@ import org.slf4j.LoggerFactory;
 public class EntityLoaderImpl implements EntityLoader {
 
     private final Logger LOG = LoggerFactory.getLogger(EntityLoaderImpl.class);
-    private final Map<String, MetaEntity> entities;
+    private final PersistenceUnitContext persistenceUnitContext;
     private final EntityInstanceBuilder entityInstanceBuilder;
     private final EntityContainer entityContainer;
     private final EntityQueryLevel entityQueryLevel;
     private final JoinTableCollectionQueryLevel joinTableCollectionQueryLevel;
     private final ForeignKeyCollectionQueryLevel foreignKeyCollectionQueryLevel;
 
-    public EntityLoaderImpl(Map<String, MetaEntity> entities, EntityInstanceBuilder entityInstanceBuilder,
+    public EntityLoaderImpl(PersistenceUnitContext persistenceUnitContext, EntityInstanceBuilder entityInstanceBuilder,
 	    EntityContainer entityContainer, EntityQueryLevel entityQueryLevel,
 	    ForeignKeyCollectionQueryLevel foreignKeyCollectionQueryLevel,
 	    JoinTableCollectionQueryLevel joinTableCollectionQueryLevel) {
-	this.entities = entities;
+	this.persistenceUnitContext = persistenceUnitContext;
 	this.entityInstanceBuilder = entityInstanceBuilder;
 	this.entityContainer = entityContainer;
 	this.entityQueryLevel = entityQueryLevel;
@@ -175,7 +175,7 @@ public class EntityLoaderImpl implements EntityLoader {
 	// foreign key on the same table
 	LOG.debug("loadRelationshipByForeignKey: foreignKeyAttribute=" + foreignKeyAttribute
 		+ "; foreignKeyValue=" + foreignKeyValue);
-	MetaEntity e = entities.get(foreignKeyAttribute.getType().getName());
+	MetaEntity e = persistenceUnitContext.getEntities().get(foreignKeyAttribute.getType().getName());
 	LOG.debug("loadRelationshipByForeignKey: e=" + e);
 	Object foreignKeyInstance = findById(e, foreignKeyValue, lockType);
 	LOG.debug("loadRelationshipByForeignKey: foreignKeyInstance=" + foreignKeyInstance);
@@ -204,7 +204,7 @@ public class EntityLoaderImpl implements EntityLoader {
 
 	LOG.debug("loadAttribute: targetAttribute=" + targetAttribute);
 	if (relationship == null || !relationship.toMany()) {
-	    MetaEntity entity = entities.get(parentInstance.getClass().getName());
+	    MetaEntity entity = persistenceUnitContext.getEntities().get(parentInstance.getClass().getName());
 	    Object foreignKey = entityContainer.getForeignKeyValue(parentInstance, a);
 	    LOG.debug("loadAttribute: foreignKey=" + foreignKey);
 	    Object result = loadRelationshipByForeignKey(parentInstance, entity, a, foreignKey, LockType.NONE);
@@ -215,7 +215,7 @@ public class EntityLoaderImpl implements EntityLoader {
 	LOG.debug("loadAttribute: to Many targetAttribute=" + targetAttribute + "; relationship.getJoinTable()="
 		+ relationship.getJoinTable());
 	if (relationship.getJoinTable() == null) {
-	    MetaEntity entity = entities.get(relationship.getTargetEntityClass().getName());
+	    MetaEntity entity = persistenceUnitContext.getEntities().get(relationship.getTargetEntityClass().getName());
 	    LOG.debug("loadAttribute: entity=" + entity);
 	    if (entity == null)
 		throw new IllegalArgumentException("Class '" + relationship.getTargetEntityClass().getName() + "' is not an entity");
@@ -226,7 +226,7 @@ public class EntityLoaderImpl implements EntityLoader {
 	}
 
 	MetaEntity entity = relationship.getAttributeType();
-	MetaEntity e = entities.get(parentInstance.getClass().getName());
+	MetaEntity e = persistenceUnitContext.getEntities().get(parentInstance.getClass().getName());
 	Object pk = AttributeUtil.getIdValue(e, parentInstance);
 	LOG.debug("loadAttribute: pk=" + pk);
 	return joinTableCollectionQueryLevel.run(entity, pk, e.getId(), relationship, a, this);

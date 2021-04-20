@@ -38,7 +38,7 @@ import org.minijpa.jpa.model.Department;
 import org.minijpa.jpa.model.Employee;
 import org.minijpa.jpa.model.Item;
 import org.minijpa.jpa.model.Store;
-import org.minijpa.metadata.EntityContext;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.metadata.EntityDelegate;
 
 public class SqlStatementFactoryTest {
@@ -50,7 +50,7 @@ public class SqlStatementFactoryTest {
     public void generateSelectByForeignKey() throws Exception {
 	EntityManagerFactory emf = Persistence.createEntityManagerFactory("manytoone_bid");
 	emf.createEntityManager();
-	Optional<EntityContext> optional = EntityDelegate.getInstance().getEntityContext("manytoone_bid");
+	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("manytoone_bid");
 	if (!optional.isPresent())
 	    Assertions.fail("Meta entities not found");
 
@@ -98,7 +98,7 @@ public class SqlStatementFactoryTest {
 	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni");
 	final EntityManager em = emf.createEntityManager();
 
-	Optional<EntityContext> optional = EntityDelegate.getInstance().getEntityContext("onetomany_uni");
+	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("onetomany_uni");
 	if (!optional.isPresent())
 	    Assertions.fail("Meta entities not found");
 
@@ -157,7 +157,7 @@ public class SqlStatementFactoryTest {
 	EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
 	final EntityManager em = emf.createEntityManager();
 
-	Optional<EntityContext> optional = EntityDelegate.getInstance().getEntityContext("citizens");
+	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("citizens");
 	if (!optional.isPresent())
 	    Assertions.fail("Meta entities not found");
 

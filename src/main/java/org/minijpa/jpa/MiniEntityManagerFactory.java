@@ -17,11 +17,12 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.metamodel.MetamodelFactory;
-import org.minijpa.metadata.EntityContext;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.Parser;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
@@ -39,7 +40,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
     /**
      * The key used is the full class name.
      */
-    private Map<String, MetaEntity> entities;
+    private PersistenceUnitContext persistenceUnitContext;
     private Metamodel metamodel;
 
     public MiniEntityManagerFactory(EntityManagerType entityManagerType, PersistenceUnitInfo persistenceUnitInfo,
@@ -54,15 +55,15 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	return entityManagerType;
     }
 
-    private synchronized Map<String, MetaEntity> createEntities() throws Exception {
+    private synchronized PersistenceUnitContext createPersistenceUnitContext() throws Exception {
 	// if the entities have been already parsed they are saved in the EntityContext.
 	// It must reuse them. Just one MetaEntity instance for each class name must
 	// exists.
-	Optional<EntityContext> optional = EntityDelegate.getInstance()
+	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
 		.getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
 	if (optional.isPresent()) {
-	    LOG.info("Persistence Unit Entities already parsed");
-	    return optional.get().getEntities();
+	    LOG.debug("Persistence Unit Entities already parsed");
+	    return optional.get();
 	}
 
 	// collects existing meta entities
@@ -87,20 +88,21 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	entityMap.putAll(existingMetaEntities);
 
 	parser.fillRelationships(entityMap);
+	Optional<Map<String, QueryResultMapping>> queryResultMappings = parser.parseSqlResultSetMappings(entityMap);
 
-	EntityDelegate.getInstance()
-		.addEntityContext(new EntityContext(persistenceUnitInfo.getPersistenceUnitName(), entityMap));
-
-	return entityMap;
+	PersistenceUnitContext persistenceUnitContext = new PersistenceUnitContext(persistenceUnitInfo.getPersistenceUnitName(),
+		entityMap, queryResultMappings);
+	EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
+	return persistenceUnitContext;
     }
 
     @Override
     public EntityManager createEntityManager() {
 	synchronized (persistenceUnitInfo) {
-	    if (entities == null)
+	    if (persistenceUnitContext == null)
 	    try {
-		entities = createEntities();
-		LOG.info("createEntityManager: createEntities entities=" + entities);
+		persistenceUnitContext = createPersistenceUnitContext();
+		LOG.debug("createEntityManager: createEntities entities=" + persistenceUnitContext.getEntities());
 	    } catch (Exception e) {
 		LOG.error("Unable to read entities: " + e.getMessage());
 		if (e instanceof InvocationTargetException) {
@@ -121,22 +123,22 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	    }
 	}
 
-	return new MiniEntityManager(this, persistenceUnitInfo, entities);
+	return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext);
     }
 
     @Override
     public EntityManager createEntityManager(@SuppressWarnings("rawtypes") Map map) {
 	synchronized (persistenceUnitInfo) {
-	    if (entities == null)
+	    if (persistenceUnitContext == null)
 				try {
-		entities = createEntities();
+		persistenceUnitContext = createPersistenceUnitContext();
 	    } catch (Exception e) {
 		LOG.error("Unable to read entities: " + e.getMessage());
 		throw new IllegalStateException(e.getMessage());
 	    }
 	}
 
-	return new MiniEntityManager(this, persistenceUnitInfo, entities);
+	return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext);
     }
 
     @Override
@@ -155,25 +157,25 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
     @Override
     public CriteriaBuilder getCriteriaBuilder() {
 	synchronized (persistenceUnitInfo) {
-	    if (entities == null)
+	    if (persistenceUnitContext == null)
 				try {
-		entities = createEntities();
+		persistenceUnitContext = createPersistenceUnitContext();
 	    } catch (Exception e) {
 		LOG.error("Unable to read entities: " + e.getMessage());
 		throw new IllegalStateException(e.getMessage());
 	    }
 	}
 
-	return new MiniCriteriaBuilder(getMetamodel(), entities);
+	return new MiniCriteriaBuilder(getMetamodel(), persistenceUnitContext);
     }
 
     @Override
     public Metamodel getMetamodel() {
 	if (metamodel == null) {
 	    synchronized (persistenceUnitInfo) {
-		if (entities == null)
+		if (persistenceUnitContext == null)
 					try {
-		    entities = createEntities();
+		    persistenceUnitContext = createPersistenceUnitContext();
 		} catch (Exception e) {
 		    LOG.error("Unable to read entities: " + e.getMessage());
 		    throw new IllegalStateException(e.getMessage());
@@ -181,7 +183,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	    }
 
 	    try {
-		metamodel = new MetamodelFactory(entities).build();
+		metamodel = new MetamodelFactory(persistenceUnitContext.getEntities()).build();
 	    } catch (Exception e) {
 		LOG.error(e.getMessage());
 	    }
