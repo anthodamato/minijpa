@@ -17,7 +17,7 @@ import org.minijpa.metadata.enhancer.EnhEntity;
 
 public class ParserTest {
 
-    private Parser parser = new Parser(new ApacheDerbyConfiguration());
+    private final Parser parser = new Parser(new ApacheDerbyConfiguration());
 
     @Test
     public void parse() throws Exception {
@@ -55,6 +55,11 @@ public class ParserTest {
 	Assertions.assertNotNull(entity.getEntityClass());
 	Assertions.assertEquals(Book.class, entity.getEntityClass());
 	Assertions.assertNotNull(entity.getModificationAttributeReadMethod());
+	Assertions.assertEquals("id", entity.getId().getPath());
+	Assertions.assertEquals("title", entity.getAttribute("title").getPath());
+	Assertions.assertEquals("bookFormat", entity.getAttribute("bookFormat").getPath());
+	Assertions.assertEquals("bookFormat.format", entity.findAttribute("format").get().getPath());
+
 	Set<MetaEntity> embeddables = new HashSet<>();
 	entity.findEmbeddables(embeddables);
 	Assertions.assertNotNull(embeddables);

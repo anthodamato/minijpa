@@ -44,17 +44,30 @@ public class EntityMapping implements ResultMapping {
     }
 
     public Optional<MetaAttribute> getAttribute(String columnName) {
+	List<MetaAttribute> attributes = metaEntity.expandAllAttributes();
 	Optional<AttributeNameMapping> optional = attributeNameMappings.stream().
 		filter(m -> m.getColumn().equalsIgnoreCase(columnName)).findFirst();
-	final String cn = optional.isPresent() ? optional.get().getName() : columnName;
-	List<MetaAttribute> attributes = metaEntity.expandAllAttributes();
-	return attributes.stream().filter(a -> a.getColumnName().equalsIgnoreCase(cn)).findFirst();
+	if (optional.isPresent()) {
+	    Optional<MetaAttribute> oa = attributes.stream().
+		    filter(a -> a.getPath().equalsIgnoreCase(optional.get().getName())).findFirst();
+	    if (oa.isPresent())
+		return oa;
+	}
+
+	return attributes.stream().filter(a -> a.getColumnName().equalsIgnoreCase(columnName)).findFirst();
     }
 
     public Optional<JoinColumnAttribute> getJoinColumnAttribute(String columnName) {
+	List<JoinColumnAttribute> joinColumnAttributes = metaEntity.expandJoinColumnAttributes();
 	Optional<AttributeNameMapping> optional = attributeNameMappings.stream().
 		filter(m -> m.getColumn().equalsIgnoreCase(columnName)).findFirst();
-	final String cn = optional.isPresent() ? optional.get().getName() : columnName;
-	return metaEntity.getJoinColumnAttributes().stream().filter(a -> a.getColumnName().equalsIgnoreCase(cn)).findFirst();
+	if (optional.isPresent()) {
+	    Optional<JoinColumnAttribute> o = joinColumnAttributes.stream().filter(
+		    j -> j.getColumnName().equalsIgnoreCase(optional.get().getName())).findFirst();
+	    if (o.isPresent())
+		return o;
+	}
+
+	return joinColumnAttributes.stream().filter(a -> a.getColumnName().equalsIgnoreCase(columnName)).findFirst();
     }
 }

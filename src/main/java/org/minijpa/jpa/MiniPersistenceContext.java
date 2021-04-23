@@ -49,7 +49,7 @@ public class MiniPersistenceContext implements EntityContainer {
     private final List<Object> managedEntityList = new LinkedList<>();
 
     /**
-     * Foreign key values
+     * Foreign key values. TODO doesn't work. An entity can't be used as key in a map
      *
      * Map<parent entity class name, Map<parent instance, Map<Attribute,foreign key
      * value>>>

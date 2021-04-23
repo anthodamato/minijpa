@@ -32,6 +32,18 @@ public interface EntityLoader {
 
     public Object build(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity, LockType lockType) throws Exception;
 
+    /**
+     * Build the entity instance using the passed values.
+     *
+     * @param modelValueArray
+     * @param entity
+     * @param lockType
+     * @return
+     * @throws Exception
+     */
+    public Object buildByValues(ModelValueArray<FetchParameter> modelValueArray,
+	    MetaEntity entity, LockType lockType) throws Exception;
+
     public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value) throws Exception;
 
 }

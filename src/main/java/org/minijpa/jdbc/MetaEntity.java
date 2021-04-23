@@ -33,7 +33,7 @@ public class MetaEntity {
     private final String alias;
     private final MetaAttribute id;
     /**
-     * Collection of simple, relationship and embeddable attributes.
+     * Collection of basic, relationship and embeddable attributes.
      */
     private final List<MetaAttribute> attributes;
     private final List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
@@ -84,6 +84,10 @@ public class MetaEntity {
 	return alias;
     }
 
+    public MetaAttribute getId() {
+	return id;
+    }
+
     public List<MetaAttribute> getAttributes() {
 	return attributes;
     }
@@ -132,8 +136,9 @@ public class MetaEntity {
 	return null;
     }
 
-    public MetaAttribute getId() {
-	return id;
+    public Optional<MetaAttribute> findAttribute(String name) {
+	List<MetaAttribute> list = expandAllAttributes();
+	return list.stream().filter(a -> a.getName().equals(name)).findFirst();
     }
 
     public List<MetaAttribute> expandAttributes() {
@@ -153,6 +158,16 @@ public class MetaEntity {
 	}
 
 	return list;
+    }
+
+    public List<JoinColumnAttribute> expandJoinColumnAttributes() {
+	List<JoinColumnAttribute> jcas = new ArrayList<>(joinColumnAttributes);
+	for (MetaAttribute attribute : attributes) {
+	    if (attribute.isEmbedded())
+		jcas.addAll(attribute.getEmbeddableMetaEntity().expandJoinColumnAttributes());
+	}
+
+	return jcas;
     }
 
     public MetaAttribute findAttributeByMappedBy(String mappedBy) {

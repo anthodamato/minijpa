@@ -50,7 +50,7 @@ public class MetaEntityHelper {
 	List<FetchParameter> list = new ArrayList<>();
 	for (JoinColumnAttribute a : attributes) {
 	    FetchParameter columnNameValue = new FetchParameter(a.getColumnName(), a.getType(), a.getReadWriteDbType(),
-		    a.getSqlType(), a.getForeignKeyAttribute(), true);
+		    a.getSqlType(), a.getForeignKeyAttribute(), null, true);
 	    list.add(columnNameValue);
 	}
 
@@ -128,7 +128,7 @@ public class MetaEntityHelper {
     public List<FetchParameter> convertAllAttributes(MetaEntity entity) {
 	List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 	List<FetchParameter> fetchColumnNameValues = convertAttributes(expandedAttributes);
-	fetchColumnNameValues.addAll(toFetchParameter(entity.getJoinColumnAttributes()));
+	fetchColumnNameValues.addAll(toFetchParameter(entity.expandJoinColumnAttributes()));
 	return fetchColumnNameValues;
     }
 
@@ -144,7 +144,7 @@ public class MetaEntityHelper {
 	    values.add(tableColumn);
 	}
 
-	for (JoinColumnAttribute joinColumnAttribute : entity.getJoinColumnAttributes()) {
+	for (JoinColumnAttribute joinColumnAttribute : entity.expandJoinColumnAttributes()) {
 	    TableColumn tableColumn = new TableColumn(fromTable, new Column(joinColumnAttribute.columnName));
 	    values.add(tableColumn);
 	}

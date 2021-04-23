@@ -20,7 +20,6 @@ package org.minijpa.jdbc;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -30,6 +29,7 @@ import java.util.function.Function;
  */
 public class ModelValueArray<T> {
 
+//    private Logger LOG = LoggerFactory.getLogger(ModelValueArray.class);
     private final List<T> models = new ArrayList<>();
     private final List<Object> values = new ArrayList<>();
 
@@ -62,22 +62,22 @@ public class ModelValueArray<T> {
 	return values.get(index);
     }
 
-    public Optional<Object> getValue(T model) {
+    public int indexOfModel(T model) {
 	for (int i = 0; i < size(); ++i) {
 	    if (getModel(i) == model)
-		return Optional.of(getValue(i));
+		return i;
 	}
 
-	return Optional.empty();
+	return -1;
     }
 
-    public Optional<Object> getValue(Function<T, ?> p, Object subModel) {
+    public int indexOfModel(Function<T, ?> p, Object subModel) {
 	for (int i = 0; i < size(); ++i) {
 	    if (p.apply(getModel(i)) == subModel)
-		return Optional.of(getValue(i));
+		return i;
 	}
 
-	return Optional.empty();
+	return -1;
     }
 
     public boolean isEmpty() {
@@ -88,12 +88,4 @@ public class ModelValueArray<T> {
 	return models.size();
     }
 
-//    public static AttributeValueArray get(List<?> ms, List<Object> values) {
-//	AttributeValueArray attributeValueArray = new AttributeValueArray<>();
-//	for (int i = 0; i < ms.size(); ++i) {
-//	    attributeValueArray.add(ms.get(i), values.get(i));
-//	}
-//
-//	return attributeValueArray;
-//    }
 }

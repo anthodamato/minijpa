@@ -29,7 +29,6 @@ import java.time.OffsetTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 
@@ -41,7 +40,7 @@ public class AttributeUtil {
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(AttributeUtil.class);
 
-    private static final Function<FetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f.getAttribute();
+    public static final Function<FetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f.getAttribute();
 
     public static Object buildPK(MetaEntity entity, ModelValueArray<FetchParameter> modelValueArray) throws Exception {
 	MetaAttribute id = entity.getId();
@@ -51,7 +50,11 @@ public class AttributeUtil {
 	    return pkObject;
 	}
 
-	return modelValueArray.getValue(fetchParameterToMetaAttribute, id).get();
+	int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, id);
+	if (index == -1)
+	    throw new IllegalArgumentException("Column '" + id.getColumnName() + "' is missing");
+
+	return modelValueArray.getValue(index);
     }
 
     private static void buildPK(MetaEntity entity, ModelValueArray<FetchParameter> modelValueArray,
@@ -60,8 +63,11 @@ public class AttributeUtil {
 	    if (a.isEmbedded())
 		buildPK(entity, modelValueArray, a.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
 	    else {
-		Optional<Object> value = modelValueArray.getValue(fetchParameterToMetaAttribute, a);
-		a.getWriteMethod().invoke(pkObject, value.get());
+		int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, a);
+		if (index == -1)
+		    throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
+
+		a.getWriteMethod().invoke(pkObject, modelValueArray.getValue(index));
 	    }
 	}
     }

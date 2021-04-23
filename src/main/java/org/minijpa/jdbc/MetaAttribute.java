@@ -47,6 +47,9 @@ public class MetaAttribute extends AbstractAttribute {
     private boolean version = false;
     // it's a basic attribute
     private boolean basic;
+    // The attribute path. If this is a basic attribute the path is the attribute name.
+    // If this is an embeddable the path is the embeddable path. For example 'jobInfo.jobDescription'.
+    private String path;
 
     public String getName() {
 	return name;
@@ -110,6 +113,10 @@ public class MetaAttribute extends AbstractAttribute {
 
     public void setBasic(boolean basic) {
 	this.basic = basic;
+    }
+
+    public String getPath() {
+	return path;
     }
 
 //    protected boolean expandRelationship() {
@@ -176,6 +183,7 @@ public class MetaAttribute extends AbstractAttribute {
 	private MetaEntity embeddableMetaEntity;
 	private boolean version = false;
 	private boolean basic;
+	private String path;
 
 	public Builder(String name) {
 	    super();
@@ -278,6 +286,11 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
+	public Builder withPath(String path) {
+	    this.path = path;
+	    return this;
+	}
+
 	public MetaAttribute build() {
 	    MetaAttribute attribute = new MetaAttribute();
 	    attribute.name = name;
@@ -300,6 +313,7 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.embeddableMetaEntity = embeddableMetaEntity;
 	    attribute.version = version;
 	    attribute.basic = basic;
+	    attribute.path = path;
 	    return attribute;
 	}
     }

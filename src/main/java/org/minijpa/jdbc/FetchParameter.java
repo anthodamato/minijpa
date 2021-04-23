@@ -25,22 +25,24 @@ public class FetchParameter {
     private final Class<?> readWriteDbType;
     private final Integer sqlType;
     private final MetaAttribute attribute;
+    private final MetaEntity metaEntity;
     private final boolean joinColumn;
 
     public FetchParameter(String columnName, Class<?> type, Class<?> readWriteDbType, Integer sqlType,
-	    MetaAttribute attribute, boolean joinColumn) {
+	    MetaAttribute attribute, MetaEntity metaEntity, boolean joinColumn) {
 	super();
 	this.columnName = columnName;
 	this.type = type;
 	this.readWriteDbType = readWriteDbType;
 	this.sqlType = sqlType;
 	this.attribute = attribute;
+	this.metaEntity = metaEntity;
 	this.joinColumn = joinColumn;
     }
 
     public static FetchParameter build(MetaAttribute attribute) {
 	return new FetchParameter(attribute.getColumnName(), attribute.getType(),
-		attribute.getReadWriteDbType(), attribute.getSqlType(), attribute, false);
+		attribute.getReadWriteDbType(), attribute.getSqlType(), attribute, null, false);
     }
 
     public String getColumnName() {
@@ -61,6 +63,10 @@ public class FetchParameter {
 
     public MetaAttribute getAttribute() {
 	return attribute;
+    }
+
+    public MetaEntity getMetaEntity() {
+	return metaEntity;
     }
 
     public boolean isJoinColumn() {

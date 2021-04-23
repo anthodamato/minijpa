@@ -300,9 +300,18 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	}
 
 	if (query.getResultSetMapping().isPresent()) {
-	    queryResultMapping = Optional.empty();
+	    if (persistenceUnitContext.getQueryResultMappings().isEmpty())
+		throw new IllegalArgumentException("Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
+
+	    String resultSetMapping = query.getResultSetMapping().get();
+	    QueryResultMapping qrm = persistenceUnitContext.getQueryResultMappings().get().get(resultSetMapping);
+	    if (qrm == null)
+		throw new IllegalArgumentException("Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
+
+	    queryResultMapping = Optional.of(qrm);
 	}
 
+	LOG.info("selectNative: 1");
 	return jdbcRunner.runNativeQuery(connectionHolder.getConnection(), query.getSqlString(),
 		query, queryResultMapping, entityLoader);
     }

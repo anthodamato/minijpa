@@ -38,7 +38,12 @@ public class ManyToOneHelper {
 	return owningAttribute.getName() + "_" + toEntity.getId().getColumnName();
     }
 
-    public ManyToOneRelationship finalizeRelationship(ManyToOneRelationship manyToOneRelationship, MetaAttribute a, MetaEntity entity, MetaEntity toEntity, DbConfiguration dbConfiguration) {
+    public ManyToOneRelationship finalizeRelationship(
+	    ManyToOneRelationship manyToOneRelationship,
+	    MetaAttribute a,
+	    MetaEntity entity,
+	    MetaEntity toEntity,
+	    DbConfiguration dbConfiguration) {
 	ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder().with(manyToOneRelationship);
 	if (manyToOneRelationship.isOwner() && manyToOneRelationship.getJoinColumn() == null) {
 	    String joinColumnName = createDefaultJoinColumn(a, toEntity);

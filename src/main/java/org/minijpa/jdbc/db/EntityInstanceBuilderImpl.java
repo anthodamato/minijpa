@@ -41,14 +41,13 @@ public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
 	    parent = parentClass.getDeclaredConstructor().newInstance();
 	}
 
-	LOG.debug("writeAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
-	LOG.debug("writeAttributeValue: value=" + value);
+	LOG.debug("writeMetaAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
+	LOG.debug("writeMetaAttributeValue: value=" + value);
 
 	attribute.getWriteMethod().invoke(parent, value);
 	Method m = entity.getModificationAttributeReadMethod();
 	List list = (List) m.invoke(parent);
 	list.remove(attribute.getName());
-	LOG.debug("writeAttributeValue: list=" + list);
 	return parent;
     }
 
@@ -74,6 +73,7 @@ public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
 		Object aInstance = findAndSetAttributeValue(a.getType(), parent,
 			a.getEmbeddableMetaEntity().getAttributes(), attribute, value, a.getEmbeddableMetaEntity());
 		LOG.debug("findAndSetAttributeValue: embedded aInstance=" + aInstance);
+
 		if (aInstance != null)
 		    return writeMetaAttributeValue(parentInstance, parentClass, a, aInstance, entity);
 	    } else if (a == attribute) {

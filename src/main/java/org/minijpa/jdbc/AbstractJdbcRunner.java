@@ -297,6 +297,7 @@ public class AbstractJdbcRunner {
 
 	    while (rs.next()) {
 		Object record = buildRecord(metaData, rs, queryResultMapping, entityLoader);
+		LOG.info("runNativeQuery: record=" + record);
 		objects.add(record);
 	    }
 
@@ -315,11 +316,12 @@ public class AbstractJdbcRunner {
 	    ResultSet rs,
 	    QueryResultMapping queryResultMapping,
 	    EntityLoader entityLoader) throws Exception {
-	List<ModelValueArray<FetchParameter>> modelValueArrays = new ArrayList<>();
-	for (int i = 0; i < queryResultMapping.size(); ++i) {
-	    modelValueArrays.add(new ModelValueArray<>());
-	}
+//	List<ModelValueArray<FetchParameter>> modelValueArrays = new ArrayList<>();
+//	for (int i = 0; i < queryResultMapping.size(); ++i) {
+//	    modelValueArrays.add(new ModelValueArray<>());
+//	}
 
+	ModelValueArray<FetchParameter> modelValueArray = new ModelValueArray<>();
 	int nc = metaData.getColumnCount();
 	for (int i = 0; i < nc; ++i) {
 	    String columnName = metaData.getColumnName(i + 1);
@@ -329,7 +331,7 @@ public class AbstractJdbcRunner {
 	    for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
 		Optional<FetchParameter> optional = buildFetchParameter(columnName, entityMapping);
 		if (optional.isPresent()) {
-		    ModelValueArray<FetchParameter> modelValueArray = modelValueArrays.get(k);
+//		    ModelValueArray<FetchParameter> modelValueArray = modelValueArrays.get(k);
 		    Object value = rs.getObject(i + 1, optional.get().getReadWriteDbType());
 		    modelValueArray.add(optional.get(), value);
 		}
@@ -342,25 +344,29 @@ public class AbstractJdbcRunner {
 	int k = 0;
 	Object[] result = new Object[queryResultMapping.size()];
 	for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
-	    ModelValueArray<FetchParameter> modelValueArray = modelValueArrays.get(k);
-	    Object entityInstance = entityLoader.build(modelValueArray, entityMapping.getMetaEntity(), LockType.NONE);
-	    if (queryResultMapping.size() == 1)
-		return entityInstance;
-
+//	    ModelValueArray<FetchParameter> modelValueArray = modelValueArrays.get(k);
+	    Object entityInstance = entityLoader.buildByValues(modelValueArray, entityMapping.getMetaEntity(), LockType.NONE);
+	    LOG.debug("buildRecord: entityInstance=" + entityInstance + "; k=" + k);
 	    result[k] = entityInstance;
+	    ++k;
 	}
+
+	if (result.length == 1)
+	    return result[0];
 
 	return result;
     }
 
     private Optional<FetchParameter> buildFetchParameter(String columnName,
 	    EntityMapping entityMapping) {
+	LOG.debug("buildFetchParameter: columnName=" + columnName);
 	Optional<MetaAttribute> optional = entityMapping.getAttribute(columnName);
+	LOG.debug("buildFetchParameter: optional.isPresent()=" + optional.isPresent());
 	if (optional.isPresent()) {
 	    MetaAttribute metaAttribute = optional.get();
 	    FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(),
 		    metaAttribute.getType(), metaAttribute.getReadWriteDbType(),
-		    metaAttribute.getSqlType(), metaAttribute, false);
+		    metaAttribute.getSqlType(), metaAttribute, entityMapping.getMetaEntity(), false);
 	    return Optional.of(fetchParameter);
 	}
 
@@ -369,7 +375,8 @@ public class AbstractJdbcRunner {
 	    JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
 	    FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),
 		    joinColumnAttribute.getType(), joinColumnAttribute.getReadWriteDbType(),
-		    joinColumnAttribute.getSqlType(), joinColumnAttribute.getForeignKeyAttribute(), true);
+		    joinColumnAttribute.getSqlType(), joinColumnAttribute.getForeignKeyAttribute(),
+		    entityMapping.getMetaEntity(), true);
 	    return Optional.of(fetchParameter);
 	}
 

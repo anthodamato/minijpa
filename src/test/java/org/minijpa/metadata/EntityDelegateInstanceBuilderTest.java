@@ -19,7 +19,6 @@
 package org.minijpa.metadata;
 
 import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
-import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -61,35 +60,35 @@ public class EntityDelegateInstanceBuilderTest {
 	e1.setJobInfo(jobInfo);
 
 	EntityInstanceBuilder entityInstanceBuilder = new EntityInstanceBuilderImpl();
-	ModelValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(
+	ModelValueArray<MetaAttribute> modelValueArray = entityInstanceBuilder.getModifications(
 		metaEntityPM, programManager);
-	Assertions.assertTrue(attributeValueArray.isEmpty());
+	Assertions.assertTrue(modelValueArray.isEmpty());
 
-	attributeValueArray = entityInstanceBuilder.getModifications(metaEntityJE, e1);
-	Assertions.assertEquals(3, attributeValueArray.size());
-	MetaAttribute a0 = attributeValueArray.getModel(0);
-	MetaAttribute a1 = attributeValueArray.getModel(1);
-	MetaAttribute a2 = attributeValueArray.getModel(2);
+	modelValueArray = entityInstanceBuilder.getModifications(metaEntityJE, e1);
+	Assertions.assertEquals(3, modelValueArray.size());
+	MetaAttribute a0 = modelValueArray.getModel(0);
+	MetaAttribute a1 = modelValueArray.getModel(1);
+	MetaAttribute a2 = modelValueArray.getModel(2);
 
 	MetaAttributeFolder metaAttributeFolder = new MetaAttributeFolder(a0, a1, a2);
 	Assertions.assertTrue(metaAttributeFolder.findByName("name").isPresent());
 	Assertions.assertTrue(metaAttributeFolder.findByName("jobDescription").isPresent());
 	Assertions.assertTrue(metaAttributeFolder.findByName("pm").isPresent());
 
-	Optional<Object> v = attributeValueArray.getValue(metaAttributeFolder.findByName("name").get());
-	Assertions.assertTrue(v.isPresent());
-	Assertions.assertEquals("Abraham", v.get());
+	int index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("name").get());
+	Assertions.assertTrue(index != -1);
+	Assertions.assertEquals("Abraham", modelValueArray.getValue(index));
 
-	v = attributeValueArray.getValue(metaAttributeFolder.findByName("jobDescription").get());
-	Assertions.assertTrue(v.isPresent());
-	Assertions.assertEquals("Analyst", v.get());
+	index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("jobDescription").get());
+	Assertions.assertTrue(index != -1);
+	Assertions.assertEquals("Analyst", modelValueArray.getValue(index));
 
-	v = attributeValueArray.getValue(metaAttributeFolder.findByName("pm").get());
-	Assertions.assertTrue(v.isPresent());
-	Assertions.assertEquals(programManager, v.get());
+	index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("pm").get());
+	Assertions.assertTrue(index != -1);
+	Assertions.assertEquals(programManager, modelValueArray.getValue(index));
 
 	entityInstanceBuilder.removeChanges(metaEntityJE, e1);
-	attributeValueArray = entityInstanceBuilder.getModifications(metaEntityJE, e1);
-	Assertions.assertEquals(0, attributeValueArray.size());
+	modelValueArray = entityInstanceBuilder.getModifications(metaEntityJE, e1);
+	Assertions.assertEquals(0, modelValueArray.size());
     }
 }
