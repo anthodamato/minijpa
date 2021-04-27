@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
@@ -17,20 +18,20 @@ import javax.persistence.metamodel.SingularAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
-public class MiniPath<X> implements Path<X> {
+public class EmbeddablePath<X> implements Path<X> {
 
-    private MetaAttribute metaAttribute;
-    private MetaEntity metaEntity;
+    private final MetaEntity embeddable;
+    private final MetaEntity metaEntity;
     private String alias;
 
-    public MiniPath(MetaAttribute metaAttribute, MetaEntity metaEntity) {
+    public EmbeddablePath(MetaEntity embeddable, MetaEntity metaEntity) {
 	super();
-	this.metaAttribute = metaAttribute;
+	this.embeddable = embeddable;
 	this.metaEntity = metaEntity;
     }
 
-    public MetaAttribute getMetaAttribute() {
-	return metaAttribute;
+    public MetaEntity getEmbeddable() {
+	return embeddable;
     }
 
     public MetaEntity getMetaEntity() {
@@ -100,7 +101,7 @@ public class MiniPath<X> implements Path<X> {
 
     @Override
     public Class<? extends X> getJavaType() {
-	return (Class<? extends X>) metaAttribute.getType();
+	return (Class<? extends X>) embeddable.getEntityClass();
     }
 
     @Override
@@ -146,27 +147,29 @@ public class MiniPath<X> implements Path<X> {
 
     @Override
     public <Y> Path<Y> get(String attributeName) {
-	if (this.metaAttribute.isEmbedded()) {
-	    MetaAttribute attribute = this.metaAttribute.getEmbeddableMetaEntity().getAttribute(attributeName);
-	    if (attribute != null)
-		return new MiniPath<Y>(attribute, metaEntity);
-	}
+	MetaAttribute attribute = this.embeddable.getAttribute(attributeName);
+	if (attribute != null)
+	    return new AttributePath<>(attribute, metaEntity);
+
+	Optional<MetaEntity> optional = this.embeddable.getEmbeddable(attributeName);
+	if (optional.isPresent())
+	    return new EmbeddablePath<>(optional.get(), metaEntity);
 
 	throw new IllegalArgumentException("Attribute '" + attributeName + "' not found");
     }
 
     @Override
     public int hashCode() {
-	return Objects.hash(metaEntity.getName(), metaAttribute.getName());
+	return Objects.hash(metaEntity.getName(), embeddable.getName());
     }
 
     @Override
     public boolean equals(Object obj) {
-	if (obj == null || !(obj instanceof MiniPath<?>))
+	if (obj == null || !(obj instanceof EmbeddablePath<?>))
 	    return false;
 
-	MiniPath<?> miniPath = (MiniPath<?>) obj;
-	if (miniPath.metaEntity != metaEntity || miniPath.metaAttribute != metaAttribute)
+	EmbeddablePath<?> miniPath = (EmbeddablePath<?>) obj;
+	if (miniPath.metaEntity != metaEntity || miniPath.embeddable != embeddable)
 	    return false;
 
 	return true;

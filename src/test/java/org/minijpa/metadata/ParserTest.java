@@ -1,7 +1,6 @@
 package org.minijpa.metadata;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -55,13 +54,13 @@ public class ParserTest {
 	Assertions.assertNotNull(entity.getEntityClass());
 	Assertions.assertEquals(Book.class, entity.getEntityClass());
 	Assertions.assertNotNull(entity.getModificationAttributeReadMethod());
-	Assertions.assertEquals("id", entity.getId().getPath());
+	Assertions.assertEquals("id", entity.getId().getAttribute().getPath());
 	Assertions.assertEquals("title", entity.getAttribute("title").getPath());
-	Assertions.assertEquals("bookFormat", entity.getAttribute("bookFormat").getPath());
-	Assertions.assertEquals("bookFormat.format", entity.findAttribute("format").get().getPath());
+	Assertions.assertEquals("bookFormat", entity.getEmbeddable("bookFormat").get().getPath());
+	MetaEntity emb = entity.getEmbeddable("bookFormat").get();
+	Assertions.assertEquals("bookFormat.format", emb.getAttribute("format").getPath());
 
-	Set<MetaEntity> embeddables = new HashSet<>();
-	entity.findEmbeddables(embeddables);
+	Set<MetaEntity> embeddables = entity.findEmbeddables();
 	Assertions.assertNotNull(embeddables);
 	Assertions.assertEquals(1, embeddables.size());
 

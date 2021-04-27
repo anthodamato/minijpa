@@ -53,23 +53,24 @@ public class MetaEntityUtils {
 	return new PersistenceUnitContext(persistenceUnitName, map, optional);
     }
 
-    private static void printEmbeddedAttribute(MetaAttribute m) {
-	LOG.info("printMetaEntity: Embedded " + m.toString());
-	List<MetaAttribute> embeddeds = m.getEmbeddableMetaEntity().getAttributes();
-	for (MetaAttribute a : embeddeds) {
-	    LOG.info("printMetaEntity: Embedded child " + a.toString());
-	}
-    }
-
+//    private static void printEmbeddedAttribute(MetaAttribute m) {
+//	LOG.info("printMetaEntity: Embedded " + m.toString());
+//	List<MetaAttribute> embeddeds = m.getEmbeddableMetaEntity().getAttributes();
+//	for (MetaAttribute a : embeddeds) {
+//	    LOG.info("printMetaEntity: Embedded child " + a.toString());
+//	}
+//    }
     public static void printMetaEntity(MetaEntity metaEntity) {
 	List<MetaAttribute> attributes = metaEntity.getAttributes();
 	LOG.info("printMetaEntity: Attributes");
 	attributes.stream().forEach(m -> {
-	    if (m.isEmbedded()) {
-		printEmbeddedAttribute(m);
-	    } else
-		LOG.info("printMetaEntity: " + m.toString());
+	    LOG.info("printMetaEntity: " + m.toString());
 	});
+
+	LOG.info("printMetaEntity: Embeddables");
+	for (MetaEntity embeddable : metaEntity.getEmbeddables()) {
+	    printMetaEntity(embeddable);
+	}
 
 	LOG.info("printMetaEntity: Relationship Attributes");
 	List<MetaAttribute> ras = metaEntity.getRelationshipAttributes();

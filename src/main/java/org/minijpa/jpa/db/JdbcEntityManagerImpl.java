@@ -22,6 +22,7 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
+import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.QueryResultMapping;
@@ -135,7 +136,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
     private Object generatePersistentIdentity(MetaEntity entity, Object entityInstance) throws Exception {
-	MetaAttribute id = entity.getId();
+	Pk id = entity.getId();
 	Object idValue = id.getReadMethod().invoke(entityInstance);
 	LOG.debug("generatePersistentIdentity: idValue=" + idValue);
 	if (idValue != null)

@@ -24,6 +24,7 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
+import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
@@ -127,7 +128,7 @@ public class SqlStatementFactoryTest {
 
 	MetaEntity storeEntity = map.get(Store.class.getName());
 	MetaEntity itemEntity = map.get(Item.class.getName());
-	MetaAttribute a = storeEntity.getId();
+	Pk a = storeEntity.getId();
 
 	MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
 	RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();

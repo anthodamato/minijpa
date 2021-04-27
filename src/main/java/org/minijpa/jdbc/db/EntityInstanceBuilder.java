@@ -31,10 +31,15 @@ public interface EntityInstanceBuilder {
     public Object writeMetaAttributeValue(Object parentInstance, Class<?> parentClass, MetaAttribute attribute,
 	    Object value, MetaEntity entity) throws Exception;
 
-    public void writeAttributeValue(MetaEntity entity, Object parentInstance, MetaAttribute attribute,
+    public Object writeEmbeddableValue(Object parentInstance, Class<?> parentClass, MetaEntity embeddable,
+	    Object value, MetaEntity entity) throws Exception;
+
+    public Object writeAttributeValue(MetaEntity entity, Object parentInstance, MetaAttribute attribute,
 	    Object value) throws Exception;
 
     public Object getAttributeValue(Object parentInstance, MetaAttribute attribute) throws Exception;
+
+    public Object getEmbeddableValue(Object parentInstance, MetaEntity metaEntity) throws IllegalAccessException, InvocationTargetException;
 
     public void removeChanges(MetaEntity entity, Object entityInstance)
 	    throws IllegalAccessException, InvocationTargetException;

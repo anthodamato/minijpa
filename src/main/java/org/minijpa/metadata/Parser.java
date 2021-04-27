@@ -31,12 +31,15 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Version;
 import org.minijpa.jdbc.AttributeUtil;
+import org.minijpa.jdbc.BasicAttributePk;
 
 import org.minijpa.jdbc.CollectionUtils;
+import org.minijpa.jdbc.EmbeddedPk;
 import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkGeneration;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkSequenceGenerator;
@@ -113,7 +116,8 @@ public class Parser {
 	    throw new Exception("@Entity annotation not found: '" + c.getName() + "'");
 
 	LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
-	List<MetaAttribute> attributes = readAttributes(enhEntity, parsedEntities, Optional.empty());
+	List<MetaAttribute> attributes = readAttributes(enhEntity, Optional.empty());
+	List<MetaEntity> embeddables = readEmbeddables(enhEntity, parsedEntities, Optional.empty());
 	MetaEntity mappedSuperclassEntity = null;
 	if (enhEntity.getMappedSuperclass() != null) {
 	    optional = parsedEntities.stream().filter(e -> e.getMappedSuperclassEntity() != null)
@@ -128,19 +132,28 @@ public class Parser {
 
 	    List<MetaAttribute> msAttributes = mappedSuperclassEntity.getAttributes();
 	    attributes.addAll(msAttributes);
-	    attributes.add(mappedSuperclassEntity.getId());
 	}
 
 	LOG.debug("Getting '" + c.getName() + "' Id...");
-	MetaAttribute id = null;
+	Pk id = null;
 	if (mappedSuperclassEntity != null)
 	    id = mappedSuperclassEntity.getId();
 	else {
 	    Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
-	    if (!optionalId.isPresent())
-		throw new Exception("@Id annotation not found: '" + c.getName() + "'");
+	    if (optionalId.isPresent()) {
+		Field field = c.getDeclaredField(optionalId.get().getName());
+		PkGeneration gv = buildPkGeneration(field);
+		id = new BasicAttributePk(optionalId.get(), gv);
+		attributes.remove(optionalId.get());
+	    } else {
+		Optional<MetaEntity> optionalME = embeddables.stream().filter(e -> e.isEmbeddedId()).findFirst();
+		if (optionalME.isEmpty())
+		    throw new Exception("@Id or @EmbeddedId annotation not found: '" + c.getName() + "'");
 
-	    id = optionalId.get();
+		id = new EmbeddedPk(optionalME.get());
+		embeddables.remove(optionalME.get());
+	    }
+
 	}
 
 	String name = c.getSimpleName();
@@ -153,7 +166,6 @@ public class Parser {
 	    tableName = table.name();
 
 	String alias = aliasGenerator.calculateAlias(tableName, parsedEntities);
-	attributes.remove(id);
 
 	Method modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
 	Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
@@ -164,13 +176,25 @@ public class Parser {
 	Method lockTypeAttributeWriteMethod = c.getMethod(enhEntity.getLockTypeAttributeSetMethod().get(), LockType.class);
 	Method entityStatusAttributeReadMethod = c.getMethod(enhEntity.getEntityStatusAttributeGetMethod().get());
 	Method entityStatusAttributeWriteMethod = c.getMethod(enhEntity.getEntityStatusAttributeSetMethod().get(), EntityStatus.class);
-	return new MetaEntity(c, name, tableName, alias, id, attributes, mappedSuperclassEntity,
-		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod,
-		Optional.of(lockTypeAttributeReadMethod), Optional.of(lockTypeAttributeWriteMethod),
-		Optional.of(entityStatusAttributeReadMethod), Optional.of(entityStatusAttributeWriteMethod));
+	return new MetaEntity.Builder()
+		.withEntityClass(c)
+		.withName(name)
+		.withTableName(tableName)
+		.withAlias(alias)
+		.withId(id)
+		.withAttributes(attributes)
+		.withEmbeddables(embeddables)
+		.withMappedSuperclassEntity(mappedSuperclassEntity)
+		.withModificationAttributeReadMethod(modificationAttributeReadMethod)
+		.withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
+		.withLockTypeAttributeReadMethod(Optional.of(lockTypeAttributeReadMethod))
+		.withLockTypeAttributeWriteMethod(Optional.of(lockTypeAttributeWriteMethod))
+		.withEntityStatusAttributeReadMethod(Optional.of(entityStatusAttributeReadMethod))
+		.withEntityStatusAttributeWriteMethod(Optional.of(entityStatusAttributeWriteMethod)).build();
     }
 
-    private MetaEntity parseEmbeddable(EnhEntity enhEntity,
+    private MetaEntity parseEmbeddable(String parentClassName,
+	    EnhAttribute enhAttribute, EnhEntity enhEntity,
 	    Collection<MetaEntity> parsedEntities,
 	    Optional<String> parentPath) throws Exception {
 	Optional<MetaEntity> optional = parsedEntities.stream().
@@ -186,7 +210,9 @@ public class Parser {
 	    throw new Exception("@Embeddable annotation not found: '" + c.getName() + "'");
 
 	LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
-	List<MetaAttribute> attributes = readAttributes(enhEntity, parsedEntities, parentPath);
+	String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
+	List<MetaAttribute> attributes = readAttributes(enhEntity, Optional.of(path));
+	List<MetaEntity> embeddables = readEmbeddables(enhEntity, parsedEntities, Optional.of(path));
 
 	Method modificationAttributeReadMethod = null;
 	if (enhEntity.getModificationAttributeGetMethod() != null)
@@ -196,8 +222,26 @@ public class Parser {
 	if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent())
 	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
 
-	return new MetaEntity(c, null, null, null, null, attributes, null, modificationAttributeReadMethod,
-		lazyLoadedAttributeReadMethod, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+	Class<?> attributeClass = Class.forName(enhAttribute.getClassName());
+	Class<?> parentClass = Class.forName(parentClassName);
+	Method readMethod = parentClass.getMethod(enhAttribute.getGetMethod());
+	Method writeMethod = parentClass.getMethod(enhAttribute.getSetMethod(), attributeClass);
+
+	Field field = parentClass.getDeclaredField(enhAttribute.getName());
+	boolean id = field.getAnnotation(EmbeddedId.class) != null;
+
+	return new MetaEntity.Builder()
+		.withEntityClass(c)
+		.withName(enhAttribute.getName())
+		.isEmbeddedId(id)
+		.withAttributes(attributes)
+		.withEmbeddables(embeddables)
+		.withReadMethod(readMethod)
+		.withWriteMethod(writeMethod)
+		.withPath(path)
+		.withModificationAttributeReadMethod(modificationAttributeReadMethod)
+		.withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
+		.build();
     }
 
     private MetaEntity parseMappedSuperclass(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities)
@@ -208,35 +252,73 @@ public class Parser {
 	    throw new Exception("@MappedSuperclass annotation not found: '" + c.getName() + "'");
 
 	LOG.debug("Reading mapped superclass '" + enhEntity.getClassName() + "' attributes...");
-	List<MetaAttribute> attributes = readAttributes(enhEntity, parsedEntities, Optional.empty());
+	List<MetaAttribute> attributes = readAttributes(enhEntity, Optional.empty());
+	List<MetaEntity> embeddables = readEmbeddables(enhEntity, parsedEntities, Optional.empty());
 
+	Pk pk = null;
 	Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
-	if (!optionalId.isPresent())
-	    throw new Exception("@Id annotation not found in mapped superclass: '" + c.getName() + "'");
+	if (optionalId.isPresent()) {
+	    Field field = c.getDeclaredField(optionalId.get().getName());
+	    PkGeneration gv = buildPkGeneration(field);
+	    pk = new BasicAttributePk(optionalId.get(), gv);
+	    attributes.remove(optionalId.get());
+	} else {
+	    Optional<MetaEntity> optionalME = embeddables.stream().filter(e -> e.isEmbeddedId()).findFirst();
+	    if (optionalME.isEmpty())
+		throw new Exception("@Id or @EmbeddedId annotation not found in mapped superclass: '" + c.getName() + "'");
 
-	MetaAttribute id = optionalId.get();
-	attributes.remove(id);
+	    pk = new EmbeddedPk(optionalME.get());
+	    embeddables.remove(optionalME.get());
+	}
 
 	Method modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
 	Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
 	if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent())
 	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
 
-	return new MetaEntity(c, null, null, null, optionalId.get(), attributes, null,
-		modificationAttributeReadMethod, lazyLoadedAttributeReadMethod,
-		Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+	return new MetaEntity.Builder()
+		.withEntityClass(c)
+		.withId(pk)
+		.withAttributes(attributes)
+		.withEmbeddables(embeddables)
+		.withModificationAttributeReadMethod(modificationAttributeReadMethod)
+		.withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
+		.build();
     }
 
     private List<MetaAttribute> readAttributes(EnhEntity enhEntity,
-	    Collection<MetaEntity> parsedEntities,
 	    Optional<String> parentPath) throws Exception {
 	List<MetaAttribute> attributes = new ArrayList<>();
 	for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
-	    MetaAttribute attribute = readAttribute(enhEntity.getClassName(), enhAttribute, parsedEntities, parentPath);
+	    if (enhAttribute.isEmbedded())
+		continue;
+
+	    MetaAttribute attribute = readAttribute(enhEntity.getClassName(), enhAttribute, parentPath);
 	    attributes.add(attribute);
 	}
 
 	return attributes;
+    }
+
+    private List<MetaEntity> readEmbeddables(
+	    EnhEntity enhEntity,
+	    Collection<MetaEntity> parsedEntities,
+	    Optional<String> parentPath) throws Exception {
+	List<MetaEntity> metaEntities = new ArrayList<>();
+	for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
+	    if (!enhAttribute.isEmbedded())
+		continue;
+
+	    MetaEntity metaEntity = parseEmbeddable(
+		    enhEntity.getClassName(),
+		    enhAttribute,
+		    enhAttribute.getEmbeddedEnhEntity(),
+		    parsedEntities,
+		    parentPath);
+	    metaEntities.add(metaEntity);
+	}
+
+	return metaEntities;
     }
 
     private JdbcAttributeMapper findJdbcAttributeMapper(Class<?> attributeClass, Integer sqlType) {
@@ -274,7 +356,6 @@ public class Parser {
     private MetaAttribute readAttribute(
 	    String parentClassName,
 	    EnhAttribute enhAttribute,
-	    Collection<MetaEntity> parsedEntities,
 	    Optional<String> parentPath) throws Exception {
 	String columnName = enhAttribute.getName();
 	Class<?> c = Class.forName(parentClassName);
@@ -305,23 +386,32 @@ public class Parser {
 	JdbcAttributeMapper jdbcAttributeMapper = findJdbcAttributeMapper(attributeClass, sqlType);
 	String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
 	if (idAnnotation != null) {
-	    MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
-		    .withType(attributeClass).withReadWriteDbType(readWriteType).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-		    .withReadMethod(readMethod).withWriteMethod(writeMethod).isId(true).withSqlType(sqlType)
-		    .withJavaMember(field).isBasic(true).withPath(path);
+	    MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName())
+		    .withColumnName(columnName)
+		    .withType(attributeClass)
+		    .withReadWriteDbType(readWriteType)
+		    .withDbTypeMapper(dbConfiguration.getDbTypeMapper())
+		    .withReadMethod(readMethod)
+		    .withWriteMethod(writeMethod)
+		    .isId(true)
+		    .withSqlType(sqlType)
+		    .withJavaMember(field)
+		    .isBasic(true)
+		    .withPath(path);
 
 	    PkGeneration gv = buildPkGeneration(field);
-	    builder.withPkGeneration(gv).withJdbcAttributeMapper(jdbcAttributeMapper);
+	    builder
+		    //		    .withPkGeneration(gv)
+		    .withJdbcAttributeMapper(jdbcAttributeMapper);
 	    return builder.build();
 	}
 
-	boolean embedded = enhAttribute.isEmbedded();
-	MetaEntity embeddableEntity = null;
-	if (embedded) {
-	    embeddableEntity = parseEmbeddable(enhAttribute.getEmbeddedEnhEntity(), parsedEntities, Optional.of(path));
-	}
-
-	boolean id = field.getAnnotation(EmbeddedId.class) != null;
+//	boolean embedded = enhAttribute.isEmbedded();
+//	MetaEntity embeddableEntity = null;
+//	if (embedded) {
+//	    embeddableEntity = parseEmbeddable(parentClassName, enhAttribute, enhAttribute.getEmbeddedEnhEntity(), parsedEntities, Optional.of(path));
+//	}
+//	boolean id = field.getAnnotation(EmbeddedId.class) != null;
 	boolean isCollection = CollectionUtils.isCollectionClass(attributeClass);
 	Class<?> collectionImplementationClass = null;
 	if (isCollection)
@@ -329,17 +419,24 @@ public class Parser {
 
 	boolean version = field.getAnnotation(Version.class) != null;
 
-	MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
-		.withType(attributeClass).withReadWriteDbType(readWriteType).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-		.withReadMethod(readMethod).withWriteMethod(writeMethod).isId(id).withSqlType(sqlType)
-		.isEmbedded(embedded).isCollection(isCollection)
-		.withJavaMember(field).withJdbcAttributeMapper(jdbcAttributeMapper).
-		withCollectionImplementationClass(collectionImplementationClass).
-		withEmbeddableMetaEntity(embeddableEntity).isVersion(version).
-		isBasic(AttributeUtil.isBasicAttribute(attributeClass))
+	MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName())
+		.withColumnName(columnName)
+		.withType(attributeClass)
+		.withReadWriteDbType(readWriteType)
+		.withDbTypeMapper(dbConfiguration.getDbTypeMapper())
+		.withReadMethod(readMethod)
+		.withWriteMethod(writeMethod)
+		//		.isId(id)
+		.withSqlType(sqlType)
+		.isCollection(isCollection)
+		.withJavaMember(field)
+		.withJdbcAttributeMapper(jdbcAttributeMapper)
+		.withCollectionImplementationClass(collectionImplementationClass)
+		.isVersion(version)
+		.isBasic(AttributeUtil.isBasicAttribute(attributeClass))
 		.withPath(path);
-	if (id)
-	    builder.withPkGeneration(new PkGeneration());
+//	if (id)
+//	    builder.withPkGeneration(new PkGeneration());
 
 	OneToOne oneToOne = field.getAnnotation(OneToOne.class);
 	ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
@@ -370,7 +467,7 @@ public class Parser {
 
 	// Basic annotation
 	Basic basic = field.getAnnotation(Basic.class);
-	if (basic != null && !id) {
+	if (basic != null) {
 	    if (!basic.optional())
 		builder.isNullable(false);
 	}
@@ -441,12 +538,16 @@ public class Parser {
 
     private void finalizeRelationships(MetaEntity entity, Map<String, MetaEntity> entities,
 	    List<MetaAttribute> attributes) {
+	for (MetaEntity embeddable : entity.getEmbeddables()) {
+	    finalizeRelationships(embeddable, entities, embeddable.getAttributes());
+	}
+
 	for (MetaAttribute a : attributes) {
 	    LOG.debug("finalizeRelationships: a=" + a);
-	    if (a.isEmbedded()) {
-		finalizeRelationships(a.getEmbeddableMetaEntity(), entities, a.getEmbeddableMetaEntity().getAttributes());
-		return;
-	    }
+//	    if (a.isEmbedded()) {
+//		finalizeRelationships(a.getEmbeddableMetaEntity(), entities, a.getEmbeddableMetaEntity().getAttributes());
+//		return;
+//	    }
 
 	    Relationship relationship = a.getRelationship();
 	    if (relationship == null)

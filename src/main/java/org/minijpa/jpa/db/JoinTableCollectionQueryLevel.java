@@ -15,6 +15,7 @@ import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
+import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
@@ -42,7 +43,7 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 	this.connectionHolder = connectionHolder;
     }
 
-    public Object run(MetaEntity entity, Object primaryKey, MetaAttribute id,
+    public Object run(MetaEntity entity, Object primaryKey, Pk id,
 	    Relationship relationship,
 	    MetaAttribute metaAttribute,
 	    EntityLoader entityLoader) throws Exception {

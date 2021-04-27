@@ -71,13 +71,6 @@ public class MetaEntityHelper {
 
     public List<QueryParameter> convertAVToQP(MetaAttribute a, Object value) throws Exception {
 	List<QueryParameter> list = new ArrayList<>();
-	if (a.isEmbedded() && a.isId()) {
-	    ModelValueArray<MetaAttribute> attributeValueArray = new ModelValueArray();
-	    expand(a, value, attributeValueArray);
-	    list.addAll(convertAVToQP(attributeValueArray));
-	    return list;
-	}
-
 	if (a.getRelationship() != null) {
 	    String joinColumn = a.getRelationship().getJoinColumn();
 	    LOG.debug("convertAVToQP: joinColumn=" + joinColumn);
@@ -85,8 +78,12 @@ public class MetaEntityHelper {
 	    LOG.debug("convertAVToQP: attributeType=" + attributeType);
 	    if (joinColumn != null && attributeType != null) {
 		Object idValue = attributeType.getId().getReadMethod().invoke(value);
-		QueryParameter queryParameter = new QueryParameter(joinColumn, idValue, attributeType.getId().getType(),
-			attributeType.getId().getSqlType(), attributeType.getId().jdbcAttributeMapper);
+		QueryParameter queryParameter = new QueryParameter(
+			joinColumn,
+			idValue,
+			attributeType.getId().getType(),
+			attributeType.getId().getAttribute().getSqlType(),
+			attributeType.getId().getAttribute().jdbcAttributeMapper);
 		list.add(queryParameter);
 	    }
 	} else {
@@ -94,6 +91,22 @@ public class MetaEntityHelper {
 		    a.getType(), a.getSqlType(), a.jdbcAttributeMapper);
 	    list.add(queryParameter);
 	}
+
+	return list;
+    }
+
+    public List<QueryParameter> convertAVToQP(Pk pk, Object value) throws Exception {
+	List<QueryParameter> list = new ArrayList<>();
+	if (pk.isEmbedded()) {
+	    ModelValueArray<MetaAttribute> attributeValueArray = new ModelValueArray();
+	    expand(pk, value, attributeValueArray);
+	    list.addAll(convertAVToQP(attributeValueArray));
+	    return list;
+	}
+
+	QueryParameter queryParameter = new QueryParameter(pk.getAttribute().getColumnName(), value,
+		pk.getType(), pk.getAttribute().getSqlType(), pk.getAttribute().jdbcAttributeMapper);
+	list.add(queryParameter);
 
 	return list;
     }
@@ -108,7 +121,7 @@ public class MetaEntityHelper {
     }
 
     public List<QueryParameter> createJoinColumnAVSToQP(List<JoinColumnAttribute> joinColumnAttributes,
-	    MetaAttribute owningId, Object joinTableForeignKey) throws Exception {
+	    Pk owningId, Object joinTableForeignKey) throws Exception {
 	ModelValueArray<MetaAttribute> attributeValueArray = new ModelValueArray<>();
 	expand(owningId, joinTableForeignKey, attributeValueArray);
 	int index = -1;
@@ -126,7 +139,9 @@ public class MetaEntityHelper {
     }
 
     public List<FetchParameter> convertAllAttributes(MetaEntity entity) {
+	LOG.debug("convertAllAttributes: entity=" + entity);
 	List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
+	LOG.debug("convertAllAttributes: expandedAttributes=" + expandedAttributes);
 	List<FetchParameter> fetchColumnNameValues = convertAttributes(expandedAttributes);
 	fetchColumnNameValues.addAll(toFetchParameter(entity.expandJoinColumnAttributes()));
 	return fetchColumnNameValues;
@@ -202,15 +217,20 @@ public class MetaEntityHelper {
 
     public void expand(MetaAttribute attribute, Object value,
 	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
-	if (!attribute.isEmbedded()) {
-	    if (attribute.getRelationship() != null)
-		return;
+	if (attribute.getRelationship() != null)
+	    return;
 
-	    attributeValueArray.add(attribute, value);
+	attributeValueArray.add(attribute, value);
+    }
+
+    public void expand(Pk attribute, Object value,
+	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	if (!attribute.isEmbedded()) {
+	    attributeValueArray.add(attribute.getAttribute(), value);
 	    return;
 	}
 
-	List<MetaAttribute> attributes = attribute.getEmbeddableMetaEntity().getAttributes();
+	List<MetaAttribute> attributes = attribute.getAttributes();
 	for (MetaAttribute a : attributes) {
 	    Object v = a.getReadMethod().invoke(value);
 	    expand(a, v, attributeValueArray);

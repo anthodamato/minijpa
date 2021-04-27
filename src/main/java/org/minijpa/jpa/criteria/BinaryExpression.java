@@ -80,11 +80,11 @@ public class BinaryExpression<N extends Number> implements Expression<N>, Binary
 
     @Override
     public Class<? extends N> getJavaType() {
-	if (x.isPresent() && x.get() instanceof MiniPath)
-	    return ((MiniPath) x.get()).getJavaType();
+	if (x.isPresent() && x.get() instanceof AttributePath)
+	    return ((AttributePath) x.get()).getJavaType();
 
-	if (y.isPresent() && y.get() instanceof MiniPath)
-	    return ((MiniPath) y.get()).getJavaType();
+	if (y.isPresent() && y.get() instanceof AttributePath)
+	    return ((AttributePath) y.get()).getJavaType();
 
 	return null;
     }

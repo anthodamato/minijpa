@@ -39,7 +39,7 @@ public class OneToOneHelper {
     }
 
     private String createDefaultJoinColumn(MetaAttribute owningAttribute, MetaEntity toEntity) {
-	return owningAttribute.getName() + "_" + toEntity.getId().getColumnName();
+	return owningAttribute.getName() + "_" + toEntity.getId().getAttribute().getColumnName();
     }
 
     public OneToOneRelationship finalizeRelationship(OneToOneRelationship oneToOneRelationship, MetaAttribute a,
@@ -52,11 +52,12 @@ public class OneToOneHelper {
 		builder.withJoinColumn(joinColumnName);
 	    }
 
-	    JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper().mapJdbcAttribute(toEntity.getId().getType(), toEntity.getId().getSqlType());
+	    JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper()
+		    .mapJdbcAttribute(toEntity.getId().getType(), toEntity.getId().getAttribute().getSqlType());
 	    JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
 		    .withColumnName(joinColumnName).withType(toEntity.getId().getType())
-		    .withReadWriteDbType(toEntity.getId().getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-		    .withSqlType(toEntity.getId().getSqlType()).withForeignKeyAttribute(a).withJdbcAttributeMapper(jdbcAttributeMapper).build();
+		    .withReadWriteDbType(toEntity.getId().getAttribute().getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
+		    .withSqlType(toEntity.getId().getAttribute().getSqlType()).withForeignKeyAttribute(a).withJdbcAttributeMapper(jdbcAttributeMapper).build();
 	    entity.getJoinColumnAttributes().add(joinColumnAttribute);
 	    builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
 	} else {

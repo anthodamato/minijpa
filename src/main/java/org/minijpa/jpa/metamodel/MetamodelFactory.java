@@ -19,6 +19,7 @@ import javax.persistence.metamodel.Type.PersistenceType;
 
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.Pk;
 
 public class MetamodelFactory {
 //	private Logger LOG = LoggerFactory.getLogger(MetamodelFactory.class);
@@ -67,7 +68,7 @@ public class MetamodelFactory {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private EntityType<?> buildEntityType(MetaEntity entity) throws Exception {
 	EntityType<?> metamodelEntityType = new MetamodelEntityType<>();
-	MetaAttribute id = entity.getId();
+	Pk id = entity.getId();
 	Field fieldId = findField(entity.getEntityClass(), id.getName());
 	SingularAttribute<?, ?> idSingularAttribute = new IdSingularAttribute(id.getName(), null, id.getType(), fieldId,
 		id.getType(), new MetamodelType(PersistenceType.BASIC, id.getType()));
@@ -101,7 +102,7 @@ public class MetamodelFactory {
     private Set<SingularAttribute> buildSingularAttributes(MetaEntity entity) {
 	Set<SingularAttribute> singularAttributes = new HashSet<>();
 	for (MetaAttribute attribute : entity.getAttributes()) {
-	    if (!attribute.isCollection() && !attribute.isEmbedded()) {
+	    if (!attribute.isCollection()) {
 		singularAttributes.add(buildSingularAttribute(attribute));
 	    }
 	}
@@ -114,11 +115,7 @@ public class MetamodelFactory {
 	Set<MetaEntity> incEmbeddables = new HashSet<>();
 	for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
 	    MetaEntity metaEntity = entry.getValue();
-	    Set<MetaEntity> embeddables = new HashSet<>();
-	    metaEntity.findEmbeddables(embeddables);
-//	    if (embeddables == null)
-//		continue;
-
+	    Set<MetaEntity> embeddables = metaEntity.findEmbeddables();
 	    for (MetaEntity embeddable : embeddables) {
 		if (!incEmbeddables.contains(embeddable)) {
 		    embeddableTypes.add(buildEmbeddableType(embeddable));
@@ -166,7 +163,7 @@ public class MetamodelFactory {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private MappedSuperclassType<?> buildMappedSuperclassType(MetaEntity entity) throws Exception {
 	MappedSuperclassType<?> metamodelEntityType = new MetamodelMappedSuperclassType<>();
-	MetaAttribute id = entity.getId();
+	Pk id = entity.getId();
 
 	SingularAttribute<?, ?> idSingularAttribute = new IdSingularAttribute(id.getName(), null, id.getType(),
 		entity.getEntityClass().getDeclaredField(id.getName()), id.getType(),

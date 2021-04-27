@@ -96,15 +96,15 @@ public final class EntityDelegate implements EntityListener {
 	    return null;
 	}
 
-	public MetaAttribute findEmbeddedAttribute(String className) {
-	    for (PersistenceUnitContext entityContext : entityContexts) {
-		MetaAttribute attribute = entityContext.findEmbeddedAttribute(className);
-		if (attribute != null)
-		    return attribute;
-	    }
-
-	    return null;
-	}
+//	public MetaAttribute findEmbeddedAttribute(String className) {
+//	    for (PersistenceUnitContext entityContext : entityContexts) {
+//		MetaAttribute attribute = entityContext.findEmbeddedAttribute(className);
+//		if (attribute != null)
+//		    return attribute;
+//	    }
+//
+//	    return null;
+//	}
 
 	public Optional<PersistenceUnitContext> getEntityContext(String persistenceUnitName) {
 	    return entityContexts.stream().filter(e -> e.getPersistenceUnitName().equals(persistenceUnitName))

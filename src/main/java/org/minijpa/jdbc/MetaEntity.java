@@ -20,6 +20,8 @@ package org.minijpa.jdbc;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -27,45 +29,32 @@ import java.util.stream.Collectors;
 
 public class MetaEntity {
 
-    private final Class<?> entityClass;
-    private final String name;
-    private final String tableName;
-    private final String alias;
-    private final MetaAttribute id;
+    private Class<?> entityClass;
+    private String name;
+    private String tableName;
+    private String alias;
+    private Pk id;
     /**
-     * Collection of basic, relationship and embeddable attributes.
+     * Collection of basic and relationship attributes.
      */
-    private final List<MetaAttribute> attributes;
+    private List<MetaAttribute> attributes;
+    private List<MetaEntity> embeddables = Collections.emptyList();
+    private Method readMethod; // used for embeddables
+    private Method writeMethod; // used for embeddables
+    private String path; // used for embeddables
+    private boolean embeddedId;
     private final List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
     // used to build the metamodel. The 'attributes' field contains the
     // MappedSuperclass attributes
-    private final MetaEntity mappedSuperclassEntity;
-    private final Method modificationAttributeReadMethod;
-    private final Optional<Method> lazyLoadedAttributeReadMethod;
-    private final Optional<Method> lockTypeAttributeReadMethod;
-    private final Optional<Method> lockTypeAttributeWriteMethod;
-    private final Optional<Method> entityStatusAttributeReadMethod;
-    private final Optional<Method> entityStatusAttributeWriteMethod;
+    private MetaEntity mappedSuperclassEntity;
+    private Method modificationAttributeReadMethod;
+    private Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
+    private Optional<Method> lockTypeAttributeReadMethod = Optional.empty();
+    private Optional<Method> lockTypeAttributeWriteMethod = Optional.empty();
+    private Optional<Method> entityStatusAttributeReadMethod = Optional.empty();
+    private Optional<Method> entityStatusAttributeWriteMethod = Optional.empty();
 
-    public MetaEntity(Class<?> entityClass, String name, String tableName, String alias, MetaAttribute id,
-	    List<MetaAttribute> attributes, MetaEntity mappedSuperclassEntity,
-	    Method modificationAttributeReadMethod, Optional<Method> lazyLoadedAttributeReadMethod,
-	    Optional<Method> lockTypeAttributeReadMethod, Optional<Method> lockTypeAttributeWriteMethod,
-	    Optional<Method> entityStatusAttributeReadMethod, Optional<Method> entityStatusAttributeWriteMethod) {
-	super();
-	this.entityClass = entityClass;
-	this.name = name;
-	this.tableName = tableName;
-	this.alias = alias;
-	this.id = id;
-	this.attributes = attributes;
-	this.mappedSuperclassEntity = mappedSuperclassEntity;
-	this.modificationAttributeReadMethod = modificationAttributeReadMethod;
-	this.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
-	this.lockTypeAttributeReadMethod = lockTypeAttributeReadMethod;
-	this.lockTypeAttributeWriteMethod = lockTypeAttributeWriteMethod;
-	this.entityStatusAttributeReadMethod = entityStatusAttributeReadMethod;
-	this.entityStatusAttributeWriteMethod = entityStatusAttributeWriteMethod;
+    private MetaEntity() {
     }
 
     public Class<?> getEntityClass() {
@@ -84,12 +73,32 @@ public class MetaEntity {
 	return alias;
     }
 
-    public MetaAttribute getId() {
+    public Pk getId() {
 	return id;
+    }
+
+    public boolean isEmbeddedId() {
+	return embeddedId;
     }
 
     public List<MetaAttribute> getAttributes() {
 	return attributes;
+    }
+
+    public List<MetaEntity> getEmbeddables() {
+	return embeddables;
+    }
+
+    public Method getReadMethod() {
+	return readMethod;
+    }
+
+    public Method getWriteMethod() {
+	return writeMethod;
+    }
+
+    public String getPath() {
+	return path;
     }
 
     public List<JoinColumnAttribute> getJoinColumnAttributes() {
@@ -130,9 +139,6 @@ public class MetaEntity {
 		return attribute;
 	}
 
-	if (id.getName().equals(name))
-	    return id;
-
 	return null;
     }
 
@@ -141,30 +147,47 @@ public class MetaEntity {
 	return list.stream().filter(a -> a.getName().equals(name)).findFirst();
     }
 
+    public Optional<MetaEntity> getEmbeddable(String name) {
+	return embeddables.stream().filter(e -> e.name.equals(name)).findFirst();
+    }
+
     public List<MetaAttribute> expandAttributes() {
 	List<MetaAttribute> list = new ArrayList<>();
-	for (MetaAttribute a : attributes) {
+	attributes.forEach(a -> {
 	    list.addAll(a.expand());
-	}
+	});
 
 	return list;
     }
 
     public List<MetaAttribute> expandAllAttributes() {
 	List<MetaAttribute> list = new ArrayList<>();
-	list.addAll(id.expand());
-	for (MetaAttribute a : attributes) {
+	if (id != null)
+	    list.addAll(id.getAttributes());
+
+	attributes.forEach(a -> {
 	    list.addAll(a.expand());
-	}
+	});
+
+	list.addAll(expandEmbeddables());
+
+	return list;
+    }
+
+    public List<MetaAttribute> expandEmbeddables() {
+	List<MetaAttribute> list = new ArrayList<>();
+
+	embeddables.forEach(e -> {
+	    list.addAll(e.expandAllAttributes());
+	});
 
 	return list;
     }
 
     public List<JoinColumnAttribute> expandJoinColumnAttributes() {
 	List<JoinColumnAttribute> jcas = new ArrayList<>(joinColumnAttributes);
-	for (MetaAttribute attribute : attributes) {
-	    if (attribute.isEmbedded())
-		jcas.addAll(attribute.getEmbeddableMetaEntity().expandJoinColumnAttributes());
+	for (MetaEntity metaEntity : embeddables) {
+	    jcas.addAll(metaEntity.expandJoinColumnAttributes());
 	}
 
 	return jcas;
@@ -183,12 +206,6 @@ public class MetaEntity {
 	return attributes.stream().filter(a -> a.getRelationship() != null).collect(Collectors.toList());
     }
 
-    public boolean isEmbeddedAttribute(String name) {
-	Optional<MetaAttribute> optional = attributes.stream().filter(a -> a.getName().equals(name) && a.isEmbedded())
-		.findFirst();
-	return optional.isPresent();
-    }
-
     @Override
     public String toString() {
 	return super.toString() + " class: " + entityClass.getName() + "; tableName: " + tableName;
@@ -198,15 +215,17 @@ public class MetaEntity {
 	return attributes.stream().filter(a -> !a.isNullable()).collect(Collectors.toList());
     }
 
-    public void findEmbeddables(Set<MetaEntity> embeddables) {
-	for (MetaAttribute enhAttribute : attributes) {
-	    if (enhAttribute.isEmbedded()) {
-		MetaEntity metaEntity = enhAttribute.getEmbeddableMetaEntity();
-		embeddables.add(metaEntity);
-
-		metaEntity.findEmbeddables(embeddables);
-	    }
+    private void findEmbeddables(Set<MetaEntity> embeddableSet) {
+	for (MetaEntity metaEntity : embeddables) {
+	    embeddableSet.add(metaEntity);
+	    metaEntity.findEmbeddables(embeddableSet);
 	}
+    }
+
+    public Set<MetaEntity> findEmbeddables() {
+	Set<MetaEntity> embeddableSet = new HashSet<>();
+	findEmbeddables(embeddableSet);
+	return embeddableSet;
     }
 
     public boolean hasVersionAttribute() {
@@ -215,5 +234,140 @@ public class MetaEntity {
 
     public Optional<MetaAttribute> getVersionAttribute() {
 	return attributes.stream().filter(a -> a.isVersion() && a.isBasic() && !a.isId()).findFirst();
+    }
+
+    public static class Builder {
+
+	private Class<?> entityClass;
+	private String name;
+	private String tableName;
+	private String alias;
+	private Pk id;
+	private boolean embeddedId;
+	private List<MetaAttribute> attributes;
+	private List<MetaEntity> embeddables;
+	private Method readMethod; // used for embeddables
+	private Method writeMethod; // used for embeddables
+	private String path; // used for embeddables
+	private MetaEntity mappedSuperclassEntity;
+	private Method modificationAttributeReadMethod;
+	private Optional<Method> lazyLoadedAttributeReadMethod;
+	private Optional<Method> lockTypeAttributeReadMethod;
+	private Optional<Method> lockTypeAttributeWriteMethod;
+	private Optional<Method> entityStatusAttributeReadMethod;
+	private Optional<Method> entityStatusAttributeWriteMethod;
+
+	public Builder withEntityClass(Class<?> entityClass) {
+	    this.entityClass = entityClass;
+	    return this;
+	}
+
+	public Builder withName(String name) {
+	    this.name = name;
+	    return this;
+	}
+
+	public Builder withTableName(String tableName) {
+	    this.tableName = tableName;
+	    return this;
+	}
+
+	public Builder withAlias(String alias) {
+	    this.alias = alias;
+	    return this;
+	}
+
+	public Builder withId(Pk id) {
+	    this.id = id;
+	    return this;
+	}
+
+	public Builder isEmbeddedId(boolean id) {
+	    this.embeddedId = id;
+	    return this;
+	}
+
+	public Builder withAttributes(List<MetaAttribute> attributes) {
+	    this.attributes = attributes;
+	    return this;
+	}
+
+	public Builder withEmbeddables(List<MetaEntity> embeddables) {
+	    this.embeddables = embeddables;
+	    return this;
+	}
+
+	public Builder withReadMethod(Method method) {
+	    this.readMethod = method;
+	    return this;
+	}
+
+	public Builder withWriteMethod(Method method) {
+	    this.writeMethod = method;
+	    return this;
+	}
+
+	public Builder withPath(String path) {
+	    this.path = path;
+	    return this;
+	}
+
+	public Builder withMappedSuperclassEntity(MetaEntity mappedSuperclassEntity) {
+	    this.mappedSuperclassEntity = mappedSuperclassEntity;
+	    return this;
+	}
+
+	public Builder withModificationAttributeReadMethod(Method modificationAttributeReadMethod) {
+	    this.modificationAttributeReadMethod = modificationAttributeReadMethod;
+	    return this;
+	}
+
+	public Builder withLazyLoadedAttributeReadMethod(Optional<Method> lazyLoadedAttributeReadMethod) {
+	    this.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
+	    return this;
+	}
+
+	public Builder withLockTypeAttributeReadMethod(Optional<Method> lockTypeAttributeReadMethod) {
+	    this.lockTypeAttributeReadMethod = lockTypeAttributeReadMethod;
+	    return this;
+	}
+
+	public Builder withLockTypeAttributeWriteMethod(Optional<Method> lockTypeAttributeWriteMethod) {
+	    this.lockTypeAttributeWriteMethod = lockTypeAttributeWriteMethod;
+	    return this;
+	}
+
+	public Builder withEntityStatusAttributeReadMethod(Optional<Method> entityStatusAttributeReadMethod) {
+	    this.entityStatusAttributeReadMethod = entityStatusAttributeReadMethod;
+	    return this;
+	}
+
+	public Builder withEntityStatusAttributeWriteMethod(Optional<Method> entityStatusAttributeWriteMethod) {
+	    this.entityStatusAttributeWriteMethod = entityStatusAttributeWriteMethod;
+	    return this;
+	}
+
+	public MetaEntity build() {
+	    MetaEntity metaEntity = new MetaEntity();
+	    metaEntity.entityClass = entityClass;
+	    metaEntity.name = name;
+	    metaEntity.tableName = tableName;
+	    metaEntity.alias = alias;
+	    metaEntity.id = id;
+	    metaEntity.embeddedId = embeddedId;
+	    metaEntity.attributes = attributes;
+	    metaEntity.embeddables = embeddables;
+	    metaEntity.readMethod = readMethod;
+	    metaEntity.writeMethod = writeMethod;
+	    metaEntity.path = path;
+	    metaEntity.mappedSuperclassEntity = mappedSuperclassEntity;
+	    metaEntity.modificationAttributeReadMethod = modificationAttributeReadMethod;
+	    metaEntity.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
+	    metaEntity.lockTypeAttributeReadMethod = lockTypeAttributeReadMethod;
+	    metaEntity.lockTypeAttributeWriteMethod = lockTypeAttributeWriteMethod;
+	    metaEntity.entityStatusAttributeReadMethod = entityStatusAttributeReadMethod;
+	    metaEntity.entityStatusAttributeWriteMethod = entityStatusAttributeWriteMethod;
+	    return metaEntity;
+	}
     }
 }

@@ -33,6 +33,7 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
+import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
@@ -113,7 +114,7 @@ public class EntityWriterImpl implements EntityWriter {
 	metaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, attributeValueArray);
 	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attributeValueArray.getModels(),
 		idColumns);
-	attributeValueArray.add(entity.getId(), idValue);
+	attributeValueArray.add(entity.getId().getAttribute(), idValue);
 	if (metaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
 	    Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
 	    attributeValueArray.add(entity.getVersionAttribute().get(), currentVersionValue);
@@ -148,7 +149,7 @@ public class EntityWriterImpl implements EntityWriter {
 	    }
 	}
 
-	MetaAttribute id = entity.getId();
+	Pk id = entity.getId();
 //	LOG.info("persist: id.getPkGeneration()=" + id.getPkGeneration());
 	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
 //	LOG.info("Primary Key Generation Strategy: " + pkStrategy);

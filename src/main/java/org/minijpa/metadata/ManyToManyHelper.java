@@ -16,6 +16,7 @@ import javax.persistence.ManyToMany;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
@@ -81,7 +82,7 @@ public class ManyToManyHelper extends RelationshipHelper {
 
     private List<JoinColumnAttribute> createJoinColumnAttributes(MetaEntity entity,
 	    MetaAttribute toAttribute, DbConfiguration dbConfiguration) {
-	List<MetaAttribute> attributes = entity.getId().expand();
+	List<MetaAttribute> attributes = entity.getId().getAttributes();
 	List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
 	for (MetaAttribute a : attributes) {
 	    JoinColumnAttribute joinColumnAttribute = createJoinColumnAttribute(a, toAttribute, null, dbConfiguration);

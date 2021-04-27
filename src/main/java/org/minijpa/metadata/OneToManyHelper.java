@@ -72,7 +72,7 @@ public class OneToManyHelper extends RelationshipHelper {
 
     private List<JoinColumnAttribute> createJoinColumnTargetAttributes(MetaEntity entity,
 	    MetaAttribute relationshipAttribute, DbConfiguration dbConfiguration) {
-	List<MetaAttribute> attributes = entity.getId().expand();
+	List<MetaAttribute> attributes = entity.getId().getAttributes();
 	List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
 	for (MetaAttribute a : attributes) {
 	    JoinColumnAttribute joinColumnAttribute = createJoinColumnTargetAttribute(a, relationshipAttribute, null, dbConfiguration);
@@ -116,8 +116,8 @@ public class OneToManyHelper extends RelationshipHelper {
 		// used
 		JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
 			.withColumnName(oneToManyRelationship.getJoinColumn()).withType(entity.getId().getType())
-			.withReadWriteDbType(entity.getId().getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-			.withSqlType(entity.getId().getSqlType()).withForeignKeyAttribute(entity.getId())
+			.withReadWriteDbType(entity.getId().getAttribute().getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
+			.withSqlType(entity.getId().getAttribute().getSqlType()).withForeignKeyAttribute(entity.getId().getAttribute())
 			.build();
 		toEntity.getJoinColumnAttributes().add(joinColumnAttribute);
 	    }

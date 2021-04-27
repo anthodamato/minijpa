@@ -32,7 +32,7 @@ public abstract class RelationshipHelper {
     }
 
     protected List<JoinColumnAttribute> createUnidirectionalJoinColumnAttributes(MetaEntity entity, DbConfiguration dbConfiguration) {
-	List<MetaAttribute> attributes = entity.getId().expand();
+	List<MetaAttribute> attributes = entity.getId().getAttributes();
 	List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
 	for (MetaAttribute a : attributes) {
 	    JoinColumnAttribute joinColumnAttribute = createUnidirectionalJoinColumnAttribute(entity, a, null, dbConfiguration);

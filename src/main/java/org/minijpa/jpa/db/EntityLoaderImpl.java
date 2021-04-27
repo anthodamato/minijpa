@@ -55,12 +55,12 @@ public class EntityLoaderImpl implements EntityLoader {
 	if (entityInstance != null)
 	    return entityInstance;
 
-	ModelValueArray<FetchParameter> attributeValueArray = entityQueryLevel.run(metaEntity, primaryKey, lockType);
-	if (attributeValueArray == null)
+	ModelValueArray<FetchParameter> modelValueArray = entityQueryLevel.run(metaEntity, primaryKey, lockType);
+	if (modelValueArray == null)
 	    return null;
 
 	entityInstance = entityInstanceBuilder.build(metaEntity, primaryKey);
-	buildEntity(entityInstance, attributeValueArray, metaEntity, primaryKey, lockType);
+	buildEntity(entityInstance, modelValueArray, metaEntity, primaryKey, lockType);
 	return entityInstance;
     }
 
@@ -142,6 +142,7 @@ public class EntityLoaderImpl implements EntityLoader {
     @Override
     public Object build(ModelValueArray<FetchParameter> modelValueArray,
 	    MetaEntity entity, LockType lockType) throws Exception {
+	LOG.debug("build: entity=" + entity);
 	Object primaryKey = AttributeUtil.buildPK(entity, modelValueArray);
 	LOG.debug("build: primaryKey=" + primaryKey);
 	Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
@@ -161,24 +162,24 @@ public class EntityLoaderImpl implements EntityLoader {
 	    LockType lockType) throws Exception {
 	// basic attributes and embeddables
 	for (MetaAttribute attribute : attributes) {
-	    if (attribute.isEmbedded()) {
-		Object parent = attribute.getType().getDeclaredConstructor().newInstance();
-		buildAttributeValues(parent, attribute.getEmbeddableMetaEntity(),
-			attribute.expand(), modelValueArray, lockType);
-		entityInstanceBuilder.writeMetaAttributeValue(parentInstance,
-			parentInstance.getClass(), attribute, parent, metaEntity);
+	    if (attribute.getRelationship() != null) {
+		loadJoinTableRelationships(parentInstance, metaEntity, attribute, lockType);
 	    } else {
-		if (attribute.getRelationship() != null) {
-		    loadJoinTableRelationships(parentInstance, metaEntity, attribute, lockType);
-		} else {
-		    int index = modelValueArray.indexOfModel(AttributeUtil.fetchParameterToMetaAttribute, attribute);
-		    if (index == -1)
-			throw new IllegalArgumentException("Column '" + attribute.getColumnName() + "' is missing");
+		int index = modelValueArray.indexOfModel(AttributeUtil.fetchParameterToMetaAttribute, attribute);
+		if (index == -1)
+		    throw new IllegalArgumentException("Column '" + attribute.getColumnName() + "' is missing");
 
-		    entityInstanceBuilder.writeMetaAttributeValue(parentInstance,
-			    parentInstance.getClass(), attribute, modelValueArray.getValue(index), metaEntity);
-		}
+		entityInstanceBuilder.writeMetaAttributeValue(parentInstance,
+			parentInstance.getClass(), attribute, modelValueArray.getValue(index), metaEntity);
 	    }
+	}
+
+	for (MetaEntity embeddable : metaEntity.getEmbeddables()) {
+	    Object parent = embeddable.getEntityClass().getDeclaredConstructor().newInstance();
+	    buildAttributeValues(parent, embeddable,
+		    embeddable.getAttributes(), modelValueArray, lockType);
+	    entityInstanceBuilder.writeEmbeddableValue(parentInstance,
+		    parentInstance.getClass(), embeddable, parent, metaEntity);
 	}
 
 	// join columns
@@ -256,12 +257,8 @@ public class EntityLoaderImpl implements EntityLoader {
 	Object foreignKeyInstance = findById(e, foreignKeyValue, lockType);
 	LOG.debug("loadRelationshipByForeignKey: foreignKeyInstance=" + foreignKeyInstance);
 	if (foreignKeyInstance != null) {
-	    Object parent = AttributeUtil.findParentInstance(parentInstance, entity.getAttributes(), foreignKeyAttribute, entityInstanceBuilder);
-	    MetaEntity parentEntity = AttributeUtil.findParentEntity(parent.getClass().getName(), entity);
-//	    LOG.debug("loadRelationshipByForeignKey: parent=" + parent);
-//	    LOG.debug("loadRelationshipByForeignKey: e=" + e);
-	    entityInstanceBuilder.writeMetaAttributeValue(parent, parent.getClass(),
-		    foreignKeyAttribute, foreignKeyInstance, parentEntity);
+	    entityInstanceBuilder.writeAttributeValue(entity, parentInstance,
+		    foreignKeyAttribute, foreignKeyInstance);
 	}
 
 	return foreignKeyInstance;

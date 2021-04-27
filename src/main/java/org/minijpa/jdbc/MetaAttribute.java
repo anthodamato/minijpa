@@ -34,21 +34,18 @@ public class MetaAttribute extends AbstractAttribute {
     private Method readMethod;
     private Method writeMethod;
     private boolean id;
-    private PkGeneration pkGeneration;
-    private boolean embedded;
     private Relationship relationship;
     private boolean collection = false;
     private Field javaMember;
     // calculated fields
     private List<MetaAttribute> expandedAttributeList;
     private boolean nullable = true;
-    private MetaEntity embeddableMetaEntity;
     // it'a a version attribute
     private boolean version = false;
     // it's a basic attribute
     private boolean basic;
     // The attribute path. If this is a basic attribute the path is the attribute name.
-    // If this is an embeddable the path is the embeddable path. For example 'jobInfo.jobDescription'.
+    // If the parent is an embeddable the path is the embeddable path. For example 'jobInfo.jobDescription'.
     private String path;
 
     public String getName() {
@@ -65,14 +62,6 @@ public class MetaAttribute extends AbstractAttribute {
 
     public boolean isId() {
 	return id;
-    }
-
-    public PkGeneration getPkGeneration() {
-	return pkGeneration;
-    }
-
-    public boolean isEmbedded() {
-	return embedded;
     }
 
     public Relationship getRelationship() {
@@ -95,10 +84,6 @@ public class MetaAttribute extends AbstractAttribute {
 	return nullable;
     }
 
-    public MetaEntity getEmbeddableMetaEntity() {
-	return embeddableMetaEntity;
-    }
-
     public boolean isVersion() {
 	return version;
     }
@@ -119,23 +104,12 @@ public class MetaAttribute extends AbstractAttribute {
 	return path;
     }
 
-//    protected boolean expandRelationship() {
-//	if (relationship == null)
-//	    return true;
-//
-//	return false;
-//    }
     public List<MetaAttribute> expand() {
 	if (expandedAttributeList != null)
 	    return expandedAttributeList;
 
 	List<MetaAttribute> list = new ArrayList<>();
-//		LOG.info("expandAttribute: embedded=" + embedded + "; name=" + name);
-	if (embedded) {
-	    for (MetaAttribute a : embeddableMetaEntity.getAttributes()) {
-		list.addAll(a.expand());
-	    }
-	} else if (relationship == null)
+	if (relationship == null)
 	    list.add(this);
 
 	expandedAttributeList = Collections.unmodifiableList(list);
@@ -158,7 +132,7 @@ public class MetaAttribute extends AbstractAttribute {
 
     @Override
     public String toString() {
-	return super.toString() + "; (Name=" + name + "; columnName=" + columnName + "; embedded=" + embedded + ")";
+	return super.toString() + "; (Name=" + name + "; columnName=" + columnName + ")";
     }
 
     public static class Builder {
@@ -172,15 +146,12 @@ public class MetaAttribute extends AbstractAttribute {
 	private Method writeMethod;
 	private boolean id;
 	private Integer sqlType;
-	private PkGeneration pkGeneration;
-	private boolean embedded;
 	private Relationship relationship;
 	private boolean collection = false;
 	private Field javaMember;
 	private JdbcAttributeMapper jdbcAttributeMapper;
 	private Class<?> collectionImplementationClass;
 	private boolean nullable = true;
-	private MetaEntity embeddableMetaEntity;
 	private boolean version = false;
 	private boolean basic;
 	private String path;
@@ -231,16 +202,6 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
-	public Builder withPkGeneration(PkGeneration generatedValue) {
-	    this.pkGeneration = generatedValue;
-	    return this;
-	}
-
-	public Builder isEmbedded(boolean embedded) {
-	    this.embedded = embedded;
-	    return this;
-	}
-
 	public Builder withRelationship(Relationship relationship) {
 	    this.relationship = relationship;
 	    return this;
@@ -271,11 +232,6 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
-	public Builder withEmbeddableMetaEntity(MetaEntity embeddableMetaEntity) {
-	    this.embeddableMetaEntity = embeddableMetaEntity;
-	    return this;
-	}
-
 	public Builder isVersion(boolean version) {
 	    this.version = version;
 	    return this;
@@ -302,15 +258,12 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.writeMethod = writeMethod;
 	    attribute.id = id;
 	    attribute.sqlType = sqlType;
-	    attribute.pkGeneration = pkGeneration;
-	    attribute.embedded = embedded;
 	    attribute.relationship = relationship;
 	    attribute.collection = collection;
 	    attribute.javaMember = javaMember;
 	    attribute.jdbcAttributeMapper = jdbcAttributeMapper;
 	    attribute.collectionImplementationClass = collectionImplementationClass;
 	    attribute.nullable = nullable;
-	    attribute.embeddableMetaEntity = embeddableMetaEntity;
 	    attribute.version = version;
 	    attribute.basic = basic;
 	    attribute.path = path;

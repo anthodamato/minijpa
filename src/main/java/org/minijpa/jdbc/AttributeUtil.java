@@ -29,8 +29,8 @@ import java.time.OffsetTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
-import org.minijpa.jdbc.db.EntityInstanceBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,32 +43,28 @@ public class AttributeUtil {
     public static final Function<FetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f.getAttribute();
 
     public static Object buildPK(MetaEntity entity, ModelValueArray<FetchParameter> modelValueArray) throws Exception {
-	MetaAttribute id = entity.getId();
+	Pk id = entity.getId();
 	if (id.isEmbedded()) {
 	    Object pkObject = id.getType().getConstructor().newInstance();
-	    buildPK(entity, modelValueArray, id.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
+	    buildPK(entity, modelValueArray, id.getAttributes(), pkObject);
 	    return pkObject;
 	}
 
-	int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, id);
+	int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, id.getAttribute());
 	if (index == -1)
-	    throw new IllegalArgumentException("Column '" + id.getColumnName() + "' is missing");
+	    throw new IllegalArgumentException("Column '" + id.getAttribute().getColumnName() + "' is missing");
 
 	return modelValueArray.getValue(index);
     }
 
     private static void buildPK(MetaEntity entity, ModelValueArray<FetchParameter> modelValueArray,
-	    List<MetaAttribute> attributes, MetaAttribute id, Object pkObject) throws Exception {
+	    List<MetaAttribute> attributes, Object pkObject) throws Exception {
 	for (MetaAttribute a : attributes) {
-	    if (a.isEmbedded())
-		buildPK(entity, modelValueArray, a.getEmbeddableMetaEntity().getAttributes(), id, pkObject);
-	    else {
-		int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, a);
-		if (index == -1)
-		    throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
+	    int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, a);
+	    if (index == -1)
+		throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
 
-		a.getWriteMethod().invoke(pkObject, modelValueArray.getValue(index));
-	    }
+	    a.getWriteMethod().invoke(pkObject, modelValueArray.getValue(index));
 	}
     }
 
@@ -95,74 +91,71 @@ public class AttributeUtil {
 	return entity.getId().getReadMethod().invoke(entityInstance);
     }
 
-    public static Object getIdValue(MetaAttribute id, Object entityInstance) throws Exception {
+    public static Object getIdValue(Pk id, Object entityInstance) throws Exception {
 	return id.getReadMethod().invoke(entityInstance);
     }
 
-    /**
-     * Finds the parent instance the 'attribute' belongs to. If the 'attribute' is one of the 'entity' attributes it
-     * will return the 'parentInstance'.If the 'attribute' is inside an embeddable it will return the embeddable
-     * instance.
-     *
-     * @param parentInstance
-     * @param attributes
-     * @param attribute
-     * @param entityInstanceBuilder
-     * @return
-     * @throws java.lang.Exception
-     */
-    public static Object findParentInstance(Object parentInstance, List<MetaAttribute> attributes,
-	    MetaAttribute attribute, EntityInstanceBuilder entityInstanceBuilder) throws Exception {
-	for (MetaAttribute a : attributes) {
-	    if (a == attribute)
-		return parentInstance;
-	}
-
-	for (MetaAttribute a : attributes) {
-	    if (!a.isEmbedded())
-		continue;
-
-	    MetaAttribute emb = a.getEmbeddableMetaEntity().getAttribute(attribute.getName());
-	    if (emb != null)
-		return entityInstanceBuilder.getAttributeValue(parentInstance, a);
-
-	    Object p = entityInstanceBuilder.getAttributeValue(parentInstance, a);
-	    Object parent = findParentInstance(p, a.getEmbeddableMetaEntity().getAttributes(),
-		    attribute, entityInstanceBuilder);
-	    if (parent != null)
-		return parent;
-	}
-
-	return null;
-    }
-
-    /**
-     * Finds the parent entity over the parentEntity entity tree. It loops over the embeddables.
-     *
-     * @param entityClassName
-     * @param parentEntity
-     * @return
-     * @throws Exception
-     */
-    public static MetaEntity findParentEntity(String entityClassName, MetaEntity parentEntity) throws Exception {
-	if (parentEntity.getEntityClass().getName().equals(entityClassName))
-	    return parentEntity;
-
-	for (MetaAttribute a : parentEntity.getAttributes()) {
-	    if (!a.isEmbedded())
-		continue;
-
-	    if (a.getEmbeddableMetaEntity().getEntityClass().getName().equals(entityClassName))
-		return a.getEmbeddableMetaEntity();
-
-	    MetaEntity entity = findParentEntity(entityClassName, a.getEmbeddableMetaEntity());
-	    if (entity != null)
-		return entity;
-	}
-
-	return null;
-    }
-
+//    /**
+//     * Finds the parent instance the 'attribute' belongs to. If the 'attribute' is one of the 'entity' attributes it
+//     * will return the 'parentInstance'. If the 'attribute' is inside an embeddable it will return the embeddable
+//     * instance.
+//     *
+//     * @param parentInstance
+//     * @param entity
+//     * @param attribute
+//     * @param entityInstanceBuilder
+//     * @return
+//     * @throws java.lang.Exception
+//     */
+//    public static Object findParentInstance(Object parentInstance, MetaEntity entity,
+//	    MetaAttribute attribute, EntityInstanceBuilder entityInstanceBuilder) throws Exception {
+//	LOG.debug("findParentInstance: attribute.getName()=" + attribute.getName());
+//	LOG.debug("findParentInstance: parentInstance=" + parentInstance);
+//	for (MetaAttribute a : entity.getAttributes()) {
+//	    if (a == attribute)
+//		return parentInstance;
+//	}
+//
+//	for (MetaEntity embeddable : entity.getEmbeddables()) {
+//	    LOG.debug("findParentInstance: embeddable=" + embeddable);
+//	    MetaAttribute emb = embeddable.getAttribute(attribute.getName());
+//	    LOG.debug("findParentInstance: emb=" + emb);
+//	    if (emb != null)
+//		return entityInstanceBuilder.getEmbeddableValue(parentInstance, embeddable);
+//
+//	    Object p = entityInstanceBuilder.getEmbeddableValue(parentInstance, embeddable);
+//	    Object parent = findParentInstance(p, embeddable,
+//		    attribute, entityInstanceBuilder);
+//	    if (parent != null)
+//		return parent;
+//	}
+//
+//	return null;
+//    }
+//
+//    /**
+//     * Finds the parent entity over the parentEntity entity tree. It loops over the embeddables.
+//     *
+//     * @param entityClassName
+//     * @param parentEntity
+//     * @return
+//     * @throws Exception
+//     */
+//    public static MetaEntity findParentEntity(String entityClassName, MetaEntity parentEntity) throws Exception {
+//	if (parentEntity.getEntityClass().getName().equals(entityClassName))
+//	    return parentEntity;
+//
+//	for (MetaEntity embeddable : parentEntity.getEmbeddables()) {
+//	    if (embeddable.getEntityClass().getName().equals(entityClassName))
+//		return embeddable;
+//
+//	    MetaEntity entity = findParentEntity(entityClassName, embeddable);
+//	    if (entity != null)
+//		return entity;
+//	}
+//
+//	return null;
+//    }
     public static MetaAttribute findAttributeFromPath(String path, MetaEntity toEntity) {
 	String[] ss = path.split("\\.");
 	if (ss.length == 0)
@@ -171,25 +164,29 @@ public class AttributeUtil {
 	if (ss.length == 1)
 	    return toEntity.getAttribute(path);
 
-	MetaAttribute a = toEntity.getAttribute(ss[0]);
+	Optional<MetaEntity> optional = toEntity.getEmbeddable(ss[0]);
+	if (optional.isEmpty())
+	    return null;
+
 	// it's an embedded
-	MetaAttribute last = a;
-	MetaAttribute tmp = null;
+	MetaEntity embeddable = optional.get();
 	for (int i = 1; i < ss.length; ++i) {
-	    List<MetaAttribute> attributes = last.getEmbeddableMetaEntity().getAttributes();
-	    tmp = null;
-	    for (MetaAttribute attribute : attributes) {
-		if (attribute.getName().equals(ss[i]))
-		    tmp = attribute;
-	    }
+	    Optional<MetaEntity> opt = embeddable.getEmbeddable(ss[i]);
+	    if (opt.isPresent()) {
+		embeddable = opt.get();
+	    } else {
+		MetaAttribute attribute = embeddable.getAttribute(ss[i]);
+		if (attribute == null)
+		    return null;
 
-	    if (tmp == null)
+		if (i == ss.length - 1)
+		    return attribute;
+
 		return null;
-
-	    last = tmp;
+	    }
 	}
 
-	return last;
+	return null;
     }
 
     public static boolean isBasicAttribute(Class<?> c) {

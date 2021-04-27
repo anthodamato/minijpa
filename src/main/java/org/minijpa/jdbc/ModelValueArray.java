@@ -46,6 +46,12 @@ public class ModelValueArray<T> {
 	values.add(value);
     }
 
+    public void add(ModelValueArray<T> modelValueArray) {
+	for (int i = 0; i < modelValueArray.size(); ++i) {
+	    add(modelValueArray.getModel(i), modelValueArray.getValue(i));
+	}
+    }
+
     public List<T> getModels() {
 	return models;
     }
