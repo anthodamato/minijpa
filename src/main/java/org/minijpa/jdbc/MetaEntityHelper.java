@@ -124,11 +124,10 @@ public class MetaEntityHelper {
 	    Pk owningId, Object joinTableForeignKey) throws Exception {
 	ModelValueArray<MetaAttribute> attributeValueArray = new ModelValueArray<>();
 	expand(owningId, joinTableForeignKey, attributeValueArray);
-	int index = -1;
 	List<QueryParameter> columnNameValues = new ArrayList<>();
 	for (int i = 0; i < attributeValueArray.size(); ++i) {
 	    MetaAttribute attribute = attributeValueArray.getModel(i);
-	    index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, attribute);
+	    int index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, attribute);
 	    MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
 	    QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(), attributeValueArray.getValue(i),
 		    metaAttribute.getType(), metaAttribute.getSqlType(), metaAttribute.jdbcAttributeMapper);

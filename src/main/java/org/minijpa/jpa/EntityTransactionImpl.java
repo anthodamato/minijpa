@@ -53,7 +53,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 	abstractEntityManager.flush();
 	try {
 	    abstractEntityManager.connectionHolder.commit();
-	    LOG.info("Commit Done");
+	    LOG.info("Commit");
 	} catch (SQLException e) {
 	    LOG.error(e.getMessage());
 	    try {
@@ -82,6 +82,7 @@ public class EntityTransactionImpl implements EntityTransaction {
 
 	try {
 	    abstractEntityManager.connectionHolder.rollback();
+	    LOG.info("Rollback");
 	} catch (SQLException e) {
 	    LOG.error(e.getMessage());
 	    try {

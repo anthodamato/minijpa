@@ -38,6 +38,9 @@ public class MetaEntity {
      * Collection of basic and relationship attributes.
      */
     private List<MetaAttribute> attributes;
+    /**
+     * Basic attributes
+     */
     private List<MetaAttribute> basicAttributes = Collections.emptyList();
     private List<MetaAttribute> relationshipAttributes = Collections.emptyList();
     private List<MetaEntity> embeddables = Collections.emptyList();
@@ -161,22 +164,13 @@ public class MetaEntity {
 	return embeddables.stream().filter(e -> e.name.equals(name)).findFirst();
     }
 
-    public List<MetaAttribute> expandAttributes() {
-	List<MetaAttribute> list = new ArrayList<>();
-	attributes.forEach(a -> {
-	    list.addAll(a.expand());
-	});
-
-	return list;
-    }
-
     public List<MetaAttribute> expandAllAttributes() {
 	List<MetaAttribute> list = new ArrayList<>();
 	if (id != null)
 	    list.addAll(id.getAttributes());
 
-	attributes.forEach(a -> {
-	    list.addAll(a.expand());
+	basicAttributes.forEach(a -> {
+	    list.add(a);
 	});
 
 	list.addAll(expandEmbeddables());
@@ -211,9 +205,6 @@ public class MetaEntity {
 	return null;
     }
 
-//    public List<MetaAttribute> getRelationshipAttributes() {
-//	return attributes.stream().filter(a -> a.getRelationship() != null).collect(Collectors.toList());
-//    }
     @Override
     public String toString() {
 	return super.toString() + " class: " + entityClass.getName() + "; tableName: " + tableName;

@@ -33,9 +33,9 @@ import org.minijpa.jdbc.model.SqlSelect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AbstractJdbcRunner {
+public class JdbcRunner {
 
-    private final Logger LOG = LoggerFactory.getLogger(AbstractJdbcRunner.class);
+    private final Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
 
     private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter,
 	    int index) throws SQLException {
@@ -57,7 +57,7 @@ public class AbstractJdbcRunner {
 
 	int index = 1;
 	for (QueryParameter queryParameter : queryParameters) {
-//	    LOG.info("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
+//	    LOG.debug("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
 //		    + queryParameter.getValue());
 	    setPreparedStatementQM(preparedStatement, queryParameter, index);
 	    ++index;
@@ -65,11 +65,9 @@ public class AbstractJdbcRunner {
     }
 
     public int update(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
-	LOG.info("persist: sql=" + sql);
+	LOG.info("Running `" + sql + "`");
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-	    if (!parameters.isEmpty())
-		setPreparedStatementParameters(preparedStatement, parameters);
-
+	    setPreparedStatementParameters(preparedStatement, parameters);
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
@@ -316,22 +314,14 @@ public class AbstractJdbcRunner {
 	    ResultSet rs,
 	    QueryResultMapping queryResultMapping,
 	    EntityLoader entityLoader) throws Exception {
-//	List<ModelValueArray<FetchParameter>> modelValueArrays = new ArrayList<>();
-//	for (int i = 0; i < queryResultMapping.size(); ++i) {
-//	    modelValueArrays.add(new ModelValueArray<>());
-//	}
-
 	ModelValueArray<FetchParameter> modelValueArray = new ModelValueArray<>();
 	int nc = metaData.getColumnCount();
 	for (int i = 0; i < nc; ++i) {
 	    String columnName = metaData.getColumnName(i + 1);
-//	    int columnType = metaData.getColumnType(i + 1);
-//	    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
 	    int k = 0;
 	    for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
 		Optional<FetchParameter> optional = buildFetchParameter(columnName, entityMapping);
 		if (optional.isPresent()) {
-//		    ModelValueArray<FetchParameter> modelValueArray = modelValueArrays.get(k);
 		    Object value = rs.getObject(i + 1, optional.get().getReadWriteDbType());
 		    modelValueArray.add(optional.get(), value);
 		}
@@ -344,7 +334,6 @@ public class AbstractJdbcRunner {
 	int k = 0;
 	Object[] result = new Object[queryResultMapping.size()];
 	for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
-//	    ModelValueArray<FetchParameter> modelValueArray = modelValueArrays.get(k);
 	    Object entityInstance = entityLoader.buildByValues(modelValueArray, entityMapping.getMetaEntity(), LockType.NONE);
 	    LOG.debug("buildRecord: entityInstance=" + entityInstance + "; k=" + k);
 	    result[k] = entityInstance;

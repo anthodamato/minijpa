@@ -13,7 +13,7 @@ import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 
-import org.minijpa.jdbc.AbstractJdbcRunner;
+import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.QueryParameter;
@@ -24,7 +24,7 @@ import org.minijpa.jpa.TupleImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JpaJdbcRunner extends AbstractJdbcRunner {
+public class JpaJdbcRunner extends JdbcRunner {
 
     private final Logger LOG = LoggerFactory.getLogger(JpaJdbcRunner.class);
 

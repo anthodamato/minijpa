@@ -433,7 +433,6 @@ public class Parser {
 		.withDbTypeMapper(dbConfiguration.getDbTypeMapper())
 		.withReadMethod(readMethod)
 		.withWriteMethod(writeMethod)
-		//		.isId(id)
 		.withSqlType(sqlType)
 		.isCollection(isCollection)
 		.withJavaMember(field)

@@ -241,6 +241,9 @@ public class AttributeUtil {
 	if (c == LocalTime.class)
 	    return true;
 
+	if (c.isEnum())
+	    return true;
+
 	if (c.isPrimitive()) {
 	    if (c.getName().equals("byte"))
 		return true;
