@@ -96,10 +96,6 @@ public class MetaAttribute extends AbstractAttribute {
 	return basic;
     }
 
-    public void setBasic(boolean basic) {
-	this.basic = basic;
-    }
-
     public String getPath() {
 	return path;
     }

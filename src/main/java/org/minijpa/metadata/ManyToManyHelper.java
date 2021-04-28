@@ -16,7 +16,6 @@ import javax.persistence.ManyToMany;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
@@ -93,8 +92,12 @@ public class ManyToManyHelper extends RelationshipHelper {
     }
 
     private Optional<MetaAttribute> findBidirectionalAttribute(String owningAttributeName, MetaEntity toEntity) {
-	List<MetaAttribute> attributes = toEntity.getAttributes();
-	return attributes.stream().filter(a -> a.getRelationship() != null && (a.getRelationship() instanceof ManyToManyRelationship) && ((ManyToManyRelationship) a.getRelationship()).getMappedBy() != null && ((ManyToManyRelationship) a.getRelationship()).getMappedBy().equals(owningAttributeName)).findFirst();
+	List<MetaAttribute> attributes = toEntity.getRelationshipAttributes();
+	return attributes.stream().filter(
+		a -> (a.getRelationship() instanceof ManyToManyRelationship)
+		&& ((ManyToManyRelationship) a.getRelationship()).getMappedBy() != null
+		&& ((ManyToManyRelationship) a.getRelationship()).getMappedBy().equals(owningAttributeName))
+		.findFirst();
     }
 
     private RelationshipJoinTable createBidirectionalJoinTable(MetaEntity owningEntity, MetaEntity targetEntity, MetaAttribute a, MetaAttribute toAttribute, JoinTableAttributes joinTableAttributes, String joinTableAlias, DbConfiguration dbConfiguration) {

@@ -133,12 +133,12 @@ public class EntityWriterImpl implements EntityWriter {
 	// if there are no notified changes. If they get changed then they'll be made persistent.
 	// Collect join table attributes
 	Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
-	for (MetaAttribute a : entity.getAttributes()) {
+	for (MetaAttribute a : entity.getRelationshipAttributes()) {
 //	    LOG.info("persist: a.getRelationship()=" + a.getRelationship());
 //	    if (a.getRelationship() != null)
 //		LOG.info("persist: a.getRelationship().getJoinTable()=" + a.getRelationship().getJoinTable());
 
-	    if (a.getRelationship() != null && a.getRelationship().getJoinTable() != null
+	    if (a.getRelationship().getJoinTable() != null
 		    && a.getRelationship().isOwner()) {
 		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
 //		LOG.info("persist: attributeInstance=" + attributeInstance);

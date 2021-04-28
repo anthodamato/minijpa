@@ -38,6 +38,8 @@ public class MetaEntity {
      * Collection of basic and relationship attributes.
      */
     private List<MetaAttribute> attributes;
+    private List<MetaAttribute> basicAttributes = Collections.emptyList();
+    private List<MetaAttribute> relationshipAttributes = Collections.emptyList();
     private List<MetaEntity> embeddables = Collections.emptyList();
     private Method readMethod; // used for embeddables
     private Method writeMethod; // used for embeddables
@@ -83,6 +85,14 @@ public class MetaEntity {
 
     public List<MetaAttribute> getAttributes() {
 	return attributes;
+    }
+
+    public List<MetaAttribute> getBasicAttributes() {
+	return basicAttributes;
+    }
+
+    public List<MetaAttribute> getRelationshipAttributes() {
+	return relationshipAttributes;
     }
 
     public List<MetaEntity> getEmbeddables() {
@@ -176,7 +186,6 @@ public class MetaEntity {
 
     public List<MetaAttribute> expandEmbeddables() {
 	List<MetaAttribute> list = new ArrayList<>();
-
 	embeddables.forEach(e -> {
 	    list.addAll(e.expandAllAttributes());
 	});
@@ -202,10 +211,9 @@ public class MetaEntity {
 	return null;
     }
 
-    public List<MetaAttribute> getRelationshipAttributes() {
-	return attributes.stream().filter(a -> a.getRelationship() != null).collect(Collectors.toList());
-    }
-
+//    public List<MetaAttribute> getRelationshipAttributes() {
+//	return attributes.stream().filter(a -> a.getRelationship() != null).collect(Collectors.toList());
+//    }
     @Override
     public String toString() {
 	return super.toString() + " class: " + entityClass.getName() + "; tableName: " + tableName;
@@ -229,11 +237,11 @@ public class MetaEntity {
     }
 
     public boolean hasVersionAttribute() {
-	return attributes.stream().filter(a -> a.isVersion() && a.isBasic() && !a.isId()).findFirst().isPresent();
+	return basicAttributes.stream().filter(a -> a.isVersion() && !a.isId()).findFirst().isPresent();
     }
 
     public Optional<MetaAttribute> getVersionAttribute() {
-	return attributes.stream().filter(a -> a.isVersion() && a.isBasic() && !a.isId()).findFirst();
+	return basicAttributes.stream().filter(a -> a.isVersion() && !a.isId()).findFirst();
     }
 
     public static class Builder {
@@ -245,6 +253,8 @@ public class MetaEntity {
 	private Pk id;
 	private boolean embeddedId;
 	private List<MetaAttribute> attributes;
+	private List<MetaAttribute> basicAttributes;
+	private List<MetaAttribute> relationshipAttributes;
 	private List<MetaEntity> embeddables;
 	private Method readMethod; // used for embeddables
 	private Method writeMethod; // used for embeddables
@@ -289,6 +299,16 @@ public class MetaEntity {
 
 	public Builder withAttributes(List<MetaAttribute> attributes) {
 	    this.attributes = attributes;
+	    return this;
+	}
+
+	public Builder withBasicAttributes(List<MetaAttribute> attributes) {
+	    this.basicAttributes = attributes;
+	    return this;
+	}
+
+	public Builder withRelationshipAttributes(List<MetaAttribute> attributes) {
+	    this.relationshipAttributes = attributes;
 	    return this;
 	}
 
@@ -356,6 +376,8 @@ public class MetaEntity {
 	    metaEntity.id = id;
 	    metaEntity.embeddedId = embeddedId;
 	    metaEntity.attributes = attributes;
+	    metaEntity.basicAttributes = basicAttributes;
+	    metaEntity.relationshipAttributes = relationshipAttributes;
 	    metaEntity.embeddables = embeddables;
 	    metaEntity.readMethod = readMethod;
 	    metaEntity.writeMethod = writeMethod;

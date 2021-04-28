@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
@@ -67,7 +68,6 @@ public class MetamodelFactory {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private EntityType<?> buildEntityType(MetaEntity entity) throws Exception {
-	EntityType<?> metamodelEntityType = new MetamodelEntityType<>();
 	Pk id = entity.getId();
 	Field fieldId = findField(entity.getEntityClass(), id.getName());
 	SingularAttribute<?, ?> idSingularAttribute = new IdSingularAttribute(id.getName(), null, id.getType(), fieldId,
@@ -83,8 +83,7 @@ public class MetamodelFactory {
 		.withBindableJavaType(entity.getEntityClass()).withId(idSingularAttribute)
 		.withSingularAttributes(singularAttributes).withPersistenceType(PersistenceType.ENTITY)
 		.withName(entity.getName()).withAttributes(attributes);
-	metamodelEntityType = builder.build();
-	return metamodelEntityType;
+	return builder.build();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -100,13 +99,8 @@ public class MetamodelFactory {
 
     @SuppressWarnings("rawtypes")
     private Set<SingularAttribute> buildSingularAttributes(MetaEntity entity) {
-	Set<SingularAttribute> singularAttributes = new HashSet<>();
-	for (MetaAttribute attribute : entity.getAttributes()) {
-	    if (!attribute.isCollection()) {
-		singularAttributes.add(buildSingularAttribute(attribute));
-	    }
-	}
-
+	Set<SingularAttribute> singularAttributes = entity.getBasicAttributes().stream()
+		.map(a -> buildSingularAttribute(a)).collect(Collectors.toSet());
 	return Collections.unmodifiableSet(singularAttributes);
     }
 
@@ -129,7 +123,6 @@ public class MetamodelFactory {
 
     @SuppressWarnings("rawtypes")
     private EmbeddableType<?> buildEmbeddableType(MetaEntity entity) throws Exception {
-	EmbeddableType<?> metamodelEntityType = new MetamodelEmbeddableType<>();
 	Set<SingularAttribute> singularAttributes = buildSingularAttributes(entity);
 	Set<Attribute> allAttributes = new HashSet<>();
 	allAttributes.addAll(singularAttributes);
@@ -138,8 +131,7 @@ public class MetamodelFactory {
 	MetamodelEmbeddableType.Builder builder = new MetamodelEmbeddableType.Builder()
 		.withJavaType(entity.getEntityClass()).withSingularAttributes(singularAttributes)
 		.withPersistenceType(PersistenceType.EMBEDDABLE).withAttributes(attributes);
-	metamodelEntityType = builder.build();
-	return metamodelEntityType;
+	return builder.build();
     }
 
     private Set<MappedSuperclassType<?>> buildMappedSuperclassTypes(Map<String, MetaEntity> entities) throws Exception {
@@ -162,9 +154,7 @@ public class MetamodelFactory {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private MappedSuperclassType<?> buildMappedSuperclassType(MetaEntity entity) throws Exception {
-	MappedSuperclassType<?> metamodelEntityType = new MetamodelMappedSuperclassType<>();
 	Pk id = entity.getId();
-
 	SingularAttribute<?, ?> idSingularAttribute = new IdSingularAttribute(id.getName(), null, id.getType(),
 		entity.getEntityClass().getDeclaredField(id.getName()), id.getType(),
 		new MetamodelType(PersistenceType.BASIC, id.getType()));
@@ -178,8 +168,7 @@ public class MetamodelFactory {
 		.withJavaType(entity.getEntityClass()).withId(idSingularAttribute)
 		.withSingularAttributes(singularAttributes).withPersistenceType(PersistenceType.MAPPED_SUPERCLASS)
 		.withAttributes(attributes);
-	metamodelEntityType = builder.build();
-	return metamodelEntityType;
+	return builder.build();
     }
 
 }
