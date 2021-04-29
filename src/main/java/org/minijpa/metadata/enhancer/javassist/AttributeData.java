@@ -3,14 +3,14 @@ package org.minijpa.metadata.enhancer.javassist;
 public class AttributeData {
 
     Property property;
-    boolean parentIsEmbeddedId = false;
+    boolean parentEmbeddedId = false;
     // only for embedded attributes
     ManagedData embeddedData;
 
     public AttributeData(Property property, boolean parentIsEmbeddedId, ManagedData embeddedData) {
 	super();
 	this.property = property;
-	this.parentIsEmbeddedId = parentIsEmbeddedId;
+	this.parentEmbeddedId = parentIsEmbeddedId;
 	this.embeddedData = embeddedData;
     }
 
@@ -22,8 +22,8 @@ public class AttributeData {
 	return property;
     }
 
-    public boolean isParentIsEmbeddedId() {
-	return parentIsEmbeddedId;
+    public boolean isParentEmbeddedId() {
+	return parentEmbeddedId;
     }
 
 }

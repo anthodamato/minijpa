@@ -7,44 +7,45 @@ import javax.persistence.Id;
 
 @Entity
 public class Address {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
 
-	private String name;
-	private String postcode;
-	private boolean tt;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	public Long getId() {
-		return id;
-	}
+    private String name;
+    private String postcode;
+    private boolean tt;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setId(Long id) {
+	this.id = id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+	return name;
+    }
 
-	public String getPostcode() {
-		return postcode;
-	}
+    public void setName(String name) {
+	this.name = name;
+    }
 
-	public void setPostcode(String postcode) {
-		this.postcode = postcode;
-	}
+    public String getPostcode() {
+	return postcode;
+    }
 
-	public boolean getTt() {
-		return tt;
-	}
+    public void setPostcode(String postcode) {
+	this.postcode = postcode;
+    }
 
-	public void setTt(boolean tt) {
-		this.tt = tt;
-	}
+    public boolean getTt() {
+	return tt;
+    }
+
+    public void setTt(boolean tt) {
+	this.tt = tt;
+    }
 
 }

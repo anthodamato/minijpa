@@ -148,7 +148,7 @@ public class EntityEnhancer {
 	if (dataAttribute.property.id)
 	    return false;
 
-	if (dataAttribute.parentIsEmbeddedId)
+	if (dataAttribute.parentEmbeddedId)
 	    return false;
 
 	if (!dataAttribute.property.getPropertyMethod.enhance && !dataAttribute.property.setPropertyMethod.enhance)

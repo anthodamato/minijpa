@@ -65,17 +65,17 @@ public class JdbcRunner {
     }
 
     public int update(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
-	LOG.info("Running `" + sql + "`");
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 	    setPreparedStatementParameters(preparedStatement, parameters);
+	    LOG.info("Running `" + sql + "`");
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
     }
 
     public int persist(Connection connection, String sql) throws SQLException {
-	LOG.info("persist: sql=" + sql);
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+	    LOG.info("Running `" + sql + "`");
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
@@ -94,7 +94,6 @@ public class JdbcRunner {
 	    resultSet = preparedStatement.getGeneratedKeys();
 	    if (resultSet != null && resultSet.next()) {
 		pk = resultSet.getLong(1);
-//		LOG.info("persist: getGeneratedKeys() pk=" + pk);
 	    }
 
 	    return pk;

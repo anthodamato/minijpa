@@ -83,9 +83,36 @@ public class ClassInspectorTest {
 	assertTrue(opt.isPresent());
 	attributeData = opt.get();
 	assertFalse(attributeData.getProperty().isEmbedded());
-	assertFalse(attributeData.isParentIsEmbeddedId());
+	assertFalse(attributeData.isParentEmbeddedId());
 
 	opt = embeddedData.findAttribute("pages");
 	assertTrue(opt.isPresent());
+    }
+
+    @Test
+    public void hotelBooking() throws Exception {
+	String className = "org.minijpa.jpa.model.HotelBooking";
+	ClassInspector classInspector = new ClassInspector();
+	ManagedData managedData = classInspector.inspect(className, new ArrayList<>());
+	assertNotNull(managedData);
+	assertNotNull(managedData.getCtClass());
+	assertEquals(className, managedData.getCtClass().getName());
+	assertEquals(ManagedData.ENTITY, managedData.getType());
+	assertEquals("mds0", managedData.getModificationAttribute());
+	assertEquals("lta0", managedData.getLockTypeAttribute().get());
+
+	List<AttributeData> attributeDatas = managedData.getAttributeDataList();
+	assertNotNull(attributeDatas);
+	assertEquals(3, attributeDatas.size());
+
+	Optional<AttributeData> optional = managedData.findAttribute("roomBookingId");
+	assertTrue(optional.isPresent());
+	assertNotNull(optional.get().getEmbeddedData());
+
+	optional = managedData.findAttribute("customerId");
+	assertTrue(optional.isPresent());
+
+	optional = managedData.findAttribute("price");
+	assertTrue(optional.isPresent());
     }
 }

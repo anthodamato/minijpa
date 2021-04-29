@@ -466,13 +466,11 @@
         <description>Items</description>
         <class>org.minijpa.jpa.model.StoreItem</class>
         <properties>
-            <property name="hibernate.dialect"
-                      value="org.hibernate.dialect.DerbyTenSevenDialect" />
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:store_items;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property 
+            <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
             <property 
@@ -481,6 +479,27 @@
             <property 
                 name="javax.persistence.schema-generation.create-script-source" 
                 value="META-INF/create_store_item_db.sql" />
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="booking_sale">
+        <description>Booking Sale</description>
+        <class>org.minijpa.jpa.model.Booking</class>
+        <class>org.minijpa.jpa.model.BookingSale</class>
+        <properties>
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:derby:memory:booking_sale;create=true" />
+            <property name="javax.persistence.jdbc.driver"
+                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+            <property
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="script" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-script-source" 
+                value="META-INF/create_booking_sale_db.sql" />
         </properties>
     </persistence-unit>
 

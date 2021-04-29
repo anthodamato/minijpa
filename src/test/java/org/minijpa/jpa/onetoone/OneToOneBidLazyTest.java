@@ -44,12 +44,10 @@ public class OneToOneBidLazyTest {
 
 	    em.detach(capital);
 	    em.detach(state);
-	    LOG.info("Loading s --------------------------");
 	    State s = em.find(State.class, state.getId());
 
 	    Assertions.assertFalse(s == state);
 	    Assertions.assertEquals("England", state.getName());
-	    LOG.info("Loading s.getCapital()");
 	    Capital c = s.getCapital();
 	    Assertions.assertNotNull(c);
 	    Assertions.assertEquals("London", c.getName());

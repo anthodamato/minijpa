@@ -55,9 +55,13 @@ public class OneToOneHelper {
 	    JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper()
 		    .mapJdbcAttribute(toEntity.getId().getType(), toEntity.getId().getAttribute().getSqlType());
 	    JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
-		    .withColumnName(joinColumnName).withType(toEntity.getId().getType())
-		    .withReadWriteDbType(toEntity.getId().getAttribute().getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-		    .withSqlType(toEntity.getId().getAttribute().getSqlType()).withForeignKeyAttribute(a).withJdbcAttributeMapper(jdbcAttributeMapper).build();
+		    .withColumnName(joinColumnName)
+		    .withType(toEntity.getId().getType())
+		    .withReadWriteDbType(toEntity.getId().getAttribute().getReadWriteDbType())
+		    .withDbTypeMapper(dbConfiguration.getDbTypeMapper())
+		    .withSqlType(toEntity.getId().getAttribute().getSqlType())
+		    .withForeignKeyAttribute(a)
+		    .withJdbcAttributeMapper(jdbcAttributeMapper).build();
 	    entity.getJoinColumnAttributes().add(joinColumnAttribute);
 	    builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
 	} else {

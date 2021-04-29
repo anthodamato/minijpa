@@ -8,36 +8,37 @@ import javax.persistence.OneToMany;
 
 @Entity
 public class HotelBookingDetail {
-	@EmbeddedId
-	private RoomBookingId roomBookingId;
 
-	@OneToMany
-	private Collection<HotelCustomer> customers;
+    @EmbeddedId
+    private RoomBookingId roomBookingId;
 
-	private Float price;
+    @OneToMany
+    private Collection<HotelCustomer> customers;
 
-	public RoomBookingId getRoomBookingId() {
-		return roomBookingId;
-	}
+    private Float price;
 
-	public void setRoomBookingId(RoomBookingId roomBookingId) {
-		this.roomBookingId = roomBookingId;
-	}
+    public RoomBookingId getRoomBookingId() {
+	return roomBookingId;
+    }
 
-	public Collection<HotelCustomer> getCustomers() {
-		return customers;
-	}
+    public void setRoomBookingId(RoomBookingId roomBookingId) {
+	this.roomBookingId = roomBookingId;
+    }
 
-	public void setCustomers(Collection<HotelCustomer> customers) {
-		this.customers = customers;
-	}
+    public Collection<HotelCustomer> getCustomers() {
+	return customers;
+    }
 
-	public Float getPrice() {
-		return price;
-	}
+    public void setCustomers(Collection<HotelCustomer> customers) {
+	this.customers = customers;
+    }
 
-	public void setPrice(Float price) {
-		this.price = price;
-	}
+    public Float getPrice() {
+	return price;
+    }
+
+    public void setPrice(Float price) {
+	this.price = price;
+    }
 
 }
