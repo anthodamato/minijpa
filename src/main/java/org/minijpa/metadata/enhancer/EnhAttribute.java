@@ -1,6 +1,7 @@
 package org.minijpa.metadata.enhancer;
 
 import java.util.List;
+import java.util.Optional;
 
 public class EnhAttribute {
 
@@ -10,8 +11,9 @@ public class EnhAttribute {
     private String getMethod;
     private String setMethod;
     private boolean embedded;
-//    private List<EnhAttribute> embeddedAttributes;
     private EnhEntity embeddedEnhEntity;
+    private Optional<String> joinColumnSetMethod = Optional.empty();
+    private Optional<String> joinColumnGetMethod = Optional.empty();
 
     public EnhAttribute(String name, String className, boolean primitiveType, String getMethod, String setMethod,
 	    boolean embedded, List<EnhAttribute> embeddedAttributes, EnhEntity embeddedEnhEntity) {
@@ -22,7 +24,6 @@ public class EnhAttribute {
 	this.getMethod = getMethod;
 	this.setMethod = setMethod;
 	this.embedded = embedded;
-//	this.embeddedAttributes = embeddedAttributes;
 	this.embeddedEnhEntity = embeddedEnhEntity;
     }
 
@@ -50,12 +51,24 @@ public class EnhAttribute {
 	return embedded;
     }
 
-//    public List<EnhAttribute> getEmbeddedAttributes() {
-//	return embeddedAttributes;
-//    }
-
     public EnhEntity getEmbeddedEnhEntity() {
 	return embeddedEnhEntity;
+    }
+
+    public Optional<String> getJoinColumnSetMethod() {
+	return joinColumnSetMethod;
+    }
+
+    public void setJoinColumnSetMethod(Optional<String> joinColumnSetMethod) {
+	this.joinColumnSetMethod = joinColumnSetMethod;
+    }
+
+    public Optional<String> getJoinColumnGetMethod() {
+	return joinColumnGetMethod;
+    }
+
+    public void setJoinColumnGetMethod(Optional<String> joinColumnGetMethod) {
+	this.joinColumnGetMethod = joinColumnGetMethod;
     }
 
 }

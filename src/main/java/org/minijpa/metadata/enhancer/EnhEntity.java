@@ -117,4 +117,8 @@ public class EnhEntity {
 	    }
 	}
     }
+
+    public Optional<EnhAttribute> getAttribute(String name) {
+	return enhAttributes.stream().filter(a -> a.getName().equals(name)).findFirst();
+    }
 }

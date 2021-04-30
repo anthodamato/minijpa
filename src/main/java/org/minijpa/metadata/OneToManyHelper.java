@@ -35,8 +35,7 @@ public class OneToManyHelper extends RelationshipHelper {
 	if (joinColumn != null)
 	    builder = builder.withJoinColumn(joinColumn.name());
 
-	if (oneToMany.mappedBy() != null && !oneToMany.mappedBy().isEmpty())
-	    builder = builder.withMappedBy(oneToMany.mappedBy());
+	builder.withMappedBy(RelationshipHelper.getMappedBy(oneToMany));
 
 	if (oneToMany.fetch() != null)
 	    if (oneToMany.fetch() == FetchType.EAGER)
@@ -115,15 +114,18 @@ public class OneToManyHelper extends RelationshipHelper {
 		// TODO: current implemented with just one join column, more columns could be
 		// used
 		JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
-			.withColumnName(oneToManyRelationship.getJoinColumn()).withType(entity.getId().getType())
-			.withReadWriteDbType(entity.getId().getAttribute().getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-			.withSqlType(entity.getId().getAttribute().getSqlType()).withForeignKeyAttribute(entity.getId().getAttribute())
+			.withColumnName(oneToManyRelationship.getJoinColumn())
+			.withType(entity.getId().getType())
+			.withReadWriteDbType(entity.getId().getAttribute().getReadWriteDbType())
+			.withDbTypeMapper(dbConfiguration.getDbTypeMapper())
+			.withSqlType(entity.getId().getAttribute().getSqlType())
+			.withForeignKeyAttribute(entity.getId().getAttribute())
 			.build();
 		toEntity.getJoinColumnAttributes().add(joinColumnAttribute);
 	    }
 	else {
 	    builder = builder.withOwningEntity(toEntity);
-	    MetaAttribute owningAttribute = AttributeUtil.findAttributeFromPath(oneToManyRelationship.getMappedBy(), toEntity);
+	    MetaAttribute owningAttribute = AttributeUtil.findAttributeFromPath(oneToManyRelationship.getMappedBy().get(), toEntity);
 	    builder = builder.withOwningAttribute(owningAttribute);
 	    builder = builder.withTargetAttribute(owningAttribute);
 	}

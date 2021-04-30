@@ -197,8 +197,8 @@ public class MetaEntity {
     }
 
     public MetaAttribute findAttributeByMappedBy(String mappedBy) {
-	for (MetaAttribute attribute : attributes) {
-	    if (attribute.getRelationship() != null && mappedBy.equals(attribute.getRelationship().getMappedBy()))
+	for (MetaAttribute attribute : relationshipAttributes) {
+	    if (mappedBy.equals(attribute.getRelationship().getMappedBy().get()))
 		return attribute;
 	}
 

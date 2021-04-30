@@ -413,9 +413,7 @@ public class Parser {
 		    .withPath(path);
 
 	    PkGeneration gv = buildPkGeneration(field);
-	    builder
-		    //		    .withPkGeneration(gv)
-		    .withJdbcAttributeMapper(jdbcAttributeMapper);
+	    builder.withJdbcAttributeMapper(jdbcAttributeMapper);
 	    return builder.build();
 	}
 
@@ -442,31 +440,17 @@ public class Parser {
 		.isBasic(AttributeUtil.isBasicAttribute(attributeClass))
 		.withPath(path);
 
-	OneToOne oneToOne = field.getAnnotation(OneToOne.class);
-	ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-	OneToMany oneToMany = field.getAnnotation(OneToMany.class);
-	ManyToMany manyToMany = field.getAnnotation(ManyToMany.class);
-	JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
-	if (oneToOne != null)
-	    builder.withRelationship(oneToOneHelper.createOneToOne(oneToOne, joinColumn));
-	else if (manyToOne != null)
-	    builder.withRelationship(manyToOneHelper.createManyToOne(manyToOne, joinColumn));
-	else if (oneToMany != null) {
-	    Class<?> collectionClass = null;
-	    Class<?> targetEntity = oneToMany.targetEntity();
-	    if (targetEntity == null || targetEntity == Void.TYPE)
-		targetEntity = ReflectionUtil.findTargetEntity(field);
-
-	    JoinTable joinTable = field.getAnnotation(JoinTable.class);
-	    builder.withRelationship(oneToManyHelper.createOneToMany(oneToMany, joinColumn, null, collectionClass, targetEntity, joinTable));
-	} else if (manyToMany != null) {
-	    Class<?> collectionClass = null;
-	    Class<?> targetEntity = manyToMany.targetEntity();
-	    if (targetEntity == null || targetEntity == Void.TYPE)
-		targetEntity = ReflectionUtil.findTargetEntity(field);
-
-	    JoinTable joinTable = field.getAnnotation(JoinTable.class);
-	    builder.withRelationship(manyToManyHelper.createManyToMany(manyToMany, joinColumn, null, collectionClass, targetEntity, joinTable));
+	Optional<Relationship> relationship = buildRelationship(field);
+	if (relationship.isPresent()) {
+	    builder.withRelationship(relationship.get());
+	    Optional<Method> joinColumnReadMethod = enhAttribute.getJoinColumnGetMethod().isPresent()
+		    ? Optional.of(c.getMethod(enhAttribute.getJoinColumnGetMethod().get()))
+		    : Optional.empty();
+	    Optional<Method> joinColumnWriteMethod = enhAttribute.getJoinColumnSetMethod().isPresent()
+		    ? Optional.of(c.getMethod(enhAttribute.getJoinColumnSetMethod().get(), Object.class))
+		    : Optional.empty();
+	    builder.withJoinColumnReadMethod(joinColumnReadMethod)
+		    .withJoinColumnWriteMethod(joinColumnWriteMethod);
 	}
 
 	// Basic annotation
@@ -479,6 +463,54 @@ public class Parser {
 	MetaAttribute attribute = builder.build();
 	LOG.debug("readAttribute: attribute: " + attribute);
 	return attribute;
+    }
+
+    private Optional<Relationship> buildRelationship(Field field) {
+	OneToOne oneToOne = field.getAnnotation(OneToOne.class);
+	ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
+	OneToMany oneToMany = field.getAnnotation(OneToMany.class);
+	ManyToMany manyToMany = field.getAnnotation(ManyToMany.class);
+	int counter = 0;
+	if (oneToOne != null)
+	    ++counter;
+	if (manyToOne != null)
+	    ++counter;
+	if (oneToMany != null)
+	    ++counter;
+	if (manyToMany != null)
+	    ++counter;
+
+	if (counter > 1)
+	    throw new IllegalArgumentException("More than one relationship annotations at '" + field.getName() + "'");
+
+	JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
+	if (oneToOne != null)
+	    return Optional.of(oneToOneHelper.createOneToOne(oneToOne, joinColumn));
+
+	if (manyToOne != null)
+	    return Optional.of(manyToOneHelper.createManyToOne(manyToOne, joinColumn));
+
+	if (oneToMany != null) {
+	    Class<?> collectionClass = null;
+	    Class<?> targetEntity = oneToMany.targetEntity();
+	    if (targetEntity == null || targetEntity == Void.TYPE)
+		targetEntity = ReflectionUtil.findTargetEntity(field);
+
+	    JoinTable joinTable = field.getAnnotation(JoinTable.class);
+	    return Optional.of(oneToManyHelper.createOneToMany(oneToMany, joinColumn, null, collectionClass, targetEntity, joinTable));
+	}
+
+	if (manyToMany != null) {
+	    Class<?> collectionClass = null;
+	    Class<?> targetEntity = manyToMany.targetEntity();
+	    if (targetEntity == null || targetEntity == Void.TYPE)
+		targetEntity = ReflectionUtil.findTargetEntity(field);
+
+	    JoinTable joinTable = field.getAnnotation(JoinTable.class);
+	    return Optional.of(manyToManyHelper.createManyToMany(manyToMany, joinColumn, null, collectionClass, targetEntity, joinTable));
+	}
+
+	return Optional.empty();
     }
 
     private PkGeneration buildPkGeneration(Field field) {

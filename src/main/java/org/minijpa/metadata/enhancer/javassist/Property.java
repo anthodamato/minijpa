@@ -1,6 +1,7 @@
 package org.minijpa.metadata.enhancer.javassist;
 
 import java.util.List;
+import java.util.Optional;
 
 import javassist.CtField;
 
@@ -12,10 +13,15 @@ public class Property {
     CtField ctField;
     boolean embedded;
     List<Property> embeddedProperties;
-    boolean lazy;
+    private final Optional<RelationshipProperties> relationshipProperties;
 
-    public Property(boolean id, PropertyMethod getPropertyMethod, PropertyMethod setPropertyMethod, CtField ctField,
-	    boolean embedded, List<Property> embeddedProperties, boolean lazy) {
+    public Property(boolean id,
+	    PropertyMethod getPropertyMethod,
+	    PropertyMethod setPropertyMethod,
+	    CtField ctField,
+	    boolean embedded,
+	    List<Property> embeddedProperties,
+	    Optional<RelationshipProperties> relationshipProperties) {
 	super();
 	this.id = id;
 	this.getPropertyMethod = getPropertyMethod;
@@ -23,7 +29,7 @@ public class Property {
 	this.ctField = ctField;
 	this.embedded = embedded;
 	this.embeddedProperties = embeddedProperties;
-	this.lazy = lazy;
+	this.relationshipProperties = relationshipProperties;
     }
 
     public boolean isId() {
@@ -50,8 +56,8 @@ public class Property {
 	return embeddedProperties;
     }
 
-    public boolean isLazy() {
-	return lazy;
+    public Optional<RelationshipProperties> getRelationshipProperties() {
+	return relationshipProperties;
     }
 
 }

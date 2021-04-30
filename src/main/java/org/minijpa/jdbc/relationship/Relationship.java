@@ -1,5 +1,6 @@
 package org.minijpa.jdbc.relationship;
 
+import java.util.Optional;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
@@ -18,7 +19,7 @@ public abstract class Relationship {
     protected MetaEntity attributeType;
     // for bidirectional relationships
     protected MetaAttribute targetAttribute;
-    protected String mappedBy;
+    protected Optional<String> mappedBy;
     protected RelationshipJoinTable joinTable;
     protected Class<?> targetEntityClass;
     protected JoinTableAttributes joinTableAttributes;
@@ -55,12 +56,12 @@ public abstract class Relationship {
 	return targetAttribute;
     }
 
-    public String getMappedBy() {
+    public Optional<String> getMappedBy() {
 	return mappedBy;
     }
 
     public boolean isOwner() {
-	return false;
+	return mappedBy.isEmpty();
     }
 
     public RelationshipJoinTable getJoinTable() {

@@ -74,7 +74,7 @@ public class EntityLoaderImpl implements EntityLoader {
 	    if (fetchParameter.isJoinColumn()) {
 		if (attribute.getRelationship().getFetchType() == FetchType.LAZY) {
 		    // save the foreign key for lazy attributes
-		    entityContainer.saveForeignKey(entityInstance, attribute, value);
+		    MetaEntityHelper.setForeignKeyValue(attribute, entityInstance, value);
 		    LOG.debug("findById: saved foreign key value=" + value);
 		} else
 		    loadRelationshipByForeignKey(entityInstance, metaEntity, attribute, value, lockType);
@@ -100,15 +100,16 @@ public class EntityLoaderImpl implements EntityLoader {
 
     @Override
     public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType) throws Exception {
-	ModelValueArray<FetchParameter> attributeValueArray = entityQueryLevel.run(metaEntity, primaryKey, lockType);
-	if (attributeValueArray == null)
+	ModelValueArray<FetchParameter> modelValueArray = entityQueryLevel.run(metaEntity, primaryKey, lockType);
+	if (modelValueArray == null)
 	    throw new EntityNotFoundException("Entity '" + entityInstance + "' not found: pk=" + primaryKey);
 
-	buildEntity(entityInstance, attributeValueArray, metaEntity, primaryKey, lockType);
+	buildEntity(entityInstance, modelValueArray, metaEntity, primaryKey, lockType);
     }
 
     private void fillCircularRelationships(MetaEntity entity, Object entityInstance) throws Exception {
 	LOG.debug("fillCircularRelationships: entity=" + entity);
+	LOG.debug("fillCircularRelationships: entityInstance=" + entityInstance);
 	for (MetaAttribute a : entity.getRelationshipAttributes()) {
 	    if (!a.isEager())
 		continue;
@@ -117,23 +118,27 @@ public class EntityLoaderImpl implements EntityLoader {
 		LOG.debug("fillCircularRelationships: a=" + a);
 		Object value = entityInstanceBuilder.getAttributeValue(entityInstance, a);
 		LOG.debug("fillCircularRelationships: value=" + value);
-		if (value != null) {
-		    MetaAttribute targetAttribute = a.getRelationship().getTargetAttribute();
-		    LOG.debug("fillCircularRelationships: targetAttribute=" + targetAttribute);
-		    LOG.debug("fillCircularRelationships: a.getRelationship().getAttributeType()=" + a.getRelationship().getAttributeType());
-		    MetaEntity toEntity = a.getRelationship().getAttributeType();
-		    if (toEntity != null) {
-			MetaAttribute attribute = toEntity.findAttributeByMappedBy(a.getName());
-			if (attribute != null) {
-			    // it's bidirectional
-			    if (attribute.getRelationship().toOne()) {
-				Object v = entityInstanceBuilder.getAttributeValue(value, attribute);
-				LOG.debug("fillCircularRelationships: v=" + v);
-				if (v == null)
-				    entityInstanceBuilder.writeMetaAttributeValue(value, value.getClass(), attribute, entityInstance, toEntity);
-			    }
-			}
-		    }
+		if (value == null)
+		    continue;
+
+		MetaAttribute targetAttribute = a.getRelationship().getTargetAttribute();
+		LOG.debug("fillCircularRelationships: targetAttribute=" + targetAttribute);
+		LOG.debug("fillCircularRelationships: a.getRelationship().getAttributeType()=" + a.getRelationship().getAttributeType());
+		MetaEntity toEntity = a.getRelationship().getAttributeType();
+		if (toEntity == null)
+		    continue;
+
+		MetaAttribute attribute = toEntity.findAttributeByMappedBy(a.getName());
+		LOG.debug("fillCircularRelationships: attribute=" + attribute);
+		if (attribute == null)
+		    continue;
+
+		// it's bidirectional
+		if (attribute.getRelationship().toOne()) {
+		    Object v = entityInstanceBuilder.getAttributeValue(value, attribute);
+		    LOG.debug("fillCircularRelationships: v=" + v);
+		    if (v == null)
+			entityInstanceBuilder.writeMetaAttributeValue(value, value.getClass(), attribute, entityInstance, toEntity);
 		}
 	    }
 	}
@@ -189,7 +194,7 @@ public class EntityLoaderImpl implements EntityLoader {
 		MetaEntity toEntity = attribute.getRelationship().getAttributeType();
 		if (attribute.isLazy()) {
 		    Object primaryKey = AttributeUtil.buildPK(toEntity, modelValueArray);
-		    entityContainer.saveForeignKey(parentInstance, attribute, primaryKey);
+		    MetaEntityHelper.setForeignKeyValue(attribute, parentInstance, primaryKey);
 		    continue;
 		}
 
@@ -278,10 +283,9 @@ public class EntityLoaderImpl implements EntityLoader {
 	LOG.debug("loadAttribute: targetAttribute=" + targetAttribute);
 	if (relationship == null || !relationship.toMany()) {
 	    MetaEntity entity = persistenceUnitContext.getEntities().get(parentInstance.getClass().getName());
-	    Object foreignKey = entityContainer.getForeignKeyValue(parentInstance, a);
+	    Object foreignKey = MetaEntityHelper.getForeignKeyValue(a, parentInstance);
 	    LOG.debug("loadAttribute: foreignKey=" + foreignKey);
 	    Object result = loadRelationshipByForeignKey(parentInstance, entity, a, foreignKey, LockType.NONE);
-	    entityContainer.removeForeignKey(parentInstance, a);
 	    return result;
 	}
 

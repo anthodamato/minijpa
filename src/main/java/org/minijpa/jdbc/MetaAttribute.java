@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 
 import org.minijpa.jdbc.relationship.FetchType;
@@ -47,6 +48,8 @@ public class MetaAttribute extends AbstractAttribute {
     // The attribute path. If this is a basic attribute the path is the attribute name.
     // If the parent is an embeddable the path is the embeddable path. For example 'jobInfo.jobDescription'.
     private String path;
+    private Optional<Method> joinColumnReadMethod = Optional.empty();
+    private Optional<Method> joinColumnWriteMethod = Optional.empty();
 
     public String getName() {
 	return name;
@@ -100,6 +103,14 @@ public class MetaAttribute extends AbstractAttribute {
 	return path;
     }
 
+    public Optional<Method> getJoinColumnReadMethod() {
+	return joinColumnReadMethod;
+    }
+
+    public Optional<Method> getJoinColumnWriteMethod() {
+	return joinColumnWriteMethod;
+    }
+
     public List<MetaAttribute> expand() {
 	if (expandedAttributeList != null)
 	    return expandedAttributeList;
@@ -151,6 +162,8 @@ public class MetaAttribute extends AbstractAttribute {
 	private boolean version = false;
 	private boolean basic;
 	private String path;
+	private Optional<Method> joinColumnReadMethod;
+	private Optional<Method> joinColumnWriteMethod;
 
 	public Builder(String name) {
 	    super();
@@ -243,6 +256,16 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
+	public Builder withJoinColumnReadMethod(Optional<Method> joinColumnReadMethod) {
+	    this.joinColumnReadMethod = joinColumnReadMethod;
+	    return this;
+	}
+
+	public Builder withJoinColumnWriteMethod(Optional<Method> joinColumnWriteMethod) {
+	    this.joinColumnWriteMethod = joinColumnWriteMethod;
+	    return this;
+	}
+
 	public MetaAttribute build() {
 	    MetaAttribute attribute = new MetaAttribute();
 	    attribute.name = name;
@@ -263,6 +286,8 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.version = version;
 	    attribute.basic = basic;
 	    attribute.path = path;
+	    attribute.joinColumnReadMethod = joinColumnReadMethod;
+	    attribute.joinColumnWriteMethod = joinColumnWriteMethod;
 	    return attribute;
 	}
     }

@@ -1,5 +1,6 @@
 package org.minijpa.jdbc.relationship;
 
+import java.util.Optional;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
@@ -7,11 +8,6 @@ public final class OneToOneRelationship extends Relationship {
 
     public OneToOneRelationship() {
 	super();
-    }
-
-    @Override
-    public boolean isOwner() {
-	return mappedBy == null || mappedBy.isEmpty();
     }
 
     @Override
@@ -30,7 +26,7 @@ public final class OneToOneRelationship extends Relationship {
 
 	private String joinColumn;
 	private String joinColumnTable;
-	private String mappedBy;
+	private Optional<String> mappedBy;
 	private FetchType fetchType = FetchType.EAGER;
 	private MetaEntity owningEntity;
 	private MetaAttribute targetAttribute;
@@ -50,7 +46,7 @@ public final class OneToOneRelationship extends Relationship {
 	    return this;
 	}
 
-	public Builder withMappedBy(String mappedBy) {
+	public Builder withMappedBy(Optional<String> mappedBy) {
 	    this.mappedBy = mappedBy;
 	    return this;
 	}

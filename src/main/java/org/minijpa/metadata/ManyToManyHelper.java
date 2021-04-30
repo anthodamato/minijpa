@@ -35,8 +35,7 @@ public class ManyToManyHelper extends RelationshipHelper {
 	if (joinColumn != null)
 	    builder = builder.withJoinColumn(joinColumn.name());
 
-	if (manyToMany.mappedBy() != null && !manyToMany.mappedBy().isEmpty())
-	    builder = builder.withMappedBy(manyToMany.mappedBy());
+	builder.withMappedBy(RelationshipHelper.getMappedBy(manyToMany));
 
 	if (manyToMany.fetch() != null)
 	    if (manyToMany.fetch() == FetchType.EAGER)
@@ -95,8 +94,8 @@ public class ManyToManyHelper extends RelationshipHelper {
 	List<MetaAttribute> attributes = toEntity.getRelationshipAttributes();
 	return attributes.stream().filter(
 		a -> (a.getRelationship() instanceof ManyToManyRelationship)
-		&& ((ManyToManyRelationship) a.getRelationship()).getMappedBy() != null
-		&& ((ManyToManyRelationship) a.getRelationship()).getMappedBy().equals(owningAttributeName))
+		&& ((ManyToManyRelationship) a.getRelationship()).getMappedBy().isPresent()
+		&& ((ManyToManyRelationship) a.getRelationship()).getMappedBy().get().equals(owningAttributeName))
 		.findFirst();
     }
 
@@ -151,8 +150,8 @@ public class ManyToManyHelper extends RelationshipHelper {
 	    JoinTableAttributes joinTableAttributes = createJoinTableAttributes(manyToManyRelationship, toEntity, entity);
 	    String joinTableAlias = aliasGenerator.calculateAlias(joinTableAttributes.getName(), entities.values());
 	    builder = builder.withOwningEntity(toEntity);
-	    builder = builder.withOwningAttribute(toEntity.getAttribute(manyToManyRelationship.getMappedBy()));
-	    MetaAttribute attribute = toEntity.getAttribute(manyToManyRelationship.getMappedBy());
+	    builder = builder.withOwningAttribute(toEntity.getAttribute(manyToManyRelationship.getMappedBy().get()));
+	    MetaAttribute attribute = toEntity.getAttribute(manyToManyRelationship.getMappedBy().get());
 	    builder = builder.withTargetAttribute(attribute);
 	    RelationshipJoinTable relationshipJoinTable = createBidirectionalJoinTable(toEntity, entity, attribute, a, joinTableAttributes, joinTableAlias, dbConfiguration);
 	    builder = builder.withJoinTable(relationshipJoinTable);

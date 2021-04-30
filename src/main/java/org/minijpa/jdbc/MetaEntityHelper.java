@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 public class MetaEntityHelper {
 
-    private final Logger LOG = LoggerFactory.getLogger(MetaEntityHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetaEntityHelper.class);
 
     public List<FetchParameter> convertAttributes(List<MetaAttribute> attributes) {
 	return attributes.stream().map(a -> FetchParameter.build(a)).collect(Collectors.toList());
@@ -271,6 +271,19 @@ public class MetaEntityHelper {
 
     public static void setEntityStatus(MetaEntity entity, Object entityInstance, EntityStatus entityStatus) throws Exception {
 	entity.getEntityStatusAttributeWriteMethod().get().invoke(entityInstance, entityStatus);
+    }
+
+    public static void setForeignKeyValue(MetaAttribute attribute, Object entityInstance, Object value)
+	    throws IllegalAccessException, InvocationTargetException {
+	LOG.debug("setForeignKeyValue: attribute=" + attribute);
+	LOG.debug("setForeignKeyValue: value=" + value);
+	LOG.debug("setForeignKeyValue: attribute.getJoinColumnWriteMethod().get()=" + attribute.getJoinColumnWriteMethod().get());
+	attribute.getJoinColumnWriteMethod().get().invoke(entityInstance, value);
+    }
+
+    public static Object getForeignKeyValue(MetaAttribute attribute, Object entityInstance)
+	    throws IllegalAccessException, InvocationTargetException {
+	return attribute.getJoinColumnReadMethod().get().invoke(entityInstance);
     }
 
     public static boolean isFlushed(MetaEntity entity, Object entityInstance) throws Exception {

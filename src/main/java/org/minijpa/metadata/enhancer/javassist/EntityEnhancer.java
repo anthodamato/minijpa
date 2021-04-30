@@ -23,6 +23,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
 import javassist.NotFoundException;
+import javassist.bytecode.Descriptor;
 
 public class EntityEnhancer {
 
@@ -35,7 +36,8 @@ public class EntityEnhancer {
     }
 
     public EnhEntity enhance(ManagedData managedData, Set<EnhEntity> parsedEntities) throws Exception {
-	Optional<EnhEntity> optional = parsedEntities.stream().filter(e -> e.getClassName().equals(managedData.getClassName())).findFirst();
+	Optional<EnhEntity> optional = parsedEntities.stream()
+		.filter(e -> e.getClassName().equals(managedData.getClassName())).findFirst();
 	if (optional.isPresent())
 	    return optional.get();
 
@@ -50,61 +52,115 @@ public class EntityEnhancer {
 	LOG.debug("enhance: ct.getName()=" + ct.getName());
 	LOG.debug("enhance: ct.isFrozen()=" + ct.isFrozen() + "; isClassModified(ct)=" + isClassModified(ct));
 	LOG.debug("enhance: isClassWritable(ct)=" + isClassWritable(ct));
-	boolean modified = false;
-//	boolean canModify = canModify(ct);
 	if (!enhancedDataEntities.contains(managedData))
-	    if (toEnhance(managedData)) {
-		LOG.debug("Enhancing " + ct.getName());
-		addEntityDelegateField(ct);
-		// modification field
-		addModificationField(ct, managedData.getModificationAttribute());
-		CtMethod ctMethod = createGetMethod(ct, managedData.getModificationAttribute(), "java.util.List");
-		enhEntity.setModificationAttributeGetMethod(ctMethod.getName());
-		// lazy loaded attribute tracking
-		if (managedData.getLazyLoadedAttribute().isPresent()) {
-		    addLazyLoadedField(ct, managedData.getLazyLoadedAttribute().get());
-		    ctMethod = createGetMethod(ct, managedData.getLazyLoadedAttribute().get(), "java.util.List");
-		    enhEntity.setLazyLoadedAttributeGetMethod(Optional.of(ctMethod.getName()));
-		}
-		// lock type field
-		if (managedData.getLockTypeAttribute().isPresent()) {
-		    addLockTypeField(ct, managedData.getLockTypeAttribute().get());
-		    // get method
-		    ctMethod = createGetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
-		    enhEntity.setLockTypeAttributeGetMethod(Optional.of(ctMethod.getName()));
-		    // set method
-		    ctMethod = createSetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
-		    enhEntity.setLockTypeAttributeSetMethod(Optional.of(ctMethod.getName()));
-		}
-		// entity status field
-		if (managedData.getEntityStatusAttribute().isPresent()) {
-		    addEntityStatusField(ct, managedData.getEntityStatusAttribute().get());
-		    // get method
-		    ctMethod = createGetMethod(ct, managedData.getEntityStatusAttribute().get(), "org.minijpa.jpa.db.EntityStatus");
-		    enhEntity.setEntityStatusAttributeGetMethod(Optional.of(ctMethod.getName()));
-		    // set method
-		    ctMethod = createSetMethod(ct, managedData.getEntityStatusAttribute().get(), "org.minijpa.jpa.db.EntityStatus");
-		    enhEntity.setEntityStatusAttributeSetMethod(Optional.of(ctMethod.getName()));
-		}
-
-		modified = true;
-	    } else
-		LOG.debug("Enhancement of '" + ct.getName() + "' not needed");
+	    createEntityStatusFields(managedData, enhEntity);
 
 	enhanceConstructor(managedData);
 
-	boolean enhanceAttribute = false;
+	List<EnhAttribute> enhAttributes = enhanceAttributes(managedData, parsedEntities);
+
+//	LOG.debug("enhance: modified=" + modified + "; canModify(ct)=" + canModify(ct) + "; ct.isModified()="
+//		+ ct.isModified());
+	LOG.debug("enhance: managedData=" + managedData);
+	enhancedDataEntities.add(managedData);
+
+	enhEntity.setEnhAttributes(enhAttributes);
+	enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
+	// fills the join column methods
+	fillJoinColumnMethods(managedData, enhEntity);
+
+	parsedEntities.add(enhEntity);
+
+	return enhEntity;
+    }
+
+    private void createEntityStatusFields(ManagedData managedData, EnhEntity enhEntity) throws Exception {
+	CtClass ct = managedData.getCtClass();
+	if (!toEnhance(managedData)) {
+	    LOG.debug("Enhancement of '" + ct.getName() + "' not needed");
+	    return;
+	}
+
+	LOG.debug("Enhancing " + ct.getName());
+	addEntityDelegateField(ct);
+	// modification field
+	addModificationField(ct, managedData.getModificationAttribute());
+	CtMethod ctMethod = createGetMethod(ct, managedData.getModificationAttribute(), "java.util.List");
+	enhEntity.setModificationAttributeGetMethod(ctMethod.getName());
+	// lazy loaded attribute tracking
+	if (managedData.getLazyLoadedAttribute().isPresent()) {
+	    addLazyLoadedField(ct, managedData.getLazyLoadedAttribute().get());
+	    ctMethod = createGetMethod(ct, managedData.getLazyLoadedAttribute().get(), "java.util.List");
+	    enhEntity.setLazyLoadedAttributeGetMethod(Optional.of(ctMethod.getName()));
+	}
+	// lock type field
+	if (managedData.getLockTypeAttribute().isPresent()) {
+	    addLockTypeField(ct, managedData.getLockTypeAttribute().get());
+	    // get method
+	    ctMethod = createGetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
+	    enhEntity.setLockTypeAttributeGetMethod(Optional.of(ctMethod.getName()));
+	    // set method
+	    ctMethod = createSetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
+	    enhEntity.setLockTypeAttributeSetMethod(Optional.of(ctMethod.getName()));
+	}
+	// entity status field
+	if (managedData.getEntityStatusAttribute().isPresent()) {
+	    addEntityStatusField(ct, managedData.getEntityStatusAttribute().get());
+	    // get method
+	    ctMethod = createGetMethod(ct, managedData.getEntityStatusAttribute().get(), "org.minijpa.jpa.db.EntityStatus");
+	    enhEntity.setEntityStatusAttributeGetMethod(Optional.of(ctMethod.getName()));
+	    // set method
+	    ctMethod = createSetMethod(ct, managedData.getEntityStatusAttribute().get(), "org.minijpa.jpa.db.EntityStatus");
+	    enhEntity.setEntityStatusAttributeSetMethod(Optional.of(ctMethod.getName()));
+	}
+
+	// creates the join column support fields
+	List<AttributeData> attributeDataList = managedData.getAttributeDataList();
+	for (AttributeData attributeData : attributeDataList) {
+	    Optional<RelationshipProperties> optional = attributeData.getProperty().getRelationshipProperties();
+	    if (optional.isPresent() && optional.get().getJoinColumnFieldName().isPresent()) {
+		RelationshipProperties relationshipProperties = optional.get();
+		String fieldName = relationshipProperties.getJoinColumnFieldName().get();
+		addJoinColumnField(ct, fieldName);
+		// get method
+		ctMethod = createGetMethod(ct, fieldName, "java.lang.Object");
+		relationshipProperties.setCtMethodGetter(Optional.of(ctMethod));
+		// set method
+		ctMethod = createSetMethod(ct, fieldName, "java.lang.Object");
+		relationshipProperties.setCtMethodSetter(Optional.of(ctMethod));
+	    }
+	}
+    }
+
+    private void fillJoinColumnMethods(ManagedData managedData, EnhEntity enhEntity) {
+	List<AttributeData> attributeDataList = managedData.getAttributeDataList();
+	for (AttributeData attributeData : attributeDataList) {
+	    Optional<RelationshipProperties> optional = attributeData.getProperty().getRelationshipProperties();
+	    if (optional.isPresent() && optional.get().getJoinColumnFieldName().isPresent()) {
+		RelationshipProperties relationshipProperties = optional.get();
+		String fieldName = relationshipProperties.getFieldName();
+		Optional<EnhAttribute> o = enhEntity.getAttribute(fieldName);
+		if (o.isEmpty())
+		    throw new IllegalStateException("Field name not found: " + fieldName);
+
+		o.get().setJoinColumnGetMethod(Optional.of(relationshipProperties.getCtMethodGetter().get().getName()));
+		o.get().setJoinColumnSetMethod(Optional.of(relationshipProperties.getCtMethodSetter().get().getName()));
+	    }
+	}
+    }
+
+    private List<EnhAttribute> enhanceAttributes(ManagedData managedData, Set<EnhEntity> parsedEntities) throws Exception {
+	CtClass ct = managedData.getCtClass();
 	List<EnhAttribute> enhAttributes = new ArrayList<>();
 	List<AttributeData> dataAttributes = managedData.getAttributeDataList();
 	for (AttributeData attributeData : dataAttributes) {
 	    Property property = attributeData.property;
-	    enhanceAttribute = toEnhance(attributeData);
+	    boolean enhanceAttribute = toEnhance(attributeData);
 	    LOG.debug("Enhancing attribute '" + property.ctField.getName() + "' " + enhanceAttribute);
 	    if (property.setPropertyMethod.add && !enhancedDataEntities.contains(managedData)) {
 		CtMethod ctMethod = createSetMethod(ct, property.ctField, enhanceAttribute, managedData);
 		property.setPropertyMethod.enhance = false;
 		property.setPropertyMethod.method = Optional.of(ctMethod);
-		modified = true;
 	    }
 
 	    if (enhanceAttribute && !enhancedDataEntities.contains(managedData) && canModify(ct)) {
@@ -130,18 +186,7 @@ public class EntityEnhancer {
 	    enhAttributes.add(enhAttribute);
 	}
 
-	LOG.debug("enhance: modified=" + modified + "; canModify(ct)=" + canModify(ct) + "; ct.isModified()="
-		+ ct.isModified());
-
-	LOG.debug("enhance: managedData=" + managedData);
-	enhancedDataEntities.add(managedData);
-
-	enhEntity.setEnhAttributes(enhAttributes);
-
-	enhEntity.setMappedSuperclass(enhMappedSuperclassEntity);
-	parsedEntities.add(enhEntity);
-
-	return enhEntity;
+	return enhAttributes;
     }
 
     private boolean toEnhance(AttributeData dataAttribute) {
@@ -151,7 +196,8 @@ public class EntityEnhancer {
 	if (dataAttribute.parentEmbeddedId)
 	    return false;
 
-	if (!dataAttribute.property.getPropertyMethod.enhance && !dataAttribute.property.setPropertyMethod.enhance)
+	if (!dataAttribute.property.getPropertyMethod.enhance
+		&& !dataAttribute.property.setPropertyMethod.enhance)
 	    return false;
 
 	return true;
@@ -255,6 +301,16 @@ public class EntityEnhancer {
 	    return;
 
 	String f = "private org.minijpa.jpa.db.EntityStatus " + fieldName + " = org.minijpa.jpa.db.EntityStatus.NEW;";
+	CtField ctField = CtField.make(f, ct);
+	ct.addField(ctField);
+	LOG.debug("Created '" + ct.getName() + "' Field: " + f);
+    }
+
+    private void addJoinColumnField(CtClass ct, String fieldName) throws Exception {
+	if (!canModify(ct))
+	    return;
+
+	String f = "private Object " + fieldName + " = null;";
 	CtField ctField = CtField.make(f, ct);
 	ct.addField(ctField);
 	LOG.debug("Created '" + ct.getName() + "' Field: " + f);
@@ -413,8 +469,12 @@ public class EntityEnhancer {
 
     private CtMethod createSetMethod(CtClass ctClass, String fieldName, String fieldTypeName)
 	    throws Exception {
-	if (!canModify(ctClass))
-	    return null;
+	if (!canModify(ctClass)) {
+	    CtClass[] ctClasses = new CtClass[1];
+	    ctClasses[0] = ClassPool.getDefault().get(fieldTypeName);
+	    return ctClass.getMethod(buildSetMethodName(fieldName),
+		    Descriptor.ofMethod(CtClass.voidType, ctClasses));
+	}
 
 	String setMethodString = createSetMethodString(fieldName, fieldTypeName);
 	CtMethod ctMethod = CtNewMethod.make(setMethodString, ctClass);
@@ -424,10 +484,12 @@ public class EntityEnhancer {
     }
 
     private CtMethod createGetMethod(CtClass ctClass, String fieldName, String fieldTypeName) throws Exception {
-	if (!canModify(ctClass))
-	    return null;
-
 	String getMethodString = createGetMethodString(fieldName, fieldTypeName);
+	if (!canModify(ctClass)) {
+	    return ctClass.getMethod(buildGetMethodName(fieldName),
+		    Descriptor.ofMethod(ClassPool.getDefault().get(fieldTypeName), new CtClass[0]));
+	}
+
 	CtMethod ctMethod = CtNewMethod.make(getMethodString, ctClass);
 	ctClass.addMethod(ctMethod);
 	LOG.debug("Created '" + ctClass.getName() + "' method: " + getMethodString);

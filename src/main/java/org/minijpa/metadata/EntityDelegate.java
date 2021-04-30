@@ -33,7 +33,6 @@ public final class EntityDelegate implements EntityListener {
 //	LOG.info("get: entityContainerContextManager.isEmpty()=" + entityContainerContextManager.isEmpty());
 //	LOG.info("get: entityContainerContextManager.isLoadedFromDb(entityInstance)=" + entityContainerContextManager.isLoadedFromDb(entityInstance));
 	if (entityContainerContextManager.isEmpty())
-//		|| !entityContainerContextManager.isLoadedFromDb(entityInstance))
 	    return value;
 
 	MetaEntity entity = persistenceUnitContextManager.getEntity(entityInstance.getClass().getName());
@@ -105,7 +104,6 @@ public final class EntityDelegate implements EntityListener {
 //
 //	    return null;
 //	}
-
 	public Optional<PersistenceUnitContext> getEntityContext(String persistenceUnitName) {
 	    return entityContexts.stream().filter(e -> e.getPersistenceUnitName().equals(persistenceUnitName))
 		    .findFirst();

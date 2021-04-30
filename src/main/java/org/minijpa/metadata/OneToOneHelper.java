@@ -26,8 +26,7 @@ public class OneToOneHelper {
 	if (joinColumn != null)
 	    builder.withJoinColumn(joinColumn.name());
 
-	if (oneToOne.mappedBy() != null && !oneToOne.mappedBy().isEmpty())
-	    builder.withMappedBy(oneToOne.mappedBy());
+	builder.withMappedBy(RelationshipHelper.getMappedBy(oneToOne));
 
 	if (oneToOne.fetch() != null)
 	    if (oneToOne.fetch() == FetchType.EAGER)
@@ -66,7 +65,7 @@ public class OneToOneHelper {
 	    builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
 	} else {
 	    builder.withOwningEntity(toEntity);
-	    builder.withOwningAttribute(toEntity.getAttribute(oneToOneRelationship.getMappedBy()));
+	    builder.withOwningAttribute(toEntity.getAttribute(oneToOneRelationship.getMappedBy().get()));
 	}
 
 	builder.withAttributeType(toEntity);

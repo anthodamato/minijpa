@@ -98,8 +98,6 @@ public class ClassInspectorTest {
 	assertNotNull(managedData.getCtClass());
 	assertEquals(className, managedData.getCtClass().getName());
 	assertEquals(ManagedData.ENTITY, managedData.getType());
-	assertEquals("mds0", managedData.getModificationAttribute());
-	assertEquals("lta0", managedData.getLockTypeAttribute().get());
 
 	List<AttributeData> attributeDatas = managedData.getAttributeDataList();
 	assertNotNull(attributeDatas);
@@ -113,6 +111,30 @@ public class ClassInspectorTest {
 	assertTrue(optional.isPresent());
 
 	optional = managedData.findAttribute("price");
+	assertTrue(optional.isPresent());
+    }
+
+    @Test
+    public void bookingSale() throws Exception {
+	String className = "org.minijpa.jpa.model.BookingSale";
+	ClassInspector classInspector = new ClassInspector();
+	ManagedData managedData = classInspector.inspect(className, new ArrayList<>());
+	assertNotNull(managedData);
+	assertNotNull(managedData.getCtClass());
+	assertEquals(className, managedData.getCtClass().getName());
+	assertEquals(ManagedData.ENTITY, managedData.getType());
+
+	List<AttributeData> attributeDatas = managedData.getAttributeDataList();
+	assertNotNull(attributeDatas);
+	assertEquals(3, attributeDatas.size());
+
+	Optional<AttributeData> optional = managedData.findAttribute("id");
+	assertTrue(optional.isPresent());
+
+	optional = managedData.findAttribute("booking");
+	assertTrue(optional.isPresent());
+
+	optional = managedData.findAttribute("perc");
 	assertTrue(optional.isPresent());
     }
 }
