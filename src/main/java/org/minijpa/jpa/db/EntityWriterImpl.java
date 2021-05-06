@@ -97,9 +97,9 @@ public class EntityWriterImpl implements EntityWriter {
     }
 
     protected void update(MetaEntity entity, Object entityInstance,
-	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	    ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
 	// It's an update.
-	if (attributeValueArray.isEmpty())
+	if (modelValueArray.isEmpty())
 	    return;
 
 	Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
@@ -111,26 +111,26 @@ public class EntityWriterImpl implements EntityWriter {
 	    idColumns.add(entity.getVersionAttribute().get().getColumnName());
 	}
 
-	metaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, attributeValueArray);
-	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, attributeValueArray.getModels(),
+	metaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, modelValueArray);
+	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, modelValueArray.getModels(),
 		idColumns);
-	attributeValueArray.add(entity.getId().getAttribute(), idValue);
+	modelValueArray.add(entity.getId().getAttribute(), idValue);
 	if (metaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
 	    Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
-	    attributeValueArray.add(entity.getVersionAttribute().get(), currentVersionValue);
+	    modelValueArray.add(entity.getVersionAttribute().get(), currentVersionValue);
 	}
 
-	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attributeValueArray);
+	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
 	String sql = sqlStatementGenerator.export(sqlUpdate);
 	jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
 	metaEntityHelper.updateVersionAttributeValue(entity, entityInstance);
     }
 
     protected void insert(MetaEntity entity, Object entityInstance,
-	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	    ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
 	// It's an insert.
 	// checks specific relationship attributes ('one to many' with join table) even
-	// if there are no notified changes. If they get changed then they'll be made persistent.
+	// if there are no notified changes. If they are changed then they'll be made persistent.
 	// Collect join table attributes
 	Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
 	for (MetaAttribute a : entity.getRelationshipAttributes()) {
@@ -154,7 +154,7 @@ public class EntityWriterImpl implements EntityWriter {
 	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
 //	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
 	if (pkStrategy == PkStrategy.IDENTITY) {
-	    List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attributeValueArray);
+	    List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
 	    // version attribute
 	    Optional<QueryParameter> optVersion = metaEntityHelper.generateVersionParameter(entity);
 	    if (optVersion.isPresent())
@@ -175,7 +175,7 @@ public class EntityWriterImpl implements EntityWriter {
 	} else {
 	    Object idValue = id.getReadMethod().invoke(entityInstance);
 	    List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(id, idValue);
-	    List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(attributeValueArray);
+	    List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
 	    parameters.addAll(0, idParameters);
 	    // version attribute
 	    Optional<QueryParameter> optVersion = metaEntityHelper.generateVersionParameter(entity);
@@ -209,7 +209,8 @@ public class EntityWriterImpl implements EntityWriter {
 	// persist every entity instance
 	RelationshipJoinTable relationshipJoinTable = a.getRelationship().getJoinTable();
 	for (Object instance : ees) {
-	    List<QueryParameter> parameters = sqlStatementFactory.createRelationshipJoinTableParameters(relationshipJoinTable, entityInstance, instance);
+	    List<QueryParameter> parameters = sqlStatementFactory.createRelationshipJoinTableParameters(
+		    relationshipJoinTable, entityInstance, instance);
 	    List<String> columnNames = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 	    SqlInsert sqlInsert = sqlStatementFactory.generateJoinTableInsert(relationshipJoinTable, columnNames);
 	    String sql = sqlStatementGenerator.export(sqlInsert);

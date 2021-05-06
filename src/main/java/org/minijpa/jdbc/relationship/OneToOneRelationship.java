@@ -17,28 +17,24 @@ public final class OneToOneRelationship extends Relationship {
 
     @Override
     public String toString() {
-	return OneToOneRelationship.class.getName() + ": joinColumn=" + joinColumn
-		+ "; joinColumnTable=" + joinColumnTable + "; mappedBy=" + mappedBy + "; fetchType="
+	return OneToOneRelationship.class.getName()
+		+ ": joinColumnTable=" + joinColumnTable + "; mappedBy=" + mappedBy + "; fetchType="
 		+ fetchType;
     }
 
     public static class Builder {
 
-	private String joinColumn;
 	private String joinColumnTable;
-	private Optional<String> mappedBy;
+	private Optional<String> mappedBy = Optional.empty();
 	private FetchType fetchType = FetchType.EAGER;
 	private MetaEntity owningEntity;
 	private MetaAttribute targetAttribute;
 	private MetaAttribute owningAttribute;
 	private MetaEntity attributeType;
+	private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
+	private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
 
 	public Builder() {
-	}
-
-	public Builder withJoinColumn(String joinColumn) {
-	    this.joinColumn = joinColumn;
-	    return this;
 	}
 
 	public Builder withJoinColumnTable(String joinColumnTable) {
@@ -76,8 +72,17 @@ public final class OneToOneRelationship extends Relationship {
 	    return this;
 	}
 
+	public Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
+	    this.joinColumnDataList = joinColumnDataList;
+	    return this;
+	}
+
+	public Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
+	    this.joinColumnMapping = joinColumnMapping;
+	    return this;
+	}
+
 	public Builder with(OneToOneRelationship oneToOne) {
-	    this.joinColumn = oneToOne.joinColumn;
 	    this.joinColumnTable = oneToOne.joinColumnTable;
 	    this.mappedBy = oneToOne.mappedBy;
 	    this.fetchType = oneToOne.fetchType;
@@ -85,12 +90,13 @@ public final class OneToOneRelationship extends Relationship {
 	    this.owningAttribute = oneToOne.owningAttribute;
 	    this.targetAttribute = oneToOne.targetAttribute;
 	    this.attributeType = oneToOne.attributeType;
+	    this.joinColumnDataList = oneToOne.joinColumnDataList;
+	    this.joinColumnMapping = oneToOne.getJoinColumnMapping();
 	    return this;
 	}
 
 	public OneToOneRelationship build() {
 	    OneToOneRelationship oto = new OneToOneRelationship();
-	    oto.joinColumn = joinColumn;
 	    oto.joinColumnTable = joinColumnTable;
 	    oto.mappedBy = mappedBy;
 	    oto.fetchType = fetchType;
@@ -98,6 +104,8 @@ public final class OneToOneRelationship extends Relationship {
 	    oto.targetAttribute = targetAttribute;
 	    oto.owningAttribute = owningAttribute;
 	    oto.attributeType = attributeType;
+	    oto.joinColumnDataList = joinColumnDataList;
+	    oto.joinColumnMapping = joinColumnMapping;
 	    return oto;
 	}
     }

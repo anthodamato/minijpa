@@ -22,7 +22,12 @@ import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 
 public class JoinColumnAttribute extends AbstractAttribute {
 
+    private MetaAttribute attribute;
     private MetaAttribute foreignKeyAttribute;
+
+    public MetaAttribute getAttribute() {
+	return attribute;
+    }
 
     public MetaAttribute getForeignKeyAttribute() {
 	return foreignKeyAttribute;
@@ -35,6 +40,7 @@ public class JoinColumnAttribute extends AbstractAttribute {
 	private Class<?> readWriteDbType;
 	private DbTypeMapper dbTypeMapper;
 	private Integer sqlType;
+	private MetaAttribute attribute;
 	private MetaAttribute foreignKeyAttribute;
 	protected JdbcAttributeMapper jdbcAttributeMapper;
 
@@ -63,6 +69,11 @@ public class JoinColumnAttribute extends AbstractAttribute {
 	    return this;
 	}
 
+	public Builder withAttribute(MetaAttribute attribute) {
+	    this.attribute = attribute;
+	    return this;
+	}
+
 	public Builder withForeignKeyAttribute(MetaAttribute foreignKeyAttribute) {
 	    this.foreignKeyAttribute = foreignKeyAttribute;
 	    return this;
@@ -80,6 +91,7 @@ public class JoinColumnAttribute extends AbstractAttribute {
 	    joinColumnAttribute.readWriteDbType = readWriteDbType;
 	    joinColumnAttribute.dbTypeMapper = dbTypeMapper;
 	    joinColumnAttribute.sqlType = sqlType;
+	    joinColumnAttribute.attribute = attribute;
 	    joinColumnAttribute.foreignKeyAttribute = foreignKeyAttribute;
 	    joinColumnAttribute.jdbcAttributeMapper = jdbcAttributeMapper;
 	    return joinColumnAttribute;

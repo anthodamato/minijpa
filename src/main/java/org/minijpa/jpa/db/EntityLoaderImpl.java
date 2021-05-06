@@ -11,13 +11,13 @@ import javax.persistence.EntityNotFoundException;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.relationship.FetchType;
+import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
@@ -148,7 +148,7 @@ public class EntityLoaderImpl implements EntityLoader {
     public Object build(ModelValueArray<FetchParameter> modelValueArray,
 	    MetaEntity entity, LockType lockType) throws Exception {
 	LOG.debug("build: entity=" + entity);
-	Object primaryKey = AttributeUtil.buildPK(entity, modelValueArray);
+	Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
 	LOG.debug("build: primaryKey=" + primaryKey);
 	Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
 	if (entityInstance != null)
@@ -188,26 +188,23 @@ public class EntityLoaderImpl implements EntityLoader {
 	}
 
 	// join columns
-	for (JoinColumnAttribute joinColumnAttribute : metaEntity.getJoinColumnAttributes()) {
-	    MetaAttribute attribute = joinColumnAttribute.getForeignKeyAttribute();
-	    if (attribute.getRelationship() != null && attribute.getRelationship().toOne()) {
-		MetaEntity toEntity = attribute.getRelationship().getAttributeType();
-		if (attribute.isLazy()) {
-		    Object primaryKey = AttributeUtil.buildPK(toEntity, modelValueArray);
-		    MetaEntityHelper.setForeignKeyValue(attribute, parentInstance, primaryKey);
-		    continue;
-		}
-
-		Object parent = buildEntityByValues(modelValueArray, toEntity, LockType.NONE);
-		entityInstanceBuilder.writeMetaAttributeValue(parentInstance,
-			parentInstance.getClass(), attribute, parent, metaEntity);
+	for (JoinColumnMapping joinColumnMapping : metaEntity.getJoinColumnMappings()) {
+	    if (joinColumnMapping.isLazy()) {
+		Object fk = AttributeUtil.buildPK(joinColumnMapping.getForeignKey(), modelValueArray);
+		MetaEntityHelper.setForeignKeyValue(joinColumnMapping.getAttribute(), parentInstance, fk);
+		continue;
 	    }
+
+	    MetaEntity toEntity = joinColumnMapping.getAttribute().getRelationship().getAttributeType();
+	    Object parent = buildEntityByValues(modelValueArray, toEntity, LockType.NONE);
+	    entityInstanceBuilder.writeMetaAttributeValue(parentInstance,
+		    parentInstance.getClass(), joinColumnMapping.getAttribute(), parent, metaEntity);
 	}
     }
 
     private Object buildEntityByValues(ModelValueArray<FetchParameter> modelValueArray,
 	    MetaEntity entity, LockType lockType) throws Exception {
-	Object primaryKey = AttributeUtil.buildPK(entity, modelValueArray);
+	Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
 	LOG.debug("buildEntityByValues: primaryKey=" + primaryKey);
 	Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
 	if (entityInstance != null)

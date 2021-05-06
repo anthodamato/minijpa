@@ -1,5 +1,6 @@
 package org.minijpa.jdbc.relationship;
 
+import java.util.Optional;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
@@ -21,24 +22,20 @@ public final class ManyToOneRelationship extends Relationship {
 
     @Override
     public String toString() {
-	return ManyToOneRelationship.class.getName() + ": joinColumn=" + getJoinColumn() + "; fetchType=" + getFetchType();
+	return ManyToOneRelationship.class.getName() + ": fetchType=" + getFetchType();
     }
 
     public static class Builder {
 
-	private String joinColumn;
 	private String joinColumnTable;
 	private FetchType fetchType = FetchType.EAGER;
 	private MetaEntity owningEntity;
 	private MetaAttribute owningAttribute;
 	private MetaEntity attributeType;
+	private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
+	private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
 
 	public Builder() {
-	}
-
-	public Builder withJoinColumn(String joinColumn) {
-	    this.joinColumn = joinColumn;
-	    return this;
 	}
 
 	public Builder withJoinColumnTable(String joinColumnTable) {
@@ -66,24 +63,36 @@ public final class ManyToOneRelationship extends Relationship {
 	    return this;
 	}
 
+	public ManyToOneRelationship.Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
+	    this.joinColumnDataList = joinColumnDataList;
+	    return this;
+	}
+
+	public ManyToOneRelationship.Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
+	    this.joinColumnMapping = joinColumnMapping;
+	    return this;
+	}
+
 	public Builder with(ManyToOneRelationship manyToOne) {
-	    this.joinColumn = manyToOne.joinColumn;
 	    this.joinColumnTable = manyToOne.joinColumnTable;
 	    this.fetchType = manyToOne.fetchType;
 	    this.owningEntity = manyToOne.owningEntity;
 	    this.owningAttribute = manyToOne.owningAttribute;
 	    this.attributeType = manyToOne.attributeType;
+	    this.joinColumnDataList = manyToOne.joinColumnDataList;
+	    this.joinColumnMapping = manyToOne.joinColumnMapping;
 	    return this;
 	}
 
 	public ManyToOneRelationship build() {
 	    ManyToOneRelationship r = new ManyToOneRelationship();
-	    r.joinColumn = joinColumn;
 	    r.joinColumnTable = joinColumnTable;
 	    r.fetchType = fetchType;
 	    r.owningEntity = owningEntity;
 	    r.owningAttribute = owningAttribute;
 	    r.attributeType = attributeType;
+	    r.joinColumnDataList = joinColumnDataList;
+	    r.joinColumnMapping = joinColumnMapping;
 	    return r;
 	}
     }

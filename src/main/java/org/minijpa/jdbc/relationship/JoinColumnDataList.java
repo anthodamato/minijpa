@@ -16,32 +16,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.minijpa.jdbc;
+package org.minijpa.jdbc.relationship;
 
-import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface Pk {
+public class JoinColumnDataList {
 
-    public PkGeneration getPkGeneration();
+    private final List<JoinColumnData> joinColumnDataList;
 
-    public boolean isComposite();
+    public JoinColumnDataList(List<JoinColumnData> joinColumnDataList) {
+	this.joinColumnDataList = joinColumnDataList;
+    }
 
-    public boolean isEmbedded();
+    public List<JoinColumnData> getJoinColumnDataList() {
+	return joinColumnDataList;
+    }
 
-    public MetaAttribute getAttribute();
-
-    public List<MetaAttribute> getAttributes();
-
-    public Class<?> getType();
-
-    public String getName();
-
-    public Method getReadMethod();
-
-    public Method getWriteMethod();
+    public Optional<String> getNameByReferenced(String referencedName) {
+	Optional<JoinColumnData> o = joinColumnDataList.stream().
+		filter(j -> j.getReferencedColumnName().isPresent() && j.getReferencedColumnName().get().equalsIgnoreCase(referencedName)).findFirst();
+	return o.isPresent() ? o.get().getName() : Optional.empty();
+    }
 }

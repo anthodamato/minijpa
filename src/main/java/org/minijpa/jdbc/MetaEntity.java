@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.minijpa.jdbc.relationship.JoinColumnMapping;
 
 public class MetaEntity {
 
@@ -48,7 +49,7 @@ public class MetaEntity {
     private Method writeMethod; // used for embeddables
     private String path; // used for embeddables
     private boolean embeddedId;
-    private final List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
+    private final List<JoinColumnMapping> joinColumnMappings = new ArrayList<>();
     // used to build the metamodel. The 'attributes' field contains the
     // MappedSuperclass attributes
     private MetaEntity mappedSuperclassEntity;
@@ -114,8 +115,8 @@ public class MetaEntity {
 	return path;
     }
 
-    public List<JoinColumnAttribute> getJoinColumnAttributes() {
-	return joinColumnAttributes;
+    public List<JoinColumnMapping> getJoinColumnMappings() {
+	return joinColumnMappings;
     }
 
     public MetaEntity getMappedSuperclassEntity() {
@@ -188,10 +189,16 @@ public class MetaEntity {
     }
 
     public List<JoinColumnAttribute> expandJoinColumnAttributes() {
-	List<JoinColumnAttribute> jcas = new ArrayList<>(joinColumnAttributes);
-	for (MetaEntity metaEntity : embeddables) {
+	List<JoinColumnAttribute> jcas = new ArrayList<>();
+	joinColumnMappings.forEach(joinColumnMapping -> {
+	    for (int i = 0; i < joinColumnMapping.count(); ++i) {
+		jcas.add(joinColumnMapping.get(i));
+	    }
+	});
+
+	embeddables.forEach(metaEntity -> {
 	    jcas.addAll(metaEntity.expandJoinColumnAttributes());
-	}
+	});
 
 	return jcas;
     }

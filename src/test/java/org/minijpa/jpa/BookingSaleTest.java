@@ -11,7 +11,6 @@ import javax.persistence.Persistence;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.minijpa.jpa.model.Booking;
@@ -40,7 +39,6 @@ public class BookingSaleTest {
 	emf.close();
     }
 
-    @Disabled
     @Test
     public void persist() throws Exception {
 	final EntityManager em = emf.createEntityManager();

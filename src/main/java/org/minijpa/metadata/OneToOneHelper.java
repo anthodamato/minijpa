@@ -5,28 +5,29 @@
  */
 package org.minijpa.metadata;
 
+import java.util.Optional;
 import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
-import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
+import org.minijpa.jdbc.relationship.JoinColumnDataList;
+import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.OneToOneRelationship;
 
 /**
  *
  * @author adamato
  */
-public class OneToOneHelper {
+public class OneToOneHelper extends RelationshipHelper {
 
-    public OneToOneRelationship createOneToOne(OneToOne oneToOne, JoinColumn joinColumn) {
+    public OneToOneRelationship createOneToOne(
+	    OneToOne oneToOne,
+	    Optional<JoinColumnDataList> joinColumnDataList) {
 	OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder();
-	if (joinColumn != null)
-	    builder.withJoinColumn(joinColumn.name());
+	builder.withJoinColumnDataList(joinColumnDataList);
 
-	builder.withMappedBy(RelationshipHelper.getMappedBy(oneToOne));
+	builder.withMappedBy(getMappedBy(oneToOne));
 
 	if (oneToOne.fetch() != null)
 	    if (oneToOne.fetch() == FetchType.EAGER)
@@ -37,32 +38,14 @@ public class OneToOneHelper {
 	return builder.build();
     }
 
-    private String createDefaultJoinColumn(MetaAttribute owningAttribute, MetaEntity toEntity) {
-	return owningAttribute.getName() + "_" + toEntity.getId().getAttribute().getColumnName();
-    }
-
     public OneToOneRelationship finalizeRelationship(OneToOneRelationship oneToOneRelationship, MetaAttribute a,
 	    MetaEntity entity, MetaEntity toEntity, DbConfiguration dbConfiguration) {
 	OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder().with(oneToOneRelationship);
 	if (oneToOneRelationship.isOwner()) {
-	    String joinColumnName = oneToOneRelationship.getJoinColumn();
-	    if (oneToOneRelationship.getJoinColumn() == null) {
-		joinColumnName = createDefaultJoinColumn(a, toEntity);
-		builder.withJoinColumn(joinColumnName);
-	    }
-
-	    JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper()
-		    .mapJdbcAttribute(toEntity.getId().getType(), toEntity.getId().getAttribute().getSqlType());
-	    JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute.Builder()
-		    .withColumnName(joinColumnName)
-		    .withType(toEntity.getId().getType())
-		    .withReadWriteDbType(toEntity.getId().getAttribute().getReadWriteDbType())
-		    .withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-		    .withSqlType(toEntity.getId().getAttribute().getSqlType())
-		    .withForeignKeyAttribute(a)
-		    .withJdbcAttributeMapper(jdbcAttributeMapper).build();
-	    entity.getJoinColumnAttributes().add(joinColumnAttribute);
+	    JoinColumnMapping joinColumnMapping = buildJoinColumnMapping(dbConfiguration, a, toEntity, oneToOneRelationship.getJoinColumnDataList());
+	    entity.getJoinColumnMappings().add(joinColumnMapping);
 	    builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
+	    builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
 	} else {
 	    builder.withOwningEntity(toEntity);
 	    builder.withOwningAttribute(toEntity.getAttribute(oneToOneRelationship.getMappedBy().get()));

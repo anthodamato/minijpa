@@ -17,6 +17,10 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
+import org.minijpa.jdbc.relationship.CompositeJoinColumnMapping;
+import org.minijpa.jdbc.relationship.JoinColumnDataList;
+import org.minijpa.jdbc.relationship.JoinColumnMapping;
+import org.minijpa.jdbc.relationship.SingleJoinColumnMapping;
 
 /**
  *
@@ -56,7 +60,7 @@ public abstract class RelationshipHelper {
 	JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper().mapJdbcAttribute(attribute.getType(), attribute.getSqlType());
 	return new JoinColumnAttribute.Builder().withColumnName(jc).withType(attribute.getType())
 		.withReadWriteDbType(attribute.getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-		.withSqlType(attribute.getSqlType()).withForeignKeyAttribute(attribute).withJdbcAttributeMapper(jdbcAttributeMapper).build();
+		.withSqlType(attribute.getSqlType()).withAttribute(attribute).withJdbcAttributeMapper(jdbcAttributeMapper).build();
     }
 
     protected List<JoinColumnAttribute> createUnidirectionalJoinColumnAttributes(MetaEntity entity, DbConfiguration dbConfiguration) {
@@ -68,6 +72,71 @@ public abstract class RelationshipHelper {
 	}
 
 	return joinColumnAttributes;
+    }
+
+    private String createDefaultJoinColumn(MetaAttribute owningAttribute, MetaAttribute targetAttribute) {
+	return owningAttribute.getName() + "_" + targetAttribute.getColumnName();
+    }
+
+    private JoinColumnMapping buildCompositeJoinColumnMapping(DbConfiguration dbConfiguration, MetaAttribute a,
+	    MetaEntity toEntity, Optional<JoinColumnDataList> joinColumnDataList) {
+	List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
+	for (MetaAttribute metaAttribute : toEntity.getId().getAttributes()) {
+	    Optional<String> joinColumnName = joinColumnDataList.isPresent()
+		    ? joinColumnDataList.get().getNameByReferenced(metaAttribute.getColumnName())
+		    : Optional.empty();
+	    if (joinColumnName.isEmpty())
+		joinColumnName = Optional.of(createDefaultJoinColumn(a, metaAttribute));
+
+	    JoinColumnAttribute joinColumnAttribute = buildJoinColumnAttribute(
+		    joinColumnName.get(), dbConfiguration, a, metaAttribute);
+	    joinColumnAttributes.add(joinColumnAttribute);
+	}
+
+	return new CompositeJoinColumnMapping(joinColumnAttributes, a, toEntity.getId());
+    }
+
+    private JoinColumnAttribute buildJoinColumnAttribute(
+	    String joinColumnName,
+	    DbConfiguration dbConfiguration,
+	    MetaAttribute foreignKeyAttribute,
+	    MetaAttribute id) {
+	JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper()
+		.mapJdbcAttribute(id.getType(), id.getSqlType());
+	return new JoinColumnAttribute.Builder()
+		.withColumnName(joinColumnName)
+		.withType(id.getType())
+		.withReadWriteDbType(id.getReadWriteDbType())
+		.withDbTypeMapper(dbConfiguration.getDbTypeMapper())
+		.withSqlType(id.getSqlType())
+		.withAttribute(foreignKeyAttribute)
+		.withForeignKeyAttribute(id)
+		.withJdbcAttributeMapper(jdbcAttributeMapper).build();
+    }
+
+    private JoinColumnMapping buildSingleJoinColumnMapping(DbConfiguration dbConfiguration, MetaAttribute a,
+	    MetaEntity toEntity, Optional<JoinColumnDataList> joinColumnDataList) {
+	String joinColumnName = null;
+	if (joinColumnDataList.isPresent()) {
+	    if (joinColumnDataList.get().getJoinColumnDataList().get(0).getName().isPresent())
+		joinColumnName = joinColumnDataList.get().getJoinColumnDataList().get(0).getName().get();
+	} else
+	    joinColumnName = createDefaultJoinColumn(a, toEntity.getId().getAttribute());
+
+	JoinColumnAttribute joinColumnAttribute = buildJoinColumnAttribute(
+		joinColumnName, dbConfiguration, a, toEntity.getId().getAttribute());
+	return new SingleJoinColumnMapping(joinColumnAttribute, a, toEntity.getId());
+    }
+
+    protected JoinColumnMapping buildJoinColumnMapping(
+	    DbConfiguration dbConfiguration,
+	    MetaAttribute a,
+	    MetaEntity toEntity,
+	    Optional<JoinColumnDataList> joinColumnDataList) {
+	if (toEntity.getId().isComposite())
+	    return buildCompositeJoinColumnMapping(dbConfiguration, a, toEntity, joinColumnDataList);
+
+	return buildSingleJoinColumnMapping(dbConfiguration, a, toEntity, joinColumnDataList);
     }
 
 }

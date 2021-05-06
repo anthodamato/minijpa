@@ -363,7 +363,7 @@ public class JdbcRunner {
 	    JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
 	    FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),
 		    joinColumnAttribute.getType(), joinColumnAttribute.getReadWriteDbType(),
-		    joinColumnAttribute.getSqlType(), joinColumnAttribute.getForeignKeyAttribute(),
+		    joinColumnAttribute.getSqlType(), joinColumnAttribute.getAttribute(),
 		    entityMapping.getMetaEntity(), true);
 	    return Optional.of(fetchParameter);
 	}

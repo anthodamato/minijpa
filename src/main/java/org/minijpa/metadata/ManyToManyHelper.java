@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import org.minijpa.jdbc.JoinColumnAttribute;
@@ -18,6 +17,7 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
+import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
 import org.minijpa.jdbc.relationship.ManyToManyRelationship;
 import org.minijpa.jdbc.relationship.Relationship;
@@ -29,11 +29,14 @@ import org.minijpa.jdbc.relationship.RelationshipJoinTable;
  */
 public class ManyToManyHelper extends RelationshipHelper {
 
-    public ManyToManyRelationship createManyToMany(ManyToMany manyToMany, JoinColumn joinColumn,
-	    String joinColumnName, Class<?> collectionClass, Class<?> targetEntity, JoinTable joinTable) {
+    public ManyToManyRelationship createManyToMany(
+	    ManyToMany manyToMany,
+	    Class<?> collectionClass,
+	    Class<?> targetEntity,
+	    JoinTable joinTable,
+	    Optional<JoinColumnDataList> joinColumnDataList) {
 	ManyToManyRelationship.Builder builder = new ManyToManyRelationship.Builder();
-	if (joinColumn != null)
-	    builder = builder.withJoinColumn(joinColumn.name());
+	builder = builder.withJoinColumnDataList(joinColumnDataList);
 
 	builder.withMappedBy(RelationshipHelper.getMappedBy(manyToMany));
 
@@ -75,7 +78,7 @@ public class ManyToManyHelper extends RelationshipHelper {
 	JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper().mapJdbcAttribute(id.getType(), id.getSqlType());
 	return new JoinColumnAttribute.Builder().withColumnName(jc).withType(id.getType())
 		.withReadWriteDbType(id.getReadWriteDbType()).withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-		.withSqlType(id.getSqlType()).withForeignKeyAttribute(id).withJdbcAttributeMapper(jdbcAttributeMapper).build();
+		.withSqlType(id.getSqlType()).withAttribute(id).withJdbcAttributeMapper(jdbcAttributeMapper).build();
     }
 
     private List<JoinColumnAttribute> createJoinColumnAttributes(MetaEntity entity,

@@ -42,11 +42,10 @@ public class AttributeUtil {
 
     public static final Function<FetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f.getAttribute();
 
-    public static Object buildPK(MetaEntity entity, ModelValueArray<FetchParameter> modelValueArray) throws Exception {
-	Pk id = entity.getId();
+    public static Object buildPK(Pk id, ModelValueArray<FetchParameter> modelValueArray) throws Exception {
 	if (id.isEmbedded()) {
 	    Object pkObject = id.getType().getConstructor().newInstance();
-	    buildPK(entity, modelValueArray, id.getAttributes(), pkObject);
+	    buildPK(modelValueArray, id.getAttributes(), pkObject);
 	    return pkObject;
 	}
 
@@ -57,7 +56,7 @@ public class AttributeUtil {
 	return modelValueArray.getValue(index);
     }
 
-    private static void buildPK(MetaEntity entity, ModelValueArray<FetchParameter> modelValueArray,
+    private static void buildPK(ModelValueArray<FetchParameter> modelValueArray,
 	    List<MetaAttribute> attributes, Object pkObject) throws Exception {
 	for (MetaAttribute a : attributes) {
 	    int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, a);
@@ -80,7 +79,7 @@ public class AttributeUtil {
 
     public static int indexOfJoinColumnAttribute(List<JoinColumnAttribute> joinColumnAttributes, MetaAttribute a) {
 	for (int i = 0; i < joinColumnAttributes.size(); ++i) {
-	    if (joinColumnAttributes.get(i).getForeignKeyAttribute() == a)
+	    if (joinColumnAttributes.get(i).getAttribute() == a)
 		return i;
 	}
 
@@ -95,67 +94,6 @@ public class AttributeUtil {
 	return id.getReadMethod().invoke(entityInstance);
     }
 
-//    /**
-//     * Finds the parent instance the 'attribute' belongs to. If the 'attribute' is one of the 'entity' attributes it
-//     * will return the 'parentInstance'. If the 'attribute' is inside an embeddable it will return the embeddable
-//     * instance.
-//     *
-//     * @param parentInstance
-//     * @param entity
-//     * @param attribute
-//     * @param entityInstanceBuilder
-//     * @return
-//     * @throws java.lang.Exception
-//     */
-//    public static Object findParentInstance(Object parentInstance, MetaEntity entity,
-//	    MetaAttribute attribute, EntityInstanceBuilder entityInstanceBuilder) throws Exception {
-//	LOG.debug("findParentInstance: attribute.getName()=" + attribute.getName());
-//	LOG.debug("findParentInstance: parentInstance=" + parentInstance);
-//	for (MetaAttribute a : entity.getAttributes()) {
-//	    if (a == attribute)
-//		return parentInstance;
-//	}
-//
-//	for (MetaEntity embeddable : entity.getEmbeddables()) {
-//	    LOG.debug("findParentInstance: embeddable=" + embeddable);
-//	    MetaAttribute emb = embeddable.getAttribute(attribute.getName());
-//	    LOG.debug("findParentInstance: emb=" + emb);
-//	    if (emb != null)
-//		return entityInstanceBuilder.getEmbeddableValue(parentInstance, embeddable);
-//
-//	    Object p = entityInstanceBuilder.getEmbeddableValue(parentInstance, embeddable);
-//	    Object parent = findParentInstance(p, embeddable,
-//		    attribute, entityInstanceBuilder);
-//	    if (parent != null)
-//		return parent;
-//	}
-//
-//	return null;
-//    }
-//
-//    /**
-//     * Finds the parent entity over the parentEntity entity tree. It loops over the embeddables.
-//     *
-//     * @param entityClassName
-//     * @param parentEntity
-//     * @return
-//     * @throws Exception
-//     */
-//    public static MetaEntity findParentEntity(String entityClassName, MetaEntity parentEntity) throws Exception {
-//	if (parentEntity.getEntityClass().getName().equals(entityClassName))
-//	    return parentEntity;
-//
-//	for (MetaEntity embeddable : parentEntity.getEmbeddables()) {
-//	    if (embeddable.getEntityClass().getName().equals(entityClassName))
-//		return embeddable;
-//
-//	    MetaEntity entity = findParentEntity(entityClassName, embeddable);
-//	    if (entity != null)
-//		return entity;
-//	}
-//
-//	return null;
-//    }
     public static MetaAttribute findAttributeFromPath(String path, MetaEntity toEntity) {
 	String[] ss = path.split("\\.");
 	if (ss.length == 0)

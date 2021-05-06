@@ -16,32 +16,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.minijpa.jdbc;
+package org.minijpa.jdbc.relationship;
 
-import java.lang.reflect.Method;
-import java.util.List;
+import java.util.Optional;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface Pk {
+public class JoinColumnData {
 
-    public PkGeneration getPkGeneration();
+    private final Optional<String> name;
+    private final Optional<String> referencedColumnName;
 
-    public boolean isComposite();
+    public JoinColumnData(Optional<String> name, Optional<String> referencedColumnName) {
+	this.name = name;
+	this.referencedColumnName = referencedColumnName;
+    }
 
-    public boolean isEmbedded();
+    public Optional<String> getName() {
+	return name;
+    }
 
-    public MetaAttribute getAttribute();
+    public Optional<String> getReferencedColumnName() {
+	return referencedColumnName;
+    }
 
-    public List<MetaAttribute> getAttributes();
-
-    public Class<?> getType();
-
-    public String getName();
-
-    public Method getReadMethod();
-
-    public Method getWriteMethod();
 }

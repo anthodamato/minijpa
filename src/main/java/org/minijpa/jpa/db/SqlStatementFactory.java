@@ -165,7 +165,7 @@ public class SqlStatementFactory {
 	for (int i = 0; i < attributeValueArray.size(); ++i) {
 	    MetaAttribute attribute = attributeValueArray.getModel(i);
 	    Optional<JoinColumnAttribute> optional = allJoinColumnAttributes.stream().
-		    filter(j -> j.getForeignKeyAttribute() == attribute).findFirst();
+		    filter(j -> j.getAttribute() == attribute).findFirst();
 	    result.add(optional.get(), attributeValueArray.getValue(i));
 	}
 

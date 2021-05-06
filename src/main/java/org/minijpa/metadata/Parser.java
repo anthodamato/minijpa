@@ -22,6 +22,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -48,6 +49,7 @@ import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
+import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.ManyToManyRelationship;
 import org.minijpa.jdbc.relationship.ManyToOneRelationship;
 import org.minijpa.jdbc.relationship.OneToManyRelationship;
@@ -484,11 +486,13 @@ public class Parser {
 	    throw new IllegalArgumentException("More than one relationship annotations at '" + field.getName() + "'");
 
 	JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
+	JoinColumns joinColumns = field.getAnnotation(JoinColumns.class);
+	Optional<JoinColumnDataList> joinColumnDataList = RelationshipUtils.buildJoinColumnDataList(joinColumn, joinColumns);
 	if (oneToOne != null)
-	    return Optional.of(oneToOneHelper.createOneToOne(oneToOne, joinColumn));
+	    return Optional.of(oneToOneHelper.createOneToOne(oneToOne, joinColumnDataList));
 
 	if (manyToOne != null)
-	    return Optional.of(manyToOneHelper.createManyToOne(manyToOne, joinColumn));
+	    return Optional.of(manyToOneHelper.createManyToOne(manyToOne, joinColumnDataList));
 
 	if (oneToMany != null) {
 	    Class<?> collectionClass = null;
@@ -497,7 +501,7 @@ public class Parser {
 		targetEntity = ReflectionUtil.findTargetEntity(field);
 
 	    JoinTable joinTable = field.getAnnotation(JoinTable.class);
-	    return Optional.of(oneToManyHelper.createOneToMany(oneToMany, joinColumn, null, collectionClass, targetEntity, joinTable));
+	    return Optional.of(oneToManyHelper.createOneToMany(oneToMany, collectionClass, targetEntity, joinTable, joinColumnDataList));
 	}
 
 	if (manyToMany != null) {
@@ -507,7 +511,7 @@ public class Parser {
 		targetEntity = ReflectionUtil.findTargetEntity(field);
 
 	    JoinTable joinTable = field.getAnnotation(JoinTable.class);
-	    return Optional.of(manyToManyHelper.createManyToMany(manyToMany, joinColumn, null, collectionClass, targetEntity, joinTable));
+	    return Optional.of(manyToManyHelper.createManyToMany(manyToMany, collectionClass, targetEntity, joinTable, joinColumnDataList));
 	}
 
 	return Optional.empty();

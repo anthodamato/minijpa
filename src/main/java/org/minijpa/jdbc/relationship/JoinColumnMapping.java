@@ -16,32 +16,29 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.minijpa.jdbc;
+package org.minijpa.jdbc.relationship;
 
-import java.lang.reflect.Method;
-import java.util.List;
+import org.minijpa.jdbc.JoinColumnAttribute;
+import org.minijpa.jdbc.MetaAttribute;
+import org.minijpa.jdbc.Pk;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface Pk {
-
-    public PkGeneration getPkGeneration();
-
-    public boolean isComposite();
-
-    public boolean isEmbedded();
+public interface JoinColumnMapping {
 
     public MetaAttribute getAttribute();
 
-    public List<MetaAttribute> getAttributes();
+    public boolean isComposite();
 
-    public Class<?> getType();
+    public int count();
 
-    public String getName();
+    public JoinColumnAttribute get(int index);
 
-    public Method getReadMethod();
+    public JoinColumnAttribute get();
 
-    public Method getWriteMethod();
+    public Pk getForeignKey();
+
+    public boolean isLazy();
 }

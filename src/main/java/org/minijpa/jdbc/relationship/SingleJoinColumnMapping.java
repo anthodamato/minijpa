@@ -16,67 +16,64 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.minijpa.jdbc;
+package org.minijpa.jdbc.relationship;
 
-import java.lang.reflect.Method;
-import java.util.List;
+import org.minijpa.jdbc.JoinColumnAttribute;
+import org.minijpa.jdbc.MetaAttribute;
+import org.minijpa.jdbc.Pk;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class EmbeddedPk implements Pk {
+public class SingleJoinColumnMapping implements JoinColumnMapping {
 
-    private final MetaEntity entity;
-    private final PkGeneration pkGeneration = new PkGeneration();
+    private final JoinColumnAttribute joinColumnAttribute;
+    private final MetaAttribute attribute;
+    private final Pk pk;
 
-    public EmbeddedPk(MetaEntity entity) {
-	this.entity = entity;
-    }
-
-    @Override
-    public PkGeneration getPkGeneration() {
-	return pkGeneration;
-    }
-
-    @Override
-    public boolean isEmbedded() {
-	return true;
-    }
-
-    @Override
-    public boolean isComposite() {
-	return entity.getAttributes().size() > 1;
+    public SingleJoinColumnMapping(JoinColumnAttribute joinColumnAttribute, MetaAttribute attribute, Pk pk) {
+	this.joinColumnAttribute = joinColumnAttribute;
+	this.attribute = attribute;
+	this.pk = pk;
     }
 
     @Override
     public MetaAttribute getAttribute() {
-	return null;
+	return attribute;
     }
 
     @Override
-    public List<MetaAttribute> getAttributes() {
-	return entity.getAttributes();
+    public boolean isComposite() {
+	return false;
     }
 
     @Override
-    public Class<?> getType() {
-	return entity.getEntityClass();
+    public int count() {
+	return 1;
     }
 
     @Override
-    public String getName() {
-	return entity.getName();
+    public JoinColumnAttribute get(int index) {
+	if (index == 0)
+	    return joinColumnAttribute;
+
+	throw new IndexOutOfBoundsException("Index '" + index + "' out of bounds");
     }
 
     @Override
-    public Method getReadMethod() {
-	return entity.getReadMethod();
+    public JoinColumnAttribute get() {
+	return joinColumnAttribute;
     }
 
     @Override
-    public Method getWriteMethod() {
-	return entity.getWriteMethod();
+    public Pk getForeignKey() {
+	return pk;
+    }
+
+    @Override
+    public boolean isLazy() {
+	return joinColumnAttribute.getAttribute().isLazy();
     }
 
 }

@@ -19,15 +19,14 @@ public final class OneToManyRelationship extends Relationship {
 
     @Override
     public String toString() {
-	return OneToManyRelationship.class.getName() + ": joinColumn=" + joinColumn + "; mappedBy=" + mappedBy + "; fetchType="
+	return OneToManyRelationship.class.getName() + ": mappedBy=" + mappedBy + "; fetchType="
 		+ fetchType;
     }
 
     public static class Builder {
 
-	private String joinColumn;
 	private String joinColumnTable;
-	private Optional<String> mappedBy;
+	private Optional<String> mappedBy = Optional.empty();
 	private FetchType fetchType = FetchType.LAZY;
 	private MetaEntity owningEntity;
 	private MetaAttribute owningAttribute;
@@ -37,13 +36,10 @@ public final class OneToManyRelationship extends Relationship {
 	private RelationshipJoinTable joinTable;
 	private MetaEntity attributeType;
 	private JoinTableAttributes joinTableAttributes;
+	private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
+	private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
 
 	public Builder() {
-	}
-
-	public Builder withJoinColumn(String joinColumn) {
-	    this.joinColumn = joinColumn;
-	    return this;
 	}
 
 	public Builder withJoinColumnTable(String joinColumnTable) {
@@ -101,8 +97,17 @@ public final class OneToManyRelationship extends Relationship {
 	    return this;
 	}
 
+	public OneToManyRelationship.Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
+	    this.joinColumnDataList = joinColumnDataList;
+	    return this;
+	}
+
+	public OneToManyRelationship.Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
+	    this.joinColumnMapping = joinColumnMapping;
+	    return this;
+	}
+
 	public Builder with(OneToManyRelationship r) {
-	    this.joinColumn = r.joinColumn;
 	    this.joinColumnTable = r.joinColumnTable;
 	    this.mappedBy = r.mappedBy;
 	    this.fetchType = r.fetchType;
@@ -114,12 +119,13 @@ public final class OneToManyRelationship extends Relationship {
 	    this.joinTable = r.joinTable;
 	    this.attributeType = r.attributeType;
 	    this.joinTableAttributes = r.joinTableAttributes;
+	    this.joinColumnDataList = r.joinColumnDataList;
+	    this.joinColumnMapping = r.joinColumnMapping;
 	    return this;
 	}
 
 	public OneToManyRelationship build() {
 	    OneToManyRelationship r = new OneToManyRelationship();
-	    r.joinColumn = joinColumn;
 	    r.joinColumnTable = joinColumnTable;
 	    r.mappedBy = mappedBy;
 	    r.fetchType = fetchType;
@@ -131,6 +137,8 @@ public final class OneToManyRelationship extends Relationship {
 	    r.joinTable = joinTable;
 	    r.attributeType = attributeType;
 	    r.joinTableAttributes = joinTableAttributes;
+	    r.joinColumnDataList = joinColumnDataList;
+	    r.joinColumnMapping = joinColumnMapping;
 	    return r;
 	}
     }

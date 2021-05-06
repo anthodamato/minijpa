@@ -7,7 +7,6 @@ import org.minijpa.jdbc.MetaEntity;
 public abstract class Relationship {
 
     protected FetchType fetchType = FetchType.EAGER;
-    protected String joinColumn;
     protected String joinColumnTable;
     protected MetaEntity owningEntity;
     // for bidirectional relationships
@@ -23,6 +22,8 @@ public abstract class Relationship {
     protected RelationshipJoinTable joinTable;
     protected Class<?> targetEntityClass;
     protected JoinTableAttributes joinTableAttributes;
+    protected Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
+    protected Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
 
     public Relationship() {
 	super();
@@ -30,10 +31,6 @@ public abstract class Relationship {
 
     public FetchType getFetchType() {
 	return fetchType;
-    }
-
-    public String getJoinColumn() {
-	return joinColumn;
     }
 
     public String getJoinColumnTable() {
@@ -84,9 +81,21 @@ public abstract class Relationship {
 	return joinTableAttributes;
     }
 
+    public Optional<JoinColumnDataList> getJoinColumnDataList() {
+	return joinColumnDataList;
+    }
+
+    public boolean isLazy() {
+	return getFetchType() == FetchType.LAZY;
+    }
+
+    public Optional<JoinColumnMapping> getJoinColumnMapping() {
+	return joinColumnMapping;
+    }
+
     @Override
     public String toString() {
-	return Relationship.class.getName() + ": fetchType=" + fetchType + "; joinColumn=" + joinColumn;
+	return Relationship.class.getName() + ": fetchType=" + fetchType;
     }
 
 }

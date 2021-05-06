@@ -134,7 +134,7 @@ public class MetaAttribute extends AbstractAttribute {
 	if (relationship == null)
 	    return false;
 
-	return relationship.getFetchType() == FetchType.LAZY;
+	return relationship.isLazy();
     }
 
     @Override

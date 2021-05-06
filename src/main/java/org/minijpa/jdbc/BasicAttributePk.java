@@ -30,10 +30,12 @@ public class BasicAttributePk implements Pk {
 
     private final MetaAttribute attribute;
     private final PkGeneration pkGeneration;
+    private final List<MetaAttribute> attributes;
 
     public BasicAttributePk(MetaAttribute attribute, PkGeneration pkGeneration) {
 	this.attribute = attribute;
 	this.pkGeneration = pkGeneration;
+	this.attributes = Arrays.asList(attribute);
     }
 
     @Override
@@ -47,13 +49,18 @@ public class BasicAttributePk implements Pk {
     }
 
     @Override
+    public boolean isComposite() {
+	return false;
+    }
+
+    @Override
     public MetaAttribute getAttribute() {
 	return attribute;
     }
 
     @Override
     public List<MetaAttribute> getAttributes() {
-	return Arrays.asList(attribute);
+	return attributes;
     }
 
     @Override
