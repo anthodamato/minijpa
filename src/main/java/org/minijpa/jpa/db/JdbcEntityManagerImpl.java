@@ -31,7 +31,6 @@ import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jpa.DeleteQuery;
@@ -52,7 +51,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     protected ConnectionHolder connectionHolder;
     protected JpaJdbcRunner jdbcRunner;
     protected SqlStatementFactory sqlStatementFactory;
-    private final SqlStatementGenerator sqlStatementGenerator;
     private final EntityLoader entityLoader;
     private final EntityWriter entityWriter;
     private final MetaEntityHelper metaEntityHelper;
@@ -68,17 +66,16 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	this.connectionHolder = connectionHolder;
 	this.sqlStatementFactory = new CachedSqlStatementFactory();
 	this.jdbcRunner = new JpaJdbcRunner();
-	this.sqlStatementGenerator = new SqlStatementGenerator(dbConfiguration.getDbJdbc());
 	this.metaEntityHelper = new MetaEntityHelper();
 	this.entityLoader = new EntityLoaderImpl(persistenceUnitContext, entityInstanceBuilder, entityContainer,
 		new EntityQueryLevel(sqlStatementFactory, entityInstanceBuilder,
-			sqlStatementGenerator, metaEntityHelper, jdbcRunner, connectionHolder),
-		new ForeignKeyCollectionQueryLevel(sqlStatementFactory, metaEntityHelper, sqlStatementGenerator,
+			dbConfiguration.getSqlStatementGenerator(), metaEntityHelper, jdbcRunner, connectionHolder),
+		new ForeignKeyCollectionQueryLevel(sqlStatementFactory, metaEntityHelper, dbConfiguration.getSqlStatementGenerator(),
 			jdbcRunner, connectionHolder),
-		new JoinTableCollectionQueryLevel(sqlStatementFactory, sqlStatementGenerator,
+		new JoinTableCollectionQueryLevel(sqlStatementFactory, dbConfiguration.getSqlStatementGenerator(),
 			jdbcRunner, connectionHolder));
 	this.entityWriter = new EntityWriterImpl(entityContainer, sqlStatementFactory,
-		sqlStatementGenerator, entityLoader, entityInstanceBuilder, connectionHolder, jdbcRunner);
+		dbConfiguration.getSqlStatementGenerator(), entityLoader, entityInstanceBuilder, connectionHolder, jdbcRunner);
     }
 
     public EntityLoader getEntityLoader() {
@@ -265,7 +262,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	StatementParameters statementParameters = sqlStatementFactory.select(query);
 	SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
-	String sql = sqlStatementGenerator.export(sqlSelect);
+	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
 	LOG.debug("select: sql=" + sql);
 	LOG.debug("select: sqlSelect.getResult()=" + sqlSelect.getResult());
 	if (sqlSelect.getResult() != null) {
@@ -329,7 +326,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	List<QueryParameter> parameters = sqlStatementFactory.createUpdateParameters(updateQuery);
 	SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery, parameters);
-	String sql = sqlStatementGenerator.export(sqlUpdate);
+	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlUpdate);
 	return jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
     }
 
@@ -340,7 +337,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	StatementParameters statementParameters = sqlStatementFactory.delete(deleteQuery);
 	SqlDelete sqlDelete = (SqlDelete) statementParameters.getSqlStatement();
-	String sql = sqlStatementGenerator.export(sqlDelete);
+	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
 	return jdbcRunner.delete(sql, connectionHolder.getConnection(), statementParameters.getParameters());
     }
 

@@ -8,11 +8,12 @@ import org.minijpa.jdbc.DbMetaData;
 import org.minijpa.jdbc.db.DbConfiguration;
 
 public class DbConfigurationFactory {
-	public static synchronized DbConfiguration create(Connection connection) throws SQLException {
-		Database database = new DbMetaData().database(connection);
-		if (database == Database.APACHE_DERBY)
-			return new ApacheDerbyConfiguration();
 
-		return new DefaultDbConfiguration();
-	}
+    public static synchronized DbConfiguration create(Connection connection) throws SQLException {
+	Database database = new DbMetaData().database(connection);
+	if (database == Database.APACHE_DERBY)
+	    return new ApacheDerbyConfiguration();
+
+	return new DefaultDbConfiguration();
+    }
 }

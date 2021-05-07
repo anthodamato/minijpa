@@ -2,13 +2,17 @@ package org.minijpa.jpa.db;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
 import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
+import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
@@ -24,7 +28,7 @@ import org.minijpa.jdbc.model.join.FromJoinImpl;
 
 public class SqlStatementGeneratorTest {
 
-    private final SqlStatementGenerator sqlStatementGenerator = new SqlStatementGenerator(new ApacheDerbyJdbc());
+    private final SqlStatementGenerator sqlStatementGenerator = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc());
 
     @Test
     public void simpleCondition() {
@@ -107,4 +111,21 @@ public class SqlStatementGeneratorTest {
 		sqlStatementGenerator.export(sqlSelect));
     }
 
+    @Test
+    public void ddlBookingSale() throws Exception {
+	DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
+	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, "booking_sale");
+	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitEnv.getPersistenceUnitContext());
+	List<String> ddlStatements = sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
+	Assertions.assertFalse(ddlStatements.isEmpty());
+	String d0 = ddlStatements.get(0);
+	Assertions.assertEquals("create table booking (dateof date not null, room_number integer not null, customer_id integer, primary key (dateof, room_number))", d0);
+	String d1 = ddlStatements.get(1);
+	Assertions.assertEquals("create table booking_sale (id bigint not null, perc integer not null, b_dateof date, b_room_number integer, primary key (id))", d1);
+	String d2 = ddlStatements.get(2);
+	Assertions.assertEquals("create sequence BOOKING_SALE_PK_SEQ", d2);
+	String d3 = ddlStatements.get(3);
+	Assertions.assertEquals("alter table booking_sale add constraint FK68sgx7a1ydv6j101gaavq9x9g foreign key (b_dateof, b_room_number) references booking", d3);
+    }
 }

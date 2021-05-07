@@ -1,6 +1,7 @@
 package org.minijpa.jpa;
 
 import java.sql.Connection;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManagerFactory;
@@ -11,9 +12,12 @@ import javax.persistence.spi.ProviderUtil;
 import org.minijpa.jpa.db.ConnectionProviderImpl;
 import org.minijpa.jdbc.DbMetaData;
 import org.minijpa.jdbc.db.DbConfiguration;
+import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jpa.db.DbConfigurationFactory;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.PersistenceUnitPropertyActions;
+import org.minijpa.jpa.db.SqlStatementFactory;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +37,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    DbMetaData dbMetaData = new DbMetaData();
 	    dbMetaData.showDatabaseMetadata(connection);
 	    DbConfiguration dbConfiguration = DbConfigurationFactory.create(connection);
-	    DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo, dbConfiguration);
+	    DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo.getPersistenceUnitName(), dbConfiguration);
 	} catch (Exception e) {
 	    LOG.error("processConfiguration: Exception " + e.getClass());
 	    if (connection != null)
@@ -42,8 +46,6 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    if (connection != null)
 		connection.close();
 	}
-
-//		new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
     }
 
     @Override
@@ -69,10 +71,10 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    processConfiguration(persistenceUnitInfo);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
-	    LOG.info("createEntityManagerFactory(String emName: processConfiguration: " + e.getClass().getName());
+	    LOG.debug("createEntityManagerFactory(String emName: processConfiguration: " + e.getClass().getName());
 	}
 
-	LOG.info("createEntityManagerFactory: EntityManagerType.APPLICATION_MANAGED");
+	LOG.debug("createEntityManagerFactory: EntityManagerType.APPLICATION_MANAGED");
 	return new MiniEntityManagerFactory(EntityManagerType.APPLICATION_MANAGED, persistenceUnitInfo, map);
     }
 
@@ -86,7 +88,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    processConfiguration(persistenceUnitInfo);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
-	    LOG.info("createEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo: processConfiguration: "
+	    LOG.debug("createEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo: processConfiguration: "
 		    + e.getClass().getName());
 	}
 
@@ -96,6 +98,13 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 
     @Override
     public void generateSchema(PersistenceUnitInfo info, @SuppressWarnings("rawtypes") Map map) {
+	try {
+	    PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(info);
+	    generateSchema(persistenceUnitContext);
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    LOG.error("generateSchema: e.getClass()=" + e.getClass());
+	}
     }
 
     @Override
@@ -111,7 +120,23 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    return false;
 	}
 
+	try {
+	    PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
+	    generateSchema(persistenceUnitContext);
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    LOG.error("generateSchema: e.getClass()=" + e.getClass());
+	    return false;
+	}
+
 	return true;
+    }
+
+    private void generateSchema(PersistenceUnitContext persistenceUnitContext) throws Exception {
+	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
+	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
+	// run script
     }
 
     @Override

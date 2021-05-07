@@ -18,21 +18,38 @@
  */
 package org.minijpa.jdbc.model;
 
+import java.util.List;
+import org.minijpa.jdbc.JoinColumnAttribute;
+import org.minijpa.jdbc.MetaAttribute;
+
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface SqlStatementGenerator {
+public class SqlCreateTable implements SqlDDLStatement {
 
-    public String export(SqlInsert sqlInsert);
+    private final String tableName;
+    private final List<MetaAttribute> attributes;
+    private final List<JoinColumnAttribute> joinColumnAttributes;
 
-    public String export(SqlUpdate sqlUpdate);
+    public SqlCreateTable(String tableName,
+	    List<MetaAttribute> attributes,
+	    List<JoinColumnAttribute> joinColumnAttributes) {
+	this.tableName = tableName;
+	this.attributes = attributes;
+	this.joinColumnAttributes = joinColumnAttributes;
+    }
 
-    public String export(SqlDelete sqlDelete);
+    public String getTableName() {
+	return tableName;
+    }
 
-    public String export(SqlSelect sqlSelect);
+    public List<MetaAttribute> getAttributes() {
+	return attributes;
+    }
 
-    public String export(SqlCreateTable sqlCreateTable);
+    public List<JoinColumnAttribute> getJoinColumnAttributes() {
+	return joinColumnAttributes;
+    }
 
-    public String export(SqlDDLStatement sqlDDLStatement);
 }

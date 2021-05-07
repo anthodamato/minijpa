@@ -20,7 +20,6 @@ package org.minijpa.metadata;
 
 import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.MetaAttribute;
@@ -39,7 +38,6 @@ import org.minijpa.jpa.model.ProgramManager;
  */
 public class EntityDelegateInstanceBuilderTest {
 
-    @Disabled
     @Test
     public void modifications() throws Exception {
 	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(new ApacheDerbyConfiguration(),

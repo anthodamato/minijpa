@@ -18,7 +18,9 @@
  */
 package org.minijpa.jdbc.db;
 
+import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.LockType;
+import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.NameTranslator;
 import org.minijpa.jdbc.PkGenerationType;
@@ -39,6 +41,10 @@ public interface DbJdbc {
     public NameTranslator getNameTranslator();
 
     public String forUpdate(LockType lockType);
+
+    public String buildColumnDefinition(MetaAttribute metaAttribute);
+
+    public String buildColumnDefinition(JoinColumnAttribute joinColumnAttribute);
 
     public default String notEqualOperator() {
 	return "<>";

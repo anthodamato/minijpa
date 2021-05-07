@@ -5,8 +5,8 @@ import java.util.List;
 
 public class SqlInsert implements SqlStatement {
 
-    private FromTable fromTable;
-    private List<Column> columns;
+    private final FromTable fromTable;
+    private final List<Column> columns;
 
     public SqlInsert(FromTable fromTable, List<Column> columns) {
 	super();

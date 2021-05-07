@@ -21,8 +21,8 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
-import org.minijpa.jdbc.AbstractAttribute;
 
+import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.FetchParameter;
@@ -38,9 +38,12 @@ import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
 import org.minijpa.jdbc.model.OrderBy;
+import org.minijpa.jdbc.model.SqlCreateTable;
+import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlInsert;
 import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.jdbc.model.SqlStatement;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.model.TableColumn;
@@ -85,6 +88,7 @@ import org.minijpa.jpa.criteria.MiniRoot;
 import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
 import org.minijpa.jpa.criteria.predicate.PredicateType;
 import org.minijpa.jpa.criteria.predicate.PredicateTypeInfo;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -984,5 +988,17 @@ public class SqlStatementFactory {
 
 	SqlDelete sqlDelete = new SqlDelete(fromTable, optionalCondition);
 	return new StatementParameters(sqlDelete, parameters);
+    }
+
+    public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext) {
+	List<SqlDDLStatement> sqlStatements = new ArrayList<>();
+	Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
+	entities.forEach((k, v) -> {
+	    SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(),
+		    v.expandAllAttributes(), v.expandJoinColumnAttributes());
+	    sqlStatements.add(sqlCreateTable);
+	});
+
+	return sqlStatements;
     }
 }

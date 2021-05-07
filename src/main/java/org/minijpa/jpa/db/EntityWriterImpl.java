@@ -62,7 +62,13 @@ public class EntityWriterImpl implements EntityWriter {
 
     private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
-    public EntityWriterImpl(EntityContainer entityContainer, SqlStatementFactory sqlStatementFactory, SqlStatementGenerator sqlStatementGenerator, EntityLoader entityLoader, EntityInstanceBuilder entityInstanceBuilder, ConnectionHolder connectionHolder, JpaJdbcRunner jdbcRunner) {
+    public EntityWriterImpl(EntityContainer entityContainer, 
+	    SqlStatementFactory sqlStatementFactory,
+	    SqlStatementGenerator sqlStatementGenerator, 
+	    EntityLoader entityLoader, 
+	    EntityInstanceBuilder entityInstanceBuilder,
+	    ConnectionHolder connectionHolder,
+	    JpaJdbcRunner jdbcRunner) {
 	this.entityContainer = entityContainer;
 	this.sqlStatementFactory = sqlStatementFactory;
 	this.sqlStatementGenerator = sqlStatementGenerator;

@@ -60,7 +60,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	this.persistenceUnitContext = persistenceUnitContext;
 	this.entityManagerType = ((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType();
 	this.persistenceContext = new MiniPersistenceContext(persistenceUnitContext.getEntities());
-	this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
+	this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
 	this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 	this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, persistenceContext,
 		new EntityInstanceBuilderImpl(), connectionHolder);

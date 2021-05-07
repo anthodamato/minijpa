@@ -27,7 +27,7 @@ import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
+import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
 import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.Condition;
@@ -87,7 +87,7 @@ public class SqlStatementFactoryTest {
 	BinaryCondition equalColumnExprCondition = (BinaryCondition) condition;
 	Assertions.assertEquals("department_id", equalColumnExprCondition.getLeftColumn().get().getColumn().getName());
 
-	String sql = new SqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
+	String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 	Assertions.assertEquals(
 		"select e.id, e.salary, e.name, e.department_id from Employee AS e where e.department_id = ?", sql);
 
@@ -144,7 +144,7 @@ public class SqlStatementFactoryTest {
 	Optional<List<Condition>> opt = sqlSelect.getConditions();
 	Assertions.assertTrue(opt.isPresent());
 
-	String sql = new SqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
+	String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 	Assertions.assertEquals(
 		"select i.id, i.model, i.name from Item AS i INNER JOIN store_items AS si ON i.id = si.items_id where si.Store_id = ?",
 		sql);
@@ -193,7 +193,7 @@ public class SqlStatementFactoryTest {
 	Assertions.assertNotNull(unaryCondition.getTableColumn());
 	Assertions.assertNotNull(unaryCondition.getExpression());
 
-	String sql = new SqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
+	String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 	Assertions.assertEquals("select a.id, a.name, a.postcode, a.tt from Address AS a where a.postcode IS NULL",
 		sql);
 

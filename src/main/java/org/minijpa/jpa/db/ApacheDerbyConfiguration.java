@@ -4,25 +4,35 @@ import org.minijpa.jdbc.mapper.ApacheDerbyDbTypeMapper;
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.DbJdbc;
+import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
+import org.minijpa.jdbc.model.SqlStatementGenerator;
 
 public class ApacheDerbyConfiguration implements DbConfiguration {
-	private DbJdbc dbJdbc;
-	private DbTypeMapper dbTypeMapper;
 
-	public ApacheDerbyConfiguration() {
-		super();
-		this.dbJdbc = new ApacheDerbyJdbc();
-		this.dbTypeMapper = new ApacheDerbyDbTypeMapper();
-	}
+    private final DbJdbc dbJdbc;
+    private final DbTypeMapper dbTypeMapper;
+    private final SqlStatementGenerator sqlStatementGenerator;
 
-	@Override
-	public DbJdbc getDbJdbc() {
-		return dbJdbc;
-	}
+    public ApacheDerbyConfiguration() {
+	super();
+	this.dbJdbc = new ApacheDerbyJdbc();
+	this.dbTypeMapper = new ApacheDerbyDbTypeMapper();
+	this.sqlStatementGenerator = new DefaultSqlStatementGenerator(dbJdbc);
+    }
 
-	@Override
-	public DbTypeMapper getDbTypeMapper() {
-		return dbTypeMapper;
-	}
+    @Override
+    public DbJdbc getDbJdbc() {
+	return dbJdbc;
+    }
+
+    @Override
+    public DbTypeMapper getDbTypeMapper() {
+	return dbTypeMapper;
+    }
+
+    @Override
+    public SqlStatementGenerator getSqlStatementGenerator() {
+	return sqlStatementGenerator;
+    }
 
 }

@@ -20,13 +20,38 @@ package org.minijpa.jdbc;
 
 import java.util.Optional;
 
-public interface NameTranslator {
+/**
+ *
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
+public class DDLData {
 
-    public String toColumnName(Optional<String> tableAlias, String columnName);
+    private final Optional<String> columnDefinition;
+    private final Optional<Integer> length;
+    private final Optional<Integer> precision;
+    private final Optional<Integer> scale;
 
-    public String toTableName(Optional<String> tableAlias, String tableName);
-
-    public default String adjustName(String name) {
-	return name;
+    public DDLData(Optional<String> columnDefinition, Optional<Integer> length, Optional<Integer> precision, Optional<Integer> scale) {
+	this.columnDefinition = columnDefinition;
+	this.length = length;
+	this.precision = precision;
+	this.scale = scale;
     }
+
+    public Optional<String> getColumnDefinition() {
+	return columnDefinition;
+    }
+
+    public Optional<Integer> getLength() {
+	return length;
+    }
+
+    public Optional<Integer> getPrecision() {
+	return precision;
+    }
+
+    public Optional<Integer> getScale() {
+	return scale;
+    }
+
 }

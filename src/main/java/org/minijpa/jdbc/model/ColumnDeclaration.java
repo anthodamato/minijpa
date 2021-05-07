@@ -16,29 +16,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.minijpa.jdbc.db;
+package org.minijpa.jdbc.model;
 
-import java.util.List;
+/**
+ *
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
+public class ColumnDeclaration {
 
-import org.minijpa.jdbc.FetchParameter;
+    private final String name;
+    private final Class<?> type;
+    private final boolean pk;
 
-public class StatementData {
-
-    private String sql;
-    private List<FetchParameter> parameters;
-
-    public StatementData(String sql, List<FetchParameter> parameters) {
-	super();
-	this.sql = sql;
-	this.parameters = parameters;
+    public ColumnDeclaration(String name, Class<?> type, boolean pk) {
+	this.name = name;
+	this.type = type;
+	this.pk = pk;
     }
 
-    public String getSql() {
-	return sql;
+    public String getName() {
+	return name;
     }
 
-    public List<FetchParameter> getParameters() {
-	return parameters;
+    public Class<?> getType() {
+	return type;
+    }
+
+    public boolean isPk() {
+	return pk;
     }
 
 }

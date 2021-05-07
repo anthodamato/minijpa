@@ -18,7 +18,11 @@
  */
 package org.minijpa.jdbc.db;
 
+import java.util.Optional;
+import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.DefaultNameTranslator;
+import org.minijpa.jdbc.JoinColumnAttribute;
+import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.NameTranslator;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
@@ -45,6 +49,24 @@ public abstract class BasicDbJdbc implements DbJdbc {
 	    return PkStrategy.SEQUENCE;
 
 	return PkStrategy.PLAIN;
+    }
+
+    public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
+	if (type == Integer.class) {
+	    return "integer";
+	}
+
+	return "";
+    }
+
+    @Override
+    public String buildColumnDefinition(MetaAttribute metaAttribute) {
+	return buildColumnDefinition(metaAttribute.getType(), metaAttribute.getDdlData());
+    }
+
+    @Override
+    public String buildColumnDefinition(JoinColumnAttribute joinColumnAttribute) {
+	return buildColumnDefinition(joinColumnAttribute.getType(), Optional.empty());
     }
 
 }

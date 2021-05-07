@@ -50,6 +50,7 @@ public class MetaAttribute extends AbstractAttribute {
     private String path;
     private Optional<Method> joinColumnReadMethod = Optional.empty();
     private Optional<Method> joinColumnWriteMethod = Optional.empty();
+    private Optional<DDLData> ddlData = Optional.empty();
 
     public String getName() {
 	return name;
@@ -111,6 +112,10 @@ public class MetaAttribute extends AbstractAttribute {
 	return joinColumnWriteMethod;
     }
 
+    public Optional<DDLData> getDdlData() {
+	return ddlData;
+    }
+
     public List<MetaAttribute> expand() {
 	if (expandedAttributeList != null)
 	    return expandedAttributeList;
@@ -164,6 +169,7 @@ public class MetaAttribute extends AbstractAttribute {
 	private String path;
 	private Optional<Method> joinColumnReadMethod;
 	private Optional<Method> joinColumnWriteMethod;
+	private Optional<DDLData> ddlData = Optional.empty();
 
 	public Builder(String name) {
 	    super();
@@ -266,6 +272,11 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
+	public Builder withDDLData(Optional<DDLData> ddlData) {
+	    this.ddlData = ddlData;
+	    return this;
+	}
+
 	public MetaAttribute build() {
 	    MetaAttribute attribute = new MetaAttribute();
 	    attribute.name = name;
@@ -288,6 +299,7 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.path = path;
 	    attribute.joinColumnReadMethod = joinColumnReadMethod;
 	    attribute.joinColumnWriteMethod = joinColumnWriteMethod;
+	    attribute.ddlData = ddlData;
 	    return attribute;
 	}
     }

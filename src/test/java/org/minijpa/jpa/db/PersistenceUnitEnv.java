@@ -14,13 +14,13 @@ import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jpa.MiniPersistenceContext;
 import org.minijpa.jpa.PersistenceProviderHelper;
 import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
+import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.metadata.MetaEntityUtils;
 
 /**
@@ -94,8 +94,7 @@ public class PersistenceUnitEnv {
 	JdbcEntityManagerImpl jdbcEntityManagerImpl = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, miniPersistenceContext,
 		entityInstanceBuilder, connectionHolder);
 
-	SqlStatementGenerator sqlStatementGenerator = new SqlStatementGenerator(dbConfiguration.getDbJdbc());
-
+	SqlStatementGenerator sqlStatementGenerator = dbConfiguration.getSqlStatementGenerator();
 	new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 	EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
 

@@ -24,34 +24,6 @@ public class PersistenceUnitContext {
 	return entities.get(entityClassName);
     }
 
-//    public MetaAttribute findEmbeddedAttribute(String className) {
-//	for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
-//	    MetaEntity entity = entry.getValue();
-//	    MetaAttribute attribute = findEmbeddedAttribute(className, entity.getAttributes());
-//	    if (attribute != null)
-//		return attribute;
-//	}
-//
-//	return null;
-//    }
-//
-//    private MetaAttribute findEmbeddedAttribute(String className, List<MetaAttribute> attributes) {
-//	for (MetaAttribute attribute : attributes) {
-//	    if (attribute.isEmbedded()) {
-//		if (attribute.getType().getName().equals(className)) {
-//		    return attribute;
-//		}
-//
-//		MetaAttribute a = findEmbeddedAttribute(className,
-//			attribute.getEmbeddableMetaEntity().getAttributes());
-//		if (a != null)
-//		    return a;
-//	    }
-//	}
-//
-//	return null;
-//    }
-
     public String getPersistenceUnitName() {
 	return persistenceUnitName;
     }

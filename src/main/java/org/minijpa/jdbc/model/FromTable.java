@@ -8,17 +8,18 @@ import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.model.join.FromJoin;
 
 public interface FromTable {
-	public String getName();
 
-	public Optional<String> getAlias();
+    public String getName();
 
-	public Optional<List<FromJoin>> getJoins();
+    public Optional<String> getAlias();
 
-	public static FromTable of(MetaEntity entity) {
-		return new FromTableImpl(entity.getTableName(), entity.getAlias());
-	}
+    public Optional<List<FromJoin>> getJoins();
 
-	public static FromTable of(MetaEntity entity, FromJoin fromJoin) {
-		return new FromTableImpl(entity.getTableName(), entity.getAlias(), Arrays.asList(fromJoin));
-	}
+    public static FromTable of(MetaEntity entity) {
+	return new FromTableImpl(entity.getTableName(), entity.getAlias());
+    }
+
+    public static FromTable of(MetaEntity entity, FromJoin fromJoin) {
+	return new FromTableImpl(entity.getTableName(), entity.getAlias(), Arrays.asList(fromJoin));
+    }
 }
