@@ -191,7 +191,7 @@ public class MetaEntity {
     public List<JoinColumnAttribute> expandJoinColumnAttributes() {
 	List<JoinColumnAttribute> jcas = new ArrayList<>();
 	joinColumnMappings.forEach(joinColumnMapping -> {
-	    for (int i = 0; i < joinColumnMapping.count(); ++i) {
+	    for (int i = 0; i < joinColumnMapping.size(); ++i) {
 		jcas.add(joinColumnMapping.get(i));
 	    }
 	});
@@ -201,6 +201,17 @@ public class MetaEntity {
 	});
 
 	return jcas;
+    }
+
+    public List<JoinColumnMapping> expandJoinColumnMappings() {
+	List<JoinColumnMapping> jcms = new ArrayList<>();
+	jcms.addAll(joinColumnMappings);
+
+	embeddables.forEach(metaEntity -> {
+	    jcms.addAll(metaEntity.expandJoinColumnMappings());
+	});
+
+	return jcms;
     }
 
     public MetaAttribute findAttributeByMappedBy(String mappedBy) {

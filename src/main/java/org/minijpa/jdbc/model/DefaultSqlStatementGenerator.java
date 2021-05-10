@@ -496,7 +496,12 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		return ddlData.get().getColumnDefinition().get();
 	}
 
-	return dbJdbc.buildColumnDefinition(attribute);
+	String s = dbJdbc.buildColumnDefinition(attribute);
+	if (ddlData.isPresent() && ddlData.get().getNullable().isPresent() && ddlData.get().getNullable().get() == false) {
+	    return s + " not null";
+	}
+
+	return s;
     }
 
     private String buildJoinColumnDefinition(JoinColumnAttribute joinColumnAttribute) {
@@ -519,16 +524,50 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	sb.append("create table ");
 	sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateTable.getTableName()));
 	sb.append(" (");
-	String cols = sqlCreateTable.getAttributes().stream()
+	String cols = sqlCreateTable.getPk().getAttributes().stream()
 		.map(a -> buildAttributeDeclaration(a))
 		.collect(Collectors.joining(", "));
 	sb.append(cols);
-	if (!sqlCreateTable.getJoinColumnAttributes().isEmpty()) {
+
+	if (!sqlCreateTable.getAttributes().isEmpty()) {
 	    sb.append(", ");
-	    cols = sqlCreateTable.getJoinColumnAttributes().stream()
+	    cols = sqlCreateTable.getAttributes().stream()
 		    .map(a -> buildAttributeDeclaration(a))
 		    .collect(Collectors.joining(", "));
 	    sb.append(cols);
+	}
+
+	for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
+	    sb.append(", ");
+	    cols = foreignKeyDeclaration.getJoinColumnMapping().getJoinColumnAttributes().stream()
+		    .map(a -> buildAttributeDeclaration(a))
+		    .collect(Collectors.joining(", "));
+	    sb.append(cols);
+	}
+
+	sb.append(", primary key ");
+	if (sqlCreateTable.getPk().isComposite()) {
+	    sb.append("(");
+	    cols = sqlCreateTable.getPk().getAttributes().stream()
+		    .map(a -> dbJdbc.getNameTranslator().adjustName(a.getColumnName()))
+		    .collect(Collectors.joining(", "));
+	    sb.append(cols);
+	    sb.append(")");
+	} else {
+	    sb.append("(");
+	    sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateTable.getPk().getAttribute().getColumnName()));
+	    sb.append(")");
+	}
+
+	// foreign keys
+	for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
+	    sb.append(", foreign key (");
+	    cols = foreignKeyDeclaration.getJoinColumnMapping().getJoinColumnAttributes().stream()
+		    .map(a -> dbJdbc.getNameTranslator().adjustName(a.getColumnName()))
+		    .collect(Collectors.joining(", "));
+	    sb.append(cols);
+	    sb.append(") references ");
+	    sb.append(foreignKeyDeclaration.getReferenceTable());
 	}
 
 	sb.append(")");
@@ -536,9 +575,20 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
     }
 
     @Override
+    public String export(SqlCreateSequence sqlCreateSequence) {
+	StringBuilder sb = new StringBuilder();
+	sb.append("create sequence ");
+	sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateSequence.getPkSequenceGenerator().getSequenceName()));
+	return sb.toString();
+    }
+
+    @Override
     public String export(SqlDDLStatement sqlDDLStatement) {
 	if (sqlDDLStatement instanceof SqlCreateTable)
 	    return export((SqlCreateTable) sqlDDLStatement);
+
+	if (sqlDDLStatement instanceof SqlCreateSequence)
+	    return export((SqlCreateSequence) sqlDDLStatement);
 
 	return "";
     }

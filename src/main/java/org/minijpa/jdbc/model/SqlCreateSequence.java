@@ -18,45 +18,22 @@
  */
 package org.minijpa.jdbc.model;
 
-import java.util.List;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.Pk;
+import org.minijpa.jdbc.PkSequenceGenerator;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class SqlCreateTable implements SqlDDLStatement {
+public class SqlCreateSequence implements SqlDDLStatement {
 
-    private final String tableName;
-    private final Pk pk;
-    private final List<MetaAttribute> attributes;
-    private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
+    private final PkSequenceGenerator pkSequenceGenerator;
 
-    public SqlCreateTable(String tableName,
-	    Pk pk,
-	    List<MetaAttribute> attributes,
-	    List<ForeignKeyDeclaration> foreignKeyDeclarations) {
-	this.tableName = tableName;
-	this.pk = pk;
-	this.attributes = attributes;
-	this.foreignKeyDeclarations = foreignKeyDeclarations;
+    public SqlCreateSequence(PkSequenceGenerator pkSequenceGenerator) {
+	this.pkSequenceGenerator = pkSequenceGenerator;
     }
 
-    public String getTableName() {
-	return tableName;
-    }
-
-    public Pk getPk() {
-	return pk;
-    }
-
-    public List<MetaAttribute> getAttributes() {
-	return attributes;
-    }
-
-    public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
-	return foreignKeyDeclarations;
+    public PkSequenceGenerator getPkSequenceGenerator() {
+	return pkSequenceGenerator;
     }
 
 }

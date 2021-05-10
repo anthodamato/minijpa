@@ -18,6 +18,8 @@
  */
 package org.minijpa.jdbc.relationship;
 
+import java.util.Arrays;
+import java.util.List;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.Pk;
@@ -49,7 +51,7 @@ public class SingleJoinColumnMapping implements JoinColumnMapping {
     }
 
     @Override
-    public int count() {
+    public int size() {
 	return 1;
     }
 
@@ -74,6 +76,11 @@ public class SingleJoinColumnMapping implements JoinColumnMapping {
     @Override
     public boolean isLazy() {
 	return joinColumnAttribute.getAttribute().isLazy();
+    }
+
+    @Override
+    public List<JoinColumnAttribute> getJoinColumnAttributes() {
+	return Arrays.asList(joinColumnAttribute);
     }
 
 }

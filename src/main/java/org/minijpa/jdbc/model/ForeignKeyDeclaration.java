@@ -18,45 +18,28 @@
  */
 package org.minijpa.jdbc.model;
 
-import java.util.List;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.Pk;
+import org.minijpa.jdbc.relationship.JoinColumnMapping;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class SqlCreateTable implements SqlDDLStatement {
+public class ForeignKeyDeclaration {
 
-    private final String tableName;
-    private final Pk pk;
-    private final List<MetaAttribute> attributes;
-    private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
+    private final JoinColumnMapping joinColumnMapping;
+    private final String referenceTable;
 
-    public SqlCreateTable(String tableName,
-	    Pk pk,
-	    List<MetaAttribute> attributes,
-	    List<ForeignKeyDeclaration> foreignKeyDeclarations) {
-	this.tableName = tableName;
-	this.pk = pk;
-	this.attributes = attributes;
-	this.foreignKeyDeclarations = foreignKeyDeclarations;
+    public ForeignKeyDeclaration(JoinColumnMapping joinColumnMapping, String referenceTable) {
+	this.joinColumnMapping = joinColumnMapping;
+	this.referenceTable = referenceTable;
     }
 
-    public String getTableName() {
-	return tableName;
+    public JoinColumnMapping getJoinColumnMapping() {
+	return joinColumnMapping;
     }
 
-    public Pk getPk() {
-	return pk;
-    }
-
-    public List<MetaAttribute> getAttributes() {
-	return attributes;
-    }
-
-    public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
-	return foreignKeyDeclarations;
+    public String getReferenceTable() {
+	return referenceTable;
     }
 
 }

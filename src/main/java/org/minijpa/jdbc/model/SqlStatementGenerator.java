@@ -34,5 +34,7 @@ public interface SqlStatementGenerator {
 
     public String export(SqlCreateTable sqlCreateTable);
 
+    public String export(SqlCreateSequence sqlCreateSequence);
+
     public String export(SqlDDLStatement sqlDDLStatement);
 }

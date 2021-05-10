@@ -109,7 +109,7 @@ public class MetaEntityHelper {
     public void expand(JoinColumnMapping joinColumnMapping,
 	    Object value,
 	    ModelValueArray<JoinColumnAttribute> modelValueArray) throws Exception {
-	for (int i = 0; i < joinColumnMapping.count(); ++i) {
+	for (int i = 0; i < joinColumnMapping.size(); ++i) {
 	    JoinColumnAttribute joinColumnAttribute = joinColumnMapping.get(i);
 	    MetaAttribute a = joinColumnMapping.get(i).getForeignKeyAttribute();
 	    LOG.debug("expand: a=" + a);

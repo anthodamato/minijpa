@@ -5,18 +5,19 @@ import java.util.Optional;
 
 public class EnhAttribute {
 
-    private String name;
-    private String className;
-    private boolean primitiveType;
-    private String getMethod;
-    private String setMethod;
-    private boolean embedded;
-    private EnhEntity embeddedEnhEntity;
+    private final String name;
+    private final String className;
+    private final boolean primitiveType;
+    private final String getMethod;
+    private final String setMethod;
+    private final boolean embedded;
+    private final EnhEntity embeddedEnhEntity;
+    private final boolean parentEmbeddedId;
     private Optional<String> joinColumnSetMethod = Optional.empty();
     private Optional<String> joinColumnGetMethod = Optional.empty();
 
     public EnhAttribute(String name, String className, boolean primitiveType, String getMethod, String setMethod,
-	    boolean embedded, List<EnhAttribute> embeddedAttributes, EnhEntity embeddedEnhEntity) {
+	    boolean embedded, List<EnhAttribute> embeddedAttributes, EnhEntity embeddedEnhEntity, boolean parentEmbeddedId) {
 	super();
 	this.name = name;
 	this.className = className;
@@ -25,6 +26,7 @@ public class EnhAttribute {
 	this.setMethod = setMethod;
 	this.embedded = embedded;
 	this.embeddedEnhEntity = embeddedEnhEntity;
+	this.parentEmbeddedId = parentEmbeddedId;
     }
 
     public String getName() {
@@ -53,6 +55,10 @@ public class EnhAttribute {
 
     public EnhEntity getEmbeddedEnhEntity() {
 	return embeddedEnhEntity;
+    }
+
+    public boolean isParentEmbeddedId() {
+	return parentEmbeddedId;
     }
 
     public Optional<String> getJoinColumnSetMethod() {

@@ -10,10 +10,7 @@ public class ApacheDerbyJdbc extends BasicDbJdbc {
     @Override
     public String sequenceNextValueStatement(MetaEntity entity) {
 	PkSequenceGenerator pkSequenceGenerator = entity.getId().getPkGeneration().getPkSequenceGenerator();
-	if (pkSequenceGenerator != null)
-	    return "VALUES (NEXT VALUE FOR " + pkSequenceGenerator.getSequenceName() + ")";
-
-	return "VALUES (NEXT VALUE FOR " + entity.getTableName().toUpperCase() + "_PK_SEQ)";
+	return "VALUES (NEXT VALUE FOR " + pkSequenceGenerator.getSequenceName() + ")";
     }
 
     @Override

@@ -18,6 +18,7 @@
  */
 package org.minijpa.jdbc.db;
 
+import java.util.Date;
 import java.util.Optional;
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.DefaultNameTranslator;
@@ -52,9 +53,14 @@ public abstract class BasicDbJdbc implements DbJdbc {
     }
 
     public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
-	if (type == Integer.class) {
+	if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int")))
 	    return "integer";
-	}
+
+	if (type == Long.class || (type.isPrimitive() && type.getName().equals("long")))
+	    return "bigint";
+
+	if (type == Date.class || type == java.sql.Date.class)
+	    return "date";
 
 	return "";
     }

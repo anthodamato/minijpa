@@ -50,7 +50,7 @@ public class CompositeJoinColumnMapping implements JoinColumnMapping {
     }
 
     @Override
-    public int count() {
+    public int size() {
 	return joinColumnAttributes.size();
     }
 
@@ -72,6 +72,11 @@ public class CompositeJoinColumnMapping implements JoinColumnMapping {
     @Override
     public boolean isLazy() {
 	return joinColumnAttributes.get(0).getAttribute().isLazy();
+    }
+
+    @Override
+    public List<JoinColumnAttribute> getJoinColumnAttributes() {
+	return joinColumnAttributes;
     }
 
 }

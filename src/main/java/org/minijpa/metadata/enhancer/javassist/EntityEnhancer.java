@@ -176,13 +176,14 @@ public class EntityEnhancer {
 	    List<EnhAttribute> enhEmbeddedAttributes = null;
 	    if (attributeData.embeddedData != null) {
 		embeddedEnhEntity = enhance(attributeData.embeddedData, parsedEntities);
+//		embeddedEnhEntity.setEmbeddedId(attributeData.isParentEmbeddedId());
 	    }
 
 	    EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(),
 		    property.ctField.getType().getName(), property.ctField.getType().isPrimitive(),
 		    property.getPropertyMethod.method.get().getName(),
 		    property.setPropertyMethod.method.get().getName(), property.embedded, enhEmbeddedAttributes,
-		    embeddedEnhEntity);
+		    embeddedEnhEntity, attributeData.isParentEmbeddedId());
 	    enhAttributes.add(enhAttribute);
 	}
 

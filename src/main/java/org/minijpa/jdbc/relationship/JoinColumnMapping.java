@@ -18,6 +18,7 @@
  */
 package org.minijpa.jdbc.relationship;
 
+import java.util.List;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.Pk;
@@ -32,11 +33,13 @@ public interface JoinColumnMapping {
 
     public boolean isComposite();
 
-    public int count();
+    public int size();
 
     public JoinColumnAttribute get(int index);
 
     public JoinColumnAttribute get();
+
+    public List<JoinColumnAttribute> getJoinColumnAttributes();
 
     public Pk getForeignKey();
 

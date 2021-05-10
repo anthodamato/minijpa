@@ -14,6 +14,7 @@ public class Property {
     boolean embedded;
     List<Property> embeddedProperties;
     private final Optional<RelationshipProperties> relationshipProperties;
+    private boolean embeddedIdParent = false;
 
     public Property(boolean id,
 	    PropertyMethod getPropertyMethod,
@@ -58,6 +59,14 @@ public class Property {
 
     public Optional<RelationshipProperties> getRelationshipProperties() {
 	return relationshipProperties;
+    }
+
+    public boolean isEmbeddedIdParent() {
+	return embeddedIdParent;
+    }
+
+    public void setEmbeddedIdParent(boolean embeddedIdParent) {
+	this.embeddedIdParent = embeddedIdParent;
     }
 
 }

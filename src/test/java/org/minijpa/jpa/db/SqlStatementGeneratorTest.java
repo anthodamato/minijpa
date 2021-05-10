@@ -117,15 +117,14 @@ public class SqlStatementGeneratorTest {
 	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, "booking_sale");
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitEnv.getPersistenceUnitContext());
+	Assertions.assertEquals(3, sqlStatements.size());
 	List<String> ddlStatements = sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
 	Assertions.assertFalse(ddlStatements.isEmpty());
 	String d0 = ddlStatements.get(0);
 	Assertions.assertEquals("create table booking (dateof date not null, room_number integer not null, customer_id integer, primary key (dateof, room_number))", d0);
 	String d1 = ddlStatements.get(1);
-	Assertions.assertEquals("create table booking_sale (id bigint not null, perc integer not null, b_dateof date, b_room_number integer, primary key (id))", d1);
+	Assertions.assertEquals("create table booking_sale (id bigint not null, perc integer not null, b_dateof date, b_room_number integer, primary key (id), foreign key (b_dateof, b_room_number) references booking)", d1);
 	String d2 = ddlStatements.get(2);
 	Assertions.assertEquals("create sequence BOOKING_SALE_PK_SEQ", d2);
-	String d3 = ddlStatements.get(3);
-	Assertions.assertEquals("alter table booking_sale add constraint FK68sgx7a1ydv6j101gaavq9x9g foreign key (b_dateof, b_room_number) references booking", d3);
     }
 }

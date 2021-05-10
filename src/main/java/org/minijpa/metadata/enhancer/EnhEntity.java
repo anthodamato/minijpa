@@ -34,6 +34,7 @@ public class EnhEntity {
     private Optional<String> lockTypeAttributeSetMethod = Optional.empty();
     private Optional<String> entityStatusAttributeGetMethod = Optional.empty();
     private Optional<String> entityStatusAttributeSetMethod = Optional.empty();
+//    private boolean embeddedId = false;
 
     public String getClassName() {
 	return className;
@@ -107,6 +108,13 @@ public class EnhEntity {
 	this.entityStatusAttributeSetMethod = entityStatusAttributeSetMethod;
     }
 
+//    public boolean isEmbeddedId() {
+//	return embeddedId;
+//    }
+//
+//    public void setEmbeddedId(boolean embeddedId) {
+//	this.embeddedId = embeddedId;
+//    }
     public void findEmbeddables(Set<EnhEntity> embeddables) {
 	for (EnhAttribute enhAttribute : enhAttributes) {
 	    if (enhAttribute.isEmbedded()) {

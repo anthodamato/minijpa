@@ -30,12 +30,18 @@ public class DDLData {
     private final Optional<Integer> length;
     private final Optional<Integer> precision;
     private final Optional<Integer> scale;
+    private final Optional<Boolean> nullable;
 
-    public DDLData(Optional<String> columnDefinition, Optional<Integer> length, Optional<Integer> precision, Optional<Integer> scale) {
+    public DDLData(Optional<String> columnDefinition,
+	    Optional<Integer> length,
+	    Optional<Integer> precision,
+	    Optional<Integer> scale,
+	    Optional<Boolean> nullable) {
 	this.columnDefinition = columnDefinition;
 	this.length = length;
 	this.precision = precision;
 	this.scale = scale;
+	this.nullable = nullable;
     }
 
     public Optional<String> getColumnDefinition() {
@@ -52,6 +58,10 @@ public class DDLData {
 
     public Optional<Integer> getScale() {
 	return scale;
+    }
+
+    public Optional<Boolean> getNullable() {
+	return nullable;
     }
 
 }

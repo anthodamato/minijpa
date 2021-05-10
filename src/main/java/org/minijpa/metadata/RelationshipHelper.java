@@ -6,6 +6,7 @@
 package org.minijpa.metadata;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.persistence.ManyToMany;
@@ -93,7 +94,7 @@ public abstract class RelationshipHelper {
 	    joinColumnAttributes.add(joinColumnAttribute);
 	}
 
-	return new CompositeJoinColumnMapping(joinColumnAttributes, a, toEntity.getId());
+	return new CompositeJoinColumnMapping(Collections.unmodifiableList(joinColumnAttributes), a, toEntity.getId());
     }
 
     private JoinColumnAttribute buildJoinColumnAttribute(

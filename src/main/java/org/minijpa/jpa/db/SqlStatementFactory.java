@@ -33,17 +33,19 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.Pk;
+import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.model.Column;
+import org.minijpa.jdbc.model.ForeignKeyDeclaration;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
 import org.minijpa.jdbc.model.OrderBy;
+import org.minijpa.jdbc.model.SqlCreateSequence;
 import org.minijpa.jdbc.model.SqlCreateTable;
 import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlInsert;
 import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.SqlStatement;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.model.TableColumn;
@@ -65,6 +67,7 @@ import org.minijpa.jdbc.model.expression.SqlBinaryExpressionBuilder;
 import org.minijpa.jdbc.model.expression.SqlExpressionOperator;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
+import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniTypedQuery;
@@ -990,13 +993,58 @@ public class SqlStatementFactory {
 	return new StatementParameters(sqlDelete, parameters);
     }
 
+    private int indexOfFirstEntity(List<MetaEntity> entities) {
+	for (int i = 0; i < entities.size(); ++i) {
+	    MetaEntity metaEntity = entities.get(i);
+	    if (metaEntity.getRelationshipAttributes().isEmpty())
+		return i;
+
+	    long rc = metaEntity.getRelationshipAttributes().stream().filter(a -> a.getRelationship().isOwner()).count();
+	    if (rc == 0)
+		return i;
+	}
+
+	return 0;
+    }
+
+    private List<MetaEntity> sortForDDL(List<MetaEntity> entities) {
+	List<MetaEntity> sorted = new ArrayList<>();
+	List<MetaEntity> toSort = new ArrayList<>(entities);
+	for (int i = 0; i < entities.size(); ++i) {
+	    int index = indexOfFirstEntity(toSort);
+	    sorted.add(toSort.get(index));
+	    toSort.remove(index);
+	}
+
+	return sorted;
+    }
+
     public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext) {
 	List<SqlDDLStatement> sqlStatements = new ArrayList<>();
 	Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
-	entities.forEach((k, v) -> {
-	    SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(),
-		    v.expandAllAttributes(), v.expandJoinColumnAttributes());
+	List<MetaEntity> sorted = sortForDDL(new ArrayList<>(entities.values()));
+	sorted.forEach(v -> {
+	    List<MetaAttribute> attributes = v.getBasicAttributes();
+	    attributes.addAll(v.expandEmbeddables());
+
+	    // foreign keys
+	    List<JoinColumnMapping> joinColumnMappings = v.expandJoinColumnMappings();
+	    List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
+	    for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
+		MetaEntity toEntity = entities.get(joinColumnMapping.getAttribute().getType().getName());
+		foreignKeyDeclarations.add(new ForeignKeyDeclaration(joinColumnMapping, toEntity.getTableName()));
+	    }
+
+	    SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(), v.getId(),
+		    attributes, foreignKeyDeclarations);
 	    sqlStatements.add(sqlCreateTable);
+	});
+
+	sorted.forEach(v -> {
+	    if (v.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
+		SqlCreateSequence sqlCreateSequence = new SqlCreateSequence(v.getId().getPkGeneration().getPkSequenceGenerator());
+		sqlStatements.add(sqlCreateSequence);
+	    }
 	});
 
 	return sqlStatements;
