@@ -494,12 +494,15 @@
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
+            <!--            <property 
+            name="javax.persistence.schema-generation.create-source" 
+            value="script" /> -->
+            <!--            <property 
+            name="javax.persistence.schema-generation.create-script-source" 
+            value="META-INF/create_booking_sale_db.sql" />-->
             <property 
                 name="javax.persistence.schema-generation.create-source" 
-                value="script" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-script-source" 
-                value="META-INF/create_booking_sale_db.sql" />
+                value="metadata" /> 
         </properties>
     </persistence-unit>
 

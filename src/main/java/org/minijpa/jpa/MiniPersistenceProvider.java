@@ -12,12 +12,9 @@ import javax.persistence.spi.ProviderUtil;
 import org.minijpa.jpa.db.ConnectionProviderImpl;
 import org.minijpa.jdbc.DbMetaData;
 import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jpa.db.DbConfigurationFactory;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.PersistenceUnitPropertyActions;
-import org.minijpa.jpa.db.SqlStatementFactory;
-import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +26,6 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	LOG.info("Processing Db Configuration...");
 	LOG.info("processConfiguration: persistenceUnitInfo=" + persistenceUnitInfo);
 	new ConnectionProviderImpl(persistenceUnitInfo).init();
-	new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 
 	Connection connection = null;
 	try {
@@ -46,6 +42,8 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    if (connection != null)
 		connection.close();
 	}
+
+	new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
     }
 
     @Override
@@ -99,8 +97,9 @@ public class MiniPersistenceProvider implements PersistenceProvider {
     @Override
     public void generateSchema(PersistenceUnitInfo info, @SuppressWarnings("rawtypes") Map map) {
 	try {
-	    PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(info);
-	    generateSchema(persistenceUnitContext);
+	    PersistenceUnitPropertyActions persistenceUnitPropertyActions = new PersistenceUnitPropertyActions();
+	    List<String> script = persistenceUnitPropertyActions.generateScriptFromMetadata(info);
+	    persistenceUnitPropertyActions.runScript(script, info);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
 	    LOG.error("generateSchema: e.getClass()=" + e.getClass());
@@ -121,8 +120,9 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	}
 
 	try {
-	    PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-	    generateSchema(persistenceUnitContext);
+	    PersistenceUnitPropertyActions persistenceUnitPropertyActions = new PersistenceUnitPropertyActions();
+	    List<String> script = persistenceUnitPropertyActions.generateScriptFromMetadata(persistenceUnitInfo);
+	    persistenceUnitPropertyActions.runScript(script, persistenceUnitInfo);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
 	    LOG.error("generateSchema: e.getClass()=" + e.getClass());
@@ -130,13 +130,6 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	}
 
 	return true;
-    }
-
-    private void generateSchema(PersistenceUnitContext persistenceUnitContext) throws Exception {
-	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
-	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
-	// run script
     }
 
     @Override

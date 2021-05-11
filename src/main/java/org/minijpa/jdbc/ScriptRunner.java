@@ -36,15 +36,7 @@ public class ScriptRunner {
 
     private Logger LOG = LoggerFactory.getLogger(ScriptRunner.class);
 
-    public void run(File file, Connection connection) {
-	List<String> statements = null;
-	try {
-	    statements = readStatements(file);
-	} catch (IOException e) {
-	    LOG.error(e.getMessage());
-	    return;
-	}
-
+    public void run(List<String> statements, Connection connection) {
 	for (String s : statements) {
 	    LOG.info("run: s=" + s);
 	}
@@ -72,8 +64,8 @@ public class ScriptRunner {
 	}
     }
 
-    private List<String> readStatements(File file) throws IOException {
-	LOG.info("Reading '" + file.getAbsolutePath() + "' file...");
+    public List<String> readStatements(File file) throws IOException {
+	LOG.debug("Reading '" + file.getAbsolutePath() + "' file...");
 	Reader reader = null;
 	BufferedReader bufferedReader = null;
 	List<String> statements = new ArrayList<>();
@@ -94,7 +86,7 @@ public class ScriptRunner {
 		    sb.append(" ");
 
 		sb.append(line);
-		LOG.info("readStatements: line=" + line);
+		LOG.debug("readStatements: line=" + line);
 		++number_of_lines;
 		if (line.trim().endsWith(";")) {
 		    statements.add(sb.toString().substring(0, sb.length() - 1));
