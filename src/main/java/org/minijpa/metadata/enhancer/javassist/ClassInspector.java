@@ -148,17 +148,28 @@ public class ClassInspector {
 	createEmbeddables(attrs, embeddables, inspectedClasses);
 	managedData.getEmbeddables().addAll(embeddables);
 	LOG.debug("Found " + embeddables.size() + " embeddables in '" + ct.getName() + "'");
-
-//	if (!attrs.isEmpty() || managedData.mappedSuperclass != null) {
+	
 	List<BMTMethodInfo> methodInfos = inspectConstructorsAndMethods(ct);
-	if (!methodInfos.isEmpty())
-	    managedData.getMethodInfos().addAll(methodInfos);
+	addPrimitiveAttributesToInitialization(properties, methodInfos);
+	managedData.getMethodInfos().addAll(methodInfos);
 	
 	inspectedClasses.add(managedData);
 	return managedData;
-//	}
-
-//	return Optional.empty();
+    }
+    
+    private void addPrimitiveAttributesToInitialization(
+	    List<Property> properties,
+	    List<BMTMethodInfo> methodInfos) throws NotFoundException {
+	for (Property property : properties) {
+	    if (property.getCtField().getType().isPrimitive()) {
+		for (BMTMethodInfo bMTMethodInfo : methodInfos) {
+		    Optional<BMTFieldInfo> optional = bMTMethodInfo.getBmtFieldInfos().stream().filter(f -> f.name.equals(property.getCtField().getName())).findFirst();
+		    if (optional.isEmpty()) {
+			bMTMethodInfo.getBmtFieldInfos().add(new BMTFieldInfo(BMTFieldInfo.PRIMITIVE, property.getCtField().getName(), null));
+		    }
+		}
+	    }
+	}
     }
     
     private void findJoinColumnAttributeFields(List<Property> properties, CtClass ct) {
@@ -331,13 +342,13 @@ public class ClassInspector {
 	    ctConstructor.instrument(exprEditorExt);
 	    List<BMTFieldInfo> fieldInfos = exprEditorExt.getFieldInfos();
 	    LOG.debug("inspectConstructorsAndMethods: fieldInfos.size()=" + fieldInfos.size());
-	    if (!fieldInfos.isEmpty()) {
-		BMTMethodInfo methodInfo = new BMTMethodInfo();
-		methodInfo.ctConstructor = ctConstructor;
-		methodInfo.addFieldInfos(fieldInfos);
-		methodInfos.add(methodInfo);
-	    }
-	    
+//	    if (!fieldInfos.isEmpty()) {
+	    BMTMethodInfo methodInfo = new BMTMethodInfo();
+	    methodInfo.ctConstructor = ctConstructor;
+	    methodInfo.addFieldInfos(fieldInfos);
+	    methodInfos.add(methodInfo);
+//	    }
+
 	    exprEditorExt.clear();
 	}
 	

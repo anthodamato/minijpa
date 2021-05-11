@@ -15,7 +15,7 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <property
+<!--            <property
                 name="javax.persistence.schema-generation.database.action"
                 value="drop-and-create" />
             <property
@@ -29,7 +29,13 @@
                 value="script" />
             <property
                 name="javax.persistence.schema-generation.drop-script-source"
-                value="META-INF/drop_citizens_db.sql" />
+                value="META-INF/drop_citizens_db.sql" />-->
+            <property
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="metadata" /> 
         </properties>
     </persistence-unit>
 

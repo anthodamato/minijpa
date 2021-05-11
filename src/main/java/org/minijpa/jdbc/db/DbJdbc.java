@@ -46,6 +46,8 @@ public interface DbJdbc {
 
     public String buildColumnDefinition(JoinColumnAttribute joinColumnAttribute);
 
+    public String buildIdentityColumnDefinition(MetaAttribute metaAttribute);
+
     public default String notEqualOperator() {
 	return "<>";
     }

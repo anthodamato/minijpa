@@ -60,7 +60,8 @@ public class PersistTest {
 	Assertions.assertNotNull(c);
 
 	Assertions.assertNotNull(address.getId());
-	Citizen cn = em.find(Citizen.class, address.getId());
+	long id = address.getId() + 1;
+	Citizen cn = em.find(Citizen.class, id);
 	Assertions.assertNull(cn);
 
 	em.remove(c);
@@ -84,7 +85,8 @@ public class PersistTest {
 	address.setName("Regent St");
 	em.persist(address);
 
-	Citizen cn = em.find(Citizen.class, address.getId());
+	long id = address.getId() + 1;
+	Citizen cn = em.find(Citizen.class, id);
 	Assertions.assertNull(cn);
 
 	tx.commit();

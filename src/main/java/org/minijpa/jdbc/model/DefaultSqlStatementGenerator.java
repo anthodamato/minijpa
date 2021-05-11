@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
+import org.minijpa.jdbc.Pk;
+import org.minijpa.jdbc.PkStrategy;
 
 import org.minijpa.jdbc.db.DbJdbc;
 import org.minijpa.jdbc.model.aggregate.AggregateFunction;
@@ -513,6 +515,19 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		+ " " + buildColumnDefinition(attribute);
     }
 
+    private String buildPkDeclaration(Pk pk) {
+	if (pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY) {
+	    return dbJdbc.getNameTranslator().adjustName(pk.getAttribute().getColumnName())
+		    + " " + dbJdbc.buildIdentityColumnDefinition(pk.getAttribute());
+	}
+
+	String cols = pk.getAttributes().stream()
+		.map(a -> buildAttributeDeclaration(a))
+		.collect(Collectors.joining(", "));
+
+	return cols;
+    }
+
     private String buildAttributeDeclaration(JoinColumnAttribute joinColumnAttribute) {
 	return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName())
 		+ " " + buildJoinColumnDefinition(joinColumnAttribute);
@@ -524,9 +539,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	sb.append("create table ");
 	sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateTable.getTableName()));
 	sb.append(" (");
-	String cols = sqlCreateTable.getPk().getAttributes().stream()
-		.map(a -> buildAttributeDeclaration(a))
-		.collect(Collectors.joining(", "));
+	String cols = buildPkDeclaration(sqlCreateTable.getPk());
 	sb.append(cols);
 
 	if (!sqlCreateTable.getAttributes().isEmpty()) {
@@ -579,6 +592,10 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	StringBuilder sb = new StringBuilder();
 	sb.append("create sequence ");
 	sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateSequence.getPkSequenceGenerator().getSequenceName()));
+	sb.append(" start with ");
+	sb.append(sqlCreateSequence.getPkSequenceGenerator().getInitialValue());
+	sb.append(" increment by ");
+	sb.append(sqlCreateSequence.getPkSequenceGenerator().getAllocationSize());
 	return sb.toString();
     }
 

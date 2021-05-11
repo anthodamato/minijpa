@@ -400,7 +400,7 @@ public class Parser {
 
 	    ddlData = buildDDLData(column, nullableColumn);
 	} else
-	    ddlData = Optional.of(new DDLData(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(nullableColumn)));
+	    ddlData = Optional.of(new DDLData(Optional.empty(), Optional.of(255), Optional.of(0), Optional.of(0), Optional.of(nullableColumn)));
 
 	Enumerated enumerated = field.getAnnotation(Enumerated.class);
 	LOG.debug("readAttribute: enumerated=" + enumerated);
@@ -597,9 +597,9 @@ public class Parser {
 	PkSequenceGenerator pkSequenceGenerator = new PkSequenceGenerator();
 	pkSequenceGenerator.setSequenceName(tableName.toUpperCase() + "_PK_SEQ");
 //		pkSequenceGenerator.setSchema(sequenceGenerator.schema());
-//		pkSequenceGenerator.setAllocationSize(sequenceGenerator.allocationSize());
+	pkSequenceGenerator.setAllocationSize(1);
 //		pkSequenceGenerator.setCatalog(sequenceGenerator.schema());
-//		pkSequenceGenerator.setInitialValue(sequenceGenerator.initialValue());
+	pkSequenceGenerator.setInitialValue(1);
 	return pkSequenceGenerator;
     }
 
