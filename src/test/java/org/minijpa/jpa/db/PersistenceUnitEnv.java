@@ -78,13 +78,18 @@ public class PersistenceUnitEnv {
 	this.connectionHolder = connectionHolder;
     }
 
-    public static PersistenceUnitEnv build(DbConfiguration dbConfiguration, String persistenceUnitName) throws Exception {
+    public static PersistenceUnitContext build(String persistenceUnitName) throws Exception {
 	PersistenceUnitInfo persistenceUnitInfo = new PersistenceProviderHelper()
 		.parseXml("/META-INF/persistence.xml", persistenceUnitName);
 	List<String> classNames = persistenceUnitInfo.getManagedClassNames();
-
-	PersistenceUnitContext persistenceUnitContext = MetaEntityUtils.parsePersistenceUnitContext(
+	return MetaEntityUtils.parsePersistenceUnitContext(
 		persistenceUnitName, classNames);
+    }
+
+    public static PersistenceUnitEnv build(DbConfiguration dbConfiguration, String persistenceUnitName) throws Exception {
+	PersistenceUnitInfo persistenceUnitInfo = new PersistenceProviderHelper()
+		.parseXml("/META-INF/persistence.xml", persistenceUnitName);
+	PersistenceUnitContext persistenceUnitContext = build(persistenceUnitName);
 	MiniPersistenceContext miniPersistenceContext = new MiniPersistenceContext(persistenceUnitContext.getEntities());
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 	EntityInstanceBuilder entityInstanceBuilder = new EntityInstanceBuilderImpl();
@@ -94,12 +99,13 @@ public class PersistenceUnitEnv {
 	JdbcEntityManagerImpl jdbcEntityManagerImpl = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, miniPersistenceContext,
 		entityInstanceBuilder, connectionHolder);
 
-	SqlStatementGenerator sqlStatementGenerator = dbConfiguration.getSqlStatementGenerator();
 	new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 	EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
 
 	MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 	JpaJdbcRunner jdbcRunner = new JpaJdbcRunner();
+	SqlStatementGenerator sqlStatementGenerator = dbConfiguration.getSqlStatementGenerator();
+	Assertions.assertNotNull(sqlStatementGenerator);
 	EntityQueryLevel entityQueryLevel = new EntityQueryLevel(sqlStatementFactory,
 		entityInstanceBuilder, sqlStatementGenerator, metaEntityHelper,
 		jdbcRunner, connectionHolder);

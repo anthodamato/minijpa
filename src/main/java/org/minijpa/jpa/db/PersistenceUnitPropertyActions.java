@@ -75,6 +75,7 @@ public class PersistenceUnitPropertyActions {
 			runScript(createScriptSource, persistenceUnitInfo);
 		} else if (createSource.equals("metadata")) {
 		    List<String> script = generateScriptFromMetadata(persistenceUnitInfo);
+		    LOG.debug("script=" + script);
 		    runScript(script, persistenceUnitInfo);
 		}
 	    }

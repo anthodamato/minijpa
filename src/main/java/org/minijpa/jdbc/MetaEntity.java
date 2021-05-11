@@ -214,6 +214,16 @@ public class MetaEntity {
 	return jcms;
     }
 
+    public List<MetaAttribute> expandRelationshipAttributes() {
+	List<MetaAttribute> list = new ArrayList<>();
+	list.addAll(relationshipAttributes);
+	embeddables.forEach(e -> {
+	    list.addAll(e.expandRelationshipAttributes());
+	});
+
+	return list;
+    }
+
     public MetaAttribute findAttributeByMappedBy(String mappedBy) {
 	for (MetaAttribute attribute : relationshipAttributes) {
 	    if (mappedBy.equals(attribute.getRelationship().getMappedBy().get()))

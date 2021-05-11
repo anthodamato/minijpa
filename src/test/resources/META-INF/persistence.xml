@@ -435,7 +435,7 @@
                       value="jdbc:derby:memory:embed_many_to_one;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property 
+<!--            <property 
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
             <property 
@@ -443,7 +443,13 @@
                 value="script" /> 
             <property 
                 name="javax.persistence.schema-generation.create-script-source" 
-                value="META-INF/create_embed_many_to_one_db.sql" />
+                value="META-INF/create_embed_many_to_one_db.sql" />-->
+            <property
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="metadata" /> 
         </properties>
     </persistence-unit>
 

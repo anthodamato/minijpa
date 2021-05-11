@@ -43,8 +43,17 @@ public class ApacheDerbyDbTypeMapper extends DefaultDbTypeMapper {
 
 	if (attributeType.isPrimitive()) {
 	    String typeName = attributeType.getName();
-	    if (typeName.equals("int") || typeName.equals("byte") || typeName.equals("short") || typeName.equals("long"))
+	    if (typeName.equals("int") || typeName.equals("byte") || typeName.equals("short"))
 		return Integer.class;
+
+	    if (typeName.equals("long"))
+		return Long.class;
+
+	    if (typeName.equals("float"))
+		return Float.class;
+
+	    if (typeName.equals("double"))
+		return Double.class;
 
 	    if (typeName.equals("boolean"))
 		return Boolean.class;

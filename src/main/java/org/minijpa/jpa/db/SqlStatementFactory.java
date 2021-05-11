@@ -996,10 +996,11 @@ public class SqlStatementFactory {
     private int indexOfFirstEntity(List<MetaEntity> entities) {
 	for (int i = 0; i < entities.size(); ++i) {
 	    MetaEntity metaEntity = entities.get(i);
-	    if (metaEntity.getRelationshipAttributes().isEmpty())
+	    List<MetaAttribute> relationshipAttributes = metaEntity.expandRelationshipAttributes();
+	    if (relationshipAttributes.isEmpty())
 		return i;
 
-	    long rc = metaEntity.getRelationshipAttributes().stream().filter(a -> a.getRelationship().isOwner()).count();
+	    long rc = relationshipAttributes.stream().filter(a -> a.getRelationship().isOwner()).count();
 	    if (rc == 0)
 		return i;
 	}

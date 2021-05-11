@@ -59,6 +59,9 @@ public abstract class BasicDbJdbc implements DbJdbc {
 	if (type == Long.class || (type.isPrimitive() && type.getName().equals("long")))
 	    return "bigint";
 
+	if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
+	    return "float";
+
 	if (type == Date.class || type == java.sql.Date.class)
 	    return "date";
 

@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 public class DbConfigurationList {
 
     private Logger LOG = LoggerFactory.getLogger(DbConfigurationList.class);
-    private static DbConfigurationList dbConfiguration = new DbConfigurationList();
+    private static final DbConfigurationList dbConfiguration = new DbConfigurationList();
 
-    private Map<String, DbConfiguration> map = new HashMap<>();
+    private final Map<String, DbConfiguration> map = new HashMap<>();
 
     public static DbConfigurationList getInstance() {
 	return dbConfiguration;
