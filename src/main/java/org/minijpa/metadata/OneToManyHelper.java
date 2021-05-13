@@ -5,19 +5,15 @@
  */
 package org.minijpa.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import org.minijpa.jdbc.AttributeUtil;
-import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
@@ -30,6 +26,10 @@ import org.minijpa.jdbc.relationship.RelationshipJoinTable;
  * @author adamato
  */
 public class OneToManyHelper extends RelationshipHelper {
+
+    private final JoinColumnMappingFactory joinColumnMappingFactory = new OwningJoinColumnMappingFactory();
+    private final JoinColumnMappingFactory owningJoinColumnMappingFactory = new OneToManyOwningJoinColumnMappingFactory();
+    private final JoinColumnMappingFactory targetJoinColumnMappingFactory = new OneToManyTargetJoinColumnMappingFactory();
 
     public OneToManyRelationship createOneToMany(
 	    OneToMany oneToMany,
@@ -58,43 +58,6 @@ public class OneToManyHelper extends RelationshipHelper {
 	return builder.build();
     }
 
-    private String createDefaultOneToManyJoinColumn(MetaAttribute relationshipAttribute, MetaAttribute id) {
-	return relationshipAttribute.getName() + "_" + id.getColumnName();
-    }
-
-    private JoinColumnAttribute createJoinColumnTargetAttribute(
-	    MetaAttribute id,
-	    MetaAttribute relationshipAttribute,
-	    String joinColumn,
-	    DbConfiguration dbConfiguration) {
-	String jc = joinColumn;
-	if (jc == null)
-	    jc = createDefaultOneToManyJoinColumn(relationshipAttribute, id);
-
-	JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper().mapJdbcAttribute(id.getType(), id.getSqlType());
-	return new JoinColumnAttribute.Builder()
-		.withColumnName(jc)
-		.withType(id.getType())
-		.withReadWriteDbType(id.getReadWriteDbType())
-		.withDbTypeMapper(dbConfiguration.getDbTypeMapper())
-		.withSqlType(id.getSqlType())
-		.withAttribute(id)
-		.withJdbcAttributeMapper(jdbcAttributeMapper)
-		.build();
-    }
-
-    private List<JoinColumnAttribute> createJoinColumnTargetAttributes(MetaEntity entity,
-	    MetaAttribute relationshipAttribute, DbConfiguration dbConfiguration) {
-	List<MetaAttribute> attributes = entity.getId().getAttributes();
-	List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
-	for (MetaAttribute a : attributes) {
-	    JoinColumnAttribute joinColumnAttribute = createJoinColumnTargetAttribute(a, relationshipAttribute, null, dbConfiguration);
-	    joinColumnAttributes.add(joinColumnAttribute);
-	}
-
-	return joinColumnAttributes;
-    }
-
     private String createDefaultOneToManyJoinTable(MetaEntity owner, MetaEntity target) {
 	return owner.getTableName() + "_" + target.getTableName();
     }
@@ -116,17 +79,24 @@ public class OneToManyHelper extends RelationshipHelper {
 	if (oneToManyRelationship.isOwner()) {
 	    if (oneToManyRelationship.getJoinColumnDataList().isPresent()) {
 		// Unidirectional One-to-Many association using a foreign key mapping
-		JoinColumnMapping joinColumnMapping = buildJoinColumnMapping(dbConfiguration, a, entity, oneToManyRelationship.getJoinColumnDataList());
+		JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(dbConfiguration, a, entity, oneToManyRelationship.getJoinColumnDataList());
 		toEntity.getJoinColumnMappings().add(joinColumnMapping);
 	    } //	    if (oneToManyRelationship.getJoinColumn() == null) 
 	    else {
 		JoinTableAttributes joinTableAttributes = createJoinTableAttributes(oneToManyRelationship, entity, toEntity);
 		String joinTableAlias = aliasGenerator.calculateAlias(joinTableAttributes.getName(), entities.values());
-		List<JoinColumnAttribute> joinColumnOwningAttributes = createUnidirectionalJoinColumnAttributes(entity, dbConfiguration);
-		List<JoinColumnAttribute> joinColumnTargetAttributes = createJoinColumnTargetAttributes(
-			toEntity, a, dbConfiguration);
-		RelationshipJoinTable relationshipJoinTable = new RelationshipJoinTable(joinTableAttributes.getSchema(), joinTableAttributes.getName(),
-			joinTableAlias, joinColumnOwningAttributes, joinColumnTargetAttributes, entity.getId(),
+
+		JoinColumnMapping owningJoinColumnMapping = owningJoinColumnMappingFactory.buildJoinColumnMapping(
+			dbConfiguration, a, entity, oneToManyRelationship.getJoinColumnDataList());
+
+		JoinColumnMapping targetJoinColumnMapping = targetJoinColumnMappingFactory.buildJoinColumnMapping(
+			dbConfiguration, a, toEntity, oneToManyRelationship.getJoinColumnDataList());
+
+		RelationshipJoinTable relationshipJoinTable = new RelationshipJoinTable(
+			joinTableAttributes.getSchema(), joinTableAttributes.getName(),
+			joinTableAlias,
+			owningJoinColumnMapping, targetJoinColumnMapping,
+			entity, toEntity, entity.getId(),
 			toEntity.getId());
 		builder = builder.withJoinTable(relationshipJoinTable);
 	    }

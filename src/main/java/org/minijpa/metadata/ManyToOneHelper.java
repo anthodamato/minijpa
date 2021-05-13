@@ -21,6 +21,8 @@ import org.minijpa.jdbc.relationship.ManyToOneRelationship;
  */
 public class ManyToOneHelper extends RelationshipHelper {
 
+    private final JoinColumnMappingFactory joinColumnMappingFactory = new OwningJoinColumnMappingFactory();
+
     public ManyToOneRelationship createManyToOne(
 	    ManyToOne manyToOne,
 	    Optional<JoinColumnDataList> joinColumnDataList) {
@@ -44,7 +46,7 @@ public class ManyToOneHelper extends RelationshipHelper {
 	    DbConfiguration dbConfiguration) {
 	ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder().with(manyToOneRelationship);
 	if (manyToOneRelationship.isOwner()) {
-	    JoinColumnMapping joinColumnMapping = buildJoinColumnMapping(dbConfiguration, a, toEntity, manyToOneRelationship.getJoinColumnDataList());
+	    JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(dbConfiguration, a, toEntity, manyToOneRelationship.getJoinColumnDataList());
 	    entity.getJoinColumnMappings().add(joinColumnMapping);
 	    builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
 	}

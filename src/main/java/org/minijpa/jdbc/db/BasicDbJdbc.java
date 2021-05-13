@@ -18,6 +18,7 @@
  */
 package org.minijpa.jdbc.db;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Optional;
 import org.minijpa.jdbc.DDLData;
@@ -65,6 +66,9 @@ public abstract class BasicDbJdbc implements DbJdbc {
 	if (type == Date.class || type == java.sql.Date.class)
 	    return "date";
 
+	if (type == Timestamp.class)
+	    return "timestamp";
+
 	if (type == String.class)
 	    return "varchar(" + ddlData.get().getLength().get() + ")";
 
@@ -76,7 +80,7 @@ public abstract class BasicDbJdbc implements DbJdbc {
 
     @Override
     public String buildColumnDefinition(MetaAttribute metaAttribute) {
-	return buildColumnDefinition(metaAttribute.getType(), metaAttribute.getDdlData());
+	return buildColumnDefinition(metaAttribute.getReadWriteDbType(), metaAttribute.getDdlData());
     }
 
     @Override

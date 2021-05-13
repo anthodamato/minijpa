@@ -128,19 +128,53 @@ public class SqlStatementFactoryTest {
 
 	MetaEntity storeEntity = map.get(Store.class.getName());
 	MetaEntity itemEntity = map.get(Item.class.getName());
-	Pk a = storeEntity.getId();
+	Pk pk = storeEntity.getId();
 
 	MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
 	RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
-	ModelValueArray<AbstractAttribute> attributeValueArray = sqlStatementFactory.expandJoinColumnAttributes(a, store.getId(),
-		relationshipJoinTable.getJoinColumnOwningAttributes());
-	List<AbstractAttribute> attributes = attributeValueArray.getModels();
-	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(attributeValueArray);
+	ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, store.getId(),
+		relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
+	List<AbstractAttribute> attributes = modelValueArray.getModels();
+	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(modelValueArray);
 	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
 		relationshipJoinTable, attributes);
 
-//	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity, a, store.getId(),
-//		relationshipJoinTable);
+	Optional<List<Condition>> opt = sqlSelect.getConditions();
+	Assertions.assertTrue(opt.isPresent());
+
+	String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
+	Assertions.assertEquals(
+		"select i.id, i.model, i.name from Item AS i INNER JOIN store_items AS si ON i.id = si.items_id where si.Store_id = ?",
+		sql);
+
+	em.close();
+	emf.close();
+    }
+
+    @Test
+    public void generateSelectStringByJoinTable() throws Exception {
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni");
+	final EntityManager em = emf.createEntityManager();
+
+	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("onetomany_uni");
+	if (!optional.isPresent())
+	    Assertions.fail("Meta entities not found");
+
+	Map<String, MetaEntity> map = optional.get().getEntities();
+
+	MetaEntity storeEntity = map.get(Store.class.getName());
+	MetaEntity itemEntity = map.get(Item.class.getName());
+	Pk pk = storeEntity.getId();
+
+	MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
+	RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
+	ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, 1L,
+		relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
+	List<AbstractAttribute> attributes = modelValueArray.getModels();
+	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(modelValueArray);
+	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
+		relationshipJoinTable, attributes);
+
 	Optional<List<Condition>> opt = sqlSelect.getConditions();
 	Assertions.assertTrue(opt.isPresent());
 

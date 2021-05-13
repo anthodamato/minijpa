@@ -40,6 +40,7 @@ import org.minijpa.jdbc.model.ForeignKeyDeclaration;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
 import org.minijpa.jdbc.model.OrderBy;
+import org.minijpa.jdbc.model.SqlCreateJoinTable;
 import org.minijpa.jdbc.model.SqlCreateSequence;
 import org.minijpa.jdbc.model.SqlCreateTable;
 import org.minijpa.jdbc.model.SqlDDLStatement;
@@ -165,15 +166,20 @@ public class SqlStatementFactory {
 
     public ModelValueArray<AbstractAttribute> expandJoinColumnAttributes(Pk owningId,
 	    Object joinTableForeignKey, List<JoinColumnAttribute> allJoinColumnAttributes) throws Exception {
-	ModelValueArray<MetaAttribute> attributeValueArray = new ModelValueArray<>();
-	metaEntityHelper.expand(owningId, joinTableForeignKey, attributeValueArray);
+	ModelValueArray<MetaAttribute> modelValueArray = new ModelValueArray<>();
+	LOG.debug("expandJoinColumnAttributes: owningId=" + owningId);
+	metaEntityHelper.expand(owningId, joinTableForeignKey, modelValueArray);
 
+	LOG.debug("expandJoinColumnAttributes: modelValueArray.size()=" + modelValueArray.size());
+	allJoinColumnAttributes.forEach(a -> LOG.debug("expandJoinColumnAttributes: a.getForeignKeyAttribute()=" + a.getForeignKeyAttribute()));
 	ModelValueArray<AbstractAttribute> result = new ModelValueArray<>();
-	for (int i = 0; i < attributeValueArray.size(); ++i) {
-	    MetaAttribute attribute = attributeValueArray.getModel(i);
+	for (int i = 0; i < modelValueArray.size(); ++i) {
+	    MetaAttribute attribute = modelValueArray.getModel(i);
+	    LOG.debug("expandJoinColumnAttributes: attribute=" + attribute);
 	    Optional<JoinColumnAttribute> optional = allJoinColumnAttributes.stream().
-		    filter(j -> j.getAttribute() == attribute).findFirst();
-	    result.add(optional.get(), attributeValueArray.getValue(i));
+		    filter(j -> j.getForeignKeyAttribute() == attribute).findFirst();
+	    LOG.debug("expandJoinColumnAttributes: optional.isPresent()=" + optional.isPresent());
+	    result.add(optional.get(), modelValueArray.getValue(i));
 	}
 
 	return result;
@@ -188,7 +194,10 @@ public class SqlStatementFactory {
 	    return new Column(a.getColumnName());
 	}).collect(Collectors.toList());
 
-	List<Column> idTargetColumns = relationshipJoinTable.getJoinColumnTargetAttributes().stream().map(a -> {
+//	List<Column> idTargetColumns = relationshipJoinTable.getJoinColumnTargetAttributes().stream().map(a -> {
+//	    return new Column(a.getColumnName());
+//	}).collect(Collectors.toList());
+	List<Column> idTargetColumns = relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes().stream().map(a -> {
 	    return new Column(a.getColumnName());
 	}).collect(Collectors.toList());
 
@@ -219,7 +228,7 @@ public class SqlStatementFactory {
 	    return new Column(a.getColumnName());
 	}).collect(Collectors.toList());
 
-	List<Column> idTargetColumns = relationshipJoinTable.getJoinColumnOwningAttributes().stream().map(a -> {
+	List<Column> idTargetColumns = relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes().stream().map(a -> {
 	    return new Column(a.getColumnName());
 	}).collect(Collectors.toList());
 
@@ -247,12 +256,21 @@ public class SqlStatementFactory {
 	    Object targetInstance) throws Exception {
 	List<QueryParameter> parameters = new ArrayList<>();
 	Pk owningId = relationshipJoinTable.getOwningAttribute();
+//	parameters
+//		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getJoinColumnOwningAttributes(),
+//			owningId, AttributeUtil.getIdValue(owningId, owningInstance)));
+	relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes()
+		.forEach(a -> LOG.debug("createRelationshipJoinTableParameters: a=" + a));
 	parameters
-		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getJoinColumnOwningAttributes(),
+		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes(),
 			owningId, AttributeUtil.getIdValue(owningId, owningInstance)));
+
 	Pk targetId = relationshipJoinTable.getTargetAttribute();
+//	parameters
+//		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getJoinColumnTargetAttributes(),
+//			targetId, AttributeUtil.getIdValue(targetId, targetInstance)));
 	parameters
-		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getJoinColumnTargetAttributes(),
+		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes(),
 			targetId, AttributeUtil.getIdValue(targetId, targetInstance)));
 	return parameters;
     }
@@ -1039,6 +1057,21 @@ public class SqlStatementFactory {
 	    SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(), v.getId(),
 		    attributes, foreignKeyDeclarations);
 	    sqlStatements.add(sqlCreateTable);
+	});
+
+	sorted.forEach(v -> {
+	    List<RelationshipJoinTable> relationshipJoinTables = v.expandRelationshipAttributes().stream()
+		    .filter(a -> a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner())
+		    .map(a -> a.getRelationship().getJoinTable()).collect(Collectors.toList());
+	    for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
+		List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
+		foreignKeyDeclarations.add(new ForeignKeyDeclaration(
+			relationshipJoinTable.getOwningJoinColumnMapping(), relationshipJoinTable.getOwningEntity().getTableName()));
+		foreignKeyDeclarations.add(new ForeignKeyDeclaration(
+			relationshipJoinTable.getTargetJoinColumnMapping(), relationshipJoinTable.getTargetEntity().getTableName()));
+		SqlCreateJoinTable sqlCreateJoinTable = new SqlCreateJoinTable(relationshipJoinTable.getTableName(), foreignKeyDeclarations);
+		sqlStatements.add(sqlCreateJoinTable);
+	    }
 	});
 
 	sorted.forEach(v -> {

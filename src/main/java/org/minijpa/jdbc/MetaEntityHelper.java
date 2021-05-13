@@ -147,25 +147,23 @@ public class MetaEntityHelper {
 
     public List<QueryParameter> createJoinColumnAVSToQP(List<JoinColumnAttribute> joinColumnAttributes,
 	    Pk owningId, Object joinTableForeignKey) throws Exception {
-	ModelValueArray<MetaAttribute> attributeValueArray = new ModelValueArray<>();
-	expand(owningId, joinTableForeignKey, attributeValueArray);
-	List<QueryParameter> columnNameValues = new ArrayList<>();
-	for (int i = 0; i < attributeValueArray.size(); ++i) {
-	    MetaAttribute attribute = attributeValueArray.getModel(i);
+	ModelValueArray<MetaAttribute> modelValueArray = new ModelValueArray<>();
+	expand(owningId, joinTableForeignKey, modelValueArray);
+	List<QueryParameter> queryParameters = new ArrayList<>();
+	for (int i = 0; i < modelValueArray.size(); ++i) {
+	    MetaAttribute attribute = modelValueArray.getModel(i);
 	    int index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, attribute);
-	    MetaAttribute metaAttribute = joinColumnAttributes.get(index).getAttribute();
-	    QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(), attributeValueArray.getValue(i),
+	    MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
+	    QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(), modelValueArray.getValue(i),
 		    metaAttribute.getType(), metaAttribute.getSqlType(), metaAttribute.jdbcAttributeMapper);
-	    columnNameValues.add(qp);
+	    queryParameters.add(qp);
 	}
 
-	return columnNameValues;
+	return queryParameters;
     }
 
     public List<FetchParameter> convertAllAttributes(MetaEntity entity) {
-	LOG.debug("convertAllAttributes: entity=" + entity);
 	List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
-	LOG.debug("convertAllAttributes: expandedAttributes=" + expandedAttributes);
 	List<FetchParameter> fetchColumnNameValues = convertAttributes(expandedAttributes);
 	fetchColumnNameValues.addAll(toFetchParameter(entity.expandJoinColumnAttributes()));
 	return fetchColumnNameValues;

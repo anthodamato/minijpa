@@ -528,9 +528,14 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	return cols;
     }
 
-    private String buildAttributeDeclaration(JoinColumnAttribute joinColumnAttribute) {
+    private String buildDeclaration(JoinColumnAttribute joinColumnAttribute) {
 	return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName())
 		+ " " + buildJoinColumnDefinition(joinColumnAttribute);
+    }
+
+    private String buildJoinTableColumnDeclaration(JoinColumnAttribute joinColumnAttribute) {
+	return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName())
+		+ " " + buildJoinColumnDefinition(joinColumnAttribute) + " not null";
     }
 
     @Override
@@ -553,7 +558,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
 	    sb.append(", ");
 	    cols = foreignKeyDeclaration.getJoinColumnMapping().getJoinColumnAttributes().stream()
-		    .map(a -> buildAttributeDeclaration(a))
+		    .map(a -> buildDeclaration(a))
 		    .collect(Collectors.joining(", "));
 	    sb.append(cols);
 	}
@@ -588,6 +593,35 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
     }
 
     @Override
+    public String export(SqlCreateJoinTable sqlCreateJoinTable) {
+	StringBuilder sb = new StringBuilder();
+	sb.append("create table ");
+	sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateJoinTable.getTableName()));
+	sb.append(" (");
+	List<JoinColumnAttribute> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations().stream()
+		.map(d -> d.getJoinColumnMapping().getJoinColumnAttributes())
+		.flatMap(List::stream).collect(Collectors.toList());
+	String cols = joinColumnAttributes.stream()
+		.map(a -> buildJoinTableColumnDeclaration(a))
+		.collect(Collectors.joining(", "));
+	sb.append(cols);
+
+	// foreign keys
+	for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateJoinTable.getForeignKeyDeclarations()) {
+	    sb.append(", foreign key (");
+	    cols = foreignKeyDeclaration.getJoinColumnMapping().getJoinColumnAttributes().stream()
+		    .map(a -> dbJdbc.getNameTranslator().adjustName(a.getColumnName()))
+		    .collect(Collectors.joining(", "));
+	    sb.append(cols);
+	    sb.append(") references ");
+	    sb.append(foreignKeyDeclaration.getReferenceTable());
+	}
+
+	sb.append(")");
+	return sb.toString();
+    }
+
+    @Override
     public String export(SqlCreateSequence sqlCreateSequence) {
 	StringBuilder sb = new StringBuilder();
 	sb.append("create sequence ");
@@ -603,6 +637,9 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
     public String export(SqlDDLStatement sqlDDLStatement) {
 	if (sqlDDLStatement instanceof SqlCreateTable)
 	    return export((SqlCreateTable) sqlDDLStatement);
+
+	if (sqlDDLStatement instanceof SqlCreateJoinTable)
+	    return export((SqlCreateJoinTable) sqlDDLStatement);
 
 	if (sqlDDLStatement instanceof SqlCreateSequence)
 	    return export((SqlCreateSequence) sqlDDLStatement);

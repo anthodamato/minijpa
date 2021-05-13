@@ -51,14 +51,14 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 	SqlSelect sqlSelect = null;
 	if (relationship.isOwner()) {
 	    modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
-		    relationship.getJoinTable().getJoinColumnOwningAttributes());
+		    relationship.getJoinTable().getOwningJoinColumnMapping().getJoinColumnAttributes());
 	    List<AbstractAttribute> attributes = modelValueArray.getModels();
 
 	    sqlSelect = sqlStatementFactory.generateSelectByJoinTable(entity,
 		    relationship.getJoinTable(), attributes);
 	} else {
 	    modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
-		    relationship.getJoinTable().getJoinColumnTargetAttributes());
+		    relationship.getJoinTable().getTargetJoinColumnMapping().getJoinColumnAttributes());
 	    List<AbstractAttribute> attributes = modelValueArray.getModels();
 	    sqlSelect = sqlStatementFactory.generateSelectByJoinTableFromTarget(entity,
 		    relationship.getJoinTable(), attributes);

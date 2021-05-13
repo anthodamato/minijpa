@@ -1,8 +1,6 @@
 package org.minijpa.jdbc.relationship;
 
-import java.util.List;
-
-import org.minijpa.jdbc.JoinColumnAttribute;
+import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.Pk;
 
 public class RelationshipJoinTable {
@@ -10,20 +8,27 @@ public class RelationshipJoinTable {
     private String schema;
     private String tableName;
     private String alias;
-    private List<JoinColumnAttribute> joinColumnOwningAttributes;
-    private List<JoinColumnAttribute> joinColumnTargetAttributes;
+    private final JoinColumnMapping owningJoinColumnMapping;
+    private final JoinColumnMapping targetJoinColumnMapping;
+    private MetaEntity owningEntity;
+    private MetaEntity targetEntity;
     private Pk owningAttribute;
     private Pk targetAttribute;
 
-    public RelationshipJoinTable(String schema, String tableName, String alias, List<JoinColumnAttribute> joinColumnOwningAttributes,
-	    List<JoinColumnAttribute> joinColumnTargetAttributes, Pk owningAttribute,
+    public RelationshipJoinTable(String schema, String tableName, String alias,
+	    JoinColumnMapping owningJoinColumnMapping,
+	    JoinColumnMapping targetJoinColumnMapping,
+	    MetaEntity owningEntity,
+	    MetaEntity targetEntity, Pk owningAttribute,
 	    Pk targetAttribute) {
 	super();
 	this.schema = schema;
 	this.tableName = tableName;
 	this.alias = alias;
-	this.joinColumnOwningAttributes = joinColumnOwningAttributes;
-	this.joinColumnTargetAttributes = joinColumnTargetAttributes;
+	this.owningJoinColumnMapping = owningJoinColumnMapping;
+	this.targetJoinColumnMapping = targetJoinColumnMapping;
+	this.owningEntity = owningEntity;
+	this.targetEntity = targetEntity;
 	this.owningAttribute = owningAttribute;
 	this.targetAttribute = targetAttribute;
     }
@@ -36,12 +41,24 @@ public class RelationshipJoinTable {
 	return alias;
     }
 
-    public List<JoinColumnAttribute> getJoinColumnOwningAttributes() {
-	return joinColumnOwningAttributes;
+    public String getSchema() {
+	return schema;
     }
 
-    public List<JoinColumnAttribute> getJoinColumnTargetAttributes() {
-	return joinColumnTargetAttributes;
+    public JoinColumnMapping getOwningJoinColumnMapping() {
+	return owningJoinColumnMapping;
+    }
+
+    public JoinColumnMapping getTargetJoinColumnMapping() {
+	return targetJoinColumnMapping;
+    }
+
+    public MetaEntity getOwningEntity() {
+	return owningEntity;
+    }
+
+    public MetaEntity getTargetEntity() {
+	return targetEntity;
     }
 
     public Pk getOwningAttribute() {

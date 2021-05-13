@@ -62,10 +62,10 @@ public class EntityWriterImpl implements EntityWriter {
 
     private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
-    public EntityWriterImpl(EntityContainer entityContainer, 
+    public EntityWriterImpl(EntityContainer entityContainer,
 	    SqlStatementFactory sqlStatementFactory,
-	    SqlStatementGenerator sqlStatementGenerator, 
-	    EntityLoader entityLoader, 
+	    SqlStatementGenerator sqlStatementGenerator,
+	    EntityLoader entityLoader,
 	    EntityInstanceBuilder entityInstanceBuilder,
 	    ConnectionHolder connectionHolder,
 	    JpaJdbcRunner jdbcRunner) {
@@ -195,14 +195,12 @@ public class EntityWriterImpl implements EntityWriter {
 	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
 	    jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
-//	    LOG.info("persist: pk=" + pk);
 	    if (optVersion.isPresent()) {
 		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
 	    }
 	}
 
 	// persist join table attributes
-//	LOG.info("persist: joinTableAttrs.size()=" + joinTableAttrs.size());
 	for (Map.Entry<MetaAttribute, Object> entry : joinTableAttrs.entrySet()) {
 	    MetaAttribute a = entry.getKey();
 	    List<Object> ees = CollectionUtils.getCollectionAsList(entry.getValue());

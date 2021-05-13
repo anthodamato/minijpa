@@ -115,9 +115,10 @@ public class SqlStatementGeneratorTest {
     @Test
     public void ddlBookingSale() throws Exception {
 	DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
-	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, "booking_sale");
+	DbConfigurationList.getInstance().setDbConfiguration("booking_sale", dbConfiguration);
+	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("booking_sale");
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitEnv.getPersistenceUnitContext());
+	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
 	Assertions.assertEquals(3, sqlStatements.size());
 	List<String> ddlStatements = sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
 	Assertions.assertFalse(ddlStatements.isEmpty());
@@ -132,9 +133,10 @@ public class SqlStatementGeneratorTest {
     @Test
     public void ddlCitizens() throws Exception {
 	DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
-	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, "citizens");
+	DbConfigurationList.getInstance().setDbConfiguration("citizens", dbConfiguration);
+	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("citizens");
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitEnv.getPersistenceUnitContext());
+	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
 	Assertions.assertEquals(3, sqlStatements.size());
 	List<String> ddlStatements = sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
 	Assertions.assertFalse(ddlStatements.isEmpty());
@@ -149,9 +151,10 @@ public class SqlStatementGeneratorTest {
     @Test
     public void ddlEmbBooking() throws Exception {
 	DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
-	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, "emb_booking");
+	DbConfigurationList.getInstance().setDbConfiguration("emb_booking", dbConfiguration);
+	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("emb_booking");
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitEnv.getPersistenceUnitContext());
+	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
 	Assertions.assertEquals(1, sqlStatements.size());
 	List<String> ddlStatements = sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
 	Assertions.assertFalse(ddlStatements.isEmpty());
@@ -174,5 +177,32 @@ public class SqlStatementGeneratorTest {
 	Assertions.assertEquals("create table program_manager (id integer not null, name varchar(255) not null, primary key (id))", d0);
 	String d1 = ddlStatements.get(1);
 	Assertions.assertEquals("create table job_employee (id integer not null, name varchar(255), jd varchar(255), pm_id integer, primary key (id), foreign key (pm_id) references program_manager)", d1);
+    }
+
+    @Test
+    public void ddlOrderManyToMany() throws Exception {
+	DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
+	DbConfigurationList.getInstance().setDbConfiguration("order_many_to_many", dbConfiguration);
+	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("order_many_to_many");
+
+	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
+	Assertions.assertEquals(7, sqlStatements.size());
+	List<String> ddlStatements = sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
+	Assertions.assertFalse(ddlStatements.isEmpty());
+	String ddl = ddlStatements.get(0);
+	Assertions.assertEquals("create table customer (id bigint not null, name varchar(255), primary key (id))", ddl);
+	ddl = ddlStatements.get(1);
+	Assertions.assertEquals("create table product (id bigint not null, name varchar(255), primary key (id))", ddl);
+	ddl = ddlStatements.get(2);
+	Assertions.assertEquals("create table orders (id bigint not null, date_of timestamp, status varchar(255), deliveryType integer, customer_id bigint, primary key (id), foreign key (customer_id) references customer)", ddl);
+	ddl = ddlStatements.get(3);
+	Assertions.assertEquals("create table orders_product (orders_id bigint not null, products_id bigint not null, foreign key (orders_id) references orders, foreign key (products_id) references product)", ddl);
+	ddl = ddlStatements.get(4);
+	Assertions.assertEquals("create sequence CUSTOMER_PK_SEQ start with 1 increment by 1", ddl);
+	ddl = ddlStatements.get(5);
+	Assertions.assertEquals("create sequence PRODUCT_PK_SEQ start with 1 increment by 1", ddl);
+	ddl = ddlStatements.get(6);
+	Assertions.assertEquals("create sequence ORDERS_PK_SEQ start with 1 increment by 1", ddl);
     }
 }

@@ -57,8 +57,8 @@ public class JdbcRunner {
 
 	int index = 1;
 	for (QueryParameter queryParameter : queryParameters) {
-//	    LOG.debug("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
-//		    + queryParameter.getValue());
+	    LOG.debug("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
+		    + queryParameter.getValue());
 	    setPreparedStatementQM(preparedStatement, queryParameter, index);
 	    ++index;
 	}
@@ -334,7 +334,6 @@ public class JdbcRunner {
 	Object[] result = new Object[queryResultMapping.size()];
 	for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
 	    Object entityInstance = entityLoader.buildByValues(modelValueArray, entityMapping.getMetaEntity(), LockType.NONE);
-	    LOG.debug("buildRecord: entityInstance=" + entityInstance + "; k=" + k);
 	    result[k] = entityInstance;
 	    ++k;
 	}
@@ -347,9 +346,7 @@ public class JdbcRunner {
 
     private Optional<FetchParameter> buildFetchParameter(String columnName,
 	    EntityMapping entityMapping) {
-	LOG.debug("buildFetchParameter: columnName=" + columnName);
 	Optional<MetaAttribute> optional = entityMapping.getAttribute(columnName);
-	LOG.debug("buildFetchParameter: optional.isPresent()=" + optional.isPresent());
 	if (optional.isPresent()) {
 	    MetaAttribute metaAttribute = optional.get();
 	    FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(),

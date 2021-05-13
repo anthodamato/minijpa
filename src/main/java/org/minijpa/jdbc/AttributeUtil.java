@@ -79,7 +79,7 @@ public class AttributeUtil {
 
     public static int indexOfJoinColumnAttribute(List<JoinColumnAttribute> joinColumnAttributes, MetaAttribute a) {
 	for (int i = 0; i < joinColumnAttributes.size(); ++i) {
-	    if (joinColumnAttributes.get(i).getAttribute() == a)
+	    if (joinColumnAttributes.get(i).getForeignKeyAttribute()== a)
 		return i;
 	}
 

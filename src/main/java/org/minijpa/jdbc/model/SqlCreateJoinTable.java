@@ -18,25 +18,29 @@
  */
 package org.minijpa.jdbc.model;
 
+import java.util.List;
+
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface SqlStatementGenerator {
+public class SqlCreateJoinTable implements SqlDDLStatement {
 
-    public String export(SqlInsert sqlInsert);
+    private final String tableName;
+    private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
 
-    public String export(SqlUpdate sqlUpdate);
+    public SqlCreateJoinTable(String tableName,
+	    List<ForeignKeyDeclaration> foreignKeyDeclarations) {
+	this.tableName = tableName;
+	this.foreignKeyDeclarations = foreignKeyDeclarations;
+    }
 
-    public String export(SqlDelete sqlDelete);
+    public String getTableName() {
+	return tableName;
+    }
 
-    public String export(SqlSelect sqlSelect);
+    public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
+	return foreignKeyDeclarations;
+    }
 
-    public String export(SqlCreateTable sqlCreateTable);
-
-    public String export(SqlCreateSequence sqlCreateSequence);
-
-    public String export(SqlDDLStatement sqlDDLStatement);
-
-    public String export(SqlCreateJoinTable sqlCreateJoinTable);
 }

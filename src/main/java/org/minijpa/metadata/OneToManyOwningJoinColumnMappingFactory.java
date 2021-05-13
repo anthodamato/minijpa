@@ -16,27 +16,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.minijpa.jdbc.model;
+package org.minijpa.metadata;
+
+import org.minijpa.jdbc.MetaAttribute;
+import org.minijpa.jdbc.MetaEntity;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface SqlStatementGenerator {
+public class OneToManyOwningJoinColumnMappingFactory extends OwningJoinColumnMappingFactory {
 
-    public String export(SqlInsert sqlInsert);
+    @Override
+    public String createDefaultJoinColumnName(MetaEntity owningEntity,
+	    MetaAttribute owningAttribute,
+	    MetaAttribute foreignKeyAttribute) {
+	return owningEntity.getName() + "_" + foreignKeyAttribute.getColumnName();
+    }
 
-    public String export(SqlUpdate sqlUpdate);
-
-    public String export(SqlDelete sqlDelete);
-
-    public String export(SqlSelect sqlSelect);
-
-    public String export(SqlCreateTable sqlCreateTable);
-
-    public String export(SqlCreateSequence sqlCreateSequence);
-
-    public String export(SqlDDLStatement sqlDDLStatement);
-
-    public String export(SqlCreateJoinTable sqlCreateJoinTable);
 }
