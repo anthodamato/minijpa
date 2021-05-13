@@ -33,6 +33,7 @@ import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.model.StatementParameters;
+import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniNativeQuery;
 import org.minijpa.jpa.MiniTypedQuery;
@@ -213,16 +214,17 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		case FLUSHED:
 		case FLUSHED_LOADED_FROM_DB: {
 		    // makes updates
-		    ModelValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
-		    if (!attributeValueArray.isEmpty()) {
-			entityWriter.persist(me, entityInstance, attributeValueArray);
+		    ModelValueArray<MetaAttribute> modelValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		    if (!modelValueArray.isEmpty()) {
+			entityWriter.persist(me, entityInstance, modelValueArray);
 			entityInstanceBuilder.removeChanges(me, entityInstance);
 		    }
 		}
 		break;
 		case PERSIST_NOT_FLUSHED: {
-		    ModelValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
-		    entityWriter.persist(me, entityInstance, attributeValueArray);
+		    ModelValueArray<MetaAttribute> modelValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		    persistEarlyInsertEntityInstance(me, modelValueArray, managedEntityList);
+		    entityWriter.persist(me, entityInstance, modelValueArray);
 		    MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
 		    entityInstanceBuilder.removeChanges(me, entityInstance);
 		    EntityStatus es = MetaEntityHelper.getEntityStatus(me, entityInstance);
@@ -233,11 +235,49 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		    entityWriter.delete(entityInstance, me);
 		    entityContainer.removeManaged(entityInstance);
 		}
+		case EARLY_INSERT: {
+		    MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
+		}
 		break;
 	    }
 	}
 
 	LOG.debug("flush: done");
+    }
+
+    /**
+     * Inserts entities related to join columns not flushed yet.
+     *
+     * @param me
+     * @param modelValueArray
+     * @param managedEntityList
+     * @throws Exception
+     */
+    private void persistEarlyInsertEntityInstance(
+	    MetaEntity me,
+	    ModelValueArray<MetaAttribute> modelValueArray,
+	    List<Object> managedEntityList) throws Exception {
+	List<JoinColumnMapping> joinColumnMappings = me.getJoinColumnMappings();
+	if (joinColumnMappings.isEmpty())
+	    return;
+
+	for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
+	    int index = modelValueArray.indexOfModel(joinColumnMapping.getAttribute());
+	    if (index != -1) {
+		Object instance = modelValueArray.getValue(index);
+		if (!managedEntityList.contains(instance))
+		    continue;
+
+		MetaEntity metaEntity = persistenceUnitContext.getEntities().get(instance.getClass().getName());
+		EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(metaEntity, instance);
+		if (entityStatus == EntityStatus.PERSIST_NOT_FLUSHED) {
+		    ModelValueArray<MetaAttribute> mva = entityInstanceBuilder.getModifications(metaEntity, instance);
+		    entityWriter.persist(metaEntity, instance, mva);
+		    MetaEntityHelper.setEntityStatus(metaEntity, instance, EntityStatus.EARLY_INSERT);
+		    entityInstanceBuilder.removeChanges(metaEntity, instance);
+		}
+	    }
+	}
     }
 
     @Override

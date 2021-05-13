@@ -18,6 +18,7 @@
  */
 package org.minijpa.jdbc.db;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Optional;
@@ -62,6 +63,21 @@ public abstract class BasicDbJdbc implements DbJdbc {
 
 	if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
 	    return "float";
+
+	if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
+	    return "double";
+
+	if (type == BigDecimal.class) {
+	    int precision = getDefaultPrecision();
+	    int scale = getDefaultScale();
+	    if (ddlData.isPresent() && ddlData.get().getPrecision().isPresent() && ddlData.get().getPrecision().get() != 0)
+		precision = ddlData.get().getPrecision().get();
+
+	    if (ddlData.isPresent() && ddlData.get().getScale().isPresent() && ddlData.get().getScale().get() != 0)
+		scale = ddlData.get().getScale().get();
+
+	    return "decimal(" + precision + "," + scale + ")";
+	}
 
 	if (type == Date.class || type == java.sql.Date.class)
 	    return "date";

@@ -24,5 +24,6 @@ package org.minijpa.jpa.db;
  */
 public enum EntityStatus {
     NEW, PERSIST_NOT_FLUSHED,
-    FLUSHED, DETACHED, FLUSHED_LOADED_FROM_DB, REMOVED;
+    FLUSHED, DETACHED, FLUSHED_LOADED_FROM_DB, REMOVED,
+    EARLY_INSERT;
 }

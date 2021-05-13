@@ -205,4 +205,42 @@ public class SqlStatementGeneratorTest {
 	ddl = ddlStatements.get(6);
 	Assertions.assertEquals("create sequence ORDERS_PK_SEQ start with 1 increment by 1", ddl);
     }
+
+    @Test
+    public void ddlPurchaseStats() throws Exception {
+	DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
+	DbConfigurationList.getInstance().setDbConfiguration("purchase_stats", dbConfiguration);
+	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("purchase_stats");
+
+	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
+	Assertions.assertEquals(2, sqlStatements.size());
+	List<String> ddlStatements = sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
+	Assertions.assertFalse(ddlStatements.isEmpty());
+	String d0 = ddlStatements.get(0);
+	Assertions.assertEquals("create table purchase_stats (id bigint not null, start_date date, end_date date, debit_card double, credit_card double, cash double, primary key (id))", d0);
+	String d1 = ddlStatements.get(1);
+	Assertions.assertEquals("create sequence PURCHASE_STATS_PK_SEQ start with 1 increment by 1", d1);
+    }
+
+    @Test
+    public void ddlManyToOneBid() throws Exception {
+	DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
+	DbConfigurationList.getInstance().setDbConfiguration("manytoone_bid", dbConfiguration);
+	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("manytoone_bid");
+
+	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
+	Assertions.assertEquals(4, sqlStatements.size());
+	List<String> ddlStatements = sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
+	Assertions.assertFalse(ddlStatements.isEmpty());
+	String ddl = ddlStatements.get(0);
+	Assertions.assertEquals("create table Department (id bigint not null, name varchar(255), primary key (id))", ddl);
+	ddl = ddlStatements.get(1);
+	Assertions.assertEquals("create table Employee (id bigint not null, salary decimal(19,2), name varchar(255), department_id bigint, primary key (id), foreign key (department_id) references Department)", ddl);
+	ddl = ddlStatements.get(2);
+	Assertions.assertEquals("create sequence DEPARTMENT_PK_SEQ start with 1 increment by 1", ddl);
+	ddl = ddlStatements.get(3);
+	Assertions.assertEquals("create sequence EMPLOYEE_PK_SEQ start with 1 increment by 1", ddl);
+    }
 }

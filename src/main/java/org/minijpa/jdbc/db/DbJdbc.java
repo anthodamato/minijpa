@@ -48,6 +48,14 @@ public interface DbJdbc {
 
     public String buildIdentityColumnDefinition(MetaAttribute metaAttribute);
 
+    public default int getDefaultPrecision() {
+	return 19;
+    }
+
+    public default int getDefaultScale() {
+	return 2;
+    }
+
     public default String notEqualOperator() {
 	return "<>";
     }
