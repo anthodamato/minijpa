@@ -14,6 +14,9 @@ public class DbConfigurationFactory {
 	if (database == Database.APACHE_DERBY)
 	    return new ApacheDerbyConfiguration();
 
+	if (database == Database.MYSQL)
+	    return new MySQLConfiguration();
+
 	return new DefaultDbConfiguration();
     }
 }

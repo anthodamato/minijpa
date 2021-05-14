@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JdbcEntityManagerImpl implements JdbcEntityManager {
-
+    
     private final Logger LOG = LoggerFactory.getLogger(JdbcEntityManagerImpl.class);
     protected DbConfiguration dbConfiguration;
     protected PersistenceUnitContext persistenceUnitContext;
@@ -55,7 +55,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     private final EntityLoader entityLoader;
     private final EntityWriter entityWriter;
     private final MetaEntityHelper metaEntityHelper;
-
+    
     public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, PersistenceUnitContext persistenceUnitContext,
 	    EntityContainer entityContainer, EntityInstanceBuilder entityInstanceBuilder,
 	    ConnectionHolder connectionHolder) {
@@ -78,79 +78,80 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	this.entityWriter = new EntityWriterImpl(entityContainer, sqlStatementFactory,
 		dbConfiguration.getSqlStatementGenerator(), entityLoader, entityInstanceBuilder, connectionHolder, jdbcRunner);
     }
-
+    
     public EntityLoader getEntityLoader() {
 	return entityLoader;
     }
-
+    
     public Object findById(Class<?> entityClass, Object primaryKey, LockType lockType) throws Exception {
 	LOG.debug("findById: primaryKey=" + primaryKey);
-
+	
 	MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	if (entity == null)
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
-
+	
 	LOG.debug("findById: entity=" + entity);
 	return entityLoader.findById(entity, primaryKey, lockType);
     }
-
+    
     public void refresh(Object entityInstance, LockType lockType) throws Exception {
 	Class<?> entityClass = entityInstance.getClass();
 	MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	if (entity == null)
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
-
+	
 	if (!entityContainer.isManaged(entityInstance))
 	    throw new IllegalArgumentException("Entity '" + entityInstance + "' is not managed");
-
+	
 	Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
 	entityLoader.refresh(entity, entityInstance, primaryKey, lockType);
     }
-
+    
     public void lock(Object entityInstance, LockType lockType) throws Exception {
 	Class<?> entityClass = entityInstance.getClass();
 	MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	if (entity == null)
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
-
+	
 	if (!entityContainer.isManaged(entityInstance))
 	    throw new IllegalArgumentException("Entity '" + entityInstance + "' is not managed");
-
+	
 	metaEntityHelper.setLockType(entity, entityInstance, lockType);
 	Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
 	entityLoader.refresh(entity, entityInstance, primaryKey, lockType);
     }
-
+    
     public LockType getLockType(Object entityInstance) throws Exception {
 	Class<?> entityClass = entityInstance.getClass();
 	MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 	if (entity == null)
 	    throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
-
+	
 	if (!entityContainer.isManaged(entityInstance))
 	    throw new IllegalArgumentException("Entity '" + entityInstance + "' is not managed");
-
+	
 	return metaEntityHelper.getLockType(entity, entityInstance);
     }
-
+    
     private Object generatePersistentIdentity(MetaEntity entity, Object entityInstance) throws Exception {
 	Pk id = entity.getId();
 	Object idValue = id.getReadMethod().invoke(entityInstance);
 	LOG.debug("generatePersistentIdentity: idValue=" + idValue);
 	if (idValue != null)
 	    return idValue;
-
+	
 	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
+	LOG.debug("generatePersistentIdentity: pkStrategy=" + pkStrategy);
 	if (pkStrategy == PkStrategy.SEQUENCE) {
 	    String seqStm = dbConfiguration.getDbJdbc().sequenceNextValueStatement(entity);
 	    Long longValue = jdbcRunner.generateNextSequenceValue(connectionHolder.getConnection(), seqStm);
 	    entity.getId().getWriteMethod().invoke(entityInstance, longValue);
 	    return longValue;
 	}
-
+	
 	return null;
     }
-
+    
     @Override
     public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
 	ModelValueArray<MetaAttribute> attributeValueArray = entityInstanceBuilder.getModifications(entity, entityInstance);
@@ -188,21 +189,21 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		return;
 	    }
 	}
-
+	
 	List<MetaAttribute> notNullableAttributes = entity.notNullableAttributes();
 	if (notNullableAttributes.isEmpty())
 	    return;
-
+	
 	if (attributeValueArray.isEmpty())
 	    throw new PersistenceException("Attribute '" + notNullableAttributes.get(0).getName() + "' is null");
-
+	
 	notNullableAttributes.stream().forEach(a -> {
 	    Optional<MetaAttribute> o = attributeValueArray.getModels().stream().filter(av -> av == a).findFirst();
 	    if (o.isEmpty())
 		throw new PersistenceException("Attribute '" + a.getName() + "' is null");
 	});
     }
-
+    
     @Override
     public void flush() throws Exception {
 	LOG.debug("Flushing entities...");
@@ -241,7 +242,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		break;
 	    }
 	}
-
+	
 	LOG.debug("flush: done");
     }
 
@@ -260,14 +261,14 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	List<JoinColumnMapping> joinColumnMappings = me.getJoinColumnMappings();
 	if (joinColumnMappings.isEmpty())
 	    return;
-
+	
 	for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
 	    int index = modelValueArray.indexOfModel(joinColumnMapping.getAttribute());
 	    if (index != -1) {
 		Object instance = modelValueArray.getValue(index);
 		if (!managedEntityList.contains(instance))
 		    continue;
-
+		
 		MetaEntity metaEntity = persistenceUnitContext.getEntities().get(instance.getClass().getName());
 		EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(metaEntity, instance);
 		if (entityStatus == EntityStatus.PERSIST_NOT_FLUSHED) {
@@ -279,7 +280,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    }
 	}
     }
-
+    
     @Override
     public void remove(Object entity) throws Exception {
 	MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
@@ -293,13 +294,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		throw new IllegalArgumentException("Entity '" + entity + "' is detached");
 	}
     }
-
+    
     @Override
     public List<?> select(Query query) throws Exception {
 	CriteriaQuery<?> criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
 	if (criteriaQuery.getSelection() == null)
 	    throw new IllegalStateException("Selection not defined or not inferable");
-
+	
 	StatementParameters statementParameters = sqlStatementFactory.select(query);
 	SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
 	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
@@ -311,12 +312,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		    entityLoader, statementParameters.getParameters());
 	    return (List<?>) collectionResult;
 	}
-
+	
 	if (criteriaQuery.getResultType() == Tuple.class) {
 	    if (!(criteriaQuery.getSelection() instanceof CompoundSelection<?>))
 		throw new IllegalArgumentException(
 			"Selection '" + criteriaQuery.getSelection() + "' is not a compound selection");
-
+	    
 	    return jdbcRunner.runTupleQuery(connectionHolder.getConnection(), sql, sqlSelect,
 		    (CompoundSelection<?>) criteriaQuery.getSelection(), statementParameters.getParameters());
 	}
@@ -325,7 +326,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect.getFetchParameters(),
 		statementParameters.getParameters());
     }
-
+    
     @Override
     public List<?> selectNative(MiniNativeQuery query) throws Exception {
 	Optional<QueryResultMapping> queryResultMapping = Optional.empty();
@@ -336,49 +337,49 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    queryResultMapping = Optional.of(new QueryResultMapping("", Arrays.asList(entityMapping),
 		    Collections.emptyList(), Collections.emptyList()));
 	}
-
+	
 	if (query.getResultSetMapping().isPresent()) {
 	    if (persistenceUnitContext.getQueryResultMappings().isEmpty())
 		throw new IllegalArgumentException("Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
-
+	    
 	    String resultSetMapping = query.getResultSetMapping().get();
 	    QueryResultMapping qrm = persistenceUnitContext.getQueryResultMappings().get().get(resultSetMapping);
 	    if (qrm == null)
 		throw new IllegalArgumentException("Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
-
+	    
 	    queryResultMapping = Optional.of(qrm);
 	}
-
+	
 	LOG.info("selectNative: 1");
 	return jdbcRunner.runNativeQuery(connectionHolder.getConnection(), query.getSqlString(),
 		query, queryResultMapping, entityLoader);
     }
-
+    
     @Override
     public int update(String sqlString, Query query) throws Exception {
 	return jdbcRunner.persist(connectionHolder.getConnection(), sqlString);
     }
-
+    
     @Override
     public int update(UpdateQuery updateQuery) throws Exception {
 	if (updateQuery.getCriteriaUpdate().getRoot() == null)
 	    throw new IllegalArgumentException("Criteria Update Root not defined");
-
+	
 	List<QueryParameter> parameters = sqlStatementFactory.createUpdateParameters(updateQuery);
 	SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery, parameters);
 	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlUpdate);
 	return jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
     }
-
+    
     @Override
     public int delete(DeleteQuery deleteQuery) throws Exception {
 	if (deleteQuery.getCriteriaDelete().getRoot() == null)
 	    throw new IllegalArgumentException("Criteria Delete Root not defined");
-
+	
 	StatementParameters statementParameters = sqlStatementFactory.delete(deleteQuery);
 	SqlDelete sqlDelete = (SqlDelete) statementParameters.getSqlStatement();
 	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
 	return jdbcRunner.delete(sql, connectionHolder.getConnection(), statementParameters.getParameters());
     }
-
+    
 }

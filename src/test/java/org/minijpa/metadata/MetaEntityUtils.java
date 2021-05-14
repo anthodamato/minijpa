@@ -13,7 +13,8 @@ import java.util.Optional;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.QueryResultMapping;
-import org.minijpa.jpa.db.ApacheDerbyConfiguration;
+import org.minijpa.jdbc.db.DbConfiguration;
+import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.metadata.enhancer.BytecodeEnhancer;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.minijpa.metadata.enhancer.EnhEntity;
@@ -29,18 +30,17 @@ public class MetaEntityUtils {
     private static final Logger LOG = LoggerFactory.getLogger(MetaEntityUtils.class);
 
     private static final BytecodeEnhancer bytecodeEnhancer = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer();
-    private static final Parser parser = new Parser(new ApacheDerbyConfiguration());
 
-    public static MetaEntity parse(String className) throws Exception {
+    public static MetaEntity parse(String className, Parser parser) throws Exception {
 	EnhEntity enhEntity = bytecodeEnhancer.enhance(className);
 	List<MetaEntity> parsedEntities = new ArrayList<>();
 	return parser.parse(enhEntity, parsedEntities);
     }
 
-    private static Map<String, MetaEntity> parse(List<String> entities) throws Exception {
+    private static Map<String, MetaEntity> parse(List<String> entities, Parser parser) throws Exception {
 	Map<String, MetaEntity> map = new HashMap<>();
 	for (String className : entities) {
-	    map.put(className, parse(className));
+	    map.put(className, parse(className, parser));
 	}
 
 	parser.fillRelationships(map);
@@ -48,7 +48,9 @@ public class MetaEntityUtils {
     }
 
     public static PersistenceUnitContext parsePersistenceUnitContext(String persistenceUnitName, List<String> entities) throws Exception {
-	Map<String, MetaEntity> map = parse(entities);
+	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+	Parser parser = new Parser(dbConfiguration);
+	Map<String, MetaEntity> map = parse(entities, parser);
 	Optional<Map<String, QueryResultMapping>> optional = parser.parseSqlResultSetMappings(map);
 	return new PersistenceUnitContext(persistenceUnitName, map, optional);
     }
@@ -62,20 +64,20 @@ public class MetaEntityUtils {
 //    }
     public static void printMetaEntity(MetaEntity metaEntity) {
 	List<MetaAttribute> attributes = metaEntity.getAttributes();
-	LOG.info("printMetaEntity: Attributes");
+	LOG.debug("printMetaEntity: Attributes");
 	attributes.stream().forEach(m -> {
-	    LOG.info("printMetaEntity: " + m.toString());
+	    LOG.debug("printMetaEntity: " + m.toString());
 	});
 
-	LOG.info("printMetaEntity: Embeddables");
+	LOG.debug("printMetaEntity: Embeddables");
 	for (MetaEntity embeddable : metaEntity.getEmbeddables()) {
 	    printMetaEntity(embeddable);
 	}
 
-	LOG.info("printMetaEntity: Relationship Attributes");
+	LOG.debug("printMetaEntity: Relationship Attributes");
 	List<MetaAttribute> ras = metaEntity.getRelationshipAttributes();
 	ras.stream().forEach(m -> {
-	    LOG.info("printMetaEntity: Relationship " + m.toString());
+	    LOG.debug("printMetaEntity: Relationship " + m.toString());
 	});
     }
 }

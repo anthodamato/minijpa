@@ -5,18 +5,19 @@ import java.util.Map;
 import javax.persistence.spi.PersistenceUnitInfo;
 
 public class PersistenceMetaData {
-	private Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas;
 
-	public PersistenceMetaData(Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas) {
-		super();
-		this.persistenceUnitMetaDatas = persistenceUnitMetaDatas;
-	}
+    private final Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas;
 
-	public Map<String, PersistenceUnitInfo> getPersistenceUnitMetaDatas() {
-		return persistenceUnitMetaDatas;
-	}
+    public PersistenceMetaData(Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas) {
+	super();
+	this.persistenceUnitMetaDatas = persistenceUnitMetaDatas;
+    }
 
-	public PersistenceUnitInfo getPersistenceUnitMetaData(String name) {
-		return persistenceUnitMetaDatas.get(name);
-	}
+    public Map<String, PersistenceUnitInfo> getPersistenceUnitMetaDatas() {
+	return persistenceUnitMetaDatas;
+    }
+
+    public PersistenceUnitInfo getPersistenceUnitMetaData(String name) {
+	return persistenceUnitMetaDatas.get(name);
+    }
 }

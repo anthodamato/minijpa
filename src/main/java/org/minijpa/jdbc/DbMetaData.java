@@ -29,68 +29,65 @@ import org.slf4j.LoggerFactory;
 public class DbMetaData {
 
     private Logger LOG = LoggerFactory.getLogger(DbMetaData.class);
-    private boolean log = false;
 
     public void showDatabaseMetadata(Connection connection) throws SQLException {
 	DatabaseMetaData databaseMetaData = connection.getMetaData();
-	if (!log)
-	    return;
 
-	LOG.info("showDatabaseMetadata: getCatalogSeparator():" + databaseMetaData.getCatalogSeparator());
-	LOG.info("showDatabaseMetadata: getCatalogTerm():" + databaseMetaData.getCatalogTerm());
-	LOG.info("showDatabaseMetadata: getDatabaseMajorVersion():" + databaseMetaData.getDatabaseMajorVersion());
-	LOG.info("showDatabaseMetadata: getDatabaseMinorVersion():" + databaseMetaData.getDatabaseMinorVersion());
-	LOG.info("showDatabaseMetadata: getDatabaseProductName():" + databaseMetaData.getDatabaseProductName());
-	LOG.info("showDatabaseMetadata: getDatabaseProductVersion():" + databaseMetaData.getDatabaseProductVersion());
-	LOG.info("showDatabaseMetadata: getDefaultTransactionIsolation():"
+	LOG.debug("showDatabaseMetadata: getCatalogSeparator():" + databaseMetaData.getCatalogSeparator());
+	LOG.debug("showDatabaseMetadata: getCatalogTerm():" + databaseMetaData.getCatalogTerm());
+	LOG.debug("showDatabaseMetadata: getDatabaseMajorVersion():" + databaseMetaData.getDatabaseMajorVersion());
+	LOG.debug("showDatabaseMetadata: getDatabaseMinorVersion():" + databaseMetaData.getDatabaseMinorVersion());
+	LOG.debug("showDatabaseMetadata: getDatabaseProductName():" + databaseMetaData.getDatabaseProductName());
+	LOG.debug("showDatabaseMetadata: getDatabaseProductVersion():" + databaseMetaData.getDatabaseProductVersion());
+	LOG.debug("showDatabaseMetadata: getDefaultTransactionIsolation():"
 		+ databaseMetaData.getDefaultTransactionIsolation());
-	LOG.info("showDatabaseMetadata: getDriverMajorVersion():" + databaseMetaData.getDriverMajorVersion());
-	LOG.info("showDatabaseMetadata: getDriverMinorVersion():" + databaseMetaData.getDriverMinorVersion());
-	LOG.info("showDatabaseMetadata: getDriverName():" + databaseMetaData.getDriverName());
-	LOG.info("showDatabaseMetadata: getDriverVersion():" + databaseMetaData.getDriverVersion());
-	LOG.info("showDatabaseMetadata: getExtraNameCharacters():" + databaseMetaData.getExtraNameCharacters());
-	LOG.info("showDatabaseMetadata: getIdentifierQuoteString():" + databaseMetaData.getIdentifierQuoteString());
-	LOG.info("showDatabaseMetadata: getJDBCMajorVersion():" + databaseMetaData.getJDBCMajorVersion());
-	LOG.info("showDatabaseMetadata: getJDBCMinorVersion():" + databaseMetaData.getJDBCMinorVersion());
-	LOG.info("showDatabaseMetadata: getMaxBinaryLiteralLength():" + databaseMetaData.getMaxBinaryLiteralLength());
-	LOG.info("showDatabaseMetadata: getMaxCatalogNameLength():" + databaseMetaData.getMaxCatalogNameLength());
-	LOG.info("showDatabaseMetadata: getMaxCharLiteralLength():" + databaseMetaData.getMaxCharLiteralLength());
-	LOG.info("showDatabaseMetadata: getMaxColumnNameLength():" + databaseMetaData.getMaxColumnNameLength());
-	LOG.info("showDatabaseMetadata: getMaxColumnsInGroupBy():" + databaseMetaData.getMaxColumnsInGroupBy());
-	LOG.info("showDatabaseMetadata: getMaxColumnsInIndex():" + databaseMetaData.getMaxColumnsInIndex());
-	LOG.info("showDatabaseMetadata: getMaxColumnsInOrderBy():" + databaseMetaData.getMaxColumnsInOrderBy());
-	LOG.info("showDatabaseMetadata: getMaxColumnsInSelect():" + databaseMetaData.getMaxColumnsInSelect());
-	LOG.info("showDatabaseMetadata: getMaxColumnsInTable():" + databaseMetaData.getMaxColumnsInTable());
-	LOG.info("showDatabaseMetadata: getMaxConnections():" + databaseMetaData.getMaxConnections());
-	LOG.info("showDatabaseMetadata: getMaxCursorNameLength():" + databaseMetaData.getMaxCursorNameLength());
-	LOG.info("showDatabaseMetadata: getMaxIndexLength():" + databaseMetaData.getMaxIndexLength());
-	LOG.info("showDatabaseMetadata: getMaxLogicalLobSize():" + databaseMetaData.getMaxLogicalLobSize());
-	LOG.info("showDatabaseMetadata: getMaxProcedureNameLength():" + databaseMetaData.getMaxProcedureNameLength());
-	LOG.info("showDatabaseMetadata: getMaxRowSize():" + databaseMetaData.getMaxRowSize());
-	LOG.info("showDatabaseMetadata: getMaxSchemaNameLength():" + databaseMetaData.getMaxSchemaNameLength());
-	LOG.info("showDatabaseMetadata: getMaxStatementLength():" + databaseMetaData.getMaxStatementLength());
-	LOG.info("showDatabaseMetadata: getMaxStatements():" + databaseMetaData.getMaxStatements());
-	LOG.info("showDatabaseMetadata: getMaxTableNameLength():" + databaseMetaData.getMaxTableNameLength());
-	LOG.info("showDatabaseMetadata: getMaxTablesInSelect():" + databaseMetaData.getMaxTablesInSelect());
-	LOG.info("showDatabaseMetadata: getMaxUserNameLength():" + databaseMetaData.getMaxUserNameLength());
-	LOG.info("showDatabaseMetadata: getNumericFunctions():" + databaseMetaData.getNumericFunctions());
-	LOG.info("showDatabaseMetadata: getProcedureTerm():" + databaseMetaData.getProcedureTerm());
-	LOG.info("showDatabaseMetadata: getResultSetHoldability():" + databaseMetaData.getResultSetHoldability());
-	LOG.info("showDatabaseMetadata: getSchemaTerm():" + databaseMetaData.getSchemaTerm());
-	LOG.info("showDatabaseMetadata: getSearchStringEscape():" + databaseMetaData.getSearchStringEscape());
-	LOG.info("showDatabaseMetadata: getSQLKeywords():" + databaseMetaData.getSQLKeywords());
-	LOG.info("showDatabaseMetadata: getSQLStateType():" + databaseMetaData.getSQLStateType());
-	LOG.info("showDatabaseMetadata: getStringFunctions():" + databaseMetaData.getStringFunctions());
-	LOG.info("showDatabaseMetadata: getSystemFunctions():" + databaseMetaData.getSystemFunctions());
-	LOG.info("showDatabaseMetadata: getTimeDateFunctions():" + databaseMetaData.getTimeDateFunctions());
-	LOG.info("showDatabaseMetadata: getURL():" + databaseMetaData.getURL());
-	LOG.info("showDatabaseMetadata: getUserName():" + databaseMetaData.getUserName());
+	LOG.debug("showDatabaseMetadata: getDriverMajorVersion():" + databaseMetaData.getDriverMajorVersion());
+	LOG.debug("showDatabaseMetadata: getDriverMinorVersion():" + databaseMetaData.getDriverMinorVersion());
+	LOG.debug("showDatabaseMetadata: getDriverName():" + databaseMetaData.getDriverName());
+	LOG.debug("showDatabaseMetadata: getDriverVersion():" + databaseMetaData.getDriverVersion());
+	LOG.debug("showDatabaseMetadata: getExtraNameCharacters():" + databaseMetaData.getExtraNameCharacters());
+	LOG.debug("showDatabaseMetadata: getIdentifierQuoteString():" + databaseMetaData.getIdentifierQuoteString());
+	LOG.debug("showDatabaseMetadata: getJDBCMajorVersion():" + databaseMetaData.getJDBCMajorVersion());
+	LOG.debug("showDatabaseMetadata: getJDBCMinorVersion():" + databaseMetaData.getJDBCMinorVersion());
+	LOG.debug("showDatabaseMetadata: getMaxBinaryLiteralLength():" + databaseMetaData.getMaxBinaryLiteralLength());
+	LOG.debug("showDatabaseMetadata: getMaxCatalogNameLength():" + databaseMetaData.getMaxCatalogNameLength());
+	LOG.debug("showDatabaseMetadata: getMaxCharLiteralLength():" + databaseMetaData.getMaxCharLiteralLength());
+	LOG.debug("showDatabaseMetadata: getMaxColumnNameLength():" + databaseMetaData.getMaxColumnNameLength());
+	LOG.debug("showDatabaseMetadata: getMaxColumnsInGroupBy():" + databaseMetaData.getMaxColumnsInGroupBy());
+	LOG.debug("showDatabaseMetadata: getMaxColumnsInIndex():" + databaseMetaData.getMaxColumnsInIndex());
+	LOG.debug("showDatabaseMetadata: getMaxColumnsInOrderBy():" + databaseMetaData.getMaxColumnsInOrderBy());
+	LOG.debug("showDatabaseMetadata: getMaxColumnsInSelect():" + databaseMetaData.getMaxColumnsInSelect());
+	LOG.debug("showDatabaseMetadata: getMaxColumnsInTable():" + databaseMetaData.getMaxColumnsInTable());
+	LOG.debug("showDatabaseMetadata: getMaxConnections():" + databaseMetaData.getMaxConnections());
+	LOG.debug("showDatabaseMetadata: getMaxCursorNameLength():" + databaseMetaData.getMaxCursorNameLength());
+	LOG.debug("showDatabaseMetadata: getMaxIndexLength():" + databaseMetaData.getMaxIndexLength());
+	LOG.debug("showDatabaseMetadata: getMaxLogicalLobSize():" + databaseMetaData.getMaxLogicalLobSize());
+	LOG.debug("showDatabaseMetadata: getMaxProcedureNameLength():" + databaseMetaData.getMaxProcedureNameLength());
+	LOG.debug("showDatabaseMetadata: getMaxRowSize():" + databaseMetaData.getMaxRowSize());
+	LOG.debug("showDatabaseMetadata: getMaxSchemaNameLength():" + databaseMetaData.getMaxSchemaNameLength());
+	LOG.debug("showDatabaseMetadata: getMaxStatementLength():" + databaseMetaData.getMaxStatementLength());
+	LOG.debug("showDatabaseMetadata: getMaxStatements():" + databaseMetaData.getMaxStatements());
+	LOG.debug("showDatabaseMetadata: getMaxTableNameLength():" + databaseMetaData.getMaxTableNameLength());
+	LOG.debug("showDatabaseMetadata: getMaxTablesInSelect():" + databaseMetaData.getMaxTablesInSelect());
+	LOG.debug("showDatabaseMetadata: getMaxUserNameLength():" + databaseMetaData.getMaxUserNameLength());
+	LOG.debug("showDatabaseMetadata: getNumericFunctions():" + databaseMetaData.getNumericFunctions());
+	LOG.debug("showDatabaseMetadata: getProcedureTerm():" + databaseMetaData.getProcedureTerm());
+	LOG.debug("showDatabaseMetadata: getResultSetHoldability():" + databaseMetaData.getResultSetHoldability());
+	LOG.debug("showDatabaseMetadata: getSchemaTerm():" + databaseMetaData.getSchemaTerm());
+	LOG.debug("showDatabaseMetadata: getSearchStringEscape():" + databaseMetaData.getSearchStringEscape());
+	LOG.debug("showDatabaseMetadata: getSQLKeywords():" + databaseMetaData.getSQLKeywords());
+	LOG.debug("showDatabaseMetadata: getSQLStateType():" + databaseMetaData.getSQLStateType());
+	LOG.debug("showDatabaseMetadata: getStringFunctions():" + databaseMetaData.getStringFunctions());
+	LOG.debug("showDatabaseMetadata: getSystemFunctions():" + databaseMetaData.getSystemFunctions());
+	LOG.debug("showDatabaseMetadata: getTimeDateFunctions():" + databaseMetaData.getTimeDateFunctions());
+	LOG.debug("showDatabaseMetadata: getURL():" + databaseMetaData.getURL());
+	LOG.debug("showDatabaseMetadata: getUserName():" + databaseMetaData.getUserName());
 
-	LOG.info("showDatabaseMetadata Tables:");
+	LOG.debug("showDatabaseMetadata Tables:");
 	ResultSet resultSet = databaseMetaData.getTables(null, null, null, new String[]{"TABLE"});
 	while (resultSet.next()) {
 	    String tableName = resultSet.getString("TABLE_NAME");
-	    LOG.info("showDatabaseMetadata: tableName=" + tableName);
+	    LOG.debug("showDatabaseMetadata: tableName=" + tableName);
 	    ResultSet columns = databaseMetaData.getColumns(null, null, tableName, null);
 	    while (columns.next()) {
 		String columnName = columns.getString("COLUMN_NAME");
@@ -99,12 +96,12 @@ public class DbMetaData {
 		String typeName = columns.getString("TYPE_NAME");
 		String isNullable = columns.getString("IS_NULLABLE");
 		String isAutoIncrement = columns.getString("IS_AUTOINCREMENT");
-		LOG.info("showDatabaseMetadata: columnName=" + columnName);
-		LOG.info("showDatabaseMetadata: columnSize=" + columnSize);
-		LOG.info("showDatabaseMetadata: datatype=" + datatype);
-		LOG.info("showDatabaseMetadata: typeName=" + typeName);
-		LOG.info("showDatabaseMetadata: isNullable=" + isNullable);
-		LOG.info("showDatabaseMetadata: isAutoIncrement=" + isAutoIncrement);
+		LOG.debug("showDatabaseMetadata: columnName=" + columnName);
+		LOG.debug("showDatabaseMetadata: columnSize=" + columnSize);
+		LOG.debug("showDatabaseMetadata: datatype=" + datatype);
+		LOG.debug("showDatabaseMetadata: typeName=" + typeName);
+		LOG.debug("showDatabaseMetadata: isNullable=" + isNullable);
+		LOG.debug("showDatabaseMetadata: isAutoIncrement=" + isAutoIncrement);
 	    }
 	}
 
@@ -113,7 +110,7 @@ public class DbMetaData {
 	    String typeName = rs.getString("TYPE_NAME");
 	    int dataType = rs.getInt("DATA_TYPE");
 	    int precision = rs.getInt("PRECISION");
-	    LOG.info("showDatabaseMetadata: typeName:" + typeName + "; dataType:" + dataType + "; precision:"
+	    LOG.debug("showDatabaseMetadata: typeName:" + typeName + "; dataType:" + dataType + "; precision:"
 		    + precision);
 	}
 
@@ -126,6 +123,8 @@ public class DbMetaData {
 	LOG.info("Jdbc Driver Database: " + databaseProductName);
 	if (databaseProductName.equalsIgnoreCase("Apache Derby")) {
 	    return Database.APACHE_DERBY;
+	} else if (databaseProductName.equalsIgnoreCase("MySQL")) {
+	    return Database.MYSQL;
 	}
 
 	return Database.UNKNOWN;

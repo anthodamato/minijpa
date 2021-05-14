@@ -16,29 +16,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package org.minijpa.jdbc.model;
+package org.minijpa.jpa;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface SqlStatementGenerator {
+public class PersistenceUnitProperties {
 
-    public String export(SqlInsert sqlInsert);
+    private static Logger LOG = LoggerFactory.getLogger(PersistenceUnitProperties.class);
 
-    public String export(SqlUpdate sqlUpdate);
+    public static Map<String, String> getProperties() {
+	String minijpaTest = System.getProperty("minijpa.test");
+	if (minijpaTest == null || minijpaTest.isBlank())
+	    return null;
 
-    public String export(SqlDelete sqlDelete);
+	LOG.debug("getProperties: minijpaTest=" + minijpaTest);
+	if (minijpaTest.equals("mysql")) {
+	    Map<String, String> map = new HashMap<>();
+	    map.put("javax.persistence.jdbc.url", "jdbc:mysql://localhost:3306/test?user=root&password=password");
+	    map.put("javax.persistence.jdbc.driver", "com.mysql.cj.jdbc.Driver");
+	    return map;
+	}
 
-    public String export(SqlSelect sqlSelect);
-
-    public String export(SqlCreateTable sqlCreateTable);
-
-    public String export(SqlCreateSequence sqlCreateSequence);
-
-    public List<String> export(SqlDDLStatement sqlDDLStatement);
-
-    public String export(SqlCreateJoinTable sqlCreateJoinTable);
+	return null;
+    }
 }

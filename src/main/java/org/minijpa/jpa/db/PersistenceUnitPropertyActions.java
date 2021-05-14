@@ -18,20 +18,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PersistenceUnitPropertyActions {
-
+    
     private Logger LOG = LoggerFactory.getLogger(PersistenceUnitPropertyActions.class);
-
+    
     private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 	String filePath = scriptPath;
 	if (!scriptPath.startsWith("/"))
 	    filePath = "/" + filePath;
-
+	
 	File file = Paths.get(getClass().getResource(filePath).toURI()).toFile();
 	ScriptRunner scriptRunner = new ScriptRunner();
 	List<String> statements = scriptRunner.readStatements(file);
 	runScript(statements, persistenceUnitInfo);
     }
-
+    
     public void runScript(List<String> statements, PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 	Connection connection = null;
 	try {
@@ -47,15 +47,15 @@ public class PersistenceUnitPropertyActions {
 	    }
 	}
     }
-
+    
     public List<String> generateScriptFromMetadata(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 	PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
 	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
-	return sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).collect(Collectors.toList());
+	return sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).flatMap(List::stream).collect(Collectors.toList());
     }
-
+    
     public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 	Properties properties = persistenceUnitInfo.getProperties();
 	LOG.debug("properties=" + properties);
@@ -67,7 +67,7 @@ public class PersistenceUnitPropertyActions {
 	LOG.debug("action=" + action);
 	if (action == null || action.isEmpty())
 	    return;
-
+	
 	if (action.equals("create")) {
 	    if (createSource != null) {
 		if (createSource.equals("script")) {
@@ -85,7 +85,7 @@ public class PersistenceUnitPropertyActions {
 		    runScript(dropScriptSource, persistenceUnitInfo);
 		}
 	    }
-
+	    
 	    if (createSource != null && createSource.equals("script")) {
 		if (createScriptSource != null) {
 		    runScript(createScriptSource, persistenceUnitInfo);
@@ -93,5 +93,5 @@ public class PersistenceUnitPropertyActions {
 	    }
 	}
     }
-
+    
 }

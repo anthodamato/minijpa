@@ -1074,13 +1074,12 @@ public class SqlStatementFactory {
 	    }
 	});
 
-	sorted.forEach(v -> {
-	    if (v.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
-		SqlCreateSequence sqlCreateSequence = new SqlCreateSequence(v.getId().getPkGeneration().getPkSequenceGenerator());
-		sqlStatements.add(sqlCreateSequence);
-	    }
-	});
-
+//	sorted.forEach(v -> {
+//	    if (v.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
+//		SqlCreateSequence sqlCreateSequence = new SqlCreateSequence(v.getId().getPkGeneration().getPkSequenceGenerator());
+//		sqlStatements.add(sqlCreateSequence);
+//	    }
+//	});
 	return sqlStatements;
     }
 }

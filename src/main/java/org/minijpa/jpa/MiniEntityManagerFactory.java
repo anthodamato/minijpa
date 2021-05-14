@@ -46,52 +46,11 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	return entityManagerType;
     }
 
-//    private synchronized PersistenceUnitContext createPersistenceUnitContext() throws Exception {
-//	// if the entities have been already parsed they are saved in the EntityContext.
-//	// It must reuse them. Just one MetaEntity instance for each class name must
-//	// exists.
-//	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
-//		.getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
-//	if (optional.isPresent()) {
-//	    LOG.debug("Persistence Unit Entities already parsed");
-//	    return optional.get();
-//	}
-//
-//	// collects existing meta entities
-//	Map<String, MetaEntity> existingMetaEntities = new HashMap<>();
-//	for (String className : persistenceUnitInfo.getManagedClassNames()) {
-//	    Optional<MetaEntity> optionalMetaEntity = EntityDelegate.getInstance().getMetaEntity(className);
-//	    if (optionalMetaEntity.isPresent())
-//		existingMetaEntities.put(className, optionalMetaEntity.get());
-//	}
-//
-//	LOG.info("Parsing entities...");
-//	Map<String, MetaEntity> entityMap = new HashMap<>();
-//	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo);
-//	Parser parser = new Parser(dbConfiguration);
-//	for (String className : persistenceUnitInfo.getManagedClassNames()) {
-//	    EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
-//	    MetaEntity metaEntity = parser.parse(enhEntity, entityMap.values());
-//	    entityMap.put(enhEntity.getClassName(), metaEntity);
-//	}
-//
-//	// replaces the existing meta entities
-//	entityMap.putAll(existingMetaEntities);
-//
-//	parser.fillRelationships(entityMap);
-//	Optional<Map<String, QueryResultMapping>> queryResultMappings = parser.parseSqlResultSetMappings(entityMap);
-//
-//	PersistenceUnitContext puc = new PersistenceUnitContext(persistenceUnitInfo.getPersistenceUnitName(),
-//		entityMap, queryResultMappings);
-//	EntityDelegate.getInstance().addPersistenceUnitContext(puc);
-//	return puc;
-//    }
     @Override
     public EntityManager createEntityManager() {
 	synchronized (persistenceUnitInfo) {
 	    if (persistenceUnitContext == null)
 	    try {
-//		persistenceUnitContext = createPersistenceUnitContext();
 		persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
 		LOG.debug("createEntityManager: createEntities entities=" + persistenceUnitContext.getEntities());
 	    } catch (Exception e) {
@@ -122,7 +81,6 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	synchronized (persistenceUnitInfo) {
 	    if (persistenceUnitContext == null)
 				try {
-//		persistenceUnitContext = createPersistenceUnitContext();
 		persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
 	    } catch (Exception e) {
 		LOG.error("Unable to read entities: " + e.getMessage());
@@ -151,7 +109,6 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	synchronized (persistenceUnitInfo) {
 	    if (persistenceUnitContext == null)
 	        try {
-//		persistenceUnitContext = createPersistenceUnitContext();
 		persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
 	    } catch (Exception e) {
 		LOG.error("Unable to read entities: " + e.getMessage());
@@ -168,7 +125,6 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	    synchronized (persistenceUnitInfo) {
 		if (persistenceUnitContext == null)
 		try {
-//		    persistenceUnitContext = createPersistenceUnitContext();
 		    persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
 		} catch (Exception e) {
 		    LOG.error("Unable to read entities: " + e.getMessage());

@@ -14,22 +14,6 @@
                       value="jdbc:derby:memory:citizens;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="drop-and-create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_citizens_db.sql" />
-        <property
-            name="javax.persistence.schema-generation.drop-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.drop-script-source"
-            value="META-INF/drop_citizens_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -86,12 +70,6 @@
             <property
                 name="javax.persistence.schema-generation.create-script-source"
                 value="META-INF/create_genericlist_db.sql" />
-            <!-- 			<property -->
-            <!-- 				name="javax.persistence.schema-generation.drop-source" -->
-            <!-- 				value="script" /> -->
-            <!-- 			<property -->
-            <!-- 				name="javax.persistence.schema-generation.drop-script-source" -->
-            <!-- 				value="META-INF/drop_citizens_db.sql" /> -->
         </properties>
     </persistence-unit>
 
@@ -262,14 +240,11 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
             <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_otm_emb_booking_db.sql" />
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="metadata" /> 
         </properties>
     </persistence-unit>
 
@@ -306,16 +281,6 @@
                       value="jdbc:derby:memory:manytoone_bid;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_manytoone_bid_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -377,15 +342,6 @@
                       value="jdbc:derby:memory:purchase_stats;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <!--            <property 
-            name="javax.persistence.schema-generation.database.action" 
-            value="create" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-source" 
-            value="script" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-script-source" 
-            value="META-INF/create_purchase_db.sql" /> -->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -447,15 +403,6 @@
                       value="jdbc:derby:memory:embed_many_to_one;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <!--            <property 
-            name="javax.persistence.schema-generation.database.action" 
-            value="create" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-source" 
-            value="script" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-script-source" 
-            value="META-INF/create_embed_many_to_one_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -518,12 +465,6 @@
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
-            <!--            <property 
-            name="javax.persistence.schema-generation.create-source" 
-            value="script" /> -->
-            <!--            <property 
-            name="javax.persistence.schema-generation.create-script-source" 
-            value="META-INF/create_booking_sale_db.sql" />-->
             <property 
                 name="javax.persistence.schema-generation.create-source" 
                 value="metadata" /> 

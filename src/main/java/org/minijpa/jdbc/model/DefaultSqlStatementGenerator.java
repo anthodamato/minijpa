@@ -1,5 +1,7 @@
 package org.minijpa.jdbc.model;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,7 +35,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
     private final Logger LOG = LoggerFactory.getLogger(DefaultSqlStatementGenerator.class);
 
-    private final DbJdbc dbJdbc;
+    protected final DbJdbc dbJdbc;
 
     public DefaultSqlStatementGenerator(DbJdbc dbJdbc) {
 	super();
@@ -510,7 +512,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	return dbJdbc.buildColumnDefinition(joinColumnAttribute);
     }
 
-    private String buildAttributeDeclaration(MetaAttribute attribute) {
+    protected String buildAttributeDeclaration(MetaAttribute attribute) {
 	return dbJdbc.getNameTranslator().adjustName(attribute.getColumnName())
 		+ " " + buildColumnDefinition(attribute);
     }
@@ -528,7 +530,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	return cols;
     }
 
-    private String buildDeclaration(JoinColumnAttribute joinColumnAttribute) {
+    protected String buildDeclaration(JoinColumnAttribute joinColumnAttribute) {
 	return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName())
 		+ " " + buildJoinColumnDefinition(joinColumnAttribute);
     }
@@ -634,17 +636,27 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
     }
 
     @Override
-    public String export(SqlDDLStatement sqlDDLStatement) {
-	if (sqlDDLStatement instanceof SqlCreateTable)
-	    return export((SqlCreateTable) sqlDDLStatement);
+    public List<String> export(SqlDDLStatement sqlDDLStatement) {
+	if (sqlDDLStatement instanceof SqlCreateTable) {
+	    String s = export((SqlCreateTable) sqlDDLStatement);
+
+	    SqlCreateTable sqlCreateTable = (SqlCreateTable) sqlDDLStatement;
+	    if (sqlCreateTable.getPk().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
+		SqlCreateSequence sqlCreateSequence = new SqlCreateSequence(sqlCreateTable.getPk().getPkGeneration().getPkSequenceGenerator());
+		String sc = export(sqlCreateSequence);
+		return Arrays.asList(s, sc);
+	    }
+
+	    return Arrays.asList(s);
+	}
 
 	if (sqlDDLStatement instanceof SqlCreateJoinTable)
-	    return export((SqlCreateJoinTable) sqlDDLStatement);
+	    return Arrays.asList(export((SqlCreateJoinTable) sqlDDLStatement));
 
 	if (sqlDDLStatement instanceof SqlCreateSequence)
-	    return export((SqlCreateSequence) sqlDDLStatement);
+	    return Arrays.asList(export((SqlCreateSequence) sqlDDLStatement));
 
-	return "";
+	return Collections.emptyList();
     }
 
 }

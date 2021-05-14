@@ -24,14 +24,14 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 
     private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 	LOG.info("Processing Db Configuration...");
-	LOG.info("processConfiguration: persistenceUnitInfo=" + persistenceUnitInfo);
+	LOG.debug("processConfiguration: persistenceUnitInfo=" + persistenceUnitInfo);
 	new ConnectionProviderImpl(persistenceUnitInfo).init();
 
 	Connection connection = null;
 	try {
 	    connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
 	    DbMetaData dbMetaData = new DbMetaData();
-	    dbMetaData.showDatabaseMetadata(connection);
+//	    dbMetaData.showDatabaseMetadata(connection);
 	    DbConfiguration dbConfiguration = DbConfigurationFactory.create(connection);
 	    DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo.getPersistenceUnitName(), dbConfiguration);
 	} catch (Exception e) {
@@ -55,7 +55,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    @SuppressWarnings("rawtypes") Map map) {
 	PersistenceUnitInfo persistenceUnitInfo = null;
 	try {
-	    persistenceUnitInfo = new PersistenceProviderHelper().parseXml(path, emName);
+	    persistenceUnitInfo = new PersistenceProviderHelper().parseXml(path, emName, map);
 	    if (persistenceUnitInfo == null) {
 		LOG.error("Persistence Unit '" + emName + "' not found");
 		return null;
@@ -90,7 +90,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 		    + e.getClass().getName());
 	}
 
-	LOG.info("createEntityManagerFactory: EntityManagerType.CONTAINER_MANAGED");
+	LOG.debug("createEntityManagerFactory: EntityManagerType.CONTAINER_MANAGED");
 	return new MiniEntityManagerFactory(EntityManagerType.CONTAINER_MANAGED, persistenceUnitInfo, map);
     }
 
@@ -111,7 +111,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	PersistenceUnitInfo persistenceUnitInfo;
 	try {
 	    persistenceUnitInfo = new PersistenceProviderHelper().parseXml("/META-INF/persistence.xml",
-		    persistenceUnitName);
+		    persistenceUnitName, map);
 	    processConfiguration(persistenceUnitInfo);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());

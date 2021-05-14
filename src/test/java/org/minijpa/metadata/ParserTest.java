@@ -21,7 +21,7 @@ public class ParserTest {
     @Test
     public void parse() throws Exception {
 	String className = "org.minijpa.jpa.model.Citizen";
-	MetaEntity entity = MetaEntityUtils.parse(className);
+	MetaEntity entity = MetaEntityUtils.parse(className, parser);
 
 	Assertions.assertNotNull(entity);
 	Assertions.assertNotNull(entity.getEntityClass());

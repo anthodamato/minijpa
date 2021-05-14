@@ -20,6 +20,7 @@ package org.minijpa.jdbc;
 
 public enum Database {
     UNKNOWN, // Unknown database
-    APACHE_DERBY // Apache Derby
+    APACHE_DERBY, // Apache Derby
+    MYSQL // MySQL
     ;
 }

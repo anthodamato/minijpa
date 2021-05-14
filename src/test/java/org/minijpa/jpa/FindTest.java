@@ -37,7 +37,7 @@ public class FindTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("citizens");
+	emf = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll
