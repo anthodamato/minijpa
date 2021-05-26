@@ -33,8 +33,12 @@ public class RoomBookingId implements Serializable {
     @Override
     public int hashCode() {
 	int hash = 3;
-	hash = 31 * hash + dateof.hashCode();
-	hash = 31 * hash + roomNumber.hashCode();
+	if (dateof != null)
+	    hash = 31 * hash + dateof.hashCode();
+
+	if (roomNumber != null)
+	    hash = 31 * hash + roomNumber.hashCode();
+
 	return hash;
     }
 
@@ -44,10 +48,15 @@ public class RoomBookingId implements Serializable {
 	    return false;
 
 	RoomBookingId roomBookingId = (RoomBookingId) obj;
-	if (dateof.equals(roomBookingId.dateof) && roomNumber.equals(roomBookingId.roomNumber))
-	    return true;
+	if ((dateof != null && !dateof.equals(roomBookingId.dateof))
+		|| (roomBookingId.dateof != null && !roomBookingId.dateof.equals(dateof)))
+	    return false;
 
-	return false;
+	if ((roomNumber != null && roomNumber.equals(roomBookingId.roomNumber))
+		|| (roomBookingId.roomNumber != null && roomBookingId.roomNumber.equals(roomNumber)))
+	    return false;
+
+	return true;
     }
 
 }

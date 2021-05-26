@@ -26,7 +26,7 @@ public class HolidayTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("holidays");
+	emf = Persistence.createEntityManagerFactory("holidays", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll
@@ -103,7 +103,6 @@ public class HolidayTest {
 //	Assertions.assertNotNull(h1.getId());
 //	h1r = em.find(Holiday.class, h1.getId());
 //	Assertions.assertNull(h1r);
-
 	CriteriaBuilder cb = em.getCriteriaBuilder();
 	CriteriaQuery<Holiday> cq = cb.createQuery(Holiday.class);
 	Root<Holiday> root = cq.from(Holiday.class);

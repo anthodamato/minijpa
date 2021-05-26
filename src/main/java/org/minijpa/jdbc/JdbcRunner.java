@@ -65,17 +65,17 @@ public class JdbcRunner {
     }
 
     public int update(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
+	LOG.info("Running `" + sql + "`");
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 	    setPreparedStatementParameters(preparedStatement, parameters);
-	    LOG.info("Running `" + sql + "`");
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
     }
 
     public int persist(Connection connection, String sql) throws SQLException {
+	LOG.info("Running `" + sql + "`");
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-	    LOG.info("Running `" + sql + "`");
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
@@ -173,6 +173,9 @@ public class JdbcRunner {
 	int i = 1;
 	for (FetchParameter fetchParameter : fetchParameters) {
 	    MetaAttribute metaAttribute = fetchParameter.getAttribute();
+	    LOG.debug("createModelValueArrayFromResultSet: fetchParameter.getReadWriteDbType()=" + fetchParameter.getReadWriteDbType());
+//	    LOG.debug("runNativeQuery: columnType=" + columnType);
+	    LOG.debug("createModelValueArrayFromResultSet: rs.getObject(i)=" + rs.getObject(i));
 	    Object value = rs.getObject(i, fetchParameter.getReadWriteDbType());
 	    Object v = metaAttribute.dbTypeMapper.convert(value,
 		    fetchParameter.getReadWriteDbType(), fetchParameter.getType());
@@ -240,20 +243,23 @@ public class JdbcRunner {
 	    rs = preparedStatement.executeQuery();
 	    ResultSetMetaData metaData = rs.getMetaData();
 	    int nc = metaData.getColumnCount();
-	    if (nc == 1) {
-		rs.next();
-		int columnType = metaData.getColumnType(1);
-		Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
-		Object instance = rs.getObject(1, readWriteType);
-		objects.add(instance);
-		return objects;
-	    }
+//	    if (nc == 1) {
+//		rs.next();
+//		int columnType = metaData.getColumnType(1);
+//		Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
+//		Object instance = rs.getObject(1, readWriteType);
+//		objects.add(instance);
+//		return objects;
+//	    }
 
 	    while (rs.next()) {
 		Object[] values = new Object[nc];
 		for (int i = 0; i < nc; ++i) {
 		    int columnType = metaData.getColumnType(i + 1);
 		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
+		    LOG.debug("runNativeQuery: readWriteType=" + readWriteType);
+		    LOG.debug("runNativeQuery: columnType=" + columnType);
+		    LOG.debug("runNativeQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
 		    values[i] = rs.getObject(i + 1, readWriteType);
 		}
 
@@ -275,26 +281,19 @@ public class JdbcRunner {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
 	try {
+	    LOG.info("Running `" + sql + "`");
 	    preparedStatement = connection.prepareStatement(sql);
 	    for (int i = 0; i < parameterValues.size(); ++i) {
 		preparedStatement.setObject(i + 1, parameterValues.get(i));
 	    }
 
-	    LOG.info("Running `" + sql + "`");
 	    List<Object> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
 	    ResultSetMetaData metaData = rs.getMetaData();
-	    int nc = metaData.getColumnCount();
-	    if (nc == 1) {
-		rs.next();
-		Object record = buildRecord(metaData, rs, queryResultMapping, entityLoader);
-		objects.add(record);
-		return objects;
-	    }
-
+//	    int nc = metaData.getColumnCount();
 	    while (rs.next()) {
 		Object record = buildRecord(metaData, rs, queryResultMapping, entityLoader);
-		LOG.info("runNativeQuery: record=" + record);
+//		LOG.debug("runNativeQuery: record=" + record);
 		objects.add(record);
 	    }
 
@@ -317,17 +316,15 @@ public class JdbcRunner {
 	int nc = metaData.getColumnCount();
 	for (int i = 0; i < nc; ++i) {
 	    String columnName = metaData.getColumnName(i + 1);
-	    int k = 0;
-	    for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
-		Optional<FetchParameter> optional = buildFetchParameter(columnName, entityMapping);
-		if (optional.isPresent()) {
-		    Object value = rs.getObject(i + 1, optional.get().getReadWriteDbType());
-		    modelValueArray.add(optional.get(), value);
-		}
-
-		++k;
+	    String columnAlias = metaData.getColumnLabel(i + 1);
+//	    LOG.debug("buildRecord: columnName=" + columnName);
+//	    LOG.debug("buildRecord: columnAlias=" + columnAlias);
+	    Optional<FetchParameter> optional = findFetchParameter(columnName, columnAlias, queryResultMapping);
+	    if (optional.isPresent()) {
+		Object value = rs.getObject(i + 1, optional.get().getReadWriteDbType());
+//		LOG.debug("buildRecord: value=" + value);
+		modelValueArray.add(optional.get(), value);
 	    }
-
 	}
 
 	int k = 0;
@@ -344,9 +341,22 @@ public class JdbcRunner {
 	return result;
     }
 
-    private Optional<FetchParameter> buildFetchParameter(String columnName,
+    private Optional<FetchParameter> findFetchParameter(
+	    String columnName, String columnAlias, QueryResultMapping queryResultMapping) {
+	for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
+	    Optional<FetchParameter> optional = buildFetchParameter(columnName, columnAlias, entityMapping);
+	    if (optional.isPresent())
+		return optional;
+	}
+
+	return Optional.empty();
+    }
+
+    private Optional<FetchParameter> buildFetchParameter(String columnName, String columnAlias,
 	    EntityMapping entityMapping) {
-	Optional<MetaAttribute> optional = entityMapping.getAttribute(columnName);
+//	LOG.debug("buildFetchParameter: columnName=" + columnName);
+	Optional<MetaAttribute> optional = entityMapping.getAttribute(columnAlias);
+//	LOG.debug("buildFetchParameter: optional.isPresent()=" + optional.isPresent());
 	if (optional.isPresent()) {
 	    MetaAttribute metaAttribute = optional.get();
 	    FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(),
@@ -356,6 +366,7 @@ public class JdbcRunner {
 	}
 
 	Optional<JoinColumnAttribute> optionalJoinColumn = entityMapping.getJoinColumnAttribute(columnName);
+//	LOG.debug("buildFetchParameter: optionalJoinColumn.isPresent()=" + optionalJoinColumn.isPresent());
 	if (optionalJoinColumn.isPresent()) {
 	    JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
 	    FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),

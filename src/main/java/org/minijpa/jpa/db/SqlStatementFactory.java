@@ -281,15 +281,15 @@ public class SqlStatementFactory {
 	return new SqlInsert(new FromTableImpl(relationshipJoinTable.getTableName()), columns);
     }
 
-    public SqlUpdate generateUpdate(MetaEntity entity, List<MetaAttribute> attributes,
+    public SqlUpdate generateUpdate(MetaEntity entity, List<String> columns,
 	    List<String> idColumnNames) throws Exception {
 	FromTable fromTable = FromTable.of(entity);
-	List<TableColumn> columns = attributes.stream().map(a -> {
-	    return new TableColumn(fromTable, new Column(a.getColumnName()));
+	List<TableColumn> cs = columns.stream().map(c -> {
+	    return new TableColumn(fromTable, new Column(c));
 	}).collect(Collectors.toList());
 
 	Condition condition = createAttributeEqualCondition(entity, idColumnNames);
-	return new SqlUpdate(fromTable, columns, Optional.of(condition));
+	return new SqlUpdate(fromTable, cs, Optional.of(condition));
     }
 
     public SqlDelete generateDeleteById(MetaEntity entity, List<String> idColumnNames) throws Exception {
@@ -1043,7 +1043,7 @@ public class SqlStatementFactory {
 	Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
 	List<MetaEntity> sorted = sortForDDL(new ArrayList<>(entities.values()));
 	sorted.forEach(v -> {
-	    List<MetaAttribute> attributes = v.getBasicAttributes();
+	    List<MetaAttribute> attributes = new ArrayList<>(v.getBasicAttributes());
 	    attributes.addAll(v.expandEmbeddables());
 
 	    // foreign keys
@@ -1054,6 +1054,7 @@ public class SqlStatementFactory {
 		foreignKeyDeclarations.add(new ForeignKeyDeclaration(joinColumnMapping, toEntity.getTableName()));
 	    }
 
+	    LOG.debug("buildDDLStatements: v.getTableName()=" + v.getTableName());
 	    SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(), v.getId(),
 		    attributes, foreignKeyDeclarations);
 	    sqlStatements.add(sqlCreateTable);

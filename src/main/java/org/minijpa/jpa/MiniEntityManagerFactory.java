@@ -53,6 +53,10 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	    try {
 		persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
 		LOG.debug("createEntityManager: createEntities entities=" + persistenceUnitContext.getEntities());
+		persistenceUnitContext.getEntities().forEach((k, v) -> {
+		    LOG.debug("createEntityManager: v.getName()=" + v.getName());
+		    v.getBasicAttributes().forEach(a -> LOG.debug("createEntityManager: ba a.getName()=" + a.getName()));
+		});
 	    } catch (Exception e) {
 		LOG.error("Unable to read entities: " + e.getMessage());
 		if (e instanceof InvocationTargetException) {
@@ -121,6 +125,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 
     @Override
     public Metamodel getMetamodel() {
+	LOG.debug("getMetamodel: metamodel=" + metamodel);
 	if (metamodel == null) {
 	    synchronized (persistenceUnitInfo) {
 		if (persistenceUnitContext == null)
@@ -132,6 +137,10 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 		}
 	    }
 
+	    persistenceUnitContext.getEntities().forEach((k, v) -> {
+		LOG.debug("getMetamodel: v.getName()=" + v.getName());
+		v.getBasicAttributes().forEach(a -> LOG.debug("getMetamodel: ba a.getName()=" + a.getName()));
+	    });
 	    try {
 		metamodel = new MetamodelFactory(persistenceUnitContext.getEntities()).build();
 	    } catch (Exception e) {

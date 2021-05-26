@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.City;
 import org.minijpa.jpa.model.Region;
 
@@ -26,7 +27,7 @@ public class OneToOneUniTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("cities_uni");
+	emf = Persistence.createEntityManagerFactory("cities_uni", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

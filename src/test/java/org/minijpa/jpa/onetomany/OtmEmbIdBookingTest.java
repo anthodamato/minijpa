@@ -11,6 +11,7 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.HotelBookingDetail;
 import org.minijpa.jpa.model.HotelCustomer;
 import org.minijpa.jpa.model.RoomBookingId;
@@ -24,7 +25,7 @@ public class OtmEmbIdBookingTest {
 
     @Test
     public void persist() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("otm_emb_booking");
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("otm_emb_booking", PersistenceUnitProperties.getProperties());
 	final EntityManager em = emf.createEntityManager();
 	try {
 	    final EntityTransaction tx = em.getTransaction();

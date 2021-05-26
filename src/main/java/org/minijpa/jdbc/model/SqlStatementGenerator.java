@@ -38,7 +38,7 @@ public interface SqlStatementGenerator {
 
     public String export(SqlCreateSequence sqlCreateSequence);
 
-    public List<String> export(SqlDDLStatement sqlDDLStatement);
+    public List<String> export(List<SqlDDLStatement> sqlDDLStatement);
 
     public String export(SqlCreateJoinTable sqlCreateJoinTable);
 }

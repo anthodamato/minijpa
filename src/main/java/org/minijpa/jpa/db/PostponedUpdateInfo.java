@@ -22,11 +22,28 @@ package org.minijpa.jpa.db;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public enum EntityStatus {
-    NEW, PERSIST_NOT_FLUSHED,
-    FLUSHED,
-    PARTIALLY_FLUSHED, // in this case some data are missing, for example the join columns
-    DETACHED, FLUSHED_LOADED_FROM_DB,
-    REMOVED_NOT_FLUSHED, REMOVED, EARLY_REMOVE,
-    EARLY_INSERT;
+public class PostponedUpdateInfo {
+
+    private Object id;
+    private Class<?> c;
+    private String attributeName;
+
+    public PostponedUpdateInfo(Object id, Class<?> c, String attributeName) {
+	this.id = id;
+	this.c = c;
+	this.attributeName = attributeName;
+    }
+
+    public Object getId() {
+	return id;
+    }
+
+    public Class<?> getC() {
+	return c;
+    }
+
+    public String getAttributeName() {
+	return attributeName;
+    }
+
 }

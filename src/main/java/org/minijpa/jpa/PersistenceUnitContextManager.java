@@ -88,6 +88,12 @@ public class PersistenceUnitContextManager {
 
 	PersistenceUnitContext puc = new PersistenceUnitContext(persistenceUnitInfo.getPersistenceUnitName(),
 		entityMap, queryResultMappings);
+
+	entityMap.forEach((k, v) -> {
+	    LOG.debug("get: v.getName()=" + v.getName());
+	    v.getBasicAttributes().forEach(a -> LOG.debug("get: ba a.getName()=" + a.getName()));
+	});
+
 	EntityDelegate.getInstance().addPersistenceUnitContext(puc);
 	return puc;
     }

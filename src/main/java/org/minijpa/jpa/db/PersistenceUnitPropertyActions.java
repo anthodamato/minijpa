@@ -1,11 +1,14 @@
 package org.minijpa.jpa.db;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
+import java.util.logging.Level;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
@@ -18,21 +21,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PersistenceUnitPropertyActions {
-    
+
     private Logger LOG = LoggerFactory.getLogger(PersistenceUnitPropertyActions.class);
-    
-    private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo) throws Exception {
+
+    private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo) throws IOException, SQLException, URISyntaxException {
 	String filePath = scriptPath;
 	if (!scriptPath.startsWith("/"))
 	    filePath = "/" + filePath;
-	
+
 	File file = Paths.get(getClass().getResource(filePath).toURI()).toFile();
 	ScriptRunner scriptRunner = new ScriptRunner();
 	List<String> statements = scriptRunner.readStatements(file);
 	runScript(statements, persistenceUnitInfo);
     }
-    
-    public void runScript(List<String> statements, PersistenceUnitInfo persistenceUnitInfo) throws Exception {
+
+    public void runScript(List<String> statements, PersistenceUnitInfo persistenceUnitInfo) throws SQLException {
 	Connection connection = null;
 	try {
 	    connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
@@ -47,16 +50,34 @@ public class PersistenceUnitPropertyActions {
 	    }
 	}
     }
-    
-    public List<String> generateScriptFromMetadata(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
-	PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
-	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
-	return sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).flatMap(List::stream).collect(Collectors.toList());
+
+    public List<String> generateScriptFromMetadata(PersistenceUnitInfo persistenceUnitInfo) {
+	try {
+	    PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
+
+	    persistenceUnitContext.getEntities().forEach((k, v) -> {
+		LOG.debug("generateScriptFromMetadata: 1 v.getName()=" + v.getName());
+		v.getBasicAttributes().forEach(a -> LOG.debug("generateScriptFromMetadata: 1 ba a.getName()=" + a.getName()));
+	    });
+
+	    SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+	    List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
+
+	    persistenceUnitContext.getEntities().forEach((k, v) -> {
+		LOG.debug("generateScriptFromMetadata: v.getName()=" + v.getName());
+		v.getBasicAttributes().forEach(a -> LOG.debug("generateScriptFromMetadata: ba a.getName()=" + a.getName()));
+	    });
+
+	    DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
+//	return sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).flatMap(List::stream).collect(Collectors.toList());
+	    return dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
+	} catch (Exception ex) {
+	    throw new IllegalStateException(ex.getMessage());
+//	    java.util.logging.Logger.getLogger(PersistenceUnitPropertyActions.class.getName()).log(Level.SEVERE, null, ex);
+	}
     }
-    
-    public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
+
+    public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo) throws IOException, SQLException, URISyntaxException {
 	Properties properties = persistenceUnitInfo.getProperties();
 	LOG.debug("properties=" + properties);
 	String action = (String) properties.get("javax.persistence.schema-generation.database.action");
@@ -67,7 +88,7 @@ public class PersistenceUnitPropertyActions {
 	LOG.debug("action=" + action);
 	if (action == null || action.isEmpty())
 	    return;
-	
+
 	if (action.equals("create")) {
 	    if (createSource != null) {
 		if (createSource.equals("script")) {
@@ -85,7 +106,7 @@ public class PersistenceUnitPropertyActions {
 		    runScript(dropScriptSource, persistenceUnitInfo);
 		}
 	    }
-	    
+
 	    if (createSource != null && createSource.equals("script")) {
 		if (createScriptSource != null) {
 		    runScript(createScriptSource, persistenceUnitInfo);
@@ -93,5 +114,5 @@ public class PersistenceUnitPropertyActions {
 	    }
 	}
     }
-    
+
 }

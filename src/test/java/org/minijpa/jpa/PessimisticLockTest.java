@@ -28,7 +28,7 @@ public class PessimisticLockTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("items");
+	emf = Persistence.createEntityManagerFactory("items", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

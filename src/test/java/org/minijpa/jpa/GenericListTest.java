@@ -12,39 +12,40 @@ import org.junit.jupiter.api.Test;
 import org.minijpa.jpa.model.GenericList;
 
 public class GenericListTest {
-	private static EntityManagerFactory emf;
 
-	@BeforeAll
-	public static void beforeAll() {
-		emf = Persistence.createEntityManagerFactory("generic_list");
-	}
+    private static EntityManagerFactory emf;
 
-	@AfterAll
-	public static void afterAll() {
-		emf.close();
-	}
+    @BeforeAll
+    public static void beforeAll() {
+	emf = Persistence.createEntityManagerFactory("generic_list", PersistenceUnitProperties.getProperties());
+    }
 
-	@Test
-	public void persistNoAttributes() {
-		final EntityManager em = emf.createEntityManager();
-		final EntityTransaction tx = em.getTransaction();
-		tx.begin();
+    @AfterAll
+    public static void afterAll() {
+	emf.close();
+    }
 
-		GenericList genericList = new GenericList();
-		em.persist(genericList);
-		tx.commit();
+    @Test
+    public void persistNoAttributes() {
+	final EntityManager em = emf.createEntityManager();
+	final EntityTransaction tx = em.getTransaction();
+	tx.begin();
 
-		Assertions.assertNotNull(genericList.getId());
-		Assertions.assertNull(genericList.getName1());
-		Assertions.assertNull(genericList.getName2());
-		
-		GenericList gl = em.find(GenericList.class, genericList.getId());
-		Assertions.assertNotNull(gl);
-		Assertions.assertEquals(genericList.getId(), gl.getId());
-		Assertions.assertNull(gl.getName1());
-		Assertions.assertNull(gl.getName2());
+	GenericList genericList = new GenericList();
+	em.persist(genericList);
+	tx.commit();
 
-		em.close();
-	}
+	Assertions.assertNotNull(genericList.getId());
+	Assertions.assertNull(genericList.getName1());
+	Assertions.assertNull(genericList.getName2());
+
+	GenericList gl = em.find(GenericList.class, genericList.getId());
+	Assertions.assertNotNull(gl);
+	Assertions.assertEquals(genericList.getId(), gl.getId());
+	Assertions.assertNull(gl.getName1());
+	Assertions.assertNull(gl.getName2());
+
+	em.close();
+    }
 
 }

@@ -7,6 +7,7 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Fingerprint;
 import org.minijpa.jpa.model.Person;
 
@@ -19,7 +20,7 @@ public class OneToOneBidTest {
 
     @Test
     public void persist() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid");
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid", PersistenceUnitProperties.getProperties());
 	final EntityManager em = emf.createEntityManager();
 	try {
 	    final EntityTransaction tx = em.getTransaction();

@@ -27,7 +27,7 @@ public class PurchaseStatsTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("purchase_stats");
+	emf = Persistence.createEntityManagerFactory("purchase_stats", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

@@ -25,19 +25,19 @@ package org.minijpa.jdbc;
 public class AttributeNameMapping {
 
     private final String name;
-    private final String column;
+    private final String alias;
 
-    public AttributeNameMapping(String name, String column) {
+    public AttributeNameMapping(String name, String alias) {
 	this.name = name;
-	this.column = column;
+	this.alias = alias;
     }
 
     public String getName() {
 	return name;
     }
 
-    public String getColumn() {
-	return column;
+    public String getAlias() {
+	return alias;
     }
 
 }

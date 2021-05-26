@@ -42,7 +42,7 @@ public class MetaEntity {
     /**
      * Basic attributes
      */
-    private List<MetaAttribute> basicAttributes = Collections.emptyList();
+    private List<MetaAttribute> basicAttributes = Collections.unmodifiableList(Collections.emptyList());
     private List<MetaAttribute> relationshipAttributes = Collections.emptyList();
     private List<MetaEntity> embeddables = Collections.emptyList();
     private Method readMethod; // used for embeddables
@@ -59,6 +59,7 @@ public class MetaEntity {
     private Optional<Method> lockTypeAttributeWriteMethod = Optional.empty();
     private Optional<Method> entityStatusAttributeReadMethod = Optional.empty();
     private Optional<Method> entityStatusAttributeWriteMethod = Optional.empty();
+    private Optional<Method> joinColumnPostponedUpdateAttributeReadMethod = Optional.empty();
 
     private MetaEntity() {
     }
@@ -131,6 +132,10 @@ public class MetaEntity {
 	return lazyLoadedAttributeReadMethod;
     }
 
+    public Optional<Method> getJoinColumnPostponedUpdateAttributeReadMethod() {
+	return joinColumnPostponedUpdateAttributeReadMethod;
+    }
+
     public Optional<Method> getLockTypeAttributeReadMethod() {
 	return lockTypeAttributeReadMethod;
     }
@@ -201,6 +206,20 @@ public class MetaEntity {
 	});
 
 	return jcas;
+    }
+
+    public Optional<MetaAttribute> findJoinColumnMappingAttribute(String attributeName) {
+	Optional<JoinColumnMapping> o = joinColumnMappings.stream().filter(j -> j.getAttribute().getName().equals(attributeName)).findFirst();
+	if (o.isPresent())
+	    return Optional.of(o.get().getAttribute());
+
+	for (MetaEntity embeddable : embeddables) {
+	    Optional<MetaAttribute> optional = embeddable.findJoinColumnMappingAttribute(attributeName);
+	    if (optional.isPresent())
+		return Optional.of(optional.get());
+	}
+
+	return Optional.empty();
     }
 
     public List<JoinColumnMapping> expandJoinColumnMappings() {
@@ -280,11 +299,12 @@ public class MetaEntity {
 	private String path; // used for embeddables
 	private MetaEntity mappedSuperclassEntity;
 	private Method modificationAttributeReadMethod;
-	private Optional<Method> lazyLoadedAttributeReadMethod;
-	private Optional<Method> lockTypeAttributeReadMethod;
-	private Optional<Method> lockTypeAttributeWriteMethod;
-	private Optional<Method> entityStatusAttributeReadMethod;
-	private Optional<Method> entityStatusAttributeWriteMethod;
+	private Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
+	private Optional<Method> lockTypeAttributeReadMethod = Optional.empty();
+	private Optional<Method> lockTypeAttributeWriteMethod = Optional.empty();
+	private Optional<Method> entityStatusAttributeReadMethod = Optional.empty();
+	private Optional<Method> entityStatusAttributeWriteMethod = Optional.empty();
+	private Optional<Method> joinColumnPostponedUpdateAttributeReadMethod = Optional.empty();
 
 	public Builder withEntityClass(Class<?> entityClass) {
 	    this.entityClass = entityClass;
@@ -366,6 +386,11 @@ public class MetaEntity {
 	    return this;
 	}
 
+	public Builder withJoinColumnPostponedUpdateAttributeReadMethod(Optional<Method> joinColumnPostponedUpdateAttributeReadMethod) {
+	    this.joinColumnPostponedUpdateAttributeReadMethod = joinColumnPostponedUpdateAttributeReadMethod;
+	    return this;
+	}
+
 	public Builder withLockTypeAttributeReadMethod(Optional<Method> lockTypeAttributeReadMethod) {
 	    this.lockTypeAttributeReadMethod = lockTypeAttributeReadMethod;
 	    return this;
@@ -404,6 +429,7 @@ public class MetaEntity {
 	    metaEntity.mappedSuperclassEntity = mappedSuperclassEntity;
 	    metaEntity.modificationAttributeReadMethod = modificationAttributeReadMethod;
 	    metaEntity.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
+	    metaEntity.joinColumnPostponedUpdateAttributeReadMethod = joinColumnPostponedUpdateAttributeReadMethod;
 	    metaEntity.lockTypeAttributeReadMethod = lockTypeAttributeReadMethod;
 	    metaEntity.lockTypeAttributeWriteMethod = lockTypeAttributeWriteMethod;
 	    metaEntity.entityStatusAttributeReadMethod = entityStatusAttributeReadMethod;

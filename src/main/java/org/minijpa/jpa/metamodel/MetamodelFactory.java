@@ -21,9 +21,12 @@ import javax.persistence.metamodel.Type.PersistenceType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.Pk;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MetamodelFactory {
-//	private Logger LOG = LoggerFactory.getLogger(MetamodelFactory.class);
+
+    private Logger LOG = LoggerFactory.getLogger(MetamodelFactory.class);
 
     private final Map<String, MetaEntity> entities;
 
@@ -70,12 +73,21 @@ public class MetamodelFactory {
     private EntityType<?> buildEntityType(MetaEntity entity) throws Exception {
 	Pk id = entity.getId();
 	Field fieldId = findField(entity.getEntityClass(), id.getName());
-	SingularAttribute<?, ?> idSingularAttribute = new IdSingularAttribute(id.getName(), null, id.getType(), fieldId,
+	SingularAttribute<?, ?> idSingularAttribute = new IdSingularAttribute(
+		id.getName(), null, id.getType(), fieldId,
 		id.getType(), new MetamodelType(PersistenceType.BASIC, id.getType()));
 
 	Set<SingularAttribute> singularAttributes = buildSingularAttributes(entity);
+	LOG.debug("buildEntityType: entity.getName()=" + entity.getName());
+	singularAttributes.forEach(a -> LOG.debug("buildEntityType: a.getName()=" + a.getName()));
+	entity.getBasicAttributes().forEach(a -> LOG.debug("buildEntityType: ba a.getName()=" + a.getName()));
 	Set<Attribute> allAttributes = new HashSet<>();
 	allAttributes.addAll(singularAttributes);
+	if (!entity.getId().isComposite())
+	    allAttributes.add(idSingularAttribute);
+
+	Set<SingularAttribute> esa = entity.getEmbeddables().stream().map(e -> buildSingularAttributeFromEmbeddable(e)).collect(Collectors.toSet());
+	allAttributes.addAll(esa);
 	Set<Attribute> attributes = Collections.unmodifiableSet(allAttributes);
 
 	MetamodelEntityType.Builder builder = new MetamodelEntityType.Builder()
@@ -97,6 +109,17 @@ public class MetamodelFactory {
 	return metamodelSingularAttribute;
     }
 
+    private SingularAttribute buildSingularAttributeFromEmbeddable(MetaEntity metaEntity) {
+	MetamodelSingularAttribute.Builder builder = new MetamodelSingularAttribute.Builder();
+	MetamodelSingularAttribute metamodelSingularAttribute = builder.withName(metaEntity.getName())
+		.withBindableJavaType(metaEntity.getEntityClass()).withBindableType(BindableType.SINGULAR_ATTRIBUTE)
+		.withPersistentAttributeType(PersistentAttributeType.EMBEDDED).withJavaType(metaEntity.getEntityClass())
+		.withType(new MetamodelType(PersistenceType.EMBEDDABLE, metaEntity.getEntityClass()))
+		//		.withJavaMember(metaEntity.getJavaMember())
+		.build();
+	return metamodelSingularAttribute;
+    }
+
     @SuppressWarnings("rawtypes")
     private Set<SingularAttribute> buildSingularAttributes(MetaEntity entity) {
 	Set<SingularAttribute> singularAttributes = entity.getBasicAttributes().stream()
@@ -115,6 +138,20 @@ public class MetamodelFactory {
 		    embeddableTypes.add(buildEmbeddableType(embeddable));
 		    incEmbeddables.add(embeddable);
 		}
+	    }
+	}
+
+	return embeddableTypes;
+    }
+
+    private Set<EmbeddableType<?>> buildEmbeddableTypes(MetaEntity metaEntity) throws Exception {
+	Set<EmbeddableType<?>> embeddableTypes = new HashSet<>();
+	Set<MetaEntity> incEmbeddables = new HashSet<>();
+	Set<MetaEntity> embeddables = metaEntity.findEmbeddables();
+	for (MetaEntity embeddable : embeddables) {
+	    if (!incEmbeddables.contains(embeddable)) {
+		embeddableTypes.add(buildEmbeddableType(embeddable));
+		incEmbeddables.add(embeddable);
 	    }
 	}
 

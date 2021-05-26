@@ -43,7 +43,7 @@ public class ConnectionHolderImpl implements ConnectionHolder {
 
     @Override
     public void closeConnection() throws SQLException {
-	if (!connection.isClosed())
+	if (connection != null && !connection.isClosed())
 	    connection.close();
     }
 

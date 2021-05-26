@@ -18,9 +18,8 @@
  */
 package org.minijpa.jpa.db;
 
-import java.util.HashMap;
+import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.persistence.OptimisticLockException;
@@ -42,6 +41,7 @@ import org.minijpa.jdbc.model.SqlInsert;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
 public class EntityWriterImpl implements EntityWriter {
 
     private final Logger LOG = LoggerFactory.getLogger(EntityWriterImpl.class);
+    private final PersistenceUnitContext persistenceUnitContext;
     private final EntityContainer entityContainer;
     private final SqlStatementFactory sqlStatementFactory;
     private final SqlStatementGenerator sqlStatementGenerator;
@@ -62,13 +63,15 @@ public class EntityWriterImpl implements EntityWriter {
 
     private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
-    public EntityWriterImpl(EntityContainer entityContainer,
+    public EntityWriterImpl(PersistenceUnitContext persistenceUnitContext,
+	    EntityContainer entityContainer,
 	    SqlStatementFactory sqlStatementFactory,
 	    SqlStatementGenerator sqlStatementGenerator,
 	    EntityLoader entityLoader,
 	    EntityInstanceBuilder entityInstanceBuilder,
 	    ConnectionHolder connectionHolder,
 	    JpaJdbcRunner jdbcRunner) {
+	this.persistenceUnitContext = persistenceUnitContext;
 	this.entityContainer = entityContainer;
 	this.sqlStatementFactory = sqlStatementFactory;
 	this.sqlStatementGenerator = sqlStatementGenerator;
@@ -80,13 +83,13 @@ public class EntityWriterImpl implements EntityWriter {
 
     @Override
     public void persist(MetaEntity entity, Object entityInstance,
-	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	    ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
 	EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(entity, entityInstance);
 	LOG.debug("persist: entityStatus=" + entityStatus);
 	if (MetaEntityHelper.isFlushed(entity, entityInstance)) {
-	    update(entity, entityInstance, attributeValueArray);
+	    update(entity, entityInstance, modelValueArray);
 	} else {
-	    insert(entity, entityInstance, attributeValueArray);
+	    insert(entity, entityInstance, modelValueArray);
 	}
     }
 
@@ -97,6 +100,11 @@ public class EntityWriterImpl implements EntityWriter {
 
 	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
 	Object dbVersionValue = entityLoader.queryVersionValue(entity, idValue, LockType.NONE);
+
+	Object instance = entityLoader.findById(entity, idValue, LockType.NONE);
+	Object currentVersionValue2 = entity.getVersionAttribute().get().getReadMethod().invoke(instance);
+	LOG.debug("checkOptimisticLock: currentVersionValue2=" + currentVersionValue2);
+
 	LOG.debug("checkOptimisticLock: dbVersionValue=" + dbVersionValue + "; currentVersionValue=" + currentVersionValue);
 	if (dbVersionValue == null || !dbVersionValue.equals(currentVersionValue))
 	    throw new OptimisticLockException("Entity was written by another transaction, version" + dbVersionValue);
@@ -109,7 +117,7 @@ public class EntityWriterImpl implements EntityWriter {
 	    return;
 
 	Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
-	checkOptimisticLock(entity, entityInstance, idValue);
+//	checkOptimisticLock(entity, entityInstance, idValue);
 	LOG.debug("update: idValue=" + idValue);
 	List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(entity.getId(), idValue);
 	List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
@@ -117,44 +125,44 @@ public class EntityWriterImpl implements EntityWriter {
 	    idColumns.add(entity.getVersionAttribute().get().getColumnName());
 	}
 
+//	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, modelValueArray.getModels(),
+//		idColumns);
+//	modelValueArray.add(entity.getId().getAttribute(), idValue);
 	metaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, modelValueArray);
-	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, modelValueArray.getModels(),
+	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
+	List<String> columns = parameters.stream().map(p -> {
+	    return p.getColumnName();
+	}).collect(Collectors.toList());
+
+//	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
+//	List<String> columns = parameters.stream().map(p -> {
+//	    return p.getColumnName();
+//	}).collect(Collectors.toList());
+	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, columns,
 		idColumns);
+
 	modelValueArray.add(entity.getId().getAttribute(), idValue);
 	if (metaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
 	    Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
 	    modelValueArray.add(entity.getVersionAttribute().get(), currentVersionValue);
 	}
 
-	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
+	parameters = metaEntityHelper.convertAVToQP(modelValueArray);
+
 	String sql = sqlStatementGenerator.export(sqlUpdate);
-	jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
+	LOG.debug("update: sql=" + sql);
+	int updateCount = jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
+	if (updateCount == 0) {
+	    Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+	    throw new OptimisticLockException("Entity was written by another transaction, version" + currentVersionValue);
+	}
+
+	LOG.debug("update: updateCount=" + updateCount);
 	metaEntityHelper.updateVersionAttributeValue(entity, entityInstance);
     }
 
     protected void insert(MetaEntity entity, Object entityInstance,
 	    ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
-	// It's an insert.
-	// checks specific relationship attributes ('one to many' with join table) even
-	// if there are no notified changes. If they are changed then they'll be made persistent.
-	// Collect join table attributes
-	Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
-	for (MetaAttribute a : entity.getRelationshipAttributes()) {
-//	    LOG.info("persist: a.getRelationship()=" + a.getRelationship());
-//	    if (a.getRelationship() != null)
-//		LOG.info("persist: a.getRelationship().getJoinTable()=" + a.getRelationship().getJoinTable());
-
-	    if (a.getRelationship().getJoinTable() != null
-		    && a.getRelationship().isOwner()) {
-		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
-//		LOG.info("persist: attributeInstance=" + attributeInstance);
-//		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
-		if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
-			&& !CollectionUtils.isCollectionEmpty(attributeInstance))
-		    joinTableAttrs.put(a, attributeInstance);
-	    }
-	}
-
 	Pk id = entity.getId();
 //	LOG.info("persist: id.getPkGeneration()=" + id.getPkGeneration());
 	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
@@ -175,6 +183,8 @@ public class EntityWriterImpl implements EntityWriter {
 	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
 //	    LOG.info("persist: pk=" + pk);
 	    entity.getId().getWriteMethod().invoke(entityInstance, pk);
+
+	    updatePostponedJoinColumnUpdate(entity, entityInstance, pk);
 	    if (optVersion.isPresent()) {
 		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
 	    }
@@ -199,14 +209,64 @@ public class EntityWriterImpl implements EntityWriter {
 		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
 	    }
 	}
+    }
 
-	// persist join table attributes
-	for (Map.Entry<MetaAttribute, Object> entry : joinTableAttrs.entrySet()) {
-	    MetaAttribute a = entry.getKey();
-	    List<Object> ees = CollectionUtils.getCollectionAsList(entry.getValue());
-	    if (entityContainer.isManaged(ees))
-		persistJoinTableAttributes(ees, a, entityInstance);
+    private void updatePostponedJoinColumnUpdate(MetaEntity entity, Object entityInstance, Object pk)
+	    throws Exception {
+	LOG.debug("updatePostponedJoinColumnUpdate: entity.getName()=" + entity.getName());
+	LOG.debug("updatePostponedJoinColumnUpdate: entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty()=" + entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty());
+	if (entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty())
+	    return;
+
+	Method m = entity.getJoinColumnPostponedUpdateAttributeReadMethod().get();
+	List list = (List) m.invoke(entityInstance);
+	LOG.debug("updatePostponedJoinColumnUpdate: list.isEmpty()=" + list.isEmpty());
+	if (list.isEmpty())
+	    return;
+
+	for (Object o : list) {
+	    PostponedUpdateInfo postponedUpdateInfo = (PostponedUpdateInfo) o;
+	    LOG.debug("updatePostponedJoinColumnUpdate: postponedUpdateInfo.getC()=" + postponedUpdateInfo.getC());
+	    Object instance = entityContainer.find(postponedUpdateInfo.getC(), postponedUpdateInfo.getId());
+	    MetaEntity toEntity = persistenceUnitContext.getEntities().get(postponedUpdateInfo.getC().getName());
+	    LOG.debug("updatePostponedJoinColumnUpdate: toEntity=" + toEntity);
+	    LOG.debug("updatePostponedJoinColumnUpdate: postponedUpdateInfo.getAttributeName()=" + postponedUpdateInfo.getAttributeName());
+	    Optional<MetaAttribute> optional = toEntity.findJoinColumnMappingAttribute(postponedUpdateInfo.getAttributeName());
+	    LOG.debug("updatePostponedJoinColumnUpdate: optional.isEmpty()=" + optional.isEmpty());
+	    if (optional.isEmpty())
+		continue;
+
+	    ModelValueArray<MetaAttribute> modelValueArray = new ModelValueArray<>();
+	    modelValueArray.add(optional.get(), entityInstance);
+	    update(toEntity, instance, modelValueArray);
 	}
+
+	list.clear();
+    }
+
+    @Override
+    public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception {
+//	Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
+	for (MetaAttribute a : entity.getRelationshipAttributes()) {
+//	    LOG.info("persist: a.getRelationship()=" + a.getRelationship());
+//	    if (a.getRelationship() != null)
+//		LOG.info("persist: a.getRelationship().getJoinTable()=" + a.getRelationship().getJoinTable());
+
+	    if (a.getRelationship().getJoinTable() != null
+		    && a.getRelationship().isOwner()) {
+		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
+//		LOG.info("persist: attributeInstance=" + attributeInstance);
+//		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
+		if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
+			&& !CollectionUtils.isCollectionEmpty(attributeInstance)) {
+//		    joinTableAttrs.put(a, attributeInstance);
+		    List<Object> ees = CollectionUtils.getCollectionAsList(attributeInstance);
+		    if (entityContainer.isManaged(ees))
+			persistJoinTableAttributes(ees, a, entityInstance);
+		}
+	    }
+	}
+
     }
 
     private void persistJoinTableAttributes(List<Object> ees, MetaAttribute a, Object entityInstance) throws Exception {

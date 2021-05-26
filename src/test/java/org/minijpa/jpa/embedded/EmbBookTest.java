@@ -2,6 +2,7 @@ package org.minijpa.jpa.embedded;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,9 +27,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jpa.MetamodelUtils;
+import org.minijpa.jpa.MiniEntityManager;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Book;
 import org.minijpa.jpa.model.BookFormat;
+import org.minijpa.metadata.PersistenceUnitContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -36,13 +43,14 @@ import org.minijpa.jpa.model.BookFormat;
  *
  */
 public class EmbBookTest {
-//	private Logger LOG = LoggerFactory.getLogger(EmbBookTest.class);
+
+    private Logger LOG = LoggerFactory.getLogger(EmbBookTest.class);
 
     private static EntityManagerFactory emf;
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("emb_books");
+	emf = Persistence.createEntityManagerFactory("emb_books", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll
@@ -87,6 +95,14 @@ public class EmbBookTest {
     @Test
     public void metamodel() {
 	final EntityManager em = emf.createEntityManager();
+
+	PersistenceUnitContext persistenceUnitContext = ((MiniEntityManager) em).getPersistenceUnitContext();
+	Map<String, MetaEntity> map = persistenceUnitContext.getEntities();
+	map.forEach((k, v) -> {
+	    LOG.debug("metamodel: v.getName()=" + v.getName());
+	    v.getBasicAttributes().forEach(a -> LOG.debug("metamodel: ba a.getName()=" + a.getName()));
+	});
+
 	Metamodel metamodel = em.getMetamodel();
 	Assertions.assertNotNull(metamodel);
 
@@ -121,6 +137,8 @@ public class EmbBookTest {
 	Assertions.assertEquals(Book.class, entityType.getBindableJavaType());
 
 	List<String> names = MetamodelUtils.getAttributeNames(entityType);
+	names.forEach(n -> LOG.debug("checkBook: n=" + n));
+	Assertions.assertEquals(4, names.size());
 	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList("id", "title", "author", "bookFormat"), names));
 
 	MetamodelUtils.checkAttribute(entityType.getAttribute("title"), "title", String.class,

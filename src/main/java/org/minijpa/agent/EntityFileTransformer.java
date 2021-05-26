@@ -34,6 +34,9 @@ public class EntityFileTransformer implements ClassFileTransformer {
 	if (log)
 	    LOG.debug("transform: className=" + className);
 
+	if (log)
+	    LOG.debug("transform: Thread.currentThread()=" + Thread.currentThread());
+
 	String fullClassName = className.replaceAll("/", ".");
 
 	try {

@@ -1,7 +1,7 @@
 package org.minijpa.jdbc.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -9,6 +9,7 @@ import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.Pk;
+import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
 
 import org.minijpa.jdbc.db.DbJdbc;
@@ -205,15 +206,15 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
     }
 
     private String exportCondition(Condition condition) {
-	LOG.debug("exportCondition: condition=" + condition);
+//	LOG.debug("exportCondition: condition=" + condition);
 	if (condition instanceof BinaryLogicCondition) {
 	    BinaryLogicCondition binaryLogicCondition = (BinaryLogicCondition) condition;
 	    StringBuilder sb = new StringBuilder();
 	    if (binaryLogicCondition.nested())
 		sb.append("(");
 
-	    LOG.debug("exportCondition: binaryLogicCondition.getConditions().size="
-		    + binaryLogicCondition.getConditions().size());
+//	    LOG.debug("exportCondition: binaryLogicCondition.getConditions().size="
+//		    + binaryLogicCondition.getConditions().size());
 	    String operator = " " + getOperator(condition.getConditionType()) + " ";
 	    String cc = binaryLogicCondition.getConditions().stream().map(c -> {
 		return exportCondition(c);
@@ -535,7 +536,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		+ " " + buildJoinColumnDefinition(joinColumnAttribute);
     }
 
-    private String buildJoinTableColumnDeclaration(JoinColumnAttribute joinColumnAttribute) {
+    protected String buildJoinTableColumnDeclaration(JoinColumnAttribute joinColumnAttribute) {
 	return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName())
 		+ " " + buildJoinColumnDefinition(joinColumnAttribute) + " not null";
     }
@@ -627,6 +628,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
     public String export(SqlCreateSequence sqlCreateSequence) {
 	StringBuilder sb = new StringBuilder();
 	sb.append("create sequence ");
+	LOG.debug("export: sqlCreateSequence.getPkSequenceGenerator().getSequenceName()=" + sqlCreateSequence.getPkSequenceGenerator().getSequenceName());
 	sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateSequence.getPkSequenceGenerator().getSequenceName()));
 	sb.append(" start with ");
 	sb.append(sqlCreateSequence.getPkSequenceGenerator().getInitialValue());
@@ -636,7 +638,26 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
     }
 
     @Override
-    public List<String> export(SqlDDLStatement sqlDDLStatement) {
+    public List<String> export(List<SqlDDLStatement> sqlDDLStatement) {
+	List<String> result = new ArrayList<>();
+	List<SqlCreateTable> createTables = sqlDDLStatement.stream()
+		.filter(c -> c instanceof SqlCreateTable)
+		.map(c -> (SqlCreateTable) c)
+		.collect(Collectors.toList());
+
+	List<String> createTableStrs = createTables.stream().map(c -> export(c)).collect(Collectors.toList());
+	result.addAll(createTableStrs);
+
+	List<PkSequenceGenerator> pkSequenceGenerators = createTables.stream()
+		.filter(c -> c.getPk().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE)
+		.map(c -> c.getPk().getPkGeneration().getPkSequenceGenerator()).distinct()
+		.collect(Collectors.toList());
+	List<String> createSequenceStrs = pkSequenceGenerators.stream()
+		.map(c -> new SqlCreateSequence(c))
+		.map(c -> export(c))
+		.collect(Collectors.toList());
+	result.addAll(createSequenceStrs);
+
 	if (sqlDDLStatement instanceof SqlCreateTable) {
 	    String s = export((SqlCreateTable) sqlDDLStatement);
 
@@ -650,13 +671,17 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	    return Arrays.asList(s);
 	}
 
-	if (sqlDDLStatement instanceof SqlCreateJoinTable)
-	    return Arrays.asList(export((SqlCreateJoinTable) sqlDDLStatement));
+//	if (sqlDDLStatement instanceof SqlCreateJoinTable)
+//	    return Arrays.asList(export((SqlCreateJoinTable) sqlDDLStatement));
+	List<SqlCreateJoinTable> createJoinTables = sqlDDLStatement.stream()
+		.filter(c -> c instanceof SqlCreateJoinTable)
+		.map(c -> (SqlCreateJoinTable) c)
+		.collect(Collectors.toList());
 
-	if (sqlDDLStatement instanceof SqlCreateSequence)
-	    return Arrays.asList(export((SqlCreateSequence) sqlDDLStatement));
+	List<String> createJoinTableStrs = createJoinTables.stream().map(c -> export(c)).collect(Collectors.toList());
+	result.addAll(createJoinTableStrs);
 
-	return Collections.emptyList();
+	return result;
     }
 
 }

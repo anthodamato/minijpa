@@ -1,8 +1,10 @@
 package org.minijpa.jpa;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
@@ -99,6 +101,12 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public void remove(Object entity) {
+	if (entity == null) {
+	    entityTransaction.setRollbackOnly();
+	    throw new IllegalArgumentException("Entity to remove is null");
+	}
+
+	LOG.debug("remove: 1 entity=" + entity);
 	try {
 	    if (!persistenceContext.isManaged(entity))
 		return;
@@ -126,7 +134,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    return;
 	}
 
-	LOG.debug("remove: entity=" + entity);
+	LOG.debug("remove: 2 entity=" + entity);
 	try {
 	    jdbcEntityManager.remove(entity);
 	} catch (Exception ex) {
@@ -484,7 +492,13 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public void close() {
-	this.open = false;
+	try {
+	    this.open = false;
+	    if (this.connectionHolder != null)
+		this.connectionHolder.closeConnection();
+	} catch (SQLException ex) {
+	    LOG.error(ex.getMessage());
+	}
     }
 
     @Override
@@ -513,6 +527,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public Metamodel getMetamodel() {
+	LOG.debug("getMetamodel: 1");
 	return entityManagerFactory.getMetamodel();
     }
 

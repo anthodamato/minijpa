@@ -31,7 +31,7 @@ public class MappedSuperclassTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("mapped_superclass");
+	emf = Persistence.createEntityManagerFactory("mapped_superclass", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

@@ -31,7 +31,7 @@ public class BookingSaleTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("booking_sale");
+	emf = Persistence.createEntityManagerFactory("booking_sale", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll
@@ -67,6 +67,7 @@ public class BookingSaleTest {
 	    b = em.find(BookingSale.class, bookingSale.getId());
 	    Assertions.assertFalse(b == bookingSale);
 	    Assertions.assertNotNull(b);
+	    Assertions.assertNotNull(b.getBooking());
 
 	    BookingSale b2 = em.find(BookingSale.class, b.getId());
 	    Assertions.assertTrue(b2 == b);

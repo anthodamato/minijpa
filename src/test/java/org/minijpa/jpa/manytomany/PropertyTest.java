@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import javax.persistence.PersistenceException;
 import org.junit.jupiter.api.Assertions;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Property;
 import org.minijpa.jpa.model.PropertyOwner;
 import org.minijpa.jpa.model.PropertyType;
@@ -28,7 +29,7 @@ public class PropertyTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("property_many_to_many_uni");
+	emf = Persistence.createEntityManagerFactory("property_many_to_many_uni", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

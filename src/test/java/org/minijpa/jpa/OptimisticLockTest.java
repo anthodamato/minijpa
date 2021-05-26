@@ -1,5 +1,6 @@
 package org.minijpa.jpa;
 
+import java.util.logging.Level;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -26,7 +27,7 @@ public class OptimisticLockTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("citizens");
+	emf = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll
@@ -41,6 +42,7 @@ public class OptimisticLockTest {
 	tx.begin();
 	Citizen citizen = new Citizen();
 	citizen.setName("Anthony");
+	citizen.setLastName("Quinn");
 	Assertions.assertNull(citizen.getVersion());
 	em.persist(citizen);
 	tx.commit();
@@ -60,6 +62,7 @@ public class OptimisticLockTest {
 	tx3.begin();
 	Citizen citizen3 = em3.find(Citizen.class, id);
 	Assertions.assertFalse(citizen == citizen3);
+	Assertions.assertEquals(id, citizen3.getId());
 	Assertions.assertEquals(version0, citizen3.getVersion());
 
 	// second transaction
@@ -67,13 +70,15 @@ public class OptimisticLockTest {
 	EntityTransaction tx2 = em2.getTransaction();
 	tx2.begin();
 	Citizen citizen2 = em2.find(Citizen.class, id);
+	Assertions.assertEquals(id, citizen2.getId());
 	Assertions.assertEquals(version0, citizen2.getVersion());
 	Assertions.assertFalse(citizen3 == citizen2);
 	citizen2.setName("Oliver");
 	em2.flush();
-	Assertions.assertEquals(version0 + 1, citizen2.getVersion());
+	long nextVersion = version0 + 1;
+	Assertions.assertEquals(nextVersion, citizen2.getVersion());
 	em2.refresh(citizen2);
-	Assertions.assertEquals(version0 + 1, citizen2.getVersion());
+	Assertions.assertEquals(nextVersion, citizen2.getVersion());
 	tx2.commit();
 	em2.close();
 
@@ -90,7 +95,7 @@ public class OptimisticLockTest {
 	em = emf.createEntityManager();
 	citizen = em.find(Citizen.class, id);
 	Assertions.assertEquals("Oliver", citizen.getName());
-	Assertions.assertEquals(version0 + 1, citizen.getVersion());
+	Assertions.assertEquals(nextVersion, citizen.getVersion());
 	em.close();
 
 	em = emf.createEntityManager();

@@ -6,9 +6,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import org.junit.jupiter.api.AfterAll;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Item;
 import org.minijpa.jpa.model.Store;
 
@@ -19,9 +22,20 @@ import org.minijpa.jpa.model.Store;
  */
 public class OneToManyUniTest {
 
+    private static EntityManagerFactory emf;
+
+    @BeforeAll
+    public static void beforeAll() {
+	emf = Persistence.createEntityManagerFactory("onetomany_uni", PersistenceUnitProperties.getProperties());
+    }
+
+    @AfterAll
+    public static void afterAll() {
+	emf.close();
+    }
+
     @Test
     public void persist() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni");
 	final EntityManager em = emf.createEntityManager();
 	Store store = new Store();
 	store.setName("Upton Store");

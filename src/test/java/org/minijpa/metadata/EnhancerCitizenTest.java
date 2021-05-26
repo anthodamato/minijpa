@@ -25,6 +25,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.minijpa.metadata.enhancer.EnhEntity;
 
@@ -34,7 +35,7 @@ public class EnhancerCitizenTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("citizens");
+	emf = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

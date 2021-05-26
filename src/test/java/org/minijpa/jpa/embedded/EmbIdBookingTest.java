@@ -16,6 +16,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.HotelBooking;
 import org.minijpa.jpa.model.RoomBookingId;
 
@@ -30,7 +31,7 @@ public class EmbIdBookingTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("emb_booking");
+	emf = Persistence.createEntityManagerFactory("emb_booking", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

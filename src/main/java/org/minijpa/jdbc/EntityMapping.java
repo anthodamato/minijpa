@@ -46,7 +46,7 @@ public class EntityMapping implements ResultMapping {
     public Optional<MetaAttribute> getAttribute(String columnName) {
 	List<MetaAttribute> attributes = metaEntity.expandAllAttributes();
 	Optional<AttributeNameMapping> optional = attributeNameMappings.stream().
-		filter(m -> m.getColumn().equalsIgnoreCase(columnName)).findFirst();
+		filter(m -> m.getAlias().equalsIgnoreCase(columnName)).findFirst();
 	if (optional.isPresent()) {
 	    Optional<MetaAttribute> oa = attributes.stream().
 		    filter(a -> a.getPath().equalsIgnoreCase(optional.get().getName())).findFirst();
@@ -60,7 +60,7 @@ public class EntityMapping implements ResultMapping {
     public Optional<JoinColumnAttribute> getJoinColumnAttribute(String columnName) {
 	List<JoinColumnAttribute> joinColumnAttributes = metaEntity.expandJoinColumnAttributes();
 	Optional<AttributeNameMapping> optional = attributeNameMappings.stream().
-		filter(m -> m.getColumn().equalsIgnoreCase(columnName)).findFirst();
+		filter(m -> m.getAlias().equalsIgnoreCase(columnName)).findFirst();
 	if (optional.isPresent()) {
 	    Optional<JoinColumnAttribute> o = joinColumnAttributes.stream().filter(
 		    j -> j.getColumnName().equalsIgnoreCase(optional.get().getName())).findFirst();

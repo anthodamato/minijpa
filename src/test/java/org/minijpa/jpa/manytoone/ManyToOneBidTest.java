@@ -21,6 +21,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Department;
 import org.minijpa.jpa.model.Employee;
 
@@ -35,7 +36,7 @@ public class ManyToOneBidTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("manytoone_bid");
+	emf = Persistence.createEntityManagerFactory("manytoone_bid", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

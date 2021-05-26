@@ -35,9 +35,8 @@ public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
     public Object writeMetaAttributeValue(Object parentInstance, Class<?> parentClass, MetaAttribute attribute,
 	    Object value, MetaEntity entity) throws Exception {
 	Object parent = parentInstance;
-	if (parent == null) {
+	if (parent == null)
 	    parent = parentClass.getDeclaredConstructor().newInstance();
-	}
 
 	LOG.debug("writeMetaAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
 	LOG.debug("writeMetaAttributeValue: value=" + value);

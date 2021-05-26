@@ -18,14 +18,21 @@
  */
 package org.minijpa.metadata;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import org.junit.jupiter.api.AfterAll;
 import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaAttributeFolder;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
+import org.minijpa.jpa.MiniEntityManager;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.db.ApacheDerbyConfiguration;
 import org.minijpa.jpa.db.PersistenceUnitEnv;
 import org.minijpa.jpa.model.JobEmployee;
@@ -38,12 +45,27 @@ import org.minijpa.jpa.model.ProgramManager;
  */
 public class EntityDelegateInstanceBuilderTest {
 
+    private static EntityManagerFactory emf;
+
+    @BeforeAll
+    public static void beforeAll() {
+	emf = Persistence.createEntityManagerFactory("embed_many_to_one", PersistenceUnitProperties.getProperties());
+    }
+
+    @AfterAll
+    public static void afterAll() {
+	emf.close();
+    }
+
     @Test
     public void modifications() throws Exception {
-	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(new ApacheDerbyConfiguration(),
-		"embed_many_to_one");
-	MetaEntity metaEntityJE = persistenceUnitEnv.getPersistenceUnitContext().getEntities().get("org.minijpa.jpa.model.JobEmployee");
-	MetaEntity metaEntityPM = persistenceUnitEnv.getPersistenceUnitContext().getEntities().get("org.minijpa.jpa.model.ProgramManager");
+	EntityManager em = emf.createEntityManager();
+	PersistenceUnitContext persistenceUnitContext = ((MiniEntityManager) em).getPersistenceUnitContext();
+//	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(new ApacheDerbyConfiguration(),
+//		"embed_many_to_one");
+	MetaEntity metaEntityJE = persistenceUnitContext.getEntities().get("org.minijpa.jpa.model.JobEmployee");
+	MetaEntity metaEntityPM = persistenceUnitContext.getEntities().get("org.minijpa.jpa.model.ProgramManager");
+	em.close();
 
 	ProgramManager programManager = new ProgramManager();
 	programManager.setId(2);

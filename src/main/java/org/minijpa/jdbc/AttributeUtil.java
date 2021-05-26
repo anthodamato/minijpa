@@ -58,8 +58,10 @@ public class AttributeUtil {
 
     private static void buildPK(ModelValueArray<FetchParameter> modelValueArray,
 	    List<MetaAttribute> attributes, Object pkObject) throws Exception {
+//	LOG.debug("buildPK: pkObject=" + pkObject);
 	for (MetaAttribute a : attributes) {
 	    int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, a);
+	    LOG.debug("buildPK: index=" + index);
 	    if (index == -1)
 		throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
 
@@ -79,7 +81,7 @@ public class AttributeUtil {
 
     public static int indexOfJoinColumnAttribute(List<JoinColumnAttribute> joinColumnAttributes, MetaAttribute a) {
 	for (int i = 0; i < joinColumnAttributes.size(); ++i) {
-	    if (joinColumnAttributes.get(i).getForeignKeyAttribute()== a)
+	    if (joinColumnAttributes.get(i).getForeignKeyAttribute() == a)
 		return i;
 	}
 

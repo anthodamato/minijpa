@@ -15,10 +15,10 @@ public class ClassInspectorTest {
     public void mappedSuperclass() throws Exception {
 	ClassInspector ci = new ClassInspector();
 	List<ManagedData> managedDatas = new ArrayList<>();
-	ManagedData managedData = ci.inspect("org.minijpa.jpa.model.TriangleAttrs", new ArrayList<>());
+	ManagedData managedData = ci.inspect("org.minijpa.jpa.model.TriangleAttrs");
 	managedDatas.add(managedData);
 
-	managedData = ci.inspect("org.minijpa.jpa.model.Square", new ArrayList<>());
+	managedData = ci.inspect("org.minijpa.jpa.model.Square");
 	managedDatas.add(managedData);
 
 	Assertions.assertNotNull(managedDatas);

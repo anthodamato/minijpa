@@ -13,6 +13,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.minijpa.metadata.enhancer.EnhAttribute;
 import org.minijpa.metadata.enhancer.EnhEntity;
@@ -23,7 +24,7 @@ public class EnhancerBookTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("emb_books");
+	emf = Persistence.createEntityManagerFactory("emb_books", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

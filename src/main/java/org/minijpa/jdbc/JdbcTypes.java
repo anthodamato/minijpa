@@ -102,8 +102,9 @@ public class JdbcTypes {
     public static Class classFromSqlType(int type) {
 	switch (type) {
 	    case Types.BIGINT:
-		return BigInteger.class;
+		return Long.class;
 	    case Types.BOOLEAN:
+	    case Types.BIT:
 		return Boolean.class;
 	    case Types.CHAR:
 		return Character.class;

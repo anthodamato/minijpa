@@ -11,7 +11,7 @@ public class EntityManagerFactoryTest {
 
     @Test
     public void entityManagerFactory() {
-	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("citizens");
+	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
 	Assertions.assertNotNull(entityManagerFactory);
 	EntityManager entityManager = entityManagerFactory.createEntityManager();
 	Assertions.assertNotNull(entityManager);

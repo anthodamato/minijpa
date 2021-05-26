@@ -27,7 +27,7 @@ public class MySQLJdbc extends BasicDbJdbc {
     @Override
     public String forUpdate(LockType lockType) {
 	if (lockType == LockType.PESSIMISTIC_WRITE)
-	    return "for update with rs";
+	    return "for update";
 
 	return "";
     }

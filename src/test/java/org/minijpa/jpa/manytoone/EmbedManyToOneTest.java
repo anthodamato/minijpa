@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.JobEmployee;
 import org.minijpa.jpa.model.JobEmployeeDetails;
 import org.minijpa.jpa.model.JobInfo;
@@ -35,7 +36,7 @@ public class EmbedManyToOneTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("embed_many_to_one");
+	emf = Persistence.createEntityManagerFactory("embed_many_to_one", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

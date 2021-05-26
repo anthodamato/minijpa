@@ -20,6 +20,7 @@ public class ManagedData {
     private final List<BMTMethodInfo> methodInfos = new ArrayList<>();
     private String modificationAttribute;
     private Optional<String> lazyLoadedAttribute = Optional.empty();
+    private Optional<String> joinColumnPostponedUpdateAttribute = Optional.empty();
     // the lock type attribute is created only in entity classes, neither mapped superclass or embedded
     private Optional<String> lockTypeAttribute = Optional.empty();
     private Optional<String> entityStatusAttribute = Optional.empty();
@@ -85,6 +86,14 @@ public class ManagedData {
 	this.lazyLoadedAttribute = lazyLoadedAttribute;
     }
 
+    public Optional<String> getJoinColumnPostponedUpdateAttribute() {
+	return joinColumnPostponedUpdateAttribute;
+    }
+
+    public void setJoinColumnPostponedUpdateAttribute(Optional<String> joinColumnPostponedUpdateAttribute) {
+	this.joinColumnPostponedUpdateAttribute = joinColumnPostponedUpdateAttribute;
+    }
+
     public Optional<String> getLockTypeAttribute() {
 	return lockTypeAttribute;
     }
@@ -109,6 +118,30 @@ public class ManagedData {
 
 	if (mappedSuperclass != null) {
 	    Optional<AttributeData> opt = mappedSuperclass.findAttribute(name);
+	    if (opt.isPresent())
+		return opt;
+	}
+
+	return Optional.empty();
+    }
+
+    public Optional<ManagedData> findParentManagedData(String attributeName) {
+	Optional<AttributeData> optional = attributeDatas.stream()
+		.filter(a -> a.property.ctField.getName().equals(attributeName)).findFirst();
+	if (optional.isPresent())
+	    return Optional.of(this);
+
+	// look inside embeddables
+	for (AttributeData attributeData : attributeDatas) {
+	    if (attributeData.property.isEmbedded() && !attributeData.property.isId()) {
+		Optional<ManagedData> o = attributeData.embeddedData.findParentManagedData(attributeName);
+		if (o.isPresent())
+		    return o;
+	    }
+	}
+
+	if (mappedSuperclass != null) {
+	    Optional<ManagedData> opt = mappedSuperclass.findParentManagedData(attributeName);
 	    if (opt.isPresent())
 		return opt;
 	}

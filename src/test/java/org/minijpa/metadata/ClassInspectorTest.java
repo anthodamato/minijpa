@@ -18,7 +18,6 @@
  */
 package org.minijpa.metadata;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -42,7 +41,7 @@ public class ClassInspectorTest {
     public void book() throws Exception {
 	String className = "org.minijpa.jpa.model.Book";
 	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className, new ArrayList<>());
+	ManagedData managedData = classInspector.inspect(className);
 	assertNotNull(managedData);
 	assertNotNull(managedData.getCtClass());
 	assertEquals(className, managedData.getCtClass().getName());
@@ -93,7 +92,7 @@ public class ClassInspectorTest {
     public void hotelBooking() throws Exception {
 	String className = "org.minijpa.jpa.model.HotelBooking";
 	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className, new ArrayList<>());
+	ManagedData managedData = classInspector.inspect(className);
 	assertNotNull(managedData);
 	assertNotNull(managedData.getCtClass());
 	assertEquals(className, managedData.getCtClass().getName());
@@ -118,7 +117,7 @@ public class ClassInspectorTest {
     public void bookingSale() throws Exception {
 	String className = "org.minijpa.jpa.model.BookingSale";
 	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className, new ArrayList<>());
+	ManagedData managedData = classInspector.inspect(className);
 	assertNotNull(managedData);
 	assertNotNull(managedData.getCtClass());
 	assertEquals(className, managedData.getCtClass().getName());

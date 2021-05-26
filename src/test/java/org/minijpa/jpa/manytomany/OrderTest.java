@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Set;
 import org.junit.jupiter.api.Assertions;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Customer;
 import org.minijpa.jpa.model.DeliveryType;
 import org.minijpa.jpa.model.Order;
@@ -29,7 +30,7 @@ public class OrderTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("order_many_to_many");
+	emf = Persistence.createEntityManagerFactory("order_many_to_many", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll
@@ -96,14 +97,14 @@ public class OrderTest {
 	    o = em.find(Order.class, order1.getId());
 	    Assertions.assertNotNull(o.getStatus());
 	    Assertions.assertEquals(OrderStatus.APPROVED, o.getStatus());
-//	} catch (Exception e) {
-//	    if (e.getStackTrace() != null) {
-//		System.out.println("stacktrace: ");
-//		for (StackTraceElement element : e.getStackTrace()) {
-//		    System.out.println(element.getClassName() + "." + element.getMethodName() + " - "
-//			    + element.getLineNumber());
-//		}
-//	    }
+	} catch (Exception e) {
+	    if (e.getStackTrace() != null) {
+		System.out.println("stacktrace: ");
+		for (StackTraceElement element : e.getStackTrace()) {
+		    System.out.println(element.getClassName() + "." + element.getMethodName() + " - "
+			    + element.getLineNumber());
+		}
+	    }
 
 	} finally {
 	    em.close();

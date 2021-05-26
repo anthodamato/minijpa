@@ -29,7 +29,7 @@ public final class EntityDelegate implements EntityListener {
 
     @Override
     public Object get(Object value, String attributeName, Object entityInstance) {
-//	LOG.info("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName + "; value=" + value);
+	LOG.debug("get: entityInstance=" + entityInstance + "; attributeName=" + attributeName + "; value=" + value);
 //	LOG.info("get: entityContainerContextManager.isEmpty()=" + entityContainerContextManager.isEmpty());
 //	LOG.info("get: entityContainerContextManager.isLoadedFromDb(entityInstance)=" + entityContainerContextManager.isLoadedFromDb(entityInstance));
 	if (entityContainerContextManager.isEmpty())

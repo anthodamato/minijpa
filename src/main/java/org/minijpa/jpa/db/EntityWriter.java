@@ -31,5 +31,7 @@ public interface EntityWriter {
     public void persist(MetaEntity entity, Object entityInstance,
 	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception;
 
+    public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception;
+
     public void delete(Object entityInstance, MetaEntity e) throws Exception;
 }

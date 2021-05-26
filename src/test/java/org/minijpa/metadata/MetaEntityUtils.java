@@ -47,7 +47,8 @@ public class MetaEntityUtils {
 	return map;
     }
 
-    public static PersistenceUnitContext parsePersistenceUnitContext(String persistenceUnitName, List<String> entities) throws Exception {
+    public static PersistenceUnitContext parsePersistenceUnitContext(
+	    String persistenceUnitName, List<String> entities) throws Exception {
 	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
 	Parser parser = new Parser(dbConfiguration);
 	Map<String, MetaEntity> map = parse(entities, parser);

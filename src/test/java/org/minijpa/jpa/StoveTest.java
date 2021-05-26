@@ -27,7 +27,7 @@ public class StoveTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("stoves");
+	emf = Persistence.createEntityManagerFactory("stoves", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

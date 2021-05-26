@@ -1,6 +1,5 @@
 package org.minijpa.metadata;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -21,18 +20,16 @@ public class EntityEnhancerTest {
 
     @Test
     public void mappedSuperclassEnhancement() throws Exception {
-	List<ManagedData> inspectedClasses = new ArrayList<>();
 	Set<EnhEntity> parsedEntities = new HashSet<>();
 	String className = "org.minijpa.metadata.MappedSuperclassEntity";
 	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className, inspectedClasses);
+	ManagedData managedData = classInspector.inspect(className);
 	Assertions.assertNotNull(managedData);
 	Assertions.assertNotNull(managedData.getModificationAttribute());
 	Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
 
 	EntityEnhancer entityEnhancer = new EntityEnhancer();
 	EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-	inspectedClasses.add(managedData);
 	parsedEntities.add(enhEntity);
 
 	List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
@@ -43,10 +40,9 @@ public class EntityEnhancerTest {
 	checkMappedSuperclass(enhEntity);
 
 	className = "org.minijpa.metadata.MappedSuperclassSecondEntity";
-	managedData = classInspector.inspect(className, inspectedClasses);
+	managedData = classInspector.inspect(className);
 	Assertions.assertNotNull(managedData);
 	enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-	inspectedClasses.add(managedData);
 	parsedEntities.add(enhEntity);
 
 	enhAttributes = enhEntity.getEnhAttributes();
@@ -68,18 +64,16 @@ public class EntityEnhancerTest {
 
     @Test
     public void bookingSaleEnhancement() throws Exception {
-	List<ManagedData> inspectedClasses = new ArrayList<>();
 	Set<EnhEntity> parsedEntities = new HashSet<>();
 	String className = "org.minijpa.jpa.model.BookingSale";
 	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className, inspectedClasses);
+	ManagedData managedData = classInspector.inspect(className);
 	Assertions.assertNotNull(managedData);
 	Assertions.assertNotNull(managedData.getModificationAttribute());
 	Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
 
 	EntityEnhancer entityEnhancer = new EntityEnhancer();
 	EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-	inspectedClasses.add(managedData);
 	parsedEntities.add(enhEntity);
 
 	List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();

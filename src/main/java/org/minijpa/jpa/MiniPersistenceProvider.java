@@ -1,8 +1,10 @@
 package org.minijpa.jpa;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
@@ -22,28 +24,33 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 
     private Logger LOG = LoggerFactory.getLogger(MiniPersistenceProvider.class);
 
-    private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
-	LOG.info("Processing Db Configuration...");
-	LOG.debug("processConfiguration: persistenceUnitInfo=" + persistenceUnitInfo);
-	new ConnectionProviderImpl(persistenceUnitInfo).init();
-
-	Connection connection = null;
+    private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) {
 	try {
+	    LOG.info("Processing Db Configuration...");
+	    LOG.debug("processConfiguration: persistenceUnitInfo=" + persistenceUnitInfo);
+	    Connection connection = null;
+//	    try {
+	    new ConnectionProviderImpl(persistenceUnitInfo).init();
+
 	    connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
 	    DbMetaData dbMetaData = new DbMetaData();
 //	    dbMetaData.showDatabaseMetadata(connection);
 	    DbConfiguration dbConfiguration = DbConfigurationFactory.create(connection);
 	    DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo.getPersistenceUnitName(), dbConfiguration);
-	} catch (Exception e) {
-	    LOG.error("processConfiguration: Exception " + e.getClass());
-	    if (connection != null)
-		connection.rollback();
-	} finally {
-	    if (connection != null)
-		connection.close();
-	}
+//	    } catch (Exception e) {
+//		LOG.error("processConfiguration: Exception " + e.getClass());
+//		if (connection != null)
+//		    connection.rollback();
+//	    } finally {
+//		if (connection != null)
+//		    connection.close();
+//	    }
 
-	new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
+	    new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
+	} catch (Exception ex) {
+	    throw new IllegalStateException(ex.getMessage());
+//	    java.util.logging.Logger.getLogger(MiniPersistenceProvider.class.getName()).log(Level.SEVERE, null, ex);
+	}
     }
 
     @Override
@@ -65,12 +72,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    return null;
 	}
 
-	try {
-	    processConfiguration(persistenceUnitInfo);
-	} catch (Exception e) {
-	    LOG.error(e.getMessage());
-	    LOG.debug("createEntityManagerFactory(String emName: processConfiguration: " + e.getClass().getName());
-	}
+	processConfiguration(persistenceUnitInfo);
 
 	LOG.debug("createEntityManagerFactory: EntityManagerType.APPLICATION_MANAGED");
 	return new MiniEntityManagerFactory(EntityManagerType.APPLICATION_MANAGED, persistenceUnitInfo, map);
@@ -82,13 +84,13 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	if (persistenceUnitInfo == null)
 	    return null;
 
-	try {
-	    processConfiguration(persistenceUnitInfo);
-	} catch (Exception e) {
-	    LOG.error(e.getMessage());
-	    LOG.debug("createEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo: processConfiguration: "
-		    + e.getClass().getName());
-	}
+//	try {
+	processConfiguration(persistenceUnitInfo);
+//	} catch (Exception e) {
+//	    LOG.error(e.getMessage());
+//	    LOG.debug("createEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo: processConfiguration: "
+//		    + e.getClass().getName());
+//	}
 
 	LOG.debug("createEntityManagerFactory: EntityManagerType.CONTAINER_MANAGED");
 	return new MiniEntityManagerFactory(EntityManagerType.CONTAINER_MANAGED, persistenceUnitInfo, map);

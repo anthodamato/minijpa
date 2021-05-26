@@ -34,6 +34,7 @@ import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Address;
 import org.minijpa.jpa.model.Department;
 import org.minijpa.jpa.model.Employee;
@@ -49,7 +50,7 @@ public class SqlStatementFactoryTest {
 
     @Test
     public void generateSelectByForeignKey() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("manytoone_bid");
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("manytoone_bid", PersistenceUnitProperties.getProperties());
 	emf.createEntityManager();
 	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("manytoone_bid");
 	if (!optional.isPresent())
@@ -96,7 +97,7 @@ public class SqlStatementFactoryTest {
 
     @Test
     public void generateSelectByJoinTable() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni");
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni", PersistenceUnitProperties.getProperties());
 	final EntityManager em = emf.createEntityManager();
 
 	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("onetomany_uni");
@@ -153,7 +154,7 @@ public class SqlStatementFactoryTest {
 
     @Test
     public void generateSelectStringByJoinTable() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni");
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni", PersistenceUnitProperties.getProperties());
 	final EntityManager em = emf.createEntityManager();
 
 	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("onetomany_uni");
@@ -189,7 +190,7 @@ public class SqlStatementFactoryTest {
 
     @Test
     public void generateIsNullSelectByCriteria() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
 	final EntityManager em = emf.createEntityManager();
 
 	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("citizens");

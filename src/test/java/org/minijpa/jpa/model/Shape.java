@@ -6,27 +6,28 @@ import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public class Shape {
-	@Id
-	@GeneratedValue
-	private Long id;
 
-	private Integer area;
-	protected Integer sides;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-	public Long getId() {
-		return id;
-	}
+    private Integer area;
+    protected Integer sides;
 
-	public Integer getArea() {
-		return area;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public void setArea(Integer area) {
-		this.area = area;
-	}
+    public Integer getArea() {
+	return area;
+    }
 
-	public Integer getSides() {
-		return sides;
-	}
+    public void setArea(Integer area) {
+	this.area = area;
+    }
+
+    public Integer getSides() {
+	return sides;
+    }
 
 }

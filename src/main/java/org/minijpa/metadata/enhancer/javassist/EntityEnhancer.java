@@ -89,9 +89,15 @@ public class EntityEnhancer {
 	enhEntity.setModificationAttributeGetMethod(ctMethod.getName());
 	// lazy loaded attribute tracking
 	if (managedData.getLazyLoadedAttribute().isPresent()) {
-	    addLazyLoadedField(ct, managedData.getLazyLoadedAttribute().get());
+	    addListField(ct, managedData.getLazyLoadedAttribute().get());
 	    ctMethod = createGetMethod(ct, managedData.getLazyLoadedAttribute().get(), "java.util.List");
 	    enhEntity.setLazyLoadedAttributeGetMethod(Optional.of(ctMethod.getName()));
+	}
+	// join column postponed update attribute
+	if (managedData.getJoinColumnPostponedUpdateAttribute().isPresent()) {
+	    addListField(ct, managedData.getJoinColumnPostponedUpdateAttribute().get());
+	    ctMethod = createGetMethod(ct, managedData.getJoinColumnPostponedUpdateAttribute().get(), "java.util.List");
+	    enhEntity.setJoinColumnPostponedUpdateAttributeGetMethod(Optional.of(ctMethod.getName()));
 	}
 	// lock type field
 	if (managedData.getLockTypeAttribute().isPresent()) {
@@ -275,16 +281,16 @@ public class EntityEnhancer {
 
 	CtField f = CtField.make("private java.util.List " + modificationFieldName + " = new java.util.ArrayList();", ct);
 	ct.addField(f);
-	LOG.debug("Created '" + ct.getName() + "' Modification Field");
+	LOG.debug("Created '" + ct.getName() + "' Field");
     }
 
-    private void addLazyLoadedField(CtClass ct, String fieldName) throws Exception {
+    private void addListField(CtClass ct, String fieldName) throws Exception {
 	if (!canModify(ct))
 	    return;
 
 	CtField f = CtField.make("private java.util.List " + fieldName + " = new java.util.ArrayList();", ct);
 	ct.addField(f);
-	LOG.debug("Created '" + ct.getName() + "' Lazy Loaded Field");
+	LOG.debug("Created '" + fieldName + "' Field");
     }
 
     private void addLockTypeField(CtClass ct, String fieldName) throws Exception {

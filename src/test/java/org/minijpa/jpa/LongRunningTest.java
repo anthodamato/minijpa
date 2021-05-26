@@ -34,7 +34,7 @@ public class LongRunningTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("long_running");
+	emf = Persistence.createEntityManagerFactory("long_running", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

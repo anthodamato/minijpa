@@ -17,6 +17,6 @@ public class DbConfigurationFactory {
 	if (database == Database.MYSQL)
 	    return new MySQLConfiguration();
 
-	return new DefaultDbConfiguration();
+	throw new IllegalStateException("Unable to set the Db Configuration up");
     }
 }

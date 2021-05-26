@@ -14,7 +14,7 @@ public class RemoveTest {
 
     @Test
     public void remove() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens");
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
 	final EntityManager em = emf.createEntityManager();
 	try {
 	    final EntityTransaction tx = em.getTransaction();

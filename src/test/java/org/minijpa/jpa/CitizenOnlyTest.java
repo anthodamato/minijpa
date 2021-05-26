@@ -28,7 +28,7 @@ public class CitizenOnlyTest {
 
     @BeforeAll
     public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("citizens_only");
+	emf = Persistence.createEntityManagerFactory("citizens_only", PersistenceUnitProperties.getProperties());
     }
 
     @AfterAll

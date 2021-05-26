@@ -30,6 +30,7 @@ public class EnhEntity {
     private EnhEntity mappedSuperclass;
     private String modificationAttributeGetMethod;
     private Optional<String> lazyLoadedAttributeGetMethod = Optional.empty();
+    private Optional<String> joinColumnPostponedUpdateAttributeGetMethod = Optional.empty();
     private Optional<String> lockTypeAttributeGetMethod = Optional.empty();
     private Optional<String> lockTypeAttributeSetMethod = Optional.empty();
     private Optional<String> entityStatusAttributeGetMethod = Optional.empty();
@@ -74,6 +75,14 @@ public class EnhEntity {
 
     public void setLazyLoadedAttributeGetMethod(Optional<String> lazyLoadedAttributeGetMethod) {
 	this.lazyLoadedAttributeGetMethod = lazyLoadedAttributeGetMethod;
+    }
+
+    public Optional<String> getJoinColumnPostponedUpdateAttributeGetMethod() {
+	return joinColumnPostponedUpdateAttributeGetMethod;
+    }
+
+    public void setJoinColumnPostponedUpdateAttributeGetMethod(Optional<String> joinColumnPostponedUpdateAttributeGetMethod) {
+	this.joinColumnPostponedUpdateAttributeGetMethod = joinColumnPostponedUpdateAttributeGetMethod;
     }
 
     public Optional<String> getLockTypeAttributeGetMethod() {

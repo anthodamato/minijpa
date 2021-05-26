@@ -51,7 +51,7 @@ public class MetaEntityHelper {
 	List<FetchParameter> list = new ArrayList<>();
 	for (JoinColumnAttribute a : attributes) {
 	    FetchParameter columnNameValue = new FetchParameter(a.getColumnName(), a.getType(), a.getReadWriteDbType(),
-		    a.getSqlType(), a.getAttribute(), null, true);
+		    a.getSqlType(), a.getForeignKeyAttribute(), null, true);
 	    list.add(columnNameValue);
 	}
 
@@ -98,6 +98,7 @@ public class MetaEntityHelper {
 	for (int i = 0; i < modelValueArray.size(); ++i) {
 	    JoinColumnAttribute joinColumnAttribute = modelValueArray.getModel(i);
 	    MetaAttribute attribute = joinColumnAttribute.getForeignKeyAttribute();
+	    LOG.debug("convertAVToQP: joinColumnAttribute.getColumnName()=" + joinColumnAttribute.getColumnName());
 	    QueryParameter queryParameter = new QueryParameter(joinColumnAttribute.getColumnName(), modelValueArray.getValue(i),
 		    attribute.getType(), attribute.getSqlType(), attribute.jdbcAttributeMapper);
 	    list.add(queryParameter);
@@ -121,6 +122,7 @@ public class MetaEntityHelper {
     }
 
     public List<QueryParameter> convertAVToQP(Pk pk, Object value) throws Exception {
+	LOG.debug("convertAVToQP: pk=" + pk + "; value=" + value);
 	List<QueryParameter> list = new ArrayList<>();
 	if (pk.isEmbedded()) {
 	    ModelValueArray<MetaAttribute> modelValueArray = new ModelValueArray();
@@ -228,13 +230,13 @@ public class MetaEntityHelper {
     }
 
     public void createVersionAttributeArrayEntry(MetaEntity entity, Object entityInstance,
-	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
+	    ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
 	if (!hasOptimisticLock(entity, entityInstance))
 	    return;
 
 	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
 	Object versionValue = AttributeUtil.increaseVersionValue(entity, currentVersionValue);
-	attributeValueArray.add(entity.getVersionAttribute().get(), versionValue);
+	modelValueArray.add(entity.getVersionAttribute().get(), versionValue);
     }
 
     public void expand(Pk pk,

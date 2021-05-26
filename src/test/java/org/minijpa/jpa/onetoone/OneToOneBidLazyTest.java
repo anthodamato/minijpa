@@ -4,9 +4,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import org.junit.jupiter.api.AfterAll;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Capital;
 import org.minijpa.jpa.model.State;
 import org.slf4j.Logger;
@@ -21,9 +24,20 @@ public class OneToOneBidLazyTest {
 
     private Logger LOG = LoggerFactory.getLogger(OneToOneBidLazyTest.class);
 
+    private static EntityManagerFactory emf;
+
+    @BeforeAll
+    public static void beforeAll() {
+	emf = Persistence.createEntityManagerFactory("onetoone_bid_lazy", PersistenceUnitProperties.getProperties());
+    }
+
+    @AfterAll
+    public static void afterAll() {
+	emf.close();
+    }
+
     @Test
     public void persist() throws Exception {
-	EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetoone_bid_lazy");
 	final EntityManager em = emf.createEntityManager();
 	try {
 	    final EntityTransaction tx = em.getTransaction();
@@ -56,7 +70,6 @@ public class OneToOneBidLazyTest {
 	    em.flush();
 	} finally {
 	    em.close();
-	    emf.close();
 	}
     }
 

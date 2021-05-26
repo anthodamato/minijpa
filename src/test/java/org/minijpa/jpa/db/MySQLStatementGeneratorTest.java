@@ -19,7 +19,6 @@
 package org.minijpa.jpa.db;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.db.DbConfiguration;
@@ -44,9 +43,10 @@ public class MySQLStatementGeneratorTest {
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
 	Assertions.assertEquals(2, sqlStatements.size());
-	List<String> ddlStatements = sqlStatements.stream()
-		.map(d -> dbConfiguration.getSqlStatementGenerator().export(d))
-		.flatMap(List::stream).collect(Collectors.toList());
+//	List<String> ddlStatements = sqlStatements.stream()
+//		.map(d -> dbConfiguration.getSqlStatementGenerator().export(d))
+//		.flatMap(List::stream).collect(Collectors.toList());
+	List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
 	Assertions.assertFalse(ddlStatements.isEmpty());
 	Assertions.assertEquals(2, ddlStatements.size());
 	String ddl = ddlStatements.get(0);

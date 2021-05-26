@@ -19,6 +19,7 @@
 package org.minijpa.metadata.enhancer.javassist;
 
 import java.util.Optional;
+import javassist.CtClass;
 import javassist.CtMethod;
 
 /**
@@ -28,14 +29,16 @@ import javassist.CtMethod;
 public class RelationshipProperties {
 
     private final String fieldName;
+    private final CtClass type;
     private final boolean lazy;
     private final boolean joinColumn;
     private Optional<String> joinColumnFieldName = Optional.empty();
     private Optional<CtMethod> ctMethodGetter;
     private Optional<CtMethod> ctMethodSetter;
 
-    public RelationshipProperties(String fieldName, boolean lazy, boolean joinColumn) {
+    public RelationshipProperties(String fieldName, CtClass type, boolean lazy, boolean joinColumn) {
 	this.fieldName = fieldName;
+	this.type = type;
 	this.lazy = lazy;
 	this.joinColumn = joinColumn;
     }
@@ -50,6 +53,10 @@ public class RelationshipProperties {
 
     public String getFieldName() {
 	return fieldName;
+    }
+
+    public CtClass getType() {
+	return type;
     }
 
     public Optional<String> getJoinColumnFieldName() {
