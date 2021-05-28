@@ -103,7 +103,6 @@ public class EntityWriterImpl implements EntityWriter {
 
 	Object instance = entityLoader.findById(entity, idValue, LockType.NONE);
 	Object currentVersionValue2 = entity.getVersionAttribute().get().getReadMethod().invoke(instance);
-	LOG.debug("checkOptimisticLock: currentVersionValue2=" + currentVersionValue2);
 
 	LOG.debug("checkOptimisticLock: dbVersionValue=" + dbVersionValue + "; currentVersionValue=" + currentVersionValue);
 	if (dbVersionValue == null || !dbVersionValue.equals(currentVersionValue))
@@ -125,19 +124,12 @@ public class EntityWriterImpl implements EntityWriter {
 	    idColumns.add(entity.getVersionAttribute().get().getColumnName());
 	}
 
-//	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, modelValueArray.getModels(),
-//		idColumns);
-//	modelValueArray.add(entity.getId().getAttribute(), idValue);
 	metaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, modelValueArray);
 	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
 	List<String> columns = parameters.stream().map(p -> {
 	    return p.getColumnName();
 	}).collect(Collectors.toList());
 
-//	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
-//	List<String> columns = parameters.stream().map(p -> {
-//	    return p.getColumnName();
-//	}).collect(Collectors.toList());
 	SqlUpdate sqlUpdate = sqlStatementFactory.generateUpdate(entity, columns,
 		idColumns);
 
@@ -150,11 +142,12 @@ public class EntityWriterImpl implements EntityWriter {
 	parameters = metaEntityHelper.convertAVToQP(modelValueArray);
 
 	String sql = sqlStatementGenerator.export(sqlUpdate);
-	LOG.debug("update: sql=" + sql);
 	int updateCount = jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
 	if (updateCount == 0) {
-	    Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
-	    throw new OptimisticLockException("Entity was written by another transaction, version" + currentVersionValue);
+	    if (entity.getVersionAttribute().isPresent()) {
+		Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+		throw new OptimisticLockException("Entity was written by another transaction, version" + currentVersionValue);
+	    }
 	}
 
 	LOG.debug("update: updateCount=" + updateCount);
@@ -184,7 +177,7 @@ public class EntityWriterImpl implements EntityWriter {
 //	    LOG.info("persist: pk=" + pk);
 	    entity.getId().getWriteMethod().invoke(entityInstance, pk);
 
-	    updatePostponedJoinColumnUpdate(entity, entityInstance, pk);
+	    updatePostponedJoinColumnUpdate(entity, entityInstance);
 	    if (optVersion.isPresent()) {
 		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
 	    }
@@ -211,7 +204,7 @@ public class EntityWriterImpl implements EntityWriter {
 	}
     }
 
-    private void updatePostponedJoinColumnUpdate(MetaEntity entity, Object entityInstance, Object pk)
+    private void updatePostponedJoinColumnUpdate(MetaEntity entity, Object entityInstance)
 	    throws Exception {
 	LOG.debug("updatePostponedJoinColumnUpdate: entity.getName()=" + entity.getName());
 	LOG.debug("updatePostponedJoinColumnUpdate: entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty()=" + entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty());
@@ -246,12 +239,7 @@ public class EntityWriterImpl implements EntityWriter {
 
     @Override
     public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception {
-//	Map<MetaAttribute, Object> joinTableAttrs = new HashMap<>();
 	for (MetaAttribute a : entity.getRelationshipAttributes()) {
-//	    LOG.info("persist: a.getRelationship()=" + a.getRelationship());
-//	    if (a.getRelationship() != null)
-//		LOG.info("persist: a.getRelationship().getJoinTable()=" + a.getRelationship().getJoinTable());
-
 	    if (a.getRelationship().getJoinTable() != null
 		    && a.getRelationship().isOwner()) {
 		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
@@ -259,7 +247,6 @@ public class EntityWriterImpl implements EntityWriter {
 //		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
 		if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
 			&& !CollectionUtils.isCollectionEmpty(attributeInstance)) {
-//		    joinTableAttrs.put(a, attributeInstance);
 		    List<Object> ees = CollectionUtils.getCollectionAsList(attributeInstance);
 		    if (entityContainer.isManaged(ees))
 			persistJoinTableAttributes(ees, a, entityInstance);

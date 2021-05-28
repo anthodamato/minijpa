@@ -33,7 +33,6 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.Pk;
-import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.ForeignKeyDeclaration;
@@ -41,7 +40,6 @@ import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
 import org.minijpa.jdbc.model.OrderBy;
 import org.minijpa.jdbc.model.SqlCreateJoinTable;
-import org.minijpa.jdbc.model.SqlCreateSequence;
 import org.minijpa.jdbc.model.SqlCreateTable;
 import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jdbc.model.SqlDelete;
@@ -256,9 +254,6 @@ public class SqlStatementFactory {
 	    Object targetInstance) throws Exception {
 	List<QueryParameter> parameters = new ArrayList<>();
 	Pk owningId = relationshipJoinTable.getOwningAttribute();
-//	parameters
-//		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getJoinColumnOwningAttributes(),
-//			owningId, AttributeUtil.getIdValue(owningId, owningInstance)));
 	relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes()
 		.forEach(a -> LOG.debug("createRelationshipJoinTableParameters: a=" + a));
 	parameters
@@ -266,9 +261,6 @@ public class SqlStatementFactory {
 			owningId, AttributeUtil.getIdValue(owningId, owningInstance)));
 
 	Pk targetId = relationshipJoinTable.getTargetAttribute();
-//	parameters
-//		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getJoinColumnTargetAttributes(),
-//			targetId, AttributeUtil.getIdValue(targetId, targetInstance)));
 	parameters
 		.addAll(metaEntityHelper.createJoinColumnAVSToQP(relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes(),
 			targetId, AttributeUtil.getIdValue(targetId, targetInstance)));
