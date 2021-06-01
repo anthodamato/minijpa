@@ -114,7 +114,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	return columnName;
     }
 
-    private String exportTableColumn(TableColumn tableColumn) {
+    protected String exportTableColumn(TableColumn tableColumn) {
 	Optional<FromTable> optionalFromTable = tableColumn.getTable();
 	Column column = tableColumn.getColumn();
 	if (optionalFromTable.isPresent()) {
@@ -205,7 +205,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	throw new IllegalArgumentException("Expression '" + sqlExpression + "' not supported");
     }
 
-    private String exportCondition(Condition condition) {
+    protected String exportCondition(Condition condition) {
 //	LOG.debug("exportCondition: condition=" + condition);
 	if (condition instanceof BinaryLogicCondition) {
 	    BinaryLogicCondition binaryLogicCondition = (BinaryLogicCondition) condition;

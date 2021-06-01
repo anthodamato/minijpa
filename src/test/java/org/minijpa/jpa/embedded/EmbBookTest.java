@@ -290,12 +290,18 @@ public class EmbBookTest {
 	query.select(cb.count(root));
 	TypedQuery<?> typedQuery = em.createQuery(query);
 	Object result = typedQuery.getSingleResult();
-	Assertions.assertEquals(5L, result);
+	if (result != null && result instanceof Long)
+	    Assertions.assertEquals(5L, result);
+	if (result != null && result instanceof Integer)
+	    Assertions.assertEquals(5, result);
 
 	query.select(cb.countDistinct(root.get("author")));
 	typedQuery = em.createQuery(query);
 	result = typedQuery.getSingleResult();
-	Assertions.assertEquals(3L, result);
+	if (result != null && result instanceof Long)
+	    Assertions.assertEquals(3L, result);
+	if (result != null && result instanceof Integer)
+	    Assertions.assertEquals(3, result);
 
 	tx.begin();
 	em.remove(book1);

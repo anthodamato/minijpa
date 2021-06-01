@@ -414,7 +414,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	}
 
 	// returns an aggregate expression result (max, min, etc)
-	return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect.getFetchParameters(),
+//	return jdbcRunner.runQuery(connectionHolder.getConnection(), sql, sqlSelect.getFetchParameters(),
+//		statementParameters.getParameters());
+	return jdbcRunner.runQuery(connectionHolder.getConnection(), sql,
 		statementParameters.getParameters());
     }
 

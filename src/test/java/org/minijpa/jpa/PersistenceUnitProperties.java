@@ -44,6 +44,15 @@ public class PersistenceUnitProperties {
 	    return map;
 	}
 
+	if (minijpaTest.equals("postgres")) {
+	    Map<String, String> map = new HashMap<>();
+	    map.put("javax.persistence.jdbc.url", "jdbc:postgresql://localhost/test");
+	    map.put("javax.persistence.jdbc.driver", "org.postgresql.Driver");
+	    map.put("javax.persistence.jdbc.user", "postgres");
+	    map.put("javax.persistence.jdbc.password", "password");
+	    return map;
+	}
+
 	return null;
     }
 }

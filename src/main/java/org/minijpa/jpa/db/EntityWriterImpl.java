@@ -173,9 +173,17 @@ public class EntityWriterImpl implements EntityWriter {
 
 	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
-	    Object pk = jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
+	    Object pk = jdbcRunner.insertReturnGeneratedKeys(connectionHolder.getConnection(), sql, parameters);
 //	    LOG.info("persist: pk=" + pk);
-	    entity.getId().getWriteMethod().invoke(entityInstance, pk);
+	    Long idValue = null;
+	    if (pk != null) {
+		if (pk instanceof Long)
+		    idValue = (Long) pk;
+		else if (pk instanceof Number)
+		    idValue = ((Number) pk).longValue();
+	    }
+
+	    entity.getId().getWriteMethod().invoke(entityInstance, idValue);
 
 	    updatePostponedJoinColumnUpdate(entity, entityInstance);
 	    if (optVersion.isPresent()) {
@@ -197,7 +205,7 @@ public class EntityWriterImpl implements EntityWriter {
 
 	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
-	    jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
+	    jdbcRunner.insert(connectionHolder.getConnection(), sql, parameters);
 	    if (optVersion.isPresent()) {
 		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
 	    }
@@ -265,7 +273,7 @@ public class EntityWriterImpl implements EntityWriter {
 	    List<String> columnNames = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 	    SqlInsert sqlInsert = sqlStatementFactory.generateJoinTableInsert(relationshipJoinTable, columnNames);
 	    String sql = sqlStatementGenerator.export(sqlInsert);
-	    jdbcRunner.persist(connectionHolder.getConnection(), sql, parameters);
+	    jdbcRunner.insert(connectionHolder.getConnection(), sql, parameters);
 	}
     }
 

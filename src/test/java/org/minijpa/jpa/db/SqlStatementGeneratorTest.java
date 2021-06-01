@@ -158,7 +158,7 @@ public class SqlStatementGeneratorTest {
 	List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
 	Assertions.assertFalse(ddlStatements.isEmpty());
 	String d0 = ddlStatements.get(0);
-	Assertions.assertEquals("create table HotelBooking (dateof date not null, room_number integer not null, customer_id integer, price float, primary key (dateof, room_number))", d0);
+	Assertions.assertEquals("create table HotelBooking (dateof date not null, room_number integer not null, customer_id integer, price real, primary key (dateof, room_number))", d0);
     }
 
     @Test
@@ -217,7 +217,7 @@ public class SqlStatementGeneratorTest {
 	List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
 	Assertions.assertFalse(ddlStatements.isEmpty());
 	String d0 = ddlStatements.get(0);
-	Assertions.assertEquals("create table purchase_stats (id bigint not null, start_date date, end_date date, debit_card double, credit_card double, cash double, primary key (id))", d0);
+	Assertions.assertEquals("create table purchase_stats (id bigint not null, start_date date, end_date date, debit_card double precision, credit_card double precision, cash double precision, primary key (id))", d0);
 	String d1 = ddlStatements.get(1);
 	Assertions.assertEquals("create sequence PURCHASE_STATS_PK_SEQ start with 1 increment by 1", d1);
     }
@@ -257,7 +257,7 @@ public class SqlStatementGeneratorTest {
 	String ddl = ddlStatements.get(0);
 	Assertions.assertEquals("create table HotelCustomer (id bigint not null, name varchar(255), primary key (id))", ddl);
 	ddl = ddlStatements.get(1);
-	Assertions.assertEquals("create table HotelBookingDetail (dateof date not null, room_number integer not null, price float, primary key (dateof, room_number))", ddl);
+	Assertions.assertEquals("create table HotelBookingDetail (dateof date not null, room_number integer not null, price real, primary key (dateof, room_number))", ddl);
 	ddl = ddlStatements.get(2);
 	Assertions.assertEquals("create sequence HOTELCUSTOMER_PK_SEQ start with 1 increment by 1", ddl);
 	ddl = ddlStatements.get(3);

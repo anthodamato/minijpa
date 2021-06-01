@@ -17,6 +17,9 @@ public class DbConfigurationFactory {
 	if (database == Database.MYSQL)
 	    return new MySQLConfiguration();
 
+	if (database == Database.POSTGRES)
+	    return new PostgresConfiguration();
+
 	throw new IllegalStateException("Unable to set the Db Configuration up");
     }
 }

@@ -106,12 +106,13 @@ public class JdbcTypes {
 	    case Types.CHAR:
 		return Character.class;
 	    case Types.DATE:
-		return Date.class;
+		return java.sql.Date.class;
 	    case Types.DECIMAL:
 		return BigDecimal.class;
 	    case Types.DOUBLE:
 		return Double.class;
 	    case Types.FLOAT:
+	    case Types.REAL:
 		return Float.class;
 	    case Types.INTEGER:
 		return Integer.class;
@@ -119,6 +120,8 @@ public class JdbcTypes {
 		return String.class;
 	    case Types.TIMESTAMP_WITH_TIMEZONE:
 		return OffsetDateTime.class;
+	    case Types.NUMERIC:
+		return BigDecimal.class;
 	    default:
 		return null;
 	}

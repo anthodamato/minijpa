@@ -21,7 +21,7 @@ import java.time.OffsetDateTime;
 import java.util.Calendar;
 import java.util.Date;
 
-public class ApacheDerbyDbTypeMapper extends AbstractDbTypeMapper {
+public class PostgresDbTypeMapper extends AbstractDbTypeMapper {
 
     @Override
     public Object convert(Object value, Class<?> readWriteDbType, Class<?> attributeType) {

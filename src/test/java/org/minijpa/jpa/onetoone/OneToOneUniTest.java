@@ -1,5 +1,6 @@
 package org.minijpa.jpa.onetoone;
 
+import java.math.BigDecimal;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -122,9 +123,12 @@ public class OneToOneUniTest {
 	    Root<City> root = criteriaQuery.from(City.class);
 	    criteriaQuery.select(cb.sum(root.get("population")));
 	    Query query = em.createQuery(criteriaQuery);
-	    Integer totalPopulation = (Integer) query.getSingleResult();
+	    Object totalPopulation = query.getSingleResult();
 	    Assertions.assertNotNull(totalPopulation);
-	    Assertions.assertEquals(763476, totalPopulation);
+	    if (totalPopulation instanceof Integer)
+		Assertions.assertEquals(763476, totalPopulation);
+	    else if (totalPopulation instanceof Long)
+		Assertions.assertEquals(763476L, totalPopulation);
 
 	    em.remove(yorkCity);
 	    em.remove(manchesterCity);
@@ -168,9 +172,14 @@ public class OneToOneUniTest {
 	    Root<City> root = criteriaQuery.from(City.class);
 	    criteriaQuery.select(cb.avg(root.get("population")));
 	    Query query = em.createQuery(criteriaQuery);
-	    Double avgPopulation = (Double) query.getSingleResult();
+	    Object avgPopulation = query.getSingleResult();
 	    Assertions.assertNotNull(avgPopulation);
-	    Assertions.assertEquals(381738.0, avgPopulation);
+	    if (avgPopulation instanceof Double)
+		Assertions.assertEquals(381738.0, avgPopulation);
+	    else if (avgPopulation instanceof Float)
+		Assertions.assertEquals(381738.0, avgPopulation);
+	    else if (avgPopulation instanceof BigDecimal)
+		Assertions.assertEquals(381738.0, ((BigDecimal) avgPopulation).doubleValue());
 
 	    em.remove(yorkCity);
 	    em.remove(manchesterCity);

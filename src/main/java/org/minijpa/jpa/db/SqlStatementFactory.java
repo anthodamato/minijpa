@@ -404,7 +404,8 @@ public class SqlStatementFactory {
 	    return Optional.of(columnNameValue);
 	} else if (selection instanceof AggregateFunctionExpression<?>) {
 	    AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
-	    if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.COUNT) {
+	    if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.COUNT
+		    || aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.SUM) {
 		FetchParameter cnv = new FetchParameter("count", Long.class, Long.class,
 			JdbcTypes.sqlTypeFromClass(Long.class), null, null, false);
 		return Optional.of(cnv);

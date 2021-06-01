@@ -55,6 +55,8 @@ public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
 
 	LOG.debug("writeMetaAttributeValue: parent=" + parent + "; a.getWriteMethod()=" + attribute.getWriteMethod());
 	LOG.debug("writeMetaAttributeValue: value=" + value);
+	if (value != null)
+	    LOG.debug("writeMetaAttributeValue: value.getClass()=" + value.getClass());
 
 	attribute.getWriteMethod().invoke(parent, value);
 	Method m = entity.getModificationAttributeReadMethod();

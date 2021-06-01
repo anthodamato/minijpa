@@ -21,9 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MiniPersistenceProvider implements PersistenceProvider {
-
+    
     private Logger LOG = LoggerFactory.getLogger(MiniPersistenceProvider.class);
-
+    
     private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) {
 	try {
 	    LOG.info("Processing Db Configuration...");
@@ -31,7 +31,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    Connection connection = null;
 //	    try {
 	    new ConnectionProviderImpl(persistenceUnitInfo).init();
-
+	    
 	    connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
 	    DbMetaData dbMetaData = new DbMetaData();
 //	    dbMetaData.showDatabaseMetadata(connection);
@@ -48,16 +48,17 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 
 	    new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 	} catch (Exception ex) {
+	    LOG.error(ex.getMessage());
 	    throw new IllegalStateException(ex.getMessage());
 //	    java.util.logging.Logger.getLogger(MiniPersistenceProvider.class.getName()).log(Level.SEVERE, null, ex);
 	}
     }
-
+    
     @Override
     public EntityManagerFactory createEntityManagerFactory(String emName, @SuppressWarnings("rawtypes") Map map) {
 	return createEntityManagerFactory("/META-INF/persistence.xml", emName, map);
     }
-
+    
     private EntityManagerFactory createEntityManagerFactory(String path, String emName,
 	    @SuppressWarnings("rawtypes") Map map) {
 	PersistenceUnitInfo persistenceUnitInfo = null;
@@ -71,13 +72,13 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    LOG.error(e.getMessage());
 	    return null;
 	}
-
+	
 	processConfiguration(persistenceUnitInfo);
-
+	
 	LOG.debug("createEntityManagerFactory: EntityManagerType.APPLICATION_MANAGED");
 	return new MiniEntityManagerFactory(EntityManagerType.APPLICATION_MANAGED, persistenceUnitInfo, map);
     }
-
+    
     @Override
     public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo,
 	    @SuppressWarnings("rawtypes") Map map) {
@@ -95,7 +96,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	LOG.debug("createEntityManagerFactory: EntityManagerType.CONTAINER_MANAGED");
 	return new MiniEntityManagerFactory(EntityManagerType.CONTAINER_MANAGED, persistenceUnitInfo, map);
     }
-
+    
     @Override
     public void generateSchema(PersistenceUnitInfo info, @SuppressWarnings("rawtypes") Map map) {
 	try {
@@ -107,7 +108,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    LOG.error("generateSchema: e.getClass()=" + e.getClass());
 	}
     }
-
+    
     @Override
     public boolean generateSchema(String persistenceUnitName, @SuppressWarnings("rawtypes") Map map) {
 	PersistenceUnitInfo persistenceUnitInfo;
@@ -120,7 +121,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    LOG.error("generateSchema: e.getClass()=" + e.getClass());
 	    return false;
 	}
-
+	
 	try {
 	    PersistenceUnitPropertyActions persistenceUnitPropertyActions = new PersistenceUnitPropertyActions();
 	    List<String> script = persistenceUnitPropertyActions.generateScriptFromMetadata(persistenceUnitInfo);
@@ -130,13 +131,13 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	    LOG.error("generateSchema: e.getClass()=" + e.getClass());
 	    return false;
 	}
-
+	
 	return true;
     }
-
+    
     @Override
     public ProviderUtil getProviderUtil() {
 	return null;
     }
-
+    
 }

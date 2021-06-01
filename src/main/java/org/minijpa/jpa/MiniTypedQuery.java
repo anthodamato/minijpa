@@ -40,7 +40,6 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 	    if (flushModeType == FlushModeType.AUTO)
 		jdbcEntityManager.flush();
 
-	    LOG.info("getResultList: select criteriaQuery=" + criteriaQuery);
 	    list = jdbcEntityManager.select(this);
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());

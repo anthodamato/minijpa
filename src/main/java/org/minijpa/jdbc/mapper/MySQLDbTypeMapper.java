@@ -1,72 +1,40 @@
 /*
- * Copyright (C) 2021 Antonio Damato <anto.damato@gmail.com>.
+ * Copyright 2021 Antonio Damato <anto.damato@gmail.com>.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA 02110-1301  USA
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.minijpa.jdbc.mapper;
 
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Calendar;
 import java.util.Date;
 
-public class MySQLDbTypeMapper extends DefaultDbTypeMapper {
-
-    @Override
-    public Class<?> map(Class<?> attributeType, Integer jdbcType) {
-	if (attributeType == LocalDate.class)
-	    return Date.class;
-
-	if (attributeType == OffsetDateTime.class)
-	    return Timestamp.class;
-
-	if (attributeType.isEnum() && jdbcType == Types.VARCHAR)
-	    return String.class;
-
-	if (attributeType.isEnum() && jdbcType == Types.INTEGER)
-	    return Integer.class;
-
-	if (attributeType.isPrimitive()) {
-	    String typeName = attributeType.getName();
-	    if (typeName.equals("int") || typeName.equals("byte") || typeName.equals("short"))
-		return Integer.class;
-
-	    if (typeName.equals("long"))
-		return Long.class;
-
-	    if (typeName.equals("float"))
-		return Float.class;
-
-	    if (typeName.equals("double"))
-		return Double.class;
-
-	    if (typeName.equals("boolean"))
-		return Boolean.class;
-	}
-
-	return attributeType;
-    }
+public class MySQLDbTypeMapper extends AbstractDbTypeMapper {
 
     @Override
     public Object convert(Object value, Class<?> readWriteDbType, Class<?> attributeType) {
-	if (attributeType == LocalDate.class && readWriteDbType == Date.class && value != null) {
-	    Date date = (Date) value;
-	    return new java.sql.Date(date.getTime()).toLocalDate();
+	if (attributeType == LocalDate.class) {
+	    if (readWriteDbType == Date.class && value != null) {
+		Date date = (Date) value;
+		return new java.sql.Date(date.getTime()).toLocalDate();
+	    }
+
+	    if (readWriteDbType == java.sql.Date.class && value != null) {
+		java.sql.Date date = (java.sql.Date) value;
+		return date.toLocalDate();
+	    }
 	}
 
 	if (attributeType == OffsetDateTime.class && readWriteDbType == Timestamp.class && value != null) {

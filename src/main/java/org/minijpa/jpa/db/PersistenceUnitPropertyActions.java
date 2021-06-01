@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
@@ -55,25 +54,13 @@ public class PersistenceUnitPropertyActions {
 	try {
 	    PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
 
-	    persistenceUnitContext.getEntities().forEach((k, v) -> {
-		LOG.debug("generateScriptFromMetadata: 1 v.getName()=" + v.getName());
-		v.getBasicAttributes().forEach(a -> LOG.debug("generateScriptFromMetadata: 1 ba a.getName()=" + a.getName()));
-	    });
-
 	    SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 	    List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
 
-	    persistenceUnitContext.getEntities().forEach((k, v) -> {
-		LOG.debug("generateScriptFromMetadata: v.getName()=" + v.getName());
-		v.getBasicAttributes().forEach(a -> LOG.debug("generateScriptFromMetadata: ba a.getName()=" + a.getName()));
-	    });
-
 	    DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
-//	return sqlStatements.stream().map(d -> dbConfiguration.getSqlStatementGenerator().export(d)).flatMap(List::stream).collect(Collectors.toList());
 	    return dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
 	} catch (Exception ex) {
 	    throw new IllegalStateException(ex.getMessage());
-//	    java.util.logging.Logger.getLogger(PersistenceUnitPropertyActions.class.getName()).log(Level.SEVERE, null, ex);
 	}
     }
 
