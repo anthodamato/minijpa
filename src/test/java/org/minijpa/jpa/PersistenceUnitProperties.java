@@ -63,6 +63,17 @@ public class PersistenceUnitProperties {
 	    return map;
 	}
 
+	if (minijpaTest.equals("oracle")) {
+	    Map<String, String> map = new HashMap<>();
+	    map.put("javax.persistence.jdbc.url", "jdbc:oracle:thin:@localhost:1521:ORCLCDB");
+//	    map.put("javax.persistence.jdbc.url", "jdbc:oracle:thin:@//localhost:1521/ORCLCDB");
+	    map.put("javax.persistence.jdbc.driver", "oracle.jdbc.driver.OracleDriver");
+	    map.put("javax.persistence.jdbc.user", "test");
+	    map.put("javax.persistence.jdbc.password", "password");
+	    map.put("hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
+	    return map;
+	}
+
 	return null;
     }
 }
