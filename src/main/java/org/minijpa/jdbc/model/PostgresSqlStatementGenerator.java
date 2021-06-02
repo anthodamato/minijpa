@@ -44,7 +44,7 @@ public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator 
 
 	if (sqlUpdate.getCondition().isPresent()) {
 	    sb.append(" where ");
-	    sb.append(exportCondition(sqlUpdate.getCondition().get()));
+	    sb.append(exportCondition(sqlUpdate.getCondition().get(), getSqlStatementExporter()));
 	}
 
 	return sb.toString();

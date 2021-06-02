@@ -26,6 +26,8 @@ import java.util.List;
  */
 public interface SqlStatementGenerator {
 
+    public SqlStatementExporter createSqlStatementExporter();
+
     public String export(SqlInsert sqlInsert);
 
     public String export(SqlUpdate sqlUpdate);

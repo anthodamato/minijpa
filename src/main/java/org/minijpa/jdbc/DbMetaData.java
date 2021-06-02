@@ -122,6 +122,8 @@ public class DbMetaData {
 	    return Database.APACHE_DERBY;
 	} else if (databaseProductName.equalsIgnoreCase("MySQL")) {
 	    return Database.MYSQL;
+	} else if (databaseProductName.equalsIgnoreCase("MariaDB")) {
+	    return Database.MARIADB;
 	} else if (databaseProductName.equalsIgnoreCase("PostgreSQL")) {
 	    return Database.POSTGRES;
 	}

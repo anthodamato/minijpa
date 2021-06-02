@@ -17,6 +17,9 @@ public class DbConfigurationFactory {
 	if (database == Database.MYSQL)
 	    return new MySQLConfiguration();
 
+	if (database == Database.MARIADB)
+	    return new MariaDBConfiguration();
+
 	if (database == Database.POSTGRES)
 	    return new PostgresConfiguration();
 

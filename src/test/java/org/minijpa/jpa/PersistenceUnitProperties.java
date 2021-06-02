@@ -44,6 +44,16 @@ public class PersistenceUnitProperties {
 	    return map;
 	}
 
+	if (minijpaTest.equals("mariadb")) {
+	    Map<String, String> map = new HashMap<>();
+//	    map.put("javax.persistence.jdbc.url", "jdbc:mariadb://localhost:3306/test?user=root&password=password");
+	    map.put("javax.persistence.jdbc.url", "jdbc:mariadb://localhost:3306/test");
+	    map.put("javax.persistence.jdbc.driver", "org.mariadb.jdbc.Driver");
+	    map.put("javax.persistence.jdbc.user", "root");
+	    map.put("javax.persistence.jdbc.password", "password");
+	    return map;
+	}
+
 	if (minijpaTest.equals("postgres")) {
 	    Map<String, String> map = new HashMap<>();
 	    map.put("javax.persistence.jdbc.url", "jdbc:postgresql://localhost/test");

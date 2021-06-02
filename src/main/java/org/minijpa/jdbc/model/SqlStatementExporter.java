@@ -13,13 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc;
+package org.minijpa.jdbc.model;
 
-public enum Database {
-    UNKNOWN, // Unknown database
-    APACHE_DERBY, // Apache Derby
-    MYSQL, // MySQL
-    MARIADB, // MariaDB
-    POSTGRES // PostgresSQL
-    ;
+import java.util.Optional;
+import org.minijpa.jdbc.db.DbJdbc;
+
+/**
+ *
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
+public interface SqlStatementExporter {
+
+    public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc);
+
+    public String exportColumnAlias(String columnName, Optional<String> alias);
+
+    public String exportColumn(Column column);
 }
