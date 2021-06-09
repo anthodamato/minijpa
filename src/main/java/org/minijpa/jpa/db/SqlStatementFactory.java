@@ -104,12 +104,13 @@ public class SqlStatementFactory {
     public SqlStatementFactory() {
     }
 
-    public SqlInsert generateInsert(MetaEntity entity, List<String> columns) throws Exception {
+    public SqlInsert generateInsert(MetaEntity entity, List<String> columns,
+	    boolean hasIdentityColumn, boolean identityColumnNull, Optional<MetaEntity> metaEntity) throws Exception {
 	List<Column> cs = columns.stream().map(c -> {
 	    return new Column(c);
 	}).collect(Collectors.toList());
 
-	return new SqlInsert(FromTable.of(entity), cs);
+	return new SqlInsert(FromTable.of(entity), cs, hasIdentityColumn, identityColumnNull, metaEntity);
     }
 
     public SqlSelect generateSelectById(MetaEntity entity, LockType lockType) throws Exception {
@@ -184,7 +185,8 @@ public class SqlStatementFactory {
     }
 
     public SqlSelect generateSelectByJoinTable(MetaEntity entity,
-	    RelationshipJoinTable relationshipJoinTable, List<AbstractAttribute> attributes) throws Exception {
+	    RelationshipJoinTable relationshipJoinTable,
+	    List<AbstractAttribute> attributes) throws Exception {
 	// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
 	// where j.t2=fk
 	List<MetaAttribute> idAttributes = entity.getId().getAttributes();
@@ -192,9 +194,6 @@ public class SqlStatementFactory {
 	    return new Column(a.getColumnName());
 	}).collect(Collectors.toList());
 
-//	List<Column> idTargetColumns = relationshipJoinTable.getJoinColumnTargetAttributes().stream().map(a -> {
-//	    return new Column(a.getColumnName());
-//	}).collect(Collectors.toList());
 	List<Column> idTargetColumns = relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes().stream().map(a -> {
 	    return new Column(a.getColumnName());
 	}).collect(Collectors.toList());
@@ -270,7 +269,8 @@ public class SqlStatementFactory {
     public SqlInsert generateJoinTableInsert(RelationshipJoinTable relationshipJoinTable,
 	    List<String> columnNames) throws Exception {
 	List<Column> columns = columnNames.stream().map(c -> new Column(c)).collect(Collectors.toList());
-	return new SqlInsert(new FromTableImpl(relationshipJoinTable.getTableName()), columns);
+	return new SqlInsert(new FromTableImpl(relationshipJoinTable.getTableName()),
+		columns, false, false, Optional.empty());
     }
 
     public SqlUpdate generateUpdate(MetaEntity entity, List<String> columns,
@@ -280,27 +280,32 @@ public class SqlStatementFactory {
 	    return new TableColumn(fromTable, new Column(c));
 	}).collect(Collectors.toList());
 
-	Condition condition = createAttributeEqualCondition(entity, idColumnNames);
+	Condition condition = createAttributeEqualCondition(fromTable, idColumnNames);
 	return new SqlUpdate(fromTable, cs, Optional.of(condition));
     }
 
     public SqlDelete generateDeleteById(MetaEntity entity, List<String> idColumnNames) throws Exception {
 	FromTable fromTable = FromTable.of(entity);
-	Condition condition = createAttributeEqualCondition(entity, idColumnNames);
+	Condition condition = createAttributeEqualCondition(fromTable, idColumnNames);
 	return new SqlDelete(fromTable, Optional.of(condition));
     }
 
-    private Condition createAttributeEqualCondition(MetaEntity entity, List<String> columns) throws Exception {
+    public SqlDelete generateDeleteById(FromTable fromTable, List<String> idColumnNames) throws Exception {
+	Condition condition = createAttributeEqualCondition(fromTable, idColumnNames);
+	return new SqlDelete(fromTable, Optional.of(condition));
+    }
+
+    private Condition createAttributeEqualCondition(FromTable fromTable, List<String> columns) throws Exception {
 	if (columns.size() == 1)
 	    return new BinaryCondition.Builder(ConditionType.EQUAL)
 		    .withLeftColumn(
-			    new TableColumn(FromTable.of(entity), new Column(columns.get(0))))
+			    new TableColumn(fromTable, new Column(columns.get(0))))
 		    .withRightExpression(QM).build();
 
 	List<Condition> conditions = new ArrayList<>();
 	for (String columnName : columns) {
 	    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-		    .withLeftColumn(new TableColumn(FromTable.of(entity), new Column(columnName)))
+		    .withLeftColumn(new TableColumn(fromTable, new Column(columnName)))
 		    .withRightExpression(QM).build();
 	    conditions.add(binaryCondition);
 	}
@@ -920,11 +925,14 @@ public class SqlStatementFactory {
 	LockType lockType = LockTypeUtils.toLockType(query.getLockMode());
 	Selection<?> selection = criteriaQuery.getSelection();
 	if (selection instanceof MiniRoot<?>) {
-	    List<FetchParameter> fetchColumnNameValues = metaEntityHelper.convertAllAttributes(entity);
+	    List<FetchParameter> fetchParameters = metaEntityHelper.convertAllAttributes(entity);
+	    LOG.debug("select: entity=" + entity);
+	    entity.getBasicAttributes().forEach(b -> LOG.debug("select: b=" + b));
+	    fetchParameters.forEach(f -> LOG.debug("select: f.getAttribute()=" + f.getAttribute()));
 
 	    FromTable fromTable = FromTable.of(entity);
 	    SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(metaEntityHelper.toValues(entity, fromTable))
-		    .withFetchParameters(fetchColumnNameValues).withConditions(conditions)
+		    .withFetchParameters(fetchParameters).withConditions(conditions)
 		    .withResult(entity).withLockType(lockType).build();
 	    return new StatementParameters(sqlSelect, parameters);
 	}

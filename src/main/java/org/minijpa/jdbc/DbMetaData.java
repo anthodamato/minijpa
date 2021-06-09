@@ -126,6 +126,8 @@ public class DbMetaData {
 	    return Database.MARIADB;
 	} else if (databaseProductName.equalsIgnoreCase("PostgreSQL")) {
 	    return Database.POSTGRES;
+	} else if (databaseProductName.equalsIgnoreCase("Oracle")) {
+	    return Database.ORACLE;
 	}
 
 	return Database.UNKNOWN;

@@ -17,8 +17,8 @@ import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.relationship.Relationship;
 
 /**
@@ -28,18 +28,16 @@ import org.minijpa.jdbc.relationship.Relationship;
 public class JoinTableCollectionQueryLevel implements QueryLevel {
 
     private final SqlStatementFactory sqlStatementFactory;
-    private final SqlStatementGenerator sqlStatementGenerator;
-    private final JpaJdbcRunner jdbcRunner;
+    private final DbConfiguration dbConfiguration;
     private final ConnectionHolder connectionHolder;
     private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
     public JoinTableCollectionQueryLevel(
 	    SqlStatementFactory sqlStatementFactory,
-	    SqlStatementGenerator sqlStatementGenerator,
-	    JpaJdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
+	    DbConfiguration dbConfiguration,
+	    ConnectionHolder connectionHolder) {
 	this.sqlStatementFactory = sqlStatementFactory;
-	this.sqlStatementGenerator = sqlStatementGenerator;
-	this.jdbcRunner = jdbcRunner;
+	this.dbConfiguration = dbConfiguration;
 	this.connectionHolder = connectionHolder;
     }
 
@@ -65,10 +63,10 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 	}
 
 	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(modelValueArray);
-	String sql = sqlStatementGenerator.export(sqlSelect);
+	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 		metaAttribute.getCollectionImplementationClass());
-	jdbcRunner.findCollection(connectionHolder.getConnection(), sql,
+	dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
 		sqlSelect, collectionResult, entityLoader, parameters);
 	return collectionResult;
     }

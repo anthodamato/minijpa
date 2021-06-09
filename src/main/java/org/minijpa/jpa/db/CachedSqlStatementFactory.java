@@ -21,6 +21,7 @@ package org.minijpa.jpa.db;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
@@ -42,7 +43,8 @@ public class CachedSqlStatementFactory extends SqlStatementFactory {
     private final Map<MetaEntity, Map<RelationshipJoinTable, Map<List<AbstractAttribute>, SqlSelect>>> selectByJoinTableFromTarget = new HashMap<>();
 
     @Override
-    public SqlInsert generateInsert(MetaEntity entity, List<String> columns) throws Exception {
+    public SqlInsert generateInsert(MetaEntity entity, List<String> columns,
+	    boolean hasIdentityColumn, boolean identityColumnNull, Optional<MetaEntity> metaEntity) throws Exception {
 	Map<List<String>, SqlInsert> map = insertMap.get(entity);
 	if (map != null) {
 	    SqlInsert sqlInsert = map.get(columns);
@@ -50,7 +52,7 @@ public class CachedSqlStatementFactory extends SqlStatementFactory {
 		return sqlInsert;
 	}
 
-	SqlInsert insert = super.generateInsert(entity, columns);
+	SqlInsert insert = super.generateInsert(entity, columns, hasIdentityColumn, identityColumnNull, metaEntity);
 
 	if (map == null) {
 	    map = new HashMap<>();

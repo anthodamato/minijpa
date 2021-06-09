@@ -39,11 +39,12 @@ public final class EntityDelegate implements EntityListener {
 	if (entity == null)
 	    return value;
 	try {
+	    LOG.debug("get: entity=" + entity);
 	    if (MetaEntityHelper.getEntityStatus(entity, entityInstance) != EntityStatus.FLUSHED_LOADED_FROM_DB)
 		return value;
 
 	    MetaAttribute a = entity.getAttribute(attributeName);
-//	LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
+//	    LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
 	    if (a.isLazy() && !lazyAttributeLoaded(entity, a, entityInstance)) {
 		EntityLoader entityLoader = entityContainerContextManager
 			.findByEntityContainer(entityInstance);

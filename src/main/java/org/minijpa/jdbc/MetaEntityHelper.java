@@ -290,9 +290,6 @@ public class MetaEntityHelper {
 
     public static void setForeignKeyValue(MetaAttribute attribute, Object entityInstance, Object value)
 	    throws IllegalAccessException, InvocationTargetException {
-	LOG.debug("setForeignKeyValue: attribute=" + attribute);
-	LOG.debug("setForeignKeyValue: value=" + value);
-	LOG.debug("setForeignKeyValue: attribute.getJoinColumnWriteMethod().get()=" + attribute.getJoinColumnWriteMethod().get());
 	attribute.getJoinColumnWriteMethod().get().invoke(entityInstance, value);
     }
 

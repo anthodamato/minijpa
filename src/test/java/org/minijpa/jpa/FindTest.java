@@ -503,11 +503,13 @@ public class FindTest {
 	    tx.begin();
 	    Address address = createRegentStAddress();
 	    em.persist(address);
+	    Assertions.assertNotNull(address.getId());
 	    Address a_RegentSt = em.find(Address.class, address.getId());
 	    Assertions.assertTrue(address == a_RegentSt);
 
 	    address = createRomfordRdAddress();
 	    em.persist(address);
+	    Assertions.assertNotNull(address.getId());
 	    Address a_RomfordRd = em.find(Address.class, address.getId());
 	    Assertions.assertTrue(address == a_RomfordRd);
 

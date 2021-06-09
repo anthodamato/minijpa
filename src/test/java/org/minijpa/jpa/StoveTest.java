@@ -143,27 +143,27 @@ public class StoveTest {
 	    Assertions.assertTrue(stove == s_induction);
 
 	    // 'induction' is true
-	    Query query = em.createNativeQuery("select * from stove where induction=true");
+	    Query query = em.createNativeQuery("select * from stove where induction" + PersistenceUnitProperties.getTrueCondition());
 	    List<Stove> stoves = query.getResultList();
 	    Assertions.assertEquals(1, stoves.size());
 	    CollectionUtils.containsAll(stoves, Arrays.asList(s_induction));
 
 	    // 'induction' is false
-	    query = em.createNativeQuery("select * from stove where induction=false");
+	    query = em.createNativeQuery("select * from stove where induction" + PersistenceUnitProperties.getFalseCondition());
 	    stoves = query.getResultList();
 
 	    Assertions.assertEquals(2, stoves.size());
 	    CollectionUtils.containsAll(stoves, Arrays.asList(s_4, s_8));
 
-	    query = em.createNativeQuery("update stove set model='New Model' where induction=true");
+	    query = em.createNativeQuery("update stove set model='New Model' where induction" + PersistenceUnitProperties.getTrueCondition());
 	    int count = query.executeUpdate();
 	    Assertions.assertEquals(1, count);
 
-	    query = em.createNativeQuery("delete from stove where induction=true");
+	    query = em.createNativeQuery("delete from stove where induction" + PersistenceUnitProperties.getTrueCondition());
 	    count = query.executeUpdate();
 	    Assertions.assertEquals(1, count);
 
-	    query = em.createNativeQuery("select * from stove where induction=true");
+	    query = em.createNativeQuery("select * from stove where induction" + PersistenceUnitProperties.getTrueCondition());
 	    stoves = query.getResultList();
 	    Assertions.assertEquals(0, stoves.size());
 

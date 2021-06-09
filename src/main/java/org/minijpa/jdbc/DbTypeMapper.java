@@ -40,6 +40,16 @@ public interface DbTypeMapper {
     public Object convert(Object value, Class<?> readWriteDbType, Class<?> attributeType);
 
     /**
+     * Converts the 'value' read from a resultSet with type 'readWriteDbType' to an object with class 'attributeType'.
+     * This method is called only to convert the generated key of an identity column.
+     *
+     * @param value
+     * @param attributeType
+     * @return
+     */
+    public Object convertGeneratedKey(Object value, Class<?> attributeType);
+
+    /**
      * Returns the attribute converter.
      *
      * @param attributeType

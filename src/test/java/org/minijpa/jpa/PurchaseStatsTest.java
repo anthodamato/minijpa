@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -68,13 +70,35 @@ public class PurchaseStatsTest {
 	Query query = em.createQuery(criteriaQuery);
 	List result = query.getResultList();
 	Assertions.assertNotNull(result);
-	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList(60d, 50d), result));
+	Assertions.assertEquals(2, result.size());
+	Assertions.assertTrue(result.get(0) instanceof Number);
+	if (result.get(0) instanceof Double)
+	    Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList(60d, 50d), result));
+	else if (result.get(0) instanceof Integer)
+	    Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList(60, 50), result));
 
 	criteriaQuery.select(root.get("cash"));
 	query = em.createQuery(criteriaQuery);
 	result = query.getResultList();
 	Assertions.assertNotNull(result);
-	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList(40d, null), result));
+	Assertions.assertEquals(2, result.size());
+	List<? extends Number> r = new ArrayList<>(result);
+	Comparator<Number> comparator = new Comparator<Number>() {
+	    @Override
+	    public int compare(Number o1, Number o2) {
+		if (o1 == null)
+		    return -1;
+
+		if (o2 == null)
+		    return 1;
+
+		return ((Double) o1.doubleValue()).compareTo((Double) o2.doubleValue());
+	    }
+	};
+
+	r.sort(comparator);
+	Assertions.assertNull(r.get(0));
+	Assertions.assertEquals(40d, ((Number) r.get(1)).doubleValue());
 
 	// sum of column and double value
 	sumExpr = cb.sum(root.get("debitCard"), 10.456d);
@@ -85,7 +109,11 @@ public class PurchaseStatsTest {
 	query = em.createQuery(criteriaQuery);
 	result = query.getResultList();
 	Assertions.assertNotNull(result);
-	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList(30.456d, 40.456d), result));
+	r = new ArrayList<>(result);
+	r.sort(comparator);
+	Assertions.assertEquals(30.456d, ((Number) r.get(0)).doubleValue());
+	Assertions.assertEquals(40.456d, ((Number) r.get(1)).doubleValue());
+//	Assertions.assertTrue(CollectionUtils.containsAll(Arrays.asList(30.456d, 40.456d), result));
 
 	em.remove(ps1);
 	em.remove(ps2);

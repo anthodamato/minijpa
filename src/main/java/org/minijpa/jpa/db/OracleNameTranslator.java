@@ -13,8 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc.mapper;
+package org.minijpa.jpa.db;
 
-public class MySQLDbTypeMapper extends AbstractDbTypeMapper {
+import java.util.Optional;
+import org.minijpa.jdbc.DefaultNameTranslator;
+
+/**
+ *
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
+public class OracleNameTranslator extends DefaultNameTranslator {
+
+    @Override
+    public String toTableName(Optional<String> tableAlias, String tableName) {
+	if (tableAlias.isPresent())
+	    return tableName + " " + tableAlias.get();
+
+	return tableName;
+    }
 
 }

@@ -15,36 +15,6 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.Calendar;
-import java.util.Date;
-
 public class PostgresDbTypeMapper extends AbstractDbTypeMapper {
-
-    @Override
-    public Object convert(Object value, Class<?> readWriteDbType, Class<?> attributeType) {
-	if (attributeType == LocalDate.class) {
-	    if (readWriteDbType == Date.class && value != null) {
-		Date date = (Date) value;
-		return new java.sql.Date(date.getTime()).toLocalDate();
-	    }
-
-	    if (readWriteDbType == java.sql.Date.class && value != null) {
-		java.sql.Date date = (java.sql.Date) value;
-		return date.toLocalDate();
-	    }
-	}
-
-	if (attributeType == OffsetDateTime.class && readWriteDbType == Timestamp.class && value != null) {
-	    Timestamp date = (Timestamp) value;
-	    Calendar calendar = Calendar.getInstance();
-	    calendar.setTime(date);
-	    return OffsetDateTime.ofInstant(date.toInstant(), calendar.getTimeZone().toZoneId());
-	}
-
-	return super.convert(value, readWriteDbType, attributeType);
-    }
 
 }

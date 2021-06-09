@@ -15,6 +15,20 @@
  */
 package org.minijpa.jdbc.mapper;
 
-public class MySQLDbTypeMapper extends AbstractDbTypeMapper {
+public class OracleDbTypeMapper extends AbstractDbTypeMapper {
 
+    @Override
+    public Object convert(Object value, Class<?> readWriteDbType, Class<?> attributeType) {
+	if (value == null)
+	    return null;
+
+	if (value instanceof Number) {
+	    if (attributeType == Boolean.class || (attributeType.isPrimitive() && attributeType.getName().equals("boolean"))) {
+		int v = ((Number) value).intValue();
+		return v == 0 ? Boolean.FALSE : Boolean.TRUE;
+	    }
+	}
+
+	return super.convert(value, readWriteDbType, attributeType);
+    }
 }

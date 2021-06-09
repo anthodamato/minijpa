@@ -18,12 +18,6 @@ public interface EntityContainer {
 
     public void removeManaged(Object entityInstance) throws Exception;
 
-    public void addNotManaged(Object entityInstance);
-
-    public void removeNotManaged(Object entityInstance);
-
-    public void clearNotManaged();
-
     public void markForRemoval(Object entityInstance) throws Exception;
 
     public List<Object> getManagedEntityList();

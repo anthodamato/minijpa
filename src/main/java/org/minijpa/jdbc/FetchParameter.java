@@ -29,7 +29,7 @@ public class FetchParameter {
 	    MetaAttribute attribute, MetaEntity metaEntity, boolean joinColumn) {
 	super();
 	this.columnName = columnName;
-	this.type = type;
+	this.type = JdbcTypes.getWrapperClass(type);
 	this.readWriteDbType = readWriteDbType;
 	this.sqlType = sqlType;
 	this.attribute = attribute;

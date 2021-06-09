@@ -20,6 +20,7 @@ public enum Database {
     APACHE_DERBY, // Apache Derby
     MYSQL, // MySQL
     MARIADB, // MariaDB
-    POSTGRES // PostgresSQL
+    POSTGRES, // PostgresSQL
+    ORACLE // Oracle
     ;
 }

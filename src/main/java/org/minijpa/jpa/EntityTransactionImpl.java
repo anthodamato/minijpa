@@ -3,6 +3,7 @@ package org.minijpa.jpa;
 import java.sql.SQLException;
 
 import javax.persistence.EntityTransaction;
+import javax.persistence.RollbackException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,19 +51,19 @@ public class EntityTransactionImpl implements EntityTransaction {
 	    }
 	}
 
-	abstractEntityManager.flush();
+	try {
+	    abstractEntityManager.flush();
+	} catch (Exception e) {
+	    LOG.error(e.getMessage());
+	    throw new RollbackException(e.getMessage());
+	}
+
 	try {
 	    abstractEntityManager.connectionHolder.commit();
 	    LOG.info("Commit");
 	} catch (SQLException e) {
 	    LOG.error(e.getMessage());
-	    try {
-		abstractEntityManager.connectionHolder.rollback();
-	    } catch (SQLException e1) {
-		LOG.error(e1.getMessage());
-	    }
-
-	    return;
+	    throw new RollbackException(e.getMessage());
 	}
 
 	try {

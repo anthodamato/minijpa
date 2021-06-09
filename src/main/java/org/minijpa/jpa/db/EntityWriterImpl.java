@@ -19,26 +19,28 @@
 package org.minijpa.jpa.db;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.persistence.OptimisticLockException;
+import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
-import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.EntityInstanceBuilder;
+import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlInsert;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -55,30 +57,27 @@ public class EntityWriterImpl implements EntityWriter {
     private final PersistenceUnitContext persistenceUnitContext;
     private final EntityContainer entityContainer;
     private final SqlStatementFactory sqlStatementFactory;
-    private final SqlStatementGenerator sqlStatementGenerator;
+    private final DbConfiguration dbConfiguration;
     private final EntityLoader entityLoader;
     private final EntityInstanceBuilder entityInstanceBuilder;
     private final ConnectionHolder connectionHolder;
-    private final JpaJdbcRunner jdbcRunner;
 
     private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
     public EntityWriterImpl(PersistenceUnitContext persistenceUnitContext,
 	    EntityContainer entityContainer,
 	    SqlStatementFactory sqlStatementFactory,
-	    SqlStatementGenerator sqlStatementGenerator,
+	    DbConfiguration dbConfiguration,
 	    EntityLoader entityLoader,
 	    EntityInstanceBuilder entityInstanceBuilder,
-	    ConnectionHolder connectionHolder,
-	    JpaJdbcRunner jdbcRunner) {
+	    ConnectionHolder connectionHolder) {
 	this.persistenceUnitContext = persistenceUnitContext;
 	this.entityContainer = entityContainer;
 	this.sqlStatementFactory = sqlStatementFactory;
-	this.sqlStatementGenerator = sqlStatementGenerator;
+	this.dbConfiguration = dbConfiguration;
 	this.entityLoader = entityLoader;
 	this.entityInstanceBuilder = entityInstanceBuilder;
 	this.connectionHolder = connectionHolder;
-	this.jdbcRunner = jdbcRunner;
     }
 
     @Override
@@ -93,22 +92,21 @@ public class EntityWriterImpl implements EntityWriter {
 	}
     }
 
-    private void checkOptimisticLock(MetaEntity entity, Object entityInstance, Object idValue)
-	    throws Exception {
-	if (!metaEntityHelper.hasOptimisticLock(entity, entityInstance))
-	    return;
-
-	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
-	Object dbVersionValue = entityLoader.queryVersionValue(entity, idValue, LockType.NONE);
-
-	Object instance = entityLoader.findById(entity, idValue, LockType.NONE);
-	Object currentVersionValue2 = entity.getVersionAttribute().get().getReadMethod().invoke(instance);
-
-	LOG.debug("checkOptimisticLock: dbVersionValue=" + dbVersionValue + "; currentVersionValue=" + currentVersionValue);
-	if (dbVersionValue == null || !dbVersionValue.equals(currentVersionValue))
-	    throw new OptimisticLockException("Entity was written by another transaction, version" + dbVersionValue);
-    }
-
+//    private void checkOptimisticLock(MetaEntity entity, Object entityInstance, Object idValue)
+//	    throws Exception {
+//	if (!metaEntityHelper.hasOptimisticLock(entity, entityInstance))
+//	    return;
+//
+//	Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
+//	Object dbVersionValue = entityLoader.queryVersionValue(entity, idValue, LockType.NONE);
+//
+//	Object instance = entityLoader.findById(entity, idValue, LockType.NONE);
+//	Object currentVersionValue2 = entity.getVersionAttribute().get().getReadMethod().invoke(instance);
+//
+//	LOG.debug("checkOptimisticLock: dbVersionValue=" + dbVersionValue + "; currentVersionValue=" + currentVersionValue);
+//	if (dbVersionValue == null || !dbVersionValue.equals(currentVersionValue))
+//	    throw new OptimisticLockException("Entity was written by another transaction, version" + dbVersionValue);
+//    }
     protected void update(MetaEntity entity, Object entityInstance,
 	    ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
 	// It's an update.
@@ -141,8 +139,8 @@ public class EntityWriterImpl implements EntityWriter {
 
 	parameters = metaEntityHelper.convertAVToQP(modelValueArray);
 
-	String sql = sqlStatementGenerator.export(sqlUpdate);
-	int updateCount = jdbcRunner.update(connectionHolder.getConnection(), sql, parameters);
+	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlUpdate);
+	int updateCount = dbConfiguration.getJdbcRunner().update(connectionHolder.getConnection(), sql, parameters);
 	if (updateCount == 0) {
 	    if (entity.getVersionAttribute().isPresent()) {
 		Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
@@ -156,9 +154,9 @@ public class EntityWriterImpl implements EntityWriter {
 
     protected void insert(MetaEntity entity, Object entityInstance,
 	    ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
-	Pk id = entity.getId();
+	Pk pk = entity.getId();
 //	LOG.info("persist: id.getPkGeneration()=" + id.getPkGeneration());
-	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
+	PkStrategy pkStrategy = pk.getPkGeneration().getPkStrategy();
 //	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
 	if (pkStrategy == PkStrategy.IDENTITY) {
 	    List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
@@ -171,27 +169,32 @@ public class EntityWriterImpl implements EntityWriter {
 		return p.getColumnName();
 	    }).collect(Collectors.toList());
 
-	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
-	    String sql = sqlStatementGenerator.export(sqlInsert);
-	    Object pk = jdbcRunner.insertReturnGeneratedKeys(connectionHolder.getConnection(), sql, parameters);
-//	    LOG.info("persist: pk=" + pk);
-	    Long idValue = null;
-	    if (pk != null) {
-		if (pk instanceof Long)
-		    idValue = (Long) pk;
-		else if (pk instanceof Number)
-		    idValue = ((Number) pk).longValue();
-	    }
+	    int pkIndex = modelValueArray.indexOfModel(pk.getAttribute());
+	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(
+		    entity, columns, true, pkIndex == -1, Optional.of(entity));
+	    String sql = dbConfiguration.getSqlStatementGenerator().export(sqlInsert);
+	    String[] ids = {pk.getAttribute().getColumnName()};
+	    Object pkId = null;
+//	    try {
+	    pkId = dbConfiguration.getJdbcRunner().insertReturnGeneratedKeys(connectionHolder.getConnection(), sql, parameters, pk);
+//	    } catch (Exception e) {
+//		LOG.debug(e.getMessage());
+//	    }
 
-	    entity.getId().getWriteMethod().invoke(entityInstance, idValue);
+	    Object idv = entity.getId().getAttribute().getDbTypeMapper().convertGeneratedKey(pkId, entity.getId().getType());
+	    LOG.info("persist: pk=" + pkId);
+	    if (pkId != null)
+		LOG.info("persist: pk.getClass()=" + pkId.getClass());
+
+	    entity.getId().getWriteMethod().invoke(entityInstance, idv);
 
 	    updatePostponedJoinColumnUpdate(entity, entityInstance);
 	    if (optVersion.isPresent()) {
 		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
 	    }
 	} else {
-	    Object idValue = id.getReadMethod().invoke(entityInstance);
-	    List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(id, idValue);
+	    Object idValue = pk.getReadMethod().invoke(entityInstance);
+	    List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(pk, idValue);
 	    List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
 	    parameters.addAll(0, idParameters);
 	    // version attribute
@@ -203,9 +206,9 @@ public class EntityWriterImpl implements EntityWriter {
 		return p.getColumnName();
 	    }).collect(Collectors.toList());
 
-	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(entity, columns);
-	    String sql = sqlStatementGenerator.export(sqlInsert);
-	    jdbcRunner.insert(connectionHolder.getConnection(), sql, parameters);
+	    SqlInsert sqlInsert = sqlStatementFactory.generateInsert(entity, columns, false, false, Optional.empty());
+	    String sql = dbConfiguration.getSqlStatementGenerator().export(sqlInsert);
+	    dbConfiguration.getJdbcRunner().insert(connectionHolder.getConnection(), sql, parameters);
 	    if (optVersion.isPresent()) {
 		entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, optVersion.get().getValue());
 	    }
@@ -248,8 +251,7 @@ public class EntityWriterImpl implements EntityWriter {
     @Override
     public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception {
 	for (MetaAttribute a : entity.getRelationshipAttributes()) {
-	    if (a.getRelationship().getJoinTable() != null
-		    && a.getRelationship().isOwner()) {
+	    if (a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner()) {
 		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
 //		LOG.info("persist: attributeInstance=" + attributeInstance);
 //		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
@@ -261,7 +263,6 @@ public class EntityWriterImpl implements EntityWriter {
 		}
 	    }
 	}
-
     }
 
     private void persistJoinTableAttributes(List<Object> ees, MetaAttribute a, Object entityInstance) throws Exception {
@@ -272,8 +273,58 @@ public class EntityWriterImpl implements EntityWriter {
 		    relationshipJoinTable, entityInstance, instance);
 	    List<String> columnNames = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 	    SqlInsert sqlInsert = sqlStatementFactory.generateJoinTableInsert(relationshipJoinTable, columnNames);
-	    String sql = sqlStatementGenerator.export(sqlInsert);
-	    jdbcRunner.insert(connectionHolder.getConnection(), sql, parameters);
+	    String sql = dbConfiguration.getSqlStatementGenerator().export(sqlInsert);
+	    dbConfiguration.getJdbcRunner().insert(connectionHolder.getConnection(), sql, parameters);
+	}
+    }
+
+    private List<RelationshipJoinTable> findRelationshipJoinTable(MetaEntity entity) {
+	List<RelationshipJoinTable> joinTables = new ArrayList<>();
+	persistenceUnitContext.getEntities().values().forEach(e -> {
+	    List<MetaAttribute> attributes = e.getRelationshipAttributes();
+	    List<RelationshipJoinTable> relationshipJoinTables = attributes.stream().
+		    filter(a -> a.getRelationship().getJoinTable() != null).
+		    map(a -> a.getRelationship().getJoinTable()).collect(Collectors.toList());
+	    for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
+		if (relationshipJoinTable.getOwningEntity() == entity || relationshipJoinTable.getTargetEntity() == entity) {
+		    Optional<RelationshipJoinTable> optional = joinTables.stream().filter(j -> j.getTableName().equals(relationshipJoinTable.getTableName())).findFirst();
+		    if (optional.isEmpty())
+			joinTables.add(relationshipJoinTable);
+		}
+	    }
+	});
+
+	return joinTables;
+    }
+
+    private void removeJoinTableRecords(
+	    MetaEntity entity,
+	    Object primaryKey,
+	    List<QueryParameter> idParameters) throws Exception {
+	List<RelationshipJoinTable> relationshipJoinTables = findRelationshipJoinTable(entity);
+	LOG.debug("removeJoinTableRecords: relationshipJoinTables.size()=" + relationshipJoinTables.size());
+	for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
+	    if (relationshipJoinTable.getOwningEntity() == entity) {
+		ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(entity.getId(), primaryKey,
+			relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
+		List<AbstractAttribute> attributes = modelValueArray.getModels();
+
+		List<String> idColumns = attributes.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+		FromTable fromTable = FromTable.of(relationshipJoinTable.getTableName());
+		SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(fromTable, idColumns);
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
+		dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), idParameters);
+	    } else {
+		ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(entity.getId(), primaryKey,
+			relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes());
+		List<AbstractAttribute> attributes = modelValueArray.getModels();
+
+		List<String> idColumns = attributes.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+		FromTable fromTable = FromTable.of(relationshipJoinTable.getTableName());
+		SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(fromTable, idColumns);
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
+		dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), idParameters);
+	    }
 	}
     }
 
@@ -283,6 +334,7 @@ public class EntityWriterImpl implements EntityWriter {
 	LOG.debug("delete: idValue=" + idValue);
 
 	List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(e.getId(), idValue);
+	removeJoinTableRecords(e, idValue, idParameters);
 	if (metaEntityHelper.hasOptimisticLock(e, entityInstance)) {
 	    Object currentVersionValue = e.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
 	    idParameters.addAll(metaEntityHelper.convertAVToQP(e.getVersionAttribute().get(), currentVersionValue));
@@ -291,8 +343,8 @@ public class EntityWriterImpl implements EntityWriter {
 	List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 
 	SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(e, idColumns);
-	String sql = sqlStatementGenerator.export(sqlDelete);
-	jdbcRunner.delete(sql, connectionHolder.getConnection(), idParameters);
+	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
+	dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), idParameters);
     }
 
 }

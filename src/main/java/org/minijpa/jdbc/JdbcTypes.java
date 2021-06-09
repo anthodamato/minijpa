@@ -96,7 +96,7 @@ public class JdbcTypes {
 	return Types.NULL;
     }
 
-    public static Class classFromSqlType(int type) {
+    public static Class classFromSqlType(int type, int precision, int scale) {
 	switch (type) {
 	    case Types.BIGINT:
 		return Long.class;
@@ -106,7 +106,19 @@ public class JdbcTypes {
 	    case Types.CHAR:
 		return Character.class;
 	    case Types.DATE:
+	    case Types.TIMESTAMP:
 		return java.sql.Date.class;
+	    case Types.NUMERIC:
+		if (precision == 10 && scale == 0)
+		    return Integer.class;
+
+		if (precision == 19 && scale == 0)
+		    return Long.class;
+
+		if (precision == 19 && scale == 4)
+		    return Float.class;
+
+		return BigDecimal.class;
 	    case Types.DECIMAL:
 		return BigDecimal.class;
 	    case Types.DOUBLE:
@@ -120,10 +132,39 @@ public class JdbcTypes {
 		return String.class;
 	    case Types.TIMESTAMP_WITH_TIMEZONE:
 		return OffsetDateTime.class;
-	    case Types.NUMERIC:
-		return BigDecimal.class;
 	    default:
 		return null;
 	}
+    }
+
+    public static Class<?> getWrapperClass(Class<?> c) {
+	if (!c.isPrimitive())
+	    return c;
+
+	if (c.getName().equals("byte"))
+	    return Byte.class;
+
+	if (c.getName().equals("short"))
+	    return Short.class;
+
+	if (c.getName().equals("int"))
+	    return Integer.class;
+
+	if (c.getName().equals("long"))
+	    return Long.class;
+
+	if (c.getName().equals("float"))
+	    return Float.class;
+
+	if (c.getName().equals("double"))
+	    return Double.class;
+
+	if (c.getName().equals("boolean"))
+	    return Boolean.class;
+
+	if (c.getName().equals("char"))
+	    return Character.class;
+
+	return c;
     }
 }

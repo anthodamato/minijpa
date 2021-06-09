@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
 import javax.persistence.Parameter;
 import javax.persistence.Query;
-
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 

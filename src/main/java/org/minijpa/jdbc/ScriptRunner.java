@@ -33,28 +33,28 @@ public class ScriptRunner {
 
     private Logger LOG = LoggerFactory.getLogger(ScriptRunner.class);
 
-    public void run(List<String> statements, Connection connection) {
+    public void runDDLStatements(List<String> statements, Connection connection) {
 	for (String s : statements) {
-	    LOG.info("run: s=" + s);
+	    runDDLStatement(s, connection);
 	}
+    }
 
+    private void runDDLStatement(String stmt, Connection connection) {
 	Statement statement = null;
+	LOG.info("Running `" + stmt + "`");
 	try {
 	    statement = connection.createStatement();
-	    for (String st : statements) {
-		statement.addBatch(st);
-	    }
-
-	    statement.executeBatch();
-	    connection.commit();
+	    statement.execute(stmt);
 	    statement.close();
+	    connection.commit();
 	} catch (SQLException e) {
 	    LOG.error(e.getMessage());
-	    LOG.error(e.getClass().getName());
+	} finally {
 	    try {
-		connection.rollback();
 		if (statement != null)
 		    statement.close();
+
+		connection.rollback();
 	    } catch (SQLException e1) {
 		LOG.error(e1.getMessage());
 	    }

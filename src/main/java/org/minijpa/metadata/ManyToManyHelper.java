@@ -108,7 +108,14 @@ public class ManyToManyHelper extends RelationshipHelper {
 	return relationshipJoinTable;
     }
 
-    public ManyToManyRelationship finalizeRelationship(ManyToManyRelationship manyToManyRelationship, MetaAttribute a, MetaEntity entity, MetaEntity toEntity, DbConfiguration dbConfiguration, AliasGenerator aliasGenerator, Map<String, MetaEntity> entities) {
+    public ManyToManyRelationship finalizeRelationship(
+	    ManyToManyRelationship manyToManyRelationship,
+	    MetaAttribute a,
+	    MetaEntity entity,
+	    MetaEntity toEntity,
+	    DbConfiguration dbConfiguration,
+	    AliasGenerator aliasGenerator,
+	    Map<String, MetaEntity> entities) {
 	ManyToManyRelationship.Builder builder = new ManyToManyRelationship.Builder().with(manyToManyRelationship);
 	builder = builder.withAttributeType(toEntity);
 	if (manyToManyRelationship.isOwner()) {

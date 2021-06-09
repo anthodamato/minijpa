@@ -21,6 +21,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Calendar;
 import org.minijpa.jdbc.DbTypeMapper;
 
 public abstract class AbstractDbTypeMapper implements DbTypeMapper {
@@ -77,10 +78,32 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 
     @Override
     public Object convert(Object value, Class<?> readWriteDbType, Class<?> attributeType) {
-	if (readWriteDbType == String.class && attributeType.isEnum())
+	if (value == null)
+	    return null;
+
+	Class<?> type = value.getClass();
+	if (value instanceof Number) {
+	    if (attributeType == Long.class || (attributeType.isPrimitive() && attributeType.getName().equals("long")))
+		return ((Number) value).longValue();
+
+	    if (attributeType == Integer.class || (attributeType.isPrimitive() && attributeType.getName().equals("int")))
+		return ((Number) value).intValue();
+
+	    if (attributeType == Float.class || (attributeType.isPrimitive() && attributeType.getName().equals("float")))
+		return ((Number) value).floatValue();
+
+	    if (attributeType == Double.class || (attributeType.isPrimitive() && attributeType.getName().equals("double")))
+		return ((Number) value).doubleValue();
+	}
+
+//	if ((attributeType == Long.class || (attributeType.isPrimitive() && attributeType.getName().equals("long")))
+//		&& readWriteDbType == BigDecimal.class) {
+//	    return ((BigDecimal) value).longValue();
+//	}
+	if (type == String.class && attributeType.isEnum())
 	    return Enum.valueOf((Class<Enum>) attributeType, (String) value);
 
-	if (readWriteDbType == Integer.class && attributeType.isEnum()) {
+	if (type == Integer.class && attributeType.isEnum()) {
 	    Object[] enums = attributeType.getEnumConstants();
 	    for (Object o : enums) {
 		if (((Enum) o).ordinal() == (Integer) value)
@@ -90,7 +113,50 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 	    return null;
 	}
 
+	if (attributeType == LocalDate.class) {
+	    if (type == java.util.Date.class) {
+		java.util.Date date = (java.util.Date) value;
+		return new java.sql.Date(date.getTime()).toLocalDate();
+	    }
+
+	    if (type == java.sql.Date.class) {
+		java.sql.Date date = (java.sql.Date) value;
+		return date.toLocalDate();
+	    }
+	}
+
+	if (type == Timestamp.class) {
+	    if (attributeType == OffsetDateTime.class) {
+		Timestamp date = (Timestamp) value;
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		return OffsetDateTime.ofInstant(date.toInstant(), calendar.getTimeZone().toZoneId());
+	    }
+
+	    if (attributeType == java.sql.Date.class) {
+		Timestamp timestamp = (Timestamp) value;
+		return new java.sql.Date(timestamp.getTime());
+	    }
+
+	    if (attributeType == java.util.Date.class) {
+		Timestamp timestamp = (Timestamp) value;
+		return new java.util.Date(timestamp.getTime());
+	    }
+	}
+
+	if (attributeType == OffsetDateTime.class && type == Timestamp.class) {
+	    Timestamp date = (Timestamp) value;
+	    Calendar calendar = Calendar.getInstance();
+	    calendar.setTime(date);
+	    return OffsetDateTime.ofInstant(date.toInstant(), calendar.getTimeZone().toZoneId());
+	}
+
 	return value;
+    }
+
+    @Override
+    public Object convertGeneratedKey(Object value, Class<?> attributeType) {
+	return ((Number) value).longValue();
     }
 
     @Override

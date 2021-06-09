@@ -18,6 +18,8 @@ package org.minijpa.jdbc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -26,7 +28,7 @@ import java.util.function.Function;
  */
 public class ModelValueArray<T> {
 
-//    private Logger LOG = LoggerFactory.getLogger(ModelValueArray.class);
+    private Logger LOG = LoggerFactory.getLogger(ModelValueArray.class);
     private final List<T> models = new ArrayList<>();
     private final List<Object> values = new ArrayList<>();
 
@@ -75,7 +77,9 @@ public class ModelValueArray<T> {
     }
 
     public int indexOfModel(Function<T, ?> p, Object subModel) {
+	    LOG.debug("indexOfModel: subModel="+subModel);
 	for (int i = 0; i < size(); ++i) {
+	    LOG.debug("indexOfModel: p.apply(getModel(i))="+p.apply(getModel(i)));
 	    if (p.apply(getModel(i)) == subModel)
 		return i;
 	}

@@ -142,8 +142,9 @@ public class EntityLoaderImpl implements EntityLoader {
 	    return entityInstance;
 
 	entityInstance = entityInstanceBuilder.build(entity, primaryKey);
+	LOG.debug("build: entityInstance=" + entityInstance);
 //	buildEntity(entityInstance, modelValueArray, entity, primaryKey, lockType);
-	buildAttributeValues(entityInstance, entity, entity.getAttributes(), modelValueArray, lockType);
+	buildAttributeValuesLoadFK(entityInstance, entity, entity.getAttributes(), modelValueArray, lockType);
 	entityContainer.addManaged(entityInstance, primaryKey);
 	MetaEntityHelper.setEntityStatus(entity, entityInstance, EntityStatus.FLUSHED_LOADED_FROM_DB);
 	fillCircularRelationships(entity, entityInstance);
@@ -258,6 +259,7 @@ public class EntityLoaderImpl implements EntityLoader {
 	    MetaEntity entity, LockType lockType) throws Exception {
 	Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
 	LOG.debug("buildEntityByValues: primaryKey=" + primaryKey);
+	LOG.debug("buildEntityByValues: entity=" + entity);
 	Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
 	if (entityInstance != null)
 	    return entityInstance;

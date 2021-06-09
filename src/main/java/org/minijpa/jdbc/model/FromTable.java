@@ -22,4 +22,8 @@ public interface FromTable {
     public static FromTable of(MetaEntity entity, FromJoin fromJoin) {
 	return new FromTableImpl(entity.getTableName(), entity.getAlias(), Arrays.asList(fromJoin));
     }
+
+    public static FromTable of(String tableName) {
+	return new FromTableImpl(tableName);
+    }
 }

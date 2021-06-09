@@ -325,7 +325,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	throw new IllegalArgumentException("Condition '" + condition + "'not supported");
     }
 
-    private String exportJoins(FromTable fromTable) {
+    protected String exportJoins(FromTable fromTable) {
 	StringBuilder sb = new StringBuilder();
 	if (!fromTable.getJoins().isPresent())
 	    return sb.toString();
@@ -363,7 +363,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	return sb.toString();
     }
 
-    private String exportFromTable(FromTable fromTable) {
+    protected String exportFromTable(FromTable fromTable) {
 	StringBuilder sb = new StringBuilder(
 		dbJdbc.getNameTranslator().toTableName(fromTable.getAlias(), fromTable.getName()));
 

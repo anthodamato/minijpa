@@ -20,7 +20,6 @@ import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.metadata.MetaEntityUtils;
 import org.slf4j.Logger;
@@ -111,16 +110,13 @@ public class PersistenceUnitEnv {
 	EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
 
 	MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
-	JpaJdbcRunner jdbcRunner = new JpaJdbcRunner();
-	SqlStatementGenerator sqlStatementGenerator = dbConfiguration.getSqlStatementGenerator();
-	Assertions.assertNotNull(sqlStatementGenerator);
 	EntityQueryLevel entityQueryLevel = new EntityQueryLevel(sqlStatementFactory,
-		entityInstanceBuilder, sqlStatementGenerator, metaEntityHelper,
-		jdbcRunner, connectionHolder);
+		entityInstanceBuilder, dbConfiguration, metaEntityHelper,
+		connectionHolder);
 	JoinTableCollectionQueryLevel joinTableCollectionQueryLevel = new JoinTableCollectionQueryLevel(
-		sqlStatementFactory, sqlStatementGenerator, jdbcRunner, connectionHolder);
+		sqlStatementFactory, dbConfiguration, connectionHolder);
 	ForeignKeyCollectionQueryLevel foreignKeyCollectionQueryLevel = new ForeignKeyCollectionQueryLevel(
-		sqlStatementFactory, metaEntityHelper, sqlStatementGenerator, jdbcRunner, connectionHolder);
+		sqlStatementFactory, metaEntityHelper, dbConfiguration, connectionHolder);
 	EntityLoaderImpl entityLoader = new EntityLoaderImpl(persistenceUnitContext, entityInstanceBuilder, miniPersistenceContext,
 		entityQueryLevel, foreignKeyCollectionQueryLevel, joinTableCollectionQueryLevel);
 

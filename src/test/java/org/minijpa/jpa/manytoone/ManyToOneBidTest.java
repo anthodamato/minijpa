@@ -75,6 +75,7 @@ public class ManyToOneBidTest {
 	    tx.begin();
 	    em.remove(employee);
 	    em.remove(emp);
+	    em.remove(d);
 	    tx.commit();
 	} finally {
 	    em.close();
@@ -134,16 +135,15 @@ public class ManyToOneBidTest {
 	    Root<Employee> root = criteriaQuery.from(Employee.class);
 	    criteriaQuery.select(cb.max(root.get("salary")));
 	    Query query = em.createQuery(criteriaQuery);
-	    BigDecimal s = (BigDecimal) query.getSingleResult();
+	    Number s = (Number) query.getSingleResult();
 
 	    Assertions.assertNotNull(s);
-	    BigDecimal salary = new BigDecimal(new BigInteger("17000000"), 2);
-	    Assertions.assertEquals(salary, s);
+	    Assertions.assertEquals(170000L, s.longValue());
 
 	    // min
 	    criteriaQuery.select(cb.min(root.get("salary")));
 	    query = em.createQuery(criteriaQuery);
-	    s = (BigDecimal) query.getSingleResult();
+	    s = (Number) query.getSingleResult();
 
 	    Assertions.assertNotNull(s);
 	    Assertions.assertEquals(130000l, s.longValue());
@@ -152,6 +152,7 @@ public class ManyToOneBidTest {
 	    em.remove(employee1);
 	    em.remove(employee2);
 	    em.remove(employee3);
+	    em.remove(department);
 	    tx.commit();
 	} finally {
 	    em.close();
@@ -190,16 +191,17 @@ public class ManyToOneBidTest {
 	    Assertions.assertEquals(3, result.size());
 	    Object[] r1 = result.get(0);
 	    Assertions.assertEquals("John Smith", r1[0]);
-	    BigDecimal salary = new BigDecimal(new BigInteger("13000000"), 2);
-	    Assertions.assertEquals(salary, r1[1]);
+	    Number n = (Number) r1[1];
+	    Assertions.assertEquals(130000L, n.longValue());
+
 	    Object[] r2 = result.get(1);
 	    Assertions.assertEquals("Joshua Bann", r2[0]);
-	    salary = new BigDecimal(new BigInteger("14000000"), 2);
-	    Assertions.assertEquals(salary, r2[1]);
+	    n = (Number) r2[1];
+	    Assertions.assertEquals(140000L, n.longValue());
 	    Object[] r3 = result.get(2);
 	    Assertions.assertEquals("Margaret White", r3[0]);
-	    salary = new BigDecimal(new BigInteger("17000000"), 2);
-	    Assertions.assertEquals(salary, r3[1]);
+	    n = (Number) r3[1];
+	    Assertions.assertEquals(170000L, n.longValue());
 
 	    Assertions.assertTrue(criteriaQuery.getSelection().isCompoundSelection());
 	    Assertions.assertEquals(Object[].class, criteriaQuery.getSelection().getJavaType());
@@ -208,6 +210,7 @@ public class ManyToOneBidTest {
 	    em.remove(employee1);
 	    em.remove(employee2);
 	    em.remove(employee3);
+	    em.remove(department);
 	    tx.commit();
 	} finally {
 	    em.close();
@@ -259,6 +262,7 @@ public class ManyToOneBidTest {
 	    em.remove(employee1);
 	    em.remove(employee2);
 	    em.remove(employee3);
+	    em.remove(department);
 	    tx.commit();
 	} finally {
 	    em.close();
@@ -300,21 +304,22 @@ public class ManyToOneBidTest {
 	    Tuple r1 = result.get(0);
 	    Assertions.assertEquals("John Smith", r1.get("name"));
 	    Assertions.assertEquals("John Smith", r1.get(0));
-	    BigDecimal salary = new BigDecimal(new BigInteger("13000000"), 2);
-	    Assertions.assertEquals(salary, r1.get("salary"));
-	    Assertions.assertEquals(salary, r1.get(1));
+	    Number n = (Number) r1.get("salary");
+	    Assertions.assertEquals(130000L, n.longValue());
 	    Tuple r2 = result.get(1);
 	    Assertions.assertEquals("Joshua Bann", r2.get("name"));
 	    Assertions.assertEquals("Joshua Bann", r2.get(0));
-	    salary = new BigDecimal(new BigInteger("14000000"), 2);
-	    Assertions.assertEquals(salary, r2.get("salary"));
-	    Assertions.assertEquals(salary, r2.get(1));
+	    n = (Number) r2.get("salary");
+	    Assertions.assertEquals(140000L, n.longValue());
+	    n = (Number) r2.get(1);
+	    Assertions.assertEquals(140000L, n.longValue());
 	    Tuple r3 = result.get(2);
 	    Assertions.assertEquals("Margaret White", r3.get("name"));
 	    Assertions.assertEquals("Margaret White", r3.get(0));
-	    salary = new BigDecimal(new BigInteger("17000000"), 2);
-	    Assertions.assertEquals(salary, r3.get("salary"));
-	    Assertions.assertEquals(salary, r3.get(1));
+	    n = (Number) r3.get("salary");
+	    Assertions.assertEquals(170000L, n.longValue());
+	    n = (Number) r3.get(1);
+	    Assertions.assertEquals(170000L, n.longValue());
 
 	    Assertions.assertTrue(criteriaQuery.getSelection().isCompoundSelection());
 	    Assertions.assertEquals(Tuple.class, criteriaQuery.getSelection().getJavaType());
@@ -323,6 +328,7 @@ public class ManyToOneBidTest {
 	    em.remove(employee1);
 	    em.remove(employee2);
 	    em.remove(employee3);
+	    em.remove(department);
 	    tx.commit();
 	} finally {
 	    em.close();
@@ -369,11 +375,13 @@ public class ManyToOneBidTest {
 	    root = criteriaQuery.from(Employee.class);
 	    query = em.createQuery(criteriaQuery);
 	    Employee employee = (Employee) query.getSingleResult();
-	    Assertions.assertEquals(new BigDecimal(new BigInteger("14000000"), 2), employee.getSalary());
+//	    Assertions.assertEquals(new BigDecimal(new BigInteger("14000000"), 2), employee.getSalary());
+	    Assertions.assertEquals(140000, employee.getSalary().longValue());
 
 	    em.remove(employee1);
 	    em.remove(employee2);
 	    em.remove(employee3);
+	    em.remove(department);
 	    tx.commit();
 	} finally {
 	    em.close();
@@ -421,9 +429,10 @@ public class ManyToOneBidTest {
 	    List<?> result = query.getResultList();
 	    Assertions.assertTrue(result.isEmpty());
 
-//			em.remove(employee1);
+	    em.remove(employee1);
 	    em.remove(employee2);
 	    em.remove(employee3);
+	    em.remove(department);
 	    tx.commit();
 	} finally {
 	    em.close();

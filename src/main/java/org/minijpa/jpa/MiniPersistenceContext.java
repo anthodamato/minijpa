@@ -46,7 +46,6 @@ public class MiniPersistenceContext implements EntityContainer {
      */
     private final Map<Class<?>, Map<Object, Object>> managedEntities = new HashMap<>();
     private final List<Object> managedEntityList = new LinkedList<>();
-    private final List<Object> notManagedEntityList = new LinkedList<>();
 
     public MiniPersistenceContext(Map<String, MetaEntity> entities) {
 	super();
@@ -89,25 +88,8 @@ public class MiniPersistenceContext implements EntityContainer {
     }
 
     @Override
-    public void addNotManaged(Object entityInstance) {
-	notManagedEntityList.add(entityInstance);
-    }
-
-    @Override
-    public void removeNotManaged(Object entityInstance) {
-	notManagedEntityList.remove(entityInstance);
-    }
-
-    @Override
-    public void clearNotManaged() {
-	notManagedEntityList.clear();
-    }
-
-    @Override
     public List<Object> getManagedEntityList() {
-	List<Object> list = new ArrayList<>(notManagedEntityList);
-	list.addAll(managedEntityList);
-	return list;
+	return new ArrayList<>(managedEntityList);
     }
 
     @Override
@@ -171,6 +153,7 @@ public class MiniPersistenceContext implements EntityContainer {
 	mapEntities.remove(idValue, entityInstance);
 	MetaEntity e = entities.get(entityInstance.getClass().getName());
 	MetaEntityHelper.setEntityStatus(e, entityInstance, EntityStatus.DETACHED);
+	managedEntityList.remove(entityInstance);
     }
 
     @Override

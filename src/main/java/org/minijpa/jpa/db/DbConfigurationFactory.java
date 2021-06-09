@@ -23,6 +23,9 @@ public class DbConfigurationFactory {
 	if (database == Database.POSTGRES)
 	    return new PostgresConfiguration();
 
+	if (database == Database.ORACLE)
+	    return new OracleConfiguration();
+
 	throw new IllegalStateException("Unable to set the Db Configuration up");
     }
 }

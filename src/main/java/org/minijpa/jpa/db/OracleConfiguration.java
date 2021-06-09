@@ -4,23 +4,23 @@ import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.DbJdbc;
-import org.minijpa.jdbc.mapper.MySQLDbTypeMapper;
-import org.minijpa.jdbc.model.MySQLSqlStatementGenerator;
+import org.minijpa.jdbc.mapper.OracleDbTypeMapper;
+import org.minijpa.jdbc.model.OracleSqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 
-public class MySQLConfiguration implements DbConfiguration {
+public class OracleConfiguration implements DbConfiguration {
 
     private final DbJdbc dbJdbc;
     private final DbTypeMapper dbTypeMapper;
     private final SqlStatementGenerator sqlStatementGenerator;
     private final JdbcRunner jdbcRunner;
 
-    public MySQLConfiguration() {
+    public OracleConfiguration() {
 	super();
-	this.dbJdbc = new MySQLJdbc();
-	this.dbTypeMapper = new MySQLDbTypeMapper();
-	this.sqlStatementGenerator = new MySQLSqlStatementGenerator(dbJdbc);
-	this.jdbcRunner = new JpaJdbcRunner();
+	this.dbJdbc = new OracleJdbc();
+	this.dbTypeMapper = new OracleDbTypeMapper();
+	this.sqlStatementGenerator = new OracleSqlStatementGenerator(dbJdbc);
+	this.jdbcRunner = new OracleJdbcRunner();
     }
 
     @Override

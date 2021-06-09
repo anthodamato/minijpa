@@ -42,7 +42,6 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.Metamodel;
 
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jpa.criteria.predicate.AbstractPredicate;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;

@@ -303,29 +303,29 @@
                     <version>4.4</version>
                     <scope>test</scope>
                 </dependency>
-                <!--                <dependency>
+                <dependency>
                     <groupId>com.oracle.database.jdbc</groupId>
                     <artifactId>ojdbc8</artifactId>
                     <version>21.1.0.0</version>
-                </dependency>            -->
-                <dependency>
+                </dependency>            
+                <!--                <dependency>
                     <groupId>com.oracle.jdbc</groupId>
                     <artifactId>ojdbc14</artifactId>
                     <version>10.2.0.4.0</version>
-                </dependency>            
+                </dependency>            -->
                 <!--                <dependency>
                     <groupId>com.oracle.jdbc</groupId>
                     <artifactId>ojdbc14</artifactId>
                     <version>10.2.0.1.0</version>
                 </dependency>-->
             </dependencies>
-            <repositories>
+            <!--            <repositories>
                 <repository>
                     <id>Ojdbc10</id>
                     <name>Ojdbc10</name>
                     <url>http://maven.icm.edu.pl/artifactory/repo/</url>
                 </repository>
-            </repositories>
+            </repositories>-->
         </profile>
 
     </profiles>

@@ -39,7 +39,7 @@ public class PersistenceUnitPropertyActions {
 	try {
 	    connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
 	    ScriptRunner scriptRunner = new ScriptRunner();
-	    scriptRunner.run(statements, connection);
+	    scriptRunner.runDDLStatements(statements, connection);
 	} finally {
 	    if (connection != null)
 	    try {

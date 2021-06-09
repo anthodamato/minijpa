@@ -33,6 +33,10 @@ public class EntityInstanceBuilderImpl implements EntityInstanceBuilder {
     @Override
     public Object build(MetaEntity entity, Object idValue) throws Exception {
 	Object entityInstance = entity.getEntityClass().getDeclaredConstructor().newInstance();
+	LOG.debug("build: entityInstance=" + entityInstance);
+	LOG.debug("build: idValue=" + idValue);
+	LOG.debug("build: idValue.getClass()=" + idValue.getClass());
+	LOG.debug("build: entity.getId().getWriteMethod()=" + entity.getId().getWriteMethod());
 	entity.getId().getWriteMethod().invoke(entityInstance, idValue);
 	return entityInstance;
     }

@@ -95,7 +95,11 @@ public class JdbcRunner {
 	}
     }
 
-    public Object insertReturnGeneratedKeys(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
+    public Object insertReturnGeneratedKeys(
+	    Connection connection,
+	    String sql,
+	    List<QueryParameter> parameters,
+	    Pk pk) throws SQLException {
 	PreparedStatement preparedStatement = null;
 	ResultSet resultSet = null;
 	try {
@@ -104,14 +108,14 @@ public class JdbcRunner {
 	    setPreparedStatementParameters(preparedStatement, parameters);
 	    preparedStatement.execute();
 
-	    Object pk = null;
+	    Object id = null;
 	    resultSet = preparedStatement.getGeneratedKeys();
-	    if (resultSet != null && resultSet.next()) {
-		pk = resultSet.getObject(1);
+	    if (resultSet.next()) {
+		id = resultSet.getObject(1);
 	    }
 
-	    LOG.debug("insertReturnGeneratedKeys: pk=" + pk);
-	    return pk;
+//	    LOG.debug("insertReturnGeneratedKeys: id=" + id);
+	    return id;
 	} finally {
 	    if (resultSet != null)
 		resultSet.close();
@@ -184,46 +188,25 @@ public class JdbcRunner {
 	}
     }
 
-//    private ModelValueArray<FetchParameter> createModelValueArrayFromResultSet(
-//	    List<FetchParameter> fetchParameters, ResultSet rs) throws Exception {
-//	ModelValueArray<FetchParameter> attributeValueArray = new ModelValueArray<>();
-//	int i = 1;
-//	for (FetchParameter fetchParameter : fetchParameters) {
-//	    MetaAttribute metaAttribute = fetchParameter.getAttribute();
-//	    LOG.debug("createModelValueArrayFromResultSet: fetchParameter.getReadWriteDbType()=" + fetchParameter.getReadWriteDbType());
-//	    LOG.debug("createModelValueArrayFromResultSet: rs.getObject(i)=" + rs.getObject(i));
-//	    Object value = rs.getObject(i, fetchParameter.getReadWriteDbType());
-//	    Object v = metaAttribute.dbTypeMapper.convert(value,
-//		    fetchParameter.getReadWriteDbType(), fetchParameter.getType());
-//	    attributeValueArray.add(fetchParameter, v);
-//	    ++i;
-//	}
-//
-//	return attributeValueArray;
-//    }
     private ModelValueArray<FetchParameter> createModelValueArrayFromResultSet(
-	    List<FetchParameter> fetchParameters, ResultSet rs, ResultSetMetaData metaData) throws Exception {
-	ModelValueArray<FetchParameter> attributeValueArray = new ModelValueArray<>();
-//	int nc = metaData.getColumnCount();
+	    List<FetchParameter> fetchParameters,
+	    ResultSet rs,
+	    ResultSetMetaData metaData) throws Exception {
+	ModelValueArray<FetchParameter> modelValueArray = new ModelValueArray<>();
 	int i = 1;
 	for (FetchParameter fetchParameter : fetchParameters) {
 	    MetaAttribute metaAttribute = fetchParameter.getAttribute();
-//	    LOG.debug("createModelValueArrayFromResultSet: fetchParameter.getReadWriteDbType()=" + fetchParameter.getReadWriteDbType());
-//	    LOG.debug("createModelValueArrayFromResultSet: rs.getObject(i)=" + rs.getObject(i));
 	    int columnType = metaData.getColumnType(i);
-//	    LOG.debug("createModelValueArrayFromResultSet: columnType=" + columnType);
-	    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
-//	    LOG.debug("createModelValueArrayFromResultSet: readWriteType=" + readWriteType);
-	    Object value = rs.getObject(i, readWriteType);
-//	    LOG.debug("createModelValueArrayFromResultSet: value=" + value);
-	    Object v = metaAttribute.dbTypeMapper.convert(value,
-		    readWriteType, fetchParameter.getType());
-//	    LOG.debug("createModelValueArrayFromResultSet: v=" + v);
-	    attributeValueArray.add(fetchParameter, v);
+
+	    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(i), metaData.getScale(i));
+	    Object value = rs.getObject(i);
+	    Object v = value != null ? metaAttribute.dbTypeMapper.convert(value,
+		    readWriteType, fetchParameter.getType()) : null;
+	    modelValueArray.add(fetchParameter, v);
 	    ++i;
 	}
 
-	return attributeValueArray;
+	return modelValueArray;
     }
 
     protected Object[] createRecord(int nc, List<FetchParameter> fetchParameters, ResultSet rs) throws Exception {
@@ -289,10 +272,7 @@ public class JdbcRunner {
 	    if (nc == 1) {
 		while (rs.next()) {
 		    int columnType = metaData.getColumnType(1);
-		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
-//		    LOG.debug("runNativeQuery: readWriteType=" + readWriteType);
-//		    LOG.debug("runNativeQuery: columnType=" + columnType);
-//		    LOG.debug("runNativeQuery: rs.getObject(i + 1)=" + rs.getObject(1));
+		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(1), metaData.getScale(1));
 		    objects.add(rs.getObject(1, readWriteType));
 		}
 	    } else {
@@ -300,10 +280,10 @@ public class JdbcRunner {
 		    Object[] values = new Object[nc];
 		    for (int i = 0; i < nc; ++i) {
 			int columnType = metaData.getColumnType(i + 1);
-			Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
-//			LOG.debug("runNativeQuery: readWriteType=" + readWriteType);
-//			LOG.debug("runNativeQuery: columnType=" + columnType);
-//			LOG.debug("runNativeQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
+			Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(i + 1), metaData.getScale(i + 1));
+//			LOG.debug("runQuery: readWriteType=" + readWriteType);
+//			LOG.debug("runQuery: columnType=" + columnType);
+//			LOG.debug("runQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
 			values[i] = rs.getObject(i + 1, readWriteType);
 		    }
 
@@ -338,7 +318,7 @@ public class JdbcRunner {
 	    if (nc == 1) {
 		while (rs.next()) {
 		    int columnType = metaData.getColumnType(1);
-		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
+		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(1), metaData.getScale(1));
 		    Object instance = rs.getObject(1, readWriteType);
 		    objects.add(instance);
 		}
@@ -347,7 +327,7 @@ public class JdbcRunner {
 		    Object[] values = new Object[nc];
 		    for (int i = 0; i < nc; ++i) {
 			int columnType = metaData.getColumnType(i + 1);
-			Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType);
+			Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(i + 1), metaData.getScale(i + 1));
 //			LOG.debug("runNativeQuery: readWriteType=" + readWriteType);
 //			LOG.debug("runNativeQuery: columnType=" + columnType);
 //			LOG.debug("runNativeQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));

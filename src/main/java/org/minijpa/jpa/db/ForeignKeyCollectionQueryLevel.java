@@ -16,8 +16,8 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
 
 /**
  *
@@ -34,18 +34,16 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 
     private final SqlStatementFactory sqlStatementFactory;
     private final MetaEntityHelper metaEntityHelper;
-    private final SqlStatementGenerator sqlStatementGenerator;
-    private final JpaJdbcRunner jdbcRunner;
+    private final DbConfiguration dbConfiguration;
     private final ConnectionHolder connectionHolder;
 
     public ForeignKeyCollectionQueryLevel(
 	    SqlStatementFactory sqlStatementFactory, MetaEntityHelper metaEntityHelper,
-	    SqlStatementGenerator sqlStatementGenerator,
-	    JpaJdbcRunner jdbcRunner, ConnectionHolder connectionHolder) {
+	    DbConfiguration dbConfiguration,
+	    ConnectionHolder connectionHolder) {
 	this.sqlStatementFactory = sqlStatementFactory;
 	this.metaEntityHelper = metaEntityHelper;
-	this.sqlStatementGenerator = sqlStatementGenerator;
-	this.jdbcRunner = jdbcRunner;
+	this.dbConfiguration = dbConfiguration;
 	this.connectionHolder = connectionHolder;
     }
 
@@ -55,9 +53,9 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 	List<String> columns = parameters.stream().map(p -> p.getColumnName())
 		.collect(Collectors.toList());
 	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, columns);
-	String sql = sqlStatementGenerator.export(sqlSelect);
+	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
-	jdbcRunner.findCollection(connectionHolder.getConnection(), sql, sqlSelect,
+	dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql, sqlSelect,
 		collectionResult, entityLoader, parameters);
 	return (List<Object>) collectionResult;
     }

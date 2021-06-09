@@ -70,10 +70,33 @@ public class PersistenceUnitProperties {
 	    map.put("javax.persistence.jdbc.driver", "oracle.jdbc.driver.OracleDriver");
 	    map.put("javax.persistence.jdbc.user", "test");
 	    map.put("javax.persistence.jdbc.password", "password");
-	    map.put("hibernate.dialect", "org.hibernate.dialect.Oracle12cDialect");
 	    return map;
 	}
 
 	return null;
+    }
+
+    public static String getFalseCondition() {
+	String minijpaTest = System.getProperty("minijpa.test");
+	if (minijpaTest == null || minijpaTest.isBlank())
+	    return "=false";
+
+	if (minijpaTest.equals("oracle")) {
+	    return "=0";
+	}
+
+	return "=false";
+    }
+
+    public static String getTrueCondition() {
+	String minijpaTest = System.getProperty("minijpa.test");
+	if (minijpaTest == null || minijpaTest.isBlank())
+	    return "=true";
+
+	if (minijpaTest.equals("oracle")) {
+	    return "=1";
+	}
+
+	return "=true";
     }
 }

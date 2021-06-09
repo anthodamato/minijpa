@@ -54,6 +54,7 @@ public class OtmEmbIdBookingTest {
 	    Assertions.assertNotNull(hotelBookingDetail.getRoomBookingId());
 	    tx.commit();
 
+	    tx.begin();
 	    HotelBookingDetail b = em.find(HotelBookingDetail.class, hotelBookingDetail.getRoomBookingId());
 	    Assertions.assertTrue(b == hotelBookingDetail);
 	    Assertions.assertNotNull(b);
@@ -69,6 +70,10 @@ public class OtmEmbIdBookingTest {
 	    HotelBookingDetail b2 = em.find(HotelBookingDetail.class, b.getRoomBookingId());
 	    Assertions.assertTrue(b2 == b);
 
+	    em.remove(hotelCustomer1);
+	    em.remove(hotelCustomer2);
+	    em.remove(b);
+	    tx.commit();
 	} finally {
 	    em.close();
 	    emf.close();
