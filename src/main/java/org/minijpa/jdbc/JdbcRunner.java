@@ -63,7 +63,7 @@ public class JdbcRunner {
 
     public int update(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
 	LOG.info("Running `" + sql + "`");
-	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 	    setPreparedStatementParameters(preparedStatement, parameters);
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
@@ -72,7 +72,7 @@ public class JdbcRunner {
 
     public int persist(Connection connection, String sql) throws SQLException {
 	LOG.info("Running `" + sql + "`");
-	try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
@@ -219,42 +219,41 @@ public class JdbcRunner {
 	return values;
     }
 
-    public List<Object> runQuery(Connection connection, String sql, List<FetchParameter> fetchParameters,
-	    List<QueryParameter> parameters) throws Exception {
-	PreparedStatement preparedStatement = null;
-	ResultSet rs = null;
-	try {
-	    preparedStatement = connection.prepareStatement(sql);
-	    setPreparedStatementParameters(preparedStatement, parameters);
-
-	    LOG.info("Running `" + sql + "`");
-	    List<Object> objects = new ArrayList<>();
-	    rs = preparedStatement.executeQuery();
-//	    int nc = fetchParameters.size();
-	    ResultSetMetaData metaData = rs.getMetaData();
-	    int nc = metaData.getColumnCount();
-
-	    while (rs.next()) {
-//		if (nc == 1) {
-//		    Class<?> readWriteType = fetchParameters.get(0).getReadWriteDbType();
-//		    Object instance = rs.getObject(1, readWriteType);
-//		    objects.add(instance);
-//		} else {
-		Object[] values = createRecord(nc, fetchParameters, rs);
-		objects.add(values);
-//		}
-	    }
-
-	    return objects;
-	} finally {
-	    if (rs != null)
-		rs.close();
-
-	    if (preparedStatement != null)
-		preparedStatement.close();
-	}
-    }
-
+//    public List<Object> runQuery(Connection connection, String sql, List<FetchParameter> fetchParameters,
+//	    List<QueryParameter> parameters) throws Exception {
+//	PreparedStatement preparedStatement = null;
+//	ResultSet rs = null;
+//	try {
+//	    preparedStatement = connection.prepareStatement(sql);
+//	    setPreparedStatementParameters(preparedStatement, parameters);
+//
+//	    LOG.info("Running `" + sql + "`");
+//	    List<Object> objects = new ArrayList<>();
+//	    rs = preparedStatement.executeQuery();
+////	    int nc = fetchParameters.size();
+//	    ResultSetMetaData metaData = rs.getMetaData();
+//	    int nc = metaData.getColumnCount();
+//
+//	    while (rs.next()) {
+////		if (nc == 1) {
+////		    Class<?> readWriteType = fetchParameters.get(0).getReadWriteDbType();
+////		    Object instance = rs.getObject(1, readWriteType);
+////		    objects.add(instance);
+////		} else {
+//		Object[] values = createRecord(nc, fetchParameters, rs);
+//		objects.add(values);
+////		}
+//	    }
+//
+//	    return objects;
+//	} finally {
+//	    if (rs != null)
+//		rs.close();
+//
+//	    if (preparedStatement != null)
+//		preparedStatement.close();
+//	}
+//    }
     public List<Object> runQuery(Connection connection, String sql,
 	    List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
