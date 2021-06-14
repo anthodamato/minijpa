@@ -38,6 +38,7 @@ public final class EntityDelegate implements EntityListener {
 	MetaEntity entity = persistenceUnitContextManager.getEntity(entityInstance.getClass().getName());
 	if (entity == null)
 	    return value;
+
 	try {
 	    LOG.debug("get: entity=" + entity);
 	    if (MetaEntityHelper.getEntityStatus(entity, entityInstance) != EntityStatus.FLUSHED_LOADED_FROM_DB)

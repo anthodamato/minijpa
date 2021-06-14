@@ -250,6 +250,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		    // makes updates
 		    LOG.debug("flush: FLUSHED_LOADED_FROM_DB entityInstance=" + entityInstance);
 		    ModelValueArray<MetaAttribute> modelValueArray = entityInstanceBuilder.getModifications(me, entityInstance);
+		    LOG.info("flush: FLUSHED_LOADED_FROM_DB modelValueArray.size()=" + modelValueArray.size());
 		    if (!modelValueArray.isEmpty()) {
 			entityWriter.persist(me, entityInstance, modelValueArray);
 			entityInstanceBuilder.removeChanges(me, entityInstance);
@@ -284,11 +285,11 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    }
 	}
 
-	for (Object entityInstance : managedEntityList) {
-	    MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
-	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
-	    LOG.debug("flush: pre persistJoinTableAttributes entityInstance=" + entityInstance + "; entityStatus=" + entityStatus);
-	}
+//	for (Object entityInstance : managedEntityList) {
+//	    MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
+//	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
+//	    LOG.debug("flush: pre persistJoinTableAttributes entityInstance=" + entityInstance + "; entityStatus=" + entityStatus);
+//	}
 
 	for (Object entityInstance : managedEntityList) {
 	    LOG.debug("flush: persistJoinTableAttributes entityInstance=" + entityInstance);

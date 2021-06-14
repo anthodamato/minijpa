@@ -114,7 +114,6 @@ public class JdbcRunner {
 		id = resultSet.getObject(1);
 	    }
 
-//	    LOG.debug("insertReturnGeneratedKeys: id=" + id);
 	    return id;
 	} finally {
 	    if (resultSet != null)
@@ -126,11 +125,11 @@ public class JdbcRunner {
     }
 
     public int delete(String sql, Connection connection, List<QueryParameter> parameters) throws SQLException {
+	LOG.info("Running `" + sql + "`");
 	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 	    if (!parameters.isEmpty())
 		setPreparedStatementParameters(preparedStatement, parameters);
 
-	    LOG.info("Running `" + sql + "`");
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
@@ -258,11 +257,11 @@ public class JdbcRunner {
 	    List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
+	LOG.info("Running `" + sql + "`");
 	try {
 	    preparedStatement = connection.prepareStatement(sql);
 	    setPreparedStatementParameters(preparedStatement, parameters);
 
-	    LOG.info("Running `" + sql + "`");
 	    List<Object> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
 	    ResultSetMetaData metaData = rs.getMetaData();
@@ -303,13 +302,13 @@ public class JdbcRunner {
     public List<Object> runNativeQuery(Connection connection, String sql, List<Object> parameterValues) throws Exception {
 	PreparedStatement preparedStatement = null;
 	ResultSet rs = null;
+	LOG.info("Running `" + sql + "`");
 	try {
 	    preparedStatement = connection.prepareStatement(sql);
 	    for (int i = 0; i < parameterValues.size(); ++i) {
 		preparedStatement.setObject(i + 1, parameterValues.get(i));
 	    }
 
-	    LOG.info("Running `" + sql + "`");
 	    List<Object> objects = new ArrayList<>();
 	    rs = preparedStatement.executeQuery();
 	    ResultSetMetaData metaData = rs.getMetaData();

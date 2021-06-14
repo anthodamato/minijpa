@@ -250,8 +250,14 @@ public class EntityWriterImpl implements EntityWriter {
 
     @Override
     public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception {
+	Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
+	List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(entity.getId(), idValue);
+
 	for (MetaAttribute a : entity.getRelationshipAttributes()) {
 	    if (a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner()) {
+		// removes the join table records first
+		removeJoinTableRecords(entity, idValue, idParameters, a.getRelationship().getJoinTable());
+
 		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
 //		LOG.info("persist: attributeInstance=" + attributeInstance);
 //		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
@@ -304,27 +310,35 @@ public class EntityWriterImpl implements EntityWriter {
 	List<RelationshipJoinTable> relationshipJoinTables = findRelationshipJoinTable(entity);
 	LOG.debug("removeJoinTableRecords: relationshipJoinTables.size()=" + relationshipJoinTables.size());
 	for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
-	    if (relationshipJoinTable.getOwningEntity() == entity) {
-		ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(entity.getId(), primaryKey,
-			relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
-		List<AbstractAttribute> attributes = modelValueArray.getModels();
+	    removeJoinTableRecords(entity, primaryKey, idParameters, relationshipJoinTable);
+	}
+    }
 
-		List<String> idColumns = attributes.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
-		FromTable fromTable = FromTable.of(relationshipJoinTable.getTableName());
-		SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(fromTable, idColumns);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
-		dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), idParameters);
-	    } else {
-		ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(entity.getId(), primaryKey,
-			relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes());
-		List<AbstractAttribute> attributes = modelValueArray.getModels();
+    private void removeJoinTableRecords(
+	    MetaEntity entity,
+	    Object primaryKey,
+	    List<QueryParameter> idParameters,
+	    RelationshipJoinTable relationshipJoinTable) throws Exception {
+	if (relationshipJoinTable.getOwningEntity() == entity) {
+	    ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(entity.getId(), primaryKey,
+		    relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
+	    List<AbstractAttribute> attributes = modelValueArray.getModels();
 
-		List<String> idColumns = attributes.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
-		FromTable fromTable = FromTable.of(relationshipJoinTable.getTableName());
-		SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(fromTable, idColumns);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
-		dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), idParameters);
-	    }
+	    List<String> idColumns = attributes.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+	    FromTable fromTable = FromTable.of(relationshipJoinTable.getTableName());
+	    SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(fromTable, idColumns);
+	    String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
+	    dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), idParameters);
+	} else {
+	    ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(entity.getId(), primaryKey,
+		    relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes());
+	    List<AbstractAttribute> attributes = modelValueArray.getModels();
+
+	    List<String> idColumns = attributes.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+	    FromTable fromTable = FromTable.of(relationshipJoinTable.getTableName());
+	    SqlDelete sqlDelete = sqlStatementFactory.generateDeleteById(fromTable, idColumns);
+	    String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
+	    dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), idParameters);
 	}
     }
 

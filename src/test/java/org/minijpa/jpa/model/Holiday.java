@@ -8,49 +8,50 @@ import javax.persistence.Id;
 
 @Entity
 public class Holiday {
-	@GeneratedValue
-	@Id
-	private Long id;
 
-	private Integer travellers;
-	private LocalDate checkIn;
-	private Integer nights;
-	private String referenceName;
+    @GeneratedValue
+    @Id
+    private Long id;
 
-	public Long getId() {
-		return id;
-	}
+    private Integer travellers;
+    private LocalDate checkIn;
+    private Integer nights;
+    private String referenceName;
 
-	public Integer getTravellers() {
-		return travellers;
-	}
+    public Long getId() {
+	return id;
+    }
 
-	public void setTravellers(Integer travellers) {
-		this.travellers = travellers;
-	}
+    public Integer getTravellers() {
+	return travellers;
+    }
 
-	public LocalDate getCheckIn() {
-		return checkIn;
-	}
+    public void setTravellers(Integer travellers) {
+	this.travellers = travellers;
+    }
 
-	public void setCheckIn(LocalDate checkIn) {
-		this.checkIn = checkIn;
-	}
+    public LocalDate getCheckIn() {
+	return checkIn;
+    }
 
-	public Integer getNights() {
-		return nights;
-	}
+    public void setCheckIn(LocalDate checkIn) {
+	this.checkIn = checkIn;
+    }
 
-	public void setNights(Integer nights) {
-		this.nights = nights;
-	}
+    public Integer getNights() {
+	return nights;
+    }
 
-	public String getReferenceName() {
-		return referenceName;
-	}
+    public void setNights(Integer nights) {
+	this.nights = nights;
+    }
 
-	public void setReferenceName(String referenceName) {
-		this.referenceName = referenceName;
-	}
+    public String getReferenceName() {
+	return referenceName;
+    }
+
+    public void setReferenceName(String referenceName) {
+	this.referenceName = referenceName;
+    }
 
 }
