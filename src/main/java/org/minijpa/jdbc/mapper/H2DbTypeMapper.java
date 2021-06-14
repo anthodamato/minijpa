@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc;
+package org.minijpa.jdbc.mapper;
 
-public enum Database {
-    UNKNOWN, // Unknown database
-    APACHE_DERBY, // Apache Derby
-    MYSQL, // MySQL
-    MARIADB, // MariaDB
-    POSTGRES, // PostgresSQL
-    ORACLE, // Oracle
-    H2 // H2
-    ;
+public class H2DbTypeMapper extends AbstractDbTypeMapper {
+
 }

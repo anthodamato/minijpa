@@ -128,6 +128,8 @@ public class DbMetaData {
 	    return Database.POSTGRES;
 	} else if (databaseProductName.equalsIgnoreCase("Oracle")) {
 	    return Database.ORACLE;
+	} else if (databaseProductName.equalsIgnoreCase("H2")) {
+	    return Database.H2;
 	}
 
 	return Database.UNKNOWN;

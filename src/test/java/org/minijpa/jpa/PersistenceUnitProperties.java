@@ -73,6 +73,15 @@ public class PersistenceUnitProperties {
 	    return map;
 	}
 
+	if (minijpaTest.equals("h2")) {
+	    Map<String, String> map = new HashMap<>();
+	    map.put("javax.persistence.jdbc.url", "jdbc:h2:mem:default");
+	    map.put("javax.persistence.jdbc.driver", "org.h2.Driver");
+	    map.put("javax.persistence.jdbc.user", "sa");
+	    map.put("javax.persistence.jdbc.password", "");
+	    return map;
+	}
+
 	return null;
     }
 

@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -85,9 +86,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 			jdbcEntityManager.getEntityLoader()));
     }
 
-//	public Connection connection() {
-//		return ((EntityTransactionImpl) entityTransaction).connection();
-//	}
     @Override
     public void persist(Object entity) {
 	MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
@@ -120,7 +118,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    throw new IllegalArgumentException("Entity to remove is null");
 	}
 
-	LOG.debug("remove: 1 entity=" + entity);
 	try {
 	    if (!persistenceContext.isManaged(entity))
 		return;
@@ -148,7 +145,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 	    return;
 	}
 
-	LOG.debug("remove: 2 entity=" + entity);
 	try {
 	    jdbcEntityManager.remove(entity);
 	} catch (Exception ex) {
@@ -178,8 +174,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-	LOG.info("find: this=" + this);
-	LOG.info("find: primaryKey=" + primaryKey);
+	LOG.debug("find: this=" + this);
+	LOG.debug("find: primaryKey=" + primaryKey);
 	try {
 	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
 	    if (entityObject == null)
@@ -194,8 +190,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
-	LOG.info("find: this=" + this);
-	LOG.info("find: primaryKey=" + primaryKey);
+	LOG.debug("find: this=" + this);
+	LOG.debug("find: primaryKey=" + primaryKey);
 	try {
 	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
 		    LockTypeUtils.toLockType(lockMode));
@@ -211,8 +207,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
-	LOG.info("find: this=" + this);
-	LOG.info("find: primaryKey=" + primaryKey);
+	LOG.debug("find: this=" + this);
+	LOG.debug("find: primaryKey=" + primaryKey);
 	try {
 	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
 		    LockTypeUtils.toLockType(lockMode));
@@ -228,8 +224,19 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public <T> T getReference(Class<T> entityClass, Object primaryKey) {
-	// TODO Auto-generated method stub
-	return null;
+	try {
+	    Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
+	    if (entityObject == null)
+		throw new EntityNotFoundException("Entity with class '" + entityClass.getName() + "' not found: pk=" + primaryKey);
+
+	    return (T) entityObject;
+	} catch (Exception e) {
+	    if (e instanceof IllegalArgumentException)
+		throw new IllegalArgumentException(e.getMessage());
+
+	    LOG.error(e.getMessage());
+	    throw new PersistenceException(e.getMessage());
+	}
     }
 
     @Override
@@ -541,7 +548,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public Metamodel getMetamodel() {
-	LOG.debug("getMetamodel: 1");
 	return entityManagerFactory.getMetamodel();
     }
 

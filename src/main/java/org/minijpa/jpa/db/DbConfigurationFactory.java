@@ -26,6 +26,9 @@ public class DbConfigurationFactory {
 	if (database == Database.ORACLE)
 	    return new OracleConfiguration();
 
+	if (database == Database.H2)
+	    return new H2Configuration();
+
 	throw new IllegalStateException("Unable to set the Db Configuration up");
     }
 }
