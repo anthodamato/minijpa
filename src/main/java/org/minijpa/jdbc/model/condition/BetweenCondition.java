@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 Antonio Damato <anto.damato@gmail.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.minijpa.jdbc.model.condition;
 
 import java.util.Optional;
@@ -5,80 +20,82 @@ import java.util.Optional;
 import org.minijpa.jdbc.model.TableColumn;
 
 public class BetweenCondition implements Condition {
+
+    private TableColumn tableColumn;
+    private Optional<TableColumn> leftColumn;
+    private Optional<TableColumn> rightColumn;
+    private Optional<String> leftExpression;
+    private Optional<String> rightExpression;
+
+    private BetweenCondition(TableColumn tableColumn) {
+	super();
+	this.tableColumn = tableColumn;
+    }
+
+    @Override
+    public ConditionType getConditionType() {
+	return ConditionType.BETWEEN;
+    }
+
+    public TableColumn getTableColumn() {
+	return tableColumn;
+    }
+
+    public Optional<TableColumn> getLeftColumn() {
+	return leftColumn;
+    }
+
+    public Optional<TableColumn> getRightColumn() {
+	return rightColumn;
+    }
+
+    public Optional<String> getLeftExpression() {
+	return leftExpression;
+    }
+
+    public Optional<String> getRightExpression() {
+	return rightExpression;
+    }
+
+    public static class Builder {
+
 	private TableColumn tableColumn;
-	private Optional<TableColumn> leftColumn;
-	private Optional<TableColumn> rightColumn;
-	private Optional<String> leftExpression;
-	private Optional<String> rightExpression;
+	private TableColumn leftColumn;
+	private TableColumn rightColumn;
+	private String leftExpression;
+	private String rightExpression;
 
-	private BetweenCondition(TableColumn tableColumn) {
-		super();
-		this.tableColumn = tableColumn;
+	public Builder(TableColumn tableColumn) {
+	    this.tableColumn = tableColumn;
 	}
 
-	@Override
-	public ConditionType getConditionType() {
-		return ConditionType.BETWEEN;
+	public Builder withLeftColumn(TableColumn tableColumn) {
+	    this.leftColumn = tableColumn;
+	    return this;
 	}
 
-	public TableColumn getTableColumn() {
-		return tableColumn;
+	public Builder withRightColumn(TableColumn tableColumn) {
+	    this.rightColumn = tableColumn;
+	    return this;
 	}
 
-	public Optional<TableColumn> getLeftColumn() {
-		return leftColumn;
+	public Builder withLeftExpression(String expr) {
+	    this.leftExpression = expr;
+	    return this;
 	}
 
-	public Optional<TableColumn> getRightColumn() {
-		return rightColumn;
+	public Builder withRightExpression(String expr) {
+	    this.rightExpression = expr;
+	    return this;
 	}
 
-	public Optional<String> getLeftExpression() {
-		return leftExpression;
+	public BetweenCondition build() {
+	    BetweenCondition betweenCondition = new BetweenCondition(tableColumn);
+	    betweenCondition.leftColumn = Optional.ofNullable(leftColumn);
+	    betweenCondition.rightColumn = Optional.ofNullable(rightColumn);
+	    betweenCondition.leftExpression = Optional.ofNullable(leftExpression);
+	    betweenCondition.rightExpression = Optional.ofNullable(rightExpression);
+	    return betweenCondition;
 	}
-
-	public Optional<String> getRightExpression() {
-		return rightExpression;
-	}
-
-	public static class Builder {
-		private TableColumn tableColumn;
-		private TableColumn leftColumn;
-		private TableColumn rightColumn;
-		private String leftExpression;
-		private String rightExpression;
-
-		public Builder(TableColumn tableColumn) {
-			this.tableColumn = tableColumn;
-		}
-
-		public Builder withLeftColumn(TableColumn tableColumn) {
-			this.leftColumn = tableColumn;
-			return this;
-		}
-
-		public Builder withRightColumn(TableColumn tableColumn) {
-			this.rightColumn = tableColumn;
-			return this;
-		}
-
-		public Builder withLeftExpression(String expr) {
-			this.leftExpression = expr;
-			return this;
-		}
-
-		public Builder withRightExpression(String expr) {
-			this.rightExpression = expr;
-			return this;
-		}
-
-		public BetweenCondition build() {
-			BetweenCondition betweenCondition = new BetweenCondition(tableColumn);
-			betweenCondition.leftColumn = Optional.ofNullable(leftColumn);
-			betweenCondition.rightColumn = Optional.ofNullable(rightColumn);
-			betweenCondition.leftExpression = Optional.ofNullable(leftExpression);
-			betweenCondition.rightExpression = Optional.ofNullable(rightExpression);
-			return betweenCondition;
-		}
-	}
+    }
 }
