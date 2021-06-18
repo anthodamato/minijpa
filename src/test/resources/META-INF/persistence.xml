@@ -25,7 +25,7 @@
 
     <persistence-unit name="citizens_only">
         <description>Citizen Entity Only</description>
-        <class>org.minijpatest.jpa.model.Citizen</class>
+        <class>org.minijpa.jpa.model.Citizen</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -59,7 +59,7 @@
 
     <persistence-unit name="generic_list">
         <description>Generic List</description>
-        <class>org.minijpatest.jpa.model.GenericList</class>
+        <class>org.minijpa.jpa.model.GenericList</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -78,8 +78,8 @@
 
     <persistence-unit name="mapped_superclass">
         <description>MappedSuperclass Test</description>
-        <class>org.minijpatest.jpa.model.Triangle</class>
-        <class>org.minijpatest.jpa.model.Square</class>
+        <class>org.minijpa.jpa.model.Triangle</class>
+        <class>org.minijpa.jpa.model.Square</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -107,7 +107,7 @@
 
     <persistence-unit name="emb_books">
         <description>Books</description>
-        <class>org.minijpatest.jpa.model.Book</class>
+        <class>org.minijpa.jpa.model.Book</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -135,7 +135,7 @@
 
     <persistence-unit name="emb_booking">
         <description>Books</description>
-        <class>org.minijpatest.jpa.model.HotelBooking</class>
+        <class>org.minijpa.jpa.model.HotelBooking</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -163,8 +163,8 @@
 
     <persistence-unit name="cities_uni">
         <description>Cities</description>
-        <class>org.minijpatest.jpa.model.City</class>
-        <class>org.minijpatest.jpa.model.Region</class>
+        <class>org.minijpa.jpa.model.City</class>
+        <class>org.minijpa.jpa.model.Region</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -192,8 +192,8 @@
 
     <persistence-unit name="onetoone_bid">
         <description>Cities</description>
-        <class>org.minijpatest.jpa.model.Person</class>
-        <class>org.minijpatest.jpa.model.Fingerprint</class>
+        <class>org.minijpa.jpa.model.Person</class>
+        <class>org.minijpa.jpa.model.Fingerprint</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -221,8 +221,8 @@
 
     <persistence-unit name="onetoone_bid_lazy">
         <description>Cities</description>
-        <class>org.minijpatest.jpa.model.State</class>
-        <class>org.minijpatest.jpa.model.Capital</class>
+        <class>org.minijpa.jpa.model.State</class>
+        <class>org.minijpa.jpa.model.Capital</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -250,8 +250,8 @@
 
     <persistence-unit name="onetomany_uni">
         <description>Unidirectional One to Many</description>
-        <class>org.minijpatest.jpa.model.Store</class>
-        <class>org.minijpatest.jpa.model.Item</class>
+        <class>org.minijpa.jpa.model.Store</class>
+        <class>org.minijpa.jpa.model.Item</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:onetomany_uni;create=true" />
@@ -277,8 +277,8 @@
 
     <persistence-unit name="otm_emb_booking">
         <description>Unidirectional One to Many</description>
-        <class>org.minijpatest.jpa.model.HotelBookingDetail</class>
-        <class>org.minijpatest.jpa.model.HotelCustomer</class>
+        <class>org.minijpa.jpa.model.HotelBookingDetail</class>
+        <class>org.minijpa.jpa.model.HotelCustomer</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:otm_emb_booking;create=true" />
@@ -295,8 +295,8 @@
 
     <persistence-unit name="onetoone_bid_lazy">
         <description>Cities</description>
-        <class>org.minijpatest.jpa.model.State</class>
-        <class>org.minijpatest.jpa.model.Capital</class>
+        <class>org.minijpa.jpa.model.State</class>
+        <class>org.minijpa.jpa.model.Capital</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -324,8 +324,8 @@
 
     <persistence-unit name="manytoone_bid">
         <description>Cities</description>
-        <class>org.minijpatest.jpa.model.Employee</class>
-        <class>org.minijpatest.jpa.model.Department</class>
+        <class>org.minijpa.jpa.model.Employee</class>
+        <class>org.minijpa.jpa.model.Department</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -343,7 +343,7 @@
 
     <persistence-unit name="stoves">
         <description>Stoves</description>
-        <class>org.minijpatest.jpa.model.Stove</class>
+        <class>org.minijpa.jpa.model.Stove</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -371,7 +371,7 @@
 
     <persistence-unit name="holidays">
         <description>Holidays</description>
-        <class>org.minijpatest.jpa.model.Holiday</class>
+        <class>org.minijpa.jpa.model.Holiday</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url"
@@ -399,7 +399,7 @@
 
     <persistence-unit name="purchase_stats">
         <description>Purchase Stats</description>
-        <class>org.minijpatest.jpa.model.PurchaseStats</class>
+        <class>org.minijpa.jpa.model.PurchaseStats</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:purchase_stats;create=true" />
@@ -416,9 +416,9 @@
 
     <persistence-unit name="order_many_to_many">
         <description>Orders</description>
-        <class>org.minijpatest.jpa.model.Customer</class>
-        <class>org.minijpatest.jpa.model.Order</class>
-        <class>org.minijpatest.jpa.model.Product</class>
+        <class>org.minijpa.jpa.model.Customer</class>
+        <class>org.minijpa.jpa.model.Order</class>
+        <class>org.minijpa.jpa.model.Product</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:orders;create=true" />
@@ -444,8 +444,8 @@
 
     <persistence-unit name="property_many_to_many_uni">
         <description>Properties</description>
-        <class>org.minijpatest.jpa.model.Property</class>
-        <class>org.minijpatest.jpa.model.PropertyOwner</class>
+        <class>org.minijpa.jpa.model.Property</class>
+        <class>org.minijpa.jpa.model.PropertyOwner</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:property_many_to_many_uni;create=true" />
@@ -471,8 +471,8 @@
 
     <persistence-unit name="embed_many_to_one">
         <description>Properties</description>
-        <class>org.minijpatest.jpa.model.JobEmployee</class>
-        <class>org.minijpatest.jpa.model.ProgramManager</class>
+        <class>org.minijpa.jpa.model.JobEmployee</class>
+        <class>org.minijpa.jpa.model.ProgramManager</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:embed_many_to_one;create=true" />
@@ -489,8 +489,8 @@
 
     <persistence-unit name="long_running">
         <description>Properties</description>
-        <class>org.minijpatest.jpa.model.RandomData</class>
-        <class>org.minijpatest.jpa.model.RandomGroup</class>
+        <class>org.minijpa.jpa.model.RandomData</class>
+        <class>org.minijpa.jpa.model.RandomGroup</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:longrunning;create=true" />
@@ -516,7 +516,7 @@
 
     <persistence-unit name="items">
         <description>Items</description>
-        <class>org.minijpatest.jpa.model.StoreItem</class>
+        <class>org.minijpa.jpa.model.StoreItem</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:store_items;create=true" />
@@ -542,8 +542,8 @@
 
     <persistence-unit name="booking_sale">
         <description>Booking Sale</description>
-        <class>org.minijpatest.jpa.model.Booking</class>
-        <class>org.minijpatest.jpa.model.BookingSale</class>
+        <class>org.minijpa.jpa.model.Booking</class>
+        <class>org.minijpa.jpa.model.BookingSale</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
                       value="jdbc:derby:memory:booking_sale;create=true" />
