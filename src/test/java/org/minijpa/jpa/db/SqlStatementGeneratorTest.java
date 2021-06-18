@@ -24,6 +24,10 @@ import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
+import org.minijpa.jpa.db.ApacheDerbyConfiguration;
+import org.minijpa.jpa.db.ApacheDerbyJdbc;
+import org.minijpa.jpa.db.DbConfigurationList;
+import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.metadata.PersistenceUnitContext;
 
 public class SqlStatementGeneratorTest {

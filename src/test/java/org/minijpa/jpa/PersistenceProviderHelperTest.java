@@ -6,6 +6,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceProviderHelper;
 
 public class PersistenceProviderHelperTest {
 

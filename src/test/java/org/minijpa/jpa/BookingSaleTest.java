@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
 import org.minijpa.jpa.model.Booking;
 import org.minijpa.jpa.model.BookingSale;
 import org.minijpa.jpa.model.RoomBookingId;

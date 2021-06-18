@@ -65,7 +65,7 @@ public class ConnectionProviderImpl implements ConnectionProvider {
 	Properties properties = persistenceUnitInfo.getProperties();
 	String driverClass = (String) properties.get("javax.persistence.jdbc.driver");
 	if (driverClass != null)
-	    Class.forName(driverClass).newInstance();
+	    Class.forName(driverClass).getDeclaredConstructor().newInstance();
 
 	String url = (String) properties.get("javax.persistence.jdbc.url");
 	if (url == null)

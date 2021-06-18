@@ -44,8 +44,9 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 	    return optionalMD.get().getCtClass().toBytecode();
 	}
 
+	LOG.debug("toBytecode: className=" + className + "; optionalMD=" + optionalMD);
 	ManagedData managedData = classInspector.inspect(className);
-
+	LOG.debug("toBytecode: managedData=" + managedData);
 	EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
 	parsedEntities.add(enhEntity);
 	if (managedData.mappedSuperclass != null)

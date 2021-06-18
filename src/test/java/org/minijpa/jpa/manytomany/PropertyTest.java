@@ -8,15 +8,15 @@ import javax.persistence.Persistence;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.PersistenceUnitProperties;
+import org.minijpa.jpa.model.Property;
+import org.minijpa.jpa.model.PropertyOwner;
+import org.minijpa.jpa.model.PropertyType;
 
 import java.util.Arrays;
 import java.util.Collection;
 import javax.persistence.PersistenceException;
 import org.junit.jupiter.api.Assertions;
-import org.minijpa.jpa.PersistenceUnitProperties;
-import org.minijpa.jpa.model.Property;
-import org.minijpa.jpa.model.PropertyOwner;
-import org.minijpa.jpa.model.PropertyType;
 
 /**
  *

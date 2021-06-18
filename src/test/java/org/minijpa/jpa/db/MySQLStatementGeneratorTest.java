@@ -25,6 +25,10 @@ import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
+import org.minijpa.jpa.db.DbConfigurationList;
+import org.minijpa.jpa.db.MySQLConfiguration;
+import org.minijpa.jpa.db.MySQLJdbc;
+import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.metadata.PersistenceUnitContext;
 
 /**

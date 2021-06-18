@@ -2,10 +2,10 @@ package org.minijpa.metadata.enhancer.javassist;
 
 public class AttributeData {
 
-    Property property;
-    boolean parentEmbeddedId = false;
+    private Property property;
+    private boolean parentEmbeddedId = false;
     // only for embedded attributes
-    ManagedData embeddedData;
+    private ManagedData embeddedData;
 
     public AttributeData(Property property, boolean parentIsEmbeddedId, ManagedData embeddedData) {
 	super();

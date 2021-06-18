@@ -7,12 +7,12 @@ import javassist.CtField;
 
 public class Property {
 
-    boolean id;
-    PropertyMethod getPropertyMethod;
-    PropertyMethod setPropertyMethod;
-    CtField ctField;
-    boolean embedded;
-    List<Property> embeddedProperties;
+    private boolean id;
+    private PropertyMethod getPropertyMethod;
+    private PropertyMethod setPropertyMethod;
+    private CtField ctField;
+    private boolean embedded;
+    private List<Property> embeddedProperties;
     private final Optional<RelationshipProperties> relationshipProperties;
     private boolean embeddedIdParent = false;
 

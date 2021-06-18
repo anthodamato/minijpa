@@ -8,15 +8,33 @@ import javassist.CtMethod;
 
 public class BMTMethodInfo {
 
-    CtConstructor ctConstructor;
-    CtMethod ctMethod;
+    private CtConstructor ctConstructor;
+    private CtMethod ctMethod;
     private final List<BMTFieldInfo> bmtFieldInfos = new ArrayList<>();
 
-    List<BMTFieldInfo> getBmtFieldInfos() {
+    public List<BMTFieldInfo> getBmtFieldInfos() {
 	return bmtFieldInfos;
     }
 
-    void addFieldInfos(List<BMTFieldInfo> fieldInfos) {
+    public void addFieldInfos(List<BMTFieldInfo> fieldInfos) {
 	bmtFieldInfos.addAll(fieldInfos);
     }
+
+    public CtConstructor getCtConstructor() {
+	return ctConstructor;
+    }
+
+    public void setCtConstructor(CtConstructor ctConstructor) {
+	this.ctConstructor = ctConstructor;
+    }
+
+    public CtMethod getCtMethod() {
+	return ctMethod;
+    }
+
+    public void setCtMethod(CtMethod ctMethod) {
+	this.ctMethod = ctMethod;
+    }
+    
+    
 }

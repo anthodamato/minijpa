@@ -9,9 +9,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.model.Citizen;
 
 import javax.persistence.OptimisticLockException;
-import org.minijpa.jpa.model.Citizen;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

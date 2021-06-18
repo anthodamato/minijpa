@@ -160,35 +160,35 @@ public class EntityEnhancer {
 	List<EnhAttribute> enhAttributes = new ArrayList<>();
 	List<AttributeData> dataAttributes = managedData.getAttributeDataList();
 	for (AttributeData attributeData : dataAttributes) {
-	    Property property = attributeData.property;
+	    Property property = attributeData.getProperty();
 	    boolean enhanceAttribute = toEnhance(attributeData);
-	    LOG.debug("Enhancing attribute '" + property.ctField.getName() + "' " + enhanceAttribute);
-	    if (property.setPropertyMethod.add && !enhancedDataEntities.contains(managedData)) {
-		CtMethod ctMethod = createSetMethod(ct, property.ctField, enhanceAttribute, managedData);
-		property.setPropertyMethod.enhance = false;
-		property.setPropertyMethod.method = Optional.of(ctMethod);
+	    LOG.debug("Enhancing attribute '" + property.getCtField().getName() + "' " + enhanceAttribute);
+	    if (property.getSetPropertyMethod().add && !enhancedDataEntities.contains(managedData)) {
+		CtMethod ctMethod = createSetMethod(ct, property.getCtField(), enhanceAttribute, managedData);
+		property.getSetPropertyMethod().enhance = false;
+		property.getSetPropertyMethod().method = Optional.of(ctMethod);
 	    }
 
 	    if (enhanceAttribute && !enhancedDataEntities.contains(managedData) && canModify(ct)) {
-		if (property.getPropertyMethod.enhance)
-		    if (isLazyOrEntityType(property.getPropertyMethod.method.get().getReturnType()))
-			modifyGetMethod(property.getPropertyMethod.method.get(), property.ctField);
+		if (property.getGetPropertyMethod().enhance)
+		    if (isLazyOrEntityType(property.getGetPropertyMethod().method.get().getReturnType()))
+			modifyGetMethod(property.getGetPropertyMethod().method.get(), property.getCtField());
 
-		if (property.setPropertyMethod.enhance)
-		    modifySetMethod(property.setPropertyMethod.method.get(), property.ctField, managedData);
+		if (property.getSetPropertyMethod().enhance)
+		    modifySetMethod(property.getSetPropertyMethod().method.get(), property.getCtField(), managedData);
 	    }
 
 	    EnhEntity embeddedEnhEntity = null;
 	    List<EnhAttribute> enhEmbeddedAttributes = null;
-	    if (attributeData.embeddedData != null) {
-		embeddedEnhEntity = enhance(attributeData.embeddedData, parsedEntities);
+	    if (attributeData.getEmbeddedData() != null) {
+		embeddedEnhEntity = enhance(attributeData.getEmbeddedData(), parsedEntities);
 //		embeddedEnhEntity.setEmbeddedId(attributeData.isParentEmbeddedId());
 	    }
 
-	    EnhAttribute enhAttribute = new EnhAttribute(property.ctField.getName(),
-		    property.ctField.getType().getName(), property.ctField.getType().isPrimitive(),
-		    property.getPropertyMethod.method.get().getName(),
-		    property.setPropertyMethod.method.get().getName(), property.embedded, enhEmbeddedAttributes,
+	    EnhAttribute enhAttribute = new EnhAttribute(property.getCtField().getName(),
+		    property.getCtField().getType().getName(), property.getCtField().getType().isPrimitive(),
+		    property.getGetPropertyMethod().method.get().getName(),
+		    property.getSetPropertyMethod().method.get().getName(), property.isEmbedded(), enhEmbeddedAttributes,
 		    embeddedEnhEntity, attributeData.isParentEmbeddedId());
 	    enhAttributes.add(enhAttribute);
 	}
@@ -197,14 +197,14 @@ public class EntityEnhancer {
     }
 
     private boolean toEnhance(AttributeData dataAttribute) {
-	if (dataAttribute.property.id)
+	if (dataAttribute.getProperty().isId())
 	    return false;
 
-	if (dataAttribute.parentEmbeddedId)
+	if (dataAttribute.isParentEmbeddedId())
 	    return false;
 
-	if (!dataAttribute.property.getPropertyMethod.enhance
-		&& !dataAttribute.property.setPropertyMethod.enhance)
+	if (!dataAttribute.getProperty().getGetPropertyMethod().enhance
+		&& !dataAttribute.getProperty().getSetPropertyMethod().enhance)
 	    return false;
 
 	return true;
@@ -254,11 +254,11 @@ public class EntityEnhancer {
 		if (bmtFieldInfo.implementation != null)
 		    // an implementation class. It can be a collection. NEW_EXPR_OP
 		    if (CollectionUtils.isCollectionName(bmtFieldInfo.implementation))
-			modifyConstructorWithCollectionCheck(bmtMethodInfo.ctConstructor, optional.get().property.ctField, managedData);
+			modifyConstructorWithCollectionCheck(bmtMethodInfo.getCtConstructor(), optional.get().getProperty().getCtField(), managedData);
 		    else
-			modifyConstructorWithSimpleField(bmtMethodInfo.ctConstructor, optional.get().property.ctField, managedData);
+			modifyConstructorWithSimpleField(bmtMethodInfo.getCtConstructor(), optional.get().getProperty().getCtField(), managedData);
 		else
-		    modifyConstructorWithSimpleField(bmtMethodInfo.ctConstructor, optional.get().property.ctField, managedData);
+		    modifyConstructorWithSimpleField(bmtMethodInfo.getCtConstructor(), optional.get().getProperty().getCtField(), managedData);
 	    }
 	}
     }

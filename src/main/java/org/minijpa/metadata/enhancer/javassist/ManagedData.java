@@ -38,7 +38,7 @@ public class ManagedData {
 	return type;
     }
 
-    String getClassName() {
+    public String getClassName() {
 	return className;
     }
 
@@ -66,7 +66,7 @@ public class ManagedData {
 	return embeddables;
     }
 
-    List<BMTMethodInfo> getMethodInfos() {
+    public List<BMTMethodInfo> getMethodInfos() {
 	return methodInfos;
     }
 
@@ -112,7 +112,7 @@ public class ManagedData {
 
     public Optional<AttributeData> findAttribute(String name) {
 	Optional<AttributeData> optional = attributeDatas.stream()
-		.filter(a -> a.property.ctField.getName().equals(name)).findFirst();
+		.filter(a -> a.getProperty().getCtField().getName().equals(name)).findFirst();
 	if (optional.isPresent())
 	    return optional;
 
@@ -127,14 +127,14 @@ public class ManagedData {
 
     public Optional<ManagedData> findParentManagedData(String attributeName) {
 	Optional<AttributeData> optional = attributeDatas.stream()
-		.filter(a -> a.property.ctField.getName().equals(attributeName)).findFirst();
+		.filter(a -> a.getProperty().getCtField().getName().equals(attributeName)).findFirst();
 	if (optional.isPresent())
 	    return Optional.of(this);
 
 	// look inside embeddables
 	for (AttributeData attributeData : attributeDatas) {
-	    if (attributeData.property.isEmbedded() && !attributeData.property.isId()) {
-		Optional<ManagedData> o = attributeData.embeddedData.findParentManagedData(attributeName);
+	    if (attributeData.getProperty().isEmbedded() && !attributeData.getProperty().isId()) {
+		Optional<ManagedData> o = attributeData.getEmbeddedData().findParentManagedData(attributeName);
 		if (o.isPresent())
 		    return o;
 	    }

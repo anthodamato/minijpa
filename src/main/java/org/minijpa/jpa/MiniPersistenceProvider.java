@@ -75,6 +75,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
     private EntityManagerFactory createEntityManagerFactory(String path, String emName,
 	    @SuppressWarnings("rawtypes") Map map) {
 	PersistenceUnitInfo persistenceUnitInfo = null;
+	LOG.debug("createEntityManagerFactory: emName=" + emName);
 	try {
 	    persistenceUnitInfo = new PersistenceProviderHelper().parseXml(path, emName, map);
 	    if (persistenceUnitInfo == null) {

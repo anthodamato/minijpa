@@ -189,7 +189,17 @@ public class Parser {
 	    }
 	}
 
-	Method modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
+	Method modificationAttributeReadMethod = null;
+	try {
+	    modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
+	} catch (NoSuchMethodException e1) {
+	    LOG.error("parse: special method '" + enhEntity.getModificationAttributeGetMethod() + "' not found");
+	    throw e1;
+	} catch (SecurityException e1) {
+	    // TODO Auto-generated catch block
+	    e1.printStackTrace();
+	}
+
 	Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
 	if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent())
 	    lazyLoadedAttributeReadMethod = Optional.of(c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));

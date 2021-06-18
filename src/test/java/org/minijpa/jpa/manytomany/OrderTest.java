@@ -8,16 +8,16 @@ import javax.persistence.Persistence;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-import java.util.Set;
-import org.junit.jupiter.api.Assertions;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Customer;
 import org.minijpa.jpa.model.DeliveryType;
 import org.minijpa.jpa.model.Order;
 import org.minijpa.jpa.model.OrderStatus;
 import org.minijpa.jpa.model.Product;
+
+import java.util.Arrays;
+import java.util.Set;
+import org.junit.jupiter.api.Assertions;
 
 /**
  *

@@ -14,6 +14,8 @@ import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.PersistenceUnitEnv;
 import org.minijpa.jpa.model.Book;
 import org.minijpa.jpa.model.Citizen;
+import org.minijpa.metadata.Parser;
+import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.minijpa.metadata.enhancer.EnhEntity;
 import org.slf4j.Logger;
@@ -26,7 +28,7 @@ public class ParserTest {
     
     @Test
     public void parse() throws Exception {
-	String className = "org.minijpa.jpa.model.Citizen";
+	String className = "org.minijpatest.jpa.model.Citizen";
 	MetaEntity entity = MetaEntityUtils.parse(className, parser);
 	
 	Assertions.assertNotNull(entity);
@@ -52,7 +54,7 @@ public class ParserTest {
 	DbConfigurationList.getInstance().setDbConfiguration("emb_books", dbConfiguration);
 	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("emb_books");
 	
-	String className = "org.minijpa.jpa.model.Book";
+	String className = "org.minijpatest.jpa.model.Book";
 //	EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
 //	Assertions.assertNotNull(enhEntity);
 //	Assertions.assertNotNull(enhEntity.getModificationAttributeGetMethod());

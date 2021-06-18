@@ -13,8 +13,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
     <profiles>
@@ -38,6 +38,11 @@
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-classic</artifactId>
                     <version>1.2.3</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <version>1.7.30</version>
                 </dependency>
                 <dependency>
                     <groupId>org.junit.jupiter</groupId>
@@ -109,6 +114,11 @@
                     <version>1.2.3</version>
                 </dependency>
                 <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <version>1.7.30</version>
+                </dependency>
+                <dependency>
                     <groupId>org.junit.jupiter</groupId>
                     <artifactId>junit-jupiter-engine</artifactId>
                     <version>5.7.0</version>
@@ -164,6 +174,11 @@
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-classic</artifactId>
                     <version>1.2.3</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <version>1.7.30</version>
                 </dependency>
                 <dependency>
                     <groupId>org.junit.jupiter</groupId>
@@ -223,6 +238,11 @@
                     <version>1.2.3</version>
                 </dependency>
                 <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <version>1.7.30</version>
+                </dependency>
+                <dependency>
                     <groupId>org.junit.jupiter</groupId>
                     <artifactId>junit-jupiter-engine</artifactId>
                     <version>5.7.0</version>
@@ -278,6 +298,11 @@
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-classic</artifactId>
                     <version>1.2.3</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <version>1.7.30</version>
                 </dependency>
                 <dependency>
                     <groupId>org.junit.jupiter</groupId>
@@ -336,6 +361,11 @@
                     <version>1.2.3</version>
                 </dependency>
                 <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <version>1.7.30</version>
+                </dependency>
+                <dependency>
                     <groupId>org.junit.jupiter</groupId>
                     <artifactId>junit-jupiter-engine</artifactId>
                     <version>5.7.0</version>
@@ -387,8 +417,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>11</release>
+                    <!--<source>9</source>-->
+                    <!--<target>9</target>-->
                 </configuration>
             </plugin>
             <plugin>

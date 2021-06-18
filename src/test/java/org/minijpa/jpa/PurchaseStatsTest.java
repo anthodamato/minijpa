@@ -7,6 +7,7 @@ import javax.persistence.Persistence;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jpa.model.PurchaseStats;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -21,7 +22,6 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Root;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.Assertions;
-import org.minijpa.jpa.model.PurchaseStats;
 
 public class PurchaseStatsTest {
 

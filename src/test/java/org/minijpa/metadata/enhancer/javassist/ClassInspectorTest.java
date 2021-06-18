@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.minijpa.metadata.enhancer.javassist.BMTMethodInfo;
+import org.minijpa.metadata.enhancer.javassist.ClassInspector;
+import org.minijpa.metadata.enhancer.javassist.ManagedData;
 
 public class ClassInspectorTest {
 
@@ -36,7 +39,7 @@ public class ClassInspectorTest {
 	Assertions.assertNotNull(triangleManagedData);
 
 	Assertions.assertEquals(4, triangleManagedData.getAttributeDataList().size());
-	List<String> names = triangleManagedData.getAttributeDataList().stream().map(d -> d.property.ctField.getName())
+	List<String> names = triangleManagedData.getAttributeDataList().stream().map(d -> d.getProperty().getCtField().getName())
 		.collect(Collectors.toList());
 	CollectionUtils.containsAll(Arrays.asList("primitiveLong", "extraProperties", "extraValues", "longValue"),
 		names);
@@ -45,7 +48,7 @@ public class ClassInspectorTest {
 
 	Assertions.assertEquals(1, triangleManagedData.getMethodInfos().size());
 	BMTMethodInfo bmtMethodInfo = triangleManagedData.getMethodInfos().get(0);
-	Assertions.assertNotNull(bmtMethodInfo.ctConstructor);
+	Assertions.assertNotNull(bmtMethodInfo.getCtConstructor());
 	Assertions.assertEquals(5, bmtMethodInfo.getBmtFieldInfos().size());
     }
 }

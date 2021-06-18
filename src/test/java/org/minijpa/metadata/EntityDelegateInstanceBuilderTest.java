@@ -38,6 +38,7 @@ import org.minijpa.jpa.db.PersistenceUnitEnv;
 import org.minijpa.jpa.model.JobEmployee;
 import org.minijpa.jpa.model.JobInfo;
 import org.minijpa.jpa.model.ProgramManager;
+import org.minijpa.metadata.PersistenceUnitContext;
 
 /**
  *

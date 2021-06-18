@@ -35,6 +35,8 @@ import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.PersistenceUnitProperties;
+import org.minijpa.jpa.db.ApacheDerbyJdbc;
+import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.jpa.model.Address;
 import org.minijpa.jpa.model.Department;
 import org.minijpa.jpa.model.Employee;

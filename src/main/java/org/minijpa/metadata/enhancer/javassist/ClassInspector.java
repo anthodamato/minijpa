@@ -72,12 +72,11 @@ public class ClassInspector {
 	for (ManagedData managedData : inspectedClasses) {
 	    LOG.debug("inspect: managedData=" + managedData + "; managedData.getClassName()="
 		    + managedData.getClassName() + "; attrs=" + managedData.getAttributeDataList().stream()
-		    .map(a -> a.property.ctField.getName()).collect(Collectors.toList()));
+		    .map(a -> a.getProperty().getCtField().getName()).collect(Collectors.toList()));
 	    if (managedData.getClassName().equals(className))
 		return managedData;
 	}
 
-	LOG.debug("inspect: Thread.currentThread()=" + Thread.currentThread());
 	LOG.debug("Inspecting " + className);
 	ClassPool pool = ClassPool.getDefault();
 	CtClass ct = null;
@@ -200,7 +199,7 @@ public class ClassInspector {
 	for (Property p : list) {
 	    Optional<ManagedData> o = Optional.empty();
 	    for (ManagedData managedData : inspectedClasses) {
-		if (managedData.getClassName().equals(p.ctField.getType().getName())) {
+		if (managedData.getClassName().equals(p.getCtField().getType().getName())) {
 		    o = Optional.of(managedData);
 		    break;
 		}
@@ -209,7 +208,7 @@ public class ClassInspector {
 	    LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: p.getCtField().getName()=" + p.getCtField().getName());
 	    LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: o.isEmpty()=" + o.isEmpty());
 	    if (o.isEmpty()) {
-		ManagedData managedData = inspect(p.ctField.getType().getName());
+		ManagedData managedData = inspect(p.getCtField().getType().getName());
 		o = Optional.of(managedData);
 	    }
 
@@ -244,7 +243,7 @@ public class ClassInspector {
 	    if (optional.isPresent()) {
 		RelationshipProperties relationshipProperties = optional.get();
 		if (relationshipProperties.hasJoinColumn() && relationshipProperties.isLazy()) {
-		    String prefix = property.ctField.getName() + "_jcv";
+		    String prefix = property.getCtField().getName() + "_jcv";
 		    Optional<String> o = findAvailableAttribute(prefix, properties, ct);
 		    relationshipProperties.setJoinColumnFieldName(o);
 		    fieldNames.add(o.get());
@@ -356,11 +355,11 @@ public class ClassInspector {
 
     private void createEmbeddables(List<AttributeData> dataAttributes, List<ManagedData> embeddables) {
 	for (AttributeData dataAttribute : dataAttributes) {
-	    if (!dataAttribute.property.embedded)
+	    if (!dataAttribute.getProperty().isEmbedded())
 		continue;
 
 	    ManagedData managedData = findInspectedEmbeddable(inspectedClasses,
-		    dataAttribute.property.ctField.getName());
+		    dataAttribute.getProperty().getCtField().getName());
 	    if (managedData != null)
 		embeddables.add(managedData);
 	}
@@ -412,7 +411,7 @@ public class ClassInspector {
 	    List<BMTFieldInfo> fieldInfos = exprEditorExt.getFieldInfos();
 	    LOG.debug("inspectConstructorsAndMethods: fieldInfos.size()=" + fieldInfos.size());
 	    BMTMethodInfo methodInfo = new BMTMethodInfo();
-	    methodInfo.ctConstructor = ctConstructor;
+	    methodInfo.setCtConstructor(ctConstructor);
 	    methodInfo.addFieldInfos(fieldInfos);
 	    methodInfos.add(methodInfo);
 
@@ -423,21 +422,21 @@ public class ClassInspector {
     }
 
     private long countAttributesToEnhance(List<Property> properties) {
-	return properties.stream().filter(p -> !p.id).count();
+	return properties.stream().filter(p -> !p.isId()).count();
     }
 
     private AttributeData createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
-	LOG.debug("createAttributeFromProperty: property.ctField.getName()=" + property.ctField.getName()
-		+ "; property.embedded=" + property.embedded + "; property.ctField.getType().getName()="
-		+ property.ctField.getType().getName());
+	LOG.debug("createAttributeFromProperty: property.ctField.getName()=" + property.getCtField().getName()
+		+ "; property.embedded=" + property.isEmbedded() + "; property.ctField.getType().getName()="
+		+ property.getCtField().getType().getName());
 	ManagedData embeddedData = null;
-	if (property.embedded) {
+	if (property.isEmbedded()) {
 	    Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix,
-		    property.embeddedProperties, property.ctField.getType());
-	    removeAttributeFromProperties(modificationAttribute.get(), property.embeddedProperties);
+		    property.getEmbeddedProperties(), property.getCtField().getType());
+	    removeAttributeFromProperties(modificationAttribute.get(), property.getEmbeddedProperties());
 
 	    // lazy loaded attribute tracker
-	    Optional<String> lazyLoadedAttribute = createLazyLoadedAttribute(property.embeddedProperties, property.ctField.getType());
+	    Optional<String> lazyLoadedAttribute = createLazyLoadedAttribute(property.getEmbeddedProperties(), property.getCtField().getType());
 //	    Optional<Property> optionalLazy = property.embeddedProperties.stream()
 //		    .filter(p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().isLazy())
 //		    .findFirst();
@@ -448,12 +447,12 @@ public class ClassInspector {
 
 	    // join column postponed update attribute
 //	    createJoinColumnPostponedUpdateAttributeOnDest(property.embeddedProperties, property.ctField.getType());
-	    Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(property.embeddedProperties, property.ctField.getType());
+	    Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(property.getEmbeddedProperties(), property.getCtField().getType());
 
 	    embeddedData = new ManagedData(ManagedData.EMBEDDABLE);
-	    embeddedData.addAttributeDatas(createDataAttributes(property.embeddedProperties, property.id));
-	    embeddedData.setCtClass(property.ctField.getType());
-	    embeddedData.setClassName(property.ctField.getType().getName());
+	    embeddedData.addAttributeDatas(createDataAttributes(property.getEmbeddedProperties(), property.isId()));
+	    embeddedData.setCtClass(property.getCtField().getType());
+	    embeddedData.setClassName(property.getCtField().getType().getName());
 	    embeddedData.setModificationAttribute(modificationAttribute.get());
 	    embeddedData.setLazyLoadedAttribute(lazyLoadedAttribute);
 	    embeddedData.setJoinColumnPostponedUpdateAttribute(joinColumnPostponedUpdateAttribute);
