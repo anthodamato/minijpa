@@ -87,15 +87,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_mapped_superclass_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_mapped_superclass_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -115,15 +115,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_emb_books_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_emb_books_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -143,15 +143,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_emb_booking_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_emb_booking_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -172,15 +172,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_city_onetoone_uni_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_city_onetoone_uni_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -201,15 +201,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_onetoone_bid_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_onetoone_bid_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -230,15 +230,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_onetoone_bid_lazy_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_onetoone_bid_lazy_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -257,15 +257,15 @@
                       value="jdbc:derby:memory:onetomany_uni;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_onetomany_uni_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_onetomany_uni_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -304,15 +304,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_onetoone_bid_lazy_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_onetoone_bid_lazy_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -351,15 +351,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_stove_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_stove_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -379,15 +379,15 @@
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-<!--            <property
-                name="javax.persistence.schema-generation.database.action"
-                value="create" />
-            <property
-                name="javax.persistence.schema-generation.create-source"
-                value="script" />
-            <property
-                name="javax.persistence.schema-generation.create-script-source"
-                value="META-INF/create_holiday_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action"
+            value="create" />
+        <property
+            name="javax.persistence.schema-generation.create-source"
+            value="script" />
+        <property
+            name="javax.persistence.schema-generation.create-script-source"
+            value="META-INF/create_holiday_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -424,15 +424,15 @@
                       value="jdbc:derby:memory:orders;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-<!--            <property 
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="script" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-script-source" 
-                value="META-INF/create_orders_db.sql" />-->
+            <!--            <property 
+            name="javax.persistence.schema-generation.database.action" 
+            value="create" /> 
+        <property 
+            name="javax.persistence.schema-generation.create-source" 
+            value="script" /> 
+        <property 
+            name="javax.persistence.schema-generation.create-script-source" 
+            value="META-INF/create_orders_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -451,15 +451,15 @@
                       value="jdbc:derby:memory:property_many_to_many_uni;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-<!--            <property 
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="script" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-script-source" 
-                value="META-INF/create_property_db.sql" />-->
+            <!--            <property 
+            name="javax.persistence.schema-generation.database.action" 
+            value="create" /> 
+        <property 
+            name="javax.persistence.schema-generation.create-source" 
+            value="script" /> 
+        <property 
+            name="javax.persistence.schema-generation.create-script-source" 
+            value="META-INF/create_property_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -496,15 +496,15 @@
                       value="jdbc:derby:memory:longrunning;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-<!--            <property 
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="script" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-script-source" 
-                value="META-INF/create_long_running_db.sql" />-->
+            <!--            <property 
+            name="javax.persistence.schema-generation.database.action" 
+            value="create" /> 
+        <property 
+            name="javax.persistence.schema-generation.create-source" 
+            value="script" /> 
+        <property 
+            name="javax.persistence.schema-generation.create-script-source" 
+            value="META-INF/create_long_running_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -522,15 +522,15 @@
                       value="jdbc:derby:memory:store_items;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-<!--            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="script" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-script-source" 
-                value="META-INF/create_store_item_db.sql" />-->
+            <!--            <property
+            name="javax.persistence.schema-generation.database.action" 
+            value="create" /> 
+        <property 
+            name="javax.persistence.schema-generation.create-source" 
+            value="script" /> 
+        <property 
+            name="javax.persistence.schema-generation.create-script-source" 
+            value="META-INF/create_store_item_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
@@ -549,6 +549,23 @@
                       value="jdbc:derby:memory:booking_sale;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
+            <property
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="metadata" /> 
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="cascade_persist">
+        <description>Citizen registry</description>
+        <class>org.minijpa.jpa.model.JobCandidate</class>
+        <class>org.minijpa.jpa.model.SkillSet</class>
+
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:cascade_persist;create=true" />
+            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
