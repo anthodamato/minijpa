@@ -1,5 +1,6 @@
 package org.minijpa.jpa.db;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface EntityContainer {
@@ -24,7 +25,8 @@ public interface EntityContainer {
 
     public boolean isManaged(Object entityInstance) throws Exception;
 
-    public boolean isManaged(List<Object> entityInstanceList) throws Exception;
+//    public boolean isManaged(List<Object> entityInstanceList) throws Exception;
+    public boolean isManaged(Collection<?> entityInstanceList) throws Exception;
 
     public void close();
 

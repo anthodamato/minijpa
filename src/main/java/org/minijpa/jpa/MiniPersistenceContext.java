@@ -17,6 +17,7 @@ package org.minijpa.jpa;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -122,8 +123,17 @@ public class MiniPersistenceContext implements EntityContainer {
 	return false;
     }
 
+//    @Override
+//    public boolean isManaged(List<Object> entityInstanceList) throws Exception {
+//	for (Object instance : entityInstanceList) {
+//	    if (!isManaged(instance))
+//		return false;
+//	}
+//
+//	return true;
+//    }
     @Override
-    public boolean isManaged(List<Object> entityInstanceList) throws Exception {
+    public boolean isManaged(Collection<?> entityInstanceList) throws Exception {
 	for (Object instance : entityInstanceList) {
 	    if (!isManaged(instance))
 		return false;

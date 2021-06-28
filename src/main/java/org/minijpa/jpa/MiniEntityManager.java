@@ -146,7 +146,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 	}
 
 	try {
-	    jdbcEntityManager.remove(entity);
+	    MiniFlushMode miniFlushMode = flushModeType == FlushModeType.AUTO ? MiniFlushMode.AUTO : MiniFlushMode.COMMIT;
+	    jdbcEntityManager.remove(entity, miniFlushMode);
 	} catch (Exception ex) {
 	    LOG.error(ex.getClass().getName());
 	    LOG.error(ex.getMessage());
@@ -359,7 +360,7 @@ public class MiniEntityManager extends AbstractEntityManager {
     @Override
     public void detach(Object entity) {
 	try {
-	    persistenceContext.detach(entity);
+	    jdbcEntityManager.detach(entity);
 	    LOG.debug("Entity " + entity + " detached");
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());

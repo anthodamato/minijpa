@@ -40,7 +40,8 @@ public class ManyToManyHelper extends RelationshipHelper {
 	ManyToManyRelationship.Builder builder = new ManyToManyRelationship.Builder();
 	builder = builder.withJoinColumnDataList(joinColumnDataList);
 
-	builder.withMappedBy(RelationshipHelper.getMappedBy(manyToMany));
+	builder.withMappedBy(getMappedBy(manyToMany));
+	builder.withCascades(getCascades(manyToMany.cascade()));
 
 	if (manyToMany.fetch() != null)
 	    if (manyToMany.fetch() == FetchType.EAGER)

@@ -16,6 +16,8 @@
 package org.minijpa.jdbc.relationship;
 
 import java.util.Optional;
+import java.util.Set;
+import org.minijpa.jdbc.Cascade;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
@@ -34,6 +36,7 @@ public abstract class Relationship {
     // for bidirectional relationships
     protected MetaAttribute targetAttribute;
     protected Optional<String> mappedBy;
+    protected Set<Cascade> cascades;
     protected RelationshipJoinTable joinTable;
     protected Class<?> targetEntityClass;
     protected JoinTableAttributes joinTableAttributes;
@@ -72,6 +75,10 @@ public abstract class Relationship {
 	return mappedBy;
     }
 
+    public Set<Cascade> getCascades() {
+	return cascades;
+    }
+
     public boolean isOwner() {
 	return mappedBy.isEmpty();
     }
@@ -85,6 +92,10 @@ public abstract class Relationship {
     }
 
     public boolean toOne() {
+	return false;
+    }
+
+    public boolean fromOne() {
 	return false;
     }
 
@@ -113,4 +124,15 @@ public abstract class Relationship {
 	return Relationship.class.getName() + ": fetchType=" + fetchType;
     }
 
+    public boolean hasAnyCascades(Cascade... csds) {
+	if (cascades == null || cascades.isEmpty())
+	    return false;
+
+	for (Cascade c : csds) {
+	    if (cascades.contains(c))
+		return true;
+	}
+
+	return false;
+    }
 }

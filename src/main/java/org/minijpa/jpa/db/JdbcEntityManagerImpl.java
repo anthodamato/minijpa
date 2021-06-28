@@ -15,6 +15,7 @@ import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.minijpa.jdbc.AttributeUtil;
+import org.minijpa.jdbc.Cascade;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
@@ -24,7 +25,6 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
-import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.QueryResultMapping;
@@ -105,6 +105,20 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 	Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
 	entityLoader.refresh(entity, entityInstance, primaryKey, lockType);
+
+	// cascades
+	List<MetaAttribute> cascadeAttributes = entity.getCascadeAttributes(Cascade.ALL, Cascade.REFRESH);
+	for (MetaAttribute attribute : cascadeAttributes) {
+	    Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, attribute);
+	    if (attribute.getRelationship().toMany()) {
+		Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
+		for (Object instance : ees) {
+		    refresh(instance, lockType);
+		}
+	    } else {
+		refresh(attributeInstance, lockType);
+	    }
+	}
     }
 
     public void lock(Object entityInstance, LockType lockType) throws Exception {
@@ -133,25 +147,24 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	return metaEntityHelper.getLockType(entity, entityInstance);
     }
 
-    private Object generatePersistentIdentity(MetaEntity entity, Object entityInstance) throws Exception {
-	Pk id = entity.getId();
-	Object idValue = id.getReadMethod().invoke(entityInstance);
-	LOG.debug("generatePersistentIdentity: idValue=" + idValue);
-	if (idValue != null)
-	    return idValue;
-
-	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
-	LOG.debug("generatePersistentIdentity: pkStrategy=" + pkStrategy);
-	if (pkStrategy == PkStrategy.SEQUENCE) {
-	    String seqStm = dbConfiguration.getDbJdbc().sequenceNextValueStatement(entity);
-	    Long longValue = dbConfiguration.getJdbcRunner().generateNextSequenceValue(connectionHolder.getConnection(), seqStm);
-	    entity.getId().getWriteMethod().invoke(entityInstance, longValue);
-	    return longValue;
-	}
-
-	return null;
-    }
-
+//    private Object generatePersistentIdentity(MetaEntity entity, Object entityInstance) throws Exception {
+//	Pk id = entity.getId();
+//	Object idValue = id.getReadMethod().invoke(entityInstance);
+//	LOG.debug("generatePersistentIdentity: idValue=" + idValue);
+//	if (idValue != null)
+//	    return idValue;
+//
+//	PkStrategy pkStrategy = id.getPkGeneration().getPkStrategy();
+//	LOG.debug("generatePersistentIdentity: pkStrategy=" + pkStrategy);
+//	if (pkStrategy == PkStrategy.SEQUENCE) {
+//	    String seqStm = dbConfiguration.getDbJdbc().sequenceNextValueStatement(entity);
+//	    Long longValue = dbConfiguration.getJdbcRunner().generateNextSequenceValue(connectionHolder.getConnection(), seqStm);
+//	    entity.getId().getWriteMethod().invoke(entityInstance, longValue);
+//	    return longValue;
+//	}
+//
+//	return null;
+//    }
     @Override
     public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
 	Object idValue = entity.getId().getReadMethod().invoke(entityInstance);
@@ -181,6 +194,20 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	    MetaEntityHelper.setEntityStatus(entity, entityInstance, EntityStatus.PERSIST_NOT_FLUSHED);
 
 	entityContainer.addManaged(entityInstance, idValue);
+
+	// cascades
+	List<MetaAttribute> cascadeAttributes = entity.getCascadeAttributes(Cascade.ALL, Cascade.PERSIST);
+	for (MetaAttribute attribute : cascadeAttributes) {
+	    Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, attribute);
+	    if (attribute.getRelationship().toMany()) {
+		Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
+		for (Object instance : ees) {
+		    persist(attribute.getRelationship().getAttributeType(), instance, miniFlushMode);
+		}
+	    } else {
+		persist(attribute.getRelationship().getAttributeType(), attributeInstance, miniFlushMode);
+	    }
+	}
     }
 
     private void addInfoForPostponedUpdateEntities(
@@ -290,7 +317,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 //	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
 //	    LOG.debug("flush: pre persistJoinTableAttributes entityInstance=" + entityInstance + "; entityStatus=" + entityStatus);
 //	}
-
 	for (Object entityInstance : managedEntityList) {
 	    LOG.debug("flush: persistJoinTableAttributes entityInstance=" + entityInstance);
 	    MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
@@ -383,17 +409,54 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
     @Override
-    public void remove(Object entity) throws Exception {
+    public void remove(Object entity, MiniFlushMode miniFlushMode) throws Exception {
 	MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
 	if (entityContainer.isManaged(entity)) {
 	    LOG.debug("Instance " + entity + " is in the persistence context");
 	    entityContainer.markForRemoval(entity);
 	    LOG.debug("remove: entity=" + entity);
+	    // cascades
+	    List<MetaAttribute> cascadeAttributes = e.getCascadeAttributes(Cascade.ALL, Cascade.REMOVE);
+	    for (MetaAttribute attribute : cascadeAttributes) {
+		if (!attribute.getRelationship().fromOne())
+		    continue;
+
+		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entity, attribute);
+		if (attribute.getRelationship().toMany()) {
+		    Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
+		    for (Object instance : ees) {
+			remove(instance, miniFlushMode);
+		    }
+		} else {
+		    remove(attributeInstance, miniFlushMode);
+		}
+	    }
+
 	} else {
 	    LOG.debug("Instance " + entity + " not found in the persistence context");
 	    EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(e, entity);
 	    if (entityStatus == EntityStatus.DETACHED)
 		throw new IllegalArgumentException("Entity '" + entity + "' is detached");
+	}
+    }
+
+    @Override
+    public void detach(Object entity) throws Exception {
+	entityContainer.detach(entity);
+
+	// cascades
+	MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
+	List<MetaAttribute> cascadeAttributes = e.getCascadeAttributes(Cascade.ALL, Cascade.DETACH);
+	for (MetaAttribute attribute : cascadeAttributes) {
+	    Object attributeInstance = entityInstanceBuilder.getAttributeValue(entity, attribute);
+	    if (attribute.getRelationship().toMany()) {
+		Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
+		for (Object instance : ees) {
+		    detach(instance);
+		}
+	    } else {
+		detach(attributeInstance);
+	    }
 	}
     }
 

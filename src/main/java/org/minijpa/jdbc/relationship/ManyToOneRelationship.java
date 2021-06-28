@@ -16,6 +16,8 @@
 package org.minijpa.jdbc.relationship;
 
 import java.util.Optional;
+import java.util.Set;
+import org.minijpa.jdbc.Cascade;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
@@ -44,6 +46,7 @@ public final class ManyToOneRelationship extends Relationship {
 
 	private String joinColumnTable;
 	private FetchType fetchType = FetchType.EAGER;
+	private Set<Cascade> cascades;
 	private MetaEntity owningEntity;
 	private MetaAttribute owningAttribute;
 	private MetaEntity attributeType;
@@ -60,6 +63,11 @@ public final class ManyToOneRelationship extends Relationship {
 
 	public Builder withFetchType(FetchType fetchType) {
 	    this.fetchType = fetchType;
+	    return this;
+	}
+
+	public Builder withCascades(Set<Cascade> cascades) {
+	    this.cascades = cascades;
 	    return this;
 	}
 
@@ -91,6 +99,7 @@ public final class ManyToOneRelationship extends Relationship {
 	public Builder with(ManyToOneRelationship manyToOne) {
 	    this.joinColumnTable = manyToOne.joinColumnTable;
 	    this.fetchType = manyToOne.fetchType;
+	    this.cascades = manyToOne.cascades;
 	    this.owningEntity = manyToOne.owningEntity;
 	    this.owningAttribute = manyToOne.owningAttribute;
 	    this.attributeType = manyToOne.attributeType;
@@ -103,6 +112,7 @@ public final class ManyToOneRelationship extends Relationship {
 	    ManyToOneRelationship r = new ManyToOneRelationship();
 	    r.joinColumnTable = joinColumnTable;
 	    r.fetchType = fetchType;
+	    r.cascades = cascades;
 	    r.owningEntity = owningEntity;
 	    r.owningAttribute = owningAttribute;
 	    r.attributeType = attributeType;

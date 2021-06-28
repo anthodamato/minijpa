@@ -16,6 +16,8 @@
 package org.minijpa.jdbc.relationship;
 
 import java.util.Optional;
+import java.util.Set;
+import org.minijpa.jdbc.Cascade;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
@@ -43,6 +45,7 @@ public final class ManyToManyRelationship extends Relationship {
 	private String joinColumnTable;
 	private Optional<String> mappedBy = Optional.empty();
 	private FetchType fetchType = FetchType.LAZY;
+	private Set<Cascade> cascades;
 	private MetaEntity owningEntity;
 	private MetaAttribute owningAttribute;
 	private Class<?> collectionClass;
@@ -69,6 +72,11 @@ public final class ManyToManyRelationship extends Relationship {
 
 	public Builder withFetchType(FetchType fetchType) {
 	    this.fetchType = fetchType;
+	    return this;
+	}
+
+	public Builder withCascades(Set<Cascade> cascades) {
+	    this.cascades = cascades;
 	    return this;
 	}
 
@@ -126,6 +134,7 @@ public final class ManyToManyRelationship extends Relationship {
 	    this.joinColumnTable = r.joinColumnTable;
 	    this.mappedBy = r.mappedBy;
 	    this.fetchType = r.fetchType;
+	    this.cascades = r.cascades;
 	    this.owningEntity = r.owningEntity;
 	    this.owningAttribute = r.owningAttribute;
 	    this.collectionClass = r.collectionClass;
@@ -144,6 +153,7 @@ public final class ManyToManyRelationship extends Relationship {
 	    r.joinColumnTable = joinColumnTable;
 	    r.mappedBy = mappedBy;
 	    r.fetchType = fetchType;
+	    r.cascades = cascades;
 	    r.owningEntity = owningEntity;
 	    r.owningAttribute = owningAttribute;
 	    r.collectionClass = collectionClass;

@@ -119,17 +119,19 @@ public class CollectionUtils {
 	return true;
     }
 
-    public static List<Object> getCollectionAsList(Object instance) {
-	List<Object> list = new ArrayList<>();
+    public static Collection<?> getCollectionFromCollectionOrMap(Object instance) {
+//	List<Object> list = new ArrayList<>();
 	Class<?> c = instance.getClass();
 	if (implementsInterface(c, Collection.class))
-	    list.addAll((Collection<?>) instance);
+	    return (Collection<?>) instance;
+//	    list.addAll((Collection<?>) instance);
 	else if (implementsInterface(c, Map.class)) {
 	    Map<?, ?> map = (Map<?, ?>) instance;
-	    list.addAll(map.values());
+//	    list.addAll(map.values());
+	    return map.values();
 	}
 
-	return list;
+	return new ArrayList<>();
     }
 
 }

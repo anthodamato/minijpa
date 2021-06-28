@@ -40,7 +40,8 @@ public class OneToManyHelper extends RelationshipHelper {
 	OneToManyRelationship.Builder builder = new OneToManyRelationship.Builder();
 	builder = builder.withJoinColumnDataList(joinColumnDataList);
 
-	builder.withMappedBy(RelationshipHelper.getMappedBy(oneToMany));
+	builder.withMappedBy(getMappedBy(oneToMany));
+	builder.withCascades(getCascades(oneToMany.cascade()));
 
 	if (oneToMany.fetch() != null)
 	    if (oneToMany.fetch() == FetchType.EAGER)

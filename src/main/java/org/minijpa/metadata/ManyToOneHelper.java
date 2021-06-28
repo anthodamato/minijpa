@@ -29,6 +29,7 @@ public class ManyToOneHelper extends RelationshipHelper {
 	ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder();
 	builder.withJoinColumnDataList(joinColumnDataList);
 
+	builder.withCascades(getCascades(manyToOne.cascade()));
 	if (manyToOne.fetch() != null)
 	    if (manyToOne.fetch() == FetchType.EAGER)
 		builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.EAGER);

@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
+import org.minijpa.jdbc.relationship.Relationship;
 
 public class MetaEntity {
 
@@ -277,6 +278,17 @@ public class MetaEntity {
 
     public Optional<MetaAttribute> getVersionAttribute() {
 	return basicAttributes.stream().filter(a -> a.isVersion() && !a.isId()).findFirst();
+    }
+
+    public List<MetaAttribute> getCascadeAttributes(Cascade... cascades) {
+	List<MetaAttribute> attrs = new ArrayList<>();
+	getRelationshipAttributes().forEach(attribute -> {
+	    Relationship r = attribute.getRelationship();
+	    if (r.isOwner() && r.hasAnyCascades(cascades))
+		attrs.add(attribute);
+	});
+
+	return attrs;
     }
 
     public static class Builder {

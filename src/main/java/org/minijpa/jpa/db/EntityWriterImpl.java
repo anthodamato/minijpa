@@ -20,6 +20,7 @@ package org.minijpa.jpa.db;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -263,7 +264,7 @@ public class EntityWriterImpl implements EntityWriter {
 //		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
 		if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
 			&& !CollectionUtils.isCollectionEmpty(attributeInstance)) {
-		    List<Object> ees = CollectionUtils.getCollectionAsList(attributeInstance);
+		    Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
 		    if (entityContainer.isManaged(ees))
 			persistJoinTableAttributes(ees, a, entityInstance);
 		}
@@ -271,7 +272,7 @@ public class EntityWriterImpl implements EntityWriter {
 	}
     }
 
-    private void persistJoinTableAttributes(List<Object> ees, MetaAttribute a, Object entityInstance) throws Exception {
+    private void persistJoinTableAttributes(Collection<?> ees, MetaAttribute a, Object entityInstance) throws Exception {
 	// persist every entity instance
 	RelationshipJoinTable relationshipJoinTable = a.getRelationship().getJoinTable();
 	for (Object instance : ees) {

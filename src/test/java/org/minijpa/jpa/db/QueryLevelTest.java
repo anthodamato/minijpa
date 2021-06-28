@@ -14,6 +14,7 @@ import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
+import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.EntityContainer;
@@ -88,8 +89,8 @@ public class QueryLevelTest {
 	Assertions.assertNotNull(employees);
 	Assertions.assertEquals(1, employees.size());
 
-	jdbcEntityManager.remove(e1);
-	jdbcEntityManager.remove(pm);
+	jdbcEntityManager.remove(e1, MiniFlushMode.AUTO);
+	jdbcEntityManager.remove(pm, MiniFlushMode.AUTO);
 	jdbcEntityManager.flush();
 	persistenceUnitEnv.getConnectionHolder().commit();
 	persistenceUnitEnv.getConnectionHolder().closeConnection();
@@ -131,8 +132,8 @@ public class QueryLevelTest {
 	Assertions.assertNotNull(c);
 	Assertions.assertNotNull(c.getState());
 	Assertions.assertEquals("London", c.getName());
-	jdbcEntityManager.remove(c);
-	jdbcEntityManager.remove(s);
+	jdbcEntityManager.remove(c, MiniFlushMode.AUTO);
+	jdbcEntityManager.remove(s, MiniFlushMode.AUTO);
 	jdbcEntityManager.flush();
 	persistenceUnitEnv.getConnectionHolder().commit();
 	persistenceUnitEnv.getConnectionHolder().closeConnection();
@@ -173,8 +174,8 @@ public class QueryLevelTest {
 	Assertions.assertNotNull(p.getFingerprint());
 	Assertions.assertEquals("John Smith", p.getName());
 	Assertions.assertEquals("arch", p.getFingerprint().getType());
-	jdbcEntityManager.remove(p);
-	jdbcEntityManager.remove(fingerprint);
+	jdbcEntityManager.remove(p, MiniFlushMode.AUTO);
+	jdbcEntityManager.remove(fingerprint, MiniFlushMode.AUTO);
 	jdbcEntityManager.flush();
 	persistenceUnitEnv.getConnectionHolder().commit();
 	persistenceUnitEnv.getConnectionHolder().closeConnection();

@@ -30,6 +30,7 @@ public class OneToOneHelper extends RelationshipHelper {
 	builder.withJoinColumnDataList(joinColumnDataList);
 
 	builder.withMappedBy(getMappedBy(oneToOne));
+	builder.withCascades(getCascades(oneToOne.cascade()));
 
 	if (oneToOne.fetch() != null)
 	    if (oneToOne.fetch() == FetchType.EAGER)

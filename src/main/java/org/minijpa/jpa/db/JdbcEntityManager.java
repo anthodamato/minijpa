@@ -26,6 +26,7 @@ public interface JdbcEntityManager {
 
     public int delete(DeleteQuery deleteQuery) throws Exception;
 
-    public void remove(Object entity) throws Exception;
+    public void remove(Object entity, MiniFlushMode miniFlushMode) throws Exception;
 
+    public void detach(Object entity) throws Exception;
 }

@@ -16,6 +16,8 @@
 package org.minijpa.jdbc.relationship;
 
 import java.util.Optional;
+import java.util.Set;
+import org.minijpa.jdbc.Cascade;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 
@@ -31,6 +33,11 @@ public final class OneToOneRelationship extends Relationship {
     }
 
     @Override
+    public boolean fromOne() {
+	return true;
+    }
+
+    @Override
     public String toString() {
 	return OneToOneRelationship.class.getName()
 		+ ": joinColumnTable=" + joinColumnTable + "; mappedBy=" + mappedBy + "; fetchType="
@@ -42,6 +49,7 @@ public final class OneToOneRelationship extends Relationship {
 	private String joinColumnTable;
 	private Optional<String> mappedBy = Optional.empty();
 	private FetchType fetchType = FetchType.EAGER;
+	private Set<Cascade> cascades;
 	private MetaEntity owningEntity;
 	private MetaAttribute targetAttribute;
 	private MetaAttribute owningAttribute;
@@ -64,6 +72,11 @@ public final class OneToOneRelationship extends Relationship {
 
 	public Builder withFetchType(FetchType fetchType) {
 	    this.fetchType = fetchType;
+	    return this;
+	}
+
+	public Builder withCascades(Set<Cascade> cascades) {
+	    this.cascades = cascades;
 	    return this;
 	}
 
@@ -101,6 +114,7 @@ public final class OneToOneRelationship extends Relationship {
 	    this.joinColumnTable = oneToOne.joinColumnTable;
 	    this.mappedBy = oneToOne.mappedBy;
 	    this.fetchType = oneToOne.fetchType;
+	    this.cascades = oneToOne.cascades;
 	    this.owningEntity = oneToOne.owningEntity;
 	    this.owningAttribute = oneToOne.owningAttribute;
 	    this.targetAttribute = oneToOne.targetAttribute;
@@ -111,17 +125,18 @@ public final class OneToOneRelationship extends Relationship {
 	}
 
 	public OneToOneRelationship build() {
-	    OneToOneRelationship oto = new OneToOneRelationship();
-	    oto.joinColumnTable = joinColumnTable;
-	    oto.mappedBy = mappedBy;
-	    oto.fetchType = fetchType;
-	    oto.owningEntity = owningEntity;
-	    oto.targetAttribute = targetAttribute;
-	    oto.owningAttribute = owningAttribute;
-	    oto.attributeType = attributeType;
-	    oto.joinColumnDataList = joinColumnDataList;
-	    oto.joinColumnMapping = joinColumnMapping;
-	    return oto;
+	    OneToOneRelationship r = new OneToOneRelationship();
+	    r.joinColumnTable = joinColumnTable;
+	    r.mappedBy = mappedBy;
+	    r.fetchType = fetchType;
+	    r.cascades = cascades;
+	    r.owningEntity = owningEntity;
+	    r.targetAttribute = targetAttribute;
+	    r.owningAttribute = owningAttribute;
+	    r.attributeType = attributeType;
+	    r.joinColumnDataList = joinColumnDataList;
+	    r.joinColumnMapping = joinColumnMapping;
+	    return r;
 	}
     }
 }
