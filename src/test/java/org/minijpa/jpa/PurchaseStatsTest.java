@@ -122,4 +122,34 @@ public class PurchaseStatsTest {
 	em.close();
     }
 
+    @Test
+    public void nullValue() throws Exception {
+	final EntityManager em = emf.createEntityManager();
+	final EntityTransaction tx = em.getTransaction();
+	tx.begin();
+
+	PurchaseStats ps2 = new PurchaseStats();
+	ps2.setStartDate(LocalDate.of(2020, Month.APRIL, 1));
+	ps2.setEndDate(LocalDate.of(2020, Month.JUNE, 1));
+	ps2.setDebitCard(Double.valueOf("30.0"));
+	ps2.setCreditCard(Double.valueOf("20.0"));
+	em.persist(ps2);
+
+	CriteriaBuilder cb = em.getCriteriaBuilder();
+	CriteriaQuery criteriaQuery = cb.createQuery();
+	Root<PurchaseStats> root = criteriaQuery.from(PurchaseStats.class);
+
+	criteriaQuery.select(root.get("cash"));
+	Query query = em.createQuery(criteriaQuery);
+	List result = query.getResultList();
+	Assertions.assertNotNull(result);
+	List<? extends Number> r = new ArrayList<>(result);
+
+	Assertions.assertNull(r.get(0));
+
+	em.remove(ps2);
+	tx.commit();
+
+	em.close();
+    }
 }

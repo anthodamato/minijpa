@@ -16,7 +16,15 @@
 package org.minijpa.jdbc.db;
 
 import java.math.BigDecimal;
+import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
 import org.minijpa.jdbc.DDLData;
@@ -58,6 +66,9 @@ public abstract class BasicDbJdbc implements DbJdbc {
 	if (type == Long.class || (type.isPrimitive() && type.getName().equals("long")))
 	    return "bigint";
 
+	if (type == String.class)
+	    return "varchar(" + ddlData.get().getLength().get() + ")";
+
 	if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
 	    return "float";
 
@@ -79,11 +90,15 @@ public abstract class BasicDbJdbc implements DbJdbc {
 	if (type == Date.class || type == java.sql.Date.class)
 	    return "date";
 
-	if (type == Timestamp.class)
+	if (type == Timestamp.class || type == Calendar.class || type == LocalDateTime.class
+		|| type == Instant.class || type == ZonedDateTime.class)
 	    return "timestamp";
 
-	if (type == String.class)
-	    return "varchar(" + ddlData.get().getLength().get() + ")";
+	if (type == LocalTime.class || type == OffsetTime.class || type == Time.class)
+	    return "time";
+
+	if (type == Duration.class)
+	    return "bigint";
 
 	if (type == Boolean.class || (type.isPrimitive() && type.getName().equals("boolean")))
 	    return "boolean";

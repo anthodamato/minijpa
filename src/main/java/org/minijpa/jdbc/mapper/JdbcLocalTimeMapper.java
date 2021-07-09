@@ -17,13 +17,20 @@ package org.minijpa.jdbc.mapper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.time.LocalTime;
 
 /**
  *
  * @author adamato
  */
-public interface JdbcAttributeMapper {
+public class JdbcLocalTimeMapper implements JdbcAttributeMapper {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    @Override
+    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException {
+	LocalTime localTime = (LocalTime) value;
+	Time time = Time.valueOf(localTime);
+	preparedStatement.setTime(index, time);
+    }
 
 }

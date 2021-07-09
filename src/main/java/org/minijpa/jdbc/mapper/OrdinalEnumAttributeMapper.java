@@ -15,15 +15,32 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JdbcAttributeMapper {
+public class OrdinalEnumAttributeMapper implements AttributeMapper<Enum, Integer> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    private final Class<?> attributeType;
+
+    public OrdinalEnumAttributeMapper(Class<?> attributeType) {
+	this.attributeType = attributeType;
+    }
+
+    @Override
+    public Integer attributeToDatabase(Enum k) {
+	return k.ordinal();
+    }
+
+    @Override
+    public Enum databaseToAttribute(Integer v) {
+	Object[] enums = attributeType.getEnumConstants();
+	for (Object o : enums) {
+	    if (((Enum) o).ordinal() == v)
+		return (Enum) o;
+	}
+
+	return null;
+    }
 
 }

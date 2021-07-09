@@ -15,15 +15,15 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
+ * @param <K>
+ * @param <V>
  */
-public interface JdbcAttributeMapper {
+public interface AttributeMapper<K, V> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    public V attributeToDatabase(K k);
 
+    public K databaseToAttribute(V v);
 }

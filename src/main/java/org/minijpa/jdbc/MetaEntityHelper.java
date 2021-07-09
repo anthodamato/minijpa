@@ -55,12 +55,13 @@ public class MetaEntityHelper {
 	return list;
     }
 
-    public List<QueryParameter> convertAbstractAVToQP(ModelValueArray<AbstractAttribute> attributeValueArray) throws Exception {
+    public List<QueryParameter> convertAbstractAVToQP(
+	    ModelValueArray<AbstractAttribute> attributeValueArray) throws Exception {
 	List<QueryParameter> list = new ArrayList<>();
 	for (int i = 0; i < attributeValueArray.size(); ++i) {
 	    AbstractAttribute a = attributeValueArray.getModel(i);
 	    QueryParameter queryParameter = new QueryParameter(a.getColumnName(), attributeValueArray.getValue(i),
-		    a.getType(), a.getSqlType(), a.jdbcAttributeMapper);
+		    a.getType(), a.getSqlType(), a.jdbcAttributeMapper, a.attributeMapper);
 	    list.add(queryParameter);
 	}
 
@@ -80,7 +81,7 @@ public class MetaEntityHelper {
 	    }
 	} else {
 	    QueryParameter queryParameter = new QueryParameter(a.getColumnName(), value,
-		    a.getType(), a.getSqlType(), a.jdbcAttributeMapper);
+		    a.getType(), a.getSqlType(), a.jdbcAttributeMapper, a.attributeMapper);
 	    list.add(queryParameter);
 	}
 
@@ -97,7 +98,7 @@ public class MetaEntityHelper {
 	    MetaAttribute attribute = joinColumnAttribute.getForeignKeyAttribute();
 	    LOG.debug("convertAVToQP: joinColumnAttribute.getColumnName()=" + joinColumnAttribute.getColumnName());
 	    QueryParameter queryParameter = new QueryParameter(joinColumnAttribute.getColumnName(), modelValueArray.getValue(i),
-		    attribute.getType(), attribute.getSqlType(), attribute.jdbcAttributeMapper);
+		    attribute.getType(), attribute.getSqlType(), attribute.jdbcAttributeMapper, attribute.attributeMapper);
 	    list.add(queryParameter);
 	}
 
@@ -129,7 +130,7 @@ public class MetaEntityHelper {
 	}
 
 	QueryParameter queryParameter = new QueryParameter(pk.getAttribute().getColumnName(), value,
-		pk.getType(), pk.getAttribute().getSqlType(), pk.getAttribute().jdbcAttributeMapper);
+		pk.getType(), pk.getAttribute().getSqlType(), pk.getAttribute().jdbcAttributeMapper, pk.getAttribute().attributeMapper);
 	list.add(queryParameter);
 	return list;
     }
@@ -154,7 +155,7 @@ public class MetaEntityHelper {
 	    int index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, attribute);
 	    MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
 	    QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(), modelValueArray.getValue(i),
-		    metaAttribute.getType(), metaAttribute.getSqlType(), metaAttribute.jdbcAttributeMapper);
+		    metaAttribute.getType(), metaAttribute.getSqlType(), metaAttribute.jdbcAttributeMapper, metaAttribute.attributeMapper);
 	    queryParameters.add(qp);
 	}
 

@@ -1,5 +1,12 @@
 package org.minijpa.jpa.db;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
+import java.util.Optional;
+import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkGenerationType;
@@ -30,6 +37,15 @@ public class MySQLJdbc extends BasicDbJdbc {
 	    return "for update";
 
 	return "";
+    }
+
+    @Override
+    public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
+	if (type == Timestamp.class || type == Calendar.class || type == LocalDateTime.class
+		|| type == Instant.class || type == ZonedDateTime.class)
+	    return "datetime(6)";
+
+	return super.buildColumnDefinition(type, ddlData);
     }
 
 }

@@ -17,13 +17,22 @@ package org.minijpa.jdbc.mapper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  *
  * @author adamato
  */
-public interface JdbcAttributeMapper {
+public class JdbcUtilDateMapper implements JdbcAttributeMapper {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    @Override
+    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException {
+	Date date = (Date) value;
+	Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+	calendar.setTimeInMillis(date.getTime());
+	preparedStatement.setDate(index, new java.sql.Date(date.getTime()), calendar);
+    }
 
 }

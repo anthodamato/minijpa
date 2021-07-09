@@ -69,10 +69,12 @@ public class OneToManyUniTest {
 
 	em.detach(store);
 
+	tx.begin();
 	Store s = em.find(Store.class, store.getId());
+	Assertions.assertFalse(s == store);
 	Assertions.assertTrue(!s.getItems().isEmpty());
 	Assertions.assertEquals(2, s.getItems().size());
-	Assertions.assertFalse(s == store);
+	tx.commit();
 
 	em.close();
     }

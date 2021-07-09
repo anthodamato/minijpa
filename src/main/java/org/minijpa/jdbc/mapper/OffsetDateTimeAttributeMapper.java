@@ -15,15 +15,23 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JdbcAttributeMapper {
+public class OffsetDateTimeAttributeMapper implements AttributeMapper<OffsetDateTime, Timestamp> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    @Override
+    public Timestamp attributeToDatabase(OffsetDateTime k) {
+	return Timestamp.from(k.toInstant());
+    }
+
+    @Override
+    public OffsetDateTime databaseToAttribute(Timestamp v) {
+	return OffsetDateTime.of(v.toLocalDateTime(), OffsetDateTime.now().getOffset());
+    }
 
 }

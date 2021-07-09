@@ -45,7 +45,7 @@ public final class EntityDelegate implements EntityListener {
 		return value;
 
 	    MetaAttribute a = entity.getAttribute(attributeName);
-//	    LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy());
+//	    LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy() + "; lazyAttributeLoaded(entity, a, entityInstance)=" + lazyAttributeLoaded(entity, a, entityInstance));
 	    if (a.isLazy() && !lazyAttributeLoaded(entity, a, entityInstance)) {
 		EntityLoader entityLoader = entityContainerContextManager
 			.findByEntityContainer(entityInstance);

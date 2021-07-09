@@ -15,15 +15,26 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JdbcAttributeMapper {
+public class StringEnumAttributeMapper implements AttributeMapper<Enum, String> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    private final Class<?> attributeType;
+
+    public StringEnumAttributeMapper(Class<?> attributeType) {
+	this.attributeType = attributeType;
+    }
+
+    @Override
+    public String attributeToDatabase(Enum k) {
+	return k.name();
+    }
+
+    @Override
+    public Enum databaseToAttribute(String v) {
+	return Enum.valueOf((Class<Enum>) attributeType, v);
+    }
 
 }

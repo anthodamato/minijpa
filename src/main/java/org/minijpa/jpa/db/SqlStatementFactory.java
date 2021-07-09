@@ -483,7 +483,7 @@ public class SqlStatementFactory {
 	    value = query.getParameter(parameterExpression.getPosition());
 
 	QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), value, attribute.getType(),
-		attribute.getSqlType(), attribute.getJdbcAttributeMapper());
+		attribute.getSqlType(), attribute.getJdbcAttributeMapper(), attribute.getAttributeMapper());
 	parameters.add(queryParameter);
     }
 
@@ -615,7 +615,9 @@ public class SqlStatementFactory {
 	    } else if (comparisonPredicate.getValue() != null)
 		if (requireQM(comparisonPredicate.getValue())) {
 		    QueryParameter queryParameter = new QueryParameter(attribute1.getColumnName(),
-			    comparisonPredicate.getValue(), attribute1.getType(), attribute1.getSqlType(), attribute1.getJdbcAttributeMapper());
+			    comparisonPredicate.getValue(), attribute1.getType(),
+			    attribute1.getSqlType(), attribute1.getJdbcAttributeMapper(),
+			    attribute1.getAttributeMapper());
 		    parameters.add(queryParameter);
 		    builder.withLeftColumn(tableColumn1).withRightExpression(QM);
 		} else
@@ -686,7 +688,7 @@ public class SqlStatementFactory {
 	BetweenCondition.Builder builder = new BetweenCondition.Builder(createTableColumnFromPath(miniPath));
 	if (requireQM(x)) {
 	    QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), x, attribute.getType(),
-		    attribute.getSqlType(), attribute.getJdbcAttributeMapper());
+		    attribute.getSqlType(), attribute.getJdbcAttributeMapper(), attribute.getAttributeMapper());
 	    parameters.add(queryParameter);
 	    builder.withLeftExpression(QM);
 	} else
@@ -694,7 +696,7 @@ public class SqlStatementFactory {
 
 	if (requireQM(y)) {
 	    QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), y, attribute.getType(),
-		    attribute.getSqlType(), attribute.getJdbcAttributeMapper());
+		    attribute.getSqlType(), attribute.getJdbcAttributeMapper(), attribute.getAttributeMapper());
 	    parameters.add(queryParameter);
 	    builder.withRightExpression(QM);
 	} else
@@ -807,7 +809,8 @@ public class SqlStatementFactory {
 	    }).collect(Collectors.toList());
 
 	    List<QueryParameter> queryParameters = inPredicate.getValues().stream().map(v -> {
-		return new QueryParameter(attribute.getColumnName(), v, attribute.getType(), attribute.getSqlType(), attribute.getJdbcAttributeMapper());
+		return new QueryParameter(attribute.getColumnName(), v, attribute.getType(),
+			attribute.getSqlType(), attribute.getJdbcAttributeMapper(), attribute.getAttributeMapper());
 	    }).collect(Collectors.toList());
 	    parameters.addAll(queryParameters);
 
@@ -958,7 +961,8 @@ public class SqlStatementFactory {
 
     private QueryParameter createQueryParameter(AttributePath<?> miniPath, Object value) {
 	MetaAttribute a = miniPath.getMetaAttribute();
-	return new QueryParameter(a.getColumnName(), value, a.getType(), a.getSqlType(), a.getJdbcAttributeMapper());
+	return new QueryParameter(a.getColumnName(), value, a.getType(), a.getSqlType(),
+		a.getJdbcAttributeMapper(), a.getAttributeMapper());
     }
 
     public SqlUpdate update(Query query, List<QueryParameter> parameters) {

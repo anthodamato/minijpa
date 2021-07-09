@@ -15,15 +15,26 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JdbcAttributeMapper {
+public class CalendarAttributeMapper implements AttributeMapper<Calendar, Timestamp> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    @Override
+    public Timestamp attributeToDatabase(Calendar k) {
+	return new Timestamp(k.getTimeInMillis());
+    }
+
+    @Override
+    public Calendar databaseToAttribute(Timestamp v) {
+	Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+	calendar.setTimeInMillis(v.getTime());
+	return calendar;
+    }
 
 }

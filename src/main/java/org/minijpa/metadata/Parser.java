@@ -50,6 +50,7 @@ import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.db.DbConfiguration;
+import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.ManyToManyRelationship;
@@ -404,8 +405,6 @@ public class Parser {
 	    return Types.INTEGER;
 
 	if (attributeClass.isEnum() && enumerated != null) {
-	    LOG.debug("findSqlType: enumerated.value()=" + enumerated.value());
-
 	    if (enumerated.value() == null)
 		return Types.INTEGER;
 
@@ -477,7 +476,6 @@ public class Parser {
 		    .withPath(path)
 		    .withDDLData(ddlData);
 
-//	    PkGeneration gv = buildPkGeneration(field);
 	    builder.withJdbcAttributeMapper(jdbcAttributeMapper);
 	    return builder.build();
 	}
@@ -505,6 +503,10 @@ public class Parser {
 		.isBasic(AttributeUtil.isBasicAttribute(attributeClass))
 		.withPath(path)
 		.withDDLData(ddlData);
+
+	AttributeMapper attributeMapper = dbConfiguration.getDbTypeMapper().attributeMapper(attributeClass, readWriteType);
+	if (attributeMapper != null)
+	    builder.withAttributeMapper(Optional.of(attributeMapper));
 
 	Optional<Relationship> relationship = buildRelationship(field);
 	if (relationship.isPresent()) {

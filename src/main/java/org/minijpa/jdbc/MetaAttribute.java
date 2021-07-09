@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 
 import org.minijpa.jdbc.relationship.FetchType;
@@ -159,6 +160,7 @@ public class MetaAttribute extends AbstractAttribute {
 	private boolean collection = false;
 	private Field javaMember;
 	private JdbcAttributeMapper jdbcAttributeMapper;
+	private Optional<AttributeMapper> attributeMapper = Optional.empty();
 	private Class<?> collectionImplementationClass;
 	private boolean nullable = true;
 	private boolean version = false;
@@ -234,6 +236,11 @@ public class MetaAttribute extends AbstractAttribute {
 	    return this;
 	}
 
+	public Builder withAttributeMapper(Optional<AttributeMapper> attributeMapper) {
+	    this.attributeMapper = attributeMapper;
+	    return this;
+	}
+
 	public Builder withCollectionImplementationClass(Class<?> collectionImplementationClass) {
 	    this.collectionImplementationClass = collectionImplementationClass;
 	    return this;
@@ -289,6 +296,7 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.collection = collection;
 	    attribute.javaMember = javaMember;
 	    attribute.jdbcAttributeMapper = jdbcAttributeMapper;
+	    attribute.attributeMapper = attributeMapper;
 	    attribute.collectionImplementationClass = collectionImplementationClass;
 	    attribute.nullable = nullable;
 	    attribute.version = version;

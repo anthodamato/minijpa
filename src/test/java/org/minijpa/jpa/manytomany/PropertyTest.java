@@ -60,12 +60,13 @@ public class PropertyTest {
 
 	    tx.commit();
 
+	    tx.begin();
 	    em.detach(property);
 	    Property p = em.find(Property.class, property.getId());
 	    Collection<PropertyOwner> owners = p.getOwners();
 	    Assertions.assertNotNull(owners);
 	    Assertions.assertEquals(2, owners.size());
-
+	    tx.commit();
 	} finally {
 	    em.close();
 	}

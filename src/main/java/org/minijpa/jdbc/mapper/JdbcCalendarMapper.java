@@ -17,13 +17,20 @@ package org.minijpa.jdbc.mapper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Calendar;
 
 /**
  *
  * @author adamato
  */
-public interface JdbcAttributeMapper {
+public class JdbcCalendarMapper implements JdbcAttributeMapper {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    @Override
+    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException {
+	Calendar calendar = (Calendar) value;
+	Timestamp timestamp = new Timestamp(calendar.getTimeInMillis());
+	preparedStatement.setTimestamp(index, timestamp);
+    }
 
 }

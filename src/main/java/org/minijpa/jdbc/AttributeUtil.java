@@ -17,12 +17,16 @@ package org.minijpa.jdbc;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -169,13 +173,28 @@ public class AttributeUtil {
 	if (c == OffsetTime.class)
 	    return true;
 
+	if (c == ZonedDateTime.class)
+	    return true;
+
+	if (c == Duration.class)
+	    return true;
+
+	if (c == Instant.class)
+	    return true;
+
+	if (c == LocalTime.class)
+	    return true;
+
 	if (c == Calendar.class)
+	    return true;
+
+	if (c == java.sql.Date.class)
 	    return true;
 
 	if (c == Timestamp.class)
 	    return true;
 
-	if (c == LocalTime.class)
+	if (c == Time.class)
 	    return true;
 
 	if (c.isEnum())

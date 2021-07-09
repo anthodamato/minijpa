@@ -17,13 +17,28 @@ package org.minijpa.jdbc.mapper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Time;
+import java.time.OffsetTime;
+import java.util.Calendar;
+import java.util.TimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author adamato
  */
-public interface JdbcAttributeMapper {
+public class JdbcOffsetTimeMapper implements JdbcAttributeMapper {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    private Logger LOG = LoggerFactory.getLogger(JdbcOffsetTimeMapper.class);
+
+    @Override
+    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException {
+	OffsetTime offsetTime = (OffsetTime) value;
+	Time time = Time.valueOf(offsetTime.toLocalTime());
+	Calendar calendar = Calendar.getInstance();
+	calendar.setTimeZone(TimeZone.getDefault());
+	preparedStatement.setTime(index, time, calendar);
+    }
 
 }

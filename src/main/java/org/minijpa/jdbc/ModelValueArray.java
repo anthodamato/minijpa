@@ -77,9 +77,7 @@ public class ModelValueArray<T> {
     }
 
     public int indexOfModel(Function<T, ?> p, Object subModel) {
-	    LOG.debug("indexOfModel: subModel="+subModel);
 	for (int i = 0; i < size(); ++i) {
-	    LOG.debug("indexOfModel: p.apply(getModel(i))="+p.apply(getModel(i)));
 	    if (p.apply(getModel(i)) == subModel)
 		return i;
 	}

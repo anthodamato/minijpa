@@ -3,6 +3,7 @@ package org.minijpa.jpa.db;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +42,9 @@ public class JpaJdbcRunner extends JdbcRunner {
 	    rs = preparedStatement.executeQuery();
 	    int nc = sqlSelect.getValues().size();
 	    List<FetchParameter> fetchParameters = sqlSelect.getFetchParameters();
+	    ResultSetMetaData metaData = rs.getMetaData();
 	    while (rs.next()) {
-		Object[] values = createRecord(nc, fetchParameters, rs);
+		Object[] values = createRecord(nc, fetchParameters, rs, metaData);
 		objects.add(new TupleImpl(values, compoundSelection));
 	    }
 

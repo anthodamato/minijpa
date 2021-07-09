@@ -15,15 +15,28 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JdbcAttributeMapper {
+public class InstantAttributeMapper implements AttributeMapper<Instant, Timestamp> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
-
+    private Logger LOG = LoggerFactory.getLogger(InstantAttributeMapper.class);
+    
+    @Override
+    public Timestamp attributeToDatabase(Instant k) {
+	return Timestamp.from(k);
+    }
+    
+    @Override
+    public Instant databaseToAttribute(Timestamp v) {
+	LOG.debug("databaseToAttribute: v=" + v);
+	return v.toInstant();
+    }
+    
 }

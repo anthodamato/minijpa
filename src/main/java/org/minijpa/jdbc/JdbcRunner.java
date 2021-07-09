@@ -15,16 +15,22 @@
  */
 package org.minijpa.jdbc;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 
 import org.minijpa.jdbc.model.SqlSelect;
 import org.slf4j.Logger;
@@ -36,15 +42,54 @@ public class JdbcRunner {
 
     private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter,
 	    int index) throws SQLException {
-//	LOG.info("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
-//		+ queryParameter.getSqlType());
-	if (queryParameter.getValue() == null) {
+	LOG.info("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
+		+ queryParameter.getSqlType());
+	Object value = queryParameter.getValue();
+	if (value == null) {
 	    preparedStatement.setNull(index, queryParameter.getSqlType());
 	    return;
 	}
 
 //	LOG.info("setPreparedStatementQM: queryParameter.getJdbcAttributeMapper()=" + queryParameter.getJdbcAttributeMapper());
-	queryParameter.getJdbcAttributeMapper().setObject(preparedStatement, index, queryParameter.getValue());
+//	queryParameter.getJdbcAttributeMapper().setObject(preparedStatement, index, queryParameter.getValue());
+	if (queryParameter.getAttributeMapper().isPresent()) {
+	    value = queryParameter.getAttributeMapper().get().attributeToDatabase(value);
+	}
+
+//	Class<?> type = queryParameter.getType();
+	Class<?> type = value.getClass();
+	if (type == String.class) {
+	    preparedStatement.setString(index, (String) value);
+	} else if (type == Integer.class) {
+	    preparedStatement.setInt(index, (Integer) value);
+	} else if (type == Long.class) {
+	    preparedStatement.setLong(index, (Long) value);
+	} else if (type == Float.class) {
+	    preparedStatement.setFloat(index, (Float) value);
+	} else if (type == Double.class) {
+	    preparedStatement.setDouble(index, (Double) value);
+	} else if (type == BigDecimal.class) {
+	    preparedStatement.setBigDecimal(index, (BigDecimal) value);
+	} else if (type == java.sql.Date.class) {
+	    preparedStatement.setDate(index, (java.sql.Date) value, Calendar.getInstance(TimeZone.getDefault()));
+	} else if (type == Timestamp.class) {
+	    Timestamp timestamp = (Timestamp) value;
+	    preparedStatement.setTimestamp(index, timestamp, Calendar.getInstance(TimeZone.getDefault()));
+	} else if (type == Time.class) {
+	    Time time = (Time) value;
+	    Calendar calendar = Calendar.getInstance();
+	    calendar.setTimeZone(TimeZone.getDefault());
+	    preparedStatement.setTime(index, time, calendar);
+	} else if (type == Boolean.class) {
+	    preparedStatement.setBoolean(index, (Boolean) value);
+	}
+//	else if (type == Character.class) {
+//	    Character characters = (Character) value;
+//	    preparedStatement.setString(index, String.valueOf(characters));
+//	} else if (type == Character[].class) {
+//	    Character[] characters = (Character[]) value;
+//	    preparedStatement.setString(index, String.valueOf(characters));
+//	} 
     }
 
     protected void setPreparedStatementParameters(PreparedStatement preparedStatement,
@@ -187,20 +232,121 @@ public class JdbcRunner {
 	}
     }
 
+    private Object getValue(ResultSet rs,
+	    int index,
+	    ResultSetMetaData metaData) throws SQLException {
+	int columnType = metaData.getColumnType(index);
+	Object value = null;
+	switch (columnType) {
+	    case Types.VARCHAR:
+		return rs.getString(index);
+	    case Types.INTEGER:
+		return rs.getObject(index);
+	    case Types.BIGINT:
+		return rs.getObject(index);
+	    case Types.DECIMAL:
+		return rs.getBigDecimal(index);
+	    case Types.NUMERIC:
+		return rs.getBigDecimal(index);
+	    case Types.DOUBLE:
+		return rs.getObject(index);
+	    case Types.FLOAT:
+	    case Types.REAL:
+		return rs.getObject(index);
+	    case Types.DATE:
+		return rs.getDate(index, Calendar.getInstance());
+	    case Types.TIME:
+		Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+		return rs.getTime(index, calendar);
+	    case Types.TIMESTAMP:
+		return rs.getTimestamp(index, Calendar.getInstance());
+	    case Types.TIMESTAMP_WITH_TIMEZONE:
+		return rs.getTimestamp(index, Calendar.getInstance());
+	    case Types.TIME_WITH_TIMEZONE:
+		return rs.getTime(index, Calendar.getInstance());
+	    case Types.BOOLEAN:
+		return rs.getBoolean(index);
+	    case Types.TINYINT:
+		break;
+	    case Types.ARRAY:
+		break;
+	    case Types.BINARY:
+		break;
+	    case Types.BIT:
+		break;
+	    case Types.BLOB:
+		break;
+	    case Types.CHAR:
+		break;
+	    case Types.CLOB:
+		break;
+	    case Types.DATALINK:
+		break;
+	    case Types.DISTINCT:
+		break;
+	    case Types.JAVA_OBJECT:
+		break;
+	    case Types.LONGNVARCHAR:
+		break;
+	    case Types.LONGVARBINARY:
+		break;
+	    case Types.LONGVARCHAR:
+		break;
+	    case Types.NCHAR:
+		break;
+	    case Types.NCLOB:
+		break;
+	    case Types.NULL:
+		break;
+	    case Types.NVARCHAR:
+		break;
+	    case Types.OTHER:
+		break;
+	    case Types.REF:
+		break;
+	    case Types.REF_CURSOR:
+		break;
+	    case Types.ROWID:
+		break;
+	    case Types.SMALLINT:
+		break;
+	    case Types.SQLXML:
+		break;
+	    case Types.STRUCT:
+		break;
+	    case Types.VARBINARY:
+		break;
+	}
+
+	return value;
+    }
+
     private ModelValueArray<FetchParameter> createModelValueArrayFromResultSet(
 	    List<FetchParameter> fetchParameters,
 	    ResultSet rs,
 	    ResultSetMetaData metaData) throws Exception {
 	ModelValueArray<FetchParameter> modelValueArray = new ModelValueArray<>();
 	int i = 1;
+	Object v = null;
 	for (FetchParameter fetchParameter : fetchParameters) {
 	    MetaAttribute metaAttribute = fetchParameter.getAttribute();
-	    int columnType = metaData.getColumnType(i);
+	    LOG.debug("createModelValueArrayFromResultSet: metaAttribute=" + metaAttribute);
 
-	    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(i), metaData.getScale(i));
-	    Object value = rs.getObject(i);
-	    Object v = value != null ? metaAttribute.dbTypeMapper.convert(value,
-		    readWriteType, fetchParameter.getType()) : null;
+	    Object value = getValue(rs, i, metaData);
+	    LOG.debug("createModelValueArrayFromResultSet: value=" + value);
+	    if (value != null)
+		LOG.debug("createModelValueArrayFromResultSet: value.getClass()=" + value.getClass());
+	    LOG.debug("createModelValueArrayFromResultSet: fetchParameter.getType()=" + fetchParameter.getType());
+
+	    v = null;
+	    if (value != null) {
+		if (metaAttribute.attributeMapper.isPresent())
+		    v = metaAttribute.attributeMapper.get().databaseToAttribute(value);
+		else
+		    v = metaAttribute.dbTypeMapper.convertToAttributeType(value, fetchParameter.getType());
+	    }
+
+	    LOG.debug("createModelValueArrayFromResultSet: v=" + v);
 	    modelValueArray.add(fetchParameter, v);
 	    ++i;
 	}
@@ -208,51 +354,20 @@ public class JdbcRunner {
 	return modelValueArray;
     }
 
-    protected Object[] createRecord(int nc, List<FetchParameter> fetchParameters, ResultSet rs) throws Exception {
+    protected Object[] createRecord(int nc,
+	    List<FetchParameter> fetchParameters,
+	    ResultSet rs,
+	    ResultSetMetaData metaData) throws Exception {
 	Object[] values = new Object[nc];
 	for (int i = 0; i < nc; ++i) {
 	    Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
-	    values[i] = rs.getObject(i + 1, readWriteType);
+//	    values[i] = rs.getObject(i + 1, readWriteType);
+	    values[i] = getValue(rs, i + 1, metaData);
 	}
 
 	return values;
     }
 
-//    public List<Object> runQuery(Connection connection, String sql, List<FetchParameter> fetchParameters,
-//	    List<QueryParameter> parameters) throws Exception {
-//	PreparedStatement preparedStatement = null;
-//	ResultSet rs = null;
-//	try {
-//	    preparedStatement = connection.prepareStatement(sql);
-//	    setPreparedStatementParameters(preparedStatement, parameters);
-//
-//	    LOG.info("Running `" + sql + "`");
-//	    List<Object> objects = new ArrayList<>();
-//	    rs = preparedStatement.executeQuery();
-////	    int nc = fetchParameters.size();
-//	    ResultSetMetaData metaData = rs.getMetaData();
-//	    int nc = metaData.getColumnCount();
-//
-//	    while (rs.next()) {
-////		if (nc == 1) {
-////		    Class<?> readWriteType = fetchParameters.get(0).getReadWriteDbType();
-////		    Object instance = rs.getObject(1, readWriteType);
-////		    objects.add(instance);
-////		} else {
-//		Object[] values = createRecord(nc, fetchParameters, rs);
-//		objects.add(values);
-////		}
-//	    }
-//
-//	    return objects;
-//	} finally {
-//	    if (rs != null)
-//		rs.close();
-//
-//	    if (preparedStatement != null)
-//		preparedStatement.close();
-//	}
-//    }
     public List<Object> runQuery(Connection connection, String sql,
 	    List<QueryParameter> parameters) throws Exception {
 	PreparedStatement preparedStatement = null;
@@ -271,7 +386,9 @@ public class JdbcRunner {
 		while (rs.next()) {
 		    int columnType = metaData.getColumnType(1);
 		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(1), metaData.getScale(1));
-		    objects.add(rs.getObject(1, readWriteType));
+//		    objects.add(rs.getObject(1, readWriteType));
+		    objects.add(getValue(rs, 1, metaData));
+//		    LOG.debug("runQuery: values[i]=" + objects.get(objects.size() - 1));
 		}
 	    } else {
 		while (rs.next()) {
@@ -282,7 +399,9 @@ public class JdbcRunner {
 //			LOG.debug("runQuery: readWriteType=" + readWriteType);
 //			LOG.debug("runQuery: columnType=" + columnType);
 //			LOG.debug("runQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
-			values[i] = rs.getObject(i + 1, readWriteType);
+//			values[i] = rs.getObject(i + 1, readWriteType);
+			values[i] = getValue(rs, i + 1, metaData);
+//			LOG.debug("runQuery: values[i]=" + values[i]);
 		    }
 
 		    objects.add(values);
@@ -317,8 +436,8 @@ public class JdbcRunner {
 		while (rs.next()) {
 		    int columnType = metaData.getColumnType(1);
 		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(1), metaData.getScale(1));
-		    Object instance = rs.getObject(1, readWriteType);
-		    objects.add(instance);
+//		    Object instance = rs.getObject(1, readWriteType);
+		    objects.add(getValue(rs, 1, metaData));
 		}
 	    } else {
 		while (rs.next()) {
@@ -329,7 +448,8 @@ public class JdbcRunner {
 //			LOG.debug("runNativeQuery: readWriteType=" + readWriteType);
 //			LOG.debug("runNativeQuery: columnType=" + columnType);
 //			LOG.debug("runNativeQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
-			values[i] = rs.getObject(i + 1, readWriteType);
+//			values[i] = rs.getObject(i + 1, readWriteType);
+			values[i] = getValue(rs, i + 1, metaData);
 		    }
 
 		    objects.add(values);
@@ -389,7 +509,8 @@ public class JdbcRunner {
 //	    LOG.debug("buildRecord: columnAlias=" + columnAlias);
 	    Optional<FetchParameter> optional = findFetchParameter(columnName, columnAlias, queryResultMapping);
 	    if (optional.isPresent()) {
-		Object value = rs.getObject(i + 1, optional.get().getReadWriteDbType());
+//		Object value = rs.getObject(i + 1, optional.get().getReadWriteDbType());
+		Object value = getValue(rs, i + 1, metaData);
 //		LOG.debug("buildRecord: value=" + value);
 		modelValueArray.add(optional.get(), value);
 	    }

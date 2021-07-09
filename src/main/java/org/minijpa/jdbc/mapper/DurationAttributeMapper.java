@@ -15,15 +15,22 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.time.Duration;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JdbcAttributeMapper {
+public class DurationAttributeMapper implements AttributeMapper<Duration, Long> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    @Override
+    public Long attributeToDatabase(Duration k) {
+	return k.toMillis();
+    }
+
+    @Override
+    public Duration databaseToAttribute(Long v) {
+	return Duration.ofMillis(v);
+    }
 
 }

@@ -15,15 +15,24 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JdbcAttributeMapper {
+public class ZonedDateTimeAttributeMapper implements AttributeMapper<ZonedDateTime, Timestamp> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    @Override
+    public Timestamp attributeToDatabase(ZonedDateTime k) {
+	return Timestamp.from(k.toInstant());
+    }
+
+    @Override
+    public ZonedDateTime databaseToAttribute(Timestamp v) {
+	return ZonedDateTime.ofInstant(v.toInstant(), ZoneId.systemDefault());
+    }
 
 }

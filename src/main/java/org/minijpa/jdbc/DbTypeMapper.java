@@ -15,9 +15,21 @@
  */
 package org.minijpa.jdbc;
 
+import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 
 public interface DbTypeMapper {
+
+    /**
+     * Finds a mapper that converts an attribute value of type <code>attributeType</code> to a value of type
+     * <code>databaseType</code> and vice-versa.
+     *
+     *
+     * @param attributeType
+     * @param databaseType
+     * @return
+     */
+    public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType);
 
     /**
      * Maps the attribute type to the db type. For example, on Apache Derby if a column has the 'DATE' data type a
@@ -30,14 +42,13 @@ public interface DbTypeMapper {
     public Class<?> map(Class<?> attributeType, Integer jdbcType);
 
     /**
-     * Converts the 'value' read from a resultSet with type 'readWriteDbType' to an object with class 'attributeType'.
+     * Converts the 'value' read from a resultSet to an object with class 'attributeType'.
      *
      * @param value
-     * @param readWriteDbType
      * @param attributeType
      * @return
      */
-    public Object convert(Object value, Class<?> readWriteDbType, Class<?> attributeType);
+    public Object convertToAttributeType(Object value, Class<?> attributeType);
 
     /**
      * Converts the 'value' read from a resultSet with type 'readWriteDbType' to an object with class 'attributeType'.
