@@ -16,7 +16,6 @@
 package org.minijpa.jdbc;
 
 import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 
 public interface DbTypeMapper {
 
@@ -60,12 +59,4 @@ public interface DbTypeMapper {
      */
     public Object convertGeneratedKey(Object value, Class<?> attributeType);
 
-    /**
-     * Returns the attribute converter.
-     *
-     * @param attributeType
-     * @param jdbcType
-     * @return
-     */
-    public JdbcAttributeMapper mapJdbcAttribute(Class<?> attributeType, Integer jdbcType);
 }

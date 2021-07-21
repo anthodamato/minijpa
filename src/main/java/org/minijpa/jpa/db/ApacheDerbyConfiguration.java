@@ -20,7 +20,7 @@ public class ApacheDerbyConfiguration implements DbConfiguration {
 	this.dbJdbc = new ApacheDerbyJdbc();
 	this.dbTypeMapper = new ApacheDerbyDbTypeMapper();
 	this.sqlStatementGenerator = new DefaultSqlStatementGenerator(dbJdbc);
-	this.jdbcRunner = new JpaJdbcRunner();
+	this.jdbcRunner = new JpaJdbcRunner(dbTypeMapper);
     }
 
     @Override

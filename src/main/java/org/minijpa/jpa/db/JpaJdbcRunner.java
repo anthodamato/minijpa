@@ -13,6 +13,7 @@ import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
+import org.minijpa.jdbc.DbTypeMapper;
 
 import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.EntityLoader;
@@ -28,6 +29,10 @@ import org.slf4j.LoggerFactory;
 public class JpaJdbcRunner extends JdbcRunner {
 
     private final Logger LOG = LoggerFactory.getLogger(JpaJdbcRunner.class);
+
+    public JpaJdbcRunner(DbTypeMapper dbTypeMapper) {
+	super(dbTypeMapper);
+    }
 
     public List<Tuple> runTupleQuery(Connection connection, String sql, SqlSelect sqlSelect,
 	    CompoundSelection<?> compoundSelection, List<QueryParameter> parameters) throws Exception {

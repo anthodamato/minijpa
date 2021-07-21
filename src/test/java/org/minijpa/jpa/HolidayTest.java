@@ -201,42 +201,40 @@ public class HolidayTest {
 	EntityTransaction tx = em.getTransaction();
 	tx.begin();
 
-	try {
-	    Holiday h1 = holiday1();
+	Holiday h1 = holiday1();
 
-	    em.persist(h1);
+	em.persist(h1);
 
-	    tx.commit();
+	tx.commit();
 
-	    tx.begin();
-	    Holiday h2 = holiday2();
-	    Holiday h3 = holiday3();
-	    Holiday h4 = holiday4();
-	    Holiday h5 = holiday5();
-	    em.persist(h2);
-	    em.persist(h3);
-	    em.persist(h4);
-	    em.persist(h5);
+	tx.begin();
+	Holiday h2 = holiday2();
+	Holiday h3 = holiday3();
+	Holiday h4 = holiday4();
+	Holiday h5 = holiday5();
+	em.persist(h2);
+	em.persist(h3);
+	em.persist(h4);
+	em.persist(h5);
 
-	    CriteriaBuilder cb = em.getCriteriaBuilder();
-	    CriteriaQuery<Holiday> cq = cb.createQuery(Holiday.class);
-	    Root<Holiday> root = cq.from(Holiday.class);
+	CriteriaBuilder cb = em.getCriteriaBuilder();
+	CriteriaQuery<Holiday> cq = cb.createQuery(Holiday.class);
+	Root<Holiday> root = cq.from(Holiday.class);
 
-	    cq.select(root);
+	cq.select(root);
 
-	    TypedQuery<Holiday> typedQuery = em.createQuery(cq);
-	    List<Holiday> holidays = typedQuery.getResultList();
-	    Assertions.assertEquals(5, holidays.size());
+	TypedQuery<Holiday> typedQuery = em.createQuery(cq);
+	List<Holiday> holidays = typedQuery.getResultList();
+	Assertions.assertEquals(5, holidays.size());
 
-	    em.remove(h1);
-	    em.remove(h2);
-	    em.remove(h3);
-	    em.remove(h4);
-	    em.remove(h5);
-	} finally {
-	    tx.commit();
-	    em.close();
-	}
+	em.remove(h1);
+	em.remove(h2);
+	em.remove(h3);
+	em.remove(h4);
+	em.remove(h5);
+
+	tx.commit();
+	em.close();
     }
 
 }

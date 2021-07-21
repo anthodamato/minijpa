@@ -20,7 +20,7 @@ public class PostgresConfiguration implements DbConfiguration {
 	this.dbJdbc = new PostgresJdbc();
 	this.dbTypeMapper = new PostgresDbTypeMapper();
 	this.sqlStatementGenerator = new PostgresSqlStatementGenerator(dbJdbc);
-	this.jdbcRunner = new JpaJdbcRunner();
+	this.jdbcRunner = new JpaJdbcRunner(dbTypeMapper);
     }
 
     @Override

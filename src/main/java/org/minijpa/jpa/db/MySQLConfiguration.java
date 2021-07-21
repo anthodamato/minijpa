@@ -20,7 +20,7 @@ public class MySQLConfiguration implements DbConfiguration {
 	this.dbJdbc = new MySQLJdbc();
 	this.dbTypeMapper = new MySQLDbTypeMapper();
 	this.sqlStatementGenerator = new MySQLSqlStatementGenerator(dbJdbc);
-	this.jdbcRunner = new JpaJdbcRunner();
+	this.jdbcRunner = new JpaJdbcRunner(dbTypeMapper);
     }
 
     @Override

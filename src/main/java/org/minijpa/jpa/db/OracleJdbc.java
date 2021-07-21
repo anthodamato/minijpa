@@ -1,5 +1,9 @@
 package org.minijpa.jpa.db;
 
+import java.sql.Time;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.OffsetTime;
 import java.util.Optional;
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.LockType;
@@ -47,6 +51,12 @@ public class OracleJdbc extends BasicDbJdbc {
 
 	if (type == Boolean.class || (type.isPrimitive() && type.getName().equals("boolean")))
 	    return "number(1)";
+
+	if (type == LocalTime.class || type == OffsetTime.class || type == Time.class)
+	    return "date";
+
+	if (type == Duration.class)
+	    return "number(19)";
 
 	return super.buildColumnDefinition(type, ddlData);
     }

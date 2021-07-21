@@ -15,22 +15,24 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
+import java.time.OffsetTime;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class JdbcZonedDateTimeMapper implements JdbcAttributeMapper {
-
+public class OffsetTimeToTimestampAttributeMapper implements AttributeMapper<OffsetTime, Timestamp> {
+    
     @Override
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException {
-	ZonedDateTime zonedDateTime = (ZonedDateTime) value;
-	Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());
-	preparedStatement.setTimestamp(index, timestamp);
+    public Timestamp attributeToDatabase(OffsetTime k) {
+	return Timestamp.valueOf(k.atDate(LocalDate.now()).toLocalDateTime());
     }
-
+    
+    @Override
+    public OffsetTime databaseToAttribute(Timestamp v) {
+	return v.toLocalDateTime().toLocalTime().atOffset(OffsetTime.now().getOffset());
+    }
+    
 }

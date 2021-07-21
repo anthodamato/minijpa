@@ -20,6 +20,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
 import org.slf4j.Logger;
@@ -32,6 +33,10 @@ import org.slf4j.LoggerFactory;
 public class OracleJdbcRunner extends JpaJdbcRunner {
 
     private final Logger LOG = LoggerFactory.getLogger(OracleJdbcRunner.class);
+
+    public OracleJdbcRunner(DbTypeMapper dbTypeMapper) {
+	super(dbTypeMapper);
+    }
 
     @Override
     public Object insertReturnGeneratedKeys(

@@ -12,7 +12,7 @@ public class H2Jdbc extends BasicDbJdbc {
     @Override
     public String sequenceNextValueStatement(MetaEntity entity) {
 	PkSequenceGenerator pkSequenceGenerator = entity.getId().getPkGeneration().getPkSequenceGenerator();
-	return "VALUES (NEXT VALUE FOR " + pkSequenceGenerator.getSequenceName() + ")";
+	return "CALL NEXT VALUE FOR " + pkSequenceGenerator.getSequenceName() + "";
     }
 
     @Override

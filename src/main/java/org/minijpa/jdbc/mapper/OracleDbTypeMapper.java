@@ -15,6 +15,12 @@
  */
 package org.minijpa.jdbc.mapper;
 
+import java.sql.Time;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetTime;
+
 public class OracleDbTypeMapper extends AbstractDbTypeMapper {
 
     @Override
@@ -29,6 +35,27 @@ public class OracleDbTypeMapper extends AbstractDbTypeMapper {
 	    }
 	}
 
-	return value;
+	return v;
     }
+
+    @Override
+    public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType) {
+	if (attributeType == LocalDate.class)
+	    return localDateToTimestampAttributeMapper;
+
+	if (attributeType == LocalTime.class)
+	    return localTimeToTimestampAttributeMapper;
+
+	if (attributeType == OffsetTime.class)
+	    return offsetTimeToTimestampAttributeMapper;
+
+	if (attributeType == Duration.class)
+	    return durationToBigDecimalAttributeMapper;
+
+	if (attributeType == Time.class)
+	    return timeToTimestampAttributeMapper;
+
+	return super.attributeMapper(attributeType, databaseType);
+    }
+
 }

@@ -39,6 +39,11 @@ import org.slf4j.LoggerFactory;
 public class JdbcRunner {
 
     private final Logger LOG = LoggerFactory.getLogger(JdbcRunner.class);
+    private final DbTypeMapper dbTypeMapper;
+
+    public JdbcRunner(DbTypeMapper dbTypeMapper) {
+	this.dbTypeMapper = dbTypeMapper;
+    }
 
     private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter,
 	    int index) throws SQLException {
@@ -50,13 +55,10 @@ public class JdbcRunner {
 	    return;
 	}
 
-//	LOG.info("setPreparedStatementQM: queryParameter.getJdbcAttributeMapper()=" + queryParameter.getJdbcAttributeMapper());
-//	queryParameter.getJdbcAttributeMapper().setObject(preparedStatement, index, queryParameter.getValue());
 	if (queryParameter.getAttributeMapper().isPresent()) {
 	    value = queryParameter.getAttributeMapper().get().attributeToDatabase(value);
 	}
 
-//	Class<?> type = queryParameter.getType();
 	Class<?> type = value.getClass();
 	if (type == String.class) {
 	    preparedStatement.setString(index, (String) value);
@@ -334,9 +336,14 @@ public class JdbcRunner {
 
 	    Object value = getValue(rs, i, metaData);
 	    LOG.debug("createModelValueArrayFromResultSet: value=" + value);
+	    LOG.debug("createModelValueArrayFromResultSet: metaData.getColumnType(i)=" + metaData.getColumnType(i));
 	    if (value != null)
 		LOG.debug("createModelValueArrayFromResultSet: value.getClass()=" + value.getClass());
+
 	    LOG.debug("createModelValueArrayFromResultSet: fetchParameter.getType()=" + fetchParameter.getType());
+	    LOG.debug("createModelValueArrayFromResultSet: metaAttribute.attributeMapper.isPresent()=" + metaAttribute.attributeMapper.isPresent());
+	    if (metaAttribute.attributeMapper.isPresent())
+		LOG.debug("createModelValueArrayFromResultSet: metaAttribute.attributeMapper.get()=" + metaAttribute.attributeMapper.get());
 
 	    v = null;
 	    if (value != null) {
@@ -361,8 +368,9 @@ public class JdbcRunner {
 	Object[] values = new Object[nc];
 	for (int i = 0; i < nc; ++i) {
 	    Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
-//	    values[i] = rs.getObject(i + 1, readWriteType);
-	    values[i] = getValue(rs, i + 1, metaData);
+	    Object v = getValue(rs, i + 1, metaData);
+	    v = dbTypeMapper.convertToAttributeType(v, readWriteType);
+	    values[i] = v;
 	}
 
 	return values;
@@ -385,9 +393,11 @@ public class JdbcRunner {
 	    if (nc == 1) {
 		while (rs.next()) {
 		    int columnType = metaData.getColumnType(1);
-		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(1), metaData.getScale(1));
-//		    objects.add(rs.getObject(1, readWriteType));
-		    objects.add(getValue(rs, 1, metaData));
+		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType,
+			    metaData.getPrecision(1), metaData.getScale(1));
+		    Object v = getValue(rs, 1, metaData);
+		    v = dbTypeMapper.convertToAttributeType(v, readWriteType);
+		    objects.add(v);
 //		    LOG.debug("runQuery: values[i]=" + objects.get(objects.size() - 1));
 		}
 	    } else {
@@ -399,8 +409,9 @@ public class JdbcRunner {
 //			LOG.debug("runQuery: readWriteType=" + readWriteType);
 //			LOG.debug("runQuery: columnType=" + columnType);
 //			LOG.debug("runQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
-//			values[i] = rs.getObject(i + 1, readWriteType);
-			values[i] = getValue(rs, i + 1, metaData);
+			Object v = getValue(rs, i + 1, metaData);
+			v = dbTypeMapper.convertToAttributeType(v, readWriteType);
+			values[i] = v;
 //			LOG.debug("runQuery: values[i]=" + values[i]);
 		    }
 
@@ -435,21 +446,25 @@ public class JdbcRunner {
 	    if (nc == 1) {
 		while (rs.next()) {
 		    int columnType = metaData.getColumnType(1);
-		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(1), metaData.getScale(1));
-//		    Object instance = rs.getObject(1, readWriteType);
-		    objects.add(getValue(rs, 1, metaData));
+		    Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType,
+			    metaData.getPrecision(1), metaData.getScale(1));
+		    Object v = getValue(rs, 1, metaData);
+		    v = dbTypeMapper.convertToAttributeType(v, readWriteType);
+		    objects.add(v);
 		}
 	    } else {
 		while (rs.next()) {
 		    Object[] values = new Object[nc];
 		    for (int i = 0; i < nc; ++i) {
 			int columnType = metaData.getColumnType(i + 1);
-			Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(i + 1), metaData.getScale(i + 1));
-//			LOG.debug("runNativeQuery: readWriteType=" + readWriteType);
+			Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType,
+				metaData.getPrecision(i + 1), metaData.getScale(i + 1));
+			Object v = getValue(rs, i + 1, metaData);
+			LOG.debug("runNativeQuery: readWriteType=" + readWriteType);
+			v = dbTypeMapper.convertToAttributeType(v, readWriteType);
 //			LOG.debug("runNativeQuery: columnType=" + columnType);
 //			LOG.debug("runNativeQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
-//			values[i] = rs.getObject(i + 1, readWriteType);
-			values[i] = getValue(rs, i + 1, metaData);
+			values[i] = v;
 		    }
 
 		    objects.add(values);
@@ -509,10 +524,20 @@ public class JdbcRunner {
 //	    LOG.debug("buildRecord: columnAlias=" + columnAlias);
 	    Optional<FetchParameter> optional = findFetchParameter(columnName, columnAlias, queryResultMapping);
 	    if (optional.isPresent()) {
-//		Object value = rs.getObject(i + 1, optional.get().getReadWriteDbType());
+		MetaAttribute metaAttribute = optional.get().getAttribute();
+
 		Object value = getValue(rs, i + 1, metaData);
+
+		Object v = null;
+		if (value != null) {
+		    if (metaAttribute.attributeMapper.isPresent())
+			v = metaAttribute.attributeMapper.get().databaseToAttribute(value);
+		    else
+			v = metaAttribute.dbTypeMapper.convertToAttributeType(value, optional.get().getType());
+		}
+
 //		LOG.debug("buildRecord: value=" + value);
-		modelValueArray.add(optional.get(), value);
+		modelValueArray.add(optional.get(), v);
 	    }
 	}
 

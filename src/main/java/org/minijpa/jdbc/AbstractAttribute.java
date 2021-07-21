@@ -17,7 +17,6 @@ package org.minijpa.jdbc;
 
 import java.util.Optional;
 import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 
 public abstract class AbstractAttribute {
 
@@ -31,7 +30,6 @@ public abstract class AbstractAttribute {
     // this type matches the database data type
     protected Class<?> readWriteDbType;
     protected DbTypeMapper dbTypeMapper;
-    protected JdbcAttributeMapper jdbcAttributeMapper;
     protected Optional<AttributeMapper> attributeMapper = Optional.empty();
     /**
      * If an attribute type is a collection this is the chosen implementation.
@@ -72,10 +70,6 @@ public abstract class AbstractAttribute {
 
     public void setDbTypeMapper(DbTypeMapper dbTypeMapper) {
 	this.dbTypeMapper = dbTypeMapper;
-    }
-
-    public JdbcAttributeMapper getJdbcAttributeMapper() {
-	return jdbcAttributeMapper;
     }
 
     public Optional<AttributeMapper> getAttributeMapper() {

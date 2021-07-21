@@ -26,7 +26,6 @@ import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 import org.minijpa.jdbc.relationship.CompositeJoinColumnMapping;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
@@ -43,8 +42,6 @@ public class OwningJoinColumnMappingFactory implements JoinColumnMappingFactory 
 	    DbConfiguration dbConfiguration,
 	    MetaAttribute foreignKeyAttribute,
 	    MetaAttribute id) {
-	JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper()
-		.mapJdbcAttribute(id.getType(), id.getSqlType());
 	return new JoinColumnAttribute.Builder()
 		.withColumnName(joinColumnName)
 		.withType(id.getType())
@@ -52,8 +49,7 @@ public class OwningJoinColumnMappingFactory implements JoinColumnMappingFactory 
 		.withDbTypeMapper(dbConfiguration.getDbTypeMapper())
 		.withSqlType(id.getSqlType())
 		.withAttribute(foreignKeyAttribute)
-		.withForeignKeyAttribute(id)
-		.withJdbcAttributeMapper(jdbcAttributeMapper).build();
+		.withForeignKeyAttribute(id).build();
     }
 
     @Override

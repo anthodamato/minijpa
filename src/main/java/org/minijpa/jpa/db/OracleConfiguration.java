@@ -20,7 +20,7 @@ public class OracleConfiguration implements DbConfiguration {
 	this.dbJdbc = new OracleJdbc();
 	this.dbTypeMapper = new OracleDbTypeMapper();
 	this.sqlStatementGenerator = new OracleSqlStatementGenerator(dbJdbc);
-	this.jdbcRunner = new OracleJdbcRunner();
+	this.jdbcRunner = new OracleJdbcRunner(dbTypeMapper);
     }
 
     @Override

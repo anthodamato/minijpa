@@ -15,22 +15,23 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.time.LocalTime;
+import java.math.BigDecimal;
+import java.time.Duration;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class JdbcLocalTimeMapper implements JdbcAttributeMapper {
+public class DurationToBigDecimalAttributeMapper implements AttributeMapper<Duration, BigDecimal> {
 
     @Override
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException {
-	LocalTime localTime = (LocalTime) value;
-	Time time = Time.valueOf(localTime);
-	preparedStatement.setTime(index, time);
+    public BigDecimal attributeToDatabase(Duration k) {
+	return new BigDecimal(k.toMillis());
+    }
+
+    @Override
+    public Duration databaseToAttribute(BigDecimal v) {
+	return Duration.ofMillis(v.longValue());
     }
 
 }

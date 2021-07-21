@@ -15,15 +15,23 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDate;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JdbcAttributeMapper {
+public class LocalDateToTimestampAttributeMapper implements AttributeMapper<LocalDate, Timestamp> {
 
-    public void setObject(PreparedStatement preparedStatement, int index, Object value) throws SQLException;
+    @Override
+    public Timestamp attributeToDatabase(LocalDate k) {
+	return Timestamp.valueOf(k.atStartOfDay());
+    }
+
+    @Override
+    public LocalDate databaseToAttribute(Timestamp v) {
+	return v.toLocalDateTime().toLocalDate();
+    }
 
 }

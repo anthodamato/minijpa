@@ -15,8 +15,6 @@
  */
 package org.minijpa.jdbc;
 
-import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
-
 public class JoinColumnAttribute extends AbstractAttribute {
 
     private MetaAttribute attribute;
@@ -39,7 +37,6 @@ public class JoinColumnAttribute extends AbstractAttribute {
 	private Integer sqlType;
 	private MetaAttribute attribute;
 	private MetaAttribute foreignKeyAttribute;
-	protected JdbcAttributeMapper jdbcAttributeMapper;
 
 	public Builder withColumnName(String columnName) {
 	    this.columnName = columnName;
@@ -76,11 +73,6 @@ public class JoinColumnAttribute extends AbstractAttribute {
 	    return this;
 	}
 
-	public Builder withJdbcAttributeMapper(JdbcAttributeMapper jdbcAttributeMapper) {
-	    this.jdbcAttributeMapper = jdbcAttributeMapper;
-	    return this;
-	}
-
 	public JoinColumnAttribute build() {
 	    JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute();
 	    joinColumnAttribute.columnName = columnName;
@@ -90,7 +82,6 @@ public class JoinColumnAttribute extends AbstractAttribute {
 	    joinColumnAttribute.sqlType = sqlType;
 	    joinColumnAttribute.attribute = attribute;
 	    joinColumnAttribute.foreignKeyAttribute = foreignKeyAttribute;
-	    joinColumnAttribute.jdbcAttributeMapper = jdbcAttributeMapper;
 	    return joinColumnAttribute;
 	}
     }

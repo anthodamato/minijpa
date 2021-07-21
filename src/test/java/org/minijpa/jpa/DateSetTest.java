@@ -115,7 +115,9 @@ public class DateSetTest {
 
 	Assertions.assertEquals(sqlDate.toLocalDate(), ds.getSqlDate().toLocalDate());
 
-	Assertions.assertEquals(time, ds.getSqlTime());
+	Assertions.assertEquals(time.getHours(), ds.getSqlTime().getHours());
+	Assertions.assertEquals(time.getMinutes(), ds.getSqlTime().getMinutes());
+	Assertions.assertEquals(time.getSeconds(), ds.getSqlTime().getSeconds());
 	// on Apache Derby 'assertEquals(timestamp, ds.getSqlTimestamp());' works
 	Assertions.assertEquals(timestamp.getTime() / 1000, ds.getSqlTimestamp().getTime() / 1000);
 	Assertions.assertEquals(calendar, ds.getUtilCalendar());

@@ -51,7 +51,6 @@ import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jdbc.mapper.JdbcAttributeMapper;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.ManyToManyRelationship;
 import org.minijpa.jdbc.relationship.ManyToOneRelationship;
@@ -388,14 +387,6 @@ public class Parser {
 	return metaEntities;
     }
 
-    private JdbcAttributeMapper findJdbcAttributeMapper(Class<?> attributeClass, Integer sqlType) {
-	JdbcAttributeMapper jdbcAttributeMapper = dbConfiguration.getDbTypeMapper().mapJdbcAttribute(attributeClass, sqlType);
-	if (jdbcAttributeMapper != null)
-	    return jdbcAttributeMapper;
-
-	return null;
-    }
-
     private Integer findSqlType(Class<?> attributeClass, Enumerated enumerated) {
 	Integer sqlType = JdbcTypes.sqlTypeFromClass(attributeClass);
 	if (sqlType != Types.NULL)
@@ -458,7 +449,6 @@ public class Parser {
 	LOG.debug("readAttribute: dbConfiguration=" + dbConfiguration);
 	Class<?> readWriteType = dbConfiguration.getDbTypeMapper().map(attributeClass, sqlType);
 	LOG.debug("readAttribute: readWriteType=" + readWriteType);
-	JdbcAttributeMapper jdbcAttributeMapper = findJdbcAttributeMapper(attributeClass, sqlType);
 	String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
 	LOG.debug("readAttribute: path=" + path);
 	if (idAnnotation != null) {
@@ -476,7 +466,6 @@ public class Parser {
 		    .withPath(path)
 		    .withDDLData(ddlData);
 
-	    builder.withJdbcAttributeMapper(jdbcAttributeMapper);
 	    return builder.build();
 	}
 
@@ -497,7 +486,6 @@ public class Parser {
 		.withSqlType(sqlType)
 		.isCollection(isCollection)
 		.withJavaMember(field)
-		.withJdbcAttributeMapper(jdbcAttributeMapper)
 		.withCollectionImplementationClass(collectionImplementationClass)
 		.isVersion(version)
 		.isBasic(AttributeUtil.isBasicAttribute(attributeClass))

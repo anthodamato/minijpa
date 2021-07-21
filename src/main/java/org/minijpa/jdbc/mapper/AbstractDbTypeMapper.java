@@ -15,8 +15,6 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -38,37 +36,17 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 
     private Logger LOG = LoggerFactory.getLogger(AbstractDbTypeMapper.class);
 
-    protected JdbcAttributeMapper jdbcBigDecimalMapper = new JdbcBigDecimalMapper();
-    protected JdbcAttributeMapper jdbcBooleanMapper = new JdbcBooleanMapper();
-    protected JdbcAttributeMapper jdbcDateMapper = new JdbcDateMapper();
-    protected JdbcAttributeMapper jdbcUtilDateMapper = new JdbcUtilDateMapper();
-    protected JdbcAttributeMapper jdbcTimeMapper = new JdbcTimeMapper();
-    protected JdbcAttributeMapper jdbcTimestampMapper = new JdbcTimestampMapper();
-    protected JdbcAttributeMapper jdbcDoubleMapper = new JdbcDoubleMapper();
-    protected JdbcAttributeMapper jdbcFloatMapper = new JdbcFloatMapper();
-    protected JdbcAttributeMapper jdbcIntegerMapper = new JdbcIntegerMapper();
-    protected JdbcAttributeMapper jdbcLocalDateMapper = new JdbcLocalDateMapper();
-    protected JdbcAttributeMapper jdbcLongMapper = new JdbcLongMapper();
-    protected JdbcAttributeMapper jdbcStringMapper = new JdbcStringMapper();
-    protected JdbcAttributeMapper jdbcOffsetDateTimeMapper = new JdbcOffsetDateTimeMapper();
-    protected JdbcAttributeMapper jdbcOffsetTimeMapper = new JdbcOffsetTimeMapper();
-    protected JdbcAttributeMapper jdbcZonedDateTimeMapper = new JdbcZonedDateTimeMapper();
-    protected JdbcAttributeMapper jdbcStringEnumMapper = new JdbcStringEnumMapper();
-    protected JdbcAttributeMapper jdbcOrdinalEnumMapper = new JdbcOrdinalEnumMapper();
-    protected JdbcAttributeMapper jdbcCharacterArrayMapper = new JdbcCharacterArrayMapper();
-    protected JdbcAttributeMapper jdbcCharacterMapper = new JdbcCharacterMapper();
-    protected JdbcAttributeMapper jdbcDurationMapper = new JdbcDurationMapper();
-    protected JdbcAttributeMapper jdbcInstantMapper = new JdbcInstantMapper();
-    protected JdbcAttributeMapper jdbcLocalDateTimeMapper = new JdbcLocalDateTimeMapper();
-    protected JdbcAttributeMapper jdbcLocalTimeMapper = new JdbcLocalTimeMapper();
-    protected JdbcAttributeMapper jdbcCalendarMapper = new JdbcCalendarMapper();
-
     // attribute converters
     private final AttributeMapper offsetTimeAttributeMapper = new OffsetTimeAttributeMapper();
     private final AttributeMapper offsetDateTimeAttributeMapper = new OffsetDateTimeAttributeMapper();
     private final AttributeMapper durationAttributeMapper = new DurationAttributeMapper();
     private final AttributeMapper instantAttributeMapper = new InstantAttributeMapper();
     private final AttributeMapper localDateAttributeMapper = new LocalDateAttributeMapper();
+    protected final AttributeMapper localDateToTimestampAttributeMapper = new LocalDateToTimestampAttributeMapper();
+    protected final AttributeMapper localTimeToTimestampAttributeMapper = new LocalTimeToTimestampAttributeMapper();
+    protected final AttributeMapper offsetTimeToTimestampAttributeMapper = new OffsetTimeToTimestampAttributeMapper();
+    protected final AttributeMapper durationToBigDecimalAttributeMapper = new DurationToBigDecimalAttributeMapper();
+    protected final AttributeMapper timeToTimestampAttributeMapper = new TimeToTimestampAttributeMapper();
     private final AttributeMapper localDateTimeAttributeMapper = new LocalDateTimeAttributeMapper();
     private final AttributeMapper localTimeAttributeMapper = new LocalTimeAttributeMapper();
     private final AttributeMapper utilDateAttributeMapper = new UtilDateAttributeMapper();
@@ -268,106 +246,6 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
     @Override
     public Object convertGeneratedKey(Object value, Class<?> attributeType) {
 	return ((Number) value).longValue();
-    }
-
-    @Override
-    public JdbcAttributeMapper mapJdbcAttribute(Class<?> attributeType, Integer jdbcType) {
-	if (attributeType == BigDecimal.class)
-	    return jdbcBigDecimalMapper;
-
-	if (attributeType == Boolean.class)
-	    return jdbcBooleanMapper;
-
-	if (attributeType == Double.class)
-	    return jdbcDoubleMapper;
-
-	if (attributeType == Float.class)
-	    return jdbcFloatMapper;
-
-	if (attributeType == Integer.class)
-	    return jdbcIntegerMapper;
-
-	if (attributeType == Long.class)
-	    return jdbcLongMapper;
-
-	if (attributeType == String.class)
-	    return jdbcStringMapper;
-
-	if (attributeType == LocalDate.class)
-	    return jdbcLocalDateMapper;
-
-	if (attributeType == LocalDateTime.class)
-	    return jdbcLocalDateTimeMapper;
-
-	if (attributeType == LocalTime.class)
-	    return jdbcLocalTimeMapper;
-
-	if (attributeType == OffsetDateTime.class)
-	    return jdbcOffsetDateTimeMapper;
-
-	if (attributeType == OffsetTime.class)
-	    return jdbcOffsetTimeMapper;
-
-	if (attributeType == ZonedDateTime.class)
-	    return jdbcZonedDateTimeMapper;
-
-	if (attributeType == java.util.Date.class)
-	    return jdbcUtilDateMapper;
-
-	if (attributeType == Date.class)
-	    return jdbcDateMapper;
-
-	if (attributeType == Time.class)
-	    return jdbcTimeMapper;
-
-	if (attributeType == Timestamp.class)
-	    return jdbcTimestampMapper;
-
-	if (attributeType == Calendar.class)
-	    return jdbcCalendarMapper;
-
-	if (attributeType.isEnum() && jdbcType == Types.VARCHAR)
-	    return jdbcStringEnumMapper;
-
-	if (attributeType.isEnum() && jdbcType == Types.INTEGER)
-	    return jdbcOrdinalEnumMapper;
-
-	if (attributeType.isPrimitive()) {
-	    if (attributeType.getName().equals("byte"))
-		return jdbcIntegerMapper;
-
-	    if (attributeType.getName().equals("short"))
-		return jdbcIntegerMapper;
-
-	    if (attributeType.getName().equals("int"))
-		return jdbcIntegerMapper;
-
-	    if (attributeType.getName().equals("long"))
-		return jdbcIntegerMapper;
-
-	    if (attributeType.getName().equals("float"))
-		return jdbcFloatMapper;
-
-	    if (attributeType.getName().equals("double"))
-		return jdbcDoubleMapper;
-
-	    if (attributeType.getName().equals("boolean"))
-		return jdbcBooleanMapper;
-
-	    if (attributeType.getName().equals("char"))
-		return jdbcCharacterMapper;
-	}
-
-	if (attributeType.isArray() && attributeType.getComponentType() == Character.class)
-	    return jdbcCharacterArrayMapper;
-
-	if (attributeType == Duration.class)
-	    return jdbcDurationMapper;
-
-	if (attributeType == Instant.class)
-	    return jdbcInstantMapper;
-
-	return null;
     }
 
 }

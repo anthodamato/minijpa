@@ -20,7 +20,7 @@ public class MariaDBConfiguration implements DbConfiguration {
 	this.dbJdbc = new MariaDBJdbc();
 	this.dbTypeMapper = new MariaDBDbTypeMapper();
 	this.sqlStatementGenerator = new MariaDBSqlStatementGenerator(dbJdbc);
-	this.jdbcRunner = new JpaJdbcRunner();
+	this.jdbcRunner = new JpaJdbcRunner(dbTypeMapper);
     }
 
     @Override

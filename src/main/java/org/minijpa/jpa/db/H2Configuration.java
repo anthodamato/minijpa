@@ -20,7 +20,7 @@ public class H2Configuration implements DbConfiguration {
 	this.dbJdbc = new H2Jdbc();
 	this.dbTypeMapper = new H2DbTypeMapper();
 	this.sqlStatementGenerator = new DefaultSqlStatementGenerator(dbJdbc);
-	this.jdbcRunner = new JpaJdbcRunner();
+	this.jdbcRunner = new JpaJdbcRunner(dbTypeMapper);
     }
 
     @Override
