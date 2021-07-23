@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +33,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Version;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.BasicAttributePk;
@@ -447,7 +450,7 @@ public class Parser {
 	Integer sqlType = findSqlType(attributeClass, enumerated);
 	LOG.debug("readAttribute: sqlType=" + sqlType);
 	LOG.debug("readAttribute: dbConfiguration=" + dbConfiguration);
-	Class<?> readWriteType = dbConfiguration.getDbTypeMapper().map(attributeClass, sqlType);
+	Class<?> readWriteType = findDatabaseType(field, attributeClass, sqlType);
 	LOG.debug("readAttribute: readWriteType=" + readWriteType);
 	String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
 	LOG.debug("readAttribute: path=" + path);
@@ -519,6 +522,45 @@ public class Parser {
 	MetaAttribute attribute = builder.build();
 	LOG.debug("readAttribute: attribute: " + attribute);
 	return attribute;
+    }
+
+    private Class<?> findDatabaseType(Field field, Class<?> attributeClass, Integer sqlType) {
+	Optional<Class<?>> optional = temporalType(field, attributeClass);
+	if (optional.isPresent())
+	    return dbConfiguration.getDbTypeMapper().databaseType(optional.get(), sqlType);
+//	    return optional.get();
+
+	return dbConfiguration.getDbTypeMapper().databaseType(attributeClass, sqlType);
+    }
+
+    private Optional<Class<?>> temporalType(Field field, Class<?> attributeClass) {
+	if (attributeClass != java.util.Date.class && attributeClass != Calendar.class)
+	    return Optional.empty();
+
+	Temporal temporal = field.getAnnotation(Temporal.class);
+	if (temporal == null)
+	    return Optional.empty();
+
+	TemporalType temporalType = temporal.value();
+	if (temporalType == null)
+	    return Optional.empty();
+
+	if (temporalType == TemporalType.DATE)
+	    return Optional.of(java.sql.Date.class);
+
+	if (temporalType == TemporalType.TIME)
+	    return Optional.of(java.sql.Time.class);
+
+	return Optional.of(java.sql.Timestamp.class);
+    }
+
+    private int temporalSqlType(Class<?> temporalType) {
+	if (temporalType == java.sql.Date.class)
+	    return Types.DATE;
+	if (temporalType == java.sql.Time.class)
+	    return Types.TIME;
+
+	return Types.TIMESTAMP;
     }
 
     private Optional<DDLData> buildDDLData(Column column, boolean nullableColumn) {

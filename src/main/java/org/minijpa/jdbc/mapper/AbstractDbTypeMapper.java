@@ -50,6 +50,9 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
     private final AttributeMapper localDateTimeAttributeMapper = new LocalDateTimeAttributeMapper();
     private final AttributeMapper localTimeAttributeMapper = new LocalTimeAttributeMapper();
     private final AttributeMapper utilDateAttributeMapper = new UtilDateAttributeMapper();
+    private final AttributeMapper utilDateToSqlDateAttributeMapper = new UtilDateToSqlDateAttributeMapper();
+    private final AttributeMapper utilDateToSqlTimeAttributeMapper = new UtilDateToSqlTimeAttributeMapper();
+    private final AttributeMapper calendarToSqlDateAttributeMapper = new CalendarToSqlDateAttributeMapper();
     private final AttributeMapper zonedDateTimeAttributeMapper = new ZonedDateTimeAttributeMapper();
     private final AttributeMapper calendarAttributeMapper = new CalendarAttributeMapper();
 
@@ -61,12 +64,6 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 	if (attributeType.isEnum() && databaseType == Integer.class)
 	    return new OrdinalEnumAttributeMapper(attributeType);
 
-	if (attributeType == Duration.class)
-	    return durationAttributeMapper;
-
-	if (attributeType == Instant.class)
-	    return instantAttributeMapper;
-
 	if (attributeType == LocalDate.class)
 	    return localDateAttributeMapper;
 
@@ -76,11 +73,14 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 	if (attributeType == LocalTime.class)
 	    return localTimeAttributeMapper;
 
-	if (attributeType == OffsetTime.class)
-	    return offsetTimeAttributeMapper;
+	if (attributeType == java.util.Date.class && databaseType == java.sql.Date.class)
+	    return utilDateToSqlDateAttributeMapper;
 
-	if (attributeType == OffsetDateTime.class)
-	    return offsetDateTimeAttributeMapper;
+	if (attributeType == java.util.Date.class && databaseType == java.sql.Time.class)
+	    return utilDateToSqlTimeAttributeMapper;
+
+	if (attributeType == Calendar.class && databaseType == java.sql.Date.class)
+	    return calendarToSqlDateAttributeMapper;
 
 	if (attributeType == java.util.Date.class)
 	    return utilDateAttributeMapper;
@@ -91,15 +91,29 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 	if (attributeType == Calendar.class)
 	    return calendarAttributeMapper;
 
+	if (attributeType == Duration.class)
+	    return durationAttributeMapper;
+
+	if (attributeType == Instant.class)
+	    return instantAttributeMapper;
+
+	if (attributeType == OffsetTime.class)
+	    return offsetTimeAttributeMapper;
+
+	if (attributeType == OffsetDateTime.class)
+	    return offsetDateTimeAttributeMapper;
+
 	return null;
     }
 
     @Override
-    public Class<?> map(Class<?> attributeType, Integer jdbcType) {
+    public Class<?> databaseType(Class<?> attributeType, Integer jdbcType) {
 	if (attributeType == LocalDate.class)
-	    return java.util.Date.class;
+	    return java.sql.Date.class;
 
-	if (attributeType == OffsetDateTime.class || attributeType == java.util.Date.class)
+	if (attributeType == OffsetDateTime.class || attributeType == java.util.Date.class
+		|| attributeType == Calendar.class || attributeType == LocalDateTime.class
+		|| attributeType == Instant.class || attributeType == ZonedDateTime.class)
 	    return Timestamp.class;
 
 	if (attributeType.isEnum() && jdbcType == Types.VARCHAR)
@@ -108,8 +122,8 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 	if (attributeType.isEnum() && jdbcType == Types.INTEGER)
 	    return Integer.class;
 
+	String typeName = attributeType.getName();
 	if (attributeType.isPrimitive()) {
-	    String typeName = attributeType.getName();
 	    if (typeName.equals("int") || typeName.equals("byte") || typeName.equals("short"))
 		return Integer.class;
 
@@ -125,6 +139,12 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 	    if (typeName.equals("boolean"))
 		return Boolean.class;
 	}
+
+	if (attributeType == Duration.class)
+	    return Long.class;
+
+	if (attributeType == OffsetTime.class || attributeType == LocalTime.class)
+	    return Time.class;
 
 	return attributeType;
     }

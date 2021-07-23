@@ -32,13 +32,13 @@ public interface DbTypeMapper {
 
     /**
      * Maps the attribute type to the db type. For example, on Apache Derby if a column has the 'DATE' data type a
-     * LocalDate attribute type is mapped as Date.
+     * LocalDate attribute type is mapped as java.sql.Date.
      *
      * @param attributeType
      * @param jdbcType
      * @return
      */
-    public Class<?> map(Class<?> attributeType, Integer jdbcType);
+    public Class<?> databaseType(Class<?> attributeType, Integer jdbcType);
 
     /**
      * Converts the 'value' read from a resultSet to an object with class 'attributeType'.

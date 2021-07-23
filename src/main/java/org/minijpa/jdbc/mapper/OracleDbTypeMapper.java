@@ -16,6 +16,7 @@
 package org.minijpa.jdbc.mapper;
 
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -56,6 +57,14 @@ public class OracleDbTypeMapper extends AbstractDbTypeMapper {
 	    return timeToTimestampAttributeMapper;
 
 	return super.attributeMapper(attributeType, databaseType);
+    }
+
+    @Override
+    public Class<?> databaseType(Class<?> attributeType, Integer jdbcType) {
+	if (attributeType == java.sql.Date.class || attributeType == java.sql.Time.class)
+	    return Timestamp.class;
+
+	return super.databaseType(attributeType, jdbcType);
     }
 
 }

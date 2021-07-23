@@ -52,11 +52,8 @@ public class OracleJdbc extends BasicDbJdbc {
 	if (type == Boolean.class || (type.isPrimitive() && type.getName().equals("boolean")))
 	    return "number(1)";
 
-	if (type == LocalTime.class || type == OffsetTime.class || type == Time.class)
+	if (type == Time.class)
 	    return "date";
-
-	if (type == Duration.class)
-	    return "number(19)";
 
 	return super.buildColumnDefinition(type, ddlData);
     }

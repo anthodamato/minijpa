@@ -56,10 +56,6 @@ public abstract class AbstractAttribute {
 	return sqlType;
     }
 
-    public void setSqlType(Integer sqlType) {
-	this.sqlType = sqlType;
-    }
-
     public Class<?> getReadWriteDbType() {
 	return readWriteDbType;
     }

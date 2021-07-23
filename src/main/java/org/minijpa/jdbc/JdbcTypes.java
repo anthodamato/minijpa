@@ -40,8 +40,14 @@ public class JdbcTypes {
 	if (c == Character.class)
 	    return Types.CHAR;
 
-	if (c == Date.class)
+	if (c == java.sql.Date.class)
 	    return Types.DATE;
+
+	if (c == java.sql.Time.class)
+	    return Types.TIME;
+
+	if (c == java.sql.Timestamp.class)
+	    return Types.TIMESTAMP;
 
 	if (c == LocalDate.class)
 	    return Types.DATE;

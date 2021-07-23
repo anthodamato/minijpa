@@ -591,4 +591,21 @@
         </properties>
     </persistence-unit>
 
+    <persistence-unit name="temporal_dates">
+        <description>Temporal Date test</description>
+        <class>org.minijpa.jpa.model.TemporalDateSet</class>
+
+        <properties>
+            <!--<property name="hibernate.jdbc.time_zone" value="UTC" />--> 
+            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:temporal_dates;create=true" />
+            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
+            <property
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="metadata" /> 
+        </properties>
+    </persistence-unit>
+
 </persistence>
