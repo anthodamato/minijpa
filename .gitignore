@@ -4,6 +4,7 @@
 target/
 derby.log
 dependency-reduced-pom.xml
+nb-configuration.xml
 
 /.gradle/
 /build/
