@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 Antonio Damato <anto.damato@gmail.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.minijpa.metadata;
 
 import java.lang.reflect.Field;
@@ -198,9 +213,9 @@ public class Parser {
 	} catch (NoSuchMethodException e1) {
 	    LOG.error("parse: special method '" + enhEntity.getModificationAttributeGetMethod() + "' not found");
 	    throw e1;
-	} catch (SecurityException e1) {
-	    // TODO Auto-generated catch block
-	    e1.printStackTrace();
+	} catch (Exception e1) {
+	    LOG.error(e1.getMessage());
+	    throw e1;
 	}
 
 	Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
@@ -395,21 +410,25 @@ public class Parser {
 	if (sqlType != Types.NULL)
 	    return sqlType;
 
+	return Types.NULL;
+    }
+
+    private Optional<Class<?>> enumerationType(Class<?> attributeClass, Enumerated enumerated) {
 	if (attributeClass.isEnum() && enumerated == null)
-	    return Types.INTEGER;
+	    return Optional.of(Integer.class);
 
 	if (attributeClass.isEnum() && enumerated != null) {
 	    if (enumerated.value() == null)
-		return Types.INTEGER;
+		return Optional.of(Integer.class);
 
 	    if (enumerated.value() == EnumType.STRING)
-		return Types.VARCHAR;
+		return Optional.of(String.class);
 
 	    if (enumerated.value() == EnumType.ORDINAL)
-		return Types.INTEGER;
+		return Optional.of(Integer.class);
 	}
 
-	return Types.NULL;
+	return Optional.empty();
     }
 
     private MetaAttribute readAttribute(
@@ -447,11 +466,12 @@ public class Parser {
 
 	Enumerated enumerated = field.getAnnotation(Enumerated.class);
 	LOG.debug("readAttribute: enumerated=" + enumerated);
-	Integer sqlType = findSqlType(attributeClass, enumerated);
-	LOG.debug("readAttribute: sqlType=" + sqlType);
+	Optional<Class<?>> enumerationType = enumerationType(attributeClass, enumerated);
 	LOG.debug("readAttribute: dbConfiguration=" + dbConfiguration);
-	Class<?> readWriteType = findDatabaseType(field, attributeClass, sqlType);
+	Class<?> readWriteType = findDatabaseType(field, attributeClass, enumerationType);
 	LOG.debug("readAttribute: readWriteType=" + readWriteType);
+	Integer sqlType = findSqlType(readWriteType, enumerated);
+	LOG.debug("readAttribute: sqlType=" + sqlType);
 	String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
 	LOG.debug("readAttribute: path=" + path);
 	if (idAnnotation != null) {
@@ -524,13 +544,12 @@ public class Parser {
 	return attribute;
     }
 
-    private Class<?> findDatabaseType(Field field, Class<?> attributeClass, Integer sqlType) {
+    private Class<?> findDatabaseType(Field field, Class<?> attributeClass, Optional<Class<?>> enumerationType) {
 	Optional<Class<?>> optional = temporalType(field, attributeClass);
 	if (optional.isPresent())
-	    return dbConfiguration.getDbTypeMapper().databaseType(optional.get(), sqlType);
-//	    return optional.get();
+	    return dbConfiguration.getDbTypeMapper().databaseType(optional.get(), enumerationType);
 
-	return dbConfiguration.getDbTypeMapper().databaseType(attributeClass, sqlType);
+	return dbConfiguration.getDbTypeMapper().databaseType(attributeClass, enumerationType);
     }
 
     private Optional<Class<?>> temporalType(Field field, Class<?> attributeClass) {
@@ -552,15 +571,6 @@ public class Parser {
 	    return Optional.of(java.sql.Time.class);
 
 	return Optional.of(java.sql.Timestamp.class);
-    }
-
-    private int temporalSqlType(Class<?> temporalType) {
-	if (temporalType == java.sql.Date.class)
-	    return Types.DATE;
-	if (temporalType == java.sql.Time.class)
-	    return Types.TIME;
-
-	return Types.TIMESTAMP;
     }
 
     private Optional<DDLData> buildDDLData(Column column, boolean nullableColumn) {

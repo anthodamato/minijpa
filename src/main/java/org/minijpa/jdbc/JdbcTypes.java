@@ -16,11 +16,9 @@
 package org.minijpa.jdbc;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +29,6 @@ public class JdbcTypes {
     private static final Logger LOG = LoggerFactory.getLogger(JdbcTypes.class);
 
     public static Integer sqlTypeFromClass(Class<?> c) {
-	if (c == BigInteger.class)
-	    return Types.BIGINT;
-
 	if (c == Boolean.class)
 	    return Types.BOOLEAN;
 
@@ -49,9 +44,6 @@ public class JdbcTypes {
 	if (c == java.sql.Timestamp.class)
 	    return Types.TIMESTAMP;
 
-	if (c == LocalDate.class)
-	    return Types.DATE;
-
 	if (c == BigDecimal.class)
 	    return Types.DECIMAL;
 
@@ -65,13 +57,10 @@ public class JdbcTypes {
 	    return Types.INTEGER;
 
 	if (c == Long.class)
-	    return Types.INTEGER;
+	    return Types.BIGINT;
 
 	if (c == String.class)
 	    return Types.VARCHAR;
-
-	if (c == OffsetDateTime.class)
-	    return Types.TIMESTAMP_WITH_TIMEZONE;
 
 	if (c.isPrimitive()) {
 	    if (c.getName().equals("byte"))

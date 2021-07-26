@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021 Antonio Damato <anto.damato@gmail.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.minijpa.jpa.db;
 
 import java.time.LocalDate;
@@ -26,7 +41,6 @@ import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
@@ -412,11 +426,11 @@ public class SqlStatementFactory {
 	    if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.COUNT
 		    || aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.SUM) {
 		FetchParameter cnv = new FetchParameter("count", Long.class, Long.class,
-			JdbcTypes.sqlTypeFromClass(Long.class), null, null, false);
+			null, null, false);
 		return Optional.of(cnv);
 	    } else if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.AVG) {
 		FetchParameter cnv = new FetchParameter("avg", Double.class, Double.class,
-			JdbcTypes.sqlTypeFromClass(Double.class), null, null, false);
+			null, null, false);
 		return Optional.of(cnv);
 	    } else {
 		Expression<?> expr = aggregateFunctionExpression.getX();

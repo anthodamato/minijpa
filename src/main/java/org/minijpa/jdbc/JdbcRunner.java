@@ -575,7 +575,7 @@ public class JdbcRunner {
 	    MetaAttribute metaAttribute = optional.get();
 	    FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(),
 		    metaAttribute.getType(), metaAttribute.getReadWriteDbType(),
-		    metaAttribute.getSqlType(), metaAttribute, entityMapping.getMetaEntity(), false);
+		    metaAttribute, entityMapping.getMetaEntity(), false);
 	    return Optional.of(fetchParameter);
 	}
 
@@ -585,7 +585,7 @@ public class JdbcRunner {
 	    JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
 	    FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),
 		    joinColumnAttribute.getType(), joinColumnAttribute.getReadWriteDbType(),
-		    joinColumnAttribute.getSqlType(), joinColumnAttribute.getAttribute(),
+		    joinColumnAttribute.getAttribute(),
 		    entityMapping.getMetaEntity(), true);
 	    return Optional.of(fetchParameter);
 	}

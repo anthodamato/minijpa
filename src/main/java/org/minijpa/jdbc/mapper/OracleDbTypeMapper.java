@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetTime;
+import java.util.Optional;
 
 public class OracleDbTypeMapper extends AbstractDbTypeMapper {
 
@@ -60,11 +61,11 @@ public class OracleDbTypeMapper extends AbstractDbTypeMapper {
     }
 
     @Override
-    public Class<?> databaseType(Class<?> attributeType, Integer jdbcType) {
+    public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType) {
 	if (attributeType == java.sql.Date.class || attributeType == java.sql.Time.class)
 	    return Timestamp.class;
 
-	return super.databaseType(attributeType, jdbcType);
+	return super.databaseType(attributeType, enumerationType);
     }
 
 }

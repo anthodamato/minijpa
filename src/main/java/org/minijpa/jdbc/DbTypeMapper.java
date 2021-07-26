@@ -15,6 +15,7 @@
  */
 package org.minijpa.jdbc;
 
+import java.util.Optional;
 import org.minijpa.jdbc.mapper.AttributeMapper;
 
 public interface DbTypeMapper {
@@ -35,10 +36,10 @@ public interface DbTypeMapper {
      * LocalDate attribute type is mapped as java.sql.Date.
      *
      * @param attributeType
-     * @param jdbcType
+     * @param enumerationType
      * @return
      */
-    public Class<?> databaseType(Class<?> attributeType, Integer jdbcType);
+    public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType);
 
     /**
      * Converts the 'value' read from a resultSet to an object with class 'attributeType'.

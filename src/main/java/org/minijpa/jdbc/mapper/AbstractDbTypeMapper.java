@@ -17,7 +17,6 @@ package org.minijpa.jdbc.mapper;
 
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -28,6 +27,7 @@ import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.Optional;
 import org.minijpa.jdbc.DbTypeMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +107,7 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
     }
 
     @Override
-    public Class<?> databaseType(Class<?> attributeType, Integer jdbcType) {
+    public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType) {
 	if (attributeType == LocalDate.class)
 	    return java.sql.Date.class;
 
@@ -116,10 +116,10 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 		|| attributeType == Instant.class || attributeType == ZonedDateTime.class)
 	    return Timestamp.class;
 
-	if (attributeType.isEnum() && jdbcType == Types.VARCHAR)
+	if (attributeType.isEnum() && enumerationType.get() == String.class)
 	    return String.class;
 
-	if (attributeType.isEnum() && jdbcType == Types.INTEGER)
+	if (attributeType.isEnum() && enumerationType.get() == Integer.class)
 	    return Integer.class;
 
 	String typeName = attributeType.getName();
