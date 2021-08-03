@@ -176,16 +176,8 @@ public class ClassInspector {
     }
 
     private Optional<String> createJoinColumnPostponedUpdateAttribute(List<Property> properties, CtClass ct) {
-	Optional<String> optionalName = Optional.empty();
-//	Optional<Property> optionalLazy = properties.stream()
-//		.filter(p -> p.getRelationshipProperties().isPresent()
-//		&& p.getRelationshipProperties().get().hasJoinColumn())
-//		.findFirst();
-//	if (optionalLazy.isPresent()) {
-	optionalName = findAvailableAttribute(joinColumnPostponedUpdateAttributePrefix, properties, ct);
+	Optional<String> optionalName = findAvailableAttribute(joinColumnPostponedUpdateAttributePrefix, properties, ct);
 	removeAttributeFromProperties(optionalName.get(), properties);
-//	}
-
 	return optionalName;
     }
 

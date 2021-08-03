@@ -22,7 +22,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import org.junit.jupiter.api.AfterAll;
-import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -30,15 +29,12 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaAttributeFolder;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.EntityInstanceBuilder;
+import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jpa.MiniEntityManager;
 import org.minijpa.jpa.PersistenceUnitProperties;
-import org.minijpa.jpa.db.ApacheDerbyConfiguration;
-import org.minijpa.jpa.db.PersistenceUnitEnv;
 import org.minijpa.jpa.model.JobEmployee;
 import org.minijpa.jpa.model.JobInfo;
 import org.minijpa.jpa.model.ProgramManager;
-import org.minijpa.metadata.PersistenceUnitContext;
 
 /**
  *
@@ -80,12 +76,11 @@ public class EntityDelegateInstanceBuilderTest {
 	e1.setName("Abraham");
 	e1.setJobInfo(jobInfo);
 
-	EntityInstanceBuilder entityInstanceBuilder = new EntityInstanceBuilderImpl();
-	ModelValueArray<MetaAttribute> modelValueArray = entityInstanceBuilder.getModifications(
+	ModelValueArray<MetaAttribute> modelValueArray = MetaEntityHelper.getModifications(
 		metaEntityPM, programManager);
 	Assertions.assertTrue(modelValueArray.isEmpty());
 
-	modelValueArray = entityInstanceBuilder.getModifications(metaEntityJE, e1);
+	modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
 	Assertions.assertEquals(3, modelValueArray.size());
 	MetaAttribute a0 = modelValueArray.getModel(0);
 	MetaAttribute a1 = modelValueArray.getModel(1);
@@ -108,8 +103,8 @@ public class EntityDelegateInstanceBuilderTest {
 	Assertions.assertTrue(index != -1);
 	Assertions.assertEquals(programManager, modelValueArray.getValue(index));
 
-	entityInstanceBuilder.removeChanges(metaEntityJE, e1);
-	modelValueArray = entityInstanceBuilder.getModifications(metaEntityJE, e1);
+	MetaEntityHelper.removeChanges(metaEntityJE, e1);
+	modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
 	Assertions.assertEquals(0, modelValueArray.size());
     }
 }

@@ -35,7 +35,6 @@ import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlInsert;
@@ -57,24 +56,19 @@ public class EntityWriterImpl implements EntityWriter {
     private final SqlStatementFactory sqlStatementFactory;
     private final DbConfiguration dbConfiguration;
     private final EntityLoader entityLoader;
-    private final EntityInstanceBuilder entityInstanceBuilder;
     private final ConnectionHolder connectionHolder;
-
-    private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
     public EntityWriterImpl(PersistenceUnitContext persistenceUnitContext,
 	    EntityContainer entityContainer,
 	    SqlStatementFactory sqlStatementFactory,
 	    DbConfiguration dbConfiguration,
 	    EntityLoader entityLoader,
-	    EntityInstanceBuilder entityInstanceBuilder,
 	    ConnectionHolder connectionHolder) {
 	this.persistenceUnitContext = persistenceUnitContext;
 	this.entityContainer = entityContainer;
 	this.sqlStatementFactory = sqlStatementFactory;
 	this.dbConfiguration = dbConfiguration;
 	this.entityLoader = entityLoader;
-	this.entityInstanceBuilder = entityInstanceBuilder;
 	this.connectionHolder = connectionHolder;
     }
 
@@ -114,14 +108,14 @@ public class EntityWriterImpl implements EntityWriter {
 	Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 //	checkOptimisticLock(entity, entityInstance, idValue);
 	LOG.debug("update: idValue=" + idValue);
-	List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(entity.getId(), idValue);
+	List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(entity.getId(), idValue);
 	List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
-	if (metaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
+	if (MetaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
 	    idColumns.add(entity.getVersionAttribute().get().getColumnName());
 	}
 
-	metaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, modelValueArray);
-	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
+	MetaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, modelValueArray);
+	List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(modelValueArray);
 	List<String> columns = parameters.stream().map(p -> {
 	    return p.getColumnName();
 	}).collect(Collectors.toList());
@@ -130,12 +124,12 @@ public class EntityWriterImpl implements EntityWriter {
 		idColumns);
 
 	modelValueArray.add(entity.getId().getAttribute(), idValue);
-	if (metaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
+	if (MetaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
 	    Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
 	    modelValueArray.add(entity.getVersionAttribute().get(), currentVersionValue);
 	}
 
-	parameters = metaEntityHelper.convertAVToQP(modelValueArray);
+	parameters = MetaEntityHelper.convertAVToQP(modelValueArray);
 
 	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlUpdate);
 	int updateCount = dbConfiguration.getJdbcRunner().update(connectionHolder.getConnection(), sql, parameters);
@@ -147,7 +141,7 @@ public class EntityWriterImpl implements EntityWriter {
 	}
 
 	LOG.debug("update: updateCount=" + updateCount);
-	metaEntityHelper.updateVersionAttributeValue(entity, entityInstance);
+	MetaEntityHelper.updateVersionAttributeValue(entity, entityInstance);
     }
 
     protected void insert(MetaEntity entity, Object entityInstance,
@@ -157,9 +151,9 @@ public class EntityWriterImpl implements EntityWriter {
 	PkStrategy pkStrategy = pk.getPkGeneration().getPkStrategy();
 //	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
 	if (pkStrategy == PkStrategy.IDENTITY) {
-	    List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
+	    List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(modelValueArray);
 	    // version attribute
-	    Optional<QueryParameter> optVersion = metaEntityHelper.generateVersionParameter(entity);
+	    Optional<QueryParameter> optVersion = MetaEntityHelper.generateVersionParameter(entity);
 	    if (optVersion.isPresent())
 		parameters.add(optVersion.get());
 
@@ -192,11 +186,11 @@ public class EntityWriterImpl implements EntityWriter {
 	    }
 	} else {
 	    Object idValue = pk.getReadMethod().invoke(entityInstance);
-	    List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(pk, idValue);
-	    List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(modelValueArray);
+	    List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(pk, idValue);
+	    List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(modelValueArray);
 	    parameters.addAll(0, idParameters);
 	    // version attribute
-	    Optional<QueryParameter> optVersion = metaEntityHelper.generateVersionParameter(entity);
+	    Optional<QueryParameter> optVersion = MetaEntityHelper.generateVersionParameter(entity);
 	    if (optVersion.isPresent())
 		parameters.add(optVersion.get());
 
@@ -217,11 +211,10 @@ public class EntityWriterImpl implements EntityWriter {
 	    throws Exception {
 	LOG.debug("updatePostponedJoinColumnUpdate: entity.getName()=" + entity.getName());
 	LOG.debug("updatePostponedJoinColumnUpdate: entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty()=" + entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty());
-	if (entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty())
-	    return;
+//	if (entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty())
+//	    return;
 
-	Method m = entity.getJoinColumnPostponedUpdateAttributeReadMethod().get();
-	List list = (List) m.invoke(entityInstance);
+	List list = MetaEntityHelper.getJoinColumnPostponedUpdateAttributeList(entity, entityInstance);
 	LOG.debug("updatePostponedJoinColumnUpdate: list.isEmpty()=" + list.isEmpty());
 	if (list.isEmpty())
 	    return;
@@ -249,14 +242,14 @@ public class EntityWriterImpl implements EntityWriter {
     @Override
     public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception {
 	Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
-	List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(entity.getId(), idValue);
+	List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(entity.getId(), idValue);
 
 	for (MetaAttribute a : entity.getRelationshipAttributes()) {
 	    if (a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner()) {
 		// removes the join table records first
 		removeJoinTableRecords(entity, idValue, idParameters, a.getRelationship().getJoinTable());
 
-		Object attributeInstance = entityInstanceBuilder.getAttributeValue(entityInstance, a);
+		Object attributeInstance = MetaEntityHelper.getAttributeValue(entityInstance, a);
 //		LOG.info("persist: attributeInstance=" + attributeInstance);
 //		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
 		if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
@@ -345,11 +338,11 @@ public class EntityWriterImpl implements EntityWriter {
 	Object idValue = AttributeUtil.getIdValue(e, entityInstance);
 	LOG.debug("delete: idValue=" + idValue);
 
-	List<QueryParameter> idParameters = metaEntityHelper.convertAVToQP(e.getId(), idValue);
+	List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(e.getId(), idValue);
 	removeJoinTableRecords(e, idValue, idParameters);
-	if (metaEntityHelper.hasOptimisticLock(e, entityInstance)) {
+	if (MetaEntityHelper.hasOptimisticLock(e, entityInstance)) {
 	    Object currentVersionValue = e.getVersionAttribute().get().getReadMethod().invoke(entityInstance);
-	    idParameters.addAll(metaEntityHelper.convertAVToQP(e.getVersionAttribute().get(), currentVersionValue));
+	    idParameters.addAll(MetaEntityHelper.convertAVToQP(e.getVersionAttribute().get(), currentVersionValue));
 	}
 
 	List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());

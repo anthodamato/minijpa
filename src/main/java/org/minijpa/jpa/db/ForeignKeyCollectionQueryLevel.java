@@ -43,23 +43,21 @@ import org.minijpa.jdbc.model.SqlSelect;
 public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 
     private final SqlStatementFactory sqlStatementFactory;
-    private final MetaEntityHelper metaEntityHelper;
     private final DbConfiguration dbConfiguration;
     private final ConnectionHolder connectionHolder;
 
     public ForeignKeyCollectionQueryLevel(
-	    SqlStatementFactory sqlStatementFactory, MetaEntityHelper metaEntityHelper,
+	    SqlStatementFactory sqlStatementFactory,
 	    DbConfiguration dbConfiguration,
 	    ConnectionHolder connectionHolder) {
 	this.sqlStatementFactory = sqlStatementFactory;
-	this.metaEntityHelper = metaEntityHelper;
 	this.dbConfiguration = dbConfiguration;
 	this.connectionHolder = connectionHolder;
     }
 
     public Object run(MetaEntity entity, MetaAttribute foreignKeyAttribute,
 	    Object foreignKey, LockType lockType, EntityLoader entityLoader) throws Exception {
-	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
+	List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
 	List<String> columns = parameters.stream().map(p -> p.getColumnName())
 		.collect(Collectors.toList());
 	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, columns);

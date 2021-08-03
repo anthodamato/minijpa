@@ -40,7 +40,6 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
     private final SqlStatementFactory sqlStatementFactory;
     private final DbConfiguration dbConfiguration;
     private final ConnectionHolder connectionHolder;
-    private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
     public JoinTableCollectionQueryLevel(
 	    SqlStatementFactory sqlStatementFactory,
@@ -72,7 +71,7 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 		    relationship.getJoinTable(), attributes);
 	}
 
-	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(modelValueArray);
+	List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
 	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
 	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 		metaAttribute.getCollectionImplementationClass());

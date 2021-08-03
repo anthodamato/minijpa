@@ -53,7 +53,6 @@ import org.minijpa.jpa.db.JdbcEntityManagerImpl;
 import org.minijpa.jpa.db.LockTypeUtils;
 import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.EntityDelegate;
-import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +79,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
 	this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 	this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, persistenceContext,
-		new EntityInstanceBuilderImpl(), connectionHolder);
+		connectionHolder);
 	EntityDelegate.getInstance()
 		.addEntityManagerContext(new EntityContainerContext(persistenceUnitContext, persistenceContext,
 			jdbcEntityManager.getEntityLoader()));

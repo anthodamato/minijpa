@@ -61,11 +61,11 @@ public final class EntityDelegate implements EntityListener {
 
 	    MetaAttribute a = entity.getAttribute(attributeName);
 //	    LOG.info("get: a=" + a + "; a.isLazy()=" + a.isLazy() + "; lazyAttributeLoaded(entity, a, entityInstance)=" + lazyAttributeLoaded(entity, a, entityInstance));
-	    if (a.isLazy() && !lazyAttributeLoaded(entity, a, entityInstance)) {
+	    if (a.isLazy() && !MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)) {
 		EntityLoader entityLoader = entityContainerContextManager
 			.findByEntityContainer(entityInstance);
 		value = entityLoader.loadAttribute(entityInstance, a, value);
-		lazyAttributeLoaded(entity, a, entityInstance, true);
+		MetaEntityHelper.lazyAttributeLoaded(entity, a, entityInstance, true);
 	    }
 	} catch (Exception e) {
 	    LOG.error(e.getMessage());
@@ -73,25 +73,6 @@ public final class EntityDelegate implements EntityListener {
 	}
 
 	return value;
-    }
-
-    private boolean lazyAttributeLoaded(MetaEntity entity, MetaAttribute a, Object entityInstance)
-	    throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	Method m = entity.getLazyLoadedAttributeReadMethod().get();
-	List list = (List) m.invoke(entityInstance);
-	return list.contains(a.getName());
-    }
-
-    private void lazyAttributeLoaded(MetaEntity entity, MetaAttribute a, Object entityInstance, boolean loaded)
-	    throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	Method m = entity.getLazyLoadedAttributeReadMethod().get();
-	List list = (List) m.invoke(entityInstance);
-	if (loaded) {
-	    if (!list.contains(a.getName()))
-		list.add(a.getName());
-	} else {
-	    list.remove(a.getName());
-	}
     }
 
     private class PersistenceUnitContextManager {

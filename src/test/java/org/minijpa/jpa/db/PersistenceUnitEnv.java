@@ -13,26 +13,13 @@ import org.minijpa.jdbc.ConnectionHolderImpl;
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.db.EntityInstanceBuilder;
 import org.minijpa.jpa.MiniPersistenceContext;
 import org.minijpa.jpa.PersistenceProviderHelper;
 import org.minijpa.jpa.PersistenceUnitProperties;
-import org.minijpa.jpa.db.ConnectionProviderImpl;
-import org.minijpa.jpa.db.DbConfigurationList;
-import org.minijpa.jpa.db.EntityContainer;
-import org.minijpa.jpa.db.EntityLoaderImpl;
-import org.minijpa.jpa.db.EntityQueryLevel;
-import org.minijpa.jpa.db.ForeignKeyCollectionQueryLevel;
-import org.minijpa.jpa.db.JdbcEntityManager;
-import org.minijpa.jpa.db.JdbcEntityManagerImpl;
-import org.minijpa.jpa.db.JoinTableCollectionQueryLevel;
-import org.minijpa.jpa.db.PersistenceUnitPropertyActions;
-import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.MetaEntityUtils;
-import org.minijpa.jdbc.db.EntityInstanceBuilderImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,26 +96,24 @@ public class PersistenceUnitEnv {
 	LOG.debug("build: persistenceUnitContext=" + persistenceUnitContext);
 	MiniPersistenceContext miniPersistenceContext = new MiniPersistenceContext(persistenceUnitContext.getEntities());
 	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-	EntityInstanceBuilder entityInstanceBuilder = new EntityInstanceBuilderImpl();
 	ConnectionHolder connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 
 	Assertions.assertNotNull(dbConfiguration);
 	JdbcEntityManagerImpl jdbcEntityManagerImpl = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, miniPersistenceContext,
-		entityInstanceBuilder, connectionHolder);
+		connectionHolder);
 
 	LOG.debug("build: jdbcEntityManagerImpl=" + jdbcEntityManagerImpl);
 	new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo);
 	EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
 
-	MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 	EntityQueryLevel entityQueryLevel = new EntityQueryLevel(sqlStatementFactory,
-		entityInstanceBuilder, dbConfiguration, metaEntityHelper,
+		dbConfiguration,
 		connectionHolder);
 	JoinTableCollectionQueryLevel joinTableCollectionQueryLevel = new JoinTableCollectionQueryLevel(
 		sqlStatementFactory, dbConfiguration, connectionHolder);
 	ForeignKeyCollectionQueryLevel foreignKeyCollectionQueryLevel = new ForeignKeyCollectionQueryLevel(
-		sqlStatementFactory, metaEntityHelper, dbConfiguration, connectionHolder);
-	EntityLoaderImpl entityLoader = new EntityLoaderImpl(persistenceUnitContext, entityInstanceBuilder, miniPersistenceContext,
+		sqlStatementFactory, dbConfiguration, connectionHolder);
+	EntityLoaderImpl entityLoader = new EntityLoaderImpl(persistenceUnitContext, miniPersistenceContext,
 		entityQueryLevel, foreignKeyCollectionQueryLevel, joinTableCollectionQueryLevel);
 
 	EntityDelegate.getInstance()

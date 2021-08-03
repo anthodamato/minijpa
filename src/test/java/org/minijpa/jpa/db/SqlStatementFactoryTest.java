@@ -35,8 +35,6 @@ import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.PersistenceUnitProperties;
-import org.minijpa.jpa.db.ApacheDerbyJdbc;
-import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.jpa.model.Address;
 import org.minijpa.jpa.model.Department;
 import org.minijpa.jpa.model.Employee;
@@ -48,7 +46,6 @@ import org.minijpa.metadata.EntityDelegate;
 public class SqlStatementFactoryTest {
 
     private final SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-    private final MetaEntityHelper metaEntityHelper = new MetaEntityHelper();
 
     @Test
     public void generateSelectByForeignKey() throws Exception {
@@ -75,7 +72,7 @@ public class SqlStatementFactoryTest {
 
 	MetaEntity employeeEntity = map.get(Employee.class.getName());
 	MetaAttribute foreignKeyAttribute = employeeEntity.getAttribute("department");
-	List<QueryParameter> parameters = metaEntityHelper.convertAVToQP(foreignKeyAttribute, department);
+	List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, department);
 	List<String> columns = parameters.stream().map(p -> p.getColumnName())
 		.collect(Collectors.toList());
 
@@ -138,7 +135,7 @@ public class SqlStatementFactoryTest {
 	ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, store.getId(),
 		relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
 	List<AbstractAttribute> attributes = modelValueArray.getModels();
-	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(modelValueArray);
+	List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
 	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
 		relationshipJoinTable, attributes);
 
@@ -174,7 +171,7 @@ public class SqlStatementFactoryTest {
 	ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, 1L,
 		relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
 	List<AbstractAttribute> attributes = modelValueArray.getModels();
-	List<QueryParameter> parameters = metaEntityHelper.convertAbstractAVToQP(modelValueArray);
+	List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
 	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
 		relationshipJoinTable, attributes);
 
