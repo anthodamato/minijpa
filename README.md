@@ -1,5 +1,5 @@
 # minijpa
-minijpa is a JPA 3.0 Spec implementation (currently partially implemented)  
+minijpa is a JPA 3.0 Spec implementation (currently partially implemented).  
 List of implemented (or partially implemented) annotations:  
 
 @Basic  

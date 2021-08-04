@@ -1,10 +1,10 @@
-.classpath
-.project
-.settings/
-target/
-derby.log
-dependency-reduced-pom.xml
-nb-configuration.xml
+**/.classpath
+**/.project
+**/.settings/
+**/target/
+**/derby.log
+**/dependency-reduced-pom.xml
+**/nb-configuration.xml
+**/.gradle/
 
-/.gradle/
-/build/
+**/build/
