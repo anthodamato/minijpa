@@ -95,7 +95,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 	try {
 	    jdbcEntityManager.persist(e, entity, tinyFlushMode);
 	} catch (Exception ex) {
-//	    LOG.error(ex.getMessage());
 	    entityTransaction.setRollbackOnly();
 	    if (ex instanceof OptimisticLockException)
 		throw (OptimisticLockException) ex;
