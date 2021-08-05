@@ -18,18 +18,24 @@ package org.minijpa.jdbc;
 import java.util.Optional;
 import org.minijpa.jdbc.mapper.AttributeMapper;
 
+/**
+ * Base class to represent an entity attribute and a join column attribute.
+ *
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
 public abstract class AbstractAttribute {
 
+    // column name
     protected String columnName;
     /**
      * Attribute type: java.lang.Long, java.lang.Date, java.lang.String, java.lang.Boolean, java.util.Collection,
      * java.util.List, java.util.Map, java.util.Set, etc.
      */
     protected Class<?> type;
+    // sql type according to java.sql.Types constants
     protected Integer sqlType;
     // this type matches the database data type
-    protected Class<?> readWriteDbType;
-    protected DbTypeMapper dbTypeMapper;
+    protected Class<?> databaseType;
     protected Optional<AttributeMapper> attributeMapper = Optional.empty();
     /**
      * If an attribute type is a collection this is the chosen implementation.
@@ -56,16 +62,8 @@ public abstract class AbstractAttribute {
 	return sqlType;
     }
 
-    public Class<?> getReadWriteDbType() {
-	return readWriteDbType;
-    }
-
-    public DbTypeMapper getDbTypeMapper() {
-	return dbTypeMapper;
-    }
-
-    public void setDbTypeMapper(DbTypeMapper dbTypeMapper) {
-	this.dbTypeMapper = dbTypeMapper;
+    public Class<?> getDatabaseType() {
+	return databaseType;
     }
 
     public Optional<AttributeMapper> getAttributeMapper() {

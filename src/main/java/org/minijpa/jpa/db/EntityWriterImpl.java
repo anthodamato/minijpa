@@ -15,7 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -173,7 +172,8 @@ public class EntityWriterImpl implements EntityWriter {
 //		LOG.debug(e.getMessage());
 //	    }
 
-	    Object idv = entity.getId().getAttribute().getDbTypeMapper().convertGeneratedKey(pkId, entity.getId().getType());
+//	    Object idv = entity.getId().getAttribute().getDbTypeMapper().convertGeneratedKey(pkId, entity.getId().getType());
+	    Object idv = entity.getId().convertGeneratedKey(pkId);
 	    LOG.info("persist: pk=" + pkId);
 	    if (pkId != null)
 		LOG.info("persist: pk.getClass()=" + pkId.getClass());

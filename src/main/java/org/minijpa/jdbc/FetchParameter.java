@@ -37,7 +37,7 @@ public class FetchParameter {
 
     public static FetchParameter build(MetaAttribute attribute) {
 	return new FetchParameter(attribute.getColumnName(), attribute.getType(),
-		attribute.getReadWriteDbType(), attribute, null, false);
+		attribute.getDatabaseType(), attribute, null, false);
     }
 
     public String getColumnName() {

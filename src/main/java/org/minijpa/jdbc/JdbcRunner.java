@@ -110,7 +110,7 @@ public class JdbcRunner {
 
     public int update(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
 	LOG.info("Running `" + sql + "`");
-	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+	try ( PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 	    setPreparedStatementParameters(preparedStatement, parameters);
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
@@ -119,7 +119,7 @@ public class JdbcRunner {
 
     public int persist(Connection connection, String sql) throws SQLException {
 	LOG.info("Running `" + sql + "`");
-	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+	try ( PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 	    preparedStatement.execute();
 	    return preparedStatement.getUpdateCount();
 	}
@@ -173,7 +173,7 @@ public class JdbcRunner {
 
     public int delete(String sql, Connection connection, List<QueryParameter> parameters) throws SQLException {
 	LOG.info("Running `" + sql + "`");
-	try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+	try ( PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 	    if (!parameters.isEmpty())
 		setPreparedStatementParameters(preparedStatement, parameters);
 
@@ -350,7 +350,7 @@ public class JdbcRunner {
 		if (metaAttribute.attributeMapper.isPresent())
 		    v = metaAttribute.attributeMapper.get().databaseToAttribute(value);
 		else
-		    v = metaAttribute.dbTypeMapper.convertToAttributeType(value, fetchParameter.getType());
+		    v = dbTypeMapper.convertToAttributeType(value, fetchParameter.getType());
 	    }
 
 	    LOG.debug("createModelValueArrayFromResultSet: v=" + v);
@@ -533,7 +533,7 @@ public class JdbcRunner {
 		    if (metaAttribute.attributeMapper.isPresent())
 			v = metaAttribute.attributeMapper.get().databaseToAttribute(value);
 		    else
-			v = metaAttribute.dbTypeMapper.convertToAttributeType(value, optional.get().getType());
+			v = dbTypeMapper.convertToAttributeType(value, optional.get().getType());
 		}
 
 //		LOG.debug("buildRecord: value=" + value);
@@ -574,7 +574,7 @@ public class JdbcRunner {
 	if (optional.isPresent()) {
 	    MetaAttribute metaAttribute = optional.get();
 	    FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(),
-		    metaAttribute.getType(), metaAttribute.getReadWriteDbType(),
+		    metaAttribute.getType(), metaAttribute.getDatabaseType(),
 		    metaAttribute, entityMapping.getMetaEntity(), false);
 	    return Optional.of(fetchParameter);
 	}
@@ -584,7 +584,7 @@ public class JdbcRunner {
 	if (optionalJoinColumn.isPresent()) {
 	    JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
 	    FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),
-		    joinColumnAttribute.getType(), joinColumnAttribute.getReadWriteDbType(),
+		    joinColumnAttribute.getType(), joinColumnAttribute.getDatabaseType(),
 		    joinColumnAttribute.getAttribute(),
 		    entityMapping.getMetaEntity(), true);
 	    return Optional.of(fetchParameter);

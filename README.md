@@ -69,5 +69,5 @@ Built using Java SE 11 but easy to downgrade to Java SE 9
     - mvn test -Dminijpa.test=h2  
   
 ## License  
-[Apache License Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)  
+[Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)  
 

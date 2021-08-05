@@ -28,7 +28,9 @@ import org.minijpa.jdbc.relationship.Relationship;
 
 public class MetaAttribute extends AbstractAttribute {
 
+    // attribute name
     private String name;
+    // methods for read/write ops
     private Method readMethod;
     private Method writeMethod;
     private boolean id;
@@ -38,7 +40,7 @@ public class MetaAttribute extends AbstractAttribute {
     // calculated fields
     private List<MetaAttribute> expandedAttributeList;
     private boolean nullable = true;
-    // it'a a version attribute
+    // it's a version attribute
     private boolean version = false;
     // it's a basic attribute
     private boolean basic;
@@ -150,7 +152,6 @@ public class MetaAttribute extends AbstractAttribute {
 	private String columnName;
 	private Class<?> type;
 	private Class<?> readWriteDbType;
-	private DbTypeMapper dbTypeMapper;
 	private Method readMethod;
 	private Method writeMethod;
 	private boolean id;
@@ -186,11 +187,6 @@ public class MetaAttribute extends AbstractAttribute {
 
 	public Builder withReadWriteDbType(Class<?> readWriteDbType) {
 	    this.readWriteDbType = readWriteDbType;
-	    return this;
-	}
-
-	public Builder withDbTypeMapper(DbTypeMapper dbTypeMapper) {
-	    this.dbTypeMapper = dbTypeMapper;
 	    return this;
 	}
 
@@ -279,8 +275,7 @@ public class MetaAttribute extends AbstractAttribute {
 	    attribute.name = name;
 	    attribute.columnName = columnName;
 	    attribute.type = type;
-	    attribute.readWriteDbType = readWriteDbType;
-	    attribute.dbTypeMapper = dbTypeMapper;
+	    attribute.databaseType = readWriteDbType;
 	    attribute.readMethod = readMethod;
 	    attribute.writeMethod = writeMethod;
 	    attribute.id = id;

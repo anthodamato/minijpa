@@ -263,9 +263,4 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 	return value;
     }
 
-    @Override
-    public Object convertGeneratedKey(Object value, Class<?> attributeType) {
-	return ((Number) value).longValue();
-    }
-
 }

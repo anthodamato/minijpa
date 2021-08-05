@@ -33,7 +33,7 @@ public interface DbTypeMapper {
 
     /**
      * Maps the attribute type to the db type. For example, on Apache Derby if a column has the 'DATE' data type a
-     * LocalDate attribute type is mapped as java.sql.Date.
+     * LocalDate attribute type can be mapped as java.sql.Date.
      *
      * @param attributeType
      * @param enumerationType
@@ -49,15 +49,5 @@ public interface DbTypeMapper {
      * @return
      */
     public Object convertToAttributeType(Object value, Class<?> attributeType);
-
-    /**
-     * Converts the 'value' read from a resultSet with type 'readWriteDbType' to an object with class 'attributeType'.
-     * This method is called only to convert the generated key of an identity column.
-     *
-     * @param value
-     * @param attributeType
-     * @return
-     */
-    public Object convertGeneratedKey(Object value, Class<?> attributeType);
 
 }

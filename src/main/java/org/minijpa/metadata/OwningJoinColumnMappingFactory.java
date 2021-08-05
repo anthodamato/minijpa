@@ -42,8 +42,7 @@ public class OwningJoinColumnMappingFactory implements JoinColumnMappingFactory 
 	return new JoinColumnAttribute.Builder()
 		.withColumnName(joinColumnName)
 		.withType(id.getType())
-		.withReadWriteDbType(id.getReadWriteDbType())
-		.withDbTypeMapper(dbConfiguration.getDbTypeMapper())
+		.withReadWriteDbType(id.getDatabaseType())
 		.withSqlType(id.getSqlType())
 		.withAttribute(foreignKeyAttribute)
 		.withForeignKeyAttribute(id).build();

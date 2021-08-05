@@ -41,4 +41,17 @@ public interface Pk {
     public Method getReadMethod();
 
     public Method getWriteMethod();
+
+    /**
+     * Converts the 'value' read from a resultSet to an object of class returned by <code>getType</code>.
+     *
+     * This method is called only to convert the generated key of an identity column.
+     *
+     * @param value returned by the result set
+     * @return the primary key value
+     */
+    public default Object convertGeneratedKey(Object value) {
+	return ((Number) value).longValue();
+    }
+
 }
