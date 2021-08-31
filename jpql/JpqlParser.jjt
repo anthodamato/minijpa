@@ -1,0 +1,4272 @@
+options {
+  STATIC=false;
+//  MULTI=true;
+  VISITOR=true;
+  NODE_DEFAULT_VOID=true;
+  DEBUG_PARSER=true;
+  DEBUG_LOOKAHEAD=true;
+//  DEBUG_TOKEN_MANAGER=true;
+}
+
+PARSER_BEGIN(JpqlParser)
+
+package org.minijpa.jpql;
+
+public class JpqlParser {
+  public static void main(String args[]) throws ParseException {
+    JpqlParser parser = new JpqlParser(System.in);
+    parser.Input();
+  }
+}
+
+PARSER_END(JpqlParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN [IGNORE_CASE]:
+{
+ <AS:        "AS">
+|<ABS:       "ABS">
+|<ALL:       "ALL">
+|<AND:       "AND">
+|<ANY:       "ANY">
+|<ASC:       "ASC">
+|<AVG:       "AVG">
+|<BETWEEN:      "BETWEEN">
+|<BOTH:      "BOTH">
+|<BY:        "BY">
+|<CASE:      "CASE">
+|<COALESCE:  "COALESCE">
+|<CONCAT:    "CONCAT">
+|<COUNT:     "COUNT">
+|<CURRENT_DATE:        "CURRENT_DATE">
+|<CURRENT_TIME:        "CURRENT_TIME">
+|<CURRENT_TIMESTAMP:   "CURRENT_TIMESTAMP">
+|<DESC:      "DESC">
+|<DISTINCT:  "DISTINCT">
+|<ELSE:      "ELSE">
+|<EMPTY:       "EMPTY">
+|<END:       "END">
+|<ENTRY:     "ENTRY">
+|<ESCAPE:     "ESCAPE">
+|<EXISTS:     "EXISTS">
+|<FETCH:     "FETCH">
+|<FROM:      "FROM">
+|<FUNCTION:  "FUNCTION">
+|<GROUP:     "GROUP">
+|<HAVING:    "HAVING">
+|<INDEX:     "INDEX">
+|<INNER:     "INNER">
+|<IN:        "IN">
+|<IS:        "IS">
+|<JOIN:      "JOIN">
+|<KEY:       "KEY">
+|<LEADING:   "LEADING">
+|<LEFT:      "LEFT">
+|<LENGTH:        "LENGTH">
+|<LIKE:      "LIKE">
+|<LOCATE:        "LOCATE">
+|<LOWER:     "LOWER">
+|<MEMBER:    "MEMBER">
+|<MIN:       "MIN">
+|<MAX:       "MAX">
+|<MOD:       "MOD">
+|<NOT:       "NOT">
+|<NULL:      "NULL">
+|<NULLIF:    "NULLIF">
+|<OF:        "OF">
+|<OR:        "OR">
+|<ORDER:        "ORDER">
+|<OUTER:     "OUTER">
+|<SELECT:    "SELECT">
+|<SIZE:      "SIZE">
+|<SOME:      "SOME">
+|<SQRT:      "SQRT">
+|<SUBSTRING: "SUBSTRING">
+|<SUM:       "SUM">
+|<THEN:      "THEN">
+|<TRAILING:  "TRAILING">
+|<TREAT:     "TREAT">
+|<TRIM:      "TRIM">
+|<TYPE:      "TYPE">
+|<UPPER:     "UPPER">
+|<WHEN:      "WHEN">
+|<WHERE:     "WHERE">
+|<VALUE:     "VALUE">
+}
+
+// 'identification_variable' replaced by NAME
+// 'single_valued_object_field' replaced by NAME
+
+TOKEN :
+{
+  <NAME: ["a"-"z","A"-"Z","_"] ( ["a"-"z","A"-"Z","_","0"-"9"] )* >
+|
+  <RESULT_VARIABLE: ["a"-"z","A"-"Z","_"] ( ["a"-"z","A"-"Z","_","0"-"9"] )* >
+|
+  <COMMA: ",">
+|
+  <DOT:   ".">
+|
+  <OPEN_BRACKET: "(">
+|
+  <CLOSE_BRACKET: ")">
+| 
+  <STRING_LITERAL: "'" ( (~["'","\n","\r"]) | ("''") )* "'">
+|
+  <NUMERIC_LITERAL: ( ["0"-"9"] )+ >
+|
+  <INPUT_PARAMETER: "?" <NUMERIC_LITERAL> | ":" <NAME> >
+|
+  <GT:    ">" >
+| <GE:    ">=" >
+| <LT:    "<" >
+| <LE:    "<=" >
+| <NE:    "<>" >
+| <EQ:    "=" >
+}
+
+
+void Input() :
+{ String result; }
+{
+  result=QL_statement() <EOF>
+  { System.out.println("Result: " + result); }
+}
+
+String QL_statement() :
+{ String result; }
+{
+  result= select_statement() <EOF>
+  { return result; }
+}
+
+
+//   select_statement ::= select_clause from_clause [where_clause] [groupby_clause]
+//      [having_clause] [orderby_clause]
+String select_statement() :
+{
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=select_clause()
+    {
+      sb.append(s);
+    }
+  s=from_clause()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  [
+   s=where_clause()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  ]
+  { return sb.toString(); }
+}
+
+
+String select_clause() :
+{
+  StringBuilder sb=new StringBuilder();
+  String s;
+  Token t;
+}
+{
+  t=<SELECT>
+  {
+    sb.append(t.image);
+  }
+  [t=<DISTINCT>
+   {
+    sb.append(" ");
+     sb.append(t.image);
+   }
+  ]
+  s=select_item()
+  {
+    sb.append(" ");
+    sb.append(s);
+  }
+  (t=<COMMA>
+  {
+    sb.append(t.image);
+  }
+   s=select_item()
+  {
+    sb.append(" ");
+    sb.append(s);
+  }
+  )*
+  { return sb.toString(); }
+}
+
+String select_item() :
+{
+  String s;
+}
+{
+  s=select_expression() [[<AS>] <RESULT_VARIABLE>]
+  { return s; }
+}
+
+String select_expression() #select_expression :
+{
+  Token t;
+}
+{
+  t=<NAME>
+  { return t.image; }
+}
+
+
+//  join_spec ::= [LEFT [OUTER] | INNER] JOIN
+//  join_spec ::= JOIN | LEFT [OUTER] JOIN | INNER JOIN
+/*
+String join_spec() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+}
+{
+  t=<JOIN>
+    {
+      sb.append(t.image);
+      return sb.toString();
+    }
+  |
+  t=<LEFT>
+    {
+      sb.append(t.image);
+    }
+    [t=<OUTER>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+    ]
+    t=<JOIN>
+      {
+        sb.append(" ");
+        sb.append(t.image);
+        return sb.toString();
+      }
+  |
+  t=<INNER>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+  t=<JOIN>
+  {
+   sb.append(" ");
+   sb.append(t.image);
+  }
+  { return sb.toString(); }
+}
+*/
+
+
+String join_spec() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+}
+{
+  [t=<LEFT>
+   {
+    sb.append(t.image);
+   }
+   [t=<OUTER>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+   ]
+   |
+   t=<INNER>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+  ]
+  t=<JOIN>
+  {
+//   sb.append(" ");
+   sb.append(t.image);
+  }
+  { return sb.toString(); }
+}
+
+
+String single_valued_embeddable_object_field() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+}
+{
+  (t=<NAME>
+     {
+      sb.append(t.image);
+     }
+   t=<DOT>
+     {
+      sb.append(".");
+     }
+  )*
+  { return sb.toString(); }
+}
+
+
+//   join_single_valued_path_expression ::= 
+//        identification_variable.{single_valued_embeddable_object_field.}*single_valued_object_field
+//
+//// MODIFIED AS:
+//
+//   join_single_valued_path_expression ::= 
+//       identification_variable.{single_valued_embeddable_object_field.}*NAME
+String join_single_valued_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  t=<DOT>
+    {
+     sb.append(".");
+    }
+  (
+   LOOKAHEAD(2)
+   s=single_valued_embeddable_object_field()
+     {
+      sb.append(s);
+     }
+   t=<DOT>
+     {
+      sb.append(".");
+     }
+  )*
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// join_collection_valued_path_expression ::= 
+//       identification_variable.{single_valued_embeddable_object_field.}*collection_valued_field
+//
+//// MODIFIED AS:
+//
+// join_collection_valued_path_expression ::= 
+//       identification_variable.{single_valued_embeddable_object_field.}*FIELD_NAME
+/*
+String join_collection_valued_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  t=<DOT>
+    {
+     sb.append(".");
+    }
+  (
+   s=single_valued_embeddable_object_field()
+     {
+      sb.append(s);
+     }
+   t=<DOT>
+     {
+      sb.append(".");
+     }
+  )*
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+*/
+
+
+// Must be a subtype, entity name?
+String subtype() #subtype :
+{
+  Token t;
+}
+{
+  t=<NAME>
+  { return t.image; }
+}
+
+
+//  join_association_path_expression ::=
+//      join_collection_valued_path_expression |
+//      join_single_valued_path_expression |
+//      TREAT(join_collection_valued_path_expression AS subtype) |
+//      TREAT(join_single_valued_path_expression AS subtype)
+//
+//// MODIFIED AS:
+//
+//  join_association_path_expression ::=
+//      join_single_valued_path_expression |
+//      TREAT(join_single_valued_path_expression AS subtype)
+String join_association_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=join_single_valued_path_expression()
+    {
+      sb.append(s);
+      return sb.toString();
+    }
+    
+  |
+  t=<TREAT>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=join_single_valued_path_expression()
+    {
+      sb.append(s);
+    }
+  t=<AS>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+  s=subtype()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+//  join ::= join_spec join_association_path_expression [AS] identification_variable [join_condition]
+// TODO: to be completed
+String join() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=join_spec()
+    {
+      sb.append(s);
+    }
+  s=join_association_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+    [t=<AS>
+      {
+       sb.append(" ");
+       sb.append(t.image);
+      }
+    ]
+//  s=join_association_path_expression()
+//    {
+//      sb.append(" ");
+//      sb.append(s);
+//    }
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+//    fetch_join ::= join_spec FETCH join_association_path_expression
+String fetch_join() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=join_spec()
+    {
+      sb.append(s);
+    }
+  t=<FETCH>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=join_association_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+//   entity_name
+String entity_name() #entityName :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+//   range_variable_declaration ::= entity_name [AS] identification_variable
+String range_variable_declaration() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  {
+   t=getNextToken();
+//     sb.append(" ");
+     sb.append(t.image);
+  }
+
+     [t=<AS>
+       {
+         sb.append(" ");
+         sb.append(t.image);
+       }
+     ]
+   t=<NAME>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+  { return sb.toString(); }
+}
+
+
+//  identification_variable_declaration ::= range_variable_declaration {join | fetch_join}*
+String identification_variable_declaration() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   s=range_variable_declaration()
+     {
+       sb.append(s);
+     }
+   (
+    LOOKAHEAD(2)
+    s=join()
+      {
+        sb.append(" ");
+        sb.append(s);
+      }
+    |
+    s=fetch_join()
+      {
+        sb.append(" ");
+        sb.append(s);
+      }
+   )*
+  { return sb.toString(); }
+}
+
+
+//    from_clause ::= FROM  identification_variable_declaration
+//          {, {identification_variable_declaration | collection_member_declaration}}*
+String from_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   t=<FROM>
+     {
+       sb.append(t.image);
+     }
+   s=identification_variable_declaration()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   (
+     t=<COMMA>
+       {
+         sb.append(t.image);
+       }
+     (
+      s=identification_variable_declaration()
+        {
+          sb.append(" ");
+          sb.append(s);
+        }
+     |
+      s=collection_member_declaration()
+        {
+          sb.append(" ");
+          sb.append(s);
+        }
+     )
+   )*
+  { return sb.toString(); }
+}
+
+
+//   map_field_identification_variable ::= KEY(identification_variable) | VALUE(identification_variable)
+String map_field_identification_variable() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   t=<KEY>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+   t=<OPEN_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   t=<NAME>
+     {
+       sb.append(t.image);
+     }
+   t=<CLOSE_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   { return sb.toString(); }
+   |
+   t=<VALUE>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+   t=<OPEN_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   t=<NAME>
+     {
+       sb.append(t.image);
+     }
+   t=<CLOSE_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   { return sb.toString(); }
+}
+
+
+//   qualified_identification_variable ::= map_field_identification_variable | ENTRY(identification_variable)
+String qualified_identification_variable() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   s=map_field_identification_variable()
+     {
+       sb.append(" ");
+       sb.append(s);
+       return sb.toString();
+     }
+   |
+   t=<ENTRY>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+   t=<OPEN_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   t=<NAME>
+     {
+       sb.append(t.image);
+     }
+   t=<CLOSE_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   { return sb.toString(); }
+}
+
+
+//  general_identification_variable ::= identification_variable | map_field_identification_variable
+String general_identification_variable() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   t=<NAME>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+       return sb.toString();
+     }
+   |
+   s=map_field_identification_variable()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   { return sb.toString(); }
+}
+
+
+// simple_subpath ::= general_identification_variable | general_identification_variable{.single_valued_object_field}*
+String simple_subpath() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   LOOKAHEAD(2)
+   s=general_identification_variable()
+     {
+       sb.append(" ");
+       sb.append(s);
+       return sb.toString();
+     }
+   |
+   s=general_identification_variable()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   (
+     LOOKAHEAD(2)
+     t=<DOT>
+       {
+         sb.append(t.image);
+       }
+     t=<NAME>
+       {
+         sb.append(t.image);
+       }
+   )*
+   { return sb.toString(); }
+}
+
+
+// general_subpath ::= simple_subpath | treated_subpath{.single_valued_object_field}*
+String general_subpath() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   s=simple_subpath()
+     {
+       sb.append(" ");
+       sb.append(s);
+       return sb.toString();
+     }
+   |
+   s=treated_subpath()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   (
+     LOOKAHEAD(2)
+     t=<DOT>
+       {
+         sb.append(t.image);
+       }
+     t=<NAME>
+       {
+         sb.append(t.image);
+       }
+   )*
+   { return sb.toString(); }
+}
+
+
+//  treated_subpath ::= TREAT(general_subpath AS subtype)
+String treated_subpath() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<TREAT>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=general_subpath()
+    {
+      sb.append(s);
+    }
+  t=<AS>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+  s=subtype()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// state_field_path_expression ::= general_subpath.state_field
+String state_field_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   s=general_subpath()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   t=<DOT>
+     {
+      sb.append(t.image);
+     }
+   t=<NAME>
+     {
+       sb.append(t.image);
+     }
+  { return sb.toString(); }
+}
+
+
+// state_valued_path_expression ::= state_field_path_expression | general_identification_variable
+String state_valued_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+   LOOKAHEAD(3)
+   s=state_field_path_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+       return sb.toString();
+     }
+   |
+   s=general_identification_variable()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  { return sb.toString(); }
+}
+
+
+//   functions_returning_strings ::=
+//      CONCAT(string_expression, string_expression{, string_expression}*) |
+//      SUBSTRING(string_expression, arithmetic_expression[, arithmetic_expression]) |
+//      TRIM([[trim_specification] [trim_character] FROM] string_expression) |
+//      LOWER(string_expression) |
+//      UPPER(string_expression)
+//   trim_specification ::= LEADING | TRAILING | BOTH
+String functions_returning_strings() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<CONCAT>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(s);
+    }
+  t=<COMMA>
+    {
+     sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(s);
+    }
+  (
+    t=<COMMA>
+      {
+       sb.append(t.image);
+      }
+    s=string_expression()
+      {
+       sb.append(" ");
+       sb.append(s);
+      }
+  )*
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<SUBSTRING>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(s);
+    }
+  t=<COMMA>
+    {
+     sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(s);
+    }
+  (
+    t=<COMMA>
+      {
+       sb.append(t.image);
+      }
+    s=arithmetic_expression()
+      {
+       sb.append(" ");
+       sb.append(s);
+      }
+  )*
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<TRIM>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  [
+   LOOKAHEAD(2)
+   [
+    t=<LEADING>
+      {
+       sb.append(t.image);
+      }
+    |
+    t=<TRAILING>
+      {
+       sb.append(t.image);
+      }
+    |
+    t=<BOTH>
+      {
+       sb.append(t.image);
+      }
+   ]
+   [
+    t=<STRING_LITERAL>
+      {
+       sb.append(t.image);
+      }
+   ]
+   t=<FROM>
+     {
+      sb.append(t.image);
+     }
+  ]
+  s=string_expression()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+    t=<LOWER>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+
+  |
+    t=<UPPER>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+//   functions_returning_datetime ::=
+//      CURRENT_DATE |
+//      CURRENT_TIME |
+//      CURRENT_TIMESTAMP
+String functions_returning_datetime() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<CURRENT_DATE>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+     return sb.toString();
+    }
+  
+  |
+  t=<CURRENT_TIME>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+     return sb.toString();
+    }
+    
+  |
+  t=<CURRENT_TIMESTAMP>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+     return sb.toString();
+    }
+}
+
+
+//   functions_returning_numerics ::=
+//      LENGTH(string_expression) |
+//      LOCATE(string_expression, string_expression[, arithmetic_expression]) |
+//      ABS(arithmetic_expression) |
+//      SQRT(arithmetic_expression) |
+//      MOD(arithmetic_expression, arithmetic_expression) |
+//      SIZE(collection_valued_path_expression) |
+//      INDEX(identification_variable)
+String functions_returning_numerics() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<LENGTH>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<LOCATE>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(s);
+    }
+  t=<COMMA>
+    {
+     sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(s);
+    }
+  (
+    t=<COMMA>
+      {
+       sb.append(t.image);
+      }
+    s=arithmetic_expression()
+      {
+       sb.append(" ");
+       sb.append(s);
+      }
+  )
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<ABS>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<SQRT>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<MOD>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(s);
+    }
+  t=<COMMA>
+    {
+     sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<SIZE>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=collection_valued_path_expression()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<INDEX>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// single_valued_object_path_expression ::= general_subpath.single_valued_object_field
+String single_valued_object_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=general_subpath()
+    {
+      sb.append(s);
+    }
+  t=<DOT>
+    {
+     sb.append(t.image);
+    }
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// aggregate_expression ::=
+//    {AVG | MAX | MIN | SUM} ([DISTINCT] state_valued_path_expression) |
+//    COUNT ([DISTINCT] identification_variable |
+//    state_valued_path_expression |
+//    single_valued_object_path_expression) |
+//    function_invocation
+String aggregate_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  (
+   t=<AVG>
+     {
+      sb.append(t.image);
+     }
+   |
+   t=<MAX>
+     {
+      sb.append(t.image);
+     }
+   |
+   t=<MIN>
+     {
+      sb.append(t.image);
+     }
+   |
+   t=<SUM>
+     {
+      sb.append(t.image);
+     }
+  )
+  [
+   t=<DISTINCT>
+     {
+      sb.append("");
+      sb.append(t.image);
+     }
+  ]
+  s=state_valued_path_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+    t=<COUNT>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  [
+   t=<DISTINCT>
+     {
+      sb.append("");
+      sb.append(t.image);
+     }
+  ]
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(3)
+  s=state_valued_path_expression()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=single_valued_object_path_expression()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  s=function_invocation()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+//   function_invocation ::= FUNCTION(function_name{, function_arg}*)
+String function_invocation() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<FUNCTION>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  (
+   t=<COMMA>
+     {
+       sb.append(t.image);
+     }
+   s=function_arg()
+     {
+       sb.append("");
+       sb.append(s);
+     }
+  )*
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+//   function_arg ::=
+//      literal |
+//      state_valued_path_expression |
+//      input_parameter |
+//      scalar_expression
+String function_arg() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(3)
+  s=state_valued_path_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(2)
+  t=<INPUT_PARAMETER>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+
+  |
+  s=scalar_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+// scalar_expression ::=
+//    arithmetic_expression |
+//    string_expression |
+//    enum_expression |
+//    datetime_expression |
+//    boolean_expression |
+//    case_expression |
+//    entity_type_expression
+String scalar_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=arithmetic_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(3)
+  s=string_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  LOOKAHEAD(3)
+  s=enum_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(3)
+  s=datetime_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  
+  |
+  LOOKAHEAD(3)
+  s=boolean_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=case_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=entity_type_expression()
+    {
+     sb.append("");
+     sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+//   nullif_expression::= NULLIF(scalar_expression, scalar_expression)
+String nullif_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<NULLIF>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append(s);
+    }
+  t=<COMMA>
+    {
+      sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+//   coalesce_expression ::= COALESCE(scalar_expression{, scalar_expression}+)
+String coalesce_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<COALESCE>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append(s);
+    }
+  (
+  t=<COMMA>
+    {
+      sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  )+
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+//   simple_when_clause ::= WHEN scalar_expression THEN scalar_expression
+String simple_when_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<WHEN>
+    {
+     sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append(s);
+    }
+  t=<THEN>
+    {
+      sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+// type_discriminator ::=
+//        TYPE(general_identification_variable |
+//          single_valued_object_path_expression |
+//          input_parameter)
+String type_discriminator() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<TYPE>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=general_identification_variable()
+    {
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=single_valued_object_path_expression()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<INPUT_PARAMETER>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+//   case_operand ::= state_valued_path_expression | type_discriminator
+String case_operand() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=state_valued_path_expression()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=type_discriminator()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }  
+}
+
+
+//   simple_case_expression ::=
+//      CASE case_operand simple_when_clause {simple_when_clause}*
+//      ELSE scalar_expression
+//      END
+String simple_case_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<CASE>
+    {
+     sb.append(t.image);
+    }
+  s=case_operand()
+    {
+      sb.append(s);
+    }
+  s=simple_when_clause()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  (
+  s=simple_when_clause()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  )*
+  t=<ELSE>
+    {
+     sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  t=<END>
+    {
+     sb.append(t.image);
+    }
+  
+  { return sb.toString(); }
+}
+
+
+//   when_clause ::= WHEN conditional_expression THEN scalar_expression
+String when_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<WHEN>
+    {
+     sb.append(t.image);
+    }
+  s=conditional_expression()
+    {
+      sb.append(s);
+    }
+  t=<THEN>
+    {
+      sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+//   general_case_expression::= CASE when_clause {when_clause}* ELSE scalar_expression END
+String general_case_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<CASE>
+    {
+     sb.append(t.image);
+    }
+  s=when_clause()
+    {
+      sb.append(s);
+    }
+  (
+  s=when_clause()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  )*
+  t=<ELSE>
+    {
+     sb.append(t.image);
+    }
+  s=scalar_expression()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  t=<END>
+    {
+     sb.append(t.image);
+    }
+  
+  { return sb.toString(); }
+}
+
+
+//   case_expression ::=
+//      general_case_expression |
+//      simple_case_expression |
+//      coalesce_expression |
+//      nullif_expression
+String case_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  s=general_case_expression()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=simple_case_expression()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }  
+
+  |
+  s=coalesce_expression()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=nullif_expression()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }  
+}
+
+
+// entity_type_expression ::= type_discriminator | entity_type_literal | input_parameter
+String entity_type_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  s=type_discriminator()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |  
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+
+  |
+  t=<INPUT_PARAMETER>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// simple_entity_expression ::= identification_variable | input_parameter
+String simple_entity_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+
+  |
+  t=<INPUT_PARAMETER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// entity_expression ::= single_valued_object_path_expression | simple_entity_expression
+String entity_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  s=single_valued_object_path_expression()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |  
+  s=simple_entity_expression()
+    {
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+// enum_expression ::=
+//    state_valued_path_expression |
+//    enum_literal |
+//    input_parameter |
+//    case_expression |
+//    (subquery)
+String enum_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  s=state_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |  
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<INPUT_PARAMETER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=case_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<OPEN_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  s=subquery()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// boolean_expression ::=
+//    state_valued_path_expression |
+//    boolean_literal |
+//    input_parameter |
+//    case_expression |
+//    function_invocation |
+//    (subquery)
+String boolean_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  s=state_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |  
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<INPUT_PARAMETER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=case_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=function_invocation()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  t=<OPEN_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  s=subquery()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// datetime_expression ::=
+//    state_valued_path_expression |
+//    input_parameter |
+//    functions_returning_datetime |
+//    aggregate_expression |
+//    case_expression |
+//    function_invocation |
+//    date_time_timestamp_literal |
+//    (subquery)
+String datetime_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  s=state_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<INPUT_PARAMETER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=functions_returning_datetime()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  LOOKAHEAD(3)
+  s=aggregate_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  s=case_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=function_invocation()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |  
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+
+  |
+  t=<OPEN_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  s=subquery()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// string_expression ::=
+//    state_valued_path_expression |
+//    string_literal |
+//    input_parameter |
+//    functions_returning_strings |
+//    aggregate_expression |
+//    case_expression |
+//    function_invocation |
+//    (subquery)
+String string_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=state_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  t=<STRING_LITERAL>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<INPUT_PARAMETER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=functions_returning_strings()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  LOOKAHEAD(3)
+  s=aggregate_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  s=case_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=function_invocation()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  t=<OPEN_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  s=subquery()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// arithmetic_primary ::=
+//    state_valued_path_expression |
+//    numeric_literal |
+//    (arithmetic_expression) |
+//    input_parameter |
+//    functions_returning_numerics |
+//    aggregate_expression |
+//    case_expression |
+//    function_invocation |
+//    (subquery)
+String arithmetic_primary() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=state_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  t=<NUMERIC_LITERAL>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+
+  |
+  LOOKAHEAD(2)
+  t=<OPEN_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  t=<INPUT_PARAMETER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=functions_returning_numerics()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  LOOKAHEAD(3)
+  s=aggregate_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  s=case_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=function_invocation()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  t=<OPEN_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  s=subquery()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// arithmetic_factor ::= [{+ | -}] arithmetic_primary
+String arithmetic_factor() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+ [
+  "+"
+    {
+      sb.append("+");
+    }
+  |
+  "-"
+    {
+      sb.append("-");
+    }
+ ]
+  s=arithmetic_primary()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+// arithmetic_term ::= arithmetic_factor | arithmetic_term {* | /} arithmetic_factor
+// LEFT RECURSION
+// SOLVED AS:
+// arithmetic_term ::= arithmetic_factor {{* | /} arithmetic_factor}*
+String arithmetic_term() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=arithmetic_factor()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+
+  (
+  LOOKAHEAD(2)
+  (
+  "+"
+    {
+      sb.append("*");
+    }
+  |
+  "-"
+    {
+      sb.append("/");
+    }
+  )
+  s=arithmetic_factor()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  )*
+  { return sb.toString(); }
+}
+
+
+// arithmetic_expression ::= arithmetic_term | arithmetic_expression {+ | -} arithmetic_term
+// LEFT RECURSION
+// SOLVED AS:
+// arithmetic_expression ::= arithmetic_term {{+ | -} arithmetic_term}*
+String arithmetic_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=arithmetic_term()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+
+  (
+  (
+  "+"
+    {
+      sb.append("+");
+    }
+  |
+  "-"
+    {
+      sb.append("-");
+    }
+  )
+  s=arithmetic_term()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  )*
+  { return sb.toString(); }
+}
+
+
+// all_or_any_expression ::= {ALL | ANY | SOME} (subquery)
+String all_or_any_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  (
+  t=<ALL>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  |
+  t=<ANY>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  |
+  t=<SOME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  )
+  t=<OPEN_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  s=subquery()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+String comparison_operator() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<GT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+  |  
+  t=<GE>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+  |  
+  t=<LT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+  |  
+  t=<LE>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+  |  
+  t=<NE>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+  |  
+  t=<EQ>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+}
+
+
+// comparison_expression ::=
+//    string_expression comparison_operator {string_expression | all_or_any_expression} |
+//    boolean_expression {= | <>} {boolean_expression | all_or_any_expression} |
+//    enum_expression {= | <>} {enum_expression | all_or_any_expression} |
+//    datetime_expression comparison_operator {datetime_expression | all_or_any_expression} |
+//    entity_expression {= | <>} {entity_expression | all_or_any_expression} |
+//    arithmetic_expression comparison_operator {arithmetic_expression | all_or_any_expression} |
+//    entity_type_expression {= | <>} entity_type_expression
+String comparison_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=string_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+   s=comparison_operator()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  (
+   s=string_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   |
+   s=all_or_any_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  )
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(3)
+  s=boolean_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  s=comparison_operator()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+   s=boolean_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   |
+   s=all_or_any_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  )
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(3)
+  s=enum_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  s=comparison_operator()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+   s=enum_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   |
+   s=all_or_any_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  )
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(3)
+  s=datetime_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  s=comparison_operator()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+   s=datetime_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   |
+   s=all_or_any_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  )
+  { return sb.toString(); }
+  
+  |
+  LOOKAHEAD(3)
+  s=entity_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  s=comparison_operator()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+   s=entity_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   |
+   s=all_or_any_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  )
+  { return sb.toString(); }  
+  
+  |
+  LOOKAHEAD(3)
+  s=arithmetic_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  s=comparison_operator()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+   s=arithmetic_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   |
+   s=all_or_any_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  )
+  { return sb.toString(); }
+  
+  |
+  s=entity_type_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  s=comparison_operator()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  s=entity_type_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }  
+}
+
+
+// exists_expression ::= [NOT] EXISTS (subquery)
+String exists_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<EXISTS>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  s=subquery()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// entity_or_value_expression ::=
+//    single_valued_object_path_expression |
+//    state_field_path_expression |
+//    simple_entity_or_value_expression
+//
+// simple_entity_or_value_expression ::=
+//    identification_variable |
+//    input_parameter |
+//    literal
+String entity_or_value_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=single_valued_object_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+    
+  |
+  LOOKAHEAD(2)
+  s=state_field_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+    
+  |
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+  
+  |
+  t=<INPUT_PARAMETER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+}
+
+
+// collection_valued_path_expression ::= general_subpath.{collection_valued_field}
+String collection_valued_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=general_subpath()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<DOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  (
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  )
+  { return sb.toString(); }
+}
+
+
+//  collection_member_expression ::= entity_or_value_expression [NOT] MEMBER [OF] collection_valued_path_expression
+String collection_member_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=entity_or_value_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<MEMBER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  [
+  t=<OF>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  s=collection_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+// empty_collection_comparison_expression ::= collection_valued_path_expression IS [NOT] EMPTY
+String empty_collection_comparison_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=collection_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<IS>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<EMPTY>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// null_comparison_expression ::= {single_valued_path_expression | input_parameter} IS [NOT] NULL
+String null_comparison_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  (
+  s=single_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+   |
+   t=<INPUT_PARAMETER>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+  )
+  t=<IS>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<NULL>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// like_expression ::= string_expression [NOT] LIKE pattern_value [ESCAPE escape_character]
+String like_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=string_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<LIKE>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  t=<STRING_LITERAL>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+  (
+   t=<ESCAPE>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+   t=<STRING_LITERAL>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+  )
+  { return sb.toString(); }
+}
+
+
+// in_item ::= literal | single_valued_input_parameter
+String in_item() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+
+  |
+  t=<STRING_LITERAL>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+       return sb.toString();
+     }
+
+  |
+  t=<INPUT_PARAMETER>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+  { return sb.toString(); }
+}
+
+
+// in_expression ::= {state_valued_path_expression | type_discriminator} [NOT] IN
+//        {(in_item{, in_item}*) | (subquery) | collection_valued_input_parameter}
+String in_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  (
+  LOOKAHEAD(3)
+  s=state_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  |
+  s=type_discriminator()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  )
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  
+  t=<IN>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+
+  (
+   LOOKAHEAD(2)
+   (
+    s=in_item()
+      {
+        sb.append(" ");
+        sb.append(s);
+      }
+    (
+     t=<DOT>
+       {
+         sb.append(t.image);
+       }
+     s=in_item()
+       {
+         sb.append(" ");
+         sb.append(s);
+       }
+    )*
+   )
+  |
+   t=<OPEN_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   s=subquery()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   t=<CLOSE_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   |
+   t=<INPUT_PARAMETER>
+     {
+       sb.append(t.image);
+     }
+  )
+  { return sb.toString(); }
+}
+
+
+// between_expression ::=
+//    arithmetic_expression [NOT] BETWEEN arithmetic_expression AND arithmetic_expression |
+//    string_expression [NOT] BETWEEN string_expression AND string_expression |
+//    datetime_expression [NOT] BETWEEN datetime_expression AND datetime_expression
+String between_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=arithmetic_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<BETWEEN>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<AND>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=arithmetic_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+
+  |
+  LOOKAHEAD(3)
+  s=string_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<BETWEEN>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<AND>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=string_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+  
+  |
+  s=datetime_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  [
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<BETWEEN>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=datetime_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<AND>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=datetime_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+// simple_cond_expression ::=
+//    comparison_expression |
+//    between_expression |
+//      in_expression |
+//    like_expression |
+//    null_comparison_expression |
+//    empty_collection_comparison_expression |
+//    collection_member_expression |
+//    exists_expression
+String simple_cond_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=comparison_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  LOOKAHEAD(3)
+  s=between_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  LOOKAHEAD(3)
+  s=in_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  LOOKAHEAD(3)
+  s=like_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  LOOKAHEAD(3)
+  s=null_comparison_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  LOOKAHEAD(3)
+  s=empty_collection_comparison_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  s=collection_member_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  s=exists_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+}
+
+
+// conditional_primary ::= simple_cond_expression | (conditional_expression)
+String conditional_primary() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=simple_cond_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+   t=<OPEN_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   s=conditional_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   t=<CLOSE_BRACKET>
+     {
+       sb.append(t.image);
+     }
+   { return sb.toString(); }
+}
+
+
+// conditional_factor ::= [NOT] conditional_primary
+String conditional_factor() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  [
+  LOOKAHEAD(2)
+  t=<NOT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  s=conditional_primary()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+   { return sb.toString(); }
+}
+
+
+// conditional_term ::= conditional_factor | conditional_term AND conditional_factor
+// LEFT RECURSION
+// SOLVED AS:
+// conditional_term ::= conditional_factor {AND conditional_factor}*
+String conditional_term() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=conditional_factor()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+
+   (  
+   t=<AND>
+     {
+       sb.append(t.image);
+     }
+   s=conditional_factor()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   )*
+   { return sb.toString(); }
+}
+
+
+// conditional_expression ::= conditional_term | conditional_expression OR conditional_term
+// LEFT RECURSION
+// SOLVED AS:
+// conditional_expression ::= conditional_term {OR conditional_term}*
+String conditional_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=conditional_term()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+   (  
+   t=<OR>
+     {
+       sb.append(t.image);
+     }
+   s=conditional_term()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+   )*
+   { return sb.toString(); }
+}
+
+
+//   single_valued_path_expression ::=
+//      qualified_identification_variable |
+//      TREAT(qualified_identification_variable AS subtype) |
+//      state_field_path_expression |
+//      single_valued_object_path_expression
+String single_valued_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=qualified_identification_variable()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  LOOKAHEAD(3)
+  t=<TREAT>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=qualified_identification_variable()
+    {
+      sb.append(s);
+    }
+  t=<AS>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+  s=subtype()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+   { return sb.toString(); }
+
+  |
+  LOOKAHEAD(3)
+  s=state_field_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+    
+  |
+  s=single_valued_object_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+}
+
+
+// simple_select_expression::=
+//    single_valued_path_expression |
+//    scalar_expression |
+//    aggregate_expression |
+//    identification_variable
+String simple_select_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=single_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  LOOKAHEAD(3)
+  s=scalar_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+    
+  |
+  LOOKAHEAD(2)
+  s=aggregate_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  t=<NAME>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// simple_select_clause ::= SELECT [DISTINCT] simple_select_expression
+String simple_select_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<SELECT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  [
+  t=<DISTINCT>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  s=simple_select_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  { return sb.toString(); }
+}
+
+
+// derived_collection_member_declaration ::= IN
+//     superquery_identification_variable.{single_valued_object_field.}*collection_valued_field
+String derived_collection_member_declaration() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<IN>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  t=<DOT>
+    {
+      sb.append(t.image);
+    }
+  (
+  LOOKAHEAD(2)
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  t=<DOT>
+    {
+      sb.append(t.image);
+    }
+  )*
+  t=<NAME>
+    {
+      sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// treated_derived_path ::= TREAT(general_derived_path AS subtype)
+String treated_derived_path() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<TREAT>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=general_derived_path()
+    {
+      sb.append(s);
+    }
+  t=<AS>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+  s=subtype()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// simple_derived_path ::= superquery_identification_variable{.single_valued_object_field}*
+String simple_derived_path() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<NAME>
+    {
+      sb.append(" ");
+     sb.append(t.image);
+    }
+  (
+  LOOKAHEAD(2)
+  t=<DOT>
+    {
+     sb.append(t.image);
+    }
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  )*
+  { return sb.toString(); }
+}
+
+
+// general_derived_path ::= simple_derived_path | treated_derived_path{.single_valued_object_field}*
+String general_derived_path() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=simple_derived_path()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  s=treated_derived_path()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+  LOOKAHEAD(2)
+  t=<DOT>
+    {
+     sb.append(t.image);
+    }
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  )*
+  { return sb.toString(); }
+}
+
+
+// derived_path_expression ::=
+//    general_derived_path.single_valued_object_field |
+//    general_derived_path.collection_valued_field
+String derived_path_expression() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=general_derived_path()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  t=<DOT>
+    {
+     sb.append(t.image);
+    }
+  t=<NAME>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// subselect_identification_variable_declaration ::=
+//    identification_variable_declaration |
+//    derived_path_expression [AS] identification_variable {join}* |
+//    derived_collection_member_declaration
+String subselect_identification_variable_declaration() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  s=identification_variable_declaration()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  s=derived_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  [
+  t=<AS>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  ]
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  (
+  s=join()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  )*
+  { return sb.toString(); }
+  
+  |
+  s=derived_collection_member_declaration()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  
+  { return sb.toString(); }
+}
+
+
+
+// subquery_from_clause ::=
+//    FROM subselect_identification_variable_declaration {, subselect_identification_variable_declaration |
+//           collection_member_declaration}*
+String subquery_from_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<FROM>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=subselect_identification_variable_declaration()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+  t=<COMMA>
+    {
+     sb.append(t.image);
+    }
+  [
+  LOOKAHEAD(2)
+  s=subselect_identification_variable_declaration()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+   |
+  s=collection_member_declaration()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  ]
+  )*
+  { return sb.toString(); }
+}
+
+
+//   collection_member_declaration ::=
+//      IN (collection_valued_path_expression) [AS] identification_variable
+String collection_member_declaration() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<IN>
+    {
+     sb.append(t.image);
+    }
+  t=<OPEN_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  s=collection_valued_path_expression()
+    {
+      sb.append(s);
+    }
+  [
+  t=<AS>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+  ]
+  t=<NAME>
+    {
+     sb.append(" ");
+     sb.append(t.image);
+    }
+  t=<CLOSE_BRACKET>
+    {
+     sb.append(t.image);
+    }
+  { return sb.toString(); }
+}
+
+
+// subquery ::= simple_select_clause subquery_from_clause [where_clause]
+//    [groupby_clause] [having_clause]
+String subquery() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  s=simple_select_clause()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  s=subquery_from_clause()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  [
+   s=where_clause()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  ]
+  [
+   s=groupby_clause()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  ]
+  [
+   s=having_clause()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  ]
+  { return sb.toString(); }
+}
+
+
+// orderby_item ::=
+//    state_field_path_expression |
+//    general_identification_variable |
+//    result_variable
+//    [ASC | DESC]
+String orderby_item() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(3)
+  s=state_field_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+    
+  |
+  LOOKAHEAD(2)
+  s=general_identification_variable()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+    
+  |
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+      return sb.toString();
+    }
+
+  [
+   t=<ASC>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+   |
+   t=<DESC>
+     {
+       sb.append(" ");
+       sb.append(t.image);
+     }
+  ]
+  { return sb.toString(); }
+}
+
+
+// orderby_clause ::= ORDER BY orderby_item {, orderby_item}*
+String orderby_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<ORDER>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  t=<BY>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=orderby_item()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+  t=<COMMA>
+    {
+      sb.append(t.image);
+    }
+  s=orderby_item()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  )*
+  
+  { return sb.toString(); }
+}
+
+
+// having_clause ::= HAVING conditional_expression
+String having_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<HAVING>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=conditional_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  
+  { return sb.toString(); }
+}
+
+
+// groupby_item ::= single_valued_path_expression | identification_variable
+String groupby_item() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(2)
+  s=single_valued_path_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+      return sb.toString();
+    }
+  
+  |
+  t=<NAME>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  
+  { return sb.toString(); }
+}
+
+
+// groupby_clause ::= GROUP BY groupby_item {, groupby_item}*
+String groupby_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<GROUP>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  t=<BY>
+    {
+      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=groupby_item()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  (
+  t=<COMMA>
+    {
+      sb.append(t.image);
+    }
+  s=groupby_item()
+    {
+      sb.append("");
+      sb.append(s);
+    }
+  )*
+  
+  { return sb.toString(); }
+}
+
+
+// where_clause ::= WHERE conditional_expression
+String where_clause() :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  t=<WHERE>
+    {
+//      sb.append(" ");
+      sb.append(t.image);
+    }
+  s=conditional_expression()
+    {
+      sb.append(" ");
+      sb.append(s);
+    }
+  
+  { return sb.toString(); }
+}
+
+

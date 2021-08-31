@@ -47,7 +47,7 @@ public class JdbcRunner {
 
     private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter,
 	    int index) throws SQLException {
-	LOG.info("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
+	LOG.debug("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
 		+ queryParameter.getSqlType());
 	Object value = queryParameter.getValue();
 	if (value == null) {
@@ -410,8 +410,7 @@ public class JdbcRunner {
 //			LOG.debug("runQuery: columnType=" + columnType);
 //			LOG.debug("runQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
 			Object v = getValue(rs, i + 1, metaData);
-			v = dbTypeMapper.convertToAttributeType(v, readWriteType);
-			values[i] = v;
+			values[i] = dbTypeMapper.convertToAttributeType(v, readWriteType);
 //			LOG.debug("runQuery: values[i]=" + values[i]);
 		    }
 
@@ -520,8 +519,6 @@ public class JdbcRunner {
 	for (int i = 0; i < nc; ++i) {
 	    String columnName = metaData.getColumnName(i + 1);
 	    String columnAlias = metaData.getColumnLabel(i + 1);
-//	    LOG.debug("buildRecord: columnName=" + columnName);
-//	    LOG.debug("buildRecord: columnAlias=" + columnAlias);
 	    Optional<FetchParameter> optional = findFetchParameter(columnName, columnAlias, queryResultMapping);
 	    if (optional.isPresent()) {
 		MetaAttribute metaAttribute = optional.get().getAttribute();
@@ -536,7 +533,6 @@ public class JdbcRunner {
 			v = dbTypeMapper.convertToAttributeType(value, optional.get().getType());
 		}
 
-//		LOG.debug("buildRecord: value=" + value);
 		modelValueArray.add(optional.get(), v);
 	    }
 	}
@@ -568,9 +564,7 @@ public class JdbcRunner {
 
     private Optional<FetchParameter> buildFetchParameter(String columnName, String columnAlias,
 	    EntityMapping entityMapping) {
-//	LOG.debug("buildFetchParameter: columnName=" + columnName);
 	Optional<MetaAttribute> optional = entityMapping.getAttribute(columnAlias);
-//	LOG.debug("buildFetchParameter: optional.isPresent()=" + optional.isPresent());
 	if (optional.isPresent()) {
 	    MetaAttribute metaAttribute = optional.get();
 	    FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(),
@@ -580,7 +574,6 @@ public class JdbcRunner {
 	}
 
 	Optional<JoinColumnAttribute> optionalJoinColumn = entityMapping.getJoinColumnAttribute(columnName);
-//	LOG.debug("buildFetchParameter: optionalJoinColumn.isPresent()=" + optionalJoinColumn.isPresent());
 	if (optionalJoinColumn.isPresent()) {
 	    JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
 	    FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),
@@ -594,7 +587,7 @@ public class JdbcRunner {
     }
 
     public Long generateNextSequenceValue(Connection connection, String sql) throws SQLException {
-	LOG.debug("generateSequenceNextValue: sql=" + sql);
+	LOG.info("Running `" + sql + "`");
 	Long value = null;
 	ResultSet rs = null;
 	PreparedStatement preparedStatement = null;
