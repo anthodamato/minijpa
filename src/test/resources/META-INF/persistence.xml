@@ -608,4 +608,22 @@
         </properties>
     </persistence-unit>
 
+    <persistence-unit name="simple_order">
+        <description>Simple Order for Jpql</description>
+        <class>org.minijpa.jpa.model.SimpleOrder</class>
+        <class>org.minijpa.jpa.model.LineItem</class>
+        <class>org.minijpa.jpa.model.SimpleProduct</class>
+
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:simple_order;create=true" />
+            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
+            <property
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="metadata" /> 
+        </properties>
+    </persistence-unit>
+
 </persistence>
