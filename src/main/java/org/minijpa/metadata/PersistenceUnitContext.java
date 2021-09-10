@@ -51,4 +51,12 @@ public class PersistenceUnitContext {
 	return queryResultMappings;
     }
 
+    public Optional<MetaEntity> findMetaEntityByName(String name) {
+	for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
+	    if (e.getValue().getName().equals(name))
+		return Optional.of(e.getValue());
+	}
+
+	return Optional.empty();
+    }
 }
