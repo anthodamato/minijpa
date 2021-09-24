@@ -16,6 +16,25 @@ public interface JpqlParserTreeConstants
   public int JJTRANGEVARIABLEDECLARATION = 10;
   public int JJTIDENTIFICATIONVARIABLEDECLARATION = 11;
   public int JJTFROMCLAUSE = 12;
+  public int JJTMAPFIELDIDENTIFICATIONVARIABLE = 13;
+  public int JJTGENERALIDENTIFICATIONVARIABLE = 14;
+  public int JJTSIMPLESUBPATH = 15;
+  public int JJTGENERALSUBPATH = 16;
+  public int JJTTREATEDSUBPATH = 17;
+  public int JJTSTATEFIELDPATHEXPRESSION = 18;
+  public int JJTSTATEVALUEDPATHEXPRESSION = 19;
+  public int JJTSINGLEVALUEDOBJECTPATHEXPRESSION = 20;
+  public int JJTWHENCLAUSE = 21;
+  public int JJTSTRINGEXPRESSION = 22;
+  public int JJTCOMPARISONEXPRESSION = 23;
+  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 24;
+  public int JJTSIMPLECONDEXPRESSION = 25;
+  public int JJTCONDITIONALPRIMARY = 26;
+  public int JJTCONDITIONALFACTOR = 27;
+  public int JJTCONDITIONALTERM = 28;
+  public int JJTCONDITIONALEXPRESSION = 29;
+  public int JJTWHERECLAUSE = 30;
+  public int JJTHAVINGCLAUSE = 31;
 
 
   public String[] jjtNodeName = {
@@ -32,6 +51,25 @@ public interface JpqlParserTreeConstants
     "RangeVariableDeclaration",
     "IdentificationVariableDeclaration",
     "FromClause",
+    "MapFieldIdentificationVariable",
+    "GeneralIdentificationVariable",
+    "SimpleSubpath",
+    "GeneralSubpath",
+    "TreatedSubpath",
+    "StateFieldPathExpression",
+    "StateValuedPathExpression",
+    "SingleValuedObjectPathExpression",
+    "WhenClause",
+    "StringExpression",
+    "ComparisonExpression",
+    "CollectionValuedPathExpression",
+    "SimpleCondExpression",
+    "ConditionalPrimary",
+    "ConditionalFactor",
+    "ConditionalTerm",
+    "ConditionalExpression",
+    "WhereClause",
+    "HavingClause",
   };
 }
-/* JavaCC - OriginalChecksum=0d3486b5668a32dbe99900b35b6f02a6 (do not edit this line) */
+/* JavaCC - OriginalChecksum=e2bcc537e6952b3a45818501335f8910 (do not edit this line) */

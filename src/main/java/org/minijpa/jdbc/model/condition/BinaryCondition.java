@@ -15,17 +15,11 @@
  */
 package org.minijpa.jdbc.model.condition;
 
-import java.util.Optional;
-
-import org.minijpa.jdbc.model.TableColumn;
-
 public class BinaryCondition implements Condition {
 
     private ConditionType conditionType;
-    private Optional<TableColumn> leftColumn;
-    private Optional<TableColumn> rightColumn;
-    private Optional<String> leftExpression;
-    private Optional<String> rightExpression;
+    private Object left;
+    private Object right;
     private boolean not = false;
 
     @Override
@@ -33,20 +27,12 @@ public class BinaryCondition implements Condition {
 	return conditionType;
     }
 
-    public Optional<TableColumn> getLeftColumn() {
-	return leftColumn;
+    public Object getLeft() {
+	return left;
     }
 
-    public Optional<TableColumn> getRightColumn() {
-	return rightColumn;
-    }
-
-    public Optional<String> getLeftExpression() {
-	return leftExpression;
-    }
-
-    public Optional<String> getRightExpression() {
-	return rightExpression;
+    public Object getRight() {
+	return right;
     }
 
     public boolean isNot() {
@@ -55,11 +41,9 @@ public class BinaryCondition implements Condition {
 
     public static class Builder {
 
-	private ConditionType conditionType;
-	private TableColumn leftColumn;
-	private TableColumn rightColumn;
-	private String leftExpression;
-	private String rightExpression;
+	private final ConditionType conditionType;
+	private Object left;
+	private Object right;
 	private boolean not = false;
 
 	public Builder(ConditionType conditionType) {
@@ -67,23 +51,13 @@ public class BinaryCondition implements Condition {
 	    this.conditionType = conditionType;
 	}
 
-	public Builder withLeftColumn(TableColumn tableColumn) {
-	    this.leftColumn = tableColumn;
+	public Builder withLeft(Object left) {
+	    this.left = left;
 	    return this;
 	}
 
-	public Builder withRightColumn(TableColumn tableColumn) {
-	    this.rightColumn = tableColumn;
-	    return this;
-	}
-
-	public Builder withLeftExpression(String expr) {
-	    this.leftExpression = expr;
-	    return this;
-	}
-
-	public Builder withRightExpression(String expr) {
-	    this.rightExpression = expr;
+	public Builder withRight(Object right) {
+	    this.right = right;
 	    return this;
 	}
 
@@ -95,10 +69,8 @@ public class BinaryCondition implements Condition {
 	public BinaryCondition build() {
 	    BinaryCondition condition = new BinaryCondition();
 	    condition.conditionType = conditionType;
-	    condition.leftColumn = Optional.ofNullable(leftColumn);
-	    condition.rightColumn = Optional.ofNullable(rightColumn);
-	    condition.leftExpression = Optional.ofNullable(leftExpression);
-	    condition.rightExpression = Optional.ofNullable(rightExpression);
+	    condition.left = left;
+	    condition.right = right;
 	    condition.not = not;
 	    return condition;
 	}

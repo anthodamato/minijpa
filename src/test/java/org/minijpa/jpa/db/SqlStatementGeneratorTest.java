@@ -24,10 +24,6 @@ import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
-import org.minijpa.jpa.db.ApacheDerbyConfiguration;
-import org.minijpa.jpa.db.ApacheDerbyJdbc;
-import org.minijpa.jpa.db.DbConfigurationList;
-import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.metadata.PersistenceUnitContext;
 
 public class SqlStatementGeneratorTest {
@@ -42,7 +38,7 @@ public class SqlStatementGeneratorTest {
 
 	List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
 	BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-		.withLeftColumn(new TableColumn(fromTable, nameColumn)).withRightExpression("'Sam'").build();
+		.withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
 	List<Condition> conditions = Arrays.asList(binaryCondition);
 	SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).withConditions(conditions)
 		.build();
@@ -98,16 +94,16 @@ public class SqlStatementGeneratorTest {
 	Column nameColumn = new Column("name");
 	Column regionColumn = new Column("region_id");
 	FromTable cityTable = new FromTableImpl("city", "c");
-	FromJoin fromJoin = new FromJoinImpl(cityTable, Arrays.asList(regionIdColumn), Arrays.asList(regionColumn));
+	FromTable regionTable = new FromTableImpl("region", "r");
+	FromJoin fromJoin = new FromJoinImpl(cityTable, regionTable.getAlias().get(), Arrays.asList(regionIdColumn), Arrays.asList(regionColumn));
 
-	FromTable regionTable = new FromTableImpl("region", "r", Arrays.asList(fromJoin));
 	Column regionNameColumn = new Column("name");
 
 	List<Value> values = Arrays.asList(new TableColumn(regionTable, regionNameColumn));
 	BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-		.withLeftColumn(new TableColumn(cityTable, nameColumn)).withRightExpression("'Nottingham'").build();
+		.withLeft(new TableColumn(cityTable, nameColumn)).withRight("'Nottingham'").build();
 	List<Condition> conditions = Arrays.asList(binaryCondition);
-	SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(regionTable).withValues(values).withConditions(conditions)
+	SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(regionTable).withJoin(fromJoin).withValues(values).withConditions(conditions)
 		.build();
 
 	Assertions.assertEquals(

@@ -29,6 +29,7 @@ import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
 import org.minijpa.jdbc.model.StatementParameters;
+import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
@@ -85,7 +86,7 @@ public class SqlStatementFactoryTest {
 	Condition condition = conditions.get(0);
 	Assertions.assertTrue(condition instanceof BinaryCondition);
 	BinaryCondition equalColumnExprCondition = (BinaryCondition) condition;
-	Assertions.assertEquals("department_id", equalColumnExprCondition.getLeftColumn().get().getColumn().getName());
+	Assertions.assertEquals("department_id", ((TableColumn) equalColumnExprCondition.getLeft()).getColumn().getName());
 
 	String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 	Assertions.assertEquals(

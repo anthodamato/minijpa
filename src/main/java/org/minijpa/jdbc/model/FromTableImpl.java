@@ -25,7 +25,7 @@ public class FromTableImpl implements FromTable {
 
     private String name;
     private Optional<String> alias = Optional.empty();
-    private Optional<List<FromJoin>> fromJoins = Optional.empty();
+//    private Optional<List<FromJoin>> fromJoins = Optional.empty();
 
     public FromTableImpl(String name) {
 	super();
@@ -38,12 +38,12 @@ public class FromTableImpl implements FromTable {
 	this.alias = Optional.of(alias);
     }
 
-    public FromTableImpl(String name, String alias, List<FromJoin> fromJoins) {
-	super();
-	this.name = name;
-	this.alias = Optional.of(alias);
-	this.fromJoins = Optional.of(Collections.unmodifiableList(fromJoins));
-    }
+//    public FromTableImpl(String name, String alias, List<FromJoin> fromJoins) {
+//	super();
+//	this.name = name;
+//	this.alias = Optional.of(alias);
+//	this.fromJoins = Optional.of(Collections.unmodifiableList(fromJoins));
+//    }
 
     @Override
     public String getName() {
@@ -55,9 +55,9 @@ public class FromTableImpl implements FromTable {
 	return alias;
     }
 
-    @Override
-    public Optional<List<FromJoin>> getJoins() {
-	return fromJoins;
-    }
+//    @Override
+//    public Optional<List<FromJoin>> getJoins() {
+//	return fromJoins;
+//    }
 
 }

@@ -146,14 +146,12 @@ ASTQLStatement QL_statement() #QLStatement :
 //      [having_clause] [orderby_clause]
 void select_statement() #SelectStatement :
 {
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   select_clause()
   from_clause()
   [
-   s=where_clause()
+   where_clause()
   ]
 }
 
@@ -668,50 +666,34 @@ void from_clause() #FromClause :
 
 
 //   map_field_identification_variable ::= KEY(identification_variable) | VALUE(identification_variable)
-String map_field_identification_variable() :
+void map_field_identification_variable() #MapFieldIdentificationVariable :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-   t=<KEY>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-     }
-   t=<OPEN_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   t=<NAME>
-     {
-       sb.append(t.image);
-     }
-   t=<CLOSE_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   { return sb.toString(); }
-   |
-   t=<VALUE>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-     }
-   t=<OPEN_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   t=<NAME>
-     {
-       sb.append(t.image);
-     }
-   t=<CLOSE_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   { return sb.toString(); }
+ <KEY>
+   {
+     jjtThis.setKey(true);
+   }
+ <OPEN_BRACKET>
+ t=<NAME>
+   {
+     jjtThis.setIdentificationVariable(t.image);
+   }
+ <CLOSE_BRACKET>
+ |
+ <VALUE>
+ {
+   jjtThis.setValue(true);
+ }
+ <OPEN_BRACKET>
+ t=<NAME>
+ {
+   jjtThis.setIdentificationVariable(t.image);
+ }
+ <CLOSE_BRACKET>
 }
 
 
@@ -723,11 +705,9 @@ String qualified_identification_variable() :
   String s;
 }
 {
-   s=map_field_identification_variable()
+ map_field_identification_variable()
      {
-       sb.append(" ");
-       sb.append(s);
-       return sb.toString();
+       return "";
      }
    |
    t=<ENTRY>
@@ -752,165 +732,102 @@ String qualified_identification_variable() :
 
 
 //  general_identification_variable ::= identification_variable | map_field_identification_variable
-String general_identification_variable() :
+void general_identification_variable() #GeneralIdentificationVariable :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-   t=<NAME>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-       return sb.toString();
-     }
-   |
-   s=map_field_identification_variable()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   { return sb.toString(); }
+ t=<NAME>
+ {
+   jjtThis.setIdentificationVariable(t.image);
+ }
+ |
+ map_field_identification_variable()
 }
 
 
 // simple_subpath ::= general_identification_variable | general_identification_variable{.single_valued_object_field}*
-String simple_subpath() :
+void simple_subpath() #SimpleSubpath :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
+ LOOKAHEAD(2)
+ general_identification_variable()
+ |
+ general_identification_variable()
+ (
    LOOKAHEAD(2)
-   s=general_identification_variable()
-     {
-       sb.append(" ");
-       sb.append(s);
-       return sb.toString();
-     }
-   |
-   s=general_identification_variable()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   (
-     LOOKAHEAD(2)
-     t=<DOT>
-       {
-         sb.append(t.image);
-       }
-     t=<NAME>
-       {
-         sb.append(t.image);
-       }
-   )*
-   { return sb.toString(); }
+   <DOT>
+   t=<NAME>
+   {
+     jjtThis.addPath(t.image);
+   }
+ )*
 }
 
 
 // general_subpath ::= simple_subpath | treated_subpath{.single_valued_object_field}*
-String general_subpath() :
+void general_subpath() #GeneralSubpath :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-   s=simple_subpath()
-     {
-       sb.append(" ");
-       sb.append(s);
-       return sb.toString();
-     }
+   simple_subpath()
    |
-   s=treated_subpath()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   treated_subpath()
    (
      LOOKAHEAD(2)
      t=<DOT>
-       {
-         sb.append(t.image);
-       }
      t=<NAME>
-       {
-         sb.append(t.image);
-       }
+     {
+       jjtThis.addPath(t.image);
+     }
    )*
-   { return sb.toString(); }
 }
 
 
 //  treated_subpath ::= TREAT(general_subpath AS subtype)
-String treated_subpath() :
+void treated_subpath() #TreatedSubpath :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<TREAT>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  s=general_subpath()
-    {
-      sb.append(s);
-    }
-  t=<AS>
-    {
-     sb.append(" ");
-     sb.append(t.image);
-    }
-  s=subtype()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <TREAT>
+  <OPEN_BRACKET>
+  general_subpath()
+  <AS>
+  t=<NAME>
+  {
+    jjtThis.setSubtype(t.image);
+  }
+  <CLOSE_BRACKET>
 }
 
 
 // state_field_path_expression ::= general_subpath.state_field
-String state_field_path_expression() :
+void state_field_path_expression() #StateFieldPathExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-   s=general_subpath()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   t=<DOT>
-     {
-      sb.append(t.image);
-     }
-   t=<NAME>
-     {
-       sb.append(t.image);
-     }
-  { return sb.toString(); }
+ general_subpath()
+ <DOT>
+ t=<NAME>
+ {
+   jjtThis.setStateField(t.image);
+ }
 }
 
 
 // state_valued_path_expression ::= state_field_path_expression | general_identification_variable
-String state_valued_path_expression() :
+void state_valued_path_expression() #StateValuedPathExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -918,19 +835,9 @@ String state_valued_path_expression() :
 }
 {
    LOOKAHEAD(3)
-   s=state_field_path_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-       return sb.toString();
-     }
+   state_field_path_expression()
    |
-   s=general_identification_variable()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-  { return sb.toString(); }
+   general_identification_variable()
 }
 
 
@@ -956,28 +863,18 @@ String functions_returning_strings() :
     {
      sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(s);
-    }
+  string_expression()
   t=<COMMA>
     {
      sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(s);
-    }
+  string_expression()
   (
     t=<COMMA>
       {
        sb.append(t.image);
       }
-    s=string_expression()
-      {
-       sb.append(" ");
-       sb.append(s);
-      }
+    string_expression()
   )*
   t=<CLOSE_BRACKET>
     {
@@ -994,10 +891,7 @@ String functions_returning_strings() :
     {
      sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(s);
-    }
+  string_expression()
   t=<COMMA>
     {
      sb.append(t.image);
@@ -1061,14 +955,8 @@ String functions_returning_strings() :
       sb.append(t.image);
      }
   ]
-  s=string_expression()
-    {
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  string_expression()
+  <CLOSE_BRACKET>
   { return sb.toString(); }
   
   |
@@ -1080,14 +968,8 @@ String functions_returning_strings() :
     {
      sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(s);
-    }
+  string_expression()
   t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
   { return sb.toString(); }
 
   |
@@ -1099,14 +981,8 @@ String functions_returning_strings() :
     {
      sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(s);
-    }
+  string_expression()
   t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
   { return sb.toString(); }
 }
 
@@ -1170,14 +1046,8 @@ String functions_returning_numerics() :
     {
      sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  string_expression()
+  <CLOSE_BRACKET>
   { return sb.toString(); }
   
   |
@@ -1189,10 +1059,7 @@ String functions_returning_numerics() :
     {
      sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(s);
-    }
+  string_expression()
   t=<COMMA>
     {
      sb.append(t.image);
@@ -1292,10 +1159,7 @@ String functions_returning_numerics() :
     {
      sb.append(t.image);
     }
-  s=collection_valued_path_expression()
-    {
-      sb.append(s);
-    }
+  collection_valued_path_expression()
   t=<CLOSE_BRACKET>
     {
      sb.append(t.image);
@@ -1324,26 +1188,19 @@ String functions_returning_numerics() :
 
 
 // single_valued_object_path_expression ::= general_subpath.single_valued_object_field
-String single_valued_object_path_expression() :
+void single_valued_object_path_expression() #SingleValuedObjectPathExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  s=general_subpath()
-    {
-      sb.append(s);
-    }
-  t=<DOT>
-    {
-     sb.append(t.image);
-    }
+  general_subpath()
+  <DOT>
   t=<NAME>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
+  {
+    jjtThis.setSingleValuedObjectField(t.image);
+  }
 }
 
 
@@ -1388,11 +1245,7 @@ String aggregate_expression() :
       sb.append(t.image);
      }
   ]
-  s=state_valued_path_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
+  state_valued_path_expression()
   { return sb.toString(); }
   
   |
@@ -1423,21 +1276,11 @@ String aggregate_expression() :
   
   |
   LOOKAHEAD(3)
-  s=state_valued_path_expression()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+  state_valued_path_expression()
   { return sb.toString(); }
   
   |
-  s=single_valued_object_path_expression()
-    {
-      sb.append("");
-      sb.append(s);
-    }
-  { return sb.toString(); }
-
+  single_valued_object_path_expression()
   |
   s=function_invocation()
     {
@@ -1508,11 +1351,7 @@ String function_arg() :
   
   |
   LOOKAHEAD(3)
-  s=state_valued_path_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
+  state_valued_path_expression()
   { return sb.toString(); }
   
   |
@@ -1558,11 +1397,7 @@ String scalar_expression() :
   
   |
   LOOKAHEAD(3)
-  s=string_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
+  string_expression()
   { return sb.toString(); }
 
   |
@@ -1735,10 +1570,7 @@ String type_discriminator() :
     {
      sb.append(t.image);
     }
-  s=general_identification_variable()
-    {
-      sb.append(s);
-    }
+  general_identification_variable()
   t=<CLOSE_BRACKET>
     {
      sb.append(t.image);
@@ -1746,10 +1578,7 @@ String type_discriminator() :
   { return sb.toString(); }
   
   |
-  s=single_valued_object_path_expression()
-    {
-      sb.append(s);
-    }
+  single_valued_object_path_expression()
   { return sb.toString(); }
   
   |
@@ -1762,7 +1591,7 @@ String type_discriminator() :
 
 
 //   case_operand ::= state_valued_path_expression | type_discriminator
-String case_operand() :
+void case_operand() :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1770,18 +1599,12 @@ String case_operand() :
 }
 {
   LOOKAHEAD(3)
-  s=state_valued_path_expression()
-    {
-      sb.append(s);
-    }
-  { return sb.toString(); }
-  
+  state_valued_path_expression()
   |
   s=type_discriminator()
     {
       sb.append(s);
     }
-  { return sb.toString(); }  
 }
 
 
@@ -1800,10 +1623,7 @@ String simple_case_expression() :
     {
      sb.append(t.image);
     }
-  s=case_operand()
-    {
-      sb.append(s);
-    }
+  case_operand()
   s=simple_when_clause()
     {
       sb.append("");
@@ -1835,31 +1655,21 @@ String simple_case_expression() :
 
 
 //   when_clause ::= WHEN conditional_expression THEN scalar_expression
-String when_clause() :
+void when_clause() #WhenClause :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<WHEN>
-    {
-     sb.append(t.image);
-    }
-  s=conditional_expression()
-    {
-      sb.append(s);
-    }
-  t=<THEN>
-    {
-      sb.append(t.image);
-    }
+  <WHEN>
+  conditional_expression()
+  <THEN>
   s=scalar_expression()
     {
       sb.append("");
       sb.append(s);
     }
-  { return sb.toString(); }
 }
 
 
@@ -1875,16 +1685,9 @@ String general_case_expression() :
     {
      sb.append(t.image);
     }
-  s=when_clause()
-    {
-      sb.append(s);
-    }
+  when_clause()
   (
-  s=when_clause()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+   when_clause()
   )*
   t=<ELSE>
     {
@@ -2010,10 +1813,7 @@ String entity_expression() :
 }
 {
   LOOKAHEAD(2)
-  s=single_valued_object_path_expression()
-    {
-      sb.append(s);
-    }
+  single_valued_object_path_expression()
   { return sb.toString(); }
 
   |  
@@ -2039,11 +1839,7 @@ String enum_expression() :
 }
 {
   LOOKAHEAD(2)
-  s=state_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  state_valued_path_expression()
   { return sb.toString(); }
 
   |  
@@ -2103,11 +1899,7 @@ String boolean_expression() :
 }
 {
   LOOKAHEAD(2)
-  s=state_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  state_valued_path_expression()
   { return sb.toString(); }
 
   |  
@@ -2177,11 +1969,7 @@ String datetime_expression() :
 }
 {
   LOOKAHEAD(2)
-  s=state_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  state_valued_path_expression()
   { return sb.toString(); }
   
   |
@@ -2260,7 +2048,7 @@ String datetime_expression() :
 //    case_expression |
 //    function_invocation |
 //    (subquery)
-String string_expression() :
+void string_expression() #StringExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -2268,37 +2056,23 @@ String string_expression() :
 }
 {
   LOOKAHEAD(3)
-  s=state_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  { return sb.toString(); }
-
+  state_valued_path_expression()
   |
   t=<STRING_LITERAL>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
+  {
+    jjtThis.setStringLiteral(t.image);
+  }
   |
   t=<INPUT_PARAMETER>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
+  {
+    jjtThis.setInputParameter(t.image);
+  }
   |
   s=functions_returning_strings()
     {
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }
-
   |
   LOOKAHEAD(3)
   s=aggregate_expression()
@@ -2306,24 +2080,18 @@ String string_expression() :
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }
-
   |
   s=case_expression()
     {
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }
-  
   |
   s=function_invocation()
     {
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }
-
   |
   t=<OPEN_BRACKET>
     {
@@ -2338,7 +2106,6 @@ String string_expression() :
     {
       sb.append(t.image);
     }
-  { return sb.toString(); }
 }
 
 
@@ -2360,11 +2127,7 @@ String arithmetic_primary() :
 }
 {
   LOOKAHEAD(3)
-  s=state_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  state_valued_path_expression()
   { return sb.toString(); }
 
   |
@@ -2605,51 +2368,37 @@ String all_or_any_expression() :
 String comparison_operator() :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   t=<GT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
-    }
+  {
+    return t.image;
+  }
   |  
   t=<GE>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
-    }
+  {
+    return t.image;
+  }
   |  
   t=<LT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
-    }
+  {
+    return t.image;
+  }
   |  
   t=<LE>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
-    }
+  {
+    return t.image;
+  }
   |  
   t=<NE>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
-    }
+  {
+    return t.image;
+  }
   |  
   t=<EQ>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
-    }
+  {
+    return t.image;
+  }
 }
 
 
@@ -2661,7 +2410,7 @@ String comparison_operator() :
 //    entity_expression {= | <>} {entity_expression | all_or_any_expression} |
 //    arithmetic_expression comparison_operator {arithmetic_expression | all_or_any_expression} |
 //    entity_type_expression {= | <>} entity_type_expression
-String comparison_expression() :
+void comparison_expression() #ComparisonExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -2669,22 +2418,13 @@ String comparison_expression() :
 }
 {
   LOOKAHEAD(3)
-  s=string_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-   s=comparison_operator()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+  string_expression()
+  s=comparison_operator()
+  {
+    jjtThis.setComparisonOperator(s);
+  }
   (
-   s=string_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   string_expression()
    |
    s=all_or_any_expression()
      {
@@ -2692,8 +2432,6 @@ String comparison_expression() :
        sb.append(s);
      }
   )
-  { return sb.toString(); }
-  
   |
   LOOKAHEAD(3)
   s=boolean_expression()
@@ -2702,10 +2440,9 @@ String comparison_expression() :
       sb.append(s);
     }
   s=comparison_operator()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  {
+    jjtThis.setComparisonOperator(s);
+  }
   (
    s=boolean_expression()
      {
@@ -2719,8 +2456,6 @@ String comparison_expression() :
        sb.append(s);
      }
   )
-  { return sb.toString(); }
-  
   |
   LOOKAHEAD(3)
   s=enum_expression()
@@ -2729,10 +2464,9 @@ String comparison_expression() :
       sb.append(s);
     }
   s=comparison_operator()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  {
+    jjtThis.setComparisonOperator(s);
+  }
   (
    s=enum_expression()
      {
@@ -2746,8 +2480,6 @@ String comparison_expression() :
        sb.append(s);
      }
   )
-  { return sb.toString(); }
-  
   |
   LOOKAHEAD(3)
   s=datetime_expression()
@@ -2756,10 +2488,9 @@ String comparison_expression() :
       sb.append(s);
     }
   s=comparison_operator()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  {
+    jjtThis.setComparisonOperator(s);
+  }
   (
    s=datetime_expression()
      {
@@ -2773,8 +2504,6 @@ String comparison_expression() :
        sb.append(s);
      }
   )
-  { return sb.toString(); }
-  
   |
   LOOKAHEAD(3)
   s=entity_expression()
@@ -2783,10 +2512,9 @@ String comparison_expression() :
       sb.append(s);
     }
   s=comparison_operator()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  {
+    jjtThis.setComparisonOperator(s);
+  }
   (
    s=entity_expression()
      {
@@ -2800,8 +2528,6 @@ String comparison_expression() :
        sb.append(s);
      }
   )
-  { return sb.toString(); }  
-  
   |
   LOOKAHEAD(3)
   s=arithmetic_expression()
@@ -2810,10 +2536,9 @@ String comparison_expression() :
       sb.append(s);
     }
   s=comparison_operator()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  {
+    jjtThis.setComparisonOperator(s);
+  }
   (
    s=arithmetic_expression()
      {
@@ -2827,8 +2552,6 @@ String comparison_expression() :
        sb.append(s);
      }
   )
-  { return sb.toString(); }
-  
   |
   s=entity_type_expression()
     {
@@ -2836,16 +2559,14 @@ String comparison_expression() :
       sb.append(s);
     }
   s=comparison_operator()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  {
+    jjtThis.setComparisonOperator(s);
+  }
   s=entity_type_expression()
     {
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }  
 }
 
 
@@ -2903,19 +2624,15 @@ String entity_or_value_expression() :
 }
 {
   LOOKAHEAD(3)
-  s=single_valued_object_path_expression()
+  single_valued_object_path_expression()
     {
-      sb.append(" ");
-      sb.append(s);
       return sb.toString();
     }
     
   |
   LOOKAHEAD(2)
-  s=state_field_path_expression()
+  state_field_path_expression()
     {
-      sb.append(" ");
-      sb.append(s);
       return sb.toString();
     }
     
@@ -2938,31 +2655,21 @@ String entity_or_value_expression() :
 
 
 // collection_valued_path_expression ::= general_subpath.{collection_valued_field}
-String collection_valued_path_expression() :
+void collection_valued_path_expression() #CollectionValuedPathExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  s=general_subpath()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<DOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  general_subpath()
+  <DOT>
   (
   t=<NAME>
     {
-      sb.append(" ");
-      sb.append(t.image);
+      jjtThis.setCollectionValuedField(t.image);
     }
   )
-  { return sb.toString(); }
 }
 
 
@@ -2998,11 +2705,7 @@ String collection_member_expression() :
       sb.append(t.image);
     }
   ]
-  s=collection_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  collection_valued_path_expression()
   { return sb.toString(); }
 }
 
@@ -3015,11 +2718,7 @@ String empty_collection_comparison_expression() :
   String s;
 }
 {
-  s=collection_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  collection_valued_path_expression()
   t=<IS>
     {
       sb.append(" ");
@@ -3091,11 +2790,7 @@ String like_expression() :
   String s;
 }
 {
-  s=string_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  string_expression()
   [
   t=<NOT>
     {
@@ -3173,11 +2868,7 @@ String in_expression() :
 {
   (
   LOOKAHEAD(3)
-  s=state_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  state_valued_path_expression()
   |
   s=type_discriminator()
     {
@@ -3291,11 +2982,7 @@ String between_expression() :
 
   |
   LOOKAHEAD(3)
-  s=string_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  string_expression()
   [
   t=<NOT>
     {
@@ -3308,21 +2995,13 @@ String between_expression() :
       sb.append(" ");
       sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  string_expression()
   t=<AND>
     {
       sb.append(" ");
       sb.append(t.image);
     }
-  s=string_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  string_expression()
   { return sb.toString(); }
   
   |
@@ -3371,7 +3050,7 @@ String between_expression() :
 //    empty_collection_comparison_expression |
 //    collection_member_expression |
 //    exists_expression
-String simple_cond_expression() :
+void simple_cond_expression() #SimpleCondExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -3379,29 +3058,21 @@ String simple_cond_expression() :
 }
 {
   LOOKAHEAD(3)
-  s=comparison_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-      return sb.toString();
-    }
-  
+  comparison_expression()
   |
   LOOKAHEAD(3)
   s=between_expression()
     {
       sb.append(" ");
       sb.append(s);
-      return sb.toString();
     }
-  
+
   |
   LOOKAHEAD(3)
   s=in_expression()
     {
       sb.append(" ");
       sb.append(s);
-      return sb.toString();
     }
   
   |
@@ -3410,7 +3081,6 @@ String simple_cond_expression() :
     {
       sb.append(" ");
       sb.append(s);
-      return sb.toString();
     }
   
   |
@@ -3419,7 +3089,6 @@ String simple_cond_expression() :
     {
       sb.append(" ");
       sb.append(s);
-      return sb.toString();
     }
   
   |
@@ -3428,7 +3097,6 @@ String simple_cond_expression() :
     {
       sb.append(" ");
       sb.append(s);
-      return sb.toString();
     }
   
   |
@@ -3436,7 +3104,6 @@ String simple_cond_expression() :
     {
       sb.append(" ");
       sb.append(s);
-      return sb.toString();
     }
   
   |
@@ -3444,13 +3111,12 @@ String simple_cond_expression() :
     {
       sb.append(" ");
       sb.append(s);
-      return sb.toString();
     }
 }
 
 
 // conditional_primary ::= simple_cond_expression | (conditional_expression)
-String conditional_primary() :
+void conditional_primary() #ConditionalPrimary :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -3458,53 +3124,30 @@ String conditional_primary() :
 }
 {
   LOOKAHEAD(3)
-  s=simple_cond_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-      return sb.toString();
-    }
-  
+  simple_cond_expression()
   |
-   t=<OPEN_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   s=conditional_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   t=<CLOSE_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   { return sb.toString(); }
+   <OPEN_BRACKET>
+   conditional_expression()
+   <CLOSE_BRACKET>
 }
 
 
 // conditional_factor ::= [NOT] conditional_primary
-String conditional_factor() :
+void conditional_factor() #ConditionalFactor :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  [
+ [
   LOOKAHEAD(2)
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  ]
-  s=conditional_primary()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-   { return sb.toString(); }
+  <NOT>
+  {
+    jjtThis.setNot(true);
+  }
+ ]
+ conditional_primary()
 }
 
 
@@ -3512,31 +3155,18 @@ String conditional_factor() :
 // LEFT RECURSION
 // SOLVED AS:
 // conditional_term ::= conditional_factor {AND conditional_factor}*
-String conditional_term() :
+void conditional_term() #ConditionalTerm :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  s=conditional_factor()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-
-   (  
-   t=<AND>
-     {
-       sb.append(t.image);
-     }
-   s=conditional_factor()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   )*
-   { return sb.toString(); }
+  conditional_factor()
+  (
+   <AND>
+   conditional_factor()
+  )*
 }
 
 
@@ -3544,30 +3174,28 @@ String conditional_term() :
 // LEFT RECURSION
 // SOLVED AS:
 // conditional_expression ::= conditional_term {OR conditional_term}*
-String conditional_expression() :
+void conditional_expression() #ConditionalExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  s=conditional_term()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-   (  
-   t=<OR>
-     {
-       sb.append(t.image);
-     }
-   s=conditional_term()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   )*
-   { return sb.toString(); }
+  conditional_term()
+  (  
+   <OR>
+   conditional_term()
+  )*
+}
+
+
+// where_clause ::= WHERE conditional_expression
+void where_clause() #WhereClause :
+{
+}
+{
+  <WHERE>
+  conditional_expression()
 }
 
 
@@ -3623,18 +3251,14 @@ String single_valued_path_expression() :
 
   |
   LOOKAHEAD(3)
-  s=state_field_path_expression()
+  state_field_path_expression()
     {
-      sb.append(" ");
-      sb.append(s);
       return sb.toString();
     }
     
   |
-  s=single_valued_object_path_expression()
+  single_valued_object_path_expression()
     {
-      sb.append(" ");
-      sb.append(s);
       return sb.toString();
     }
 }
@@ -3997,10 +3621,7 @@ void collection_member_declaration() :
 {
   <IN>
   <OPEN_BRACKET>
-  s=collection_valued_path_expression()
-    {
-      sb.append(s);
-    }
+  collection_valued_path_expression()
   [<AS>]
   t=<NAME>
     {
@@ -4031,11 +3652,7 @@ String subquery() :
       sb.append(s);
     }
   [
-   s=where_clause()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   where_clause()
   ]
   [
    s=groupby_clause()
@@ -4045,11 +3662,7 @@ String subquery() :
      }
   ]
   [
-   s=having_clause()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   having_clause()
   ]
   { return sb.toString(); }
 }
@@ -4068,20 +3681,16 @@ String orderby_item() :
 }
 {
   LOOKAHEAD(3)
-  s=state_field_path_expression()
+  state_field_path_expression()
     {
-      sb.append(" ");
-      sb.append(s);
       return sb.toString();
     }
     
   |
   LOOKAHEAD(2)
-  s=general_identification_variable()
+  general_identification_variable()
     {
-      sb.append(" ");
-      sb.append(s);
-      return sb.toString();
+      return "";
     }
     
   |
@@ -4149,25 +3758,15 @@ String orderby_clause() :
 
 
 // having_clause ::= HAVING conditional_expression
-String having_clause() :
+void having_clause() #HavingClause :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<HAVING>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  s=conditional_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  
-  { return sb.toString(); }
+  <HAVING>
+  conditional_expression()
 }
 
 
@@ -4237,22 +3836,5 @@ String groupby_clause() :
 }
 
 
-// where_clause ::= WHERE conditional_expression
-String where_clause() :
-{
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
-}
-{
-  <WHERE>
-  s=conditional_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  
-  { return sb.toString(); }
-}
 
 

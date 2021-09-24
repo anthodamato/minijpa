@@ -25,6 +25,19 @@ public interface SqlStatementGenerator {
 
     public SqlStatementExporter createSqlStatementExporter();
 
+    public default String export(SqlStatement sqlStatement) {
+	if (sqlStatement instanceof SqlSelect)
+	    return export((SqlSelect) sqlStatement);
+	else if (sqlStatement instanceof SqlUpdate)
+	    return export((SqlUpdate) sqlStatement);
+	else if (sqlStatement instanceof SqlDelete)
+	    return export((SqlDelete) sqlStatement);
+	else if (sqlStatement instanceof SqlInsert)
+	    return export((SqlInsert) sqlStatement);
+
+	throw new IllegalArgumentException("Sql Statement not implemented");
+    }
+
     public String export(SqlInsert sqlInsert);
 
     public String export(SqlUpdate sqlUpdate);

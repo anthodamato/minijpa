@@ -28,15 +28,15 @@ public interface FromTable {
 
     public Optional<String> getAlias();
 
-    public Optional<List<FromJoin>> getJoins();
+//    public Optional<List<FromJoin>> getJoins();
 
     public static FromTable of(MetaEntity entity) {
 	return new FromTableImpl(entity.getTableName(), entity.getAlias());
     }
 
-    public static FromTable of(MetaEntity entity, FromJoin fromJoin) {
-	return new FromTableImpl(entity.getTableName(), entity.getAlias(), Arrays.asList(fromJoin));
-    }
+//    public static FromTable of(MetaEntity entity, FromJoin fromJoin) {
+//	return new FromTableImpl(entity.getTableName(), entity.getAlias(), Arrays.asList(fromJoin));
+//    }
 
     public static FromTable of(String tableName) {
 	return new FromTableImpl(tableName);

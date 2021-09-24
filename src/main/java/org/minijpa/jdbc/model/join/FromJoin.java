@@ -24,6 +24,8 @@ public interface FromJoin {
 
     public FromTable getToTable();
 
+    public String getFromAlias();
+
     public List<Column> getFromColumns();
 
     public List<Column> getToColumns();

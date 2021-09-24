@@ -23,36 +23,42 @@ import org.minijpa.jdbc.model.FromTable;
 public class FromJoinImpl implements FromJoin {
 
     private FromTable toTable;
+    private String fromAlias;
     private List<Column> fromColumns;
     private List<Column> toColumns;
     private JoinType joinType = JoinType.InnerJoin;
 
-    public FromJoinImpl(FromTable toTable, List<Column> fromColumns, List<String> columnAlias, List<Column> toColumns,
-	    List<String> joinColumnAlias) {
+//    public FromJoinImpl(FromTable toTable, List<Column> fromColumns, List<String> columnAlias, List<Column> toColumns,
+//	    List<String> joinColumnAlias) {
+//	super();
+//	this.toTable = toTable;
+//	this.fromColumns = fromColumns;
+//	this.toColumns = toColumns;
+//    }
+    public FromJoinImpl(FromTable toTable, String fromAlias, List<Column> fromColumns, List<Column> toColumns) {
 	super();
 	this.toTable = toTable;
+	this.fromAlias = fromAlias;
 	this.fromColumns = fromColumns;
 	this.toColumns = toColumns;
     }
 
-    public FromJoinImpl(FromTable toTable, List<Column> fromColumns, List<Column> toColumns) {
-	super();
-	this.toTable = toTable;
-	this.fromColumns = fromColumns;
-	this.toColumns = toColumns;
-    }
-
-    public FromJoinImpl(FromTable toTable, List<Column> columns, List<String> columnAlias, List<Column> toColumns,
-	    List<String> joinColumnAlias, JoinType joinType) {
-	super();
-	this.toTable = toTable;
-	this.fromColumns = columns;
-	this.toColumns = toColumns;
-	this.joinType = joinType;
-    }
-
+//    public FromJoinImpl(FromTable toTable, List<Column> columns, List<String> columnAlias, List<Column> toColumns,
+//	    List<String> joinColumnAlias, JoinType joinType) {
+//	super();
+//	this.toTable = toTable;
+//	this.fromColumns = columns;
+//	this.toColumns = toColumns;
+//	this.joinType = joinType;
+//    }
+    @Override
     public FromTable getToTable() {
 	return toTable;
+    }
+
+    @Override
+    public String getFromAlias() {
+	return fromAlias;
     }
 
     @Override

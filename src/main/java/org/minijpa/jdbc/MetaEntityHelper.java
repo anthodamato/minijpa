@@ -194,6 +194,16 @@ public final class MetaEntityHelper {
 	return values;
     }
 
+    public static List<Value> toValues(List<MetaAttribute> attributes, FromTable fromTable) {
+	List<Value> tableColumns = new ArrayList<>();
+	for (MetaAttribute metaAttribute : attributes) {
+	    TableColumn tableColumn = new TableColumn(fromTable, new Column(metaAttribute.getColumnName()));
+	    tableColumns.add(tableColumn);
+	}
+
+	return tableColumns;
+    }
+
     public static List<TableColumn> toTableColumns(List<MetaAttribute> attributes, FromTable fromTable) {
 	List<TableColumn> tableColumns = new ArrayList<>();
 	for (MetaAttribute metaAttribute : attributes) {

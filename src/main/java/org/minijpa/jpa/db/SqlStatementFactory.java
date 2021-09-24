@@ -131,7 +131,7 @@ public class SqlStatementFactory {
 	FromTable fromTable = FromTable.of(entity);
 	List<TableColumn> tableColumns = MetaEntityHelper.toTableColumns(entity.getId().getAttributes(), fromTable);
 	List<Condition> conditions = tableColumns.stream().map(t -> {
-	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
+	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 	}).collect(Collectors.toList());
 
 	Condition condition = Condition.toAnd(conditions);
@@ -147,7 +147,7 @@ public class SqlStatementFactory {
 	FromTable fromTable = FromTable.of(entity);
 	List<TableColumn> tableColumns = MetaEntityHelper.toTableColumns(entity.getId().getAttributes(), fromTable);
 	List<Condition> conditions = tableColumns.stream().map(t -> {
-	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
+	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 	}).collect(Collectors.toList());
 
 	Condition condition = Condition.toAnd(conditions);
@@ -167,7 +167,7 @@ public class SqlStatementFactory {
 	List<TableColumn> tableColumns = columns.stream().map(c -> new TableColumn(fromTable, new Column(c)))
 		.collect(Collectors.toList());
 	List<Condition> conditions = tableColumns.stream().map(t -> {
-	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
+	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 	}).collect(Collectors.toList());
 
 	Condition condition = Condition.toAnd(conditions);
@@ -197,11 +197,58 @@ public class SqlStatementFactory {
 	return result;
     }
 
-    public SqlSelect generateSelectByJoinTable(MetaEntity entity,
-	    RelationshipJoinTable relationshipJoinTable,
-	    List<AbstractAttribute> attributes) throws Exception {
-	// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
-	// where j.t2=fk
+//    public Condition buildConditionFromExpressions(
+//	    ConditionType conditionType, String expr0, String expr1){
+//	if(expr1.equalsIgnoreCase("FALSE")){
+//	    ConditionType ct=conditionType;
+//            if(conditionType==ConditionType.EQUAL)
+//		ct=ConditionType.IS_FALSE;
+//		    
+//	    UnaryCondition unaryCondition=new UnaryCondition();
+//	}
+//	
+//			BinaryCondition.Builder builder = new BinaryCondition.Builder(conditionType);
+//		builder.withLeftExpression(expr0);
+//		builder.withRightExpression(expr1);
+//		return builder.build();
+//    }
+    
+    public List<FromJoin> calculateFromTable(MetaEntity entity, MetaAttribute metaAttribute) {
+	if(metaAttribute.getRelationship().getJoinTable()!=null) {
+	    	List<MetaAttribute> idSourceAttributes = entity.getId().getAttributes();
+        	List<Column> idSourceColumns = idSourceAttributes.stream().map(a -> {
+	         return new Column(a.getColumnName());
+        	}).collect(Collectors.toList());
+
+		RelationshipJoinTable relationshipJoinTable=metaAttribute.getRelationship().getJoinTable();
+        	List<Column> idOwningColumns = relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes().stream().map(a -> {
+	            return new Column(a.getColumnName());
+        	}).collect(Collectors.toList());
+  
+        	FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
+        	FromJoin fromJoin = new FromJoinImpl(joinTable,joinTable.getAlias().get(), idSourceColumns, idOwningColumns);
+		
+		MetaEntity destEntity= relationshipJoinTable.getTargetEntity();
+	    	List<MetaAttribute> idTargetAttributes = destEntity.getId().getAttributes();
+        	List<Column> idDestColumns = idTargetAttributes.stream().map(a -> {
+	         return new Column(a.getColumnName());
+        	}).collect(Collectors.toList());
+
+		List<Column> idTargetColumns = relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes().stream().map(a -> {
+	            return new Column(a.getColumnName());
+        	}).collect(Collectors.toList());
+        	FromTable joinTable2 = new FromTableImpl(destEntity.getTableName(), destEntity.getAlias());
+        	FromJoin fromJoin2 = new FromJoinImpl(joinTable2, relationshipJoinTable.getAlias(),
+			idDestColumns, idTargetColumns);
+
+		return Arrays.asList(fromJoin,fromJoin2);
+	}
+	
+	return null;
+    }
+
+    public FromJoin calculateFromTableByJoinTable(MetaEntity entity,
+	    RelationshipJoinTable relationshipJoinTable) {
 	List<MetaAttribute> idAttributes = entity.getId().getAttributes();
 	List<Column> idColumns = idAttributes.stream().map(a -> {
 	    return new Column(a.getColumnName());
@@ -212,19 +259,29 @@ public class SqlStatementFactory {
 	}).collect(Collectors.toList());
 
 	FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
-	FromJoin fromJoin = new FromJoinImpl(joinTable, idColumns, idTargetColumns);
-	FromTable fromTable = FromTable.of(entity, fromJoin);
+	FromJoin fromJoin = new FromJoinImpl(joinTable, entity.getAlias(),idColumns, idTargetColumns);
+	return fromJoin;
+    }
+    
+    public SqlSelect generateSelectByJoinTable(MetaEntity entity,
+	    RelationshipJoinTable relationshipJoinTable,
+	    List<AbstractAttribute> attributes) throws Exception {
+	// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
+	// where j.t2=fk
+	FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
+	FromJoin fromJoin =calculateFromTableByJoinTable(entity, relationshipJoinTable);
+	FromTable fromTable=FromTable.of(entity);
 	// handles multiple column pk
 
 	List<TableColumn> tableColumns = MetaEntityHelper.attributesToTableColumns(attributes, joinTable);
 	List<Condition> conditions = tableColumns.stream().map(t -> {
-	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
+	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 	}).collect(Collectors.toList());
 
 	Condition condition = Condition.toAnd(conditions);
 	List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 	List<FetchParameter> fetchColumnNameValues = MetaEntityHelper.convertAttributes(expandedAttributes);
-	return new SqlSelect.SqlSelectBuilder(fromTable).withValues(MetaEntityHelper.toValues(entity, fromTable))
+	return new SqlSelect.SqlSelectBuilder(fromTable).withJoin(fromJoin).withValues(MetaEntityHelper.toValues(entity, fromTable))
 		.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
 		.withResult(entity).build();
     }
@@ -243,20 +300,20 @@ public class SqlStatementFactory {
 	}).collect(Collectors.toList());
 
 	FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
-	FromJoin fromJoin = new FromJoinImpl(joinTable, idColumns, idTargetColumns);
-	FromTable fromTable = FromTable.of(entity, fromJoin);
+	FromJoin fromJoin = new FromJoinImpl(joinTable,joinTable.getAlias().get(), idColumns, idTargetColumns);
+	FromTable fromTable = FromTable.of(entity);
 	// handles multiple column pk
 
 	List<TableColumn> tableColumns = MetaEntityHelper.attributesToTableColumns(attributes, joinTable);
 
 	List<Condition> conditions = tableColumns.stream().map(t -> {
-	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeftColumn(t).withRightExpression(QM).build();
+	    return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 	}).collect(Collectors.toList());
 
 	Condition condition = Condition.toAnd(conditions);
 	List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 	List<FetchParameter> fetchColumnNameValues = MetaEntityHelper.convertAttributes(expandedAttributes);
-	return new SqlSelect.SqlSelectBuilder(fromTable).withValues(MetaEntityHelper.toValues(entity, fromTable))
+	return new SqlSelect.SqlSelectBuilder(fromTable).withJoin(fromJoin).withValues(MetaEntityHelper.toValues(entity, fromTable))
 		.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
 		.withResult(entity).build();
     }
@@ -311,15 +368,15 @@ public class SqlStatementFactory {
     private Condition createAttributeEqualCondition(FromTable fromTable, List<String> columns) throws Exception {
 	if (columns.size() == 1)
 	    return new BinaryCondition.Builder(ConditionType.EQUAL)
-		    .withLeftColumn(
+		    .withLeft(
 			    new TableColumn(fromTable, new Column(columns.get(0))))
-		    .withRightExpression(QM).build();
+		    .withRight(QM).build();
 
 	List<Condition> conditions = new ArrayList<>();
 	for (String columnName : columns) {
 	    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-		    .withLeftColumn(new TableColumn(fromTable, new Column(columnName)))
-		    .withRightExpression(QM).build();
+		    .withLeft(new TableColumn(fromTable, new Column(columnName)))
+		    .withRight(QM).build();
 	    conditions.add(binaryCondition);
 	}
 
@@ -619,11 +676,11 @@ public class SqlStatementFactory {
 		if (expression2 instanceof AttributePath<?>) {
 		    miniPath = (AttributePath<?>) expression2;
 		    TableColumn tableColumn2 = createTableColumnFromPath(miniPath);
-		    builder.withLeftColumn(tableColumn1).withRightColumn(tableColumn2);
+		    builder.withLeft(tableColumn1).withRight(tableColumn2);
 		} else if (expression2 instanceof ParameterExpression<?>) {
 		    ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression2;
 		    addParameter(parameterExpression, attribute1, parameters, query);
-		    builder.withLeftColumn(tableColumn1).withRightExpression(QM);
+		    builder.withLeft(tableColumn1).withRight(QM);
 		}
 	    } else if (comparisonPredicate.getValue() != null)
 		if (requireQM(comparisonPredicate.getValue())) {
@@ -632,10 +689,10 @@ public class SqlStatementFactory {
 			    attribute1.getSqlType(),
 			    attribute1.getAttributeMapper());
 		    parameters.add(queryParameter);
-		    builder.withLeftColumn(tableColumn1).withRightExpression(QM);
+		    builder.withLeft(tableColumn1).withRight(QM);
 		} else
-		    builder.withLeftColumn(tableColumn1)
-			    .withRightExpression(buildValue(comparisonPredicate.getValue()));
+		    builder.withLeft(tableColumn1)
+			    .withRight(buildValue(comparisonPredicate.getValue()));
 
 	    return Optional.of(builder.build());
 	}
@@ -800,7 +857,7 @@ public class SqlStatementFactory {
 	String pattern = likePatternPredicate.getPattern();
 	AttributePath<?> miniPath = (AttributePath<?>) likePatternPredicate.getX();
 	BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
-		.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(pattern));
+		.withLeft(createTableColumnFromPath(miniPath)).withRight(buildValue(pattern));
 	if (likePatternPredicate.isNot())
 	    builder.not();
 
@@ -847,7 +904,7 @@ public class SqlStatementFactory {
 	}
 
 	BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
-		.withLeftColumn(createTableColumnFromPath(miniPath)).withRightExpression(buildValue(QM));
+		.withLeft(createTableColumnFromPath(miniPath)).withRight(buildValue(QM));
 	if (likePatternExprPredicate.isNot())
 	    builder.not();
 

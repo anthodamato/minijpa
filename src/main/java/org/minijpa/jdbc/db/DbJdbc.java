@@ -81,12 +81,27 @@ public interface DbJdbc {
 	return "IS NOT NULL";
     }
 
+    public default String booleanValue(Boolean value) {
+	if (value == false)
+	    return falseValue();
+
+	return trueValue();
+    }
+
+    public default String trueValue() {
+	return "TRUE";
+    }
+
+    public default String falseValue() {
+	return "FALSE";
+    }
+
     public default String trueOperator() {
-	return "= TRUE";
+	return "= " + trueValue();
     }
 
     public default String falseOperator() {
-	return "= FALSE";
+	return "= " + falseValue();
     }
 
     public default String emptyConjunctionOperator() {

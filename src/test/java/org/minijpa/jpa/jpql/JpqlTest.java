@@ -6,8 +6,15 @@
 package org.minijpa.jpa.jpql;
 
 import java.io.StringReader;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.minijpa.jdbc.db.DbConfiguration;
+import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.jdbc.model.SqlStatement;
+import org.minijpa.jpa.PersistenceUnitProperties;
+import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.PersistenceUnitEnv;
 import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -24,9 +31,12 @@ public class JpqlTest {
 
     @Test
     public void simple() throws Exception {
-	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("simple_order");
+	EntityManagerFactory emf = Persistence.createEntityManagerFactory("simple_order", PersistenceUnitProperties.getProperties());
+	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("simple_order");
 
-	String query = "SELECT DISTINCT o FROM Order AS o JOIN o.lineItems AS l WHERE l.shipped = FALSE";
+	PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, "simple_order");
+	PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+	String query = "SELECT DISTINCT o FROM SimpleOrder AS o JOIN o.lineItems AS l WHERE l.shipped = FALSE";
 	StringReader reader = new StringReader(query);
 	JpqlParser parser = new JpqlParser(reader);
 
@@ -34,10 +44,16 @@ public class JpqlTest {
 	    ASTQLStatement qlStatement = parser.QL_statement();
 	    LOG.debug("qlStatement=" + qlStatement);
 	    JpqlParserVisitor visitor = new JpqlParserVisitorImpl(persistenceUnitContext, new SqlStatementFactory());
-	    Object result = qlStatement.jjtAccept(visitor, null);
-	    LOG.debug("result=" + result);
-//			Assertions.assertEquals("Select DISTINCT o FROM order AS o JOIN o.lineItems AS l WHERE l.shipped = FALSE",
-//					qlStatement.jjtGetValue());
+	    SqlStatement sqlStatement = (SqlStatement) qlStatement.jjtAccept(visitor, null);
+	    LOG.debug("sqlStatement=" + sqlStatement);
+	    Assertions.assertNotNull(sqlStatement);
+
+	    String sql = dbConfiguration.getSqlStatementGenerator().export(sqlStatement);
+	    Assertions.assertEquals(
+		    "select distinct so.id from simple_order AS so"
+		    + " INNER JOIN simple_order_line_item AS soli ON soli.id = soli.SimpleOrder_id"
+		    + " INNER JOIN line_item AS li ON soli.id = li.lineItems_id where li.shipped = FALSE",
+		    sql);
 	} catch (ParseException ex) {
 	    LOG.debug(ex.getMessage());
 	    Throwable t = ex.getCause();

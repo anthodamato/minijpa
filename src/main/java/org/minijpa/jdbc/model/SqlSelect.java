@@ -15,6 +15,7 @@
  */
 package org.minijpa.jdbc.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,10 +25,12 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.Condition;
+import org.minijpa.jdbc.model.join.FromJoin;
 
 public class SqlSelect implements SqlStatement {
-
+    
     private FromTable fromTable;
+    private Optional<List<FromJoin>> fromJoins = Optional.empty();
     private List<FetchParameter> fetchParameters;
     private MetaEntity result;
     private List<Value> values;
@@ -36,50 +39,55 @@ public class SqlSelect implements SqlStatement {
     private Optional<List<OrderBy>> orderByList = Optional.empty();
     private boolean distinct = false;
     private LockType lockType = LockType.NONE;
-
+    
     private SqlSelect() {
 	super();
     }
-
+    
     public FromTable getFromTable() {
 	return fromTable;
     }
-
+    
+    public Optional<List<FromJoin>> getJoins() {
+	return fromJoins;
+    }
+    
     public List<Value> getValues() {
 	return values;
     }
-
+    
     public Optional<List<Condition>> getConditions() {
 	return conditions;
     }
-
+    
     public Optional<GroupBy> getGroupBy() {
 	return groupBy;
     }
-
+    
     public List<FetchParameter> getFetchParameters() {
 	return fetchParameters;
     }
-
+    
     public MetaEntity getResult() {
 	return result;
     }
-
+    
     public Optional<List<OrderBy>> getOrderByList() {
 	return orderByList;
     }
-
+    
     public boolean isDistinct() {
 	return distinct;
     }
-
+    
     public LockType getLockType() {
 	return lockType;
     }
-
+    
     public static class SqlSelectBuilder {
-
-	private final FromTable fromTable;
+	
+	private FromTable fromTable;
+	private List<FromJoin> fromJoins;
 	private List<Value> values;
 	private List<Condition> conditions;
 	private List<FetchParameter> fetchColumnNameValues;
@@ -88,69 +96,94 @@ public class SqlSelect implements SqlStatement {
 	private List<OrderBy> orderByList;
 	private boolean distinct = false;
 	private LockType lockType = LockType.NONE;
-
+	
+	public SqlSelectBuilder() {
+	    super();
+	}
+	
 	public SqlSelectBuilder(FromTable fromTable) {
 	    super();
 	    this.fromTable = fromTable;
 	}
+	
+	public SqlSelectBuilder withFromTable(FromTable fromTable) {
+	    this.fromTable = fromTable;
+	    return this;
+	}
 
+	public SqlSelectBuilder withJoin(FromJoin fromJoin) {
+	    if (this.fromJoins == null)
+		this.fromJoins = new ArrayList<>();
+	    
+	    this.fromJoins.add(fromJoin);
+	    return this;
+	}
+	
+	public SqlSelectBuilder withJoins(List<FromJoin> fromJoins) {
+	    this.fromJoins = fromJoins;
+	    return this;
+	}
+	
 	public SqlSelectBuilder withValues(List<Value> values) {
 	    this.values = Collections.unmodifiableList(values);
 	    return this;
 	}
-
+	
 	public SqlSelectBuilder withConditions(List<Condition> conditions) {
 	    this.conditions = conditions;
 	    return this;
 	}
-
+	
 	public SqlSelectBuilder withFetchParameters(List<FetchParameter> fetchColumnNameValues) {
 	    this.fetchColumnNameValues = Collections.unmodifiableList(fetchColumnNameValues);
 	    return this;
 	}
-
+	
 	public SqlSelectBuilder withGroupBy(GroupBy groupBy) {
 	    this.groupBy = groupBy;
 	    return this;
 	}
-
+	
 	public SqlSelectBuilder withOrderBy(List<OrderBy> orderByList) {
 	    this.orderByList = orderByList;
 	    return this;
 	}
-
+	
 	public SqlSelectBuilder withResult(MetaEntity result) {
 	    this.result = result;
 	    return this;
 	}
-
+	
 	public SqlSelectBuilder distinct() {
 	    this.distinct = true;
 	    return this;
 	}
-
+	
 	public SqlSelectBuilder withLockType(LockType lockType) {
 	    if (lockType == LockType.PESSIMISTIC_READ)
 		this.lockType = LockType.PESSIMISTIC_READ;
-
+	    
 	    if (lockType == LockType.PESSIMISTIC_WRITE)
 		this.lockType = LockType.PESSIMISTIC_WRITE;
-
+	    
 	    return this;
 	}
-
+	
 	public SqlSelect build() {
 	    SqlSelect sqlSelect = new SqlSelect();
 	    sqlSelect.fromTable = fromTable;
+	    if (fromJoins != null && !fromJoins.isEmpty())
+		sqlSelect.fromJoins = Optional.of(fromJoins);
+	    
 	    sqlSelect.values = values;
 	    if (conditions != null && !conditions.isEmpty())
 		sqlSelect.conditions = Optional.ofNullable(conditions);
-
+	    
 	    sqlSelect.fetchParameters = fetchColumnNameValues;
 	    sqlSelect.groupBy = Optional.ofNullable(groupBy);
 	    if (orderByList != null && !orderByList.isEmpty())
 		sqlSelect.orderByList = Optional.ofNullable(orderByList);
-
+	    
 	    sqlSelect.result = result;
 	    sqlSelect.distinct = distinct;
 	    sqlSelect.lockType = lockType;
