@@ -46,4 +46,9 @@ public class SqlUpdate implements SqlStatement {
 	return condition;
     }
 
+    @Override
+    public StatementType getType() {
+	return StatementType.UPDATE;
+    }
+
 }

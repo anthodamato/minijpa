@@ -411,8 +411,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public Query createQuery(String qlString) {
-	// TODO Auto-generated method stub
-	return null;
+	return new MiniJpqlQuery(qlString, null, this, jdbcEntityManager);
     }
 
     @Override

@@ -21,4 +21,5 @@ package org.minijpa.jdbc.model;
  */
 public interface SqlStatement {
 
+    public StatementType getType();
 }

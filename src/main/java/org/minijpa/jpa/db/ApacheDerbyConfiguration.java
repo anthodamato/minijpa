@@ -20,7 +20,7 @@ import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.DbJdbc;
-import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
+import org.minijpa.jdbc.model.ApacheDerbySqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 
 public class ApacheDerbyConfiguration implements DbConfiguration {
@@ -34,7 +34,7 @@ public class ApacheDerbyConfiguration implements DbConfiguration {
 	super();
 	this.dbJdbc = new ApacheDerbyJdbc();
 	this.dbTypeMapper = new ApacheDerbyDbTypeMapper();
-	this.sqlStatementGenerator = new DefaultSqlStatementGenerator(dbJdbc);
+	this.sqlStatementGenerator = new ApacheDerbySqlStatementGenerator(dbJdbc);
 	this.jdbcRunner = new JpaJdbcRunner(dbTypeMapper);
     }
 

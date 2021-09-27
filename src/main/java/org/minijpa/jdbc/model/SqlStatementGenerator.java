@@ -35,7 +35,7 @@ public interface SqlStatementGenerator {
 	else if (sqlStatement instanceof SqlInsert)
 	    return export((SqlInsert) sqlStatement);
 
-	throw new IllegalArgumentException("Sql Statement not implemented");
+	throw new IllegalArgumentException("Unknown Sql Statement: " + sqlStatement);
     }
 
     public String export(SqlInsert sqlInsert);

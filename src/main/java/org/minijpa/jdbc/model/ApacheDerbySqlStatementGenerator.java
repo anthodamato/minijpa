@@ -15,7 +15,6 @@
  */
 package org.minijpa.jdbc.model;
 
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.minijpa.jdbc.db.DbJdbc;
 
@@ -23,27 +22,10 @@ import org.minijpa.jdbc.db.DbJdbc;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
+public class ApacheDerbySqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-    private final SqlStatementExporter sqlDeleteExporter = new SqlDeleteExporter();
-
-    public OracleSqlStatementGenerator(DbJdbc dbJdbc) {
+    public ApacheDerbySqlStatementGenerator(DbJdbc dbJdbc) {
 	super(dbJdbc);
-    }
-
-    @Override
-    public String export(SqlDelete sqlDelete) {
-	StringBuilder sb = new StringBuilder();
-	sb.append("delete from ");
-	sb.append(dbJdbc.getNameTranslator().toTableName(Optional.empty(),
-		sqlDelete.getFromTable().getName()));
-
-	if (sqlDelete.getCondition().isPresent()) {
-	    sb.append(" where ");
-	    sb.append(exportCondition(sqlDelete.getCondition().get(), sqlDeleteExporter));
-	}
-
-	return sb.toString();
     }
 
     @Override
@@ -77,26 +59,6 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
 	sb.append(")");
 	return sb.toString();
-    }
-
-    private class SqlDeleteExporter extends DefaultSqlStatementExporter {
-
-	@Override
-	public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
-	    Optional<FromTable> optionalFromTable = tableColumn.getTable();
-	    Column column = tableColumn.getColumn();
-	    if (optionalFromTable.isPresent()) {
-		String tc = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
-		return exportColumnAlias(tc, Optional.empty());
-	    }
-
-	    if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
-		return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
-
-	    String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
-	    return exportColumnAlias(c, Optional.empty());
-	}
-
     }
 
 }

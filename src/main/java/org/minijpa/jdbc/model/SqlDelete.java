@@ -38,4 +38,9 @@ public class SqlDelete implements SqlStatement {
 	return condition;
     }
 
+    @Override
+    public StatementType getType() {
+	return StatementType.DELETE;
+    }
+
 }
