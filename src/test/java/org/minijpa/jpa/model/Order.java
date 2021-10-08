@@ -25,61 +25,61 @@ import javax.persistence.Table;
 @Table(name = "orders")
 public class Order {
 
-    @Id
-    @GeneratedValue
-    private Long id;
-    @Column(name = "date_of")
-    private OffsetDateTime dateOf = OffsetDateTime.now();
-    @OneToOne
-    private Customer customer;
-    @ManyToMany
-    private List<Product> products;
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status = OrderStatus.NEW;
-    @Enumerated(EnumType.ORDINAL)
-    private DeliveryType deliveryType;
+	@Id
+	@GeneratedValue
+	private Long id;
+	@Column(name = "date_of")
+	private OffsetDateTime dateOf = OffsetDateTime.now();
+	@OneToOne
+	private Customer customer;
+	@ManyToMany
+	private List<Product> products;
+	@Enumerated(EnumType.STRING)
+	private OrderStatus status = OrderStatus.NEW;
+	@Enumerated(EnumType.ORDINAL)
+	private DeliveryType deliveryType;
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public OffsetDateTime getDateOf() {
-	return dateOf;
-    }
+	public OffsetDateTime getDateOf() {
+		return dateOf;
+	}
 
-    public void setDateOf(OffsetDateTime dateOf) {
-	this.dateOf = dateOf;
-    }
+	public void setDateOf(OffsetDateTime dateOf) {
+		this.dateOf = dateOf;
+	}
 
-    public Customer getCustomer() {
-	return customer;
-    }
+	public Customer getCustomer() {
+		return customer;
+	}
 
-    public void setCustomer(Customer customer) {
-	this.customer = customer;
-    }
+	public void setCustomer(Customer customer) {
+		this.customer = customer;
+	}
 
-    public List<Product> getProducts() {
-	return products;
-    }
+	public List<Product> getProducts() {
+		return products;
+	}
 
-    public void setProducts(List<Product> products) {
-	this.products = products;
-    }
+	public void setProducts(List<Product> products) {
+		this.products = products;
+	}
 
-    public OrderStatus getStatus() {
-	return status;
-    }
+	public OrderStatus getStatus() {
+		return status;
+	}
 
-    public void setStatus(OrderStatus status) {
-	this.status = status;
-    }
+	public void setStatus(OrderStatus status) {
+		this.status = status;
+	}
 
-    public DeliveryType getDeliveryType() {
-	return deliveryType;
-    }
+	public DeliveryType getDeliveryType() {
+		return deliveryType;
+	}
 
-    public void setDeliveryType(DeliveryType deliveryType) {
-	this.deliveryType = deliveryType;
-    }
+	public void setDeliveryType(DeliveryType deliveryType) {
+		this.deliveryType = deliveryType;
+	}
 }

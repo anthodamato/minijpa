@@ -26,15 +26,19 @@ public interface JpqlParserTreeConstants
   public int JJTSINGLEVALUEDOBJECTPATHEXPRESSION = 20;
   public int JJTWHENCLAUSE = 21;
   public int JJTSTRINGEXPRESSION = 22;
-  public int JJTCOMPARISONEXPRESSION = 23;
-  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 24;
-  public int JJTSIMPLECONDEXPRESSION = 25;
-  public int JJTCONDITIONALPRIMARY = 26;
-  public int JJTCONDITIONALFACTOR = 27;
-  public int JJTCONDITIONALTERM = 28;
-  public int JJTCONDITIONALEXPRESSION = 29;
-  public int JJTWHERECLAUSE = 30;
-  public int JJTHAVINGCLAUSE = 31;
+  public int JJTARITHMETICPRIMARY = 23;
+  public int JJTARITHMETICFACTOR = 24;
+  public int JJTARITHMETICTERM = 25;
+  public int JJTARITHMETICEXPRESSION = 26;
+  public int JJTCOMPARISONEXPRESSION = 27;
+  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 28;
+  public int JJTSIMPLECONDEXPRESSION = 29;
+  public int JJTCONDITIONALPRIMARY = 30;
+  public int JJTCONDITIONALFACTOR = 31;
+  public int JJTCONDITIONALTERM = 32;
+  public int JJTCONDITIONALEXPRESSION = 33;
+  public int JJTWHERECLAUSE = 34;
+  public int JJTHAVINGCLAUSE = 35;
 
 
   public String[] jjtNodeName = {
@@ -61,6 +65,10 @@ public interface JpqlParserTreeConstants
     "SingleValuedObjectPathExpression",
     "WhenClause",
     "StringExpression",
+    "ArithmeticPrimary",
+    "ArithmeticFactor",
+    "ArithmeticTerm",
+    "ArithmeticExpression",
     "ComparisonExpression",
     "CollectionValuedPathExpression",
     "SimpleCondExpression",
@@ -72,4 +80,4 @@ public interface JpqlParserTreeConstants
     "HavingClause",
   };
 }
-/* JavaCC - OriginalChecksum=e2bcc537e6952b3a45818501335f8910 (do not edit this line) */
+/* JavaCC - OriginalChecksum=76b39257c21d3fe69281ecf5650d1cd8 (do not edit this line) */

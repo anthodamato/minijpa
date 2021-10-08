@@ -21,23 +21,23 @@ import javax.persistence.Table;
 @Table(name = "simple_order")
 public class SimpleOrder {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @OneToMany
-    private Collection<LineItem> lineItems;
+	@OneToMany
+	private Collection<LineItem> lineItems;
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public Collection<LineItem> getLineItems() {
-	return lineItems;
-    }
+	public Collection<LineItem> getLineItems() {
+		return lineItems;
+	}
 
-    public void setLineItems(Collection<LineItem> lineItems) {
-	this.lineItems = lineItems;
-    }
+	public void setLineItems(Collection<LineItem> lineItems) {
+		this.lineItems = lineItems;
+	}
 
 }

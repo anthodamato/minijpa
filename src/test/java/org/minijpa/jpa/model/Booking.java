@@ -9,26 +9,26 @@ import javax.persistence.Table;
 @Table(name = "booking")
 public class Booking {
 
-    @EmbeddedId
-    private RoomBookingId roomBookingId;
+	@EmbeddedId
+	private RoomBookingId roomBookingId;
 
-    @Column(name = "customer_id")
-    private Integer customerId;
+	@Column(name = "customer_id")
+	private Integer customerId;
 
-    public RoomBookingId getRoomBookingId() {
-	return roomBookingId;
-    }
+	public RoomBookingId getRoomBookingId() {
+		return roomBookingId;
+	}
 
-    public void setRoomBookingId(RoomBookingId roomBookingId) {
-	this.roomBookingId = roomBookingId;
-    }
+	public void setRoomBookingId(RoomBookingId roomBookingId) {
+		this.roomBookingId = roomBookingId;
+	}
 
-    public Integer getCustomerId() {
-	return customerId;
-    }
+	public Integer getCustomerId() {
+		return customerId;
+	}
 
-    public void setCustomerId(Integer customerId) {
-	this.customerId = customerId;
-    }
+	public void setCustomerId(Integer customerId) {
+		this.customerId = customerId;
+	}
 
 }

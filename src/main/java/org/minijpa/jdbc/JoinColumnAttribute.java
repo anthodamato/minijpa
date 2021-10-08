@@ -17,65 +17,65 @@ package org.minijpa.jdbc;
 
 public class JoinColumnAttribute extends AbstractAttribute {
 
-    private MetaAttribute attribute;
-    private MetaAttribute foreignKeyAttribute;
-
-    public MetaAttribute getAttribute() {
-	return attribute;
-    }
-
-    public MetaAttribute getForeignKeyAttribute() {
-	return foreignKeyAttribute;
-    }
-
-    public static class Builder {
-
-	private String columnName;
-	private Class<?> type;
-	private Class<?> readWriteDbType;
-	private Integer sqlType;
 	private MetaAttribute attribute;
 	private MetaAttribute foreignKeyAttribute;
 
-	public Builder withColumnName(String columnName) {
-	    this.columnName = columnName;
-	    return this;
+	public MetaAttribute getAttribute() {
+		return attribute;
 	}
 
-	public Builder withType(Class<?> type) {
-	    this.type = type;
-	    return this;
+	public MetaAttribute getForeignKeyAttribute() {
+		return foreignKeyAttribute;
 	}
 
-	public Builder withReadWriteDbType(Class<?> readWriteDbType) {
-	    this.readWriteDbType = readWriteDbType;
-	    return this;
-	}
+	public static class Builder {
 
-	public Builder withSqlType(Integer sqlType) {
-	    this.sqlType = sqlType;
-	    return this;
-	}
+		private String columnName;
+		private Class<?> type;
+		private Class<?> readWriteDbType;
+		private Integer sqlType;
+		private MetaAttribute attribute;
+		private MetaAttribute foreignKeyAttribute;
 
-	public Builder withAttribute(MetaAttribute attribute) {
-	    this.attribute = attribute;
-	    return this;
-	}
+		public Builder withColumnName(String columnName) {
+			this.columnName = columnName;
+			return this;
+		}
 
-	public Builder withForeignKeyAttribute(MetaAttribute foreignKeyAttribute) {
-	    this.foreignKeyAttribute = foreignKeyAttribute;
-	    return this;
-	}
+		public Builder withType(Class<?> type) {
+			this.type = type;
+			return this;
+		}
 
-	public JoinColumnAttribute build() {
-	    JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute();
-	    joinColumnAttribute.columnName = columnName;
-	    joinColumnAttribute.type = type;
-	    joinColumnAttribute.databaseType = readWriteDbType;
-	    joinColumnAttribute.sqlType = sqlType;
-	    joinColumnAttribute.attribute = attribute;
-	    joinColumnAttribute.foreignKeyAttribute = foreignKeyAttribute;
-	    return joinColumnAttribute;
+		public Builder withReadWriteDbType(Class<?> readWriteDbType) {
+			this.readWriteDbType = readWriteDbType;
+			return this;
+		}
+
+		public Builder withSqlType(Integer sqlType) {
+			this.sqlType = sqlType;
+			return this;
+		}
+
+		public Builder withAttribute(MetaAttribute attribute) {
+			this.attribute = attribute;
+			return this;
+		}
+
+		public Builder withForeignKeyAttribute(MetaAttribute foreignKeyAttribute) {
+			this.foreignKeyAttribute = foreignKeyAttribute;
+			return this;
+		}
+
+		public JoinColumnAttribute build() {
+			JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute();
+			joinColumnAttribute.columnName = columnName;
+			joinColumnAttribute.type = type;
+			joinColumnAttribute.databaseType = readWriteDbType;
+			joinColumnAttribute.sqlType = sqlType;
+			joinColumnAttribute.attribute = attribute;
+			joinColumnAttribute.foreignKeyAttribute = foreignKeyAttribute;
+			return joinColumnAttribute;
+		}
 	}
-    }
 }

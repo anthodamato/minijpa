@@ -12,38 +12,38 @@ import org.slf4j.LoggerFactory;
 
 public class ASTConditionalExpression extends SimpleNode {
 
-    private Logger LOG = LoggerFactory.getLogger(ASTConditionalExpression.class);
+	private Logger LOG = LoggerFactory.getLogger(ASTConditionalExpression.class);
 
-    public ASTConditionalExpression(int id) {
-	super(id);
-    }
-
-    public ASTConditionalExpression(JpqlParser p, int id) {
-	super(p, id);
-    }
-
-    /**
-     * Accept the visitor. *
-     */
-    @Override
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
-
-	return visitor.visit(this, data);
-    }
-
-    @Override
-    public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
-	List<Condition> conditions = new ArrayList<>();
-	if (children != null) {
-	    for (int i = 0; i < children.length; ++i) {
-		Condition condition = (Condition) children[i].jjtAccept(visitor, data);
-		LOG.debug("childrenAccept: ASTConditionalExpression condition=" + condition);
-		conditions.add(condition);
-	    }
+	public ASTConditionalExpression(int id) {
+		super(id);
 	}
 
-	return new BinaryLogicConditionImpl(ConditionType.OR, conditions);
-    }
+	public ASTConditionalExpression(JpqlParser p, int id) {
+		super(p, id);
+	}
+
+	/**
+	 * Accept the visitor. *
+	 */
+	@Override
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+
+		return visitor.visit(this, data);
+	}
+
+	@Override
+	public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
+		List<Condition> conditions = new ArrayList<>();
+		if (children != null) {
+			for (int i = 0; i < children.length; ++i) {
+				Condition condition = (Condition) children[i].jjtAccept(visitor, data);
+				LOG.debug("childrenAccept: ASTConditionalExpression condition=" + condition);
+				conditions.add(condition);
+			}
+		}
+
+		return new BinaryLogicConditionImpl(ConditionType.OR, conditions);
+	}
 
 }
 /* JavaCC - OriginalChecksum=9ebc7846a556bb87c26e6954508eddbd (do not edit this line) */

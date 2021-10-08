@@ -20,33 +20,33 @@ import javax.persistence.Table;
 @Table(name = "line_item")
 public class LineItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private Boolean shipped;
+	private Boolean shipped;
 
-    @ManyToOne
-    private SimpleProduct product;
+	@ManyToOne
+	private SimpleProduct product;
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public Boolean getShipped() {
-	return shipped;
-    }
+	public Boolean getShipped() {
+		return shipped;
+	}
 
-    public void setShipped(Boolean shipped) {
-	this.shipped = shipped;
-    }
+	public void setShipped(Boolean shipped) {
+		this.shipped = shipped;
+	}
 
-    public SimpleProduct getProduct() {
-	return product;
-    }
+	public SimpleProduct getProduct() {
+		return product;
+	}
 
-    public void setProduct(SimpleProduct product) {
-	this.product = product;
-    }
+	public void setProduct(SimpleProduct product) {
+		this.product = product;
+	}
 
 }

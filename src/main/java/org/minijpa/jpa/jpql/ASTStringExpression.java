@@ -4,50 +4,50 @@ package org.minijpa.jpa.jpql;
 
 public class ASTStringExpression extends SimpleNode {
 
-    private String stringLiteral;
-    private String inputParameter;
-    private String path;
+	private String stringLiteral;
+	private String inputParameter;
+	private String path;
 
-    public ASTStringExpression(int id) {
-	super(id);
-    }
+	public ASTStringExpression(int id) {
+		super(id);
+	}
 
-    public ASTStringExpression(JpqlParser p, int id) {
-	super(p, id);
-    }
+	public ASTStringExpression(JpqlParser p, int id) {
+		super(p, id);
+	}
 
-    /**
-     * Accept the visitor. *
-     */
-    @Override
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+	/**
+	 * Accept the visitor. *
+	 */
+	@Override
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-	return visitor.visit(this, data);
-    }
+		return visitor.visit(this, data);
+	}
 
-    public String getStringLiteral() {
-	return stringLiteral;
-    }
+	public String getStringLiteral() {
+		return stringLiteral;
+	}
 
-    public void setStringLiteral(String stringLiteral) {
-	this.stringLiteral = stringLiteral;
-    }
+	public void setStringLiteral(String stringLiteral) {
+		this.stringLiteral = stringLiteral;
+	}
 
-    public String getInputParameter() {
-	return inputParameter;
-    }
+	public String getInputParameter() {
+		return inputParameter;
+	}
 
-    public void setInputParameter(String inputParameter) {
-	this.inputParameter = inputParameter;
-    }
+	public void setInputParameter(String inputParameter) {
+		this.inputParameter = inputParameter;
+	}
 
-    public String getPath() {
-	return path;
-    }
+	public String getPath() {
+		return path;
+	}
 
-    public void setPath(String path) {
-	this.path = path;
-    }
+	public void setPath(String path) {
+		this.path = path;
+	}
 
 }
 /* JavaCC - OriginalChecksum=2587011cb0902cc92ce0866959bf3da6 (do not edit this line) */

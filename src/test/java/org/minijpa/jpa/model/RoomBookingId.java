@@ -9,54 +9,54 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class RoomBookingId implements Serializable {
 
-    private static final long serialVersionUID = 1453073604263556318L;
-    private Date dateof;
-    @Column(name = "room_number")
-    private Integer roomNumber;
+	private static final long serialVersionUID = 1453073604263556318L;
+	private Date dateof;
+	@Column(name = "room_number")
+	private Integer roomNumber;
 
-    public Date getDateof() {
-	return dateof;
-    }
+	public Date getDateof() {
+		return dateof;
+	}
 
-    public void setDateof(Date dateof) {
-	this.dateof = dateof;
-    }
+	public void setDateof(Date dateof) {
+		this.dateof = dateof;
+	}
 
-    public Integer getRoomNumber() {
-	return roomNumber;
-    }
+	public Integer getRoomNumber() {
+		return roomNumber;
+	}
 
-    public void setRoomNumber(Integer roomNumber) {
-	this.roomNumber = roomNumber;
-    }
+	public void setRoomNumber(Integer roomNumber) {
+		this.roomNumber = roomNumber;
+	}
 
-    @Override
-    public int hashCode() {
-	int hash = 3;
-	if (dateof != null)
-	    hash = 31 * hash + dateof.hashCode();
+	@Override
+	public int hashCode() {
+		int hash = 3;
+		if (dateof != null)
+			hash = 31 * hash + dateof.hashCode();
 
-	if (roomNumber != null)
-	    hash = 31 * hash + roomNumber.hashCode();
+		if (roomNumber != null)
+			hash = 31 * hash + roomNumber.hashCode();
 
-	return hash;
-    }
+		return hash;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-	if (obj == null || !(obj instanceof RoomBookingId))
-	    return false;
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || !(obj instanceof RoomBookingId))
+			return false;
 
-	RoomBookingId roomBookingId = (RoomBookingId) obj;
-	if ((dateof != null && !dateof.equals(roomBookingId.dateof))
-		|| (roomBookingId.dateof != null && !roomBookingId.dateof.equals(dateof)))
-	    return false;
+		RoomBookingId roomBookingId = (RoomBookingId) obj;
+		if ((dateof != null && !dateof.equals(roomBookingId.dateof))
+				|| (roomBookingId.dateof != null && !roomBookingId.dateof.equals(dateof)))
+			return false;
 
-	if ((roomNumber != null && roomNumber.equals(roomBookingId.roomNumber))
-		|| (roomBookingId.roomNumber != null && roomBookingId.roomNumber.equals(roomNumber)))
-	    return false;
+		if ((roomNumber != null && roomNumber.equals(roomBookingId.roomNumber))
+				|| (roomBookingId.roomNumber != null && roomBookingId.roomNumber.equals(roomNumber)))
+			return false;
 
-	return true;
-    }
+		return true;
+	}
 
 }

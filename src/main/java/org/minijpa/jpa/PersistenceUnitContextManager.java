@@ -37,61 +37,61 @@ import org.slf4j.LoggerFactory;
  */
 public class PersistenceUnitContextManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PersistenceUnitContextManager.class);
-    private static final PersistenceUnitContextManager persistenceUnitContextManager = new PersistenceUnitContextManager();
+	private static final Logger LOG = LoggerFactory.getLogger(PersistenceUnitContextManager.class);
+	private static final PersistenceUnitContextManager persistenceUnitContextManager = new PersistenceUnitContextManager();
 
-    private PersistenceUnitContextManager() {
+	private PersistenceUnitContextManager() {
 
-    }
-
-    public static PersistenceUnitContextManager getInstance() {
-	return persistenceUnitContextManager;
-    }
-
-    public synchronized PersistenceUnitContext get(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
-	// if the entities have been already parsed they are saved in the EntityContext.
-	// It must reuse them. Just one MetaEntity instance for each class name must
-	// exists.
-	Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
-		.getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
-	if (optional.isPresent()) {
-	    LOG.debug("Persistence Unit Entities already parsed");
-	    return optional.get();
 	}
 
-	// collects existing meta entities
-	Map<String, MetaEntity> existingMetaEntities = new HashMap<>();
-	for (String className : persistenceUnitInfo.getManagedClassNames()) {
-	    Optional<MetaEntity> optionalMetaEntity = EntityDelegate.getInstance().getMetaEntity(className);
-	    if (optionalMetaEntity.isPresent())
-		existingMetaEntities.put(className, optionalMetaEntity.get());
+	public static PersistenceUnitContextManager getInstance() {
+		return persistenceUnitContextManager;
 	}
 
-	LOG.info("Parsing entities...");
-	Map<String, MetaEntity> entityMap = new HashMap<>();
-	DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
-	Parser parser = new Parser(dbConfiguration);
-	for (String className : persistenceUnitInfo.getManagedClassNames()) {
-	    EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
-	    MetaEntity metaEntity = parser.parse(enhEntity, entityMap.values());
-	    entityMap.put(enhEntity.getClassName(), metaEntity);
+	public synchronized PersistenceUnitContext get(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
+		// if the entities have been already parsed they are saved in the EntityContext.
+		// It must reuse them. Just one MetaEntity instance for each class name must
+		// exists.
+		Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
+				.getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
+		if (optional.isPresent()) {
+			LOG.debug("Persistence Unit Entities already parsed");
+			return optional.get();
+		}
+
+		// collects existing meta entities
+		Map<String, MetaEntity> existingMetaEntities = new HashMap<>();
+		for (String className : persistenceUnitInfo.getManagedClassNames()) {
+			Optional<MetaEntity> optionalMetaEntity = EntityDelegate.getInstance().getMetaEntity(className);
+			if (optionalMetaEntity.isPresent())
+				existingMetaEntities.put(className, optionalMetaEntity.get());
+		}
+
+		LOG.info("Parsing entities...");
+		Map<String, MetaEntity> entityMap = new HashMap<>();
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
+		Parser parser = new Parser(dbConfiguration);
+		for (String className : persistenceUnitInfo.getManagedClassNames()) {
+			EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
+			MetaEntity metaEntity = parser.parse(enhEntity, entityMap.values());
+			entityMap.put(enhEntity.getClassName(), metaEntity);
+		}
+
+		// replaces the existing meta entities
+		entityMap.putAll(existingMetaEntities);
+
+		parser.fillRelationships(entityMap);
+		Optional<Map<String, QueryResultMapping>> queryResultMappings = parser.parseSqlResultSetMappings(entityMap);
+
+		PersistenceUnitContext puc = new PersistenceUnitContext(persistenceUnitInfo.getPersistenceUnitName(),
+				entityMap, queryResultMappings);
+
+		entityMap.forEach((k, v) -> {
+			LOG.debug("get: v.getName()=" + v.getName());
+			v.getBasicAttributes().forEach(a -> LOG.debug("get: ba a.getName()=" + a.getName()));
+		});
+
+		EntityDelegate.getInstance().addPersistenceUnitContext(puc);
+		return puc;
 	}
-
-	// replaces the existing meta entities
-	entityMap.putAll(existingMetaEntities);
-
-	parser.fillRelationships(entityMap);
-	Optional<Map<String, QueryResultMapping>> queryResultMappings = parser.parseSqlResultSetMappings(entityMap);
-
-	PersistenceUnitContext puc = new PersistenceUnitContext(persistenceUnitInfo.getPersistenceUnitName(),
-		entityMap, queryResultMappings);
-
-	entityMap.forEach((k, v) -> {
-	    LOG.debug("get: v.getName()=" + v.getName());
-	    v.getBasicAttributes().forEach(a -> LOG.debug("get: ba a.getName()=" + a.getName()));
-	});
-
-	EntityDelegate.getInstance().addPersistenceUnitContext(puc);
-	return puc;
-    }
 }

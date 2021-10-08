@@ -56,6 +56,27 @@ public class JpqlOrderTest {
 		em.close();
 	}
 
+	@Test
+	public void simpleOrderProductType() throws Exception {
+		EntityManager em = emf.createEntityManager();
+
+		em.getTransaction().begin();
+		persistEntities(em);
+
+		Query query = em.createQuery(
+				"SELECT DISTINCT o\n"
+				+ "  FROM SimpleOrder o JOIN o.lineItems l JOIN l.product p\n"
+				+ "  WHERE p.productType = 'office_supplies'");
+		List list = query.getResultList();
+		Assertions.assertTrue(!list.isEmpty());
+		Assertions.assertEquals(1, list.size());
+		Object so = list.get(0);
+		Assertions.assertTrue(so instanceof SimpleOrder);
+		em.getTransaction().rollback();
+
+		em.close();
+	}
+
 	private void persistEntities(EntityManager em) {
 		SimpleProduct simpleProduct1 = new SimpleProduct();
 		simpleProduct1.setProductType("office_supplies");

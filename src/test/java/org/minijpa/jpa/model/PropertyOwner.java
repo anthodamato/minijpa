@@ -18,22 +18,22 @@ import javax.persistence.Table;
 @Table(name = "property_owner")
 public class PropertyOwner {
 
-    @GeneratedValue
-    @Id
-    private Long id;
+	@GeneratedValue
+	@Id
+	private Long id;
 
-    private String name;
+	private String name;
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
 }

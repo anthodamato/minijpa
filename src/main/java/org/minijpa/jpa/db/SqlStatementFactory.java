@@ -196,23 +196,15 @@ public class SqlStatementFactory {
 		return result;
 	}
 
-//    public Condition buildConditionFromExpressions(
-//	    ConditionType conditionType, String expr0, String expr1){
-//	if(expr1.equalsIgnoreCase("FALSE")){
-//	    ConditionType ct=conditionType;
-//            if(conditionType==ConditionType.EQUAL)
-//		ct=ConditionType.IS_FALSE;
-//		    
-//	    UnaryCondition unaryCondition=new UnaryCondition();
-//	}
-//	
-//			BinaryCondition.Builder builder = new BinaryCondition.Builder(conditionType);
-//		builder.withLeftExpression(expr0);
-//		builder.withRightExpression(expr1);
-//		return builder.build();
-//    }
-
-	public List<FromJoin> calculateFromTable(MetaEntity entity, MetaAttribute metaAttribute) {
+	/**
+	 * Calculates the joins from <i>entity</i> to <i>metaAttribute</i>. <i>metaAttribute</i> is a relationship
+	 * attribute.
+	 *
+	 * @param entity
+	 * @param metaAttribute
+	 * @return
+	 */
+	public List<FromJoin> calculateJoins(MetaEntity entity, MetaAttribute metaAttribute) {
 		if (metaAttribute.getRelationship().getJoinTable() != null) {
 			List<MetaAttribute> idSourceAttributes = entity.getId().getAttributes();
 			List<Column> idSourceColumns = idSourceAttributes.stream().map(a -> {
@@ -227,8 +219,7 @@ public class SqlStatementFactory {
 
 			FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(),
 					relationshipJoinTable.getAlias());
-			FromJoin fromJoin = new FromJoinImpl(joinTable, entity.getAlias(), idSourceColumns,
-					idOwningColumns);
+			FromJoin fromJoin = new FromJoinImpl(joinTable, entity.getAlias(), idSourceColumns, idOwningColumns);
 
 			MetaEntity destEntity = relationshipJoinTable.getTargetEntity();
 			List<MetaAttribute> idTargetAttributes = destEntity.getId().getAttributes();
@@ -241,10 +232,28 @@ public class SqlStatementFactory {
 						return new Column(a.getColumnName());
 					}).collect(Collectors.toList());
 			FromTable joinTable2 = new FromTableImpl(destEntity.getTableName(), destEntity.getAlias());
-			FromJoin fromJoin2 = new FromJoinImpl(joinTable2, relationshipJoinTable.getAlias(), 
-					idTargetColumns,idDestColumns);
+			FromJoin fromJoin2 = new FromJoinImpl(joinTable2, relationshipJoinTable.getAlias(), idTargetColumns,
+					idDestColumns);
 
 			return Arrays.asList(fromJoin, fromJoin2);
+		} else if (metaAttribute.getRelationship().getJoinColumnMapping().isPresent()) {
+//			List<MetaAttribute> idSourceAttributes = entity.getId().getAttributes();
+			List<JoinColumnAttribute> joinColumnAttributes = metaAttribute.getRelationship().getJoinColumnMapping().get().getJoinColumnAttributes();
+			List<Column> idSourceColumns = joinColumnAttributes.stream().map(a -> {
+				return new Column(a.getColumnName());
+			}).collect(Collectors.toList());
+
+			MetaEntity destEntity = metaAttribute.getRelationship().getAttributeType();
+			List<MetaAttribute> idTargetAttributes = destEntity.getId().getAttributes();
+			List<Column> idDestColumns = idTargetAttributes.stream().map(a -> {
+				return new Column(a.getColumnName());
+			}).collect(Collectors.toList());
+
+			FromTable joinTable = new FromTableImpl(destEntity.getTableName(), destEntity.getAlias());
+			FromJoin fromJoin = new FromJoinImpl(joinTable, entity.getAlias(), idSourceColumns,
+					idDestColumns);
+
+			return Arrays.asList(fromJoin);
 		}
 
 		return null;
@@ -266,6 +275,15 @@ public class SqlStatementFactory {
 		return fromJoin;
 	}
 
+	/**
+	 *
+	 *
+	 * @param entity
+	 * @param relationshipJoinTable
+	 * @param attributes
+	 * @return
+	 * @throws Exception
+	 */
 	public SqlSelect generateSelectByJoinTable(MetaEntity entity, RelationshipJoinTable relationshipJoinTable,
 			List<AbstractAttribute> attributes) throws Exception {
 		// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
@@ -303,7 +321,7 @@ public class SqlStatementFactory {
 				}).collect(Collectors.toList());
 
 		FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
-		FromJoin fromJoin = new FromJoinImpl(joinTable, joinTable.getAlias().get(), idColumns, idTargetColumns);
+		FromJoin fromJoin = new FromJoinImpl(joinTable, entity.getAlias(), idColumns, idTargetColumns);
 		FromTable fromTable = FromTable.of(entity);
 		// handles multiple column pk
 
@@ -578,48 +596,48 @@ public class SqlStatementFactory {
 
 	private ConditionType getOperator(PredicateType predicateType) {
 		switch (predicateType) {
-		case EQUAL:
-			return ConditionType.EQUAL;
-		case NOT_EQUAL:
-			return ConditionType.NOT_EQUAL;
-		case AND:
-			return ConditionType.AND;
-		case IS_FALSE:
-			return ConditionType.IS_FALSE;
-		case IS_NOT_NULL:
-			return ConditionType.IS_NOT_NULL;
-		case IS_NULL:
-			return ConditionType.IS_NULL;
-		case IS_TRUE:
-			return ConditionType.IS_TRUE;
-		case NOT:
-			return ConditionType.NOT;
-		case OR:
-			return ConditionType.OR;
-		case EMPTY_CONJUNCTION:
-			return ConditionType.AND;
-		case EMPTY_DISJUNCTION:
-			return ConditionType.OR;
-		case GREATER_THAN:
-		case GT:
-			return ConditionType.GREATER_THAN;
-		case GREATER_THAN_OR_EQUAL_TO:
-			return ConditionType.GREATER_THAN_OR_EQUAL_TO;
-		case LESS_THAN:
-		case LT:
-			return ConditionType.LESS_THAN;
-		case LESS_THAN_OR_EQUAL_TO:
-			return ConditionType.LESS_THAN_OR_EQUAL_TO;
-		case BETWEEN_EXPRESSIONS:
-		case BETWEEN_VALUES:
-			return ConditionType.BETWEEN;
-		case LIKE_PATTERN:
-		case LIKE_PATTERN_EXPR:
-			return ConditionType.LIKE;
-		case IN:
-			return ConditionType.IN;
-		default:
-			break;
+			case EQUAL:
+				return ConditionType.EQUAL;
+			case NOT_EQUAL:
+				return ConditionType.NOT_EQUAL;
+			case AND:
+				return ConditionType.AND;
+			case IS_FALSE:
+				return ConditionType.IS_FALSE;
+			case IS_NOT_NULL:
+				return ConditionType.IS_NOT_NULL;
+			case IS_NULL:
+				return ConditionType.IS_NULL;
+			case IS_TRUE:
+				return ConditionType.IS_TRUE;
+			case NOT:
+				return ConditionType.NOT;
+			case OR:
+				return ConditionType.OR;
+			case EMPTY_CONJUNCTION:
+				return ConditionType.AND;
+			case EMPTY_DISJUNCTION:
+				return ConditionType.OR;
+			case GREATER_THAN:
+			case GT:
+				return ConditionType.GREATER_THAN;
+			case GREATER_THAN_OR_EQUAL_TO:
+				return ConditionType.GREATER_THAN_OR_EQUAL_TO;
+			case LESS_THAN:
+			case LT:
+				return ConditionType.LESS_THAN;
+			case LESS_THAN_OR_EQUAL_TO:
+				return ConditionType.LESS_THAN_OR_EQUAL_TO;
+			case BETWEEN_EXPRESSIONS:
+			case BETWEEN_VALUES:
+				return ConditionType.BETWEEN;
+			case LIKE_PATTERN:
+			case LIKE_PATTERN_EXPR:
+				return ConditionType.LIKE;
+			case IN:
+				return ConditionType.IN;
+			default:
+				break;
 		}
 
 		throw new IllegalArgumentException("Unknown condition type for predicate type: " + predicateType);
@@ -627,18 +645,18 @@ public class SqlStatementFactory {
 
 	private AggregateFunctionBasicType getAggregateFunction(AggregateFunctionType aggregateFunctionType) {
 		switch (aggregateFunctionType) {
-		case AVG:
-			return AggregateFunctionBasicType.AVG;
-		case MAX:
-			return AggregateFunctionBasicType.MAX;
-		case MIN:
-			return AggregateFunctionBasicType.MIN;
-		case COUNT:
-			return AggregateFunctionBasicType.COUNT;
-		case SUM:
-			return AggregateFunctionBasicType.SUM;
-		default:
-			break;
+			case AVG:
+				return AggregateFunctionBasicType.AVG;
+			case MAX:
+				return AggregateFunctionBasicType.MAX;
+			case MIN:
+				return AggregateFunctionBasicType.MIN;
+			case COUNT:
+				return AggregateFunctionBasicType.COUNT;
+			case SUM:
+				return AggregateFunctionBasicType.SUM;
+			default:
+				break;
 		}
 
 		throw new IllegalArgumentException(
@@ -647,18 +665,18 @@ public class SqlStatementFactory {
 
 	private SqlExpressionOperator getSqlExpressionOperator(ExpressionOperator expressionOperator) {
 		switch (expressionOperator) {
-		case DIFF:
-			return SqlExpressionOperator.DIFF;
-		case MINUS:
-			return SqlExpressionOperator.MINUS;
-		case PROD:
-			return SqlExpressionOperator.PROD;
-		case QUOT:
-			return SqlExpressionOperator.QUOT;
-		case SUM:
-			return SqlExpressionOperator.SUM;
-		default:
-			break;
+			case DIFF:
+				return SqlExpressionOperator.DIFF;
+			case MINUS:
+				return SqlExpressionOperator.MINUS;
+			case PROD:
+				return SqlExpressionOperator.PROD;
+			case QUOT:
+				return SqlExpressionOperator.QUOT;
+			case SUM:
+				return SqlExpressionOperator.SUM;
+			default:
+				break;
 		}
 
 		throw new IllegalArgumentException("Unknown  operator for expression type: " + expressionOperator);

@@ -31,38 +31,39 @@ import org.minijpa.jdbc.relationship.ManyToOneRelationship;
  */
 public class ManyToOneHelper extends RelationshipHelper {
 
-    private final JoinColumnMappingFactory joinColumnMappingFactory = new OwningJoinColumnMappingFactory();
+	private final JoinColumnMappingFactory joinColumnMappingFactory = new OwningJoinColumnMappingFactory();
 
-    public ManyToOneRelationship createManyToOne(
-	    ManyToOne manyToOne,
-	    Optional<JoinColumnDataList> joinColumnDataList) {
-	ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder();
-	builder.withJoinColumnDataList(joinColumnDataList);
+	public ManyToOneRelationship createManyToOne(
+			ManyToOne manyToOne,
+			Optional<JoinColumnDataList> joinColumnDataList) {
+		ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder();
+		builder.withJoinColumnDataList(joinColumnDataList);
 
-	builder.withCascades(getCascades(manyToOne.cascade()));
-	if (manyToOne.fetch() != null)
-	    if (manyToOne.fetch() == FetchType.EAGER)
-		builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.EAGER);
-	    else if (manyToOne.fetch() == FetchType.LAZY)
-		builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.LAZY);
+		builder.withCascades(getCascades(manyToOne.cascade()));
+		if (manyToOne.fetch() != null)
+			if (manyToOne.fetch() == FetchType.EAGER)
+				builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.EAGER);
+			else if (manyToOne.fetch() == FetchType.LAZY)
+				builder = builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.LAZY);
 
-	return builder.build();
-    }
-
-    public ManyToOneRelationship finalizeRelationship(
-	    ManyToOneRelationship manyToOneRelationship,
-	    MetaAttribute a,
-	    MetaEntity entity,
-	    MetaEntity toEntity,
-	    DbConfiguration dbConfiguration) {
-	ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder().with(manyToOneRelationship);
-	if (manyToOneRelationship.isOwner()) {
-	    JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(dbConfiguration, a, toEntity, manyToOneRelationship.getJoinColumnDataList());
-	    entity.getJoinColumnMappings().add(joinColumnMapping);
-	    builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
+		return builder.build();
 	}
 
-	builder.withAttributeType(toEntity);
-	return builder.build();
-    }
+	public ManyToOneRelationship finalizeRelationship(
+			ManyToOneRelationship manyToOneRelationship,
+			MetaAttribute a,
+			MetaEntity entity,
+			MetaEntity toEntity,
+			DbConfiguration dbConfiguration) {
+		ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder().with(manyToOneRelationship);
+		if (manyToOneRelationship.isOwner()) {
+			JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(
+					dbConfiguration, a, toEntity, manyToOneRelationship.getJoinColumnDataList());
+			entity.getJoinColumnMappings().add(joinColumnMapping);
+			builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
+		}
+
+		builder.withAttributeType(toEntity);
+		return builder.build();
+	}
 }

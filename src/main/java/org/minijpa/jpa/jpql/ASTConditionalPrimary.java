@@ -4,26 +4,26 @@ package org.minijpa.jpa.jpql;
 
 public class ASTConditionalPrimary extends SimpleNode {
 
-    public ASTConditionalPrimary(int id) {
-	super(id);
-    }
+	public ASTConditionalPrimary(int id) {
+		super(id);
+	}
 
-    public ASTConditionalPrimary(JpqlParser p, int id) {
-	super(p, id);
-    }
+	public ASTConditionalPrimary(JpqlParser p, int id) {
+		super(p, id);
+	}
 
-    /**
-     * Accept the visitor. *
-     */
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+	/**
+	 * Accept the visitor. *
+	 */
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-	return visitor.visit(this, data);
-    }
+		return visitor.visit(this, data);
+	}
 
-    @Override
-    public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
-	return children[0].jjtAccept(visitor, data);
-    }
+	@Override
+	public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
+		return children[0].jjtAccept(visitor, data);
+	}
 
 }
 /* JavaCC - OriginalChecksum=40e163d75c9097c3ff61040a84b86325 (do not edit this line) */

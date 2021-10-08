@@ -23,40 +23,49 @@ import org.minijpa.jdbc.QueryResultMapping;
 
 public class PersistenceUnitContext {
 
-    private final String persistenceUnitName;
-    private final Map<String, MetaEntity> entities;
-    private final Optional<Map<String, QueryResultMapping>> queryResultMappings;
+	private final String persistenceUnitName;
+	private final Map<String, MetaEntity> entities;
+	private final Optional<Map<String, QueryResultMapping>> queryResultMappings;
 
-    public PersistenceUnitContext(String persistenceUnitName, Map<String, MetaEntity> entities,
-	    Optional<Map<String, QueryResultMapping>> queryResultMappings) {
-	super();
-	this.persistenceUnitName = persistenceUnitName;
-	this.entities = entities;
-	this.queryResultMappings = queryResultMappings;
-    }
-
-    public MetaEntity getEntity(String entityClassName) {
-	return entities.get(entityClassName);
-    }
-
-    public String getPersistenceUnitName() {
-	return persistenceUnitName;
-    }
-
-    public Map<String, MetaEntity> getEntities() {
-	return entities;
-    }
-
-    public Optional<Map<String, QueryResultMapping>> getQueryResultMappings() {
-	return queryResultMappings;
-    }
-
-    public Optional<MetaEntity> findMetaEntityByName(String name) {
-	for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
-	    if (e.getValue().getName().equals(name))
-		return Optional.of(e.getValue());
+	public PersistenceUnitContext(String persistenceUnitName, Map<String, MetaEntity> entities,
+			Optional<Map<String, QueryResultMapping>> queryResultMappings) {
+		super();
+		this.persistenceUnitName = persistenceUnitName;
+		this.entities = entities;
+		this.queryResultMappings = queryResultMappings;
 	}
 
-	return Optional.empty();
-    }
+	public MetaEntity getEntity(String entityClassName) {
+		return entities.get(entityClassName);
+	}
+
+	public String getPersistenceUnitName() {
+		return persistenceUnitName;
+	}
+
+	public Map<String, MetaEntity> getEntities() {
+		return entities;
+	}
+
+	public Optional<Map<String, QueryResultMapping>> getQueryResultMappings() {
+		return queryResultMappings;
+	}
+
+	public Optional<MetaEntity> findMetaEntityByName(String name) {
+		for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
+			if (e.getValue().getName().equals(name))
+				return Optional.of(e.getValue());
+		}
+
+		return Optional.empty();
+	}
+
+	public Optional<MetaEntity> findMetaEntityByAlias(String alias) {
+		for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
+			if (e.getValue().getAlias().equals(alias))
+				return Optional.of(e.getValue());
+		}
+
+		return Optional.empty();
+	}
 }
