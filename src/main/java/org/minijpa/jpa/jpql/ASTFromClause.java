@@ -4,20 +4,20 @@ package org.minijpa.jpa.jpql;
 
 public class ASTFromClause extends SimpleNode {
 
-    public ASTFromClause(int id) {
-	super(id);
-    }
+	public ASTFromClause(int id) {
+		super(id);
+	}
 
-    public ASTFromClause(JpqlParser p, int id) {
-	super(p, id);
-    }
+	public ASTFromClause(JpqlParser p, int id) {
+		super(p, id);
+	}
 
-    /**
-     * Accept the visitor. *
-     */
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+	/**
+	 * Accept the visitor. *
+	 */
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-	return visitor.visit(this, data);
-    }
+		return visitor.visit(this, data);
+	}
 }
 /* JavaCC - OriginalChecksum=f6c01c3ce1690b4a18529180b19bf19e (do not edit this line) */

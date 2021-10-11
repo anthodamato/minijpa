@@ -12,6 +12,7 @@ import java.util.Map;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.Value;
+import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.join.FromJoin;
 
 /**
@@ -25,4 +26,5 @@ public class JpqlVisitorParameters {
 	List<FromJoin> fromJoins = new ArrayList<>();
 	List<Value> values;
 	List<FetchParameter> fetchParameters;
+	List<Condition> conditions = new ArrayList<>();
 }

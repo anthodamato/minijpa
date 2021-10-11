@@ -1,7 +1,6 @@
 package org.minijpa.jpa.jpql;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +13,7 @@ import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.Value;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
+import org.minijpa.jdbc.model.condition.BinaryLogicConditionImpl;
 import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.condition.NestedCondition;
@@ -74,7 +74,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		jpqlVisitorParameters.aliases.put(rvdAlias, sourceEntity.getAlias());
 
 		fillFetchParameters(jpqlVisitorParameters, selectClause);
-		List<Object> list = (List< Object>) node.childrenAccept(this, jpqlVisitorParameters);
+		node.childrenAccept(this, jpqlVisitorParameters);
 
 		selectBuilder.withFromTable(jpqlVisitorParameters.fromTable);
 		if (jpqlVisitorParameters.fromJoins != null)
@@ -83,15 +83,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		selectBuilder.withValues(jpqlVisitorParameters.values);
 		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
 
-//		list.forEach(v -> LOG.debug("visit: ASTSelectStatement v=" + v));
-		if (node.jjtGetNumChildren() > 2) {
-			Node n2 = node.jjtGetChild(2);
-			if (n2 instanceof ASTWhereClause) {
-				Condition condition = (Condition) list.get(2);
-				LOG.debug("visit: ASTSelectStatement condition=" + condition);
-				selectBuilder.withConditions(Arrays.asList(condition));
-			}
-		}
+		selectBuilder.withConditions(jpqlVisitorParameters.conditions);
+		LOG.debug("visit: jpqlVisitorParameters.conditions=" + jpqlVisitorParameters.conditions);
 
 		return selectBuilder.build();
 	}
@@ -180,6 +173,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTJoin node, Object data) {
 		Object object = node.childrenAccept(this, data);
+		LOG.debug("visit: ASTJoin data=" + data);
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
 		JoinType jt = node.getJoinType();
@@ -261,6 +255,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTStateValuedPathExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTStateValuedPathExpression node.jjtGetNumChildren()=" + node.jjtGetNumChildren());
+		LOG.debug("visit: ASTStateValuedPathExpression data=" + data);
 		if (node.jjtGetNumChildren() == 0)
 			return object;
 
@@ -324,7 +319,6 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		if (node.jjtGetNumChildren() == 0)
 			return object;
 
-//		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 		Node n0_0 = node.jjtGetChild(0);
 		LOG.debug("visit: ASTStringExpression n0_0=" + n0_0);
 		if (n0_0 instanceof ASTStateValuedPathExpression) {
@@ -332,7 +326,78 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			node.setPath(stateValuedPathExpression.getPath());
 		}
 
-		LOG.debug("visit: ASTStringExpression object=" + object);
+		return object;
+	}
+
+	@Override
+	public Object visit(ASTStringExpressionComparison node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		LOG.debug("visit: ASTStringExpressionComparison object=" + object);
+		ASTStringExpression stringExpression0 = (ASTStringExpression) node.jjtGetChild(0);
+
+		String comparisonOperator = node.getComparisonOperator();
+		Node n1 = node.jjtGetChild(1);
+		if (n1 instanceof ASTStringExpression) {
+			ASTStringExpression stringExpression1 = (ASTStringExpression) n1;
+			BinaryCondition.Builder builder = new BinaryCondition.Builder(decodeConditionType(comparisonOperator));
+			builder.withLeft(decodeStringExpression(stringExpression0));
+			builder.withRight(decodeStringExpression(stringExpression1));
+			node.setCondition(builder.build());
+		}
+
+		return object;
+	}
+
+	@Override
+	public Object visit(ASTBooleanExpression node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		if (node.jjtGetNumChildren() == 0)
+			return object;
+
+		Node n0_0 = node.jjtGetChild(0);
+		LOG.debug("visit: ASTBooleanExpression n0_0=" + n0_0);
+		if (n0_0 instanceof ASTStateValuedPathExpression) {
+			ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0_0;
+			node.setPath(stateValuedPathExpression.getPath());
+		}
+
+		return object;
+	}
+
+	@Override
+	public Object visit(ASTBooleanExpressionComparison node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		ASTBooleanExpression stringExpression0 = (ASTBooleanExpression) node.jjtGetChild(0);
+
+		String comparisonOperator = node.getComparisonOperator();
+		Node n1 = node.jjtGetChild(1);
+		if (n1 instanceof ASTBooleanExpression) {
+			ASTBooleanExpression stringExpression1 = (ASTBooleanExpression) n1;
+			BinaryCondition.Builder builder = new BinaryCondition.Builder(decodeConditionType(comparisonOperator));
+			builder.withLeft(decodeBooleanExpression(stringExpression0));
+			builder.withRight(decodeBooleanExpression(stringExpression1));
+			node.setCondition(builder.build());
+		}
+
+		return object;
+	}
+
+	@Override
+	public Object visit(ASTArithmeticExpressionComparison node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		Node n0 = node.jjtGetChild(0);
+		ASTArithmeticExpression expression0 = (ASTArithmeticExpression) n0;
+
+		String comparisonOperator = node.getComparisonOperator();
+		Node n1 = node.jjtGetChild(1);
+		if (n1 instanceof ASTArithmeticExpression) {
+			ASTArithmeticExpression expression1 = (ASTArithmeticExpression) n1;
+			BinaryCondition.Builder builder = new BinaryCondition.Builder(decodeConditionType(comparisonOperator));
+			builder.withLeft(expression0.getResult());
+			builder.withRight(expression1.getResult());
+			node.setCondition(builder.build());
+		}
+
 		return object;
 	}
 
@@ -352,25 +417,28 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		return null;
 	}
 
-	private Object decodeOperand(String operand) {
-		if (operand.equalsIgnoreCase("FALSE"))
-			return Boolean.FALSE;
+	private Object decodeStringExpression(ASTStringExpression expression) {
+		if (expression.getPath() != null)
+			return expression.getPath();
 
-		if (operand.equalsIgnoreCase("TRUE"))
-			return Boolean.TRUE;
+		if (expression.getStringLiteral() != null)
+			return expression.getStringLiteral();
 
-		return operand;
+		if (expression.getInputParameter() != null)
+			return expression.getInputParameter();
+
+		return "";
 	}
 
-	private Object decodeStringExpression(ASTStringExpression stringExpression) {
-		if (stringExpression.getPath() != null)
-			return decodeOperand(stringExpression.getPath());
+	private Object decodeBooleanExpression(ASTBooleanExpression expression) {
+		if (expression.getBooleanValue() != null)
+			return expression.getBooleanValue();
 
-		if (stringExpression.getStringLiteral() != null)
-			return stringExpression.getStringLiteral();
+		if (expression.getPath() != null)
+			return expression.getPath();
 
-		if (stringExpression.getInputParameter() != null)
-			return stringExpression.getInputParameter();
+		if (expression.getInputParameter() != null)
+			return expression.getInputParameter();
 
 		return "";
 	}
@@ -384,33 +452,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		LOG.debug("visit: ASTComparisonExpression object=" + object);
 		Node n0 = node.jjtGetChild(0);
 		LOG.debug("visit: ASTComparisonExpression n0=" + n0);
-		if (n0 instanceof ASTStringExpression) {
-			ASTStringExpression stringExpression0 = (ASTStringExpression) n0;
-
-			String comparisonOperator = node.getComparisonOperator();
-			Node n1 = node.jjtGetChild(1);
-			if (n1 instanceof ASTStringExpression) {
-				ASTStringExpression stringExpression1 = (ASTStringExpression) n1;
-				BinaryCondition.Builder builder = new BinaryCondition.Builder(decodeConditionType(comparisonOperator));
-				builder.withLeft(decodeStringExpression(stringExpression0));
-				builder.withRight(decodeStringExpression(stringExpression1));
-				return builder.build();
-			}
-		} else if (n0 instanceof ASTArithmeticExpression) {
-			ASTArithmeticExpression expression0 = (ASTArithmeticExpression) n0;
-
-			String comparisonOperator = node.getComparisonOperator();
-			LOG.debug("visit: ASTComparisonExpression comparisonOperator=" + comparisonOperator);
-			Node n1 = node.jjtGetChild(1);
-			if (n1 instanceof ASTArithmeticExpression) {
-				ASTArithmeticExpression expression1 = (ASTArithmeticExpression) n1;
-				BinaryCondition.Builder builder = new BinaryCondition.Builder(decodeConditionType(comparisonOperator));
-				builder.withLeft(expression0.getValue());
-				builder.withRight(expression1.getValue());
-				return builder.build();
-			}
-		}
-
+		node.setCondition(((ConditionNode) n0).getCondition());
 		return object;
 	}
 
@@ -418,36 +460,56 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTSimpleCondExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTSimpleCondExpression object=" + object);
+		node.setCondition(((ConditionNode) node.jjtGetChild(0)).getCondition());
 		return object;
 	}
 
 	@Override
 	public Object visit(ASTConditionalPrimary node, Object data) {
 		LOG.debug("visit: ASTConditionalPrimary data=" + data);
-		Condition condition = (Condition) node.childrenAccept(this, data);
-		LOG.debug("visit: ASTConditionalPrimary condition=" + condition);
+		Object object = node.childrenAccept(this, data);
+		LOG.debug("visit: ASTConditionalPrimary object=" + object);
 		Node n = node.jjtGetChild(0);
-		if (n instanceof ASTSimpleCondExpression)
-			return condition;
+		if (n instanceof ASTSimpleCondExpression) {
+			node.setCondition(((ASTSimpleCondExpression) n).getCondition());
+			return object;
+		}
 
-		return new NestedCondition(condition);
+		Condition condition = new NestedCondition(((ASTConditionalExpression) n).getCondition());
+		node.setCondition(condition);
+		return object;
 	}
 
 	@Override
 	public Object visit(ASTConditionalFactor node, Object data) {
 		LOG.debug("visit: ASTConditionalFactor data=" + data);
-		Condition condition = (Condition) node.childrenAccept(this, data);
-		LOG.debug("visit: ASTConditionalFactor condition=" + condition);
+		Object object = node.childrenAccept(this, data);
+		LOG.debug("visit: ASTConditionalFactor object=" + object);
+		ASTConditionalPrimary conditionalPrimary = (ASTConditionalPrimary) node.jjtGetChild(0);
 		if (node.isNot())
-			return new NotCondition(condition);
+			node.setCondition(new NotCondition(conditionalPrimary.getCondition()));
+		else
+			node.setCondition(conditionalPrimary.getCondition());
 
-		return condition;
+		return object;
 	}
 
 	@Override
 	public Object visit(ASTConditionalTerm node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTConditionalTerm object=" + object);
+		if (node.jjtGetNumChildren() == 1)
+			node.setCondition(((ASTConditionalFactor) node.jjtGetChild(0)).getCondition());
+		else {
+			List<Condition> conditions = new ArrayList<>();
+			for (int i = 0; i < node.jjtGetNumChildren(); ++i) {
+				Condition condition = ((ASTConditionalFactor) node.jjtGetChild(i)).getCondition();
+				conditions.add(condition);
+			}
+
+			node.setCondition(new BinaryLogicConditionImpl(ConditionType.AND, conditions));
+		}
+
 		return object;
 	}
 
@@ -455,6 +517,18 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTConditionalExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTConditionalExpression object=" + object);
+		if (node.jjtGetNumChildren() == 1)
+			node.setCondition(((ASTConditionalTerm) node.jjtGetChild(0)).getCondition());
+		else {
+			List<Condition> conditions = new ArrayList<>();
+			for (int i = 0; i < node.jjtGetNumChildren(); ++i) {
+				Condition condition = ((ASTConditionalTerm) node.jjtGetChild(i)).getCondition();
+				conditions.add(condition);
+			}
+
+			node.setCondition(new BinaryLogicConditionImpl(ConditionType.OR, conditions));
+		}
+
 		return object;
 	}
 
@@ -462,6 +536,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTWhereClause node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTWhereClause object=" + object);
+		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
+		jpqlVisitorParameters.conditions.add(((ASTConditionalExpression) node.jjtGetChild(0)).getCondition());
 		return object;
 	}
 
@@ -483,6 +559,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTArithmeticPrimary node, Object data) {
 		Object object = node.childrenAccept(this, data);
+		LOG.debug("visit: ASTArithmeticPrimary node.getResult()=" + node.getResult());
 		if (node.jjtGetNumChildren() == 0)
 			return object;
 
@@ -490,7 +567,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		LOG.debug("visit: ASTArithmeticPrimary n0_0=" + n0_0);
 		if (n0_0 instanceof ASTStateValuedPathExpression) {
 			ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0_0;
-			node.setValue(stateValuedPathExpression.getPath());
+			node.setResult(stateValuedPathExpression.getPath());
 		}
 
 		return object;
@@ -500,7 +577,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTArithmeticFactor node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		ASTArithmeticPrimary n0_0 = (ASTArithmeticPrimary) node.jjtGetChild(0);
-		node.setValue(n0_0.getValue());
+		node.setResult(n0_0.getResult());
 		return object;
 	}
 
@@ -509,17 +586,18 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Object object = node.childrenAccept(this, data);
 		StringBuilder sb = new StringBuilder();
 		ASTArithmeticFactor n0_0 = (ASTArithmeticFactor) node.jjtGetChild(0);
+		LOG.debug("visit: ASTArithmeticTerm n0_0.getResult()=" + n0_0.getResult());
 		sb.append(n0_0.getSign());
-		sb.append(n0_0.getValue());
+		sb.append(n0_0.getResult());
 		for (int i = 1; i < node.jjtGetNumChildren(); ++i) {
 			ASTArithmeticFactor n_i = (ASTArithmeticFactor) node.jjtGetChild(i);
 			sb.append(node.getSigns().get(i - 1));
 			sb.append(n_i.getSign());
-			sb.append(n_i.getValue());
+			sb.append(n_i.getResult());
 		}
 
 		LOG.debug("visit: ASTArithmeticTerm sb.toString()=" + sb.toString());
-		node.setValue(sb.toString());
+		node.setResult(sb.toString());
 		return object;
 	}
 
@@ -528,16 +606,16 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Object object = node.childrenAccept(this, data);
 		StringBuilder sb = new StringBuilder();
 		ASTArithmeticTerm n0_0 = (ASTArithmeticTerm) node.jjtGetChild(0);
-		LOG.debug("visit: ASTArithmeticExpression n0_0.getValue()=" + n0_0.getValue());
-		sb.append(n0_0.getValue());
+		LOG.debug("visit: ASTArithmeticExpression n0_0.getResult()=" + n0_0.getResult());
+		sb.append(n0_0.getResult());
 		for (int i = 1; i < node.jjtGetNumChildren(); ++i) {
 			ASTArithmeticTerm n_i = (ASTArithmeticTerm) node.jjtGetChild(i);
 			sb.append(node.getSigns().get(i - 1));
-			sb.append(n_i.getValue());
+			sb.append(n_i.getResult());
 		}
 
 		LOG.debug("visit: ASTArithmeticExpression sb.toString()=" + sb.toString());
-		node.setValue(sb.toString());
+		node.setResult(sb.toString());
 		return object;
 	}
 

@@ -4,31 +4,31 @@ package org.minijpa.jpa.jpql;
 
 public class ASTCollectionValuedPathExpression extends SimpleNode {
 
-    private String collectionValuedField;
+	private String collectionValuedField;
 
-    public ASTCollectionValuedPathExpression(int id) {
-	super(id);
-    }
+	public ASTCollectionValuedPathExpression(int id) {
+		super(id);
+	}
 
-    public ASTCollectionValuedPathExpression(JpqlParser p, int id) {
-	super(p, id);
-    }
+	public ASTCollectionValuedPathExpression(JpqlParser p, int id) {
+		super(p, id);
+	}
 
-    /**
-     * Accept the visitor. *
-     */
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+	/**
+	 * Accept the visitor. *
+	 */
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-	return visitor.visit(this, data);
-    }
+		return visitor.visit(this, data);
+	}
 
-    public String getCollectionValuedField() {
-	return collectionValuedField;
-    }
+	public String getCollectionValuedField() {
+		return collectionValuedField;
+	}
 
-    public void setCollectionValuedField(String collectionValuedField) {
-	this.collectionValuedField = collectionValuedField;
-    }
+	public void setCollectionValuedField(String collectionValuedField) {
+		this.collectionValuedField = collectionValuedField;
+	}
 
 }
 /* JavaCC - OriginalChecksum=7ea607cd94f621431e374fa62c2275f3 (do not edit this line) */

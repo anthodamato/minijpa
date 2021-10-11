@@ -2,7 +2,11 @@
  /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package org.minijpa.jpa.jpql;
 
+import org.minijpa.jdbc.model.condition.Condition;
+
 public class ASTConditionalPrimary extends SimpleNode {
+
+	private Condition condition;
 
 	public ASTConditionalPrimary(int id) {
 		super(id);
@@ -20,9 +24,12 @@ public class ASTConditionalPrimary extends SimpleNode {
 		return visitor.visit(this, data);
 	}
 
-	@Override
-	public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
-		return children[0].jjtAccept(visitor, data);
+	public Condition getCondition() {
+		return condition;
+	}
+
+	public void setCondition(Condition condition) {
+		this.condition = condition;
 	}
 
 }

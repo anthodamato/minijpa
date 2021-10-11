@@ -8,7 +8,7 @@ import java.util.List;
 public class ASTArithmeticExpression extends SimpleNode {
 
 	private List<String> signs = new ArrayList<>();
-	private String value;
+	private String result;
 
 	public ASTArithmeticExpression(int id) {
 		super(id);
@@ -34,12 +34,18 @@ public class ASTArithmeticExpression extends SimpleNode {
 		this.signs.add(sign);
 	}
 
-	public String getValue() {
-		return value;
+	public String getResult() {
+		return result;
 	}
 
-	public void setValue(String value) {
-		this.value = value;
+	public void setResult(String result) {
+		this.result = result;
+	}
+
+	@Override
+	public void dump(String prefix) {
+		super.dump(prefix);
+		System.out.println("result=" + result);
 	}
 
 }

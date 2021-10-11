@@ -25,11 +25,15 @@ public interface JpqlParserVisitor
   public Object visit(ASTStateValuedPathExpression node, Object data);
   public Object visit(ASTSingleValuedObjectPathExpression node, Object data);
   public Object visit(ASTWhenClause node, Object data);
+  public Object visit(ASTBooleanExpression node, Object data);
   public Object visit(ASTStringExpression node, Object data);
   public Object visit(ASTArithmeticPrimary node, Object data);
   public Object visit(ASTArithmeticFactor node, Object data);
   public Object visit(ASTArithmeticTerm node, Object data);
   public Object visit(ASTArithmeticExpression node, Object data);
+  public Object visit(ASTStringExpressionComparison node, Object data);
+  public Object visit(ASTArithmeticExpressionComparison node, Object data);
+  public Object visit(ASTBooleanExpressionComparison node, Object data);
   public Object visit(ASTComparisonExpression node, Object data);
   public Object visit(ASTCollectionValuedPathExpression node, Object data);
   public Object visit(ASTSimpleCondExpression node, Object data);
@@ -40,4 +44,4 @@ public interface JpqlParserVisitor
   public Object visit(ASTWhereClause node, Object data);
   public Object visit(ASTHavingClause node, Object data);
 }
-/* JavaCC - OriginalChecksum=dd7b557e3060c07eb6b429f77ed06701 (do not edit this line) */
+/* JavaCC - OriginalChecksum=b87251678a3c721c3b969339b1e75ad1 (do not edit this line) */

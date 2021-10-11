@@ -56,6 +56,7 @@ TOKEN [IGNORE_CASE]:
 |<ENTRY:     "ENTRY">
 |<ESCAPE:     "ESCAPE">
 |<EXISTS:     "EXISTS">
+|<FALSE:     "FALSE">
 |<FETCH:     "FETCH">
 |<FROM:      "FROM">
 |<FUNCTION:  "FUNCTION">
@@ -96,6 +97,7 @@ TOKEN [IGNORE_CASE]:
 |<TRAILING:  "TRAILING">
 |<TREAT:     "TREAT">
 |<TRIM:      "TRIM">
+|<TRUE:      "TRUE">
 |<TYPE:      "TYPE">
 |<UPPER:     "UPPER">
 |<WHEN:      "WHEN">
@@ -1386,11 +1388,7 @@ String scalar_expression() :
   
   |
   LOOKAHEAD(3)
-  s=boolean_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
+  boolean_expression()
   { return sb.toString(); }
   
   |
@@ -1849,6 +1847,23 @@ String enum_expression() :
 }
 
 
+// boolean_literal ::= <TRUE> | <FALSE>
+Boolean boolean_literal() :
+{
+}
+{
+ <TRUE>
+ {
+  return Boolean.TRUE;
+ }
+ |
+ <FALSE>
+ {
+  return Boolean.FALSE;
+ }
+}
+
+
 // boolean_expression ::=
 //    state_valued_path_expression |
 //    boolean_literal |
@@ -1856,24 +1871,22 @@ String enum_expression() :
 //    case_expression |
 //    function_invocation |
 //    (subquery)
-String boolean_expression() :
+ void boolean_expression() #BooleanExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
+  Boolean booleanValue;
 }
 {
   LOOKAHEAD(2)
   state_valued_path_expression()
-  { return sb.toString(); }
 
-  |  
-  t=<NAME>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
+  |
+  booleanValue=boolean_literal()
+  {
+    jjtThis.setBooleanValue(booleanValue);
+  }
   
   |
   t=<INPUT_PARAMETER>
@@ -1881,7 +1894,6 @@ String boolean_expression() :
       sb.append(" ");
       sb.append(t.image);
     }
-  { return sb.toString(); }
   
   |
   s=case_expression()
@@ -1889,7 +1901,6 @@ String boolean_expression() :
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }
   
   |
   s=function_invocation()
@@ -1897,7 +1908,6 @@ String boolean_expression() :
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }
 
   |
   t=<OPEN_BRACKET>
@@ -1913,7 +1923,6 @@ String boolean_expression() :
     {
       sb.append(t.image);
     }
-  { return sb.toString(); }
 }
 
 
@@ -2091,14 +2100,13 @@ void arithmetic_primary() #ArithmeticPrimary :
   String s;
 }
 {
-  LOOKAHEAD(3)
-  state_valued_path_expression()
-
-  |
   t=<NUMERIC_LITERAL>
     {
-      jjtThis.setValue(t.image);
+      jjtThis.setResult(t.image);
     }
+  |
+  LOOKAHEAD(3)
+  state_valued_path_expression()
 
   |
   LOOKAHEAD(2)
@@ -2323,39 +2331,13 @@ String comparison_operator() :
 }
 
 
-// comparison_expression ::=
-//    string_expression comparison_operator {string_expression | all_or_any_expression} |
-//    boolean_expression {= | <>} {boolean_expression | all_or_any_expression} |
-//    enum_expression {= | <>} {enum_expression | all_or_any_expression} |
-//    datetime_expression comparison_operator {datetime_expression | all_or_any_expression} |
-//    entity_expression {= | <>} {entity_expression | all_or_any_expression} |
-//    arithmetic_expression comparison_operator {arithmetic_expression | all_or_any_expression} |
-//    entity_type_expression {= | <>} entity_type_expression
-void comparison_expression() #ComparisonExpression :
+// string_expression_comparison ::= string_expression comparison_operator {string_expression | all_or_any_expression}
+void string_expression_comparison() #StringExpressionComparison :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
   String s;
+  StringBuilder sb=new StringBuilder();
 }
 {
-  LOOKAHEAD(arithmetic_expression())
-  arithmetic_expression()
-  s=comparison_operator()
-  {
-    jjtThis.setComparisonOperator(s);
-  }
-  (
-   arithmetic_expression()
-   |
-   s=all_or_any_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-  )
-  |
-  
-  LOOKAHEAD(string_expression())
   string_expression()
   s=comparison_operator()
   {
@@ -2370,23 +2352,23 @@ void comparison_expression() #ComparisonExpression :
        sb.append(s);
      }
   )
-  |
-  LOOKAHEAD(3)
-  s=boolean_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+}
+
+
+// arithmetic_expression_comparison ::= arithmetic_expression comparison_operator {arithmetic_expression | all_or_any_expression}
+void arithmetic_expression_comparison() #ArithmeticExpressionComparison :
+{
+  String s;
+  StringBuilder sb=new StringBuilder();
+}
+{
+  arithmetic_expression()
   s=comparison_operator()
   {
     jjtThis.setComparisonOperator(s);
   }
   (
-   s=boolean_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   arithmetic_expression()
    |
    s=all_or_any_expression()
      {
@@ -2394,7 +2376,67 @@ void comparison_expression() #ComparisonExpression :
        sb.append(s);
      }
   )
+}
+
+
+// boolean_expression_comparison ::= boolean_expression {= | <>} {boolean_expression | all_or_any_expression}
+void boolean_expression_comparison() #BooleanExpressionComparison :
+{
+  String s;
+  StringBuilder sb=new StringBuilder();
+}
+{
+  boolean_expression()
+  (
+   "="
+   {
+    jjtThis.setComparisonOperator("=");
+   }
+   |
+   "<>"
+   {
+    jjtThis.setComparisonOperator("<>");
+   }
+  )
+  (
+   boolean_expression()
+   |
+   s=all_or_any_expression()
+     {
+       sb.append(" ");
+       sb.append(s);
+     }
+  )
+}
+
+
+// comparison_expression ::=
+//    string_expression_comparison |
+//    arithmetic_expression_comparison |
+//    boolean_expression_comparison |
+//    enum_expression {= | <>} {enum_expression | all_or_any_expression} |
+//    datetime_expression comparison_operator {datetime_expression | all_or_any_expression} |
+//    entity_expression {= | <>} {entity_expression | all_or_any_expression} |
+//    entity_type_expression {= | <>} entity_type_expression
+void comparison_expression() #ComparisonExpression :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+}
+{
+  LOOKAHEAD(string_expression_comparison())
+  string_expression_comparison()
   |
+
+  LOOKAHEAD(arithmetic_expression_comparison())
+  arithmetic_expression_comparison()
+  |
+
+  LOOKAHEAD(boolean_expression_comparison())
+  boolean_expression_comparison()
+  |
+  
   LOOKAHEAD(3)
   s=enum_expression()
     {
@@ -3021,7 +3063,6 @@ void simple_cond_expression() #SimpleCondExpression :
 void conditional_primary() #ConditionalPrimary :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
   String s;
 }
 {

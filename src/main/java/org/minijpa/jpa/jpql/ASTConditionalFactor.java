@@ -2,38 +2,44 @@
  /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package org.minijpa.jpa.jpql;
 
+import org.minijpa.jdbc.model.condition.Condition;
+
 public class ASTConditionalFactor extends SimpleNode {
 
-    private boolean not = false;
+	private boolean not = false;
+	private Condition condition;
 
-    public ASTConditionalFactor(int id) {
-	super(id);
-    }
+	public ASTConditionalFactor(int id) {
+		super(id);
+	}
 
-    public ASTConditionalFactor(JpqlParser p, int id) {
-	super(p, id);
-    }
+	public ASTConditionalFactor(JpqlParser p, int id) {
+		super(p, id);
+	}
 
-    /**
-     * Accept the visitor. *
-     */
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+	/**
+	 * Accept the visitor. *
+	 */
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-	return visitor.visit(this, data);
-    }
+		return visitor.visit(this, data);
+	}
 
-    @Override
-    public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
-	return children[0].jjtAccept(visitor, data);
-    }
+	public boolean isNot() {
+		return not;
+	}
 
-    public boolean isNot() {
-	return not;
-    }
+	public void setNot(boolean not) {
+		this.not = not;
+	}
 
-    public void setNot(boolean not) {
-	this.not = not;
-    }
+	public Condition getCondition() {
+		return condition;
+	}
+
+	public void setCondition(Condition condition) {
+		this.condition = condition;
+	}
 
 }
 /* JavaCC - OriginalChecksum=5a3eebfe9e31f45f99106644ef186a94 (do not edit this line) */

@@ -522,14 +522,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 		if (((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType() == EntityManagerType.CONTAINER_MANAGED)
 			throw new IllegalStateException("Can't close a Container Managed Entity Manager");
 
-//		try {
 		this.open = false;
-//			if (this.connectionHolder != null)
-//				this.connectionHolder.closeConnection();
-//		} catch (SQLException e) {
-//			LOG.error(e.getMessage());
-//			throw new PersistenceException(e.getMessage());
-//		}
 	}
 
 	@Override

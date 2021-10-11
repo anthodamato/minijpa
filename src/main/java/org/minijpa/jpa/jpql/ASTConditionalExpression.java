@@ -2,17 +2,14 @@
  /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package org.minijpa.jpa.jpql;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.minijpa.jdbc.model.condition.BinaryLogicConditionImpl;
 import org.minijpa.jdbc.model.condition.Condition;
-import org.minijpa.jdbc.model.condition.ConditionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ASTConditionalExpression extends SimpleNode {
 
 	private Logger LOG = LoggerFactory.getLogger(ASTConditionalExpression.class);
+	private Condition condition;
 
 	public ASTConditionalExpression(int id) {
 		super(id);
@@ -31,18 +28,12 @@ public class ASTConditionalExpression extends SimpleNode {
 		return visitor.visit(this, data);
 	}
 
-	@Override
-	public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
-		List<Condition> conditions = new ArrayList<>();
-		if (children != null) {
-			for (int i = 0; i < children.length; ++i) {
-				Condition condition = (Condition) children[i].jjtAccept(visitor, data);
-				LOG.debug("childrenAccept: ASTConditionalExpression condition=" + condition);
-				conditions.add(condition);
-			}
-		}
+	public Condition getCondition() {
+		return condition;
+	}
 
-		return new BinaryLogicConditionImpl(ConditionType.OR, conditions);
+	public void setCondition(Condition condition) {
+		this.condition = condition;
 	}
 
 }

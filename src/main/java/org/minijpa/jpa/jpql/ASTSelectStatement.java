@@ -7,33 +7,33 @@ import java.util.List;
 
 public class ASTSelectStatement extends SimpleNode {
 
-    public ASTSelectStatement(int id) {
-	super(id);
-    }
-
-    public ASTSelectStatement(JpqlParser p, int id) {
-	super(p, id);
-    }
-
-    /**
-     * Accept the visitor. *
-     */
-    @Override
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
-	return visitor.visit(this, data);
-    }
-
-    @Override
-    public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
-	List<Object> list = new ArrayList<>();
-	if (children != null) {
-	    for (int i = 0; i < children.length; ++i) {
-		list.add(children[i].jjtAccept(visitor, data));
-	    }
+	public ASTSelectStatement(int id) {
+		super(id);
 	}
 
-	return list;
-    }
+	public ASTSelectStatement(JpqlParser p, int id) {
+		super(p, id);
+	}
+
+	/**
+	 * Accept the visitor. *
+	 */
+	@Override
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+		return visitor.visit(this, data);
+	}
+
+//	@Override
+//	public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
+//		List<Object> list = new ArrayList<>();
+//		if (children != null) {
+//			for (int i = 0; i < children.length; ++i) {
+//				list.add(children[i].jjtAccept(visitor, data));
+//			}
+//		}
+//
+//		return list;
+//	}
 
 }
 /* JavaCC - OriginalChecksum=29793356faf64c31d470ab1613b35466 (do not edit this line) */

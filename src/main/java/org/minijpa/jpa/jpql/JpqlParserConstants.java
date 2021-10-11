@@ -61,125 +61,129 @@ public interface JpqlParserConstants {
   /** RegularExpression Id. */
   int EXISTS = 29;
   /** RegularExpression Id. */
-  int FETCH = 30;
+  int FALSE = 30;
   /** RegularExpression Id. */
-  int FROM = 31;
+  int FETCH = 31;
   /** RegularExpression Id. */
-  int FUNCTION = 32;
+  int FROM = 32;
   /** RegularExpression Id. */
-  int GROUP = 33;
+  int FUNCTION = 33;
   /** RegularExpression Id. */
-  int HAVING = 34;
+  int GROUP = 34;
   /** RegularExpression Id. */
-  int INDEX = 35;
+  int HAVING = 35;
   /** RegularExpression Id. */
-  int INNER = 36;
+  int INDEX = 36;
   /** RegularExpression Id. */
-  int IN = 37;
+  int INNER = 37;
   /** RegularExpression Id. */
-  int IS = 38;
+  int IN = 38;
   /** RegularExpression Id. */
-  int JOIN = 39;
+  int IS = 39;
   /** RegularExpression Id. */
-  int KEY = 40;
+  int JOIN = 40;
   /** RegularExpression Id. */
-  int LEADING = 41;
+  int KEY = 41;
   /** RegularExpression Id. */
-  int LEFT = 42;
+  int LEADING = 42;
   /** RegularExpression Id. */
-  int LENGTH = 43;
+  int LEFT = 43;
   /** RegularExpression Id. */
-  int LIKE = 44;
+  int LENGTH = 44;
   /** RegularExpression Id. */
-  int LOCATE = 45;
+  int LIKE = 45;
   /** RegularExpression Id. */
-  int LOWER = 46;
+  int LOCATE = 46;
   /** RegularExpression Id. */
-  int MEMBER = 47;
+  int LOWER = 47;
   /** RegularExpression Id. */
-  int MIN = 48;
+  int MEMBER = 48;
   /** RegularExpression Id. */
-  int MAX = 49;
+  int MIN = 49;
   /** RegularExpression Id. */
-  int MOD = 50;
+  int MAX = 50;
   /** RegularExpression Id. */
-  int NEW = 51;
+  int MOD = 51;
   /** RegularExpression Id. */
-  int NOT = 52;
+  int NEW = 52;
   /** RegularExpression Id. */
-  int NULL = 53;
+  int NOT = 53;
   /** RegularExpression Id. */
-  int NULLIF = 54;
+  int NULL = 54;
   /** RegularExpression Id. */
-  int OBJECT = 55;
+  int NULLIF = 55;
   /** RegularExpression Id. */
-  int OF = 56;
+  int OBJECT = 56;
   /** RegularExpression Id. */
-  int OR = 57;
+  int OF = 57;
   /** RegularExpression Id. */
-  int ORDER = 58;
+  int OR = 58;
   /** RegularExpression Id. */
-  int OUTER = 59;
+  int ORDER = 59;
   /** RegularExpression Id. */
-  int SELECT = 60;
+  int OUTER = 60;
   /** RegularExpression Id. */
-  int SIZE = 61;
+  int SELECT = 61;
   /** RegularExpression Id. */
-  int SOME = 62;
+  int SIZE = 62;
   /** RegularExpression Id. */
-  int SQRT = 63;
+  int SOME = 63;
   /** RegularExpression Id. */
-  int SUBSTRING = 64;
+  int SQRT = 64;
   /** RegularExpression Id. */
-  int SUM = 65;
+  int SUBSTRING = 65;
   /** RegularExpression Id. */
-  int THEN = 66;
+  int SUM = 66;
   /** RegularExpression Id. */
-  int TRAILING = 67;
+  int THEN = 67;
   /** RegularExpression Id. */
-  int TREAT = 68;
+  int TRAILING = 68;
   /** RegularExpression Id. */
-  int TRIM = 69;
+  int TREAT = 69;
   /** RegularExpression Id. */
-  int TYPE = 70;
+  int TRIM = 70;
   /** RegularExpression Id. */
-  int UPPER = 71;
+  int TRUE = 71;
   /** RegularExpression Id. */
-  int WHEN = 72;
+  int TYPE = 72;
   /** RegularExpression Id. */
-  int WHERE = 73;
+  int UPPER = 73;
   /** RegularExpression Id. */
-  int VALUE = 74;
+  int WHEN = 74;
   /** RegularExpression Id. */
-  int NAME = 75;
+  int WHERE = 75;
   /** RegularExpression Id. */
-  int RESULT_VARIABLE = 76;
+  int VALUE = 76;
   /** RegularExpression Id. */
-  int COMMA = 77;
+  int NAME = 77;
   /** RegularExpression Id. */
-  int DOT = 78;
+  int RESULT_VARIABLE = 78;
   /** RegularExpression Id. */
-  int OPEN_BRACKET = 79;
+  int COMMA = 79;
   /** RegularExpression Id. */
-  int CLOSE_BRACKET = 80;
+  int DOT = 80;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 81;
+  int OPEN_BRACKET = 81;
   /** RegularExpression Id. */
-  int NUMERIC_LITERAL = 82;
+  int CLOSE_BRACKET = 82;
   /** RegularExpression Id. */
-  int INPUT_PARAMETER = 83;
+  int STRING_LITERAL = 83;
   /** RegularExpression Id. */
-  int GT = 84;
+  int NUMERIC_LITERAL = 84;
   /** RegularExpression Id. */
-  int GE = 85;
+  int INPUT_PARAMETER = 85;
   /** RegularExpression Id. */
-  int LT = 86;
+  int GT = 86;
   /** RegularExpression Id. */
-  int LE = 87;
+  int GE = 87;
   /** RegularExpression Id. */
-  int NE = 88;
+  int LT = 88;
   /** RegularExpression Id. */
-  int EQ = 89;
+  int LE = 89;
+  /** RegularExpression Id. */
+  int NE = 90;
+  /** RegularExpression Id. */
+  int EQ = 91;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -216,6 +220,7 @@ public interface JpqlParserConstants {
     "\"ENTRY\"",
     "\"ESCAPE\"",
     "\"EXISTS\"",
+    "\"FALSE\"",
     "\"FETCH\"",
     "\"FROM\"",
     "\"FUNCTION\"",
@@ -256,6 +261,7 @@ public interface JpqlParserConstants {
     "\"TRAILING\"",
     "\"TREAT\"",
     "\"TRIM\"",
+    "\"TRUE\"",
     "\"TYPE\"",
     "\"UPPER\"",
     "\"WHEN\"",
