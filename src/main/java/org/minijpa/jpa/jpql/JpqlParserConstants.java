@@ -157,33 +157,31 @@ public interface JpqlParserConstants {
   /** RegularExpression Id. */
   int NAME = 77;
   /** RegularExpression Id. */
-  int RESULT_VARIABLE = 78;
+  int COMMA = 78;
   /** RegularExpression Id. */
-  int COMMA = 79;
+  int DOT = 79;
   /** RegularExpression Id. */
-  int DOT = 80;
+  int OPEN_BRACKET = 80;
   /** RegularExpression Id. */
-  int OPEN_BRACKET = 81;
+  int CLOSE_BRACKET = 81;
   /** RegularExpression Id. */
-  int CLOSE_BRACKET = 82;
+  int STRING_LITERAL = 82;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 83;
+  int NUMERIC_LITERAL = 83;
   /** RegularExpression Id. */
-  int NUMERIC_LITERAL = 84;
+  int INPUT_PARAMETER = 84;
   /** RegularExpression Id. */
-  int INPUT_PARAMETER = 85;
+  int GT = 85;
   /** RegularExpression Id. */
-  int GT = 86;
+  int GE = 86;
   /** RegularExpression Id. */
-  int GE = 87;
+  int LT = 87;
   /** RegularExpression Id. */
-  int LT = 88;
+  int LE = 88;
   /** RegularExpression Id. */
-  int LE = 89;
+  int NE = 89;
   /** RegularExpression Id. */
-  int NE = 90;
-  /** RegularExpression Id. */
-  int EQ = 91;
+  int EQ = 90;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -268,7 +266,6 @@ public interface JpqlParserConstants {
     "\"WHERE\"",
     "\"VALUE\"",
     "<NAME>",
-    "<RESULT_VARIABLE>",
     "\",\"",
     "\".\"",
     "\"(\"",

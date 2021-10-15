@@ -17,6 +17,7 @@ public interface JpqlParserVisitor
   public Object visit(ASTIdentificationVariableDeclaration node, Object data);
   public Object visit(ASTFromClause node, Object data);
   public Object visit(ASTMapFieldIdentificationVariable node, Object data);
+  public Object visit(ASTQualifiedIdentificationVariable node, Object data);
   public Object visit(ASTGeneralIdentificationVariable node, Object data);
   public Object visit(ASTSimpleSubpath node, Object data);
   public Object visit(ASTGeneralSubpath node, Object data);
@@ -24,24 +25,42 @@ public interface JpqlParserVisitor
   public Object visit(ASTStateFieldPathExpression node, Object data);
   public Object visit(ASTStateValuedPathExpression node, Object data);
   public Object visit(ASTSingleValuedObjectPathExpression node, Object data);
+  public Object visit(ASTFunctionArg node, Object data);
+  public Object visit(ASTScalarExpression node, Object data);
   public Object visit(ASTWhenClause node, Object data);
+  public Object visit(ASTGeneralCaseExpression node, Object data);
+  public Object visit(ASTCaseExpression node, Object data);
+  public Object visit(ASTEnumExpression node, Object data);
   public Object visit(ASTBooleanExpression node, Object data);
+  public Object visit(ASTDatetimeExpression node, Object data);
   public Object visit(ASTStringExpression node, Object data);
   public Object visit(ASTArithmeticPrimary node, Object data);
   public Object visit(ASTArithmeticFactor node, Object data);
   public Object visit(ASTArithmeticTerm node, Object data);
   public Object visit(ASTArithmeticExpression node, Object data);
+  public Object visit(ASTAllOrAnyExpression node, Object data);
   public Object visit(ASTStringExpressionComparison node, Object data);
   public Object visit(ASTArithmeticExpressionComparison node, Object data);
   public Object visit(ASTBooleanExpressionComparison node, Object data);
+  public Object visit(ASTDatetimeExpressionComparison node, Object data);
   public Object visit(ASTComparisonExpression node, Object data);
+  public Object visit(ASTExistsExpression node, Object data);
   public Object visit(ASTCollectionValuedPathExpression node, Object data);
+  public Object visit(ASTNullComparisonExpression node, Object data);
+  public Object visit(ASTLikeExpression node, Object data);
+  public Object visit(ASTInItem node, Object data);
+  public Object visit(ASTInExpression node, Object data);
   public Object visit(ASTSimpleCondExpression node, Object data);
   public Object visit(ASTConditionalPrimary node, Object data);
   public Object visit(ASTConditionalFactor node, Object data);
   public Object visit(ASTConditionalTerm node, Object data);
   public Object visit(ASTConditionalExpression node, Object data);
   public Object visit(ASTWhereClause node, Object data);
+  public Object visit(ASTSingleValuedPathExpression node, Object data);
+  public Object visit(ASTSimpleSelectClause node, Object data);
+  public Object visit(ASTSubquery node, Object data);
   public Object visit(ASTHavingClause node, Object data);
+  public Object visit(ASTGroupbyItem node, Object data);
+  public Object visit(ASTGroupbyClause node, Object data);
 }
-/* JavaCC - OriginalChecksum=b87251678a3c721c3b969339b1e75ad1 (do not edit this line) */
+/* JavaCC - OriginalChecksum=510b829c34fb715e47038b7e9b30bffb (do not edit this line) */

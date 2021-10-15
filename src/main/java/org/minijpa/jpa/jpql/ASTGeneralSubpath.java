@@ -4,7 +4,10 @@ package org.minijpa.jpa.jpql;
 
 public class ASTGeneralSubpath extends SimpleNode {
 
-	private StringBuilder sb = new StringBuilder();
+	private final StringBuilder sb = new StringBuilder();
+	private MapFieldIdentificationVariable mapFieldIdentificationVariable;
+	private String identificationVariable;
+	private String path;
 
 	public ASTGeneralSubpath(int id) {
 		super(id);
@@ -27,9 +30,32 @@ public class ASTGeneralSubpath extends SimpleNode {
 		sb.append(path);
 	}
 
-	public String getPath() {
+	public String getTreatedPath() {
 		return sb.toString();
 	}
 
+	public MapFieldIdentificationVariable getMapFieldIdentificationVariable() {
+		return mapFieldIdentificationVariable;
+	}
+
+	public void setMapFieldIdentificationVariable(MapFieldIdentificationVariable mapFieldIdentificationVariable) {
+		this.mapFieldIdentificationVariable = mapFieldIdentificationVariable;
+	}
+
+	public String getIdentificationVariable() {
+		return identificationVariable;
+	}
+
+	public void setIdentificationVariable(String identificationVariable) {
+		this.identificationVariable = identificationVariable;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
+	}
+
+	public String getPath() {
+		return path;
+	}
 }
 /* JavaCC - OriginalChecksum=f0dd85c1a2fd54d2f4d26be6560888b3 (do not edit this line) */

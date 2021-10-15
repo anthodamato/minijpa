@@ -128,4 +128,38 @@ public class JpqlTest {
 
 		emf.close();
 	}
+
+	@Test
+	public void simpleOrderDates() throws Exception {
+		String persistenceUnitName = "simple_order";
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnitName, PersistenceUnitProperties.getProperties());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+
+		PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, persistenceUnitName);
+		PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+		String query = "SELECT o.id, CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP FROM SimpleOrder o WHERE o.createdAt >= CURRENT_DATE";
+		JpqlModule jpqlModule = new JpqlModule(dbConfiguration, new SqlStatementFactory(), persistenceUnitContext);
+
+		try {
+			JpqlResult jpqlResult = jpqlModule.parse(query);
+			Assertions.assertEquals(
+					"select so.id, CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP "
+					+ "from simple_order AS so where so.created_at >= CURRENT_DATE",
+					jpqlResult.getSql());
+		} catch (Exception ex) {
+			LOG.debug(ex.getMessage());
+			Throwable t = ex.getCause();
+			LOG.debug("t=" + t);
+			ex.printStackTrace();
+			Assertions.fail();
+		} catch (Error error) {
+			LOG.debug(error.getMessage());
+			Throwable t = error.getCause();
+			LOG.debug("t=" + t);
+			Assertions.fail();
+		}
+
+		emf.close();
+	}
+
 }

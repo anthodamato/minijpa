@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.minijpa.jdbc.FetchParameter;
+import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.Value;
 import org.minijpa.jdbc.model.condition.Condition;
@@ -24,7 +25,10 @@ public class JpqlVisitorParameters {
 	Map<String, String> aliases = new HashMap<>();
 	FromTable fromTable;
 	List<FromJoin> fromJoins = new ArrayList<>();
-	List<Value> values;
-	List<FetchParameter> fetchParameters;
+	List<Value> values = new ArrayList<>();
+	// column aliases that can be used in subqueries
+	Map<String, List<Value>> resultVariables = new HashMap<>();
+	List<FetchParameter> fetchParameters = new ArrayList<>();
 	List<Condition> conditions = new ArrayList<>();
+	MetaEntity identificationVariableEntity;
 }

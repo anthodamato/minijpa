@@ -28,39 +28,54 @@ import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.db.BasicDbJdbc;
+import org.minijpa.jdbc.db.SqlFunction;
 
 public class MySQLJdbc extends BasicDbJdbc {
 
-    @Override
-    public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {
-	PkStrategy pkStrategy = super.findPkStrategy(pkGenerationType);
-	if (pkStrategy == PkStrategy.SEQUENCE)
-	    return PkStrategy.IDENTITY;
+	@Override
+	public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {
+		PkStrategy pkStrategy = super.findPkStrategy(pkGenerationType);
+		if (pkStrategy == PkStrategy.SEQUENCE)
+			return PkStrategy.IDENTITY;
 
-	return pkStrategy;
-    }
+		return pkStrategy;
+	}
 
-    @Override
-    public String sequenceNextValueStatement(MetaEntity entity) {
-	PkSequenceGenerator pkSequenceGenerator = entity.getId().getPkGeneration().getPkSequenceGenerator();
-	return "VALUES (NEXT VALUE FOR " + pkSequenceGenerator.getSequenceName() + ")";
-    }
+	@Override
+	public String sequenceNextValueStatement(MetaEntity entity) {
+		PkSequenceGenerator pkSequenceGenerator = entity.getId().getPkGeneration().getPkSequenceGenerator();
+		return "VALUES (NEXT VALUE FOR " + pkSequenceGenerator.getSequenceName() + ")";
+	}
 
-    @Override
-    public String forUpdate(LockType lockType) {
-	if (lockType == LockType.PESSIMISTIC_WRITE)
-	    return "for update";
+	@Override
+	public String forUpdate(LockType lockType) {
+		if (lockType == LockType.PESSIMISTIC_WRITE)
+			return "for update";
 
-	return "";
-    }
+		return "";
+	}
 
-    @Override
-    public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
-	if (type == Timestamp.class || type == Calendar.class || type == LocalDateTime.class
-		|| type == Instant.class || type == ZonedDateTime.class)
-	    return "datetime(6)";
+	@Override
+	public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
+		if (type == Timestamp.class || type == Calendar.class || type == LocalDateTime.class
+				|| type == Instant.class || type == ZonedDateTime.class)
+			return "datetime(6)";
 
-	return super.buildColumnDefinition(type, ddlData);
-    }
+		return super.buildColumnDefinition(type, ddlData);
+	}
+
+	@Override
+	public String getFunction(SqlFunction sqlFunction) {
+		if (sqlFunction == SqlFunction.CURRENT_DATE)
+			return "CURRENT_DATE()";
+
+		if (sqlFunction == SqlFunction.CURRENT_TIME)
+			return "CURRENT_TIME()";
+
+		if (sqlFunction == SqlFunction.CURRENT_TIMESTAMP)
+			return "CURRENT_TIMESTAMP()";
+
+		return super.getFunction(sqlFunction);
+	}
 
 }

@@ -11,7 +11,7 @@ import org.minijpa.jdbc.model.condition.Condition;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface ConditionNode {
+interface ConditionNode {
 
 	public Condition getCondition();
 

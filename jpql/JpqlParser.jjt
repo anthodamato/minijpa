@@ -3,9 +3,9 @@ options {
   MULTI=true;
   VISITOR=true;
   NODE_DEFAULT_VOID=true;
-  DEBUG_PARSER=true;
-  DEBUG_LOOKAHEAD=true;
-  DEBUG_TOKEN_MANAGER=true;
+//  DEBUG_PARSER=true;
+//  DEBUG_LOOKAHEAD=true;
+//  DEBUG_TOKEN_MANAGER=true;
 }
 
 PARSER_BEGIN(JpqlParser)
@@ -112,8 +112,6 @@ TOKEN :
 {
   <NAME: ["a"-"z","A"-"Z","_"] ( ["a"-"z","A"-"Z","_","0"-"9"] )* >
 |
-  <RESULT_VARIABLE: ["a"-"z","A"-"Z","_"] ( ["a"-"z","A"-"Z","_","0"-"9"] )* >
-|
   <COMMA: ",">
 |
   <DOT:   ".">
@@ -211,60 +209,47 @@ void select_expression() #SelectExpression :
   String s;
 }
 {
- LOOKAHEAD(2)
+ LOOKAHEAD((<NAME> ",") | (<NAME> <FROM>))
  t=<NAME>
    {
      jjtThis.setIdentificationVariable(t.image);
    }
+ |
+ 
+// LOOKAHEAD(single_valued_path_expression())
+ LOOKAHEAD(2)
+ single_valued_path_expression()
 
  |
- LOOKAHEAD(3)
- s=single_valued_path_expression()
-//   {
-//     sb.append(s);
-//   }
+// LOOKAHEAD(scalar_expression())
+ LOOKAHEAD(2)
+ scalar_expression()
 
  |
- LOOKAHEAD(3)
- s=scalar_expression()
-//   {
-//     sb.append(s);
-//   }
-
- |
- LOOKAHEAD(3)
+// LOOKAHEAD(aggregate_expression())
+ LOOKAHEAD(2)
  s=aggregate_expression()
-//   {
-//     sb.append(s);
-//   }
 
  |
- t=<OBJECT>
-   {
-     sb.append(t.image);
-   }
- t=<OPEN_BRACKET>
-   {
-     sb.append(t.image);
-   }
+ <OBJECT>
+ <OPEN_BRACKET>
  t=<NAME>
    {
-     sb.append(t.image);
+     jjtThis.setObjectIdentificationVariable(t.image);
    }
- t=<CLOSE_BRACKET>
-   {
-     sb.append(t.image);
-   }
+ <CLOSE_BRACKET>
 
  |
  LOOKAHEAD(2)
- s=aggregate_expression()
+ s=constructor_expression()
    {
      sb.append(s);
    }
-
-
-// { return sb.toString(); }
+// |
+// t=<NAME>
+//   {
+//     jjtThis.setIdentificationVariable(t.image);
+//   }
 }
 
 
@@ -273,7 +258,7 @@ void select_expression() #SelectExpression :
 //    scalar_expression |
 //    aggregate_expression |
 //    identification_variable
-String constructor_item() :
+void constructor_item() :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -281,17 +266,11 @@ String constructor_item() :
 }
 {
  LOOKAHEAD(3)
- s=single_valued_path_expression()
- {
-   sb.append(s);
- }
+ single_valued_path_expression()
  
  |
  LOOKAHEAD(3)
- s=scalar_expression()
- {
-   sb.append(s);
- }
+ scalar_expression()
  
  |
  LOOKAHEAD(2)
@@ -305,7 +284,6 @@ String constructor_item() :
  {
    sb.append(t.image);
  }
- { return sb.toString(); }
 }
 
 
@@ -330,19 +308,13 @@ String constructor_expression() :
    {
      sb.append(t.image);
    }
- s=constructor_item()
-   {
-     sb.append(s);
-   }
+ constructor_item()
  (
   t=<COMMA>
     {
       sb.append(t.image);
     }
-  s=constructor_item()
-    {
-      sb.append(s);
-    }
+  constructor_item()
  )*
  t=<CLOSE_BRACKET>
    {
@@ -665,76 +637,73 @@ void from_clause() #FromClause :
 }
 
 
-//   map_field_identification_variable ::= KEY(identification_variable) | VALUE(identification_variable)
-void map_field_identification_variable() #MapFieldIdentificationVariable :
+// map_field_identification_variable ::= KEY(identification_variable) | VALUE(identification_variable)
+MapFieldIdentificationVariable map_field_identification_variable() #MapFieldIdentificationVariable :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
+  MapFieldIdentificationVariable mapFieldIdentificationVariable=new MapFieldIdentificationVariable();
 }
 {
  <KEY>
-   {
-     jjtThis.setKey(true);
-   }
+ {
+//   jjtThis.setKey(true);
+   mapFieldIdentificationVariable.setMapField(MapField.KEY);
+ }
  <OPEN_BRACKET>
  t=<NAME>
-   {
-     jjtThis.setIdentificationVariable(t.image);
-   }
+ {
+//   jjtThis.setIdentificationVariable(t.image);
+   mapFieldIdentificationVariable.setIdentificationVariable(t.image);
+ }
  <CLOSE_BRACKET>
  |
  <VALUE>
  {
-   jjtThis.setValue(true);
+//   jjtThis.setKey(false);
+   mapFieldIdentificationVariable.setMapField(MapField.VALUE);
  }
  <OPEN_BRACKET>
  t=<NAME>
  {
-   jjtThis.setIdentificationVariable(t.image);
+//   jjtThis.setIdentificationVariable(t.image);
+   mapFieldIdentificationVariable.setIdentificationVariable(t.image);
+ }
+ <CLOSE_BRACKET>
+ { return mapFieldIdentificationVariable; }
+}
+
+
+// qualified_identification_variable ::= map_field_identification_variable | ENTRY(identification_variable)
+void qualified_identification_variable() #QualifiedIdentificationVariable :
+{
+  Token t;
+  StringBuilder sb=new StringBuilder();
+  String s;
+  MapFieldIdentificationVariable mapFieldIdentificationVariable;
+}
+{
+ mapFieldIdentificationVariable=map_field_identification_variable()
+ {
+   jjtThis.setMapFieldIdentificationVariable(mapFieldIdentificationVariable);
+ }
+ |
+ <ENTRY>
+ <OPEN_BRACKET>
+ t=<NAME>
+ {
+   jjtThis.setEntryIdentificationVariable(t.image);
  }
  <CLOSE_BRACKET>
 }
 
 
-//   qualified_identification_variable ::= map_field_identification_variable | ENTRY(identification_variable)
-String qualified_identification_variable() :
-{
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
-}
-{
- map_field_identification_variable()
-     {
-       return "";
-     }
-   |
-   t=<ENTRY>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-     }
-   t=<OPEN_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   t=<NAME>
-     {
-       sb.append(t.image);
-     }
-   t=<CLOSE_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   { return sb.toString(); }
-}
-
-
-//  general_identification_variable ::= identification_variable | map_field_identification_variable
+// general_identification_variable ::= identification_variable | map_field_identification_variable
 void general_identification_variable() #GeneralIdentificationVariable :
 {
   Token t;
+  MapFieldIdentificationVariable mapFieldIdentificationVariable;
 }
 {
  t=<NAME>
@@ -742,7 +711,10 @@ void general_identification_variable() #GeneralIdentificationVariable :
    jjtThis.setIdentificationVariable(t.image);
  }
  |
- map_field_identification_variable()
+ mapFieldIdentificationVariable=map_field_identification_variable()
+ {
+   jjtThis.setMapFieldIdentificationVariable(mapFieldIdentificationVariable);
+ }
 }
 
 
@@ -981,35 +953,29 @@ String functions_returning_strings() :
 //      CURRENT_DATE |
 //      CURRENT_TIME |
 //      CURRENT_TIMESTAMP
-String functions_returning_datetime() :
+org.minijpa.jdbc.db.SqlFunction functions_returning_datetime() :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<CURRENT_DATE>
-    {
-     sb.append(" ");
-     sb.append(t.image);
-     return sb.toString();
-    }
+  <CURRENT_DATE>
+  {
+    return org.minijpa.jdbc.db.SqlFunction.CURRENT_DATE;
+  }
   
   |
-  t=<CURRENT_TIME>
-    {
-     sb.append(" ");
-     sb.append(t.image);
-     return sb.toString();
-    }
+  <CURRENT_TIME>
+  {
+    return org.minijpa.jdbc.db.SqlFunction.CURRENT_TIME;
+  }
     
   |
-  t=<CURRENT_TIMESTAMP>
-    {
-     sb.append(" ");
-     sb.append(t.image);
-     return sb.toString();
-    }
+  <CURRENT_TIMESTAMP>
+  {
+    return org.minijpa.jdbc.db.SqlFunction.CURRENT_TIMESTAMP;
+  }
 }
 
 
@@ -1287,11 +1253,7 @@ String function_invocation() :
      {
        sb.append(t.image);
      }
-   s=function_arg()
-     {
-       sb.append("");
-       sb.append(s);
-     }
+   function_arg()
   )*
   t=<CLOSE_BRACKET>
     {
@@ -1306,7 +1268,7 @@ String function_invocation() :
 //      state_valued_path_expression |
 //      input_parameter |
 //      scalar_expression
-String function_arg() :
+void function_arg() #FunctionArg :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1318,12 +1280,10 @@ String function_arg() :
     {
      sb.append(t.image);
     }
-  { return sb.toString(); }
   
   |
   LOOKAHEAD(3)
   state_valued_path_expression()
-  { return sb.toString(); }
   
   |
   LOOKAHEAD(2)
@@ -1331,15 +1291,9 @@ String function_arg() :
     {
      sb.append(t.image);
     }
-  { return sb.toString(); }
 
   |
-  s=scalar_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
-  { return sb.toString(); }
+  scalar_expression()
 }
 
 
@@ -1351,7 +1305,7 @@ String function_arg() :
 //    boolean_expression |
 //    case_expression |
 //    entity_type_expression
-String scalar_expression() :
+void scalar_expression() #ScalarExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1359,45 +1313,26 @@ String scalar_expression() :
 }
 {
   LOOKAHEAD(3)
-  arithmetic_expression()
-  { return sb.toString(); }
-  
-  |
-  LOOKAHEAD(3)
   string_expression()
-  { return sb.toString(); }
 
   |
   LOOKAHEAD(3)
-  s=enum_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
-  { return sb.toString(); }
-  
+  datetime_expression()
+
   |
   LOOKAHEAD(3)
-  s=datetime_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
-  { return sb.toString(); }
-  
+  arithmetic_expression()
   
   |
   LOOKAHEAD(3)
   boolean_expression()
-  { return sb.toString(); }
+
+  |
+  LOOKAHEAD(3)
+  enum_expression()
   
   |
-  s=case_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
-  { return sb.toString(); }
+  case_expression()
   
   |
   s=entity_type_expression()
@@ -1405,12 +1340,11 @@ String scalar_expression() :
      sb.append("");
      sb.append(s);
     }
-  { return sb.toString(); }
 }
 
 
 //   nullif_expression::= NULLIF(scalar_expression, scalar_expression)
-String nullif_expression() :
+void nullif_expression() :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1425,29 +1359,21 @@ String nullif_expression() :
     {
      sb.append(t.image);
     }
-  s=scalar_expression()
-    {
-      sb.append(s);
-    }
+  scalar_expression()
   t=<COMMA>
     {
       sb.append(t.image);
     }
-  s=scalar_expression()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+  scalar_expression()
   t=<CLOSE_BRACKET>
     {
      sb.append(t.image);
     }
-  { return sb.toString(); }
 }
 
 
 //   coalesce_expression ::= COALESCE(scalar_expression{, scalar_expression}+)
-String coalesce_expression() :
+void coalesce_expression() :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1462,31 +1388,23 @@ String coalesce_expression() :
     {
      sb.append(t.image);
     }
-  s=scalar_expression()
-    {
-      sb.append(s);
-    }
+  scalar_expression()
   (
   t=<COMMA>
     {
       sb.append(t.image);
     }
-  s=scalar_expression()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+  scalar_expression()
   )+
   t=<CLOSE_BRACKET>
     {
      sb.append(t.image);
     }
-  { return sb.toString(); }
 }
 
 
 //   simple_when_clause ::= WHEN scalar_expression THEN scalar_expression
-String simple_when_clause() :
+void simple_when_clause() :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1497,20 +1415,12 @@ String simple_when_clause() :
     {
      sb.append(t.image);
     }
-  s=scalar_expression()
-    {
-      sb.append(s);
-    }
+  scalar_expression()
   t=<THEN>
     {
       sb.append(t.image);
     }
-  s=scalar_expression()
-    {
-      sb.append("");
-      sb.append(s);
-    }
-  { return sb.toString(); }
+  scalar_expression()
 }
 
 
@@ -1575,7 +1485,7 @@ void case_operand() :
 //      CASE case_operand simple_when_clause {simple_when_clause}*
 //      ELSE scalar_expression
 //      END
-String simple_case_expression() :
+void simple_case_expression() :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1587,33 +1497,19 @@ String simple_case_expression() :
      sb.append(t.image);
     }
   case_operand()
-  s=simple_when_clause()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+  simple_when_clause()
   (
-  s=simple_when_clause()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+   simple_when_clause()
   )*
   t=<ELSE>
     {
      sb.append(t.image);
     }
-  s=scalar_expression()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+  scalar_expression()
   t=<END>
     {
      sb.append(t.image);
     }
-  
-  { return sb.toString(); }
 }
 
 
@@ -1628,16 +1524,12 @@ void when_clause() #WhenClause :
   <WHEN>
   conditional_expression()
   <THEN>
-  s=scalar_expression()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+  scalar_expression()
 }
 
 
 //   general_case_expression::= CASE when_clause {when_clause}* ELSE scalar_expression END
-String general_case_expression() :
+void general_case_expression() #GeneralCaseExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1656,17 +1548,11 @@ String general_case_expression() :
     {
      sb.append(t.image);
     }
-  s=scalar_expression()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+  scalar_expression()
   t=<END>
     {
      sb.append(t.image);
-    }
-  
-  { return sb.toString(); }
+    }  
 }
 
 
@@ -1675,7 +1561,7 @@ String general_case_expression() :
 //      simple_case_expression |
 //      coalesce_expression |
 //      nullif_expression
-String case_expression() :
+void case_expression() #CaseExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1683,32 +1569,16 @@ String case_expression() :
 }
 {
   LOOKAHEAD(2)
-  s=general_case_expression()
-    {
-      sb.append(s);
-    }
-  { return sb.toString(); }
+  general_case_expression()
   
   |
-  s=simple_case_expression()
-    {
-      sb.append(s);
-    }
-  { return sb.toString(); }  
+  simple_case_expression()
 
   |
-  s=coalesce_expression()
-    {
-      sb.append(s);
-    }
-  { return sb.toString(); }
+  coalesce_expression()
   
   |
-  s=nullif_expression()
-    {
-      sb.append(s);
-    }
-  { return sb.toString(); }  
+  nullif_expression()
 }
 
 
@@ -1794,7 +1664,7 @@ String entity_expression() :
 //    input_parameter |
 //    case_expression |
 //    (subquery)
-String enum_expression() :
+void enum_expression() #EnumExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1803,7 +1673,6 @@ String enum_expression() :
 {
   LOOKAHEAD(2)
   state_valued_path_expression()
-  { return sb.toString(); }
 
   |  
   t=<NAME>
@@ -1811,7 +1680,6 @@ String enum_expression() :
       sb.append(" ");
       sb.append(t.image);
     }
-  { return sb.toString(); }
   
   |
   t=<INPUT_PARAMETER>
@@ -1819,31 +1687,14 @@ String enum_expression() :
       sb.append(" ");
       sb.append(t.image);
     }
-  { return sb.toString(); }
   
   |
-  s=case_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  { return sb.toString(); }
+  case_expression()
   
   |
-  t=<OPEN_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  s=subquery()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
 }
 
 
@@ -1890,17 +1741,12 @@ Boolean boolean_literal() :
   
   |
   t=<INPUT_PARAMETER>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  {
+    jjtThis.setInputParameter(t.image);
+  }
   
   |
-  s=case_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  case_expression()
   
   |
   s=function_invocation()
@@ -1910,19 +1756,9 @@ Boolean boolean_literal() :
     }
 
   |
-  t=<OPEN_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  s=subquery()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-      sb.append(t.image);
-    }
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
 }
 
 
@@ -1935,32 +1771,28 @@ Boolean boolean_literal() :
 //    function_invocation |
 //    date_time_timestamp_literal |
 //    (subquery)
-String datetime_expression() :
+void datetime_expression() #DatetimeExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
+  org.minijpa.jdbc.db.SqlFunction sqlFunction;
 }
 {
   LOOKAHEAD(2)
   state_valued_path_expression()
-  { return sb.toString(); }
-  
+
   |
   t=<INPUT_PARAMETER>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
+  {
+    jjtThis.setInputParameter(t.image);
+  }
+
   |
-  s=functions_returning_datetime()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  { return sb.toString(); }
+  sqlFunction=functions_returning_datetime()
+  {
+    jjtThis.setSqlFunction(sqlFunction);
+  }
 
   |
   LOOKAHEAD(3)
@@ -1969,23 +1801,16 @@ String datetime_expression() :
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }
 
   |
-  s=case_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  { return sb.toString(); }
-  
+  case_expression()
+
   |
   s=function_invocation()
     {
       sb.append(" ");
       sb.append(s);
     }
-  { return sb.toString(); }
 
   |  
   t=<NAME>
@@ -1993,23 +1818,11 @@ String datetime_expression() :
       sb.append(" ");
       sb.append(t.image);
     }
-  { return sb.toString(); }
 
   |
-  t=<OPEN_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  s=subquery()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
 }
 
 
@@ -2055,11 +1868,7 @@ void string_expression() #StringExpression :
       sb.append(s);
     }
   |
-  s=case_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  case_expression()
   |
   s=function_invocation()
     {
@@ -2067,19 +1876,9 @@ void string_expression() #StringExpression :
       sb.append(s);
     }
   |
-  t=<OPEN_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  s=subquery()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-      sb.append(t.image);
-    }
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
 }
 
 
@@ -2122,10 +1921,9 @@ void arithmetic_primary() #ArithmeticPrimary :
   
   |
   t=<INPUT_PARAMETER>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  {
+    jjtThis.setInputParameter(t.image);
+  }
   
   |
   s=functions_returning_numerics()
@@ -2143,11 +1941,7 @@ void arithmetic_primary() #ArithmeticPrimary :
     }
 
   |
-  s=case_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  case_expression()
   
   |
   s=function_invocation()
@@ -2157,19 +1951,9 @@ void arithmetic_primary() #ArithmeticPrimary :
     }
 
   |
-  t=<OPEN_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  s=subquery()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-      sb.append(t.image);
-    }
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
 }
 
 
@@ -2251,7 +2035,7 @@ void arithmetic_expression() #ArithmeticExpression :
 
 
 // all_or_any_expression ::= {ALL | ANY | SOME} (subquery)
-String all_or_any_expression() :
+void all_or_any_expression() #AllOrAnyExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -2277,20 +2061,9 @@ String all_or_any_expression() :
       sb.append(t.image);
     }
   )
-  t=<OPEN_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  s=subquery()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
 }
 
 
@@ -2346,11 +2119,7 @@ void string_expression_comparison() #StringExpressionComparison :
   (
    string_expression()
    |
-   s=all_or_any_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   all_or_any_expression()
   )
 }
 
@@ -2370,11 +2139,7 @@ void arithmetic_expression_comparison() #ArithmeticExpressionComparison :
   (
    arithmetic_expression()
    |
-   s=all_or_any_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   all_or_any_expression()
   )
 }
 
@@ -2401,11 +2166,27 @@ void boolean_expression_comparison() #BooleanExpressionComparison :
   (
    boolean_expression()
    |
-   s=all_or_any_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   all_or_any_expression()
+  )
+}
+
+
+// datetime_expression_comparison ::= datetime_expression comparison_operator {datetime_expression | all_or_any_expression}
+void datetime_expression_comparison() #DatetimeExpressionComparison :
+{
+  String s;
+  StringBuilder sb=new StringBuilder();
+}
+{
+  datetime_expression()
+  s=comparison_operator()
+  {
+    jjtThis.setComparisonOperator(s);
+  }
+  (
+   datetime_expression()
+   |
+   all_or_any_expression()
   )
 }
 
@@ -2414,8 +2195,8 @@ void boolean_expression_comparison() #BooleanExpressionComparison :
 //    string_expression_comparison |
 //    arithmetic_expression_comparison |
 //    boolean_expression_comparison |
+//    datetime_expression_comparison |
 //    enum_expression {= | <>} {enum_expression | all_or_any_expression} |
-//    datetime_expression comparison_operator {datetime_expression | all_or_any_expression} |
 //    entity_expression {= | <>} {entity_expression | all_or_any_expression} |
 //    entity_type_expression {= | <>} entity_type_expression
 void comparison_expression() #ComparisonExpression :
@@ -2436,53 +2217,21 @@ void comparison_expression() #ComparisonExpression :
   LOOKAHEAD(boolean_expression_comparison())
   boolean_expression_comparison()
   |
+
+  LOOKAHEAD(datetime_expression_comparison())
+  datetime_expression_comparison()
+  |
   
   LOOKAHEAD(3)
-  s=enum_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  enum_expression()
   s=comparison_operator()
   {
     jjtThis.setComparisonOperator(s);
   }
   (
-   s=enum_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   enum_expression()
    |
-   s=all_or_any_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-  )
-  |
-  LOOKAHEAD(3)
-  s=datetime_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  s=comparison_operator()
-  {
-    jjtThis.setComparisonOperator(s);
-  }
-  (
-   s=datetime_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   |
-   s=all_or_any_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   all_or_any_expression()
   )
   |
   LOOKAHEAD(3)
@@ -2502,11 +2251,7 @@ void comparison_expression() #ComparisonExpression :
        sb.append(s);
      }
    |
-   s=all_or_any_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   all_or_any_expression()
   )
   |
   s=entity_type_expression()
@@ -2527,7 +2272,7 @@ void comparison_expression() #ComparisonExpression :
 
 
 // exists_expression ::= [NOT] EXISTS (subquery)
-String exists_expression() :
+void exists_expression() #ExistsExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -2546,20 +2291,9 @@ String exists_expression() :
       sb.append(" ");
       sb.append(t.image);
     }
-  t=<OPEN_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  s=subquery()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<CLOSE_BRACKET>
-    {
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
 }
 
 
@@ -2697,49 +2431,34 @@ String empty_collection_comparison_expression() :
 
 
 // null_comparison_expression ::= {single_valued_path_expression | input_parameter} IS [NOT] NULL
-String null_comparison_expression() :
+void null_comparison_expression() #NullComparisonExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  (
-  s=single_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-   |
+ (
+  single_valued_path_expression()
+  |
    t=<INPUT_PARAMETER>
      {
-       sb.append(" ");
-       sb.append(t.image);
+       jjtThis.setInputParameter(t.image);
      }
   )
-  t=<IS>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <IS>
   [
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+   <NOT>
+   {
+     jjtThis.setNot(true);
+   }
   ]
-  t=<NULL>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <NULL>
 }
 
 
 // like_expression ::= string_expression [NOT] LIKE pattern_value [ESCAPE escape_character]
-String like_expression() :
+void like_expression() #LikeExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -2748,74 +2467,51 @@ String like_expression() :
 {
   string_expression()
   [
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+   <NOT>
+   {
+     jjtThis.setNot(true);
+   }
   ]
-  t=<LIKE>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <LIKE>
   t=<STRING_LITERAL>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-     }
-  (
-   t=<ESCAPE>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-     }
+    {
+      jjtThis.setPatternValue(t.image);
+    }
+  [
+   <ESCAPE>
    t=<STRING_LITERAL>
      {
        sb.append(" ");
        sb.append(t.image);
      }
-  )
-  { return sb.toString(); }
+  ]
 }
 
 
 // in_item ::= literal | single_valued_input_parameter
-String in_item() :
+void in_item() #InItem :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<NAME>
+  t=<STRING_LITERAL>
     {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
+      jjtThis.setLiteral(t.image);
     }
 
   |
-  t=<STRING_LITERAL>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-       return sb.toString();
-     }
-
-  |
   t=<INPUT_PARAMETER>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-     }
-  { return sb.toString(); }
+    {
+      jjtThis.setInputParameter(t.image);
+    }
 }
 
 
 // in_expression ::= {state_valued_path_expression | type_discriminator} [NOT] IN
 //        {(in_item{, in_item}*) | (subquery) | collection_valued_input_parameter}
-String in_expression() :
+void in_expression() #InExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -2833,60 +2529,32 @@ String in_expression() :
     }
   )
   [
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+   <NOT>
+   {
+     jjtThis.setNot(true);
+   }
   ]
   
-  t=<IN>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-
+  <IN>
   (
    LOOKAHEAD(2)
    (
-    s=in_item()
-      {
-        sb.append(" ");
-        sb.append(s);
-      }
+    in_item()
     (
-     t=<DOT>
-       {
-         sb.append(t.image);
-       }
-     s=in_item()
-       {
-         sb.append(" ");
-         sb.append(s);
-       }
+     <COMMA>
+     in_item()
     )*
    )
   |
-   t=<OPEN_BRACKET>
-     {
-       sb.append(t.image);
-     }
-   s=subquery()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   t=<CLOSE_BRACKET>
-     {
-       sb.append(t.image);
-     }
+   <OPEN_BRACKET>
+   subquery()
+   <CLOSE_BRACKET>
    |
    t=<INPUT_PARAMETER>
      {
        sb.append(t.image);
      }
   )
-  { return sb.toString(); }
 }
 
 
@@ -2949,11 +2617,7 @@ String between_expression() :
   { return sb.toString(); }
   
   |
-  s=datetime_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  datetime_expression()
   [
   t=<NOT>
     {
@@ -2966,21 +2630,13 @@ String between_expression() :
       sb.append(" ");
       sb.append(t.image);
     }
-  s=datetime_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  datetime_expression()
   t=<AND>
     {
       sb.append(" ");
       sb.append(t.image);
     }
-  s=datetime_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  datetime_expression()
   { return sb.toString(); }
 }
 
@@ -3013,27 +2669,15 @@ void simple_cond_expression() #SimpleCondExpression :
 
   |
   LOOKAHEAD(3)
-  s=in_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  in_expression()
   
   |
   LOOKAHEAD(3)
-  s=like_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  like_expression()
   
   |
   LOOKAHEAD(3)
-  s=null_comparison_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  null_comparison_expression()
   
   |
   LOOKAHEAD(3)
@@ -3051,11 +2695,7 @@ void simple_cond_expression() #SimpleCondExpression :
     }
   
   |
-  s=exists_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  exists_expression()
 }
 
 
@@ -3147,7 +2787,14 @@ void where_clause() #WhereClause :
 //      TREAT(qualified_identification_variable AS subtype) |
 //      state_field_path_expression |
 //      single_valued_object_path_expression
-String single_valued_path_expression() :
+//
+//  MODIFIED as: ('state_field_path_expression' and 'single_valued_object_path_expression' could be the same)
+//
+//   single_valued_path_expression ::=
+//      qualified_identification_variable |
+//      TREAT(qualified_identification_variable AS subtype) |
+//      state_field_path_expression |
+void single_valued_path_expression() #SingleValuedPathExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -3155,55 +2802,26 @@ String single_valued_path_expression() :
 }
 {
   LOOKAHEAD(3)
-  s=qualified_identification_variable()
-    {
-      sb.append(" ");
-      sb.append(s);
-      return sb.toString();
-    }
+  state_field_path_expression()
   
   |
   LOOKAHEAD(3)
-  t=<TREAT>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  s=qualified_identification_variable()
-    {
-      sb.append(s);
-    }
-  t=<AS>
-    {
-     sb.append(" ");
-     sb.append(t.image);
-    }
+  <TREAT>
+  <OPEN_BRACKET>
+  qualified_identification_variable()
+  <AS>
   s=subtype()
     {
-      sb.append(" ");
-      sb.append(s);
+      jjtThis.setSubtype(s);
     }
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-   { return sb.toString(); }
+  <CLOSE_BRACKET>
 
   |
   LOOKAHEAD(3)
-  state_field_path_expression()
-    {
-      return sb.toString();
-    }
+  qualified_identification_variable()
     
-  |
-  single_valued_object_path_expression()
-    {
-      return sb.toString();
-    }
+//  |
+//  single_valued_object_path_expression()
 }
 
 
@@ -3212,7 +2830,7 @@ String single_valued_path_expression() :
 //    scalar_expression |
 //    aggregate_expression |
 //    identification_variable
-String simple_select_expression() :
+void simple_select_expression() :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -3220,29 +2838,17 @@ String simple_select_expression() :
 }
 {
   LOOKAHEAD(3)
-  s=single_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-      return sb.toString();
-    }
+  single_valued_path_expression()
   
   |
   LOOKAHEAD(3)
-  s=scalar_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-      return sb.toString();
-    }
-    
+  scalar_expression()
   |
   LOOKAHEAD(2)
   s=aggregate_expression()
     {
       sb.append(" ");
       sb.append(s);
-      return sb.toString();
     }
   
   |
@@ -3250,36 +2856,25 @@ String simple_select_expression() :
     {
       sb.append(t.image);
     }
-  { return sb.toString(); }
 }
 
 
 // simple_select_clause ::= SELECT [DISTINCT] simple_select_expression
-String simple_select_clause() :
+void simple_select_clause() #SimpleSelectClause :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<SELECT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <SELECT>
   [
-  t=<DISTINCT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+   <DISTINCT>
+   {
+     jjtThis.setDistinct(true);
+   }
   ]
-  s=simple_select_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  { return sb.toString(); }
+  simple_select_expression()
 }
 
 
@@ -3577,18 +3172,14 @@ void collection_member_declaration() :
 
 // subquery ::= simple_select_clause subquery_from_clause [where_clause]
 //    [groupby_clause] [having_clause]
-String subquery() :
+void subquery() #Subquery :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  s=simple_select_clause()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  simple_select_clause()
   s=subquery_from_clause()
     {
       sb.append(" ");
@@ -3598,16 +3189,11 @@ String subquery() :
    where_clause()
   ]
   [
-   s=groupby_clause()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
+   groupby_clause()
   ]
   [
    having_clause()
   ]
-  { return sb.toString(); }
 }
 
 
@@ -3714,7 +3300,7 @@ void having_clause() #HavingClause :
 
 
 // groupby_item ::= single_valued_path_expression | identification_variable
-String groupby_item() :
+void groupby_item() #GroupbyItem :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -3722,60 +3308,31 @@ String groupby_item() :
 }
 {
   LOOKAHEAD(2)
-  s=single_valued_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-      return sb.toString();
-    }
+  single_valued_path_expression()
   
   |
   t=<NAME>
     {
-      sb.append(" ");
-      sb.append(t.image);
+      jjtThis.setIdentificationVariable(t.image);
     }
-  
-  { return sb.toString(); }
 }
 
 
 // groupby_clause ::= GROUP BY groupby_item {, groupby_item}*
-String groupby_clause() :
+void groupby_clause() #GroupbyClause :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<GROUP>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  t=<BY>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  s=groupby_item()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  <GROUP>
+  <BY>
+  groupby_item()
   (
-  t=<COMMA>
-    {
-      sb.append(t.image);
-    }
-  s=groupby_item()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+   <COMMA>
+   groupby_item()
   )*
-  
-  { return sb.toString(); }
 }
 
 

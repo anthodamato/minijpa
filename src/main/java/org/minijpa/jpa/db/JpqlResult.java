@@ -13,20 +13,20 @@ import org.minijpa.jdbc.model.SqlStatement;
  */
 public class JpqlResult {
 
-    private final SqlStatement sqlStatement;
-    private final String sql;
+	private final SqlStatement sqlStatement;
+	private final String sql;
 
-    public JpqlResult(SqlStatement sqlStatement, String sql) {
-	this.sqlStatement = sqlStatement;
-	this.sql = sql;
-    }
+	public JpqlResult(SqlStatement sqlStatement, String sql) {
+		this.sqlStatement = sqlStatement;
+		this.sql = sql;
+	}
 
-    public SqlStatement getSqlStatement() {
-	return sqlStatement;
-    }
+	public SqlStatement getSqlStatement() {
+		return sqlStatement;
+	}
 
-    public String getSql() {
-	return sql;
-    }
+	public String getSql() {
+		return sql;
+	}
 
 }

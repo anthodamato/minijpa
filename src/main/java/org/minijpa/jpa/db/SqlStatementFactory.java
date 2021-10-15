@@ -76,6 +76,7 @@ import org.minijpa.jdbc.model.condition.InCondition;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.model.condition.UnaryLogicConditionImpl;
 import org.minijpa.jdbc.model.expression.SqlBinaryExpression;
+import org.minijpa.jdbc.model.expression.SqlBinaryExpressionImpl;
 import org.minijpa.jdbc.model.expression.SqlBinaryExpressionBuilder;
 import org.minijpa.jdbc.model.expression.SqlExpressionOperator;
 import org.minijpa.jdbc.model.join.FromJoin;
@@ -439,7 +440,7 @@ public class SqlStatementFactory {
 			if (binaryExpression.getX().isPresent()) {
 				AttributePath<?> miniPath = (AttributePath<?>) binaryExpression.getX().get();
 				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-				builder.setLeftTableColumn(new TableColumn(FromTable.of(miniPath.getMetaEntity()),
+				builder.setLeftExpression(new TableColumn(FromTable.of(miniPath.getMetaEntity()),
 						new Column(metaAttribute.getColumnName())));
 			}
 
@@ -452,7 +453,7 @@ public class SqlStatementFactory {
 			if (binaryExpression.getY().isPresent()) {
 				AttributePath<?> miniPath = (AttributePath<?>) binaryExpression.getY().get();
 				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-				builder.setRightTableColumn(new TableColumn(FromTable.of(miniPath.getMetaEntity()),
+				builder.setRightExpression(new TableColumn(FromTable.of(miniPath.getMetaEntity()),
 						new Column(metaAttribute.getColumnName())));
 			}
 
@@ -463,7 +464,7 @@ public class SqlStatementFactory {
 					builder.setRightExpression(buildValue(binaryExpression.getyValue().get()));
 
 			SqlBinaryExpression sqlBinaryExpression = builder.build();
-			return Optional.of(sqlBinaryExpression);
+			return Optional.of((Value) sqlBinaryExpression);
 		}
 
 		return Optional.empty();

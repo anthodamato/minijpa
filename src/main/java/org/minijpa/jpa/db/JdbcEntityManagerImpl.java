@@ -490,13 +490,19 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 			throw new IllegalStateException("Internal Jpql Parser Error: " + e.getMessage());
 		}
 
-		Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
-				null, CollectionUtils.findCollectionImplementationClass(List.class));
-		LOG.debug("selectJpql: collectionResult=" + collectionResult);
-		dbConfiguration.getJdbcRunner().findCollection(
-				connectionHolder.getConnection(), jpqlResult.getSql(), (SqlSelect) jpqlResult.getSqlStatement(),
-				collectionResult, entityLoader, new ArrayList<>());
-		return (List<?>) collectionResult;
+		SqlSelect sqlSelect = (SqlSelect) jpqlResult.getSqlStatement();
+		if (sqlSelect.getResult() != null) {
+			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
+					null, CollectionUtils.findCollectionImplementationClass(List.class));
+			LOG.debug("selectJpql: collectionResult=" + collectionResult);
+			dbConfiguration.getJdbcRunner().findCollection(
+					connectionHolder.getConnection(), jpqlResult.getSql(), (SqlSelect) jpqlResult.getSqlStatement(),
+					collectionResult, entityLoader, new ArrayList<>());
+			return (List<?>) collectionResult;
+		}
+
+		return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), jpqlResult.getSql(),
+				new ArrayList<QueryParameter>());
 	}
 
 	@Override

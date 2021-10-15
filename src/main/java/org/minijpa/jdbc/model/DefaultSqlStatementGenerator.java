@@ -28,6 +28,7 @@ import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
 
 import org.minijpa.jdbc.db.DbJdbc;
+import org.minijpa.jdbc.db.SqlFunction;
 import org.minijpa.jdbc.model.aggregate.AggregateFunction;
 import org.minijpa.jdbc.model.aggregate.BasicAggregateFunction;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
@@ -180,42 +181,62 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		throw new IllegalArgumentException("Sql operator '" + operator + "' not supported");
 	}
 
-	private String exportBinaryExpression(SqlBinaryExpression sqlBinaryExpression) {
+//	private String exportOperand(Object operand) {
+//		if (operand instanceof TableColumn)
+//			return sqlStatementExporter.exportTableColumn((TableColumn) operand, dbJdbc);
+//
+//		if (operand instanceof String)
+//			return (String) operand;
+//
+//		if (operand instanceof Boolean)
+//			return dbJdbc.booleanValue((Boolean) operand);
+//
+//		return "";
+//	}
+	private String exportExpression(Object expression) {
+		if (expression instanceof TableColumn)
+			return getSqlStatementExporter().exportTableColumn((TableColumn) expression, dbJdbc);
+
+		if (expression instanceof String)
+			return (String) expression;
+
+		if (expression instanceof SqlFunction)
+			return dbJdbc.getFunction((SqlFunction) expression);
+
+		if (expression instanceof Boolean)
+			return dbJdbc.booleanValue((Boolean) expression);
+
+		return "";
+	}
+
+	private String exportSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression) {
 		StringBuilder sb = new StringBuilder();
-		if (sqlBinaryExpression.getLeftTableColumn().isPresent())
-			sb.append(getSqlStatementExporter().exportTableColumn(sqlBinaryExpression.getLeftTableColumn().get(), dbJdbc));
+		Object leftExpression = sqlBinaryExpression.getLeftExpression();
+		sb.append(exportExpression(leftExpression));
 
-		if (sqlBinaryExpression.getLeftExpression().isPresent())
-			sb.append(sqlBinaryExpression.getLeftExpression().get());
-
+//		if (sqlBinaryExpression.getLeftTableColumn().isPresent())
+//			sb.append(getSqlStatementExporter().exportTableColumn(sqlBinaryExpression.getLeftTableColumn().get(), dbJdbc));
+//
+//		if (sqlBinaryExpression.getLeftExpression().isPresent())
+//			sb.append(sqlBinaryExpression.getLeftExpression().get());
 		sb.append(getSqlOperator(sqlBinaryExpression.getOperator()));
-		if (sqlBinaryExpression.getRightTableColumn().isPresent())
-			sb.append(getSqlStatementExporter().exportTableColumn(sqlBinaryExpression.getRightTableColumn().get(), dbJdbc));
 
-		if (sqlBinaryExpression.getRightExpression().isPresent())
-			sb.append(sqlBinaryExpression.getRightExpression().get());
+		sb.append(exportExpression(sqlBinaryExpression.getRightExpression()));
 
+//		if (sqlBinaryExpression.getRightTableColumn().isPresent())
+//			sb.append(getSqlStatementExporter().exportTableColumn(sqlBinaryExpression.getRightTableColumn().get(), dbJdbc));
+//
+//		if (sqlBinaryExpression.getRightExpression().isPresent())
+//			sb.append(sqlBinaryExpression.getRightExpression().get());
 		return sb.toString();
 	}
 
-	private String exportExpression(SqlExpression sqlExpression) {
-		if (sqlExpression instanceof SqlBinaryExpression)
-			return exportBinaryExpression((SqlBinaryExpression) sqlExpression);
-
-		throw new IllegalArgumentException("Expression '" + sqlExpression + "' not supported");
-	}
-
-	private String exportOperand(Object operand) {
-		if (operand instanceof TableColumn)
-			return sqlStatementExporter.exportTableColumn((TableColumn) operand, dbJdbc);
-
-		if (operand instanceof String)
-			return (String) operand;
-
-		if (operand instanceof Boolean)
-			return dbJdbc.booleanValue((Boolean) operand);
-
-		return "";
+	private String exportSqlExpression(SqlExpression sqlExpression) {
+		return exportExpression(sqlExpression.getExpression());
+//		if (sqlExpression instanceof SqlBinaryExpressionImpl)
+//			return exportSqlBinaryExpression((SqlBinaryExpressionImpl) sqlExpression);
+//
+//		throw new IllegalArgumentException("Expression '" + sqlExpression + "' not supported");
 	}
 
 	protected String exportCondition(Condition condition, SqlStatementExporter sqlStatementExporter) {
@@ -292,13 +313,13 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 				sb.append("not ");
 
 			Object left = binaryCondition.getLeft();
-			sb.append(exportOperand(left));
+			sb.append(exportExpression(left));
 
 			sb.append(" ");
 			sb.append(getOperator(condition.getConditionType()));
 			sb.append(" ");
 			Object right = binaryCondition.getRight();
-			sb.append(exportOperand(right));
+			sb.append(exportExpression(right));
 
 			return sb.toString();
 		}
@@ -409,7 +430,9 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 			if (c instanceof AggregateFunction)
 				return exportAggregateFunction((AggregateFunction) c);
 			if (c instanceof SqlExpression)
-				return exportExpression((SqlExpression) c);
+				return exportSqlExpression((SqlExpression) c);
+			if (c instanceof SqlBinaryExpression)
+				return exportSqlBinaryExpression((SqlBinaryExpression) c);
 
 			throw new IllegalArgumentException("Value type '" + c + "'not supported");
 		}).collect(Collectors.joining(", "));

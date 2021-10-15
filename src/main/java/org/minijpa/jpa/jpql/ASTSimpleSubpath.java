@@ -4,31 +4,50 @@ package org.minijpa.jpa.jpql;
 
 public class ASTSimpleSubpath extends SimpleNode {
 
-    private StringBuilder sb = new StringBuilder();
+	private final StringBuilder sb = new StringBuilder();
+	private MapFieldIdentificationVariable mapFieldIdentificationVariable;
+	private String identificationVariable;
 
-    public ASTSimpleSubpath(int id) {
-	super(id);
-    }
+	public ASTSimpleSubpath(int id) {
+		super(id);
+	}
 
-    public ASTSimpleSubpath(JpqlParser p, int id) {
-	super(p, id);
-    }
+	public ASTSimpleSubpath(JpqlParser p, int id) {
+		super(p, id);
+	}
 
-    /**
-     * Accept the visitor. *
-     */
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+	/**
+	 * Accept the visitor. *
+	 */
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-	return visitor.visit(this, data);
-    }
+		return visitor.visit(this, data);
+	}
 
-    public void addPath(String path) {
-	sb.append(".");
-	sb.append(path);
-    }
+	public void addPath(String path) {
+		sb.append(".");
+		sb.append(path);
+	}
 
-    public String getPath() {
-	return sb.toString();
-    }
+	public String getPath() {
+		return sb.toString();
+	}
+
+	public MapFieldIdentificationVariable getMapFieldIdentificationVariable() {
+		return mapFieldIdentificationVariable;
+	}
+
+	public void setMapFieldIdentificationVariable(MapFieldIdentificationVariable mapFieldIdentificationVariable) {
+		this.mapFieldIdentificationVariable = mapFieldIdentificationVariable;
+	}
+
+	public String getIdentificationVariable() {
+		return identificationVariable;
+	}
+
+	public void setIdentificationVariable(String identificationVariable) {
+		this.identificationVariable = identificationVariable;
+	}
+
 }
 /* JavaCC - OriginalChecksum=37f9d0138e6587f99d38819c38171296 (do not edit this line) */

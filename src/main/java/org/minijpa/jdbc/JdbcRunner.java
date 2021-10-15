@@ -110,7 +110,7 @@ public class JdbcRunner {
 
 	public int update(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
 		LOG.info("Running `" + sql + "`");
-		try ( PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			setPreparedStatementParameters(preparedStatement, parameters);
 			preparedStatement.execute();
 			return preparedStatement.getUpdateCount();
@@ -119,7 +119,7 @@ public class JdbcRunner {
 
 	public int persist(Connection connection, String sql) throws SQLException {
 		LOG.info("Running `" + sql + "`");
-		try ( PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.execute();
 			return preparedStatement.getUpdateCount();
 		}
@@ -173,7 +173,7 @@ public class JdbcRunner {
 
 	public int delete(String sql, Connection connection, List<QueryParameter> parameters) throws SQLException {
 		LOG.info("Running `" + sql + "`");
-		try ( PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+		try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			if (!parameters.isEmpty())
 				setPreparedStatementParameters(preparedStatement, parameters);
 
@@ -406,9 +406,9 @@ public class JdbcRunner {
 					for (int i = 0; i < nc; ++i) {
 						int columnType = metaData.getColumnType(i + 1);
 						Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(i + 1), metaData.getScale(i + 1));
-//			LOG.debug("runQuery: readWriteType=" + readWriteType);
-//			LOG.debug("runQuery: columnType=" + columnType);
-//			LOG.debug("runQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
+//						LOG.debug("runQuery: readWriteType=" + readWriteType);
+//						LOG.debug("runQuery: columnType=" + columnType);
+//						LOG.debug("runQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
 						Object v = getValue(rs, i + 1, metaData);
 						values[i] = dbTypeMapper.convertToAttributeType(v, readWriteType);
 //			LOG.debug("runQuery: values[i]=" + values[i]);

@@ -5,6 +5,7 @@ package org.minijpa.jpa.jpql;
 public class ASTArithmeticPrimary extends SimpleNode {
 
 	private String result = "";
+	private String inputParameter;
 
 	public ASTArithmeticPrimary(int id) {
 		super(id);
@@ -37,6 +38,14 @@ public class ASTArithmeticPrimary extends SimpleNode {
 		dump("");
 //		System.out.println("ASTArithmeticPrimary: this=" + this.dump(""));
 		this.result = result;
+	}
+
+	public String getInputParameter() {
+		return inputParameter;
+	}
+
+	public void setInputParameter(String inputParameter) {
+		this.inputParameter = inputParameter;
 	}
 
 }

@@ -19,38 +19,36 @@ import org.minijpa.jdbc.model.TableColumn;
 
 public class SqlBinaryExpressionBuilder {
 
-    private final SqlExpressionOperator operator;
-    private TableColumn leftTableColumn;
-    private String leftExpression;
-    private TableColumn rightTableColumn;
-    private String rightExpression;
+	private final SqlExpressionOperator operator;
+//	private TableColumn leftTableColumn;
+	private Object leftExpression;
+//	private TableColumn rightTableColumn;
+	private Object rightExpression;
 
-    public SqlBinaryExpressionBuilder(SqlExpressionOperator operator) {
-	this.operator = operator;
-    }
+	public SqlBinaryExpressionBuilder(SqlExpressionOperator operator) {
+		this.operator = operator;
+	}
 
-    public SqlBinaryExpressionBuilder setLeftTableColumn(TableColumn leftTableColumn) {
-	this.leftTableColumn = leftTableColumn;
-	return this;
-    }
+//	public SqlBinaryExpressionBuilder setLeftTableColumn(TableColumn leftTableColumn) {
+//		this.leftTableColumn = leftTableColumn;
+//		return this;
+//	}
+	public SqlBinaryExpressionBuilder setLeftExpression(Object leftExpression) {
+		this.leftExpression = leftExpression;
+		return this;
+	}
 
-    public SqlBinaryExpressionBuilder setLeftExpression(String leftExpression) {
-	this.leftExpression = leftExpression;
-	return this;
-    }
+//	public SqlBinaryExpressionBuilder setRightTableColumn(TableColumn rightTableColumn) {
+//		this.rightTableColumn = rightTableColumn;
+//		return this;
+//	}
+	public SqlBinaryExpressionBuilder setRightExpression(Object rightExpression) {
+		this.rightExpression = rightExpression;
+		return this;
+	}
 
-    public SqlBinaryExpressionBuilder setRightTableColumn(TableColumn rightTableColumn) {
-	this.rightTableColumn = rightTableColumn;
-	return this;
-    }
-
-    public SqlBinaryExpressionBuilder setRightExpression(String rightExpression) {
-	this.rightExpression = rightExpression;
-	return this;
-    }
-
-    public SqlBinaryExpression build() {
-	return new SqlBinaryExpression(operator, leftTableColumn, leftExpression, rightTableColumn, rightExpression);
-    }
+	public SqlBinaryExpression build() {
+		return new SqlBinaryExpressionImpl(operator, leftExpression, rightExpression);
+	}
 
 }

@@ -17,32 +17,51 @@ public interface JpqlParserTreeConstants
   public int JJTIDENTIFICATIONVARIABLEDECLARATION = 11;
   public int JJTFROMCLAUSE = 12;
   public int JJTMAPFIELDIDENTIFICATIONVARIABLE = 13;
-  public int JJTGENERALIDENTIFICATIONVARIABLE = 14;
-  public int JJTSIMPLESUBPATH = 15;
-  public int JJTGENERALSUBPATH = 16;
-  public int JJTTREATEDSUBPATH = 17;
-  public int JJTSTATEFIELDPATHEXPRESSION = 18;
-  public int JJTSTATEVALUEDPATHEXPRESSION = 19;
-  public int JJTSINGLEVALUEDOBJECTPATHEXPRESSION = 20;
-  public int JJTWHENCLAUSE = 21;
-  public int JJTBOOLEANEXPRESSION = 22;
-  public int JJTSTRINGEXPRESSION = 23;
-  public int JJTARITHMETICPRIMARY = 24;
-  public int JJTARITHMETICFACTOR = 25;
-  public int JJTARITHMETICTERM = 26;
-  public int JJTARITHMETICEXPRESSION = 27;
-  public int JJTSTRINGEXPRESSIONCOMPARISON = 28;
-  public int JJTARITHMETICEXPRESSIONCOMPARISON = 29;
-  public int JJTBOOLEANEXPRESSIONCOMPARISON = 30;
-  public int JJTCOMPARISONEXPRESSION = 31;
-  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 32;
-  public int JJTSIMPLECONDEXPRESSION = 33;
-  public int JJTCONDITIONALPRIMARY = 34;
-  public int JJTCONDITIONALFACTOR = 35;
-  public int JJTCONDITIONALTERM = 36;
-  public int JJTCONDITIONALEXPRESSION = 37;
-  public int JJTWHERECLAUSE = 38;
-  public int JJTHAVINGCLAUSE = 39;
+  public int JJTQUALIFIEDIDENTIFICATIONVARIABLE = 14;
+  public int JJTGENERALIDENTIFICATIONVARIABLE = 15;
+  public int JJTSIMPLESUBPATH = 16;
+  public int JJTGENERALSUBPATH = 17;
+  public int JJTTREATEDSUBPATH = 18;
+  public int JJTSTATEFIELDPATHEXPRESSION = 19;
+  public int JJTSTATEVALUEDPATHEXPRESSION = 20;
+  public int JJTSINGLEVALUEDOBJECTPATHEXPRESSION = 21;
+  public int JJTFUNCTIONARG = 22;
+  public int JJTSCALAREXPRESSION = 23;
+  public int JJTWHENCLAUSE = 24;
+  public int JJTGENERALCASEEXPRESSION = 25;
+  public int JJTCASEEXPRESSION = 26;
+  public int JJTENUMEXPRESSION = 27;
+  public int JJTBOOLEANEXPRESSION = 28;
+  public int JJTDATETIMEEXPRESSION = 29;
+  public int JJTSTRINGEXPRESSION = 30;
+  public int JJTARITHMETICPRIMARY = 31;
+  public int JJTARITHMETICFACTOR = 32;
+  public int JJTARITHMETICTERM = 33;
+  public int JJTARITHMETICEXPRESSION = 34;
+  public int JJTALLORANYEXPRESSION = 35;
+  public int JJTSTRINGEXPRESSIONCOMPARISON = 36;
+  public int JJTARITHMETICEXPRESSIONCOMPARISON = 37;
+  public int JJTBOOLEANEXPRESSIONCOMPARISON = 38;
+  public int JJTDATETIMEEXPRESSIONCOMPARISON = 39;
+  public int JJTCOMPARISONEXPRESSION = 40;
+  public int JJTEXISTSEXPRESSION = 41;
+  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 42;
+  public int JJTNULLCOMPARISONEXPRESSION = 43;
+  public int JJTLIKEEXPRESSION = 44;
+  public int JJTINITEM = 45;
+  public int JJTINEXPRESSION = 46;
+  public int JJTSIMPLECONDEXPRESSION = 47;
+  public int JJTCONDITIONALPRIMARY = 48;
+  public int JJTCONDITIONALFACTOR = 49;
+  public int JJTCONDITIONALTERM = 50;
+  public int JJTCONDITIONALEXPRESSION = 51;
+  public int JJTWHERECLAUSE = 52;
+  public int JJTSINGLEVALUEDPATHEXPRESSION = 53;
+  public int JJTSIMPLESELECTCLAUSE = 54;
+  public int JJTSUBQUERY = 55;
+  public int JJTHAVINGCLAUSE = 56;
+  public int JJTGROUPBYITEM = 57;
+  public int JJTGROUPBYCLAUSE = 58;
 
 
   public String[] jjtNodeName = {
@@ -60,6 +79,7 @@ public interface JpqlParserTreeConstants
     "IdentificationVariableDeclaration",
     "FromClause",
     "MapFieldIdentificationVariable",
+    "QualifiedIdentificationVariable",
     "GeneralIdentificationVariable",
     "SimpleSubpath",
     "GeneralSubpath",
@@ -67,25 +87,43 @@ public interface JpqlParserTreeConstants
     "StateFieldPathExpression",
     "StateValuedPathExpression",
     "SingleValuedObjectPathExpression",
+    "FunctionArg",
+    "ScalarExpression",
     "WhenClause",
+    "GeneralCaseExpression",
+    "CaseExpression",
+    "EnumExpression",
     "BooleanExpression",
+    "DatetimeExpression",
     "StringExpression",
     "ArithmeticPrimary",
     "ArithmeticFactor",
     "ArithmeticTerm",
     "ArithmeticExpression",
+    "AllOrAnyExpression",
     "StringExpressionComparison",
     "ArithmeticExpressionComparison",
     "BooleanExpressionComparison",
+    "DatetimeExpressionComparison",
     "ComparisonExpression",
+    "ExistsExpression",
     "CollectionValuedPathExpression",
+    "NullComparisonExpression",
+    "LikeExpression",
+    "InItem",
+    "InExpression",
     "SimpleCondExpression",
     "ConditionalPrimary",
     "ConditionalFactor",
     "ConditionalTerm",
     "ConditionalExpression",
     "WhereClause",
+    "SingleValuedPathExpression",
+    "SimpleSelectClause",
+    "Subquery",
     "HavingClause",
+    "GroupbyItem",
+    "GroupbyClause",
   };
 }
-/* JavaCC - OriginalChecksum=46964b6d644542820447882efa49f73a (do not edit this line) */
+/* JavaCC - OriginalChecksum=cab67befc673a8d9f37af533cfbe87e9 (do not edit this line) */

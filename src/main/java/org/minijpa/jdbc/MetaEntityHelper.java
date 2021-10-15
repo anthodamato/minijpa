@@ -37,10 +37,6 @@ public final class MetaEntityHelper {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MetaEntityHelper.class);
 
-	private MetaEntityHelper() {
-
-	}
-
 	public static List<FetchParameter> convertAttributes(List<MetaAttribute> attributes) {
 		return attributes.stream().map(a -> FetchParameter.build(a)).collect(Collectors.toList());
 	}
