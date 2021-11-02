@@ -5,7 +5,7 @@ package org.minijpa.jpa.jpql;
 public class ASTArithmeticFactor extends SimpleNode {
 
 	private String sign = "";
-	private String result;
+	private Object result;
 
 	public ASTArithmeticFactor(int id) {
 		super(id);
@@ -31,11 +31,11 @@ public class ASTArithmeticFactor extends SimpleNode {
 		this.sign = sign;
 	}
 
-	public String getResult() {
+	public Object getResult() {
 		return result;
 	}
 
-	public void setResult(String result) {
+	public void setResult(Object result) {
 		this.result = result;
 	}
 

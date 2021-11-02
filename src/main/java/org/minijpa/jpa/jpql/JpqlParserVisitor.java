@@ -58,9 +58,16 @@ public interface JpqlParserVisitor
   public Object visit(ASTWhereClause node, Object data);
   public Object visit(ASTSingleValuedPathExpression node, Object data);
   public Object visit(ASTSimpleSelectClause node, Object data);
+  public Object visit(ASTDerivedCollectionMemberDeclaration node, Object data);
+  public Object visit(ASTTreatedDerivedPath node, Object data);
+  public Object visit(ASTSimpleDerivedPath node, Object data);
+  public Object visit(ASTGeneralDerivedPath node, Object data);
+  public Object visit(ASTDerivedPathExpression node, Object data);
+  public Object visit(ASTSubselectIdentificationVariableDeclaration node, Object data);
+  public Object visit(ASTSubqueryFromClause node, Object data);
   public Object visit(ASTSubquery node, Object data);
   public Object visit(ASTHavingClause node, Object data);
   public Object visit(ASTGroupbyItem node, Object data);
   public Object visit(ASTGroupbyClause node, Object data);
 }
-/* JavaCC - OriginalChecksum=510b829c34fb715e47038b7e9b30bffb (do not edit this line) */
+/* JavaCC - OriginalChecksum=aa376a1083c9d2e0d4225ade51cbde28 (do not edit this line) */

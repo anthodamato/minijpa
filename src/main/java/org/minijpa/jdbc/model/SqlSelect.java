@@ -29,7 +29,7 @@ import org.minijpa.jdbc.model.join.FromJoin;
 
 public class SqlSelect implements SqlStatement {
 
-	private FromTable fromTable;
+	private List<FromTable> fromTables;
 	private Optional<List<FromJoin>> fromJoins = Optional.empty();
 	private List<FetchParameter> fetchParameters;
 	private MetaEntity result;
@@ -44,8 +44,8 @@ public class SqlSelect implements SqlStatement {
 		super();
 	}
 
-	public FromTable getFromTable() {
-		return fromTable;
+	public List<FromTable> getFromTables() {
+		return fromTables;
 	}
 
 	public Optional<List<FromJoin>> getJoins() {
@@ -91,7 +91,7 @@ public class SqlSelect implements SqlStatement {
 
 	public static class SqlSelectBuilder {
 
-		private FromTable fromTable;
+		private List<FromTable> fromTables = new ArrayList<>();
 		private List<FromJoin> fromJoins;
 		private List<Value> values;
 		private List<Condition> conditions;
@@ -108,11 +108,11 @@ public class SqlSelect implements SqlStatement {
 
 		public SqlSelectBuilder(FromTable fromTable) {
 			super();
-			this.fromTable = fromTable;
+			this.fromTables.add(fromTable);
 		}
 
 		public SqlSelectBuilder withFromTable(FromTable fromTable) {
-			this.fromTable = fromTable;
+			this.fromTables.add(fromTable);
 			return this;
 		}
 
@@ -176,7 +176,7 @@ public class SqlSelect implements SqlStatement {
 
 		public SqlSelect build() {
 			SqlSelect sqlSelect = new SqlSelect();
-			sqlSelect.fromTable = fromTable;
+			sqlSelect.fromTables = fromTables;
 			if (fromJoins != null && !fromJoins.isEmpty())
 				sqlSelect.fromJoins = Optional.of(fromJoins);
 

@@ -20,23 +20,23 @@ import javax.persistence.Table;
 @Table(name = "store_item")
 public class StoreItem {
 
-    @SequenceGenerator(name = "SEQ", sequenceName = "STORE_ITEM_SEQUENCE", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ")
-    @Id
-    private Long id;
+	@SequenceGenerator(name = "SEQ", sequenceName = "STORE_ITEM_SEQUENCE", allocationSize = 1)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "SEQ")
+	@Id
+	private Long id;
 
-    private Long amount;
+	private Long amount;
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public Long getAmount() {
-	return amount;
-    }
+	public Long getAmount() {
+		return amount;
+	}
 
-    public void setAmount(Long amount) {
-	this.amount = amount;
-    }
+	public void setAmount(Long amount) {
+		this.amount = amount;
+	}
 
 }

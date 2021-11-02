@@ -82,6 +82,7 @@ import org.minijpa.jdbc.model.expression.SqlExpressionOperator;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
+import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniTypedQuery;
@@ -274,6 +275,58 @@ public class SqlStatementFactory {
 		FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
 		FromJoin fromJoin = new FromJoinImpl(joinTable, entity.getAlias(), idColumns, idTargetColumns);
 		return fromJoin;
+	}
+
+	public Condition generateJoinCondition(
+			Relationship relationship,
+			MetaEntity owningEntity,
+			MetaEntity targetEntity) {
+		if (relationship.getJoinTable() != null) {
+			RelationshipJoinTable relationshipJoinTable = relationship.getJoinTable();
+			LOG.debug("generateJoinCondition: alias.tableName=" + relationshipJoinTable.getAlias() + "." + relationshipJoinTable.getTableName());
+			Pk pk = relationshipJoinTable.getOwningAttribute();
+			pk.getAttributes().forEach(a -> LOG.debug("generateJoinCondition: relationshipJoinTable.getOwningAttribute()=" + a.getColumnName()));
+			relationshipJoinTable.getTargetAttribute().getAttributes().forEach(a -> LOG.debug("generateJoinCondition: relationshipJoinTable.getTargetAttribute()=" + a.getColumnName()));
+			relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes().
+					forEach(a -> LOG.debug("generateJoinCondition: getOwningJoinColumnMapping a.getColumnName()=" + a.getColumnName()));
+			relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes().
+					forEach(a -> LOG.debug("generateJoinCondition: getOwningJoinColumnMapping a.getAttribute().getColumnName()=" + a.getAttribute().getColumnName()));
+			relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes().
+					forEach(a -> LOG.debug("generateJoinCondition: getTargetJoinColumnMapping a.getColumnName()=" + a.getColumnName()));
+			relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes().
+					forEach(a -> LOG.debug("generateJoinCondition: getTargetJoinColumnMapping a.getAttribute().getColumnName()=" + a.getAttribute().getColumnName()));
+			// op.orders_id = o.id and p.id = op.products_id
+			List<JoinColumnAttribute> owningJoinColumnAttributes = relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes();
+			List<Condition> conditions = new ArrayList<>();
+			FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), relationshipJoinTable.getAlias());
+			FromTable fromTable = FromTable.of(owningEntity);
+			// op.orders_id = o.id
+			// handle composite primary key
+			for (int i = 0; i < owningJoinColumnAttributes.size(); ++i) {
+				JoinColumnAttribute joinColumnAttribute = owningJoinColumnAttributes.get(i);
+				TableColumn owningTableColumn = new TableColumn(joinTable, new Column(joinColumnAttribute.getColumnName()));
+				MetaAttribute ak = owningEntity.getId().getAttributes().get(i);
+				TableColumn owningEntityTableColumn = new TableColumn(fromTable, new Column(ak.getColumnName()));
+				Condition condition = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(owningTableColumn).withRight(owningEntityTableColumn).build();
+				conditions.add(condition);
+			}
+
+			// p.id = op.products_id
+			FromTable targetTable = FromTable.of(targetEntity);
+			List<JoinColumnAttribute> targetJoinColumnAttributes = relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes();
+			for (int i = 0; i < targetJoinColumnAttributes.size(); ++i) {
+				JoinColumnAttribute joinColumnAttribute = targetJoinColumnAttributes.get(i);
+				TableColumn owningTableColumn = new TableColumn(joinTable, new Column(joinColumnAttribute.getColumnName()));
+				MetaAttribute ak = targetEntity.getId().getAttributes().get(i);
+				TableColumn targetEntityTableColumn = new TableColumn(targetTable, new Column(ak.getColumnName()));
+				Condition condition = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(owningTableColumn).withRight(targetEntityTableColumn).build();
+				conditions.add(condition);
+			}
+
+			return Condition.toAnd(conditions);
+		}
+
+		return null;
 	}
 
 	/**

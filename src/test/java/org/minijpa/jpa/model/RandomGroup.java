@@ -20,32 +20,32 @@ import javax.persistence.Table;
 @Table(name = "random_group")
 public class RandomGroup {
 
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
-    private String name;
-    @OneToMany
-    private Collection<RandomData> randomDataValues;
+	private String name;
+	@OneToMany
+	private Collection<RandomData> randomDataValues;
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Collection<RandomData> getRandomDataValues() {
-	return randomDataValues;
-    }
+	public Collection<RandomData> getRandomDataValues() {
+		return randomDataValues;
+	}
 
-    public void setRandomDataValues(Collection<RandomData> randomDataValues) {
-	this.randomDataValues = randomDataValues;
-    }
+	public void setRandomDataValues(Collection<RandomData> randomDataValues) {
+		this.randomDataValues = randomDataValues;
+	}
 
 }

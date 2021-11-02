@@ -206,6 +206,24 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		if (expression instanceof Boolean)
 			return dbJdbc.booleanValue((Boolean) expression);
 
+		if (expression instanceof SqlSelect) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("(");
+			sb.append(export((SqlSelect) expression));
+			sb.append(")");
+			return sb.toString();
+		}
+
+		if (expression instanceof List) {
+			List<Object> list = (List) expression;
+			StringBuilder sb = new StringBuilder();
+			for (Object obj : list) {
+				sb.append(exportExpression(obj));
+			}
+
+			return sb.toString();
+		}
+
 		return "";
 	}
 
@@ -400,10 +418,10 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		return sb.toString();
 	}
 
-	protected String exportFromTable(FromTable fromTable) {
-		StringBuilder sb = new StringBuilder(
-				dbJdbc.getNameTranslator().toTableName(fromTable.getAlias(), fromTable.getName()));
-		return sb.toString();
+	protected String exportFromTable(List<FromTable> fromTables) {
+		return fromTables.stream().map(t -> {
+			return dbJdbc.getNameTranslator().toTableName(t.getAlias(), t.getName());
+		}).collect(Collectors.joining(", "));
 	}
 
 	private String exportGroupBy(GroupBy groupBy) {
@@ -439,7 +457,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 		sb.append(cc);
 		sb.append(" from ");
-		sb.append(exportFromTable(sqlSelect.getFromTable()));
+		sb.append(exportFromTable(sqlSelect.getFromTables()));
 		if (sqlSelect.getJoins().isPresent())
 			sb.append(exportJoins(sqlSelect.getJoins().get()));
 

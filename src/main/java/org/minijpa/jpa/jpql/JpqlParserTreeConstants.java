@@ -3,12 +3,12 @@ package org.minijpa.jpa.jpql;
 
 public interface JpqlParserTreeConstants
 {
-  public int JJTQLSTATEMENT = 0;
-  public int JJTSELECTSTATEMENT = 1;
-  public int JJTSELECTCLAUSE = 2;
-  public int JJTSELECTITEM = 3;
-  public int JJTSELECTEXPRESSION = 4;
-  public int JJTVOID = 5;
+  public int JJTVOID = 0;
+  public int JJTQLSTATEMENT = 1;
+  public int JJTSELECTSTATEMENT = 2;
+  public int JJTSELECTCLAUSE = 3;
+  public int JJTSELECTITEM = 4;
+  public int JJTSELECTEXPRESSION = 5;
   public int JJTJOINSINGLEVALUEDPATHEXPRESSION = 6;
   public int JJTSUBTYPE = 7;
   public int JJTJOINASSOCIATIONPATHEXPRESSION = 8;
@@ -58,19 +58,26 @@ public interface JpqlParserTreeConstants
   public int JJTWHERECLAUSE = 52;
   public int JJTSINGLEVALUEDPATHEXPRESSION = 53;
   public int JJTSIMPLESELECTCLAUSE = 54;
-  public int JJTSUBQUERY = 55;
-  public int JJTHAVINGCLAUSE = 56;
-  public int JJTGROUPBYITEM = 57;
-  public int JJTGROUPBYCLAUSE = 58;
+  public int JJTDERIVEDCOLLECTIONMEMBERDECLARATION = 55;
+  public int JJTTREATEDDERIVEDPATH = 56;
+  public int JJTSIMPLEDERIVEDPATH = 57;
+  public int JJTGENERALDERIVEDPATH = 58;
+  public int JJTDERIVEDPATHEXPRESSION = 59;
+  public int JJTSUBSELECTIDENTIFICATIONVARIABLEDECLARATION = 60;
+  public int JJTSUBQUERYFROMCLAUSE = 61;
+  public int JJTSUBQUERY = 62;
+  public int JJTHAVINGCLAUSE = 63;
+  public int JJTGROUPBYITEM = 64;
+  public int JJTGROUPBYCLAUSE = 65;
 
 
   public String[] jjtNodeName = {
+    "void",
     "QLStatement",
     "SelectStatement",
     "SelectClause",
     "SelectItem",
     "SelectExpression",
-    "void",
     "JoinSingleValuedPathExpression",
     "Subtype",
     "JoinAssociationPathExpression",
@@ -120,10 +127,17 @@ public interface JpqlParserTreeConstants
     "WhereClause",
     "SingleValuedPathExpression",
     "SimpleSelectClause",
+    "DerivedCollectionMemberDeclaration",
+    "TreatedDerivedPath",
+    "SimpleDerivedPath",
+    "GeneralDerivedPath",
+    "DerivedPathExpression",
+    "SubselectIdentificationVariableDeclaration",
+    "SubqueryFromClause",
     "Subquery",
     "HavingClause",
     "GroupbyItem",
     "GroupbyClause",
   };
 }
-/* JavaCC - OriginalChecksum=cab67befc673a8d9f37af533cfbe87e9 (do not edit this line) */
+/* JavaCC - OriginalChecksum=e1b009fc74f18f52215399f60fa2ff42 (do not edit this line) */

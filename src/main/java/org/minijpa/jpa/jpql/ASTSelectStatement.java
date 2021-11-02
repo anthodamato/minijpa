@@ -2,9 +2,6 @@
  /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package org.minijpa.jpa.jpql;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ASTSelectStatement extends SimpleNode {
 
 	public ASTSelectStatement(int id) {
@@ -23,17 +20,20 @@ public class ASTSelectStatement extends SimpleNode {
 		return visitor.visit(this, data);
 	}
 
-//	@Override
-//	public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
-//		List<Object> list = new ArrayList<>();
-//		if (children != null) {
-//			for (int i = 0; i < children.length; ++i) {
-//				list.add(children[i].jjtAccept(visitor, data));
-//			}
-//		}
-//
-//		return list;
-//	}
+	@Override
+	public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
+		for (int i = 0; i < children.length; ++i) {
+			if (children[i] instanceof ASTFromClause)
+				children[i].jjtAccept(visitor, data);
+		}
+
+		for (int i = 0; i < children.length; ++i) {
+			if (!(children[i] instanceof ASTFromClause))
+				children[i].jjtAccept(visitor, data);
+		}
+
+		return data;
+	}
 
 }
 /* JavaCC - OriginalChecksum=29793356faf64c31d470ab1613b35466 (do not edit this line) */

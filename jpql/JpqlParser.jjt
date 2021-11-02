@@ -3,8 +3,8 @@ options {
   MULTI=true;
   VISITOR=true;
   NODE_DEFAULT_VOID=true;
-//  DEBUG_PARSER=true;
-//  DEBUG_LOOKAHEAD=true;
+  DEBUG_PARSER=true;
+  DEBUG_LOOKAHEAD=true;
 //  DEBUG_TOKEN_MANAGER=true;
 }
 
@@ -133,6 +133,89 @@ TOKEN :
 | <NE:    "<>" >
 | <EQ:    "=" >
 }
+
+String anyIdentifier() :
+{
+ Token t;
+}
+{
+   (t=<NAME>
+  | t=<AS>
+  | t=<ABS>
+  | t=<ALL>
+  | t=<AND>
+  | t=<ANY>
+  | t=<ASC>
+  | t=<AVG>
+  | t=<BETWEEN>
+  | t=<BOTH>
+  | t=<BY>
+  | t=<CASE>
+  | t=<COALESCE>
+  | t=<CONCAT>
+  | t=<COUNT>
+  | t=<CURRENT_DATE>
+  | t=<CURRENT_TIME>
+  | t=<CURRENT_TIMESTAMP>
+  | t=<DESC>
+  | t=<DISTINCT>
+  | t=<ELSE>
+  | t=<EMPTY>
+  | t=<END>
+  | t=<ENTRY>
+  | t=<ESCAPE>
+  | t=<EXISTS>
+  | t=<FALSE>
+  | t=<FETCH>
+  | t=<FROM>
+  | t=<FUNCTION>
+  | t=<GROUP>
+  | t=<HAVING>
+  | t=<INDEX>
+  | t=<INNER>
+  | t=<IN>
+  | t=<IS>
+  | t=<JOIN>
+  | t=<KEY>
+  | t=<LEADING>
+  | t=<LEFT>
+  | t=<LENGTH>
+  | t=<LIKE>
+  | t=<LOCATE>
+  | t=<LOWER>
+  | t=<MEMBER>
+  | t=<MIN>
+  | t=<MAX>
+  | t=<MOD>
+  | t=<NEW>
+  | t=<NOT>
+  | t=<NULL>
+  | t=<NULLIF>
+  | t=<OBJECT>
+  | t=<OF>
+  | t=<OR>
+  | t=<ORDER>
+  | t=<OUTER>
+  | t=<SELECT>
+  | t=<SIZE>
+  | t=<SOME>
+  | t=<SQRT>
+  | t=<SUBSTRING>
+  | t=<SUM>
+  | t=<THEN>
+  | t=<TRAILING>
+  | t=<TREAT>
+  | t=<TRIM>
+  | t=<TRUE>
+  | t=<TYPE>
+  | t=<UPPER>
+  | t=<WHEN>
+  | t=<WHERE>
+  | t=<VALUE>
+ )
+ {return t.image;}
+}
+
 
 ASTQLStatement QL_statement() #QLStatement :
 { String result; }
@@ -584,11 +667,12 @@ String entity_name() :
 void range_variable_declaration() #RangeVariableDeclaration :
 {
   Token t;
+  String s;
 }
 {
+  s=anyIdentifier()
   {
-    t=getNextToken();
-    jjtThis.setEntityName(t.image);     
+    jjtThis.setEntityName(s);
   }
   [t=<AS>]
   t=<NAME>
@@ -629,6 +713,7 @@ void from_clause() #FromClause :
    (
      <COMMA>
      (
+      LOOKAHEAD(2)
       identification_variable_declaration()
      |
       collection_member_declaration()
@@ -1143,7 +1228,7 @@ void single_valued_object_path_expression() #SingleValuedObjectPathExpression :
 
 // aggregate_expression ::=
 //    {AVG | MAX | MIN | SUM} ([DISTINCT] state_valued_path_expression) |
-//    COUNT ([DISTINCT] identification_variable |
+//    COUNT ([DISTINCT] identification_variable) |
 //    state_valued_path_expression |
 //    single_valued_object_path_expression) |
 //    function_invocation
@@ -1175,6 +1260,7 @@ String aggregate_expression() :
       sb.append(t.image);
      }
   )
+  <OPEN_BRACKET>
   [
    t=<DISTINCT>
      {
@@ -1183,6 +1269,7 @@ String aggregate_expression() :
      }
   ]
   state_valued_path_expression()
+  <CLOSE_BRACKET>
   { return sb.toString(); }
   
   |
@@ -1190,10 +1277,7 @@ String aggregate_expression() :
     {
      sb.append(t.image);
     }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <OPEN_BRACKET>
   [
    t=<DISTINCT>
      {
@@ -1205,10 +1289,7 @@ String aggregate_expression() :
     {
      sb.append(t.image);
     }
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
   { return sb.toString(); }
   
   |
@@ -1842,6 +1923,12 @@ void string_expression() #StringExpression :
   String s;
 }
 {
+  LOOKAHEAD("(" <SELECT>)
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
+  |
+  
   LOOKAHEAD(3)
   state_valued_path_expression()
   |
@@ -1875,10 +1962,10 @@ void string_expression() #StringExpression :
       sb.append(" ");
       sb.append(s);
     }
-  |
-  <OPEN_BRACKET>
-  subquery()
-  <CLOSE_BRACKET>
+//  |
+//  <OPEN_BRACKET>
+//  subquery()
+//  <CLOSE_BRACKET>
 }
 
 
@@ -1899,6 +1986,12 @@ void arithmetic_primary() #ArithmeticPrimary :
   String s;
 }
 {
+  LOOKAHEAD("(" <SELECT>)
+  <OPEN_BRACKET>
+  subquery()
+  <CLOSE_BRACKET>
+  |
+
   t=<NUMERIC_LITERAL>
     {
       jjtThis.setResult(t.image);
@@ -1949,11 +2042,6 @@ void arithmetic_primary() #ArithmeticPrimary :
       sb.append(" ");
       sb.append(s);
     }
-
-  |
-  <OPEN_BRACKET>
-  subquery()
-  <CLOSE_BRACKET>
 }
 
 
@@ -1983,9 +2071,6 @@ void arithmetic_factor() #ArithmeticFactor :
 // arithmetic_term ::= arithmetic_factor {{* | /} arithmetic_factor}*
 void arithmetic_term() #ArithmeticTerm :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   arithmetic_factor()
@@ -2837,7 +2922,7 @@ void simple_select_expression() :
   String s;
 }
 {
-  LOOKAHEAD(3)
+  LOOKAHEAD(single_valued_path_expression())
   single_valued_path_expression()
   
   |
@@ -2880,87 +2965,57 @@ void simple_select_clause() #SimpleSelectClause :
 
 // derived_collection_member_declaration ::= IN
 //     superquery_identification_variable.{single_valued_object_field.}*collection_valued_field
-String derived_collection_member_declaration() :
+void derived_collection_member_declaration() #DerivedCollectionMemberDeclaration :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<IN>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <IN>
   t=<NAME>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  t=<DOT>
-    {
-      sb.append(t.image);
-    }
+  {
+    jjtThis.setIdentificationVariable(t.image);
+  }
+  <DOT>
   (
-  LOOKAHEAD(2)
-  t=<NAME>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  t=<DOT>
-    {
-      sb.append(t.image);
-    }
+   LOOKAHEAD(2)
+   t=<NAME>
+   {
+     jjtThis.addPath(t.image);
+   }
+   <DOT>
   )*
   t=<NAME>
-    {
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
+  {
+    jjtThis.setCollectionValuedField(t.image);
+   }
 }
 
 
 // treated_derived_path ::= TREAT(general_derived_path AS subtype)
-String treated_derived_path() :
+void treated_derived_path() #TreatedDerivedPath :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<TREAT>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  s=general_derived_path()
-    {
-      sb.append(s);
-    }
-  t=<AS>
-    {
-     sb.append(" ");
-     sb.append(t.image);
-    }
+  <TREAT>
+  <OPEN_BRACKET>
+  general_derived_path()
+  <AS>
   s=subtype()
     {
       sb.append(" ");
       sb.append(s);
     }
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <CLOSE_BRACKET>
 }
 
 
 // simple_derived_path ::= superquery_identification_variable{.single_valued_object_field}*
-String simple_derived_path() :
+void simple_derived_path() #SimpleDerivedPath :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -2968,85 +3023,57 @@ String simple_derived_path() :
 }
 {
   t=<NAME>
-    {
-      sb.append(" ");
-     sb.append(t.image);
-    }
+  {
+    jjtThis.setIdentificationVariable(t.image);
+  }
   (
-  LOOKAHEAD(2)
-  t=<DOT>
-    {
-     sb.append(t.image);
-    }
-  t=<NAME>
-    {
-     sb.append(t.image);
-    }
+   LOOKAHEAD(2)
+   <DOT>
+   t=<NAME>
+   {
+     jjtThis.addPath(t.image);
+   }
   )*
-  { return sb.toString(); }
 }
 
 
 // general_derived_path ::= simple_derived_path | treated_derived_path{.single_valued_object_field}*
-String general_derived_path() :
+void general_derived_path() #GeneralDerivedPath :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  s=simple_derived_path()
-    {
-      sb.append(" ");
-      sb.append(s);
-      return sb.toString();
-    }
+  simple_derived_path()
   
   |
-  s=treated_derived_path()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  treated_derived_path()
   (
-  LOOKAHEAD(2)
-  t=<DOT>
-    {
-     sb.append(t.image);
-    }
-  t=<NAME>
-    {
-     sb.append(t.image);
-    }
+   LOOKAHEAD(2)
+   <DOT>
+   t=<NAME>
+   {
+     jjtThis.addPath(t.image);
+   }
   )*
-  { return sb.toString(); }
 }
 
 
 // derived_path_expression ::=
 //    general_derived_path.single_valued_object_field |
 //    general_derived_path.collection_valued_field
-String derived_path_expression() :
+void derived_path_expression() #DerivedPathExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  s=general_derived_path()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  t=<DOT>
-    {
-     sb.append(t.image);
-    }
+  general_derived_path()
+  <DOT>
   t=<NAME>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
+  {
+    jjtThis.setField(t.image);
+  }
 }
 
 
@@ -3054,97 +3081,50 @@ String derived_path_expression() :
 //    identification_variable_declaration |
 //    derived_path_expression [AS] identification_variable {join}* |
 //    derived_collection_member_declaration
-void subselect_identification_variable_declaration() :
+void subselect_identification_variable_declaration() #SubselectIdentificationVariableDeclaration :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  LOOKAHEAD(2)
+  LOOKAHEAD(identification_variable_declaration())
   identification_variable_declaration()
-    {
-      sb.append(" ");
-//      sb.append(s);
-//      return sb.toString();
-    }
-  
   |
-  s=derived_path_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  [
-  t=<AS>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  ]
+  
+  LOOKAHEAD(2)
+  general_derived_path()     //  derived_path_expression()
+  [<AS>]
   t=<NAME>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  {
+    jjtThis.setEntityAlias(t.image);
+  }
   (
-  join()
-//    {
-//      sb.append(" ");
-//      sb.append(s);
-//    }
+   join()
   )*
-//  { return sb.toString(); }
   
   |
-  s=derived_collection_member_declaration()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  
-//  { return sb.toString(); }
+  derived_collection_member_declaration()
 }
-
 
 
 // subquery_from_clause ::=
 //    FROM subselect_identification_variable_declaration {, subselect_identification_variable_declaration |
 //           collection_member_declaration}*
-String subquery_from_clause() :
+void subquery_from_clause() #SubqueryFromClause :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
   String s;
 }
 {
-  t=<FROM>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <FROM>
   subselect_identification_variable_declaration()
-    {
-      sb.append(" ");
-//      sb.append(s);
-    }
   (
-  t=<COMMA>
-    {
-     sb.append(t.image);
-    }
-  [
-  LOOKAHEAD(2)
-  subselect_identification_variable_declaration()
-    {
-      sb.append(" ");
-//      sb.append(s);
-    }
+   <COMMA>
+//   LOOKAHEAD(3)
+   subselect_identification_variable_declaration()
    |
-  collection_member_declaration()
-  ]
+   collection_member_declaration()
   )*
-  { return sb.toString(); }
 }
 
 
@@ -3180,11 +3160,7 @@ void subquery() #Subquery :
 }
 {
   simple_select_clause()
-  s=subquery_from_clause()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  subquery_from_clause()
   [
    where_clause()
   ]

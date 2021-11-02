@@ -4,31 +4,31 @@ package org.minijpa.jpa.jpql;
 
 public class ASTSelectClause extends SimpleNode {
 
-    private boolean distinct = false;
+	private boolean distinct = false;
 
-    public ASTSelectClause(int id) {
-	super(id);
-    }
+	public ASTSelectClause(int id) {
+		super(id);
+	}
 
-    public ASTSelectClause(JpqlParser p, int id) {
-	super(p, id);
-    }
+	public ASTSelectClause(JpqlParser p, int id) {
+		super(p, id);
+	}
 
-    /**
-     * Accept the visitor. *
-     */
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+	/**
+	 * Accept the visitor. *
+	 */
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-	return visitor.visit(this, data);
-    }
+		return visitor.visit(this, data);
+	}
 
-    public void setDistinct(boolean distinct) {
-	this.distinct = distinct;
-    }
+	public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
+	}
 
-    public boolean isDistinct() {
-	return distinct;
-    }
+	public boolean isDistinct() {
+		return distinct;
+	}
 
 }
 /* JavaCC - OriginalChecksum=e23ccca0572c8c3cf1d1e5906dd55e64 (do not edit this line) */

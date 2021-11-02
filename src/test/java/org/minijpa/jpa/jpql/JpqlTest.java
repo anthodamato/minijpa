@@ -162,4 +162,38 @@ public class JpqlTest {
 		emf.close();
 	}
 
+	@Test
+	public void orderSubquery() throws Exception {
+		String persistenceUnitName = "order_many_to_many";
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnitName, PersistenceUnitProperties.getProperties());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+
+		PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, persistenceUnitName);
+		PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+		String query = "select o from Order o where (select AVG(p.price) from o.products p)>50";
+		// select o.id from orders AS o where 
+		// (select avg(p.price) from product AS p, orders_product AS op where op.orders_id = o.id
+		//  and p.id = op.products_id) > 50
+		JpqlModule jpqlModule = new JpqlModule(dbConfiguration, new SqlStatementFactory(), persistenceUnitContext);
+
+		try {
+			JpqlResult jpqlResult = jpqlModule.parse(query);
+			Assertions.assertEquals(
+					"select o from Order o where (select AVG(p.price) from o.products p)>50",
+					jpqlResult.getSql());
+		} catch (Exception ex) {
+			LOG.debug(ex.getMessage());
+			Throwable t = ex.getCause();
+			LOG.debug("t=" + t);
+			ex.printStackTrace();
+			Assertions.fail();
+		} catch (Error error) {
+			LOG.debug(error.getMessage());
+			Throwable t = error.getCause();
+			LOG.debug("t=" + t);
+			Assertions.fail();
+		}
+
+		emf.close();
+	}
 }

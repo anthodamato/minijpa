@@ -22,8 +22,10 @@ import org.minijpa.jdbc.model.join.FromJoin;
  */
 public class JpqlVisitorParameters {
 
+	boolean distinct = false;
 	Map<String, String> aliases = new HashMap<>();
-	FromTable fromTable;
+	MetaEntity sourceEntity;
+	List<FromTable> fromTables = new ArrayList<>();
 	List<FromJoin> fromJoins = new ArrayList<>();
 	List<Value> values = new ArrayList<>();
 	// column aliases that can be used in subqueries

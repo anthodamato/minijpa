@@ -119,8 +119,7 @@ subquery ::= simple_select_clause subquery_from_clause [where_clause]
     [groupby_clause] [having_clause]
 subquery_from_clause ::=
     FROM subselect_identification_variable_declaration
-        {, subselect_identification_variable_declaration |
-collection_member_declaration}*
+        {, subselect_identification_variable_declaration | collection_member_declaration}*
 subselect_identification_variable_declaration ::=
     identification_variable_declaration |
     derived_path_expression [AS] identification_variable {join}* |

@@ -4,7 +4,7 @@ package org.minijpa.jpa.jpql;
 
 public class ASTArithmeticPrimary extends SimpleNode {
 
-	private String result = "";
+	private Object result;
 	private String inputParameter;
 
 	public ASTArithmeticPrimary(int id) {
@@ -23,7 +23,7 @@ public class ASTArithmeticPrimary extends SimpleNode {
 		return visitor.visit(this, data);
 	}
 
-	public String getResult() {
+	public Object getResult() {
 		return result;
 	}
 
@@ -33,7 +33,7 @@ public class ASTArithmeticPrimary extends SimpleNode {
 		System.out.println("ASTArithmeticPrimary result=" + result);
 	}
 
-	public void setResult(String result) {
+	public void setResult(Object result) {
 		System.out.println("ASTArithmeticPrimary: result=" + result);
 		dump("");
 //		System.out.println("ASTArithmeticPrimary: this=" + this.dump(""));

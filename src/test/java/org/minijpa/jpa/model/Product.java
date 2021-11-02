@@ -6,6 +6,7 @@
 package org.minijpa.jpa.model;
 
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -28,6 +29,8 @@ public class Product {
 
 	@ManyToMany(mappedBy = "products")
 	private Set<Order> orders;
+	@Column(nullable = false)
+	private Float price;
 
 	public Long getId() {
 		return id;
@@ -43,6 +46,14 @@ public class Product {
 
 	public Set<Order> getOrders() {
 		return orders;
+	}
+
+	public Float getPrice() {
+		return price;
+	}
+
+	public void setPrice(Float price) {
+		this.price = price;
 	}
 
 }

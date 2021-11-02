@@ -4,31 +4,31 @@ package org.minijpa.jpa.jpql;
 
 public class ASTJoinAssociationPathExpression extends SimpleNode {
 
-    private String joinSingleValuedPathExpression;
+	private String joinSingleValuedPathExpression;
 
-    public ASTJoinAssociationPathExpression(int id) {
-	super(id);
-    }
+	public ASTJoinAssociationPathExpression(int id) {
+		super(id);
+	}
 
-    public ASTJoinAssociationPathExpression(JpqlParser p, int id) {
-	super(p, id);
-    }
+	public ASTJoinAssociationPathExpression(JpqlParser p, int id) {
+		super(p, id);
+	}
 
-    /**
-     * Accept the visitor. *
-     */
-    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+	/**
+	 * Accept the visitor. *
+	 */
+	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-	return visitor.visit(this, data);
-    }
+		return visitor.visit(this, data);
+	}
 
-    public String getJoinSingleValuedPathExpression() {
-	return joinSingleValuedPathExpression;
-    }
+	public String getJoinSingleValuedPathExpression() {
+		return joinSingleValuedPathExpression;
+	}
 
-    public void setJoinSingleValuedPathExpression(String joinSingleValuedPathExpression) {
-	this.joinSingleValuedPathExpression = joinSingleValuedPathExpression;
-    }
+	public void setJoinSingleValuedPathExpression(String joinSingleValuedPathExpression) {
+		this.joinSingleValuedPathExpression = joinSingleValuedPathExpression;
+	}
 
 }
 /* JavaCC - OriginalChecksum=efc533ffc37be8557aed0daca89cbc7f (do not edit this line) */
