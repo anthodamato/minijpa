@@ -200,16 +200,6 @@ public final class MetaEntityHelper {
 		return tableColumns;
 	}
 
-	public static List<TableColumn> toTableColumns(List<MetaAttribute> attributes, FromTable fromTable) {
-		List<TableColumn> tableColumns = new ArrayList<>();
-		for (MetaAttribute metaAttribute : attributes) {
-			TableColumn tableColumn = new TableColumn(fromTable, new Column(metaAttribute.getColumnName()));
-			tableColumns.add(tableColumn);
-		}
-
-		return tableColumns;
-	}
-
 	public static List<TableColumn> queryParametersToTableColumns(List<QueryParameter> parameters, FromTable fromTable) {
 		return parameters.stream().map(p -> new TableColumn(fromTable, new Column(p.getColumnName())))
 				.collect(Collectors.toList());

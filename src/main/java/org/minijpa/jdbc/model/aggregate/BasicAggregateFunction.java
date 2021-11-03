@@ -45,7 +45,7 @@ public class BasicAggregateFunction implements AggregateFunction, Value {
 		return aggregateFunctionBasicType;
 	}
 
-	public Optional< TableColumn> getTableColumn() {
+	public Optional<TableColumn> getTableColumn() {
 		return tableColumn;
 	}
 

@@ -111,8 +111,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select bs.id from booking_sale AS bs INNER JOIN booking AS b"
-					+ " ON bs.b_dateof = b.dateof AND bs.b_room_number = b.room_number where b.customer_id = 1",
+					"select bs.id, bs.perc, bs.b_dateof, bs.b_room_number from booking_sale AS bs INNER JOIN booking AS b ON bs.b_dateof = b.dateof AND bs.b_room_number = b.room_number where b.customer_id = 1",
 					jpqlResult.getSql());
 		} catch (ParseException ex) {
 			LOG.debug(ex.getMessage());
@@ -179,7 +178,8 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select o from Order o where (select AVG(p.price) from o.products p)>50",
+					"select o.id, o.date_of, o.status, o.deliveryType, o.customer_id"
+					+ " from orders AS o where (select avg(p.price) from product AS p, orders_product AS op where op.orders_id = o.id AND op.products_id = p.id) > 50",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());

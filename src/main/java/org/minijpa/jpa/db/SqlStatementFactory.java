@@ -131,7 +131,7 @@ public class SqlStatementFactory {
 	public SqlSelect generateSelectById(MetaEntity entity, LockType lockType) throws Exception {
 		List<FetchParameter> fetchParameters = MetaEntityHelper.convertAllAttributes(entity);
 		FromTable fromTable = FromTable.of(entity);
-		List<TableColumn> tableColumns = MetaEntityHelper.toTableColumns(entity.getId().getAttributes(), fromTable);
+		List<Value> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
 			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 		}).collect(Collectors.toList());
@@ -146,7 +146,7 @@ public class SqlStatementFactory {
 		FetchParameter fetchParameter = MetaEntityHelper.toFetchParameter(entity.getVersionAttribute().get());
 
 		FromTable fromTable = FromTable.of(entity);
-		List<TableColumn> tableColumns = MetaEntityHelper.toTableColumns(entity.getId().getAttributes(), fromTable);
+		List<Value> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
 			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 		}).collect(Collectors.toList());

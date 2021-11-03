@@ -280,8 +280,8 @@ void select_item() #SelectItem :
 
 // select_expression ::=
 //    single_valued_path_expression |
-//    scalar_expression |
 //    aggregate_expression |
+//    scalar_expression |
 //    identification_variable |
 //    OBJECT(identification_variable) |
 //    constructor_expression
@@ -298,20 +298,20 @@ void select_expression() #SelectExpression :
      jjtThis.setIdentificationVariable(t.image);
    }
  |
- 
+
 // LOOKAHEAD(single_valued_path_expression())
  LOOKAHEAD(2)
  single_valued_path_expression()
 
  |
+// LOOKAHEAD(aggregate_expression())
+ LOOKAHEAD(2)
+ aggregate_expression()
+
+ |
 // LOOKAHEAD(scalar_expression())
  LOOKAHEAD(2)
  scalar_expression()
-
- |
-// LOOKAHEAD(aggregate_expression())
- LOOKAHEAD(2)
- s=aggregate_expression()
 
  |
  <OBJECT>
@@ -338,8 +338,8 @@ void select_expression() #SelectExpression :
 
 // constructor_item ::=
 //    single_valued_path_expression |
-//    scalar_expression |
 //    aggregate_expression |
+//    scalar_expression |
 //    identification_variable
 void constructor_item() :
 {
@@ -352,16 +352,13 @@ void constructor_item() :
  single_valued_path_expression()
  
  |
+ LOOKAHEAD(2)
+ aggregate_expression()
+
+ |
  LOOKAHEAD(3)
  scalar_expression()
- 
- |
- LOOKAHEAD(2)
- s=aggregate_expression()
- {
-   sb.append(s);
- }
- 
+  
  |
  t=<NAME>
  {
@@ -1228,84 +1225,73 @@ void single_valued_object_path_expression() #SingleValuedObjectPathExpression :
 
 // aggregate_expression ::=
 //    {AVG | MAX | MIN | SUM} ([DISTINCT] state_valued_path_expression) |
-//    COUNT ([DISTINCT] identification_variable) |
-//    state_valued_path_expression |
-//    single_valued_object_path_expression) |
+//    COUNT ([DISTINCT] identification_variable | state_valued_path_expression | single_valued_object_path_expression) |
 //    function_invocation
-String aggregate_expression() :
+void aggregate_expression() #AggregateExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
   String s;
 }
 {
   (
-   t=<AVG>
-     {
-      sb.append(t.image);
-     }
+   <AVG>
+   {
+     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.AVG);
+   }
    |
-   t=<MAX>
-     {
-      sb.append(t.image);
-     }
+   <MAX>
+   {
+     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.MAX);
+   }
    |
-   t=<MIN>
-     {
-      sb.append(t.image);
-     }
+   <MIN>
+   {
+     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.MIN);
+   }
    |
-   t=<SUM>
-     {
-      sb.append(t.image);
-     }
+   <SUM>
+   {
+     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.SUM);
+   }
   )
   <OPEN_BRACKET>
   [
-   t=<DISTINCT>
-     {
-      sb.append("");
-      sb.append(t.image);
-     }
+   <DISTINCT>
+   {
+     jjtThis.setDistinct(true);
+   }
   ]
   state_valued_path_expression()
   <CLOSE_BRACKET>
-  { return sb.toString(); }
   
   |
-    t=<COUNT>
-    {
-     sb.append(t.image);
-    }
+   <COUNT>
+   {
+     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.COUNT);
+   }
   <OPEN_BRACKET>
   [
-   t=<DISTINCT>
-     {
-      sb.append("");
-      sb.append(t.image);
-     }
+   <DISTINCT>
+   {
+     jjtThis.setDistinct(true);
+   }
   ]
   t=<NAME>
     {
-     sb.append(t.image);
+      jjtThis.setIdentificationVariable(t.image);
     }
-  <CLOSE_BRACKET>
-  { return sb.toString(); }
-  
   |
   LOOKAHEAD(3)
   state_valued_path_expression()
-  { return sb.toString(); }
-  
   |
   single_valued_object_path_expression()
+  <CLOSE_BRACKET>
+
   |
   s=function_invocation()
     {
-      sb.append("");
-      sb.append(s);
+      //sb.append(s);
     }
-  { return sb.toString(); }
 }
 
 
@@ -1877,11 +1863,7 @@ void datetime_expression() #DatetimeExpression :
 
   |
   LOOKAHEAD(3)
-  s=aggregate_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  aggregate_expression()
 
   |
   case_expression()
@@ -1949,11 +1931,7 @@ void string_expression() #StringExpression :
     }
   |
   LOOKAHEAD(3)
-  s=aggregate_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  aggregate_expression()
   |
   case_expression()
   |
@@ -2027,11 +2005,7 @@ void arithmetic_primary() #ArithmeticPrimary :
 
   |
   LOOKAHEAD(3)
-  s=aggregate_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  aggregate_expression()
 
   |
   case_expression()
@@ -2912,35 +2886,30 @@ void single_valued_path_expression() #SingleValuedPathExpression :
 
 // simple_select_expression::=
 //    single_valued_path_expression |
-//    scalar_expression |
 //    aggregate_expression |
+//    scalar_expression |
 //    identification_variable
-void simple_select_expression() :
+void simple_select_expression() #SimpleSelectExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   LOOKAHEAD(single_valued_path_expression())
   single_valued_path_expression()
+
+  |
+  LOOKAHEAD(2)
+  aggregate_expression()
   
   |
   LOOKAHEAD(3)
   scalar_expression()
-  |
-  LOOKAHEAD(2)
-  s=aggregate_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
   
   |
   t=<NAME>
-    {
-      sb.append(t.image);
-    }
+  {
+    jjtThis.setIdentificationVariable(t.image);
+  }
 }
 
 

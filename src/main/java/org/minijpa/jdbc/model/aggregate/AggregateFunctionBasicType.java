@@ -20,5 +20,5 @@ package org.minijpa.jdbc.model.aggregate;
  * @author adamato
  */
 public enum AggregateFunctionBasicType {
-    COUNT, MIN, MAX, AVG, SUM;
+	COUNT, MIN, MAX, AVG, SUM;
 }
