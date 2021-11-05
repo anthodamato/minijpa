@@ -5695,9 +5695,7 @@ if (jjtc000) {
 /*@bgen(jjtree) OrderByClause */
   ASTOrderByClause jjtn000 = new ASTOrderByClause(JJTORDERBYCLAUSE);
   boolean jjtc000 = true;
-  jjtree.openNodeScope(jjtn000);Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
+  jjtree.openNodeScope(jjtn000);
       try {
         jj_consume_token(ORDER);
         jj_consume_token(BY);
@@ -8684,29 +8682,29 @@ if (jjtc000) {
     return false;
   }
 
-  private boolean jj_3R_groupby_clause_3273_4_276()
- {
-    if (jj_scan_token(COMMA)) return true;
-    if (jj_3R_groupby_item_3250_3_275()) return true;
-    return false;
-  }
-
   private boolean jj_3R_empty_collection_comparison_expression_2506_3_293()
  {
     if (jj_scan_token(NOT)) return true;
     return false;
   }
 
-  private boolean jj_3R_groupby_clause_3269_3_259()
+  private boolean jj_3R_groupby_clause_3270_4_276()
+ {
+    if (jj_scan_token(COMMA)) return true;
+    if (jj_3R_groupby_item_3247_3_275()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_groupby_clause_3266_3_259()
  {
     if (!jj_rescan) trace_call("groupby_clause(LOOKING AHEAD...)");
     if (jj_scan_token(GROUP)) { if (!jj_rescan) trace_return("groupby_clause(LOOKAHEAD FAILED)"); return true; }
     if (jj_scan_token(BY)) { if (!jj_rescan) trace_return("groupby_clause(LOOKAHEAD FAILED)"); return true; }
-    if (jj_3R_groupby_item_3250_3_275()) { if (!jj_rescan) trace_return("groupby_clause(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_groupby_item_3247_3_275()) { if (!jj_rescan) trace_return("groupby_clause(LOOKAHEAD FAILED)"); return true; }
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
-      if (jj_3R_groupby_clause_3273_4_276()) { jj_scanpos = xsp; break; }
+      if (jj_3R_groupby_clause_3270_4_276()) { jj_scanpos = xsp; break; }
     }
     { if (!jj_rescan) trace_return("groupby_clause(LOOKAHEAD SUCCEEDED)"); return false; }
   }
@@ -8745,12 +8743,6 @@ if (jjtc000) {
     return false;
   }
 
-  private boolean jj_3R_groupby_item_3254_3_287()
- {
-    if (jj_scan_token(NAME)) return true;
-    return false;
-  }
-
   private boolean jj_3R_simple_entity_expression_1720_3_230()
  {
     if (jj_scan_token(NAME)) return true;
@@ -8776,22 +8768,22 @@ if (jjtc000) {
     return false;
   }
 
-  private boolean jj_3R_groupby_item_3250_3_275()
+  private boolean jj_3R_groupby_item_3251_3_287()
+ {
+    if (jj_scan_token(NAME)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_groupby_item_3247_3_275()
  {
     if (!jj_rescan) trace_call("groupby_item(LOOKING AHEAD...)");
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3_76()) {
     jj_scanpos = xsp;
-    if (jj_3R_groupby_item_3254_3_287()) { if (!jj_rescan) trace_return("groupby_item(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_groupby_item_3251_3_287()) { if (!jj_rescan) trace_return("groupby_item(LOOKAHEAD FAILED)"); return true; }
     }
     { if (!jj_rescan) trace_return("groupby_item(LOOKAHEAD SUCCEEDED)"); return false; }
-  }
-
-  private boolean jj_3_76()
- {
-    if (jj_3R_single_valued_path_expression_2892_3_29()) return true;
-    return false;
   }
 
   private boolean jj_3R_collection_member_expression_2480_3_239()
@@ -8800,18 +8792,16 @@ if (jjtc000) {
     return false;
   }
 
+  private boolean jj_3_76()
+ {
+    if (jj_3R_single_valued_path_expression_2892_3_29()) return true;
+    return false;
+  }
+
   private boolean jj_3R_entity_type_expression_1704_3_210()
  {
     if (jj_scan_token(INPUT_PARAMETER)) return true;
     return false;
-  }
-
-  private boolean jj_3R_having_clause_3237_3_260()
- {
-    if (!jj_rescan) trace_call("having_clause(LOOKING AHEAD...)");
-    if (jj_scan_token(HAVING)) { if (!jj_rescan) trace_return("having_clause(LOOKAHEAD FAILED)"); return true; }
-    if (jj_3R_conditional_expression_2855_3_274()) { if (!jj_rescan) trace_return("having_clause(LOOKAHEAD FAILED)"); return true; }
-    { if (!jj_rescan) trace_return("having_clause(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
   private boolean jj_3R_functions_returning_strings_935_3_219()
@@ -8855,6 +8845,14 @@ if (jjtc000) {
  {
     if (jj_scan_token(NOT)) return true;
     return false;
+  }
+
+  private boolean jj_3R_having_clause_3234_3_260()
+ {
+    if (!jj_rescan) trace_call("having_clause(LOOKING AHEAD...)");
+    if (jj_scan_token(HAVING)) { if (!jj_rescan) trace_return("having_clause(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_conditional_expression_2855_3_274()) { if (!jj_rescan) trace_return("having_clause(LOOKAHEAD FAILED)"); return true; }
+    { if (!jj_rescan) trace_return("having_clause(LOOKAHEAD SUCCEEDED)"); return false; }
   }
 
   private boolean jj_3R_entity_type_expression_1697_3_209()
@@ -9257,7 +9255,7 @@ if (jjtc000) {
 
   private boolean jj_3R_subquery_3172_4_235()
  {
-    if (jj_3R_having_clause_3237_3_260()) return true;
+    if (jj_3R_having_clause_3234_3_260()) return true;
     return false;
   }
 
@@ -9287,7 +9285,7 @@ if (jjtc000) {
 
   private boolean jj_3R_subquery_3169_4_234()
  {
-    if (jj_3R_groupby_clause_3269_3_259()) return true;
+    if (jj_3R_groupby_clause_3266_3_259()) return true;
     return false;
   }
 
