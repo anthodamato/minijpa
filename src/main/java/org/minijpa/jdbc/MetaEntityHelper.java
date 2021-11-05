@@ -170,7 +170,7 @@ public final class MetaEntityHelper {
 		return fetchColumnNameValues;
 	}
 
-	public static Value toValue(MetaAttribute attribute, FromTable fromTable) {
+	public static TableColumn toValue(MetaAttribute attribute, FromTable fromTable) {
 		return new TableColumn(fromTable, new Column(attribute.columnName));
 	}
 
@@ -190,8 +190,8 @@ public final class MetaEntityHelper {
 		return values;
 	}
 
-	public static List<Value> toValues(List<MetaAttribute> attributes, FromTable fromTable) {
-		List<Value> tableColumns = new ArrayList<>();
+	public static List<TableColumn> toValues(List<MetaAttribute> attributes, FromTable fromTable) {
+		List<TableColumn> tableColumns = new ArrayList<>();
 		for (MetaAttribute metaAttribute : attributes) {
 			TableColumn tableColumn = new TableColumn(fromTable, new Column(metaAttribute.getColumnName()));
 			tableColumns.add(tableColumn);

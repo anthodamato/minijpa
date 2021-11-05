@@ -68,9 +68,11 @@ public interface JpqlParserTreeConstants
   public int JJTSUBSELECTIDENTIFICATIONVARIABLEDECLARATION = 62;
   public int JJTSUBQUERYFROMCLAUSE = 63;
   public int JJTSUBQUERY = 64;
-  public int JJTHAVINGCLAUSE = 65;
-  public int JJTGROUPBYITEM = 66;
-  public int JJTGROUPBYCLAUSE = 67;
+  public int JJTORDERBYITEM = 65;
+  public int JJTORDERBYCLAUSE = 66;
+  public int JJTHAVINGCLAUSE = 67;
+  public int JJTGROUPBYITEM = 68;
+  public int JJTGROUPBYCLAUSE = 69;
 
 
   public String[] jjtNodeName = {
@@ -139,9 +141,11 @@ public interface JpqlParserTreeConstants
     "SubselectIdentificationVariableDeclaration",
     "SubqueryFromClause",
     "Subquery",
+    "OrderByItem",
+    "OrderByClause",
     "HavingClause",
-    "GroupbyItem",
-    "GroupbyClause",
+    "GroupByItem",
+    "GroupByClause",
   };
 }
-/* JavaCC - OriginalChecksum=4a99c8f6d9a682d7da31b354e9233f7e (do not edit this line) */
+/* JavaCC - OriginalChecksum=b9d4c88975011885aa0a1544e09e535c (do not edit this line) */

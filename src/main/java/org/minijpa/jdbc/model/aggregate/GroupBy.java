@@ -22,19 +22,22 @@ import org.minijpa.jdbc.model.TableColumn;
 
 public class GroupBy {
 
-    private List<TableColumn> columns = new ArrayList<>();
+	private final List<TableColumn> columns = new ArrayList<>();
 
-    public GroupBy(TableColumn column) {
-	super();
-	addColumn(column);
-    }
+	public GroupBy() {
+	}
 
-    public void addColumn(TableColumn column) {
-	this.columns.add(column);
-    }
+	public GroupBy(TableColumn column) {
+		super();
+		columns.add(column);
+	}
 
-    public List<TableColumn> getColumns() {
-	return columns;
-    }
+	public void addColumn(TableColumn column) {
+		this.columns.add(column);
+	}
+
+	public List<TableColumn> getColumns() {
+		return columns;
+	}
 
 }

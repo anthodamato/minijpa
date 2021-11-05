@@ -430,7 +430,10 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	}
 
 	private String exportOrderBy(OrderBy orderBy) {
-		String ad = orderBy.isAscending() ? " ASC" : " DESC";
+		String ad = "";
+		if (orderBy.getOrderByType() != null)
+			ad = orderBy.getOrderByType() == OrderByType.ASC ? " ASC" : " DESC";
+
 		return getSqlStatementExporter().exportTableColumn(orderBy.getTableColumn(), dbJdbc) + ad;
 	}
 

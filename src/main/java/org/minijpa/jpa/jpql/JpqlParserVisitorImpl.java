@@ -13,10 +13,12 @@ import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
+import org.minijpa.jdbc.model.OrderBy;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
 import org.minijpa.jdbc.model.aggregate.BasicAggregateFunction;
+import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.BinaryLogicConditionImpl;
 import org.minijpa.jdbc.model.condition.Condition;
@@ -79,9 +81,15 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			selectBuilder.withJoins(jpqlVisitorParameters.fromJoins);
 
 		selectBuilder.withValues(jpqlVisitorParameters.values);
+		jpqlVisitorParameters.values.forEach(v -> LOG.debug("createFromParameters: v=" + v));
 		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
 
 		selectBuilder.withConditions(jpqlVisitorParameters.conditions);
+		if (jpqlVisitorParameters.groupBy != null)
+			selectBuilder.withGroupBy(jpqlVisitorParameters.groupBy);
+
+		selectBuilder.withOrderBy(jpqlVisitorParameters.orderByList);
+
 		LOG.debug("createFromParameters: jpqlVisitorParameters.conditions=" + jpqlVisitorParameters.conditions);
 
 		return selectBuilder.build();
@@ -138,7 +146,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 							attributePath = stateFieldPathExpression.getPath() + "." + stateFieldPathExpression.getStateField();
 
 						if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
-							List<Value> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity));
+							List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity));
 //							node.setValues(values);
 							jpqlVisitorParameters.values.addAll(values);
 
@@ -163,37 +171,38 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 					}
 				}
 			} else if (node0 instanceof ASTScalarExpression) {
-				Node node0_0 = node.jjtGetChild(0);
-				LOG.debug("visit: ASTSelectExpression node0_0=" + node0_0);
-				LOG.debug("visit: ASTSelectExpression node0_0.jjtGetNumChildren()=" + node0_0.jjtGetNumChildren());
-				if (node0_0.jjtGetNumChildren() > 0)
-					LOG.debug("visit: ASTSelectExpression node0_0.jjtGetChild(0)=" + node0_0.jjtGetChild(0));
+				LOG.debug("visit: ASTSelectExpression node0=" + node0);
+				LOG.debug("visit: ASTSelectExpression node0_0.jjtGetNumChildren()=" + node0.jjtGetNumChildren());
+				if (node0.jjtGetNumChildren() > 0)
+					LOG.debug("visit: ASTSelectExpression node0_0.jjtGetChild(0)=" + node0.jjtGetChild(0));
 
-				// ScalarExpression Node is duplicated.
-				node0_0 = node0_0.jjtGetChild(0);
+				// ScalarExpression Node is duplicated. Why!?
+				node0 = node0.jjtGetChild(0);
 
-				if (node0_0 instanceof ASTArithmeticExpression) {
-					ASTArithmeticExpression arithmeticExpression = (ASTArithmeticExpression) node0_0;
+				if (node0 instanceof ASTArithmeticExpression) {
+					ASTArithmeticExpression arithmeticExpression = (ASTArithmeticExpression) node0;
 					Value value = new SqlExpressionImpl(arithmeticExpression.getResult());
 //					node.setValues(Arrays.asList(value));
 					jpqlVisitorParameters.values.addAll(Arrays.asList(value));
-				} else if (node0_0 instanceof ASTDatetimeExpression) {
-					ASTDatetimeExpression datetimeExpression = (ASTDatetimeExpression) node0_0;
+				} else if (node0 instanceof ASTDatetimeExpression) {
+					ASTDatetimeExpression datetimeExpression = (ASTDatetimeExpression) node0;
 					Value value = new SqlExpressionImpl(decodeExpression(datetimeExpression));
 					LOG.debug("visit: ASTSelectExpression value=" + value);
 //					node.setValues(Arrays.asList(value));
 					jpqlVisitorParameters.values.addAll(Arrays.asList(value));
-				} else if (node0_0 instanceof ASTStringExpression) {
-					ASTStringExpression expression = (ASTStringExpression) node0_0;
+				} else if (node0 instanceof ASTStringExpression) {
+					ASTStringExpression expression = (ASTStringExpression) node0;
 					Value value = new SqlExpressionImpl(decodeExpression(expression));
 //					node.setValues(Arrays.asList(value));
 					jpqlVisitorParameters.values.addAll(Arrays.asList(value));
-				} else if (node0_0 instanceof ASTBooleanExpression) {
-					ASTBooleanExpression expression = (ASTBooleanExpression) node0_0;
+				} else if (node0 instanceof ASTBooleanExpression) {
+					ASTBooleanExpression expression = (ASTBooleanExpression) node0;
 					Value value = new SqlExpressionImpl(decodeExpression(expression));
 //					node.setValues(Arrays.asList(value));
 					jpqlVisitorParameters.values.addAll(Arrays.asList(value));
 				}
+			} else if (node0 instanceof ASTAggregateExpression) {
+				jpqlVisitorParameters.values.add(((ASTAggregateExpression) node0).getValue());
 			}
 		} else {
 			String identificationVariable = node.getIdentificationVariable();
@@ -201,7 +210,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			if (identificationVariable != null) {
 				MetaEntity metaEntity = findMetaEntityByJpqlAlias(identificationVariable, jpqlVisitorParameters.aliases);
 				if (jpqlVisitorParameters.distinct) {
-					List<Value> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity));
+					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity));
 					jpqlVisitorParameters.values.addAll(values);
 
 					List<FetchParameter> fetchParameters = new ArrayList<>();
@@ -932,13 +941,106 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	}
 
 	@Override
-	public Object visit(ASTGroupbyItem node, Object data) {
+	public Object visit(ASTGroupByItem node, Object data) {
 		return node.childrenAccept(this, data);
 	}
 
 	@Override
-	public Object visit(ASTGroupbyClause node, Object data) {
+	public Object visit(ASTGroupByClause node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
+		GroupBy groupBy = new GroupBy();
+		for (Node n : node.children) {
+			ASTGroupByItem groupbyItem = (ASTGroupByItem) n;
+			if (groupbyItem.jjtGetNumChildren() == 0) {
+				// identification variable
+			} else {
+				Node node0 = groupbyItem.jjtGetChild(0);
+				if (node0 instanceof ASTSingleValuedPathExpression) {
+					ASTSingleValuedPathExpression singleValuedPathExpression = (ASTSingleValuedPathExpression) node0;
+					Node node1 = singleValuedPathExpression.jjtGetChild(0);
+					if (node1 instanceof ASTStateFieldPathExpression) {
+						ASTStateFieldPathExpression stateFieldPathExpression = (ASTStateFieldPathExpression) node1;
+						// identification variable.path.stateField
+						String identificationVariable = stateFieldPathExpression.getIdentificationVariable();
+						if (identificationVariable != null) {
+							LOG.debug("visit: ASTSelectExpression stateFieldPathExpression.getStateField()=" + stateFieldPathExpression.getStateField());
+							MetaEntity metaEntity = findMetaEntityByJpqlAlias(identificationVariable, jpqlVisitorParameters.aliases);
+							String attributePath = stateFieldPathExpression.getStateField();
+							if (!stateFieldPathExpression.getPath().isEmpty())
+								attributePath = stateFieldPathExpression.getPath() + "." + stateFieldPathExpression.getStateField();
+
+							if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
+								List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity));
+								values.forEach(v -> groupBy.addColumn(v));
+							} else {
+								MetaAttribute metaAttribute
+										= AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+								if (metaAttribute == null)
+									throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+
+								TableColumn value = MetaEntityHelper.toValue(metaAttribute, FromTable.of(metaEntity));
+								groupBy.addColumn(value);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		jpqlVisitorParameters.groupBy = groupBy;
+		return object;
+	}
+
+	@Override
+	public Object visit(ASTOrderByItem node, Object data) {
 		return node.childrenAccept(this, data);
+	}
+
+	@Override
+	public Object visit(ASTOrderByClause node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
+		for (Node n : node.children) {
+			ASTOrderByItem orderByItem = (ASTOrderByItem) n;
+			if (orderByItem.jjtGetNumChildren() == 0) {
+				// result variable
+			} else {
+				Node n0 = orderByItem.jjtGetChild(0);
+				if (n0 instanceof ASTStateFieldPathExpression) {
+					ASTStateFieldPathExpression stateFieldPathExpression = (ASTStateFieldPathExpression) n0;
+					// identification variable.path.stateField
+					String identificationVariable = stateFieldPathExpression.getIdentificationVariable();
+					if (identificationVariable != null) {
+						LOG.debug("visit: ASTSelectExpression stateFieldPathExpression.getStateField()=" + stateFieldPathExpression.getStateField());
+						MetaEntity metaEntity = findMetaEntityByJpqlAlias(identificationVariable, jpqlVisitorParameters.aliases);
+						String attributePath = stateFieldPathExpression.getStateField();
+						if (!stateFieldPathExpression.getPath().isEmpty())
+							attributePath = stateFieldPathExpression.getPath() + "." + stateFieldPathExpression.getStateField();
+
+						if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
+							List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity));
+							values.forEach(v -> {
+								OrderBy orderBy = new OrderBy(v, orderByItem.getOrderByType());
+								jpqlVisitorParameters.orderByList.add(orderBy);
+							});
+						} else {
+							MetaAttribute metaAttribute
+									= AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+							if (metaAttribute == null)
+								throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+
+							TableColumn value = MetaEntityHelper.toValue(metaAttribute, FromTable.of(metaEntity));
+							OrderBy orderBy = new OrderBy(value, orderByItem.getOrderByType());
+							jpqlVisitorParameters.orderByList.add(orderBy);
+						}
+					}
+				}
+
+			}
+		}
+
+		return object;
 	}
 
 	@Override
@@ -1077,6 +1179,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		if (n0_0 instanceof ASTStateValuedPathExpression) {
 			ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0_0;
 			String path = stateValuedPathExpression.getPath();
+			LOG.debug("ASTAggregateExpression: ASTStateValuedPathExpression path=" + path);
 			String[] sps = path.split("\\.");
 			if (sps.length == 1) {
 				MetaEntity metaEntity = findMetaEntityByJpqlAlias(sps[0], jpqlVisitorParameters.aliases);

@@ -196,4 +196,36 @@ public class JpqlTest {
 
 		emf.close();
 	}
+
+	@Test
+	public void groupByOrderBy() throws Exception {
+		String persistenceUnitName = "item_sale_stats";
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnitName, PersistenceUnitProperties.getProperties());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+
+		PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, persistenceUnitName);
+		PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+		String query = "select i.category, count(i.count) from ItemSaleStats i group by i.category order by i.category";
+		JpqlModule jpqlModule = new JpqlModule(dbConfiguration, new SqlStatementFactory(), persistenceUnitContext);
+
+		try {
+			JpqlResult jpqlResult = jpqlModule.parse(query);
+			Assertions.assertEquals(
+					"select i.category, count(i.count) from ItemSaleStats AS i group by i.category order by i.category",
+					jpqlResult.getSql());
+		} catch (Exception ex) {
+			LOG.debug(ex.getMessage());
+			Throwable t = ex.getCause();
+			LOG.debug("t=" + t);
+			ex.printStackTrace();
+			Assertions.fail();
+		} catch (Error error) {
+			LOG.debug(error.getMessage());
+			Throwable t = error.getCause();
+			LOG.debug("t=" + t);
+			Assertions.fail();
+		}
+
+		emf.close();
+	}
 }

@@ -27,115 +27,115 @@ import org.slf4j.LoggerFactory;
  */
 public class OneToManyUniTest {
 
-    private Logger LOG = LoggerFactory.getLogger(OneToManyUniTest.class);
-    private static EntityManagerFactory emf;
+	private Logger LOG = LoggerFactory.getLogger(OneToManyUniTest.class);
+	private static EntityManagerFactory emf;
 
-    @BeforeAll
-    public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("onetomany_uni", PersistenceUnitProperties.getProperties());
-    }
+	@BeforeAll
+	public static void beforeAll() {
+		emf = Persistence.createEntityManagerFactory("onetomany_uni", PersistenceUnitProperties.getProperties());
+	}
 
-    @AfterAll
-    public static void afterAll() {
-	emf.close();
-    }
+	@AfterAll
+	public static void afterAll() {
+		emf.close();
+	}
 
-    @Test
-    public void persist() throws Exception {
-	final EntityManager em = emf.createEntityManager();
-	Store store = new Store();
-	store.setName("Upton Store");
+	@Test
+	public void persist() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		Store store = new Store();
+		store.setName("Upton Store");
 
-	Item item1 = new Item();
-	item1.setName("Notepad");
-	item1.setModel("Free Ink");
+		Item item1 = new Item();
+		item1.setName("Notepad");
+		item1.setModel("Free Ink");
 
-	Item item2 = new Item();
-	item2.setName("Pencil");
-	item2.setModel("Staedtler");
+		Item item2 = new Item();
+		item2.setName("Pencil");
+		item2.setModel("Staedtler");
 
-	store.setItems(Arrays.asList(item1, item2));
+		store.setItems(Arrays.asList(item1, item2));
 
-	final EntityTransaction tx = em.getTransaction();
-	tx.begin();
+		final EntityTransaction tx = em.getTransaction();
+		tx.begin();
 
-	em.persist(item1);
-	em.persist(store);
-	em.persist(item2);
+		em.persist(item1);
+		em.persist(store);
+		em.persist(item2);
 
-	tx.commit();
+		tx.commit();
 
-	Assertions.assertFalse(store.getItems().isEmpty());
+		Assertions.assertFalse(store.getItems().isEmpty());
 
-	em.detach(store);
+		em.detach(store);
 
-	tx.begin();
-	Store s = em.find(Store.class, store.getId());
-	Assertions.assertFalse(s == store);
-	Assertions.assertTrue(!s.getItems().isEmpty());
-	Assertions.assertEquals(2, s.getItems().size());
-	tx.commit();
+		tx.begin();
+		Store s = em.find(Store.class, store.getId());
+		Assertions.assertFalse(s == store);
+		Assertions.assertTrue(!s.getItems().isEmpty());
+		Assertions.assertEquals(2, s.getItems().size());
+		tx.commit();
 
-	em.close();
-    }
+		em.close();
+	}
 
-    @Test
-    public void persistCollection() throws Exception {
-	final EntityManager em = emf.createEntityManager();
-	Store store = new Store();
-	store.setName("Upton Store");
+	@Test
+	public void persistCollection() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		Store store = new Store();
+		store.setName("Upton Store");
 
-	Item item1 = new Item();
-	item1.setName("Notepad");
-	item1.setModel("Free Inch");
+		Item item1 = new Item();
+		item1.setName("Notepad");
+		item1.setModel("Free Inch");
 
-	Item item2 = new Item();
-	item2.setName("Pencil");
-	item2.setModel("Staedtler");
+		Item item2 = new Item();
+		item2.setName("Pencil");
+		item2.setModel("Staedtler");
 
-	List list = new ArrayList();
-	list.add(item1);
-	list.add(item2);
-	store.setItems(list);
+		List list = new ArrayList();
+		list.add(item1);
+		list.add(item2);
+		store.setItems(list);
 
-	final EntityTransaction tx = em.getTransaction();
-	tx.begin();
+		final EntityTransaction tx = em.getTransaction();
+		tx.begin();
 
-	em.persist(item1);
-	em.persist(store);
-	em.persist(item2);
+		em.persist(item1);
+		em.persist(store);
+		em.persist(item2);
 
-	tx.commit();
+		tx.commit();
 
-	tx.begin();
-	Item item3 = new Item();
-	item3.setName("Pen");
-	item3.setModel("Bic");
-	em.persist(item3);
+		tx.begin();
+		Item item3 = new Item();
+		item3.setName("Pen");
+		item3.setModel("Bic");
+		em.persist(item3);
 
-	store.getItems().add(item3);
-	em.persist(store);
+		store.getItems().add(item3);
+		em.persist(store);
 
-	tx.commit();
+		tx.commit();
 
-	Assertions.assertFalse(store.getItems().isEmpty());
+		Assertions.assertFalse(store.getItems().isEmpty());
 
-	em.detach(store);
+		em.detach(store);
 
-	tx.begin();
-	Store s = em.find(Store.class, store.getId());
-	Assertions.assertTrue(!s.getItems().isEmpty());
-	Assertions.assertEquals(3, s.getItems().size());
-	Assertions.assertFalse(s == store);
+		tx.begin();
+		Store s = em.find(Store.class, store.getId());
+		Assertions.assertTrue(!s.getItems().isEmpty());
+		Assertions.assertEquals(3, s.getItems().size());
+		Assertions.assertFalse(s == store);
 
-	Query query = em.createNativeQuery("select count(*) from store_items where store_id=" + s.getId());
-	Number count = (Number) query.getSingleResult();
-	Assertions.assertEquals(3, count.intValue());
+		Query query = em.createNativeQuery("select count(*) from store_items where store_id=" + s.getId());
+		Number count = (Number) query.getSingleResult();
+		Assertions.assertEquals(3, count.intValue());
 
-	tx.commit();
+		tx.commit();
 
-	LOG.info("persistCollection: s=" + s);
-	em.close();
-    }
+		LOG.info("persistCollection: s=" + s);
+		em.close();
+	}
 
 }

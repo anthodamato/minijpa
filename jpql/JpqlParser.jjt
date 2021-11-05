@@ -236,6 +236,15 @@ void select_statement() #SelectStatement :
   [
    where_clause()
   ]
+  [
+   groupby_clause()
+  ]
+  [
+   having_clause()
+  ]
+  [
+   orderby_clause()
+  ]
 }
 
 
@@ -265,13 +274,18 @@ void select_clause() #SelectClause :
 void select_item() #SelectItem :
 {
   Token t;
+  String s;
 }
 {
   select_expression()
   [
+   //LOOKAHEAD(2)
    [<AS>]
    t=<NAME>
+//   LOOKAHEAD({ getToken(1).kind != FROM && getToken(1).kind != COMMA })
+//   s=anyIdentifier()
    {
+//     jjtThis.setAlias(s);
      jjtThis.setAlias(t.image);
    }
   ]
@@ -317,7 +331,9 @@ void select_expression() #SelectExpression :
  <OBJECT>
  <OPEN_BRACKET>
  t=<NAME>
+// s=anyIdentifier()
    {
+//     jjtThis.setObjectIdentificationVariable(s);
      jjtThis.setObjectIdentificationVariable(t.image);
    }
  <CLOSE_BRACKET>
@@ -699,7 +715,7 @@ void identification_variable_declaration() #IdentificationVariableDeclaration :
 }
 
 
-//    from_clause ::= FROM  identification_variable_declaration
+//    from_clause ::= FROM identification_variable_declaration
 //          {, {identification_variable_declaration | collection_member_declaration}}*
 void from_clause() #FromClause :
 {
@@ -801,6 +817,10 @@ void general_identification_variable() #GeneralIdentificationVariable :
 
 
 // simple_subpath ::= general_identification_variable | general_identification_variable{.single_valued_object_field}*
+//
+// MODIFIED AS:
+//
+// simple_subpath ::= general_identification_variable{.single_valued_object_field}*
 void simple_subpath() #SimpleSubpath :
 {
   Token t;
@@ -820,6 +840,9 @@ void simple_subpath() #SimpleSubpath :
      jjtThis.addPath(t.image);
    }
  )*
+ 
+// |
+// general_identification_variable()
 }
 
 
@@ -845,7 +868,7 @@ void general_subpath() #GeneralSubpath :
 }
 
 
-//  treated_subpath ::= TREAT(general_subpath AS subtype)
+// treated_subpath ::= TREAT(general_subpath AS subtype)
 void treated_subpath() #TreatedSubpath :
 {
   Token t;
@@ -869,13 +892,16 @@ void treated_subpath() #TreatedSubpath :
 void state_field_path_expression() #StateFieldPathExpression :
 {
   Token t;
+  String s;
 }
 {
  general_subpath()
  <DOT>
- t=<NAME>
+ s=anyIdentifier()
+// t=<NAME>
  {
-   jjtThis.setStateField(t.image);
+   jjtThis.setStateField(s);
+//   jjtThis.setStateField(t.image);
  }
 }
 
@@ -1276,15 +1302,18 @@ void aggregate_expression() #AggregateExpression :
      jjtThis.setDistinct(true);
    }
   ]
-  t=<NAME>
-    {
-      jjtThis.setIdentificationVariable(t.image);
-    }
-  |
-  LOOKAHEAD(3)
-  state_valued_path_expression()
-  |
-  single_valued_object_path_expression()
+  (
+   LOOKAHEAD(3)
+   state_valued_path_expression()
+   |
+   LOOKAHEAD(2)
+   single_valued_object_path_expression()
+   |
+   t=<NAME>
+     {
+       jjtThis.setIdentificationVariable(t.image);
+     }
+  )
   <CLOSE_BRACKET>
 
   |
@@ -2847,7 +2876,7 @@ void where_clause() #WhereClause :
 //      state_field_path_expression |
 //      single_valued_object_path_expression
 //
-//  MODIFIED as: ('state_field_path_expression' and 'single_valued_object_path_expression' could be the same)
+//  MODIFIED as: ('state_field_path_expression' and 'single_valued_object_path_expression' could be the same from a syntactic point of view)
 //
 //   single_valued_path_expression ::=
 //      qualified_identification_variable |
@@ -2892,6 +2921,7 @@ void single_valued_path_expression() #SingleValuedPathExpression :
 void simple_select_expression() #SimpleSelectExpression :
 {
   Token t;
+  String s;
 }
 {
   LOOKAHEAD(single_valued_path_expression())
@@ -3035,6 +3065,7 @@ void general_derived_path() #GeneralDerivedPath :
 void derived_path_expression() #DerivedPathExpression :
 {
   Token t;
+  String s;
 }
 {
   general_derived_path()
@@ -3053,6 +3084,7 @@ void derived_path_expression() #DerivedPathExpression :
 void subselect_identification_variable_declaration() #SubselectIdentificationVariableDeclaration :
 {
   Token t;
+  String s;
 }
 {
   LOOKAHEAD(identification_variable_declaration())
@@ -3142,92 +3174,52 @@ void subquery() #Subquery :
 }
 
 
-// orderby_item ::=
-//    state_field_path_expression |
-//    general_identification_variable |
-//    result_variable
-//    [ASC | DESC]
-String orderby_item() :
+// orderby_item ::= { state_field_path_expression | general_identification_variable | result_variable } [ASC | DESC]
+void orderby_item() #OrderByItem :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
+ (
   LOOKAHEAD(3)
   state_field_path_expression()
-    {
-      return sb.toString();
-    }
     
   |
   LOOKAHEAD(2)
   general_identification_variable()
-    {
-      return "";
-    }
-    
+
   |
   t=<NAME>
     {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
+      jjtThis.setResultVariable(t.image);
     }
-
+ )
   [
-   t=<ASC>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-     }
+   <ASC>
+   {
+     jjtThis.setOrderByType(org.minijpa.jdbc.model.OrderByType.ASC);
+   }
    |
-   t=<DESC>
-     {
-       sb.append(" ");
-       sb.append(t.image);
-     }
+   <DESC>
+   {
+     jjtThis.setOrderByType(org.minijpa.jdbc.model.OrderByType.DESC);
+   }
   ]
-  { return sb.toString(); }
 }
 
 
 // orderby_clause ::= ORDER BY orderby_item {, orderby_item}*
-String orderby_clause() :
+void orderby_clause() #OrderByClause :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  t=<ORDER>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  t=<BY>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  s=orderby_item()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  <ORDER>
+  <BY>
+  orderby_item()
   (
-  t=<COMMA>
-    {
-      sb.append(t.image);
-    }
-  s=orderby_item()
-    {
-      sb.append("");
-      sb.append(s);
-    }
+   <COMMA>
+   orderby_item()
   )*
-  
-  { return sb.toString(); }
 }
 
 
@@ -3245,7 +3237,7 @@ void having_clause() #HavingClause :
 
 
 // groupby_item ::= single_valued_path_expression | identification_variable
-void groupby_item() #GroupbyItem :
+void groupby_item() #GroupByItem :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -3264,7 +3256,7 @@ void groupby_item() #GroupbyItem :
 
 
 // groupby_clause ::= GROUP BY groupby_item {, groupby_item}*
-void groupby_clause() #GroupbyClause :
+void groupby_clause() #GroupByClause :
 {
   Token t;
   StringBuilder sb=new StringBuilder();

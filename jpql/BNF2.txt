@@ -108,11 +108,7 @@ groupby_clause ::= GROUP BY groupby_item {, groupby_item}*
 groupby_item ::= single_valued_path_expression | identification_variable
 having_clause ::= HAVING conditional_expression
 orderby_clause ::= ORDER BY orderby_item {, orderby_item}*
-orderby_item ::=
-    state_field_path_expression |
-    general_identification_variable |
-    result_variable
-    [ASC | DESC]
+orderby_item ::= { state_field_path_expression | general_identification_variable | result_variable } [ASC | DESC]
     
 subquery ::= simple_select_clause subquery_from_clause [where_clause]
     [groupby_clause] [having_clause]

@@ -53,6 +53,7 @@ import org.minijpa.jdbc.model.ForeignKeyDeclaration;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
 import org.minijpa.jdbc.model.OrderBy;
+import org.minijpa.jdbc.model.OrderByType;
 import org.minijpa.jdbc.model.SqlCreateJoinTable;
 import org.minijpa.jdbc.model.SqlCreateTable;
 import org.minijpa.jdbc.model.SqlDDLStatement;
@@ -131,7 +132,7 @@ public class SqlStatementFactory {
 	public SqlSelect generateSelectById(MetaEntity entity, LockType lockType) throws Exception {
 		List<FetchParameter> fetchParameters = MetaEntityHelper.convertAllAttributes(entity);
 		FromTable fromTable = FromTable.of(entity);
-		List<Value> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
+		List<TableColumn> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
 			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 		}).collect(Collectors.toList());
@@ -146,7 +147,7 @@ public class SqlStatementFactory {
 		FetchParameter fetchParameter = MetaEntityHelper.toFetchParameter(entity.getVersionAttribute().get());
 
 		FromTable fromTable = FromTable.of(entity);
-		List<Value> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
+		List<TableColumn> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
 			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
 		}).collect(Collectors.toList());
@@ -1037,7 +1038,8 @@ public class SqlStatementFactory {
 				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
 				TableColumn tableColumn = new TableColumn(FromTable.of(miniPath.getMetaEntity()),
 						new Column(metaAttribute.getColumnName()));
-				OrderBy orderBy = new OrderBy(tableColumn, order.isAscending());
+				OrderByType orderByType = order.isAscending() ? OrderByType.ASC : OrderByType.DESC;
+				OrderBy orderBy = new OrderBy(tableColumn, orderByType);
 				result.add(orderBy);
 			}
 		}

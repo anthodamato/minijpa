@@ -3,13 +3,13 @@
 package org.minijpa.jpa.jpql;
 
 public
-class ASTGroupbyItem extends SimpleNode {
+class ASTGroupByItem extends SimpleNode {
 	private String identificationVariable;
-  public ASTGroupbyItem(int id) {
+  public ASTGroupByItem(int id) {
     super(id);
   }
 
-  public ASTGroupbyItem(JpqlParser p, int id) {
+  public ASTGroupByItem(JpqlParser p, int id) {
     super(p, id);
   }
 
