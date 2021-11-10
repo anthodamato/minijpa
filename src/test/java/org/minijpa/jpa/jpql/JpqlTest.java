@@ -228,4 +228,36 @@ public class JpqlTest {
 
 		emf.close();
 	}
+
+	@Test
+	public void betweenHolidays() throws Exception {
+		String persistenceUnitName = "holidays";
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnitName, PersistenceUnitProperties.getProperties());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+
+		PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, persistenceUnitName);
+		PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+		String query = "select hl from Holiday hl where hl.nights between 7 and 10";
+		JpqlModule jpqlModule = new JpqlModule(dbConfiguration, new SqlStatementFactory(), persistenceUnitContext);
+
+		try {
+			JpqlResult jpqlResult = jpqlModule.parse(query);
+			Assertions.assertEquals(
+					"select h.id, h.travellers, h.checkIn, h.nights, h.referenceName from Holiday AS h where h.nights BETWEEN 7 AND 10",
+					jpqlResult.getSql());
+		} catch (Exception ex) {
+			LOG.debug(ex.getMessage());
+			Throwable t = ex.getCause();
+			LOG.debug("t=" + t);
+			ex.printStackTrace();
+			Assertions.fail();
+		} catch (Error error) {
+			LOG.debug(error.getMessage());
+			Throwable t = error.getCause();
+			LOG.debug("t=" + t);
+			Assertions.fail();
+		}
+
+		emf.close();
+	}
 }

@@ -31,6 +31,7 @@ public interface JpqlParserVisitor
   public Object visit(ASTWhenClause node, Object data);
   public Object visit(ASTGeneralCaseExpression node, Object data);
   public Object visit(ASTCaseExpression node, Object data);
+  public Object visit(ASTEntityTypeExpression node, Object data);
   public Object visit(ASTEnumExpression node, Object data);
   public Object visit(ASTBooleanExpression node, Object data);
   public Object visit(ASTDatetimeExpression node, Object data);
@@ -44,6 +45,7 @@ public interface JpqlParserVisitor
   public Object visit(ASTArithmeticExpressionComparison node, Object data);
   public Object visit(ASTBooleanExpressionComparison node, Object data);
   public Object visit(ASTDatetimeExpressionComparison node, Object data);
+  public Object visit(ASTEntityTypeExpressionComparison node, Object data);
   public Object visit(ASTComparisonExpression node, Object data);
   public Object visit(ASTExistsExpression node, Object data);
   public Object visit(ASTCollectionValuedPathExpression node, Object data);
@@ -51,6 +53,10 @@ public interface JpqlParserVisitor
   public Object visit(ASTLikeExpression node, Object data);
   public Object visit(ASTInItem node, Object data);
   public Object visit(ASTInExpression node, Object data);
+  public Object visit(ASTBetweenExpression node, Object data);
+  public Object visit(ASTArithmeticBetweenExpression node, Object data);
+  public Object visit(ASTStringBetweenExpression node, Object data);
+  public Object visit(ASTDatetimeBetweenExpression node, Object data);
   public Object visit(ASTSimpleCondExpression node, Object data);
   public Object visit(ASTConditionalPrimary node, Object data);
   public Object visit(ASTConditionalFactor node, Object data);
@@ -74,4 +80,4 @@ public interface JpqlParserVisitor
   public Object visit(ASTGroupByItem node, Object data);
   public Object visit(ASTGroupByClause node, Object data);
 }
-/* JavaCC - OriginalChecksum=b1fe6f0c44a2cc4d59dfa39082d151c0 (do not edit this line) */
+/* JavaCC - OriginalChecksum=c7a49b5da32946d17e12e7a51afb93ea (do not edit this line) */

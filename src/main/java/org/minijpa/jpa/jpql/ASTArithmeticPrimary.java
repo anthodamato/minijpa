@@ -30,12 +30,11 @@ public class ASTArithmeticPrimary extends SimpleNode {
 	@Override
 	public void dump(String prefix) {
 		super.dump(prefix);
-		System.out.println("ASTArithmeticPrimary result=" + result);
+//		System.out.println("ASTArithmeticPrimary result=" + result);
 	}
 
 	public void setResult(Object result) {
-		System.out.println("ASTArithmeticPrimary: result=" + result);
-		dump("");
+//		dump("");
 //		System.out.println("ASTArithmeticPrimary: this=" + this.dump(""));
 		this.result = result;
 	}

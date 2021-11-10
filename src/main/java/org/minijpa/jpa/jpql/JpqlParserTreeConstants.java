@@ -31,48 +31,54 @@ public interface JpqlParserTreeConstants
   public int JJTWHENCLAUSE = 25;
   public int JJTGENERALCASEEXPRESSION = 26;
   public int JJTCASEEXPRESSION = 27;
-  public int JJTENUMEXPRESSION = 28;
-  public int JJTBOOLEANEXPRESSION = 29;
-  public int JJTDATETIMEEXPRESSION = 30;
-  public int JJTSTRINGEXPRESSION = 31;
-  public int JJTARITHMETICPRIMARY = 32;
-  public int JJTARITHMETICFACTOR = 33;
-  public int JJTARITHMETICTERM = 34;
-  public int JJTARITHMETICEXPRESSION = 35;
-  public int JJTALLORANYEXPRESSION = 36;
-  public int JJTSTRINGEXPRESSIONCOMPARISON = 37;
-  public int JJTARITHMETICEXPRESSIONCOMPARISON = 38;
-  public int JJTBOOLEANEXPRESSIONCOMPARISON = 39;
-  public int JJTDATETIMEEXPRESSIONCOMPARISON = 40;
-  public int JJTCOMPARISONEXPRESSION = 41;
-  public int JJTEXISTSEXPRESSION = 42;
-  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 43;
-  public int JJTNULLCOMPARISONEXPRESSION = 44;
-  public int JJTLIKEEXPRESSION = 45;
-  public int JJTINITEM = 46;
-  public int JJTINEXPRESSION = 47;
-  public int JJTSIMPLECONDEXPRESSION = 48;
-  public int JJTCONDITIONALPRIMARY = 49;
-  public int JJTCONDITIONALFACTOR = 50;
-  public int JJTCONDITIONALTERM = 51;
-  public int JJTCONDITIONALEXPRESSION = 52;
-  public int JJTWHERECLAUSE = 53;
-  public int JJTSINGLEVALUEDPATHEXPRESSION = 54;
-  public int JJTSIMPLESELECTEXPRESSION = 55;
-  public int JJTSIMPLESELECTCLAUSE = 56;
-  public int JJTDERIVEDCOLLECTIONMEMBERDECLARATION = 57;
-  public int JJTTREATEDDERIVEDPATH = 58;
-  public int JJTSIMPLEDERIVEDPATH = 59;
-  public int JJTGENERALDERIVEDPATH = 60;
-  public int JJTDERIVEDPATHEXPRESSION = 61;
-  public int JJTSUBSELECTIDENTIFICATIONVARIABLEDECLARATION = 62;
-  public int JJTSUBQUERYFROMCLAUSE = 63;
-  public int JJTSUBQUERY = 64;
-  public int JJTORDERBYITEM = 65;
-  public int JJTORDERBYCLAUSE = 66;
-  public int JJTHAVINGCLAUSE = 67;
-  public int JJTGROUPBYITEM = 68;
-  public int JJTGROUPBYCLAUSE = 69;
+  public int JJTENTITYTYPEEXPRESSION = 28;
+  public int JJTENUMEXPRESSION = 29;
+  public int JJTBOOLEANEXPRESSION = 30;
+  public int JJTDATETIMEEXPRESSION = 31;
+  public int JJTSTRINGEXPRESSION = 32;
+  public int JJTARITHMETICPRIMARY = 33;
+  public int JJTARITHMETICFACTOR = 34;
+  public int JJTARITHMETICTERM = 35;
+  public int JJTARITHMETICEXPRESSION = 36;
+  public int JJTALLORANYEXPRESSION = 37;
+  public int JJTSTRINGEXPRESSIONCOMPARISON = 38;
+  public int JJTARITHMETICEXPRESSIONCOMPARISON = 39;
+  public int JJTBOOLEANEXPRESSIONCOMPARISON = 40;
+  public int JJTDATETIMEEXPRESSIONCOMPARISON = 41;
+  public int JJTENTITYTYPEEXPRESSIONCOMPARISON = 42;
+  public int JJTCOMPARISONEXPRESSION = 43;
+  public int JJTEXISTSEXPRESSION = 44;
+  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 45;
+  public int JJTNULLCOMPARISONEXPRESSION = 46;
+  public int JJTLIKEEXPRESSION = 47;
+  public int JJTINITEM = 48;
+  public int JJTINEXPRESSION = 49;
+  public int JJTBETWEENEXPRESSION = 50;
+  public int JJTARITHMETICBETWEENEXPRESSION = 51;
+  public int JJTSTRINGBETWEENEXPRESSION = 52;
+  public int JJTDATETIMEBETWEENEXPRESSION = 53;
+  public int JJTSIMPLECONDEXPRESSION = 54;
+  public int JJTCONDITIONALPRIMARY = 55;
+  public int JJTCONDITIONALFACTOR = 56;
+  public int JJTCONDITIONALTERM = 57;
+  public int JJTCONDITIONALEXPRESSION = 58;
+  public int JJTWHERECLAUSE = 59;
+  public int JJTSINGLEVALUEDPATHEXPRESSION = 60;
+  public int JJTSIMPLESELECTEXPRESSION = 61;
+  public int JJTSIMPLESELECTCLAUSE = 62;
+  public int JJTDERIVEDCOLLECTIONMEMBERDECLARATION = 63;
+  public int JJTTREATEDDERIVEDPATH = 64;
+  public int JJTSIMPLEDERIVEDPATH = 65;
+  public int JJTGENERALDERIVEDPATH = 66;
+  public int JJTDERIVEDPATHEXPRESSION = 67;
+  public int JJTSUBSELECTIDENTIFICATIONVARIABLEDECLARATION = 68;
+  public int JJTSUBQUERYFROMCLAUSE = 69;
+  public int JJTSUBQUERY = 70;
+  public int JJTORDERBYITEM = 71;
+  public int JJTORDERBYCLAUSE = 72;
+  public int JJTHAVINGCLAUSE = 73;
+  public int JJTGROUPBYITEM = 74;
+  public int JJTGROUPBYCLAUSE = 75;
 
 
   public String[] jjtNodeName = {
@@ -104,6 +110,7 @@ public interface JpqlParserTreeConstants
     "WhenClause",
     "GeneralCaseExpression",
     "CaseExpression",
+    "EntityTypeExpression",
     "EnumExpression",
     "BooleanExpression",
     "DatetimeExpression",
@@ -117,6 +124,7 @@ public interface JpqlParserTreeConstants
     "ArithmeticExpressionComparison",
     "BooleanExpressionComparison",
     "DatetimeExpressionComparison",
+    "EntityTypeExpressionComparison",
     "ComparisonExpression",
     "ExistsExpression",
     "CollectionValuedPathExpression",
@@ -124,6 +132,10 @@ public interface JpqlParserTreeConstants
     "LikeExpression",
     "InItem",
     "InExpression",
+    "BetweenExpression",
+    "ArithmeticBetweenExpression",
+    "StringBetweenExpression",
+    "DatetimeBetweenExpression",
     "SimpleCondExpression",
     "ConditionalPrimary",
     "ConditionalFactor",
@@ -148,4 +160,4 @@ public interface JpqlParserTreeConstants
     "GroupByClause",
   };
 }
-/* JavaCC - OriginalChecksum=b9d4c88975011885aa0a1544e09e535c (do not edit this line) */
+/* JavaCC - OriginalChecksum=d112be6fa8873e717437f8e25a5712be (do not edit this line) */

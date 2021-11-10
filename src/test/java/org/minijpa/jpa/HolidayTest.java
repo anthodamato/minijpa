@@ -7,6 +7,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -237,4 +238,35 @@ public class HolidayTest {
 		em.close();
 	}
 
+	@Test
+	public void jpqlBetween() {
+		final EntityManager em = emf.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		tx.begin();
+
+		Holiday h1 = holiday1();
+		Holiday h2 = holiday2();
+		Holiday h3 = holiday3();
+		Holiday h4 = holiday4();
+		Holiday h5 = holiday5();
+
+		em.persist(h1);
+		em.persist(h2);
+		em.persist(h3);
+		em.persist(h4);
+		em.persist(h5);
+
+		Query query = em.createQuery("select hl from Holiday hl where hl.nights between 7 and 10");
+		List list = query.getResultList();
+		Assertions.assertEquals(3, list.size());
+
+		em.remove(h1);
+		em.remove(h2);
+		em.remove(h3);
+		em.remove(h4);
+		em.remove(h5);
+
+		tx.commit();
+		em.close();
+	}
 }

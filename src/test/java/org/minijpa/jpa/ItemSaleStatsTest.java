@@ -80,13 +80,13 @@ public class ItemSaleStatsTest {
 		Assertions.assertEquals(3, list.size());
 		Object[] r0 = (Object[]) list.get(0);
 		Assertions.assertEquals("pen", r0[0]);
-		Assertions.assertEquals(3L, r0[1]);
+		Assertions.assertEquals(3L, ((Number) r0[1]).longValue());
 		Object[] r1 = (Object[]) list.get(1);
 		Assertions.assertEquals("pencil", r1[0]);
-		Assertions.assertEquals(2L, r1[1]);
+		Assertions.assertEquals(2L, ((Number) r1[1]).longValue());
 		Object[] r2 = (Object[]) list.get(2);
 		Assertions.assertEquals("rubber", r2[0]);
-		Assertions.assertEquals(2L, r2[1]);
+		Assertions.assertEquals(2L, ((Number) r2[1]).longValue());
 
 		em.remove(i1);
 		em.remove(i2);

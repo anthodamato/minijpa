@@ -19,6 +19,7 @@ import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
 import org.minijpa.jdbc.model.aggregate.BasicAggregateFunction;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
+import org.minijpa.jdbc.model.condition.BetweenCondition;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.BinaryLogicConditionImpl;
 import org.minijpa.jdbc.model.condition.Condition;
@@ -556,9 +557,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			List<Object> r1 = new ArrayList<>();
 			processArithmeticExpressionResult(expression1, r1);
 			BinaryCondition.Builder builder = new BinaryCondition.Builder(decodeConditionType(comparisonOperator));
-//			builder.withLeft(expression0.getResult());
 			builder.withLeft(r0);
-//			builder.withRight(expression1.getResult());
 			builder.withRight(r1);
 			node.setCondition(builder.build());
 		}
@@ -842,38 +841,12 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTArithmeticTerm node, Object data) {
 		Object object = node.childrenAccept(this, data);
-//		StringBuilder sb = new StringBuilder();
-//		ASTArithmeticFactor n0_0 = (ASTArithmeticFactor) node.jjtGetChild(0);
-//		LOG.debug("visit: ASTArithmeticTerm n0_0.getResult()=" + n0_0.getResult());
-//		sb.append(n0_0.getSign());
-//		sb.append(n0_0.getResult());
-//		for (int i = 1; i < node.jjtGetNumChildren(); ++i) {
-//			ASTArithmeticFactor n_i = (ASTArithmeticFactor) node.jjtGetChild(i);
-//			sb.append(node.getSigns().get(i - 1));
-//			sb.append(n_i.getSign());
-//			sb.append(n_i.getResult());
-//		}
-//		
-//		LOG.debug("visit: ASTArithmeticTerm sb.toString()=" + sb.toString());
-//		node.setResult(sb.toString());
 		return object;
 	}
 
 	@Override
 	public Object visit(ASTArithmeticExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
-//		StringBuilder sb = new StringBuilder();
-//		ASTArithmeticTerm n0_0 = (ASTArithmeticTerm) node.jjtGetChild(0);
-//		LOG.debug("visit: ASTArithmeticExpression n0_0.getResult()=" + n0_0.getResult());
-//		sb.append(n0_0.getResult());
-//		for (int i = 1; i < node.jjtGetNumChildren(); ++i) {
-//			ASTArithmeticTerm n_i = (ASTArithmeticTerm) node.jjtGetChild(i);
-//			sb.append(node.getSigns().get(i - 1));
-//			sb.append(n_i.getResult());
-//		}
-//		
-//		LOG.debug("visit: ASTArithmeticExpression sb.toString()=" + sb.toString());
-//		node.setResult(sb.toString());
 		return object;
 	}
 
@@ -884,7 +857,6 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	@Override
 	public Object visit(ASTScalarExpression node, Object data) {
-		LOG.debug("visit: ASTScalarExpression");
 		return node.childrenAccept(this, data);
 	}
 
@@ -1223,8 +1195,86 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	}
 
 	@Override
+	public Object visit(ASTEntityTypeExpression node, Object data) {
+		return node.childrenAccept(this, data);
+	}
+
+	@Override
+	public Object visit(ASTEntityTypeExpressionComparison node, Object data) {
+		return node.childrenAccept(this, data);
+	}
+
+	@Override
+	public Object visit(ASTBetweenExpression node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		ConditionNode conditionNode = (ConditionNode) node.jjtGetChild(0);
+		node.setCondition(conditionNode.getCondition());
+		return object;
+	}
+
+	@Override
+	public Object visit(ASTArithmeticBetweenExpression node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		ASTArithmeticExpression arithmeticExpression = (ASTArithmeticExpression) node.jjtGetChild(0);
+		List<Object> r0 = new ArrayList<>();
+		processArithmeticExpressionResult(arithmeticExpression, r0);
+		BetweenCondition.Builder builder = new BetweenCondition.Builder(r0);
+
+		arithmeticExpression = (ASTArithmeticExpression) node.jjtGetChild(1);
+		r0 = new ArrayList<>();
+		processArithmeticExpressionResult(arithmeticExpression, r0);
+		builder.withLeftExpression(r0);
+
+		arithmeticExpression = (ASTArithmeticExpression) node.jjtGetChild(2);
+		r0 = new ArrayList<>();
+		processArithmeticExpressionResult(arithmeticExpression, r0);
+		builder.withRightExpression(r0);
+
+		builder.withNot(node.isNot());
+
+		node.setCondition(builder.build());
+		return object;
+	}
+
+	@Override
+	public Object visit(ASTStringBetweenExpression node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		ASTStringExpression expression = (ASTStringExpression) node.jjtGetChild(0);
+		BetweenCondition.Builder builder = new BetweenCondition.Builder(decodeExpression(expression));
+
+		expression = (ASTStringExpression) node.jjtGetChild(1);
+		builder.withLeftExpression(decodeExpression(expression));
+
+		expression = (ASTStringExpression) node.jjtGetChild(2);
+		builder.withRightExpression(decodeExpression(expression));
+
+		builder.withNot(node.isNot());
+
+		node.setCondition(builder.build());
+		return object;
+	}
+
+	@Override
+	public Object visit(ASTDatetimeBetweenExpression node, Object data) {
+		Object object = node.childrenAccept(this, data);
+		ASTDatetimeExpression expression = (ASTDatetimeExpression) node.jjtGetChild(0);
+		BetweenCondition.Builder builder = new BetweenCondition.Builder(decodeExpression(expression));
+
+		expression = (ASTDatetimeExpression) node.jjtGetChild(1);
+		builder.withLeftExpression(decodeExpression(expression));
+
+		expression = (ASTDatetimeExpression) node.jjtGetChild(2);
+		builder.withRightExpression(decodeExpression(expression));
+
+		builder.withNot(node.isNot());
+
+		node.setCondition(builder.build());
+		return object;
+	}
+
+	@Override
 	public Object visit(SimpleNode node, Object data) {
-		LOG.debug("visit: SimpleNode data=" + data);
+		LOG.debug("visit: SimpleNode data={}", data);
 		LOG.debug("visit: SimpleNode node=" + node);
 		return node.childrenAccept(this, data);
 	}

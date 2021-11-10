@@ -804,7 +804,7 @@ public class SqlStatementFactory {
 
 		BetweenCondition.Builder builder = new BetweenCondition.Builder(createTableColumnFromPath(miniPath));
 		if (expression1 instanceof AttributePath<?>)
-			builder.withLeftColumn(createTableColumnFromPath((AttributePath<?>) expression1));
+			builder.withLeftExpression(createTableColumnFromPath((AttributePath<?>) expression1));
 		else if (expression1 instanceof ParameterExpression<?>) {
 			ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression1;
 			addParameter(parameterExpression, attribute, parameters, query);
@@ -812,7 +812,7 @@ public class SqlStatementFactory {
 		}
 
 		if (expression2 instanceof AttributePath<?>)
-			builder.withRightColumn(createTableColumnFromPath((AttributePath<?>) expression2));
+			builder.withRightExpression(createTableColumnFromPath((AttributePath<?>) expression2));
 		else if (expression2 instanceof ParameterExpression<?>) {
 			ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression2;
 			addParameter(parameterExpression, attribute, parameters, query);

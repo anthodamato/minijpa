@@ -345,23 +345,17 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		if (condition instanceof BetweenCondition) {
 			BetweenCondition betweenCondition = (BetweenCondition) condition;
 			StringBuilder sb = new StringBuilder();
-			sb.append(sqlStatementExporter.exportTableColumn(betweenCondition.getTableColumn(), dbJdbc));
+			sb.append(exportExpression(betweenCondition.getOperand()));
 			sb.append(" ");
+			if (betweenCondition.isNot())
+				sb.append("NOT ");
+
 			sb.append(getOperator(condition.getConditionType()));
 			sb.append(" ");
 
-			if (betweenCondition.getLeftColumn().isPresent())
-				sb.append(sqlStatementExporter.exportTableColumn(betweenCondition.getLeftColumn().get(), dbJdbc));
-
-			if (betweenCondition.getLeftExpression().isPresent())
-				sb.append(betweenCondition.getLeftExpression().get());
-
+			sb.append(exportExpression(betweenCondition.getLeftExpression()));
 			sb.append(" AND ");
-			if (betweenCondition.getRightColumn().isPresent())
-				sb.append(sqlStatementExporter.exportTableColumn(betweenCondition.getRightColumn().get(), dbJdbc));
-
-			if (betweenCondition.getRightExpression().isPresent())
-				sb.append(betweenCondition.getRightExpression().get());
+			sb.append(exportExpression(betweenCondition.getRightExpression()));
 
 			return sb.toString();
 		}

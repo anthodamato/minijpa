@@ -1423,19 +1423,15 @@ void scalar_expression() #ScalarExpression :
   LOOKAHEAD(3)
   boolean_expression()
 
-  |
-  LOOKAHEAD(3)
-  enum_expression()
+//  |
+//  LOOKAHEAD(3)
+//  enum_expression()
   
   |
   case_expression()
   
   |
-  s=entity_type_expression()
-    {
-     sb.append("");
-     sb.append(s);
-    }
+  entity_type_expression()
 }
 
 
@@ -1679,7 +1675,7 @@ void case_expression() #CaseExpression :
 
 
 // entity_type_expression ::= type_discriminator | entity_type_literal | input_parameter
-String entity_type_expression() :
+void entity_type_expression() #EntityTypeExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -1691,21 +1687,18 @@ String entity_type_expression() :
     {
       sb.append(s);
     }
-  { return sb.toString(); }
 
   |  
   t=<NAME>
     {
      sb.append(t.image);
     }
-  { return sb.toString(); }
 
   |
   t=<INPUT_PARAMETER>
     {
      sb.append(t.image);
     }
-  { return sb.toString(); }
 }
 
 
@@ -2263,7 +2256,6 @@ void boolean_expression_comparison() #BooleanExpressionComparison :
 void datetime_expression_comparison() #DatetimeExpressionComparison :
 {
   String s;
-  StringBuilder sb=new StringBuilder();
 }
 {
   datetime_expression()
@@ -2279,6 +2271,28 @@ void datetime_expression_comparison() #DatetimeExpressionComparison :
 }
 
 
+// entity_type_expression_comparison ::= entity_type_expression {= | <>} entity_type_expression
+void entity_type_expression_comparison() #EntityTypeExpressionComparison :
+{
+  String s;
+}
+{
+  entity_type_expression()
+  (
+   "="
+   {
+    jjtThis.setComparisonOperator("=");
+   }
+   |
+   "<>"
+   {
+    jjtThis.setComparisonOperator("<>");
+   }
+  )
+  entity_type_expression()
+}
+
+
 // comparison_expression ::=
 //    string_expression_comparison |
 //    arithmetic_expression_comparison |
@@ -2286,7 +2300,7 @@ void datetime_expression_comparison() #DatetimeExpressionComparison :
 //    datetime_expression_comparison |
 //    enum_expression {= | <>} {enum_expression | all_or_any_expression} |
 //    entity_expression {= | <>} {entity_expression | all_or_any_expression} |
-//    entity_type_expression {= | <>} entity_type_expression
+//    entity_type_expression_comparison
 void comparison_expression() #ComparisonExpression :
 {
   Token t;
@@ -2310,52 +2324,42 @@ void comparison_expression() #ComparisonExpression :
   datetime_expression_comparison()
   |
   
-  LOOKAHEAD(3)
-  enum_expression()
-  s=comparison_operator()
-  {
-    jjtThis.setComparisonOperator(s);
-  }
-  (
-   enum_expression()
-   |
-   all_or_any_expression()
-  )
-  |
-  LOOKAHEAD(3)
-  s=entity_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  s=comparison_operator()
-  {
-    jjtThis.setComparisonOperator(s);
-  }
-  (
-   s=entity_expression()
-     {
-       sb.append(" ");
-       sb.append(s);
-     }
-   |
-   all_or_any_expression()
-  )
-  |
-  s=entity_type_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  s=comparison_operator()
-  {
-    jjtThis.setComparisonOperator(s);
-  }
-  s=entity_type_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+//  LOOKAHEAD(3)
+//  enum_expression()
+//  s=comparison_operator()
+//  {
+//    jjtThis.setComparisonOperator(s);
+//  }
+//  (
+//   enum_expression()
+//   |
+//   all_or_any_expression()
+//  )
+//  |
+  
+//  LOOKAHEAD(3)
+//  s=entity_expression()
+//    {
+//      sb.append(" ");
+//      sb.append(s);
+//    }
+//  s=comparison_operator()
+//  {
+//    jjtThis.setComparisonOperator(s);
+//  }
+//  (
+//   s=entity_expression()
+//     {
+//       sb.append(" ");
+//       sb.append(s);
+//     }
+//   |
+//   all_or_any_expression()
+//  )
+//  |
+  
+  LOOKAHEAD(entity_type_expression_comparison())
+  entity_type_expression_comparison()
 }
 
 
@@ -2647,85 +2651,80 @@ void in_expression() #InExpression :
 
 
 // between_expression ::=
-//    arithmetic_expression [NOT] BETWEEN arithmetic_expression AND arithmetic_expression |
-//    string_expression [NOT] BETWEEN string_expression AND string_expression |
-//    datetime_expression [NOT] BETWEEN datetime_expression AND datetime_expression
-String between_expression() :
+//    arithmetic_between_expression |
+//    string_between_expression |
+//    datetime_between_expression
+void between_expression() #BetweenExpression :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  LOOKAHEAD(arithmetic_expression())
-  arithmetic_expression()
-  [
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  ]
-  t=<BETWEEN>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  arithmetic_expression()
-  t=<AND>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  arithmetic_expression()
-  { return sb.toString(); }
+  LOOKAHEAD(arithmetic_between_expression())
+  arithmetic_between_expression()
 
   |
-  LOOKAHEAD(string_expression())
-  string_expression()
-  [
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  ]
-  t=<BETWEEN>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  string_expression()
-  t=<AND>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  string_expression()
-  { return sb.toString(); }
+  LOOKAHEAD(string_between_expression())
+  string_between_expression()
   
   |
-  datetime_expression()
+  LOOKAHEAD(datetime_between_expression())
+  datetime_between_expression()
+}
+
+
+// arithmetic_between_expression ::= arithmetic_expression [NOT] BETWEEN arithmetic_expression AND arithmetic_expression
+void arithmetic_between_expression() #ArithmeticBetweenExpression :
+{
+}
+{
+  arithmetic_expression()
   [
-  t=<NOT>
+   <NOT>
     {
-      sb.append(" ");
-      sb.append(t.image);
+      jjtThis.setNot(true);
     }
   ]
-  t=<BETWEEN>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <BETWEEN>
+  arithmetic_expression()
+  <AND>
+  arithmetic_expression()
+}
+
+
+// string_between_expression ::= string_expression [NOT] BETWEEN string_expression AND string_expression
+void string_between_expression() #StringBetweenExpression :
+{
+}
+{
+  string_expression()
+  [
+   <NOT>
+   {
+     jjtThis.setNot(true);
+   }
+  ]
+  <BETWEEN>
+  string_expression()
+  <AND>
+  string_expression()
+}
+
+
+// datetime_between_expression ::= datetime_expression [NOT] BETWEEN datetime_expression AND datetime_expression
+void datetime_between_expression() #DatetimeBetweenExpression :
+{
+}
+{
   datetime_expression()
-  t=<AND>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  [
+   <NOT>
+   {
+     jjtThis.setNot(true);
+   }
+  ]
+  <BETWEEN>
   datetime_expression()
-  { return sb.toString(); }
+  <AND>
+  datetime_expression()
 }
 
 
@@ -2745,15 +2744,12 @@ void simple_cond_expression() #SimpleCondExpression :
   String s;
 }
 {
-  LOOKAHEAD(3)
+  LOOKAHEAD(comparison_expression())
   comparison_expression()
   |
+  
   LOOKAHEAD(3)
-  s=between_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  between_expression()
 
   |
   LOOKAHEAD(3)
