@@ -958,10 +958,7 @@ public class SqlStatementFactory {
 			}).collect(Collectors.toList());
 			parameters.addAll(queryParameters);
 
-			if (inPredicate.isNot())
-				return Optional.of(new InCondition(tableColumn, list, true));
-
-			return Optional.of(new InCondition(tableColumn, list));
+			return Optional.of(new InCondition(tableColumn, list, inPredicate.isNot()));
 		}
 
 		return Optional.empty();

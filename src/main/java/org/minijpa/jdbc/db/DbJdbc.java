@@ -62,23 +62,23 @@ public interface DbJdbc {
 	}
 
 	public default String orOperator() {
-		return "OR";
+		return "or";
 	}
 
 	public default String andOperator() {
-		return "AND";
+		return "and";
 	}
 
 	public default String notOperator() {
-		return "NOT";
+		return "not";
 	}
 
 	public default String isNullOperator() {
-		return "IS NULL";
+		return "is null";
 	}
 
 	public default String notNullOperator() {
-		return "IS NOT NULL";
+		return "is not null";
 	}
 
 	public default String booleanValue(Boolean value) {
@@ -129,11 +129,11 @@ public interface DbJdbc {
 	}
 
 	public default String betweenOperator() {
-		return "BETWEEN";
+		return "between";
 	}
 
 	public default String likeOperator() {
-		return "LIKE";
+		return "like";
 	}
 
 	public default String inOperator() {

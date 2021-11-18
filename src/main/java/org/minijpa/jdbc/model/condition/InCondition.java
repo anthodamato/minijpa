@@ -21,38 +21,32 @@ import org.minijpa.jdbc.model.TableColumn;
 
 public class InCondition implements Condition {
 
-    private TableColumn leftColumn;
-    private List<String> rightExpressions;
-    private boolean not = false;
+	private final TableColumn leftColumn;
+	private final List<?> rightExpressions;
+	private boolean not = false;
 
-    public InCondition(TableColumn leftColumn, List<String> rightExpressions) {
-	super();
-	this.leftColumn = leftColumn;
-	this.rightExpressions = rightExpressions;
-    }
+	public InCondition(TableColumn leftColumn, List<?> rightExpressions, boolean not) {
+		super();
+		this.leftColumn = leftColumn;
+		this.rightExpressions = rightExpressions;
+		this.not = not;
+	}
 
-    public InCondition(TableColumn leftColumn, List<String> rightExpressions, boolean not) {
-	super();
-	this.leftColumn = leftColumn;
-	this.rightExpressions = rightExpressions;
-	this.not = not;
-    }
+	@Override
+	public ConditionType getConditionType() {
+		return ConditionType.IN;
+	}
 
-    @Override
-    public ConditionType getConditionType() {
-	return ConditionType.IN;
-    }
+	public TableColumn getLeftColumn() {
+		return leftColumn;
+	}
 
-    public TableColumn getLeftColumn() {
-	return leftColumn;
-    }
+	public List<?> getRightExpressions() {
+		return rightExpressions;
+	}
 
-    public List<String> getRightExpressions() {
-	return rightExpressions;
-    }
-
-    public boolean isNot() {
-	return not;
-    }
+	public boolean isNot() {
+		return not;
+	}
 
 }

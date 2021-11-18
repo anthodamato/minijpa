@@ -2,6 +2,8 @@
  /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package org.minijpa.jpa.jpql;
 
+import org.minijpa.jdbc.MetaEntity;
+
 public class ASTSingleValuedPathExpression extends SimpleNode {
 
 	private String subtype;
@@ -9,6 +11,8 @@ public class ASTSingleValuedPathExpression extends SimpleNode {
 	private String identificationVariable;
 	private String path;
 	private String stateField;
+	private MetaEntity metaEntity;
+	private String attributePath;
 
 	public ASTSingleValuedPathExpression(int id) {
 		super(id);
@@ -64,6 +68,22 @@ public class ASTSingleValuedPathExpression extends SimpleNode {
 
 	public void setStateField(String stateField) {
 		this.stateField = stateField;
+	}
+
+	public MetaEntity getMetaEntity() {
+		return metaEntity;
+	}
+
+	public void setMetaEntity(MetaEntity metaEntity) {
+		this.metaEntity = metaEntity;
+	}
+
+	public String getAttributePath() {
+		return attributePath;
+	}
+
+	public void setAttributePath(String attributePath) {
+		this.attributePath = attributePath;
 	}
 
 }

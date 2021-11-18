@@ -2,10 +2,13 @@
  /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package org.minijpa.jpa.jpql;
 
-public class ASTNullComparisonExpression extends SimpleNode {
+import org.minijpa.jdbc.model.condition.Condition;
+
+public class ASTNullComparisonExpression extends SimpleNode implements ConditionNode {
 
 	private String inputParameter;
-	private boolean not=false;
+	private boolean not = false;
+	private Condition condition;
 
 	public ASTNullComparisonExpression(int id) {
 		super(id);
@@ -37,6 +40,16 @@ public class ASTNullComparisonExpression extends SimpleNode {
 
 	public void setNot(boolean not) {
 		this.not = not;
+	}
+
+	@Override
+	public Condition getCondition() {
+		return condition;
+	}
+
+	@Override
+	public void setCondition(Condition condition) {
+		this.condition = condition;
 	}
 
 }

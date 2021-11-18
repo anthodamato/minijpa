@@ -28,6 +28,7 @@ public interface JpqlParserVisitor
   public Object visit(ASTAggregateExpression node, Object data);
   public Object visit(ASTFunctionArg node, Object data);
   public Object visit(ASTScalarExpression node, Object data);
+  public Object visit(ASTTypeDiscriminator node, Object data);
   public Object visit(ASTWhenClause node, Object data);
   public Object visit(ASTGeneralCaseExpression node, Object data);
   public Object visit(ASTCaseExpression node, Object data);
@@ -80,4 +81,4 @@ public interface JpqlParserVisitor
   public Object visit(ASTGroupByItem node, Object data);
   public Object visit(ASTGroupByClause node, Object data);
 }
-/* JavaCC - OriginalChecksum=c7a49b5da32946d17e12e7a51afb93ea (do not edit this line) */
+/* JavaCC - OriginalChecksum=e53ee0519466058931b16837acd25d94 (do not edit this line) */

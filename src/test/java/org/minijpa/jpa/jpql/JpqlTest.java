@@ -179,7 +179,7 @@ public class JpqlTest {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
 					"select o.id, o.date_of, o.status, o.deliveryType, o.customer_id"
-					+ " from orders AS o where (select avg(p.price) from product AS p, orders_product AS op where op.orders_id = o.id AND op.products_id = p.id) > 50",
+					+ " from orders AS o where (select avg(p.price) from product AS p, orders_product AS op where op.orders_id = o.id and op.products_id = p.id) > 50",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());
@@ -243,7 +243,39 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select h.id, h.travellers, h.checkIn, h.nights, h.referenceName from Holiday AS h where h.nights BETWEEN 7 AND 10",
+					"select h.id, h.travellers, h.checkIn, h.nights, h.referenceName from Holiday AS h where h.nights between 7 and 10",
+					jpqlResult.getSql());
+		} catch (Exception ex) {
+			LOG.debug(ex.getMessage());
+			Throwable t = ex.getCause();
+			LOG.debug("t=" + t);
+			ex.printStackTrace();
+			Assertions.fail();
+		} catch (Error error) {
+			LOG.debug(error.getMessage());
+			Throwable t = error.getCause();
+			LOG.debug("t=" + t);
+			Assertions.fail();
+		}
+
+		emf.close();
+	}
+
+	@Test
+	public void inRegions() throws Exception {
+		String persistenceUnitName = "cities_uni";
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnitName, PersistenceUnitProperties.getProperties());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+
+		PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, persistenceUnitName);
+		PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+		String query = "select r.population from Region r where r.name is not null and r.name in ('North West','South West') order by r.name";
+		JpqlModule jpqlModule = new JpqlModule(dbConfiguration, new SqlStatementFactory(), persistenceUnitContext);
+
+		try {
+			JpqlResult jpqlResult = jpqlModule.parse(query);
+			Assertions.assertEquals(
+					"select r.population from Region AS r where r.name is not null and r.name in ('North West', 'South West') order by r.name",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());

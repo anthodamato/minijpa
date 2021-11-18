@@ -1520,56 +1520,37 @@ void simple_when_clause() :
 //        TYPE(general_identification_variable |
 //          single_valued_object_path_expression |
 //          input_parameter)
-String type_discriminator() :
+void type_discriminator() #TypeDiscriminator :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  t=<TYPE>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  general_identification_variable()
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
-  |
-  single_valued_object_path_expression()
-  { return sb.toString(); }
-  
-  |
-  t=<INPUT_PARAMETER>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <TYPE>
+  <OPEN_BRACKET>
+  (
+   LOOKAHEAD(3)
+   general_identification_variable() 
+   |
+   single_valued_object_path_expression()
+   |
+   t=<INPUT_PARAMETER>
+     {
+       jjtThis.setInputParameter(t.image);
+     }
+  )
+  <CLOSE_BRACKET>
 }
 
 
 //   case_operand ::= state_valued_path_expression | type_discriminator
 void case_operand() :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   LOOKAHEAD(3)
   state_valued_path_expression()
   |
-  s=type_discriminator()
-    {
-      sb.append(s);
-    }
+  type_discriminator()
 }
 
 
@@ -1679,14 +1660,10 @@ void entity_type_expression() #EntityTypeExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   LOOKAHEAD(2)
-  s=type_discriminator()
-    {
-      sb.append(s);
-    }
+  type_discriminator()
 
   |  
   t=<NAME>
@@ -2526,8 +2503,6 @@ String empty_collection_comparison_expression() :
 void null_comparison_expression() #NullComparisonExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
  (
@@ -2537,15 +2512,15 @@ void null_comparison_expression() #NullComparisonExpression :
      {
        jjtThis.setInputParameter(t.image);
      }
-  )
-  <IS>
-  [
-   <NOT>
-   {
-     jjtThis.setNot(true);
-   }
-  ]
-  <NULL>
+ )
+ <IS>
+ [
+  <NOT>
+  {
+    jjtThis.setNot(true);
+  }
+ ]
+ <NULL>
 }
 
 
@@ -2584,8 +2559,6 @@ void like_expression() #LikeExpression :
 void in_item() #InItem :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   t=<STRING_LITERAL>
@@ -2610,43 +2583,39 @@ void in_expression() #InExpression :
   String s;
 }
 {
-  (
+ (
   LOOKAHEAD(3)
   state_valued_path_expression()
   |
-  s=type_discriminator()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
-  )
-  [
+  type_discriminator()
+ )
+ [
    <NOT>
    {
      jjtThis.setNot(true);
    }
-  ]
+ ]
   
-  <IN>
-  (
+ <IN>
+ (
    LOOKAHEAD(2)
-   (
+   <OPEN_BRACKET>
     in_item()
     (
      <COMMA>
      in_item()
     )*
-   )
-  |
+   <CLOSE_BRACKET>
+   |
    <OPEN_BRACKET>
    subquery()
    <CLOSE_BRACKET>
    |
    t=<INPUT_PARAMETER>
      {
-       sb.append(t.image);
+       jjtThis.setInputParameter(t.image);
      }
-  )
+ )
 }
 
 
@@ -2748,23 +2717,23 @@ void simple_cond_expression() #SimpleCondExpression :
   comparison_expression()
   |
   
-  LOOKAHEAD(3)
+  LOOKAHEAD(between_expression())
   between_expression()
 
   |
-  LOOKAHEAD(3)
+  LOOKAHEAD(in_expression())
   in_expression()
   
   |
-  LOOKAHEAD(3)
+  LOOKAHEAD(like_expression())
   like_expression()
   
   |
-  LOOKAHEAD(3)
+  LOOKAHEAD(null_comparison_expression())
   null_comparison_expression()
   
   |
-  LOOKAHEAD(3)
+  LOOKAHEAD(empty_collection_comparison_expression())
   s=empty_collection_comparison_expression()
     {
       sb.append(" ");
@@ -2772,6 +2741,7 @@ void simple_cond_expression() #SimpleCondExpression :
     }
   
   |
+  LOOKAHEAD(collection_member_expression())
   s=collection_member_expression()
     {
       sb.append(" ");
@@ -2779,6 +2749,7 @@ void simple_cond_expression() #SimpleCondExpression :
     }
   
   |
+  LOOKAHEAD(exists_expression())
   exists_expression()
 }
 
