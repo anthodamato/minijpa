@@ -15,7 +15,9 @@
  */
 package org.minijpa.jdbc.model.aggregate;
 
+import org.minijpa.jpa.jpql.AggregateFunctionType;
+
 public interface AggregateFunction {
 
-    public AggregateFunctionBasicType getType();
+    public AggregateFunctionType getType();
 }

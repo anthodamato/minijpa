@@ -15,13 +15,13 @@ import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
-import org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType;
+import org.minijpa.jpa.jpql.AggregateFunctionType;
 import org.minijpa.jdbc.model.aggregate.BasicAggregateFunction;
-import org.minijpa.jdbc.model.aggregate.Count;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
+import org.minijpa.jdbc.model.function.Count;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -62,7 +62,7 @@ public class SqlStatementGeneratorTest {
 		FromTable fromTable = new FromTableImpl("region", "r");
 		Column populationColumn = new Column("population");
 
-		List<Value> values = Arrays.asList(new BasicAggregateFunction(AggregateFunctionBasicType.SUM, new TableColumn(fromTable, populationColumn), false));
+		List<Value> values = Arrays.asList(new BasicAggregateFunction(AggregateFunctionType.SUM, new TableColumn(fromTable, populationColumn), false));
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).build();
 		Assertions.assertEquals("select sum(r.population) from region AS r", sqlStatementGenerator.export(sqlSelect));
 	}
@@ -70,7 +70,7 @@ public class SqlStatementGeneratorTest {
 	@Test
 	public void count() {
 		FromTable fromTable = new FromTableImpl("product", "p");
-		List<Value> values = Arrays.asList(Count.countStar());
+		List<Value> values = Arrays.asList(new Count("*"));
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).build();
 		Assertions.assertEquals("select count(*) from product AS p", sqlStatementGenerator.export(sqlSelect));
 	}
@@ -80,7 +80,7 @@ public class SqlStatementGeneratorTest {
 		FromTable fromTable = new FromTableImpl("product", "p");
 		Column categoryColumn = new Column("category");
 
-		List<Value> values = Arrays.asList(new TableColumn(fromTable, categoryColumn), Count.countStar());
+		List<Value> values = Arrays.asList(new TableColumn(fromTable, categoryColumn), new Count("*"));
 		GroupBy groupBy = new GroupBy(new TableColumn(fromTable, categoryColumn));
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).withGroupBy(groupBy).build();
 		Assertions.assertEquals("select p.category, count(*) from product AS p group by p.category",

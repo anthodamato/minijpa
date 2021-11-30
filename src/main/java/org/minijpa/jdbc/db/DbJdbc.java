@@ -22,6 +22,7 @@ import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.NameTranslator;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
+import org.minijpa.jdbc.model.function.Function;
 
 public interface DbJdbc {
 

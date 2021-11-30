@@ -292,4 +292,68 @@ public class JpqlTest {
 
 		emf.close();
 	}
+
+	@Test
+	public void concatRegions() throws Exception {
+		String persistenceUnitName = "cities_uni";
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnitName, PersistenceUnitProperties.getProperties());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+
+		PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, persistenceUnitName);
+		PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+		String query = "select CONCAT('Region',' ',r.name), r.population from Region r order by r.name";
+		JpqlModule jpqlModule = new JpqlModule(dbConfiguration, new SqlStatementFactory(), persistenceUnitContext);
+
+		try {
+			JpqlResult jpqlResult = jpqlModule.parse(query);
+			Assertions.assertEquals(
+					"select 'Region'||' '||r.name, r.population from Region AS r order by r.name",
+					jpqlResult.getSql());
+		} catch (Exception ex) {
+			LOG.debug(ex.getMessage());
+			Throwable t = ex.getCause();
+			LOG.debug("t=" + t);
+			ex.printStackTrace();
+			Assertions.fail();
+		} catch (Error error) {
+			LOG.debug(error.getMessage());
+			Throwable t = error.getCause();
+			LOG.debug("t=" + t);
+			Assertions.fail();
+		}
+
+		emf.close();
+	}
+
+	@Test
+	public void lengthConcatRegions() throws Exception {
+		String persistenceUnitName = "cities_uni";
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnitName, PersistenceUnitProperties.getProperties());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+
+		PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, persistenceUnitName);
+		PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+		String query = "select r from Region r where LENGTH(CONCAT('Region',' ',r.name)) = (select MAX(LENGTH(CONCAT('Region',' ',r2.name))) from Region r2)";
+		JpqlModule jpqlModule = new JpqlModule(dbConfiguration, new SqlStatementFactory(), persistenceUnitContext);
+
+		try {
+			JpqlResult jpqlResult = jpqlModule.parse(query);
+			Assertions.assertEquals(
+					"select 'Region'||' '||r.name, r.population from Region AS r order by r.name",
+					jpqlResult.getSql());
+		} catch (Exception ex) {
+			LOG.debug(ex.getMessage());
+			Throwable t = ex.getCause();
+			LOG.debug("t=" + t);
+			ex.printStackTrace();
+			Assertions.fail();
+		} catch (Error error) {
+			LOG.debug(error.getMessage());
+			Throwable t = error.getCause();
+			LOG.debug("t=" + t);
+			Assertions.fail();
+		}
+
+		emf.close();
+	}
 }

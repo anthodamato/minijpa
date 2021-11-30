@@ -251,9 +251,6 @@ void select_statement() #SelectStatement :
 // select_clause ::= SELECT [DISTINCT] select_item {, select_item}*
 void select_clause() #SelectClause :
 {
-  StringBuilder sb=new StringBuilder();
-  String s;
-  Token t;
 }
 {
   <SELECT>
@@ -279,13 +276,24 @@ void select_item() #SelectItem :
 {
   select_expression()
   [
-   //LOOKAHEAD(2)
+//   LOOKAHEAD(2)
+//   (
+//    LOOKAHEAD((<AS>))
+//    <AS>
+//    s=anyIdentifier()
+//      {
+//        jjtThis.setAlias(s);
+//      }
+//    |
+//    s=anyIdentifier()
+//      {
+//        jjtThis.setAlias(s);
+//      }
+//   )
+   
    [<AS>]
    t=<NAME>
-//   LOOKAHEAD({ getToken(1).kind != FROM && getToken(1).kind != COMMA })
-//   s=anyIdentifier()
    {
-//     jjtThis.setAlias(s);
      jjtThis.setAlias(t.image);
    }
   ]
@@ -340,10 +348,7 @@ void select_expression() #SelectExpression :
 
  |
  LOOKAHEAD(2)
- s=constructor_expression()
-   {
-     sb.append(s);
-   }
+ constructor_expression()
 // |
 // t=<NAME>
 //   {
@@ -357,11 +362,9 @@ void select_expression() #SelectExpression :
 //    aggregate_expression |
 //    scalar_expression |
 //    identification_variable
-void constructor_item() :
+void constructor_item() #ConstructorItem :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
  LOOKAHEAD(3)
@@ -378,45 +381,30 @@ void constructor_item() :
  |
  t=<NAME>
  {
-   sb.append(t.image);
+   jjtThis.setIdentificationVariable(t.image);
  }
 }
 
 
 // constructor_expression ::=
 //    NEW constructor_name (constructor_item {, constructor_item}*)
-String constructor_expression() :
+void constructor_expression() #ConstructorExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
- t=<NEW>
-   {
-     sb.append(t.image);
-   }
+ <NEW>
  t=<NAME>
    {
-     sb.append(t.image);
+     jjtThis.setConstructorName(t.image);
    }
- t=<OPEN_BRACKET>
-   {
-     sb.append(t.image);
-   }
+ <OPEN_BRACKET>
  constructor_item()
  (
-  t=<COMMA>
-    {
-      sb.append(t.image);
-    }
+  <COMMA>
   constructor_item()
  )*
- t=<CLOSE_BRACKET>
-   {
-     sb.append(t.image);
-   }
- { return sb.toString(); }
+ <CLOSE_BRACKET>
 }
 
 
@@ -446,25 +434,6 @@ JoinType join_spec() :
 }
 
 
-String single_valued_embeddable_object_field() :
-{
-  Token t;
-  StringBuilder sb=new StringBuilder();
-}
-{
-  (t=<NAME>
-     {
-      sb.append(t.image);
-     }
-   t=<DOT>
-     {
-      sb.append(".");
-     }
-  )*
-  { return sb.toString(); }
-}
-
-
 //   join_single_valued_path_expression ::= 
 //        identification_variable.{single_valued_embeddable_object_field.}*single_valued_object_field
 //
@@ -472,7 +441,7 @@ String single_valued_embeddable_object_field() :
 //
 //   join_single_valued_path_expression ::= 
 //       identification_variable.{single_valued_embeddable_object_field.}*NAME
-String join_single_valued_path_expression() #JoinSingleValuedPathExpression :
+void join_single_valued_path_expression() #JoinSingleValuedPathExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -481,30 +450,20 @@ String join_single_valued_path_expression() #JoinSingleValuedPathExpression :
 {
   t=<NAME>
     {
-     sb.append(t.image);
+      jjtThis.setIdentificationVariable(t.image);
     }
-  t=<DOT>
-    {
-     sb.append(".");
-    }
+  <DOT>
   (
    LOOKAHEAD(2)
-   s=single_valued_embeddable_object_field()
-     {
-      sb.append(s);
-     }
-   t=<DOT>
-     {
-      sb.append(".");
-     }
+   s=anyIdentifier()
+   {
+     jjtThis.addPath(s);
+   }
+   <DOT>
   )*
-  t=<NAME>
-    {
-     sb.append(t.image);
-    }
+  s=anyIdentifier()
   {
-    jjtThis.jjtSetValue(sb.toString());
-    return sb.toString();
+    jjtThis.setFieldName(s);
   }
 }
 
@@ -533,14 +492,11 @@ String join_collection_valued_path_expression() :
      sb.append(".");
     }
   (
-   s=single_valued_embeddable_object_field()
-     {
-      sb.append(s);
-     }
-   t=<DOT>
-     {
-      sb.append(".");
-     }
+   s=anyIdentifier()
+   {
+     jjtThis.addPath(s);
+   }
+   <DOT>
   )*
   t=<NAME>
     {
@@ -580,39 +536,19 @@ void join_association_path_expression() #JoinAssociationPathExpression :
   String s;
 }
 {
-  s=join_single_valued_path_expression()
-    {
-      jjtThis.setJoinSingleValuedPathExpression(s);
-    }
+  join_single_valued_path_expression()
     
   |
-  t=<TREAT>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  s=join_single_valued_path_expression()
-//    {
-//      sb.append(s);
-//    }
-  t=<AS>
-    {
-     sb.append(" ");
-     sb.append(t.image);
-    }
+  <TREAT>
+  <OPEN_BRACKET>
+  join_single_valued_path_expression()
+  <AS>
   s=subtype()
     {
       sb.append(" ");
       sb.append(s);
     }
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-//  { return sb.toString(); }
+  <CLOSE_BRACKET>
 }
 
 
@@ -638,29 +574,22 @@ void join() #Join :
 
 
 //    fetch_join ::= join_spec FETCH join_association_path_expression
-void fetch_join() :
+void fetch_join() #FetchJoin :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
   JoinType jt;
 }
 {
   jt=join_spec()
-    {
-//      jjtThis.setJoinType(jt);
-    }
+     {
+       jjtThis.setJoinType(jt);
+     }
   <FETCH>
   join_association_path_expression()
-    {
-      sb.append(" ");
-//      sb.append(s);
-    }
-//  { return sb.toString(); }
 }
 
 
 //   entity_name
+/*
 String entity_name() :
 {
   Token t;
@@ -674,6 +603,7 @@ String entity_name() :
     }
   { return sb.toString(); }
 }
+*/
 
 
 //   range_variable_declaration ::= entity_name [AS] identification_variable
@@ -698,9 +628,6 @@ void range_variable_declaration() #RangeVariableDeclaration :
 //  identification_variable_declaration ::= range_variable_declaration {join | fetch_join}*
 void identification_variable_declaration() #IdentificationVariableDeclaration :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
    range_variable_declaration()
@@ -746,26 +673,22 @@ MapFieldIdentificationVariable map_field_identification_variable() #MapFieldIden
 {
  <KEY>
  {
-//   jjtThis.setKey(true);
    mapFieldIdentificationVariable.setMapField(MapField.KEY);
  }
  <OPEN_BRACKET>
  t=<NAME>
  {
-//   jjtThis.setIdentificationVariable(t.image);
    mapFieldIdentificationVariable.setIdentificationVariable(t.image);
  }
  <CLOSE_BRACKET>
  |
  <VALUE>
  {
-//   jjtThis.setKey(false);
    mapFieldIdentificationVariable.setMapField(MapField.VALUE);
  }
  <OPEN_BRACKET>
  t=<NAME>
  {
-//   jjtThis.setIdentificationVariable(t.image);
    mapFieldIdentificationVariable.setIdentificationVariable(t.image);
  }
  <CLOSE_BRACKET>
@@ -925,135 +848,119 @@ void state_valued_path_expression() #StateValuedPathExpression :
 //      LOWER(string_expression) |
 //      UPPER(string_expression)
 //   trim_specification ::= LEADING | TRAILING | BOTH
-String functions_returning_strings() :
+void functions_returning_strings() #FunctionsReturningStrings :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  t=<CONCAT>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+ concat_function()
+ |
+ substring_function()
+ |
+ trim_function()
+ |
+ lower_function()
+ |
+ upper_function()
+}
+
+
+// concat_function ::= CONCAT(string_expression, string_expression{, string_expression}*)
+void concat_function() #ConcatFunction :
+{
+}
+{
+  <CONCAT>
+  <OPEN_BRACKET>
   string_expression()
-  t=<COMMA>
-    {
-     sb.append(t.image);
-    }
+  <COMMA>
   string_expression()
   (
-    t=<COMMA>
-      {
-       sb.append(t.image);
-      }
+    <COMMA>
     string_expression()
   )*
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
-  |
-  t=<SUBSTRING>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
+}
+
+
+// substring_function ::= SUBSTRING(string_expression, arithmetic_expression[, arithmetic_expression])
+void substring_function() #SubstringFunction :
+{
+}
+{
+  <SUBSTRING>
+  <OPEN_BRACKET>
   string_expression()
-  t=<COMMA>
-    {
-     sb.append(t.image);
-    }
+  <COMMA>
   arithmetic_expression()
   (
-    t=<COMMA>
-      {
-       sb.append(t.image);
-      }
+    <COMMA>
     arithmetic_expression()
   )*
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
-  |
-  t=<TRIM>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
+}
+
+
+// trim_function ::= TRIM([[trim_specification] [trim_character] FROM] string_expression)
+// trim_specification ::= LEADING | TRAILING | BOTH
+void trim_function() #TrimFunction :
+{
+ Token t;
+}
+{
+  <TRIM>
+  <OPEN_BRACKET>
   [
    LOOKAHEAD(2)
    [
-    t=<LEADING>
-      {
-       sb.append(t.image);
-      }
+    <LEADING>
+    {
+      jjtThis.setTrimType(org.minijpa.jdbc.model.function.TrimType.LEADING);
+    }
     |
-    t=<TRAILING>
-      {
-       sb.append(t.image);
-      }
+    <TRAILING>
+    {
+      jjtThis.setTrimType(org.minijpa.jdbc.model.function.TrimType.TRAILING);
+    }
     |
-    t=<BOTH>
-      {
-       sb.append(t.image);
-      }
+    <BOTH>
+    {
+      jjtThis.setTrimType(org.minijpa.jdbc.model.function.TrimType.BOTH);
+    }
    ]
    [
     t=<STRING_LITERAL>
       {
-       sb.append(t.image);
+        jjtThis.setTrimCharacter(t.image);
       }
    ]
-   t=<FROM>
-     {
-      sb.append(t.image);
-     }
+   <FROM>
   ]
   string_expression()
   <CLOSE_BRACKET>
-  { return sb.toString(); }
-  
-  |
-    t=<LOWER>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  string_expression()
-  t=<CLOSE_BRACKET>
-  { return sb.toString(); }
+}
 
-  |
-    t=<UPPER>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+
+// lower_function ::= LOWER(string_expression)
+void lower_function() #LowerFunction :
+{
+}
+{
+  <LOWER>
+  <OPEN_BRACKET>
   string_expression()
-  t=<CLOSE_BRACKET>
-  { return sb.toString(); }
+  <CLOSE_BRACKET>
+}
+
+
+// upper_function ::= UPPER(string_expression)
+void upper_function() #UpperFunction :
+{
+}
+{
+  <UPPER>
+  <OPEN_BRACKET>
+  string_expression()
+  <CLOSE_BRACKET>
 }
 
 
@@ -1063,9 +970,6 @@ String functions_returning_strings() :
 //      CURRENT_TIMESTAMP
 org.minijpa.jdbc.db.SqlFunction functions_returning_datetime() :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <CURRENT_DATE>
@@ -1095,140 +999,119 @@ org.minijpa.jdbc.db.SqlFunction functions_returning_datetime() :
 //      MOD(arithmetic_expression, arithmetic_expression) |
 //      SIZE(collection_valued_path_expression) |
 //      INDEX(identification_variable)
-String functions_returning_numerics() :
+void functions_returning_numerics() #FunctionsReturningNumerics :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  t=<LENGTH>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+ length_function()  
+ |
+ locate_function()
+ |
+ abs_function()
+ |
+ sqrt_function()
+ |
+ mod_function()
+ |
+ size_function()
+ |
+ index_function()
+}
+
+
+// length_function ::= LENGTH(string_expression)
+void length_function() #LengthFunction :
+{
+}
+{
+  <LENGTH>
+  <OPEN_BRACKET>
   string_expression()
   <CLOSE_BRACKET>
-  { return sb.toString(); }
-  
-  |
-  t=<LOCATE>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+}
+
+
+// locate_function ::= LOCATE(string_expression, string_expression[, arithmetic_expression])
+void locate_function() #LocateFunction :
+{
+}
+{
+  <LOCATE>
+  <OPEN_BRACKET>
   string_expression()
-  t=<COMMA>
-    {
-     sb.append(t.image);
-    }
+  <COMMA>
   arithmetic_expression()
-  (
-    t=<COMMA>
-      {
-       sb.append(t.image);
-      }
+  [
+    <COMMA>
     arithmetic_expression()
-  )
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
-  |
-  t=<ABS>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  ]
+  <CLOSE_BRACKET>
+}
+
+
+// abs_function ::= ABS(arithmetic_expression)
+void abs_function() #AbsFunction :
+{
+}
+{
+  <ABS>
+  <OPEN_BRACKET>
   arithmetic_expression()
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
-  |
-  t=<SQRT>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
+}
+
+
+// sqrt_function ::= SQRT(arithmetic_expression)
+void sqrt_function() #SqrtFunction :
+{
+}
+{
+  <SQRT>
+  <OPEN_BRACKET>
   arithmetic_expression()
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
-  |
-  t=<MOD>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
+}
+
+
+// mod_function ::= MOD(arithmetic_expression, arithmetic_expression)
+void mod_function() #ModFunction :
+{
+}
+{
+  <MOD>
+  <OPEN_BRACKET>
   arithmetic_expression()
-  t=<COMMA>
-    {
-     sb.append(t.image);
-    }
+  <COMMA>
   arithmetic_expression()
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
-  |
-  t=<SIZE>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
+}
+
+
+// size_function ::= SIZE(collection_valued_path_expression)
+void size_function() #SizeFunction :
+{
+}
+{
+  <SIZE>
+  <OPEN_BRACKET>
   collection_valued_path_expression()
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
-  
-  |
-  t=<INDEX>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
+}
+
+
+// index_function ::= INDEX(identification_variable)
+void index_function() #IndexFunction :
+{
+ Token t;
+}
+{
+  <INDEX>
+  <OPEN_BRACKET>
   t=<NAME>
-    {
-     sb.append(t.image);
-    }
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
+  {
+    jjtThis.setIdentificationVariable(t.image);
+  }
+  <CLOSE_BRACKET>
 }
 
 
@@ -1253,6 +1136,13 @@ void single_valued_object_path_expression() #SingleValuedObjectPathExpression :
 //    {AVG | MAX | MIN | SUM} ([DISTINCT] state_valued_path_expression) |
 //    COUNT ([DISTINCT] identification_variable | state_valued_path_expression | single_valued_object_path_expression) |
 //    function_invocation
+//
+// MODIFIED AS:
+//
+// aggregate_expression ::=
+//    {AVG | MAX | MIN | SUM} ([DISTINCT] {functions_returning_strings | functions_returning_numerics | state_valued_path_expression}) |
+//    COUNT ([DISTINCT] identification_variable | functions_returning_strings | functions_returning_numerics | state_valued_path_expression | single_valued_object_path_expression) |
+//    function_invocation
 void aggregate_expression() #AggregateExpression :
 {
   Token t;
@@ -1262,22 +1152,22 @@ void aggregate_expression() #AggregateExpression :
   (
    <AVG>
    {
-     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.AVG);
+     jjtThis.setAggregateFunctionType(org.minijpa.jpa.jpql.AggregateFunctionType.AVG);
    }
    |
    <MAX>
    {
-     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.MAX);
+     jjtThis.setAggregateFunctionType(org.minijpa.jpa.jpql.AggregateFunctionType.MAX);
    }
    |
    <MIN>
    {
-     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.MIN);
+     jjtThis.setAggregateFunctionType(org.minijpa.jpa.jpql.AggregateFunctionType.MIN);
    }
    |
    <SUM>
    {
-     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.SUM);
+     jjtThis.setAggregateFunctionType(org.minijpa.jpa.jpql.AggregateFunctionType.SUM);
    }
   )
   <OPEN_BRACKET>
@@ -1287,13 +1177,19 @@ void aggregate_expression() #AggregateExpression :
      jjtThis.setDistinct(true);
    }
   ]
-  state_valued_path_expression()
+  (
+    functions_returning_numerics()
+    |
+    functions_returning_strings()
+    |
+    state_valued_path_expression()
+  )
   <CLOSE_BRACKET>
   
   |
    <COUNT>
    {
-     jjtThis.setAggregateFunction(org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType.COUNT);
+     jjtThis.setAggregateFunctionType(org.minijpa.jpa.jpql.AggregateFunctionType.COUNT);
    }
   <OPEN_BRACKET>
   [
@@ -1305,6 +1201,10 @@ void aggregate_expression() #AggregateExpression :
   (
    LOOKAHEAD(3)
    state_valued_path_expression()
+   |
+   functions_returning_numerics()
+   |
+   functions_returning_strings()
    |
    LOOKAHEAD(2)
    single_valued_object_path_expression()
@@ -1472,14 +1372,8 @@ void coalesce_expression() :
   String s;
 }
 {
-  t=<COALESCE>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <COALESCE>
+  <OPEN_BRACKET>
   scalar_expression()
   (
   t=<COMMA>
@@ -1488,10 +1382,7 @@ void coalesce_expression() :
     }
   scalar_expression()
   )+
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
 }
 
 
@@ -1503,15 +1394,9 @@ void simple_when_clause() :
   String s;
 }
 {
-  t=<WHEN>
-    {
-     sb.append(t.image);
-    }
+  <WHEN>
   scalar_expression()
-  t=<THEN>
-    {
-      sb.append(t.image);
-    }
+  <THEN>
   scalar_expression()
 }
 
@@ -1565,33 +1450,21 @@ void simple_case_expression() :
   String s;
 }
 {
-  t=<CASE>
-    {
-     sb.append(t.image);
-    }
+  <CASE>
   case_operand()
   simple_when_clause()
   (
    simple_when_clause()
   )*
-  t=<ELSE>
-    {
-     sb.append(t.image);
-    }
+  <ELSE>
   scalar_expression()
-  t=<END>
-    {
-     sb.append(t.image);
-    }
+  <END>
 }
 
 
 //   when_clause ::= WHEN conditional_expression THEN scalar_expression
 void when_clause() #WhenClause :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <WHEN>
@@ -1609,23 +1482,14 @@ void general_case_expression() #GeneralCaseExpression :
   String s;
 }
 {
-  t=<CASE>
-    {
-     sb.append(t.image);
-    }
+  <CASE>
   when_clause()
   (
    when_clause()
   )*
-  t=<ELSE>
-    {
-     sb.append(t.image);
-    }
+  <ELSE>
   scalar_expression()
-  t=<END>
-    {
-     sb.append(t.image);
-    }  
+  <END>
 }
 
 
@@ -1923,11 +1787,8 @@ void string_expression() #StringExpression :
     jjtThis.setInputParameter(t.image);
   }
   |
-  s=functions_returning_strings()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  functions_returning_strings()
+
   |
   LOOKAHEAD(3)
   aggregate_expression()
@@ -1939,10 +1800,6 @@ void string_expression() #StringExpression :
       sb.append(" ");
       sb.append(s);
     }
-//  |
-//  <OPEN_BRACKET>
-//  subquery()
-//  <CLOSE_BRACKET>
 }
 
 
@@ -1979,15 +1836,9 @@ void arithmetic_primary() #ArithmeticPrimary :
 
   |
   LOOKAHEAD(2)
-  t=<OPEN_BRACKET>
-    {
-      sb.append(t.image);
-    }
+  <OPEN_BRACKET>
   arithmetic_expression()
-  t=<CLOSE_BRACKET>
-    {
-      sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
   
   |
   t=<INPUT_PARAMETER>
@@ -1996,11 +1847,7 @@ void arithmetic_primary() #ArithmeticPrimary :
   }
   
   |
-  s=functions_returning_numerics()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  functions_returning_numerics()
 
   |
   LOOKAHEAD(3)
@@ -2100,28 +1947,25 @@ void all_or_any_expression() #AllOrAnyExpression :
   String s;
 }
 {
-  (
-  t=<ALL>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+ (
+  <ALL>
+  {
+    jjtThis.setAll(true);
+  }
   |
-  t=<ANY>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <ANY>
+  {
+    jjtThis.setAny(true);
+  }
   |
-  t=<SOME>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  )
-  <OPEN_BRACKET>
-  subquery()
-  <CLOSE_BRACKET>
+  <SOME>
+  {
+    jjtThis.setSome(true);
+  }
+ )
+ <OPEN_BRACKET>
+ subquery()
+ <CLOSE_BRACKET>
 }
 
 
@@ -2343,23 +2187,15 @@ void comparison_expression() #ComparisonExpression :
 // exists_expression ::= [NOT] EXISTS (subquery)
 void exists_expression() #ExistsExpression :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   [
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+   <NOT>
+   {
+     jjtThis.setNot(true);
+   }
   ]
-  t=<EXISTS>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <EXISTS>
   <OPEN_BRACKET>
   subquery()
   <CLOSE_BRACKET>
@@ -2375,7 +2211,7 @@ void exists_expression() #ExistsExpression :
 //    identification_variable |
 //    input_parameter |
 //    literal
-String entity_or_value_expression() :
+void entity_or_value_expression() #EntityOrValueExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
@@ -2384,32 +2220,22 @@ String entity_or_value_expression() :
 {
   LOOKAHEAD(3)
   single_valued_object_path_expression()
-    {
-      return sb.toString();
-    }
     
   |
   LOOKAHEAD(2)
   state_field_path_expression()
-    {
-      return sb.toString();
-    }
     
   |
   t=<NAME>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
-    }
+  {
+    jjtThis.setIdentificationVariable(t.image);
+  }
   
   |
   t=<INPUT_PARAMETER>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-      return sb.toString();
-    }
+  {
+    jjtThis.setInputParameter(t.image);
+  }
 }
 
 
@@ -2433,69 +2259,39 @@ void collection_valued_path_expression() #CollectionValuedPathExpression :
 
 
 //  collection_member_expression ::= entity_or_value_expression [NOT] MEMBER [OF] collection_valued_path_expression
-String collection_member_expression() :
+void collection_member_expression() #CollectionMemberExpression :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  s=entity_or_value_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  entity_or_value_expression()
   [
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <NOT>
+  {
+    jjtThis.setNot(true);
+  }
   ]
-  t=<MEMBER>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <MEMBER>
   [
-  t=<OF>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+   <OF>
   ]
   collection_valued_path_expression()
-  { return sb.toString(); }
 }
 
 
 // empty_collection_comparison_expression ::= collection_valued_path_expression IS [NOT] EMPTY
-String empty_collection_comparison_expression() :
+void empty_collection_comparison_expression() #EmptyCollectionComparisonExpression :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   collection_valued_path_expression()
-  t=<IS>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+  <IS>
   [
-  t=<NOT>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
+   <NOT>
+   {
+     jjtThis.setNot(true);
+   }
   ]
-  t=<EMPTY>
-    {
-      sb.append(" ");
-      sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <EMPTY>
 }
 
 
@@ -2528,8 +2324,6 @@ void null_comparison_expression() #NullComparisonExpression :
 void like_expression() #LikeExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   string_expression()
@@ -2548,8 +2342,7 @@ void like_expression() #LikeExpression :
    <ESCAPE>
    t=<STRING_LITERAL>
      {
-       sb.append(" ");
-       sb.append(t.image);
+       jjtThis.setEscapeCharacter(t.image);
      }
   ]
 }
@@ -2579,8 +2372,6 @@ void in_item() #InItem :
 void in_expression() #InExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
  (
@@ -2708,9 +2499,6 @@ void datetime_between_expression() #DatetimeBetweenExpression :
 //    exists_expression
 void simple_cond_expression() #SimpleCondExpression :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   LOOKAHEAD(comparison_expression())
@@ -2734,19 +2522,11 @@ void simple_cond_expression() #SimpleCondExpression :
   
   |
   LOOKAHEAD(empty_collection_comparison_expression())
-  s=empty_collection_comparison_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  empty_collection_comparison_expression()
   
   |
   LOOKAHEAD(collection_member_expression())
-  s=collection_member_expression()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  collection_member_expression()
   
   |
   LOOKAHEAD(exists_expression())
@@ -2757,25 +2537,20 @@ void simple_cond_expression() #SimpleCondExpression :
 // conditional_primary ::= simple_cond_expression | (conditional_expression)
 void conditional_primary() #ConditionalPrimary :
 {
-  Token t;
-  String s;
 }
 {
   LOOKAHEAD(3)
   simple_cond_expression()
   |
-   <OPEN_BRACKET>
-   conditional_expression()
-   <CLOSE_BRACKET>
+  <OPEN_BRACKET>
+  conditional_expression()
+  <CLOSE_BRACKET>
 }
 
 
 // conditional_factor ::= [NOT] conditional_primary
 void conditional_factor() #ConditionalFactor :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
  [
@@ -2795,9 +2570,6 @@ void conditional_factor() #ConditionalFactor :
 // conditional_term ::= conditional_factor {AND conditional_factor}*
 void conditional_term() #ConditionalTerm :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   conditional_factor()
@@ -2814,9 +2586,6 @@ void conditional_term() #ConditionalTerm :
 // conditional_expression ::= conditional_term {OR conditional_term}*
 void conditional_expression() #ConditionalExpression :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   conditional_term()
@@ -2851,8 +2620,6 @@ void where_clause() #WhereClause :
 //      state_field_path_expression |
 void single_valued_path_expression() #SingleValuedPathExpression :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
   String s;
 }
 {
@@ -2888,7 +2655,6 @@ void single_valued_path_expression() #SingleValuedPathExpression :
 void simple_select_expression() #SimpleSelectExpression :
 {
   Token t;
-  String s;
 }
 {
   LOOKAHEAD(single_valued_path_expression())
@@ -2913,9 +2679,6 @@ void simple_select_expression() #SimpleSelectExpression :
 // simple_select_clause ::= SELECT [DISTINCT] simple_select_expression
 void simple_select_clause() #SimpleSelectClause :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <SELECT>
@@ -2934,8 +2697,6 @@ void simple_select_clause() #SimpleSelectClause :
 void derived_collection_member_declaration() #DerivedCollectionMemberDeclaration :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <IN>
@@ -2962,8 +2723,6 @@ void derived_collection_member_declaration() #DerivedCollectionMemberDeclaration
 // treated_derived_path ::= TREAT(general_derived_path AS subtype)
 void treated_derived_path() #TreatedDerivedPath :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
   String s;
 }
 {
@@ -2973,8 +2732,6 @@ void treated_derived_path() #TreatedDerivedPath :
   <AS>
   s=subtype()
     {
-      sb.append(" ");
-      sb.append(s);
     }
   <CLOSE_BRACKET>
 }
@@ -2984,8 +2741,6 @@ void treated_derived_path() #TreatedDerivedPath :
 void simple_derived_path() #SimpleDerivedPath :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   t=<NAME>
@@ -3007,8 +2762,6 @@ void simple_derived_path() #SimpleDerivedPath :
 void general_derived_path() #GeneralDerivedPath :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   simple_derived_path()
@@ -3032,7 +2785,6 @@ void general_derived_path() #GeneralDerivedPath :
 void derived_path_expression() #DerivedPathExpression :
 {
   Token t;
-  String s;
 }
 {
   general_derived_path()
@@ -3051,7 +2803,6 @@ void derived_path_expression() #DerivedPathExpression :
 void subselect_identification_variable_declaration() #SubselectIdentificationVariableDeclaration :
 {
   Token t;
-  String s;
 }
 {
   LOOKAHEAD(identification_variable_declaration())
@@ -3079,16 +2830,12 @@ void subselect_identification_variable_declaration() #SubselectIdentificationVar
 //           collection_member_declaration}*
 void subquery_from_clause() #SubqueryFromClause :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <FROM>
   subselect_identification_variable_declaration()
   (
    <COMMA>
-//   LOOKAHEAD(3)
    subselect_identification_variable_declaration()
    |
    collection_member_declaration()
@@ -3098,22 +2845,32 @@ void subquery_from_clause() #SubqueryFromClause :
 
 //   collection_member_declaration ::=
 //      IN (collection_valued_path_expression) [AS] identification_variable
-void collection_member_declaration() :
+void collection_member_declaration() #CollectionMemberDeclaration :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
   String s;
 }
 {
   <IN>
   <OPEN_BRACKET>
   collection_valued_path_expression()
-  [<AS>]
-  t=<NAME>
-    {
-     sb.append(" ");
-     sb.append(t.image);
-    }
+  (
+   LOOKAHEAD((<AS>))
+   <AS>
+   s=anyIdentifier()
+     {
+       jjtThis.setIdentificationVariable(s);
+     }
+   |
+   s=anyIdentifier()
+     {
+       jjtThis.setIdentificationVariable(s);
+     }
+  )
+//  [<AS>]
+//  s=anyIdentifier()
+//    {
+//      jjtThis.setIdentificationVariable(s);
+//    }
   <CLOSE_BRACKET>
 }
 
@@ -3122,9 +2879,6 @@ void collection_member_declaration() :
 //    [groupby_clause] [having_clause]
 void subquery() #Subquery :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   simple_select_clause()
@@ -3161,17 +2915,17 @@ void orderby_item() #OrderByItem :
       jjtThis.setResultVariable(t.image);
     }
  )
-  [
-   <ASC>
-   {
-     jjtThis.setOrderByType(org.minijpa.jdbc.model.OrderByType.ASC);
-   }
-   |
-   <DESC>
-   {
-     jjtThis.setOrderByType(org.minijpa.jdbc.model.OrderByType.DESC);
-   }
-  ]
+ [
+  <ASC>
+  {
+    jjtThis.setOrderByType(org.minijpa.jdbc.model.OrderByType.ASC);
+  }
+  |
+  <DESC>
+  {
+    jjtThis.setOrderByType(org.minijpa.jdbc.model.OrderByType.DESC);
+  }
+ ]
 }
 
 
@@ -3193,9 +2947,6 @@ void orderby_clause() #OrderByClause :
 // having_clause ::= HAVING conditional_expression
 void having_clause() #HavingClause :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <HAVING>
@@ -3207,8 +2958,6 @@ void having_clause() #HavingClause :
 void groupby_item() #GroupByItem :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   LOOKAHEAD(2)
@@ -3225,9 +2974,6 @@ void groupby_item() #GroupByItem :
 // groupby_clause ::= GROUP BY groupby_item {, groupby_item}*
 void groupby_clause() #GroupByClause :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <GROUP>

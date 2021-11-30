@@ -64,9 +64,8 @@ import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
-import org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType;
+import org.minijpa.jpa.jpql.AggregateFunctionType;
 import org.minijpa.jdbc.model.aggregate.BasicAggregateFunction;
-import org.minijpa.jdbc.model.aggregate.Count;
 import org.minijpa.jdbc.model.condition.BetweenCondition;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.BinaryLogicConditionImpl;
@@ -77,9 +76,9 @@ import org.minijpa.jdbc.model.condition.InCondition;
 import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.model.condition.UnaryLogicConditionImpl;
 import org.minijpa.jdbc.model.expression.SqlBinaryExpression;
-import org.minijpa.jdbc.model.expression.SqlBinaryExpressionImpl;
 import org.minijpa.jdbc.model.expression.SqlBinaryExpressionBuilder;
 import org.minijpa.jdbc.model.expression.SqlExpressionOperator;
+import org.minijpa.jdbc.model.function.Count;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
@@ -89,7 +88,6 @@ import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
 import org.minijpa.jpa.criteria.AggregateFunctionExpression;
-import org.minijpa.jpa.criteria.AggregateFunctionType;
 import org.minijpa.jpa.criteria.BinaryExpression;
 import org.minijpa.jpa.criteria.ExpressionOperator;
 import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
@@ -466,7 +464,7 @@ public class SqlStatementFactory {
 		} else if (selection instanceof AggregateFunctionExpression<?>) {
 			AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
 			Expression<?> expr = aggregateFunctionExpression.getX();
-			if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.COUNT) {
+			if (aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT.COUNT) {
 				if (expr instanceof AttributePath<?>) {
 					AttributePath<?> miniPath = (AttributePath<?>) expr;
 					MetaAttribute metaAttribute = miniPath.getMetaAttribute();
@@ -556,11 +554,11 @@ public class SqlStatementFactory {
 			return Optional.of(columnNameValue);
 		} else if (selection instanceof AggregateFunctionExpression<?>) {
 			AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
-			if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.COUNT
-					|| aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.SUM) {
+			if (aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT
+					|| aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.SUM) {
 				FetchParameter cnv = new FetchParameter("count", Long.class, Long.class, null, null, false);
 				return Optional.of(cnv);
-			} else if (aggregateFunctionExpression.getAggregateFunctionType() == AggregateFunctionType.AVG) {
+			} else if (aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.AVG) {
 				FetchParameter cnv = new FetchParameter("avg", Double.class, Double.class, null, null, false);
 				return Optional.of(cnv);
 			} else {
@@ -698,18 +696,18 @@ public class SqlStatementFactory {
 		throw new IllegalArgumentException("Unknown condition type for predicate type: " + predicateType);
 	}
 
-	private AggregateFunctionBasicType getAggregateFunction(AggregateFunctionType aggregateFunctionType) {
+	private AggregateFunctionType getAggregateFunction(org.minijpa.jpa.criteria.AggregateFunctionType aggregateFunctionType) {
 		switch (aggregateFunctionType) {
 			case AVG:
-				return AggregateFunctionBasicType.AVG;
+				return AggregateFunctionType.AVG;
 			case MAX:
-				return AggregateFunctionBasicType.MAX;
+				return AggregateFunctionType.MAX;
 			case MIN:
-				return AggregateFunctionBasicType.MIN;
+				return AggregateFunctionType.MIN;
 			case COUNT:
-				return AggregateFunctionBasicType.COUNT;
+				return AggregateFunctionType.COUNT;
 			case SUM:
-				return AggregateFunctionBasicType.SUM;
+				return AggregateFunctionType.SUM;
 			default:
 				break;
 		}

@@ -9,77 +9,98 @@ public interface JpqlParserTreeConstants
   public int JJTSELECTCLAUSE = 3;
   public int JJTSELECTITEM = 4;
   public int JJTSELECTEXPRESSION = 5;
-  public int JJTJOINSINGLEVALUEDPATHEXPRESSION = 6;
-  public int JJTSUBTYPE = 7;
-  public int JJTJOINASSOCIATIONPATHEXPRESSION = 8;
-  public int JJTJOIN = 9;
-  public int JJTRANGEVARIABLEDECLARATION = 10;
-  public int JJTIDENTIFICATIONVARIABLEDECLARATION = 11;
-  public int JJTFROMCLAUSE = 12;
-  public int JJTMAPFIELDIDENTIFICATIONVARIABLE = 13;
-  public int JJTQUALIFIEDIDENTIFICATIONVARIABLE = 14;
-  public int JJTGENERALIDENTIFICATIONVARIABLE = 15;
-  public int JJTSIMPLESUBPATH = 16;
-  public int JJTGENERALSUBPATH = 17;
-  public int JJTTREATEDSUBPATH = 18;
-  public int JJTSTATEFIELDPATHEXPRESSION = 19;
-  public int JJTSTATEVALUEDPATHEXPRESSION = 20;
-  public int JJTSINGLEVALUEDOBJECTPATHEXPRESSION = 21;
-  public int JJTAGGREGATEEXPRESSION = 22;
-  public int JJTFUNCTIONARG = 23;
-  public int JJTSCALAREXPRESSION = 24;
-  public int JJTTYPEDISCRIMINATOR = 25;
-  public int JJTWHENCLAUSE = 26;
-  public int JJTGENERALCASEEXPRESSION = 27;
-  public int JJTCASEEXPRESSION = 28;
-  public int JJTENTITYTYPEEXPRESSION = 29;
-  public int JJTENUMEXPRESSION = 30;
-  public int JJTBOOLEANEXPRESSION = 31;
-  public int JJTDATETIMEEXPRESSION = 32;
-  public int JJTSTRINGEXPRESSION = 33;
-  public int JJTARITHMETICPRIMARY = 34;
-  public int JJTARITHMETICFACTOR = 35;
-  public int JJTARITHMETICTERM = 36;
-  public int JJTARITHMETICEXPRESSION = 37;
-  public int JJTALLORANYEXPRESSION = 38;
-  public int JJTSTRINGEXPRESSIONCOMPARISON = 39;
-  public int JJTARITHMETICEXPRESSIONCOMPARISON = 40;
-  public int JJTBOOLEANEXPRESSIONCOMPARISON = 41;
-  public int JJTDATETIMEEXPRESSIONCOMPARISON = 42;
-  public int JJTENTITYTYPEEXPRESSIONCOMPARISON = 43;
-  public int JJTCOMPARISONEXPRESSION = 44;
-  public int JJTEXISTSEXPRESSION = 45;
-  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 46;
-  public int JJTNULLCOMPARISONEXPRESSION = 47;
-  public int JJTLIKEEXPRESSION = 48;
-  public int JJTINITEM = 49;
-  public int JJTINEXPRESSION = 50;
-  public int JJTBETWEENEXPRESSION = 51;
-  public int JJTARITHMETICBETWEENEXPRESSION = 52;
-  public int JJTSTRINGBETWEENEXPRESSION = 53;
-  public int JJTDATETIMEBETWEENEXPRESSION = 54;
-  public int JJTSIMPLECONDEXPRESSION = 55;
-  public int JJTCONDITIONALPRIMARY = 56;
-  public int JJTCONDITIONALFACTOR = 57;
-  public int JJTCONDITIONALTERM = 58;
-  public int JJTCONDITIONALEXPRESSION = 59;
-  public int JJTWHERECLAUSE = 60;
-  public int JJTSINGLEVALUEDPATHEXPRESSION = 61;
-  public int JJTSIMPLESELECTEXPRESSION = 62;
-  public int JJTSIMPLESELECTCLAUSE = 63;
-  public int JJTDERIVEDCOLLECTIONMEMBERDECLARATION = 64;
-  public int JJTTREATEDDERIVEDPATH = 65;
-  public int JJTSIMPLEDERIVEDPATH = 66;
-  public int JJTGENERALDERIVEDPATH = 67;
-  public int JJTDERIVEDPATHEXPRESSION = 68;
-  public int JJTSUBSELECTIDENTIFICATIONVARIABLEDECLARATION = 69;
-  public int JJTSUBQUERYFROMCLAUSE = 70;
-  public int JJTSUBQUERY = 71;
-  public int JJTORDERBYITEM = 72;
-  public int JJTORDERBYCLAUSE = 73;
-  public int JJTHAVINGCLAUSE = 74;
-  public int JJTGROUPBYITEM = 75;
-  public int JJTGROUPBYCLAUSE = 76;
+  public int JJTCONSTRUCTORITEM = 6;
+  public int JJTCONSTRUCTOREXPRESSION = 7;
+  public int JJTJOINSINGLEVALUEDPATHEXPRESSION = 8;
+  public int JJTSUBTYPE = 9;
+  public int JJTJOINASSOCIATIONPATHEXPRESSION = 10;
+  public int JJTJOIN = 11;
+  public int JJTFETCHJOIN = 12;
+  public int JJTRANGEVARIABLEDECLARATION = 13;
+  public int JJTIDENTIFICATIONVARIABLEDECLARATION = 14;
+  public int JJTFROMCLAUSE = 15;
+  public int JJTMAPFIELDIDENTIFICATIONVARIABLE = 16;
+  public int JJTQUALIFIEDIDENTIFICATIONVARIABLE = 17;
+  public int JJTGENERALIDENTIFICATIONVARIABLE = 18;
+  public int JJTSIMPLESUBPATH = 19;
+  public int JJTGENERALSUBPATH = 20;
+  public int JJTTREATEDSUBPATH = 21;
+  public int JJTSTATEFIELDPATHEXPRESSION = 22;
+  public int JJTSTATEVALUEDPATHEXPRESSION = 23;
+  public int JJTFUNCTIONSRETURNINGSTRINGS = 24;
+  public int JJTCONCATFUNCTION = 25;
+  public int JJTSUBSTRINGFUNCTION = 26;
+  public int JJTTRIMFUNCTION = 27;
+  public int JJTLOWERFUNCTION = 28;
+  public int JJTUPPERFUNCTION = 29;
+  public int JJTFUNCTIONSRETURNINGNUMERICS = 30;
+  public int JJTLENGTHFUNCTION = 31;
+  public int JJTLOCATEFUNCTION = 32;
+  public int JJTABSFUNCTION = 33;
+  public int JJTSQRTFUNCTION = 34;
+  public int JJTMODFUNCTION = 35;
+  public int JJTSIZEFUNCTION = 36;
+  public int JJTINDEXFUNCTION = 37;
+  public int JJTSINGLEVALUEDOBJECTPATHEXPRESSION = 38;
+  public int JJTAGGREGATEEXPRESSION = 39;
+  public int JJTFUNCTIONARG = 40;
+  public int JJTSCALAREXPRESSION = 41;
+  public int JJTTYPEDISCRIMINATOR = 42;
+  public int JJTWHENCLAUSE = 43;
+  public int JJTGENERALCASEEXPRESSION = 44;
+  public int JJTCASEEXPRESSION = 45;
+  public int JJTENTITYTYPEEXPRESSION = 46;
+  public int JJTENUMEXPRESSION = 47;
+  public int JJTBOOLEANEXPRESSION = 48;
+  public int JJTDATETIMEEXPRESSION = 49;
+  public int JJTSTRINGEXPRESSION = 50;
+  public int JJTARITHMETICPRIMARY = 51;
+  public int JJTARITHMETICFACTOR = 52;
+  public int JJTARITHMETICTERM = 53;
+  public int JJTARITHMETICEXPRESSION = 54;
+  public int JJTALLORANYEXPRESSION = 55;
+  public int JJTSTRINGEXPRESSIONCOMPARISON = 56;
+  public int JJTARITHMETICEXPRESSIONCOMPARISON = 57;
+  public int JJTBOOLEANEXPRESSIONCOMPARISON = 58;
+  public int JJTDATETIMEEXPRESSIONCOMPARISON = 59;
+  public int JJTENTITYTYPEEXPRESSIONCOMPARISON = 60;
+  public int JJTCOMPARISONEXPRESSION = 61;
+  public int JJTEXISTSEXPRESSION = 62;
+  public int JJTENTITYORVALUEEXPRESSION = 63;
+  public int JJTCOLLECTIONVALUEDPATHEXPRESSION = 64;
+  public int JJTCOLLECTIONMEMBEREXPRESSION = 65;
+  public int JJTEMPTYCOLLECTIONCOMPARISONEXPRESSION = 66;
+  public int JJTNULLCOMPARISONEXPRESSION = 67;
+  public int JJTLIKEEXPRESSION = 68;
+  public int JJTINITEM = 69;
+  public int JJTINEXPRESSION = 70;
+  public int JJTBETWEENEXPRESSION = 71;
+  public int JJTARITHMETICBETWEENEXPRESSION = 72;
+  public int JJTSTRINGBETWEENEXPRESSION = 73;
+  public int JJTDATETIMEBETWEENEXPRESSION = 74;
+  public int JJTSIMPLECONDEXPRESSION = 75;
+  public int JJTCONDITIONALPRIMARY = 76;
+  public int JJTCONDITIONALFACTOR = 77;
+  public int JJTCONDITIONALTERM = 78;
+  public int JJTCONDITIONALEXPRESSION = 79;
+  public int JJTWHERECLAUSE = 80;
+  public int JJTSINGLEVALUEDPATHEXPRESSION = 81;
+  public int JJTSIMPLESELECTEXPRESSION = 82;
+  public int JJTSIMPLESELECTCLAUSE = 83;
+  public int JJTDERIVEDCOLLECTIONMEMBERDECLARATION = 84;
+  public int JJTTREATEDDERIVEDPATH = 85;
+  public int JJTSIMPLEDERIVEDPATH = 86;
+  public int JJTGENERALDERIVEDPATH = 87;
+  public int JJTDERIVEDPATHEXPRESSION = 88;
+  public int JJTSUBSELECTIDENTIFICATIONVARIABLEDECLARATION = 89;
+  public int JJTSUBQUERYFROMCLAUSE = 90;
+  public int JJTCOLLECTIONMEMBERDECLARATION = 91;
+  public int JJTSUBQUERY = 92;
+  public int JJTORDERBYITEM = 93;
+  public int JJTORDERBYCLAUSE = 94;
+  public int JJTHAVINGCLAUSE = 95;
+  public int JJTGROUPBYITEM = 96;
+  public int JJTGROUPBYCLAUSE = 97;
 
 
   public String[] jjtNodeName = {
@@ -89,10 +110,13 @@ public interface JpqlParserTreeConstants
     "SelectClause",
     "SelectItem",
     "SelectExpression",
+    "ConstructorItem",
+    "ConstructorExpression",
     "JoinSingleValuedPathExpression",
     "Subtype",
     "JoinAssociationPathExpression",
     "Join",
+    "FetchJoin",
     "RangeVariableDeclaration",
     "IdentificationVariableDeclaration",
     "FromClause",
@@ -104,6 +128,20 @@ public interface JpqlParserTreeConstants
     "TreatedSubpath",
     "StateFieldPathExpression",
     "StateValuedPathExpression",
+    "FunctionsReturningStrings",
+    "ConcatFunction",
+    "SubstringFunction",
+    "TrimFunction",
+    "LowerFunction",
+    "UpperFunction",
+    "FunctionsReturningNumerics",
+    "LengthFunction",
+    "LocateFunction",
+    "AbsFunction",
+    "SqrtFunction",
+    "ModFunction",
+    "SizeFunction",
+    "IndexFunction",
     "SingleValuedObjectPathExpression",
     "AggregateExpression",
     "FunctionArg",
@@ -129,7 +167,10 @@ public interface JpqlParserTreeConstants
     "EntityTypeExpressionComparison",
     "ComparisonExpression",
     "ExistsExpression",
+    "EntityOrValueExpression",
     "CollectionValuedPathExpression",
+    "CollectionMemberExpression",
+    "EmptyCollectionComparisonExpression",
     "NullComparisonExpression",
     "LikeExpression",
     "InItem",
@@ -154,6 +195,7 @@ public interface JpqlParserTreeConstants
     "DerivedPathExpression",
     "SubselectIdentificationVariableDeclaration",
     "SubqueryFromClause",
+    "CollectionMemberDeclaration",
     "Subquery",
     "OrderByItem",
     "OrderByClause",
@@ -162,4 +204,4 @@ public interface JpqlParserTreeConstants
     "GroupByClause",
   };
 }
-/* JavaCC - OriginalChecksum=c2ce2354d5feb5d3691bea3a0ebfb7a4 (do not edit this line) */
+/* JavaCC - OriginalChecksum=af04d970f7fe9b6353f223e022847969 (do not edit this line) */

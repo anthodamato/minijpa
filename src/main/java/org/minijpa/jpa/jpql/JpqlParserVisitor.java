@@ -9,10 +9,13 @@ public interface JpqlParserVisitor
   public Object visit(ASTSelectClause node, Object data);
   public Object visit(ASTSelectItem node, Object data);
   public Object visit(ASTSelectExpression node, Object data);
+  public Object visit(ASTConstructorItem node, Object data);
+  public Object visit(ASTConstructorExpression node, Object data);
   public Object visit(ASTJoinSingleValuedPathExpression node, Object data);
   public Object visit(ASTSubtype node, Object data);
   public Object visit(ASTJoinAssociationPathExpression node, Object data);
   public Object visit(ASTJoin node, Object data);
+  public Object visit(ASTFetchJoin node, Object data);
   public Object visit(ASTRangeVariableDeclaration node, Object data);
   public Object visit(ASTIdentificationVariableDeclaration node, Object data);
   public Object visit(ASTFromClause node, Object data);
@@ -24,6 +27,20 @@ public interface JpqlParserVisitor
   public Object visit(ASTTreatedSubpath node, Object data);
   public Object visit(ASTStateFieldPathExpression node, Object data);
   public Object visit(ASTStateValuedPathExpression node, Object data);
+  public Object visit(ASTFunctionsReturningStrings node, Object data);
+  public Object visit(ASTConcatFunction node, Object data);
+  public Object visit(ASTSubstringFunction node, Object data);
+  public Object visit(ASTTrimFunction node, Object data);
+  public Object visit(ASTLowerFunction node, Object data);
+  public Object visit(ASTUpperFunction node, Object data);
+  public Object visit(ASTFunctionsReturningNumerics node, Object data);
+  public Object visit(ASTLengthFunction node, Object data);
+  public Object visit(ASTLocateFunction node, Object data);
+  public Object visit(ASTAbsFunction node, Object data);
+  public Object visit(ASTSqrtFunction node, Object data);
+  public Object visit(ASTModFunction node, Object data);
+  public Object visit(ASTSizeFunction node, Object data);
+  public Object visit(ASTIndexFunction node, Object data);
   public Object visit(ASTSingleValuedObjectPathExpression node, Object data);
   public Object visit(ASTAggregateExpression node, Object data);
   public Object visit(ASTFunctionArg node, Object data);
@@ -49,7 +66,10 @@ public interface JpqlParserVisitor
   public Object visit(ASTEntityTypeExpressionComparison node, Object data);
   public Object visit(ASTComparisonExpression node, Object data);
   public Object visit(ASTExistsExpression node, Object data);
+  public Object visit(ASTEntityOrValueExpression node, Object data);
   public Object visit(ASTCollectionValuedPathExpression node, Object data);
+  public Object visit(ASTCollectionMemberExpression node, Object data);
+  public Object visit(ASTEmptyCollectionComparisonExpression node, Object data);
   public Object visit(ASTNullComparisonExpression node, Object data);
   public Object visit(ASTLikeExpression node, Object data);
   public Object visit(ASTInItem node, Object data);
@@ -74,6 +94,7 @@ public interface JpqlParserVisitor
   public Object visit(ASTDerivedPathExpression node, Object data);
   public Object visit(ASTSubselectIdentificationVariableDeclaration node, Object data);
   public Object visit(ASTSubqueryFromClause node, Object data);
+  public Object visit(ASTCollectionMemberDeclaration node, Object data);
   public Object visit(ASTSubquery node, Object data);
   public Object visit(ASTOrderByItem node, Object data);
   public Object visit(ASTOrderByClause node, Object data);
@@ -81,4 +102,4 @@ public interface JpqlParserVisitor
   public Object visit(ASTGroupByItem node, Object data);
   public Object visit(ASTGroupByClause node, Object data);
 }
-/* JavaCC - OriginalChecksum=e53ee0519466058931b16837acd25d94 (do not edit this line) */
+/* JavaCC - OriginalChecksum=f79326ec94e1e6470c5e22d35e2c998f (do not edit this line) */

@@ -3,11 +3,10 @@
 package org.minijpa.jpa.jpql;
 
 import org.minijpa.jdbc.model.Value;
-import org.minijpa.jdbc.model.aggregate.AggregateFunctionBasicType;
 
 public class ASTAggregateExpression extends SimpleNode {
 
-	private AggregateFunctionBasicType aggregateFunction;
+	private AggregateFunctionType aggregateFunctionType;
 	private boolean distinct = false;
 	private String identificationVariable;
 	private Value value;
@@ -28,12 +27,12 @@ public class ASTAggregateExpression extends SimpleNode {
 		return visitor.visit(this, data);
 	}
 
-	public AggregateFunctionBasicType getAggregateFunction() {
-		return aggregateFunction;
+	public AggregateFunctionType getAggregateFunctionType() {
+		return aggregateFunctionType;
 	}
 
-	public void setAggregateFunction(AggregateFunctionBasicType aggregateFunction) {
-		this.aggregateFunction = aggregateFunction;
+	public void setAggregateFunctionType(AggregateFunctionType aggregateFunctionType) {
+		this.aggregateFunctionType = aggregateFunctionType;
 	}
 
 	public boolean isDistinct() {

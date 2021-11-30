@@ -6,6 +6,7 @@ public class ASTLikeExpression extends SimpleNode {
 
 	private boolean not = false;
 	private String patternValue;
+	private String escapeCharacter;
 
 	public ASTLikeExpression(int id) {
 		super(id);
@@ -37,6 +38,14 @@ public class ASTLikeExpression extends SimpleNode {
 
 	public void setPatternValue(String patternValue) {
 		this.patternValue = patternValue;
+	}
+
+	public String getEscapeCharacter() {
+		return escapeCharacter;
+	}
+
+	public void setEscapeCharacter(String escapeCharacter) {
+		this.escapeCharacter = escapeCharacter;
 	}
 
 }
