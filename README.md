@@ -25,7 +25,6 @@ List of implemented (or partially implemented) annotations:
 @Version  
 
 
-JPQL is not implemented yet.  
 XML mapping is not supported.  
 
 ## Supported Databases  
@@ -37,7 +36,7 @@ XML mapping is not supported.
 - **H2** *1.4.200*  
 
 ## Building  
-Built using Java SE 11 but easy to downgrade to Java SE 9  
+Built using Java SE 11    
 1. Install Java SE 11  
 2. Install Maven 3.6.3 or higher  
 3. git clone https://github.com/adamatolondon/minijpa.git
