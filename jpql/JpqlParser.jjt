@@ -3,8 +3,8 @@ options {
   MULTI=true;
   VISITOR=true;
   NODE_DEFAULT_VOID=true;
-  DEBUG_PARSER=true;
-  DEBUG_LOOKAHEAD=true;
+//  DEBUG_PARSER=true;
+//  DEBUG_LOOKAHEAD=true;
 //  DEBUG_TOKEN_MANAGER=true;
 }
 
@@ -310,7 +310,6 @@ void select_item() #SelectItem :
 void select_expression() #SelectExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
   String s;
 }
 {
@@ -565,7 +564,7 @@ void join() #Join :
       jjtThis.setJoinType(jt);
     }
   join_association_path_expression()
-  [t=<AS>]
+  [<AS>]
   t=<NAME>
     {
       jjtThis.setIdentificationVariable(t.image);
@@ -617,7 +616,7 @@ void range_variable_declaration() #RangeVariableDeclaration :
   {
     jjtThis.setEntityName(s);
   }
-  [t=<AS>]
+  [<AS>]
   t=<NAME>
   {
     jjtThis.setAlias(t.image);     
@@ -666,8 +665,6 @@ void from_clause() #FromClause :
 MapFieldIdentificationVariable map_field_identification_variable() #MapFieldIdentificationVariable :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
   MapFieldIdentificationVariable mapFieldIdentificationVariable=new MapFieldIdentificationVariable();
 }
 {
@@ -700,8 +697,6 @@ MapFieldIdentificationVariable map_field_identification_variable() #MapFieldIden
 void qualified_identification_variable() #QualifiedIdentificationVariable :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
   MapFieldIdentificationVariable mapFieldIdentificationVariable;
 }
 {
@@ -747,8 +742,6 @@ void general_identification_variable() #GeneralIdentificationVariable :
 void simple_subpath() #SimpleSubpath :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
  LOOKAHEAD(2)
@@ -773,8 +766,6 @@ void simple_subpath() #SimpleSubpath :
 void general_subpath() #GeneralSubpath :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
    simple_subpath()
@@ -782,7 +773,7 @@ void general_subpath() #GeneralSubpath :
    treated_subpath()
    (
      LOOKAHEAD(2)
-     t=<DOT>
+     <DOT>
      t=<NAME>
      {
        jjtThis.addPath(t.image);
@@ -1146,7 +1137,6 @@ void single_valued_object_path_expression() #SingleValuedObjectPathExpression :
 void aggregate_expression() #AggregateExpression :
 {
   Token t;
-  String s;
 }
 {
   (
@@ -1217,45 +1207,27 @@ void aggregate_expression() #AggregateExpression :
   <CLOSE_BRACKET>
 
   |
-  s=function_invocation()
-    {
-      //sb.append(s);
-    }
+  function_invocation()
 }
 
 
 //   function_invocation ::= FUNCTION(function_name{, function_arg}*)
-String function_invocation() :
+void function_invocation() #FunctionInvocation :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  t=<FUNCTION>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <FUNCTION>
+  <OPEN_BRACKET>
   t=<NAME>
     {
-     sb.append(t.image);
+      jjtThis.setFunctionName(t.image);
     }
   (
-   t=<COMMA>
-     {
-       sb.append(t.image);
-     }
+   <COMMA>
    function_arg()
   )*
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
-  { return sb.toString(); }
+  <CLOSE_BRACKET>
 }
 
 
@@ -1285,7 +1257,7 @@ void function_arg() #FunctionArg :
   LOOKAHEAD(2)
   t=<INPUT_PARAMETER>
     {
-     sb.append(t.image);
+      jjtThis.setInputParameter(t.image);
     }
 
   |
@@ -1338,49 +1310,28 @@ void scalar_expression() #ScalarExpression :
 //   nullif_expression::= NULLIF(scalar_expression, scalar_expression)
 void nullif_expression() :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
-  t=<NULLIF>
-    {
-     sb.append(t.image);
-    }
-  t=<OPEN_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <NULLIF>
+  <OPEN_BRACKET>
   scalar_expression()
-  t=<COMMA>
-    {
-      sb.append(t.image);
-    }
+  <COMMA>
   scalar_expression()
-  t=<CLOSE_BRACKET>
-    {
-     sb.append(t.image);
-    }
+  <CLOSE_BRACKET>
 }
 
 
 //   coalesce_expression ::= COALESCE(scalar_expression{, scalar_expression}+)
 void coalesce_expression() :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <COALESCE>
   <OPEN_BRACKET>
   scalar_expression()
   (
-  t=<COMMA>
-    {
-      sb.append(t.image);
-    }
-  scalar_expression()
+   <COMMA>
+   scalar_expression()
   )+
   <CLOSE_BRACKET>
 }
@@ -1389,9 +1340,6 @@ void coalesce_expression() :
 //   simple_when_clause ::= WHEN scalar_expression THEN scalar_expression
 void simple_when_clause() :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   <WHEN>
@@ -1655,8 +1603,6 @@ Boolean boolean_literal() :
  void boolean_expression() #BooleanExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
   Boolean booleanValue;
 }
 {
@@ -1679,11 +1625,7 @@ Boolean boolean_literal() :
   case_expression()
   
   |
-  s=function_invocation()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  function_invocation()
 
   |
   <OPEN_BRACKET>
@@ -1705,7 +1647,6 @@ void datetime_expression() #DatetimeExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
-  String s;
   org.minijpa.jdbc.db.SqlFunction sqlFunction;
 }
 {
@@ -1732,11 +1673,7 @@ void datetime_expression() #DatetimeExpression :
   case_expression()
 
   |
-  s=function_invocation()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  function_invocation()
 
   |  
   t=<NAME>
@@ -1764,8 +1701,6 @@ void datetime_expression() #DatetimeExpression :
 void string_expression() #StringExpression :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   LOOKAHEAD("(" <SELECT>)
@@ -1795,11 +1730,7 @@ void string_expression() #StringExpression :
   |
   case_expression()
   |
-  s=function_invocation()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  function_invocation()
 }
 
 
@@ -1816,8 +1747,6 @@ void string_expression() #StringExpression :
 void arithmetic_primary() #ArithmeticPrimary :
 {
   Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   LOOKAHEAD("(" <SELECT>)
@@ -1857,11 +1786,7 @@ void arithmetic_primary() #ArithmeticPrimary :
   case_expression()
   
   |
-  s=function_invocation()
-    {
-      sb.append(" ");
-      sb.append(s);
-    }
+  function_invocation()
 }
 
 
@@ -2848,23 +2773,30 @@ void subquery_from_clause() #SubqueryFromClause :
 void collection_member_declaration() #CollectionMemberDeclaration :
 {
   String s;
+  Token t;
 }
 {
   <IN>
   <OPEN_BRACKET>
   collection_valued_path_expression()
   (
-   LOOKAHEAD((<AS>))
-   <AS>
-   s=anyIdentifier()
-     {
-       jjtThis.setIdentificationVariable(s);
-     }
-   |
-   s=anyIdentifier()
-     {
-       jjtThis.setIdentificationVariable(s);
-     }
+   [<AS>]
+   t=<NAME>
+   {
+     jjtThis.setIdentificationVariable(t.image);
+   }
+  
+//   LOOKAHEAD((<AS>))
+//   <AS>
+//   s=anyIdentifier()
+//     {
+//       jjtThis.setIdentificationVariable(s);
+//     }
+//   |
+//   s=anyIdentifier()
+//     {
+//       jjtThis.setIdentificationVariable(s);
+//     }
   )
 //  [<AS>]
 //  s=anyIdentifier()

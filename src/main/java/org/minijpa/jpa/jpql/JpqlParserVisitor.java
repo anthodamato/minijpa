@@ -43,6 +43,7 @@ public interface JpqlParserVisitor
   public Object visit(ASTIndexFunction node, Object data);
   public Object visit(ASTSingleValuedObjectPathExpression node, Object data);
   public Object visit(ASTAggregateExpression node, Object data);
+  public Object visit(ASTFunctionInvocation node, Object data);
   public Object visit(ASTFunctionArg node, Object data);
   public Object visit(ASTScalarExpression node, Object data);
   public Object visit(ASTTypeDiscriminator node, Object data);
@@ -102,4 +103,4 @@ public interface JpqlParserVisitor
   public Object visit(ASTGroupByItem node, Object data);
   public Object visit(ASTGroupByClause node, Object data);
 }
-/* JavaCC - OriginalChecksum=f79326ec94e1e6470c5e22d35e2c998f (do not edit this line) */
+/* JavaCC - OriginalChecksum=56bafa8a65f0494dc3e0cf663898734e (do not edit this line) */

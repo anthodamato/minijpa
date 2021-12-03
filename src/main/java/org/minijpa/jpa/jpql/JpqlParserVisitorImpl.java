@@ -1699,6 +1699,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	}
 
 	@Override
+	public Object visit(ASTFunctionInvocation node, Object data) {
+		return node.childrenAccept(this, data);
+	}
+
+	@Override
 	public Object visit(SimpleNode node, Object data) {
 		return node.childrenAccept(this, data);
 	}
