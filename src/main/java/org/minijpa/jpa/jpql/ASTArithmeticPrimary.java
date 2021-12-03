@@ -6,6 +6,7 @@ public class ASTArithmeticPrimary extends SimpleNode {
 
 	private Object result;
 	private String inputParameter;
+	private String path;
 
 	public ASTArithmeticPrimary(int id) {
 		super(id);
@@ -45,6 +46,14 @@ public class ASTArithmeticPrimary extends SimpleNode {
 
 	public void setInputParameter(String inputParameter) {
 		this.inputParameter = inputParameter;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 }

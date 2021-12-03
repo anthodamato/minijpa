@@ -46,8 +46,6 @@ import org.minijpa.metadata.EntityDelegate;
 
 public class SqlStatementFactoryTest {
 
-	private final SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-
 	@Test
 	public void generateSelectByForeignKey() throws Exception {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory("manytoone_bid", PersistenceUnitProperties.getProperties());
@@ -77,8 +75,9 @@ public class SqlStatementFactoryTest {
 		List<String> columns = parameters.stream().map(p -> p.getColumnName())
 				.collect(Collectors.toList());
 
+		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(employeeEntity,
-				foreignKeyAttribute, columns);
+				foreignKeyAttribute, columns, optional.get().getTableAliasGenerator());
 		Optional<List<Condition>> opt = sqlSelect.getConditions();
 		Assertions.assertTrue(opt.isPresent());
 		List<Condition> conditions = opt.get();
@@ -90,7 +89,7 @@ public class SqlStatementFactoryTest {
 
 		String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 		Assertions.assertEquals(
-				"select e.id, e.salary, e.name, e.department_id from Employee AS e where e.department_id = ?", sql);
+				"select employee0.id, employee0.salary, employee0.name, employee0.department_id from Employee AS employee0 where employee0.department_id = ?", sql);
 
 		emf.close();
 	}
@@ -131,6 +130,7 @@ public class SqlStatementFactoryTest {
 		MetaEntity itemEntity = map.get(Item.class.getName());
 		Pk pk = storeEntity.getId();
 
+		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
 		RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
 		ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, store.getId(),
@@ -138,14 +138,14 @@ public class SqlStatementFactoryTest {
 		List<AbstractAttribute> attributes = modelValueArray.getModels();
 		List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
-				relationshipJoinTable, attributes);
+				relationshipJoinTable, attributes, optional.get().getTableAliasGenerator());
 
 		Optional<List<Condition>> opt = sqlSelect.getConditions();
 		Assertions.assertTrue(opt.isPresent());
 
 		String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 		Assertions.assertEquals(
-				"select i.id, i.model, i.name from Item AS i INNER JOIN store_items AS si ON i.id = si.items_id where si.Store_id = ?",
+				"select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
 				sql);
 
 		em.close();
@@ -167,6 +167,7 @@ public class SqlStatementFactoryTest {
 		MetaEntity itemEntity = map.get(Item.class.getName());
 		Pk pk = storeEntity.getId();
 
+		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
 		RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
 		ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, 1L,
@@ -174,14 +175,14 @@ public class SqlStatementFactoryTest {
 		List<AbstractAttribute> attributes = modelValueArray.getModels();
 		List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
 		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
-				relationshipJoinTable, attributes);
+				relationshipJoinTable, attributes, optional.get().getTableAliasGenerator());
 
 		Optional<List<Condition>> opt = sqlSelect.getConditions();
 		Assertions.assertTrue(opt.isPresent());
 
 		String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
 		Assertions.assertEquals(
-				"select i.id, i.model, i.name from Item AS i INNER JOIN store_items AS si ON i.id = si.items_id where si.Store_id = ?",
+				"select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
 				sql);
 
 		em.close();
@@ -214,7 +215,8 @@ public class SqlStatementFactoryTest {
 
 		tx.commit();
 
-		StatementParameters statementParameters = sqlStatementFactory.select(typedQuery);
+		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+		StatementParameters statementParameters = sqlStatementFactory.select(typedQuery, optional.get().getTableAliasGenerator());
 		SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
 		Assertions.assertNotNull(sqlSelect.getValues());
 		Optional<List<Condition>> opt = sqlSelect.getConditions();
@@ -228,7 +230,7 @@ public class SqlStatementFactoryTest {
 		Assertions.assertNotNull(unaryCondition.getTableColumn());
 
 		String sql = new DefaultSqlStatementGenerator(new ApacheDerbyJdbc()).export(sqlSelect);
-		Assertions.assertEquals("select a.id, a.name, a.postcode, a.tt from Address AS a where a.postcode is null",
+		Assertions.assertEquals("select address0.id, address0.name, address0.postcode, address0.tt from Address AS address0 where address0.postcode is null",
 				sql);
 
 		em.close();

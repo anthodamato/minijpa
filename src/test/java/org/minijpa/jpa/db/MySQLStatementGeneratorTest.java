@@ -25,10 +25,6 @@ import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
-import org.minijpa.jpa.db.DbConfigurationList;
-import org.minijpa.jpa.db.MySQLConfiguration;
-import org.minijpa.jpa.db.MySQLJdbc;
-import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.metadata.PersistenceUnitContext;
 
 /**
@@ -37,26 +33,26 @@ import org.minijpa.metadata.PersistenceUnitContext;
  */
 public class MySQLStatementGeneratorTest {
 
-    private final SqlStatementGenerator sqlStatementGenerator = new DefaultSqlStatementGenerator(new MySQLJdbc());
-    private final DbConfiguration dbConfiguration = new MySQLConfiguration();
+	private final SqlStatementGenerator sqlStatementGenerator = new DefaultSqlStatementGenerator(new MySQLJdbc());
+	private final DbConfiguration dbConfiguration = new MySQLConfiguration();
 
-    @Test
-    public void ddlCitizens() throws Exception {
-	DbConfigurationList.getInstance().setDbConfiguration("citizens", dbConfiguration);
-	PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("citizens");
-	SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-	List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
-	Assertions.assertEquals(2, sqlStatements.size());
+	@Test
+	public void ddlCitizens() throws Exception {
+		DbConfigurationList.getInstance().setDbConfiguration("citizens", dbConfiguration);
+		PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("citizens");
+		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+		List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
+		Assertions.assertEquals(2, sqlStatements.size());
 //	List<String> ddlStatements = sqlStatements.stream()
 //		.map(d -> dbConfiguration.getSqlStatementGenerator().export(d))
 //		.flatMap(List::stream).collect(Collectors.toList());
-	List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
-	Assertions.assertFalse(ddlStatements.isEmpty());
-	Assertions.assertEquals(2, ddlStatements.size());
-	String ddl = ddlStatements.get(0);
-	Assertions.assertEquals("create table citizen (id bigint not null AUTO_INCREMENT, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))", ddl);
-	ddl = ddlStatements.get(1);
-	Assertions.assertEquals("create table Address (id bigint not null AUTO_INCREMENT, name varchar(255), postcode varchar(255), tt boolean not null, primary key (id))", ddl);
-    }
+		List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
+		Assertions.assertFalse(ddlStatements.isEmpty());
+		Assertions.assertEquals(2, ddlStatements.size());
+		String ddl = ddlStatements.get(0);
+		Assertions.assertEquals("create table citizen (id bigint not null AUTO_INCREMENT, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))", ddl);
+		ddl = ddlStatements.get(1);
+		Assertions.assertEquals("create table Address (id bigint not null AUTO_INCREMENT, name varchar(255), postcode varchar(255), tt boolean not null, primary key (id))", ddl);
+	}
 
 }

@@ -29,6 +29,7 @@ import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.relationship.Relationship;
+import org.minijpa.metadata.AliasGenerator;
 
 /**
  *
@@ -39,14 +40,17 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 	private final SqlStatementFactory sqlStatementFactory;
 	private final DbConfiguration dbConfiguration;
 	private final ConnectionHolder connectionHolder;
+	private final AliasGenerator tableAliasGenerator;
 
 	public JoinTableCollectionQueryLevel(
 			SqlStatementFactory sqlStatementFactory,
 			DbConfiguration dbConfiguration,
-			ConnectionHolder connectionHolder) {
+			ConnectionHolder connectionHolder,
+			AliasGenerator tableAliasGenerator) {
 		this.sqlStatementFactory = sqlStatementFactory;
 		this.dbConfiguration = dbConfiguration;
 		this.connectionHolder = connectionHolder;
+		this.tableAliasGenerator = tableAliasGenerator;
 	}
 
 	public Object run(Object primaryKey, Pk id,
@@ -61,13 +65,13 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 			List<AbstractAttribute> attributes = modelValueArray.getModels();
 
 			sqlSelect = sqlStatementFactory.generateSelectByJoinTable(relationship.getAttributeType(),
-					relationship.getJoinTable(), attributes);
+					relationship.getJoinTable(), attributes, tableAliasGenerator);
 		} else {
 			modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
 					relationship.getJoinTable().getTargetJoinColumnMapping().getJoinColumnAttributes());
 			List<AbstractAttribute> attributes = modelValueArray.getModels();
 			sqlSelect = sqlStatementFactory.generateSelectByJoinTableFromTarget(relationship.getAttributeType(),
-					relationship.getJoinTable(), attributes);
+					relationship.getJoinTable(), attributes, tableAliasGenerator);
 		}
 
 		List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);

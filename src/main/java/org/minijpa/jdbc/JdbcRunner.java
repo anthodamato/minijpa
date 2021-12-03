@@ -376,7 +376,9 @@ public class JdbcRunner {
 		return values;
 	}
 
-	public List<Object> runQuery(Connection connection, String sql,
+	public List<Object> runQuery(
+			Connection connection,
+			String sql,
 			List<QueryParameter> parameters) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;

@@ -1040,7 +1040,7 @@ void locate_function() #LocateFunction :
   <OPEN_BRACKET>
   string_expression()
   <COMMA>
-  arithmetic_expression()
+  string_expression()
   [
     <COMMA>
     arithmetic_expression()

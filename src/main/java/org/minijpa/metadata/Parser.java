@@ -85,7 +85,7 @@ public class Parser {
 
 	private final Logger LOG = LoggerFactory.getLogger(Parser.class);
 	private final DbConfiguration dbConfiguration;
-	private final AliasGenerator aliasGenerator = new AliasGenerator();
+//	private final AliasGeneratorClass aliasGenerator = new AliasGeneratorClass();
 	private final OneToOneHelper oneToOneHelper = new OneToOneHelper();
 	private final ManyToOneHelper manyToOneHelper = new ManyToOneHelper();
 	private final OneToManyHelper oneToManyHelper = new OneToManyHelper();
@@ -157,8 +157,7 @@ public class Parser {
 		if (table != null && table.name() != null && table.name().trim().length() > 0)
 			tableName = table.name();
 
-		String alias = aliasGenerator.calculateAlias(tableName, parsedEntities);
-
+//		String alias = aliasGenerator.calculateAlias(tableName, parsedEntities);
 		LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
 		List<MetaAttribute> attributes = readAttributes(enhEntity, Optional.empty());
 		List<MetaEntity> embeddables = readEmbeddables(enhEntity, parsedEntities, Optional.empty());
@@ -236,7 +235,7 @@ public class Parser {
 				.withEntityClass(c)
 				.withName(name)
 				.withTableName(tableName)
-				.withAlias(alias)
+				//				.withAlias(alias)
 				.withId(id)
 				.withAttributes(attributes)
 				.withBasicAttributes(Collections.unmodifiableList(basicAttributes))
@@ -376,7 +375,6 @@ public class Parser {
 			if (enhAttribute.isEmbedded())
 				continue;
 
-			LOG.debug("readAttributes: enhAttribute.getName()=" + enhAttribute.getName());
 			MetaAttribute attribute = readAttribute(enhEntity.getClassName(), enhAttribute, parentPath);
 			attributes.add(attribute);
 		}
@@ -472,8 +470,10 @@ public class Parser {
 		LOG.debug("readAttribute: readWriteType=" + readWriteType);
 		Integer sqlType = findSqlType(readWriteType, enumerated);
 		LOG.debug("readAttribute: sqlType=" + sqlType);
+		LOG.debug("readAttribute: parentPath.isEmpty() =" + parentPath.isEmpty());
 		String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
 		LOG.debug("readAttribute: path=" + path);
+		LOG.debug("readAttribute: idAnnotation=" + idAnnotation);
 		if (idAnnotation != null) {
 			MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName())
 					.withColumnName(columnName)
@@ -544,6 +544,7 @@ public class Parser {
 
 	private Class<?> findDatabaseType(Field field, Class<?> attributeClass, Optional<Class<?>> enumerationType) {
 		Optional<Class<?>> optional = temporalType(field, attributeClass);
+		LOG.debug("findDatabaseType: optional=" + optional);
 		if (optional.isPresent())
 			return dbConfiguration.getDbTypeMapper().databaseType(optional.get(), enumerationType);
 
@@ -752,7 +753,7 @@ public class Parser {
 							+ relationship.getTargetEntityClass().getName() + ")");
 
 				OneToManyRelationship oneToMany = (OneToManyRelationship) relationship;
-				OneToManyRelationship otm = oneToManyHelper.finalizeRelationship(oneToMany, a, entity, toEntity, dbConfiguration, aliasGenerator, entities);
+				OneToManyRelationship otm = oneToManyHelper.finalizeRelationship(oneToMany, a, entity, toEntity, dbConfiguration, entities);
 				a.setRelationship(otm);
 			} else if (relationship instanceof ManyToManyRelationship) {
 				MetaEntity toEntity = entities.get(relationship.getTargetEntityClass().getName());
@@ -763,7 +764,7 @@ public class Parser {
 							+ relationship.getTargetEntityClass().getName() + ")");
 
 				ManyToManyRelationship manyToMany = (ManyToManyRelationship) relationship;
-				ManyToManyRelationship otm = manyToManyHelper.finalizeRelationship(manyToMany, a, entity, toEntity, dbConfiguration, aliasGenerator, entities);
+				ManyToManyRelationship otm = manyToManyHelper.finalizeRelationship(manyToMany, a, entity, toEntity, dbConfiguration, entities);
 				a.setRelationship(otm);
 			}
 		}

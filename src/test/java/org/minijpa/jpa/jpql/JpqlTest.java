@@ -42,9 +42,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select distinct so.id from simple_order AS so"
-					+ " INNER JOIN simple_order_line_item AS soli ON so.id = soli.SimpleOrder_id"
-					+ " INNER JOIN line_item AS li ON soli.lineItems_id = li.id where li.shipped = FALSE",
+					"select distinct simple_order0.id from simple_order AS simple_order0 INNER JOIN simple_order_line_item AS simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item AS line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id where line_item0.shipped = FALSE",
 					jpqlResult.getSql());
 		} catch (ParseException ex) {
 			LOG.debug(ex.getMessage());
@@ -77,10 +75,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select distinct so.id from simple_order AS so"
-					+ " INNER JOIN simple_order_line_item AS soli ON so.id = soli.SimpleOrder_id"
-					+ " INNER JOIN line_item AS li ON soli.lineItems_id = li.id"
-					+ " INNER JOIN simple_product AS sp ON li.product_id = sp.id where sp.productType = 'office_supplies'",
+					"select distinct simple_order0.id from simple_order AS simple_order0 INNER JOIN simple_order_line_item AS simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item AS line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id INNER JOIN simple_product AS simple_product0 ON line_item0.product_id = simple_product0.id where simple_product0.productType = 'office_supplies'",
 					jpqlResult.getSql());
 		} catch (ParseException ex) {
 			LOG.debug(ex.getMessage());
@@ -111,7 +106,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select bs.id, bs.perc, bs.b_dateof, bs.b_room_number from booking_sale AS bs INNER JOIN booking AS b ON bs.b_dateof = b.dateof AND bs.b_room_number = b.room_number where b.customer_id = 1",
+					"select booking_sale0.id, booking_sale0.perc, booking_sale0.b_dateof, booking_sale0.b_room_number from booking_sale AS booking_sale0 INNER JOIN booking AS booking0 ON booking_sale0.b_dateof = booking0.dateof AND booking_sale0.b_room_number = booking0.room_number where booking0.customer_id = 1",
 					jpqlResult.getSql());
 		} catch (ParseException ex) {
 			LOG.debug(ex.getMessage());
@@ -142,8 +137,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select so.id, CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP "
-					+ "from simple_order AS so where so.created_at >= CURRENT_DATE",
+					"select simple_order0.id, CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP from simple_order AS simple_order0 where simple_order0.created_at >= CURRENT_DATE",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());
@@ -178,8 +172,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select o.id, o.date_of, o.status, o.deliveryType, o.customer_id"
-					+ " from orders AS o where (select avg(p.price) from product AS p, orders_product AS op where op.orders_id = o.id and op.products_id = p.id) > 50",
+					"select orders0.id, orders0.date_of, orders0.status, orders0.deliveryType, orders0.customer_id from orders AS orders0 where (select AVG(product0.price) from product AS product0, orders_product AS orders_product0 where orders_product0.orders_id = orders0.id and orders_product0.products_id = product0.id) > 50",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());
@@ -211,7 +204,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select i.category, count(i.count) from ItemSaleStats AS i group by i.category order by i.category",
+					"select itemsalestats0.category, COUNT(itemsalestats0.count) from ItemSaleStats AS itemsalestats0 group by itemsalestats0.category order by itemsalestats0.category",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());
@@ -243,7 +236,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select h.id, h.travellers, h.checkIn, h.nights, h.referenceName from Holiday AS h where h.nights between 7 and 10",
+					"select holiday0.id, holiday0.travellers, holiday0.checkIn, holiday0.nights, holiday0.referenceName from Holiday AS holiday0 where holiday0.nights between 7 and 10",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());
@@ -275,7 +268,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select r.population from Region AS r where r.name is not null and r.name in ('North West', 'South West') order by r.name",
+					"select region0.population from Region AS region0 where region0.name is not null and region0.name in ('North West', 'South West') order by region0.name",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());
@@ -307,7 +300,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select 'Region'||' '||r.name, r.population from Region AS r order by r.name",
+					"select 'Region'||' '||region0.name, region0.population from Region AS region0 order by region0.name",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());
@@ -339,7 +332,7 @@ public class JpqlTest {
 		try {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			Assertions.assertEquals(
-					"select 'Region'||' '||r.name, r.population from Region AS r order by r.name",
+					"select region0.id, region0.name, region0.population from Region AS region0 where LENGTH('Region'||' '||region0.name) = (select MAX(LENGTH('Region'||' '||region1.name)) from Region AS region1)",
 					jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());

@@ -29,8 +29,6 @@ import org.minijpa.jdbc.PkStrategy;
 
 import org.minijpa.jdbc.db.DbJdbc;
 import org.minijpa.jdbc.db.SqlFunction;
-import org.minijpa.jdbc.model.aggregate.AggregateFunction;
-import org.minijpa.jdbc.model.aggregate.BasicAggregateFunction;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.BetweenCondition;
 import org.minijpa.jdbc.model.condition.BinaryCondition;

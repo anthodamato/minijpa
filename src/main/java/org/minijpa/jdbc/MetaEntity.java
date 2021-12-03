@@ -31,7 +31,7 @@ public class MetaEntity {
 	private Class<?> entityClass;
 	private String name;
 	private String tableName;
-	private String alias;
+//	private String alias;
 	private Pk id;
 	/**
 	 * Collection of basic and relationship attributes.
@@ -74,9 +74,9 @@ public class MetaEntity {
 		return tableName;
 	}
 
-	public String getAlias() {
-		return alias;
-	}
+//	public String getAlias() {
+//		return alias;
+//	}
 
 	public Pk getId() {
 		return id;
@@ -296,7 +296,7 @@ public class MetaEntity {
 		private Class<?> entityClass;
 		private String name;
 		private String tableName;
-		private String alias;
+//		private String alias;
 		private Pk id;
 		private boolean embeddedId;
 		private List<MetaAttribute> attributes;
@@ -330,10 +330,10 @@ public class MetaEntity {
 			return this;
 		}
 
-		public Builder withAlias(String alias) {
-			this.alias = alias;
-			return this;
-		}
+//		public Builder withAlias(String alias) {
+//			this.alias = alias;
+//			return this;
+//		}
 
 		public Builder withId(Pk id) {
 			this.id = id;
@@ -425,7 +425,7 @@ public class MetaEntity {
 			metaEntity.entityClass = entityClass;
 			metaEntity.name = name;
 			metaEntity.tableName = tableName;
-			metaEntity.alias = alias;
+//			metaEntity.alias = alias;
 			metaEntity.id = id;
 			metaEntity.embeddedId = embeddedId;
 			metaEntity.attributes = attributes;

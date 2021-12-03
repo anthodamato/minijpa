@@ -25,11 +25,15 @@ public interface FromTable {
 
 	public Optional<String> getAlias();
 
-	public static FromTable of(MetaEntity entity) {
-		return new FromTableImpl(entity.getTableName(), entity.getAlias());
+	public static FromTable of(MetaEntity entity, String alias) {
+		return new FromTableImpl(entity.getTableName(), alias);
 	}
 
 	public static FromTable of(String tableName) {
 		return new FromTableImpl(tableName);
+	}
+
+	public static FromTable of(String tableName, String alias) {
+		return new FromTableImpl(tableName, alias);
 	}
 }

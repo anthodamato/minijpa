@@ -26,6 +26,7 @@ public class PersistenceUnitContext {
 	private final String persistenceUnitName;
 	private final Map<String, MetaEntity> entities;
 	private final Optional<Map<String, QueryResultMapping>> queryResultMappings;
+	private AliasGenerator tableAliasGenerator;
 
 	public PersistenceUnitContext(String persistenceUnitName, Map<String, MetaEntity> entities,
 			Optional<Map<String, QueryResultMapping>> queryResultMappings) {
@@ -60,12 +61,32 @@ public class PersistenceUnitContext {
 		return Optional.empty();
 	}
 
-	public Optional<MetaEntity> findMetaEntityByAlias(String alias) {
+	public Optional<MetaEntity> findMetaEntityByTableName(String tableName) {
 		for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
-			if (e.getValue().getAlias().equals(alias))
+			if (e.getValue().getTableName().equals(tableName))
 				return Optional.of(e.getValue());
 		}
 
 		return Optional.empty();
+	}
+
+//	public Optional<MetaEntity> findMetaEntityByAlias(String alias) {
+//		for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
+//			if (e.getValue().getAlias().equals(alias))
+//				return Optional.of(e.getValue());
+//		}
+//
+//		return Optional.empty();
+//	}
+	public AliasGenerator getTableAliasGenerator() {
+		if (tableAliasGenerator == null)
+			this.tableAliasGenerator = new TableAliasGeneratorImpl();
+
+		return tableAliasGenerator;
+
+	}
+
+	public AliasGenerator createTableAliasGenerator() {
+		return new TableAliasGeneratorImpl();
 	}
 }

@@ -28,6 +28,7 @@ import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.metadata.AliasGenerator;
 
 /**
  *
@@ -42,30 +43,33 @@ import org.minijpa.jdbc.model.SqlSelect;
  */
 public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 
-    private final SqlStatementFactory sqlStatementFactory;
-    private final DbConfiguration dbConfiguration;
-    private final ConnectionHolder connectionHolder;
+	private final SqlStatementFactory sqlStatementFactory;
+	private final DbConfiguration dbConfiguration;
+	private final ConnectionHolder connectionHolder;
+	private final AliasGenerator tableAliasGenerator;
 
-    public ForeignKeyCollectionQueryLevel(
-	    SqlStatementFactory sqlStatementFactory,
-	    DbConfiguration dbConfiguration,
-	    ConnectionHolder connectionHolder) {
-	this.sqlStatementFactory = sqlStatementFactory;
-	this.dbConfiguration = dbConfiguration;
-	this.connectionHolder = connectionHolder;
-    }
+	public ForeignKeyCollectionQueryLevel(
+			SqlStatementFactory sqlStatementFactory,
+			DbConfiguration dbConfiguration,
+			ConnectionHolder connectionHolder,
+			AliasGenerator tableAliasGenerator) {
+		this.sqlStatementFactory = sqlStatementFactory;
+		this.dbConfiguration = dbConfiguration;
+		this.connectionHolder = connectionHolder;
+		this.tableAliasGenerator = tableAliasGenerator;
+	}
 
-    public Object run(MetaEntity entity, MetaAttribute foreignKeyAttribute,
-	    Object foreignKey, LockType lockType, EntityLoader entityLoader) throws Exception {
-	List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
-	List<String> columns = parameters.stream().map(p -> p.getColumnName())
-		.collect(Collectors.toList());
-	SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, columns);
-	String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
-	Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
-	dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql, sqlSelect,
-		collectionResult, entityLoader, parameters);
-	return (List<Object>) collectionResult;
-    }
+	public Object run(MetaEntity entity, MetaAttribute foreignKeyAttribute,
+			Object foreignKey, LockType lockType, EntityLoader entityLoader) throws Exception {
+		List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
+		List<String> columns = parameters.stream().map(p -> p.getColumnName())
+				.collect(Collectors.toList());
+		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, columns, tableAliasGenerator);
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
+		Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
+		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql, sqlSelect,
+				collectionResult, entityLoader, parameters);
+		return (List<Object>) collectionResult;
+	}
 
 }

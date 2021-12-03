@@ -2154,7 +2154,7 @@ if (jjtc000) {
         jj_consume_token(OPEN_BRACKET);
         string_expression();
         jj_consume_token(COMMA);
-        arithmetic_expression();
+        string_expression();
         switch ((jj_ntk==-1)?jj_ntk_f():jj_ntk) {
         case COMMA:{
           jj_consume_token(COMMA);
@@ -2413,8 +2413,8 @@ if (jjtc000) {
 // MODIFIED AS:
 //
 // aggregate_expression ::=
-//    {AVG | MAX | MIN | SUM} ([DISTINCT] {arithmetic_expression | string_expression}) |
-//    COUNT ([DISTINCT] identification_variable | arithmetic_expression | string_expression | single_valued_object_path_expression) |
+//    {AVG | MAX | MIN | SUM} ([DISTINCT] {functions_returning_strings | functions_returning_numerics | state_valued_path_expression}) |
+//    COUNT ([DISTINCT] identification_variable | functions_returning_strings | functions_returning_numerics | state_valued_path_expression | single_valued_object_path_expression) |
 //    function_invocation
   final public void aggregate_expression() throws ParseException {
     trace_call("aggregate_expression");
@@ -9103,7 +9103,7 @@ if (jjtc000) {
     if (jj_scan_token(OPEN_BRACKET)) { if (!jj_rescan) trace_return("locate_function(LOOKAHEAD FAILED)"); return true; }
     if (jj_3R_string_expression_1771_3_41()) { if (!jj_rescan) trace_return("locate_function(LOOKAHEAD FAILED)"); return true; }
     if (jj_scan_token(COMMA)) { if (!jj_rescan) trace_return("locate_function(LOOKAHEAD FAILED)"); return true; }
-    if (jj_3R_arithmetic_expression_1924_3_43()) { if (!jj_rescan) trace_return("locate_function(LOOKAHEAD FAILED)"); return true; }
+    if (jj_3R_string_expression_1771_3_41()) { if (!jj_rescan) trace_return("locate_function(LOOKAHEAD FAILED)"); return true; }
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_locate_function_1045_5_306()) jj_scanpos = xsp;

@@ -22,7 +22,7 @@ public class RelationshipJoinTable {
 
 	private String schema;
 	private String tableName;
-	private String alias;
+//	private String alias;
 	private final JoinColumnMapping owningJoinColumnMapping;
 	private final JoinColumnMapping targetJoinColumnMapping;
 	private MetaEntity owningEntity;
@@ -30,7 +30,8 @@ public class RelationshipJoinTable {
 	private Pk owningAttribute;
 	private Pk targetAttribute;
 
-	public RelationshipJoinTable(String schema, String tableName, String alias,
+	public RelationshipJoinTable(String schema, String tableName, 
+//			String alias,
 			JoinColumnMapping owningJoinColumnMapping,
 			JoinColumnMapping targetJoinColumnMapping,
 			MetaEntity owningEntity,
@@ -39,7 +40,7 @@ public class RelationshipJoinTable {
 		super();
 		this.schema = schema;
 		this.tableName = tableName;
-		this.alias = alias;
+//		this.alias = alias;
 		this.owningJoinColumnMapping = owningJoinColumnMapping;
 		this.targetJoinColumnMapping = targetJoinColumnMapping;
 		this.owningEntity = owningEntity;
@@ -52,9 +53,9 @@ public class RelationshipJoinTable {
 		return tableName;
 	}
 
-	public String getAlias() {
-		return alias;
-	}
+//	public String getAlias() {
+//		return alias;
+//	}
 
 	public String getSchema() {
 		return schema;

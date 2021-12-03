@@ -17,51 +17,51 @@ package org.minijpa.jdbc;
 
 public class FetchParameter {
 
-    private final String columnName;
-    private final Class<?> type;
-    private final Class<?> readWriteDbType;
-    private final MetaAttribute attribute;
-    private final MetaEntity metaEntity;
-    private final boolean joinColumn;
+	private final String columnName;
+	private final Class<?> type;
+	private final Class<?> readWriteDbType;
+	private final MetaAttribute attribute;
+	private final MetaEntity metaEntity;
+	private final boolean joinColumn;
 
-    public FetchParameter(String columnName, Class<?> type, Class<?> readWriteDbType,
-	    MetaAttribute attribute, MetaEntity metaEntity, boolean joinColumn) {
-	super();
-	this.columnName = columnName;
-	this.type = JdbcTypes.getWrapperClass(type);
-	this.readWriteDbType = readWriteDbType;
-	this.attribute = attribute;
-	this.metaEntity = metaEntity;
-	this.joinColumn = joinColumn;
-    }
+	public FetchParameter(String columnName, Class<?> type, Class<?> readWriteDbType,
+			MetaAttribute attribute, MetaEntity metaEntity, boolean joinColumn) {
+		super();
+		this.columnName = columnName;
+		this.type = JdbcTypes.getWrapperClass(type);
+		this.readWriteDbType = readWriteDbType;
+		this.attribute = attribute;
+		this.metaEntity = metaEntity;
+		this.joinColumn = joinColumn;
+	}
 
-    public static FetchParameter build(MetaAttribute attribute) {
-	return new FetchParameter(attribute.getColumnName(), attribute.getType(),
-		attribute.getDatabaseType(), attribute, null, false);
-    }
+	public static FetchParameter build(MetaAttribute attribute) {
+		return new FetchParameter(attribute.getColumnName(), attribute.getType(),
+				attribute.getDatabaseType(), attribute, null, false);
+	}
 
-    public String getColumnName() {
-	return columnName;
-    }
+	public String getColumnName() {
+		return columnName;
+	}
 
-    public Class<?> getType() {
-	return type;
-    }
+	public Class<?> getType() {
+		return type;
+	}
 
-    public Class<?> getReadWriteDbType() {
-	return readWriteDbType;
-    }
+	public Class<?> getReadWriteDbType() {
+		return readWriteDbType;
+	}
 
-    public MetaAttribute getAttribute() {
-	return attribute;
-    }
+	public MetaAttribute getAttribute() {
+		return attribute;
+	}
 
-    public MetaEntity getMetaEntity() {
-	return metaEntity;
-    }
+	public MetaEntity getMetaEntity() {
+		return metaEntity;
+	}
 
-    public boolean isJoinColumn() {
-	return joinColumn;
-    }
+	public boolean isJoinColumn() {
+		return joinColumn;
+	}
 
 }

@@ -23,8 +23,11 @@ import org.minijpa.jdbc.model.join.FromJoin;
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class JpqlVisitorParameters {
-	
+
 	boolean distinct = false;
+	/**
+	 * Association between jpql alias and entity alias.
+	 */
 	Map<String, String> aliases = new HashMap<>();
 	MetaEntity sourceEntity;
 	List<FromTable> fromTables = new ArrayList<>();

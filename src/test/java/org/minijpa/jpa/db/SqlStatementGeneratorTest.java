@@ -2,26 +2,24 @@ package org.minijpa.jpa.db;
 
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.Column;
+import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
-import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlDDLStatement;
+import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
-import org.minijpa.jpa.jpql.AggregateFunctionType;
-import org.minijpa.jdbc.model.aggregate.BasicAggregateFunction;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.condition.ConditionType;
 import org.minijpa.jdbc.model.function.Count;
+import org.minijpa.jdbc.model.function.Sum;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.model.join.FromJoinImpl;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -62,9 +60,9 @@ public class SqlStatementGeneratorTest {
 		FromTable fromTable = new FromTableImpl("region", "r");
 		Column populationColumn = new Column("population");
 
-		List<Value> values = Arrays.asList(new BasicAggregateFunction(AggregateFunctionType.SUM, new TableColumn(fromTable, populationColumn), false));
+		List<Value> values = Arrays.asList(new Sum(new TableColumn(fromTable, populationColumn)));
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).build();
-		Assertions.assertEquals("select sum(r.population) from region AS r", sqlStatementGenerator.export(sqlSelect));
+		Assertions.assertEquals("select SUM(r.population) from region AS r", sqlStatementGenerator.export(sqlSelect));
 	}
 
 	@Test
@@ -72,7 +70,7 @@ public class SqlStatementGeneratorTest {
 		FromTable fromTable = new FromTableImpl("product", "p");
 		List<Value> values = Arrays.asList(new Count("*"));
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).build();
-		Assertions.assertEquals("select count(*) from product AS p", sqlStatementGenerator.export(sqlSelect));
+		Assertions.assertEquals("select COUNT(*) from product AS p", sqlStatementGenerator.export(sqlSelect));
 	}
 
 	@Test
@@ -83,7 +81,7 @@ public class SqlStatementGeneratorTest {
 		List<Value> values = Arrays.asList(new TableColumn(fromTable, categoryColumn), new Count("*"));
 		GroupBy groupBy = new GroupBy(new TableColumn(fromTable, categoryColumn));
 		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values).withGroupBy(groupBy).build();
-		Assertions.assertEquals("select p.category, count(*) from product AS p group by p.category",
+		Assertions.assertEquals("select p.category, COUNT(*) from product AS p group by p.category",
 				sqlStatementGenerator.export(sqlSelect));
 	}
 
