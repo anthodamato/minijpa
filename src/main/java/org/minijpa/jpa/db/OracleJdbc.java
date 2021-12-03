@@ -71,13 +71,13 @@ public class OracleJdbc extends BasicDbJdbc {
     }
 
     @Override
-    public String falseOperator() {
-	return "= 0";
+    public String trueValue() {
+	return "1";
     }
 
     @Override
-    public String trueOperator() {
-	return "= 1";
+    public String falseValue() {
+	return "0";
     }
 
 }

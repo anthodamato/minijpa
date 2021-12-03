@@ -33,6 +33,8 @@ public interface JdbcEntityManager {
 
     public List<?> select(Query query) throws Exception;
 
+    public List<?> selectJpql(String jpqlStatement) throws Exception;
+
     public List<?> selectNative(MiniNativeQuery query) throws Exception;
 
     public int update(String sqlString, Query query) throws Exception;

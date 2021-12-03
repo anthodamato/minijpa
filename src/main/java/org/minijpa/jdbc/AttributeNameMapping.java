@@ -21,20 +21,20 @@ package org.minijpa.jdbc;
  */
 public class AttributeNameMapping {
 
-    private final String name;
-    private final String alias;
+	private final String name;
+	private final String alias;
 
-    public AttributeNameMapping(String name, String alias) {
-	this.name = name;
-	this.alias = alias;
-    }
+	public AttributeNameMapping(String name, String alias) {
+		this.name = name;
+		this.alias = alias;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public String getAlias() {
-	return alias;
-    }
+	public String getAlias() {
+		return alias;
+	}
 
 }

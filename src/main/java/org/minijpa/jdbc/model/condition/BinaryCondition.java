@@ -15,93 +15,65 @@
  */
 package org.minijpa.jdbc.model.condition;
 
-import java.util.Optional;
-
-import org.minijpa.jdbc.model.TableColumn;
-
 public class BinaryCondition implements Condition {
 
-    private ConditionType conditionType;
-    private Optional<TableColumn> leftColumn;
-    private Optional<TableColumn> rightColumn;
-    private Optional<String> leftExpression;
-    private Optional<String> rightExpression;
-    private boolean not = false;
-
-    @Override
-    public ConditionType getConditionType() {
-	return conditionType;
-    }
-
-    public Optional<TableColumn> getLeftColumn() {
-	return leftColumn;
-    }
-
-    public Optional<TableColumn> getRightColumn() {
-	return rightColumn;
-    }
-
-    public Optional<String> getLeftExpression() {
-	return leftExpression;
-    }
-
-    public Optional<String> getRightExpression() {
-	return rightExpression;
-    }
-
-    public boolean isNot() {
-	return not;
-    }
-
-    public static class Builder {
-
 	private ConditionType conditionType;
-	private TableColumn leftColumn;
-	private TableColumn rightColumn;
-	private String leftExpression;
-	private String rightExpression;
+	private Object left;
+	private Object right;
 	private boolean not = false;
 
-	public Builder(ConditionType conditionType) {
-	    super();
-	    this.conditionType = conditionType;
+	@Override
+	public ConditionType getConditionType() {
+		return conditionType;
 	}
 
-	public Builder withLeftColumn(TableColumn tableColumn) {
-	    this.leftColumn = tableColumn;
-	    return this;
+	public Object getLeft() {
+		return left;
 	}
 
-	public Builder withRightColumn(TableColumn tableColumn) {
-	    this.rightColumn = tableColumn;
-	    return this;
+	public Object getRight() {
+		return right;
 	}
 
-	public Builder withLeftExpression(String expr) {
-	    this.leftExpression = expr;
-	    return this;
+	public boolean isNot() {
+		return not;
 	}
 
-	public Builder withRightExpression(String expr) {
-	    this.rightExpression = expr;
-	    return this;
-	}
+	public static class Builder {
 
-	public Builder not() {
-	    this.not = true;
-	    return this;
-	}
+		private final ConditionType conditionType;
+		private Object left;
+		private Object right;
+		private boolean not = false;
 
-	public BinaryCondition build() {
-	    BinaryCondition condition = new BinaryCondition();
-	    condition.conditionType = conditionType;
-	    condition.leftColumn = Optional.ofNullable(leftColumn);
-	    condition.rightColumn = Optional.ofNullable(rightColumn);
-	    condition.leftExpression = Optional.ofNullable(leftExpression);
-	    condition.rightExpression = Optional.ofNullable(rightExpression);
-	    condition.not = not;
-	    return condition;
+		public Builder(ConditionType conditionType) {
+			super();
+			this.conditionType = conditionType;
+		}
+
+		public Builder withLeft(Object left) {
+			this.left = left;
+			return this;
+		}
+
+		public Builder withRight(Object right) {
+			this.right = right;
+			return this;
+		}
+
+		public Builder not() {
+			this.not = true;
+			return this;
+		}
+
+		public BinaryCondition build() {
+			BinaryCondition condition = new BinaryCondition();
+			condition.conditionType = conditionType;
+			condition.left = left;
+			condition.right = right;
+			condition.not = not;
+			return condition;
+		}
 	}
-    }
 
 }

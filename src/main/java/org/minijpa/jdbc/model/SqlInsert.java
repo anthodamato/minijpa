@@ -57,4 +57,9 @@ public class SqlInsert implements SqlStatement {
 	return metaEntity;
     }
 
+    @Override
+    public StatementType getType() {
+	return StatementType.INSERT;
+    }
+
 }

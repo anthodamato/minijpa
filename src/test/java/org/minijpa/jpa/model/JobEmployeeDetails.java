@@ -13,39 +13,39 @@ import javax.persistence.Id;
  */
 public class JobEmployeeDetails {
 
-    @Id
-    int id;
-    private String employeeName;
-    private String managerName;
+	@Id
+	int id;
+	private String employeeName;
+	private String managerName;
 
-    public JobEmployeeDetails(int id, String employeeName, String managerName) {
-	this.id = id;
-	this.employeeName = employeeName;
-	this.managerName = managerName;
-    }
+	public JobEmployeeDetails(int id, String employeeName, String managerName) {
+		this.id = id;
+		this.employeeName = employeeName;
+		this.managerName = managerName;
+	}
 
-    public int getId() {
-	return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(int id) {
-	this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public String getEmployeeName() {
-	return employeeName;
-    }
+	public String getEmployeeName() {
+		return employeeName;
+	}
 
-    public void setEmployeeName(String employeeName) {
-	this.employeeName = employeeName;
-    }
+	public void setEmployeeName(String employeeName) {
+		this.employeeName = employeeName;
+	}
 
-    public String getManagerName() {
-	return managerName;
-    }
+	public String getManagerName() {
+		return managerName;
+	}
 
-    public void setManagerName(String managerName) {
-	this.managerName = managerName;
-    }
+	public void setManagerName(String managerName) {
+		this.managerName = managerName;
+	}
 
 }

@@ -21,5 +21,5 @@ package org.minijpa.jdbc.model.expression;
  */
 public interface SqlExpression {
 
-    public SqlExpressionOperator getOperator();
+	public Object getExpression();
 }

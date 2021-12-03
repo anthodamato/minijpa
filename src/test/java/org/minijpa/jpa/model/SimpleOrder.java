@@ -5,7 +5,9 @@
  */
 package org.minijpa.jpa.model;
 
+import java.sql.Date;
 import java.util.Collection;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -21,23 +23,34 @@ import javax.persistence.Table;
 @Table(name = "simple_order")
 public class SimpleOrder {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @OneToMany
-    private Collection<LineItem> lineItems;
+	@Column(name = "created_at")
+	private java.sql.Date createdAt;
 
-    public Long getId() {
-	return id;
-    }
+	@OneToMany
+	private Collection<LineItem> lineItems;
 
-    public Collection<LineItem> getLineItems() {
-	return lineItems;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setLineItems(Collection<LineItem> lineItems) {
-	this.lineItems = lineItems;
-    }
+	public Collection<LineItem> getLineItems() {
+		return lineItems;
+	}
+
+	public void setLineItems(Collection<LineItem> lineItems) {
+		this.lineItems = lineItems;
+	}
+
+	public Date getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
+	}
 
 }

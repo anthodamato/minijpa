@@ -24,36 +24,36 @@ import org.minijpa.jdbc.db.DbJdbc;
  */
 public class DefaultSqlStatementExporter implements SqlStatementExporter {
 
-    @Override
-    public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
-	Optional<FromTable> optionalFromTable = tableColumn.getTable();
-	Column column = tableColumn.getColumn();
-	if (optionalFromTable.isPresent()) {
-	    String tc = dbJdbc.getNameTranslator().toColumnName(optionalFromTable.get().getAlias(), column.getName());
-	    return exportColumnAlias(tc, column.getAlias());
+	@Override
+	public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
+		Optional<FromTable> optionalFromTable = tableColumn.getTable();
+		Column column = tableColumn.getColumn();
+		if (optionalFromTable.isPresent()) {
+			String tc = dbJdbc.getNameTranslator().toColumnName(optionalFromTable.get().getAlias(), column.getName());
+			return exportColumnAlias(tc, column.getAlias());
+		}
+
+		if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
+			return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
+
+		String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+		return exportColumnAlias(c, column.getAlias());
 	}
 
-	if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
-	    return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
+	@Override
+	public String exportColumnAlias(String columnName, Optional<String> alias) {
+		if (alias.isPresent())
+			return columnName + " AS " + alias.get();
 
-	String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
-	return exportColumnAlias(c, column.getAlias());
-    }
+		return columnName;
+	}
 
-    @Override
-    public String exportColumnAlias(String columnName, Optional<String> alias) {
-	if (alias.isPresent())
-	    return columnName + " AS " + alias.get();
+	@Override
+	public String exportColumn(Column column) {
+		if (column.getAlias().isPresent())
+			return column.getName() + " AS " + column.getAlias().get();
 
-	return columnName;
-    }
-
-    @Override
-    public String exportColumn(Column column) {
-	if (column.getAlias().isPresent())
-	    return column.getName() + " AS " + column.getAlias().get();
-
-	return column.getName();
-    }
+		return column.getName();
+	}
 
 }

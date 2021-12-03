@@ -29,83 +29,83 @@ import org.slf4j.LoggerFactory;
  */
 public class PersistenceUnitProperties {
 
-    private static Logger LOG = LoggerFactory.getLogger(PersistenceUnitProperties.class);
+	private static Logger LOG = LoggerFactory.getLogger(PersistenceUnitProperties.class);
 
-    public static Map<String, String> getProperties() {
-	String minijpaTest = System.getProperty("minijpa.test");
-	if (minijpaTest == null || minijpaTest.isBlank())
-	    return null;
+	public static Map<String, String> getProperties() {
+		String minijpaTest = System.getProperty("minijpa.test");
+		if (minijpaTest == null || minijpaTest.isBlank())
+			return null;
 
-	LOG.debug("getProperties: minijpaTest=" + minijpaTest);
-	if (minijpaTest.equals("mysql")) {
-	    Map<String, String> map = new HashMap<>();
-	    map.put("javax.persistence.jdbc.url", "jdbc:mysql://localhost:3306/test?user=root&password=password");
-	    map.put("javax.persistence.jdbc.driver", "com.mysql.cj.jdbc.Driver");
-	    return map;
-	}
+		LOG.debug("getProperties: minijpaTest=" + minijpaTest);
+		if (minijpaTest.equals("mysql")) {
+			Map<String, String> map = new HashMap<>();
+			map.put("javax.persistence.jdbc.url", "jdbc:mysql://localhost:3306/test?user=root&password=password");
+			map.put("javax.persistence.jdbc.driver", "com.mysql.cj.jdbc.Driver");
+			return map;
+		}
 
-	if (minijpaTest.equals("mariadb")) {
-	    Map<String, String> map = new HashMap<>();
+		if (minijpaTest.equals("mariadb")) {
+			Map<String, String> map = new HashMap<>();
 //	    map.put("javax.persistence.jdbc.url", "jdbc:mariadb://localhost:3306/test?user=root&password=password");
-	    map.put("javax.persistence.jdbc.url", "jdbc:mariadb://localhost:3306/test");
-	    map.put("javax.persistence.jdbc.driver", "org.mariadb.jdbc.Driver");
-	    map.put("javax.persistence.jdbc.user", "root");
-	    map.put("javax.persistence.jdbc.password", "password");
-	    return map;
-	}
+			map.put("javax.persistence.jdbc.url", "jdbc:mariadb://localhost:3306/test");
+			map.put("javax.persistence.jdbc.driver", "org.mariadb.jdbc.Driver");
+			map.put("javax.persistence.jdbc.user", "root");
+			map.put("javax.persistence.jdbc.password", "password");
+			return map;
+		}
 
-	if (minijpaTest.equals("postgres")) {
-	    Map<String, String> map = new HashMap<>();
-	    map.put("javax.persistence.jdbc.url", "jdbc:postgresql://localhost/test");
-	    map.put("javax.persistence.jdbc.driver", "org.postgresql.Driver");
-	    map.put("javax.persistence.jdbc.user", "postgres");
-	    map.put("javax.persistence.jdbc.password", "password");
-	    return map;
-	}
+		if (minijpaTest.equals("postgres")) {
+			Map<String, String> map = new HashMap<>();
+			map.put("javax.persistence.jdbc.url", "jdbc:postgresql://localhost/test");
+			map.put("javax.persistence.jdbc.driver", "org.postgresql.Driver");
+			map.put("javax.persistence.jdbc.user", "postgres");
+			map.put("javax.persistence.jdbc.password", "password");
+			return map;
+		}
 
-	if (minijpaTest.equals("oracle")) {
-	    Map<String, String> map = new HashMap<>();
-	    map.put("javax.persistence.jdbc.url", "jdbc:oracle:thin:@localhost:1521:ORCLCDB");
+		if (minijpaTest.equals("oracle")) {
+			Map<String, String> map = new HashMap<>();
+			map.put("javax.persistence.jdbc.url", "jdbc:oracle:thin:@localhost:1521:ORCLCDB");
 //	    map.put("javax.persistence.jdbc.url", "jdbc:oracle:thin:@//localhost:1521/ORCLCDB");
-	    map.put("javax.persistence.jdbc.driver", "oracle.jdbc.driver.OracleDriver");
-	    map.put("javax.persistence.jdbc.user", "test");
-	    map.put("javax.persistence.jdbc.password", "password");
-	    return map;
+			map.put("javax.persistence.jdbc.driver", "oracle.jdbc.driver.OracleDriver");
+			map.put("javax.persistence.jdbc.user", "test");
+			map.put("javax.persistence.jdbc.password", "password");
+			return map;
+		}
+
+		if (minijpaTest.equals("h2")) {
+			Map<String, String> map = new HashMap<>();
+			map.put("javax.persistence.jdbc.url", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
+			map.put("javax.persistence.jdbc.driver", "org.h2.Driver");
+			map.put("javax.persistence.jdbc.user", "sa");
+			map.put("javax.persistence.jdbc.password", "");
+			return map;
+		}
+
+		return null;
 	}
 
-	if (minijpaTest.equals("h2")) {
-	    Map<String, String> map = new HashMap<>();
-	    map.put("javax.persistence.jdbc.url", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
-	    map.put("javax.persistence.jdbc.driver", "org.h2.Driver");
-	    map.put("javax.persistence.jdbc.user", "sa");
-	    map.put("javax.persistence.jdbc.password", "");
-	    return map;
+	public static String getFalseCondition() {
+		String minijpaTest = System.getProperty("minijpa.test");
+		if (minijpaTest == null || minijpaTest.isBlank())
+			return "=false";
+
+		if (minijpaTest.equals("oracle")) {
+			return "=0";
+		}
+
+		return "=false";
 	}
 
-	return null;
-    }
+	public static String getTrueCondition() {
+		String minijpaTest = System.getProperty("minijpa.test");
+		if (minijpaTest == null || minijpaTest.isBlank())
+			return "=true";
 
-    public static String getFalseCondition() {
-	String minijpaTest = System.getProperty("minijpa.test");
-	if (minijpaTest == null || minijpaTest.isBlank())
-	    return "=false";
+		if (minijpaTest.equals("oracle")) {
+			return "=1";
+		}
 
-	if (minijpaTest.equals("oracle")) {
-	    return "=0";
+		return "=true";
 	}
-
-	return "=false";
-    }
-
-    public static String getTrueCondition() {
-	String minijpaTest = System.getProperty("minijpa.test");
-	if (minijpaTest == null || minijpaTest.isBlank())
-	    return "=true";
-
-	if (minijpaTest.equals("oracle")) {
-	    return "=1";
-	}
-
-	return "=true";
-    }
 }

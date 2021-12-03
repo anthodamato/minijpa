@@ -23,120 +23,120 @@ import org.minijpa.jdbc.MetaEntity;
 
 public final class OneToOneRelationship extends Relationship {
 
-    public OneToOneRelationship() {
-	super();
-    }
-
-    @Override
-    public boolean toOne() {
-	return true;
-    }
-
-    @Override
-    public boolean fromOne() {
-	return true;
-    }
-
-    @Override
-    public String toString() {
-	return OneToOneRelationship.class.getName()
-		+ ": joinColumnTable=" + joinColumnTable + "; mappedBy=" + mappedBy + "; fetchType="
-		+ fetchType;
-    }
-
-    public static class Builder {
-
-	private String joinColumnTable;
-	private Optional<String> mappedBy = Optional.empty();
-	private FetchType fetchType = FetchType.EAGER;
-	private Set<Cascade> cascades;
-	private MetaEntity owningEntity;
-	private MetaAttribute targetAttribute;
-	private MetaAttribute owningAttribute;
-	private MetaEntity attributeType;
-	private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
-	private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
-
-	public Builder() {
+	public OneToOneRelationship() {
+		super();
 	}
 
-	public Builder withJoinColumnTable(String joinColumnTable) {
-	    this.joinColumnTable = joinColumnTable;
-	    return this;
+	@Override
+	public boolean toOne() {
+		return true;
 	}
 
-	public Builder withMappedBy(Optional<String> mappedBy) {
-	    this.mappedBy = mappedBy;
-	    return this;
+	@Override
+	public boolean fromOne() {
+		return true;
 	}
 
-	public Builder withFetchType(FetchType fetchType) {
-	    this.fetchType = fetchType;
-	    return this;
+	@Override
+	public String toString() {
+		return OneToOneRelationship.class.getName()
+				+ ": joinColumnTable=" + joinColumnTable + "; mappedBy=" + mappedBy + "; fetchType="
+				+ fetchType;
 	}
 
-	public Builder withCascades(Set<Cascade> cascades) {
-	    this.cascades = cascades;
-	    return this;
-	}
+	public static class Builder {
 
-	public Builder withOwningEntity(MetaEntity owningEntity) {
-	    this.owningEntity = owningEntity;
-	    return this;
-	}
+		private String joinColumnTable;
+		private Optional<String> mappedBy = Optional.empty();
+		private FetchType fetchType = FetchType.EAGER;
+		private Set<Cascade> cascades;
+		private MetaEntity owningEntity;
+		private MetaAttribute targetAttribute;
+		private MetaAttribute owningAttribute;
+		private MetaEntity attributeType;
+		private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
+		private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
 
-	public Builder withTargetAttribute(MetaAttribute targetAttribute) {
-	    this.targetAttribute = targetAttribute;
-	    return this;
-	}
+		public Builder() {
+		}
 
-	public Builder withOwningAttribute(MetaAttribute attribute) {
-	    this.owningAttribute = attribute;
-	    return this;
-	}
+		public Builder withJoinColumnTable(String joinColumnTable) {
+			this.joinColumnTable = joinColumnTable;
+			return this;
+		}
 
-	public Builder withAttributeType(MetaEntity attributeType) {
-	    this.attributeType = attributeType;
-	    return this;
-	}
+		public Builder withMappedBy(Optional<String> mappedBy) {
+			this.mappedBy = mappedBy;
+			return this;
+		}
 
-	public Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
-	    this.joinColumnDataList = joinColumnDataList;
-	    return this;
-	}
+		public Builder withFetchType(FetchType fetchType) {
+			this.fetchType = fetchType;
+			return this;
+		}
 
-	public Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
-	    this.joinColumnMapping = joinColumnMapping;
-	    return this;
-	}
+		public Builder withCascades(Set<Cascade> cascades) {
+			this.cascades = cascades;
+			return this;
+		}
 
-	public Builder with(OneToOneRelationship oneToOne) {
-	    this.joinColumnTable = oneToOne.joinColumnTable;
-	    this.mappedBy = oneToOne.mappedBy;
-	    this.fetchType = oneToOne.fetchType;
-	    this.cascades = oneToOne.cascades;
-	    this.owningEntity = oneToOne.owningEntity;
-	    this.owningAttribute = oneToOne.owningAttribute;
-	    this.targetAttribute = oneToOne.targetAttribute;
-	    this.attributeType = oneToOne.attributeType;
-	    this.joinColumnDataList = oneToOne.joinColumnDataList;
-	    this.joinColumnMapping = oneToOne.getJoinColumnMapping();
-	    return this;
-	}
+		public Builder withOwningEntity(MetaEntity owningEntity) {
+			this.owningEntity = owningEntity;
+			return this;
+		}
 
-	public OneToOneRelationship build() {
-	    OneToOneRelationship r = new OneToOneRelationship();
-	    r.joinColumnTable = joinColumnTable;
-	    r.mappedBy = mappedBy;
-	    r.fetchType = fetchType;
-	    r.cascades = cascades;
-	    r.owningEntity = owningEntity;
-	    r.targetAttribute = targetAttribute;
-	    r.owningAttribute = owningAttribute;
-	    r.attributeType = attributeType;
-	    r.joinColumnDataList = joinColumnDataList;
-	    r.joinColumnMapping = joinColumnMapping;
-	    return r;
+		public Builder withTargetAttribute(MetaAttribute targetAttribute) {
+			this.targetAttribute = targetAttribute;
+			return this;
+		}
+
+		public Builder withOwningAttribute(MetaAttribute attribute) {
+			this.owningAttribute = attribute;
+			return this;
+		}
+
+		public Builder withAttributeType(MetaEntity attributeType) {
+			this.attributeType = attributeType;
+			return this;
+		}
+
+		public Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
+			this.joinColumnDataList = joinColumnDataList;
+			return this;
+		}
+
+		public Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
+			this.joinColumnMapping = joinColumnMapping;
+			return this;
+		}
+
+		public Builder with(OneToOneRelationship oneToOne) {
+			this.joinColumnTable = oneToOne.joinColumnTable;
+			this.mappedBy = oneToOne.mappedBy;
+			this.fetchType = oneToOne.fetchType;
+			this.cascades = oneToOne.cascades;
+			this.owningEntity = oneToOne.owningEntity;
+			this.owningAttribute = oneToOne.owningAttribute;
+			this.targetAttribute = oneToOne.targetAttribute;
+			this.attributeType = oneToOne.attributeType;
+			this.joinColumnDataList = oneToOne.joinColumnDataList;
+			this.joinColumnMapping = oneToOne.getJoinColumnMapping();
+			return this;
+		}
+
+		public OneToOneRelationship build() {
+			OneToOneRelationship r = new OneToOneRelationship();
+			r.joinColumnTable = joinColumnTable;
+			r.mappedBy = mappedBy;
+			r.fetchType = fetchType;
+			r.cascades = cascades;
+			r.owningEntity = owningEntity;
+			r.targetAttribute = targetAttribute;
+			r.owningAttribute = owningAttribute;
+			r.attributeType = attributeType;
+			r.joinColumnDataList = joinColumnDataList;
+			r.joinColumnMapping = joinColumnMapping;
+			return r;
+		}
 	}
-    }
 }

@@ -22,37 +22,37 @@ import javax.persistence.Table;
 @Table(name = "booking_sale")
 public class BookingSale {
 
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-	@JoinColumn(name = "b_dateof", referencedColumnName = "DATEOF"),
-	@JoinColumn(name = "b_room_number", referencedColumnName = "ROOM_NUMBER")
-    })
-    private Booking booking;
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumns({
+		@JoinColumn(name = "b_dateof", referencedColumnName = "DATEOF"),
+		@JoinColumn(name = "b_room_number", referencedColumnName = "ROOM_NUMBER")
+	})
+	private Booking booking;
 
-    private int perc;
+	private int perc;
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public Booking getBooking() {
-	return booking;
-    }
+	public Booking getBooking() {
+		return booking;
+	}
 
-    public void setBooking(Booking booking) {
-	this.booking = booking;
-    }
+	public void setBooking(Booking booking) {
+		this.booking = booking;
+	}
 
-    public int getPerc() {
-	return perc;
-    }
+	public int getPerc() {
+		return perc;
+	}
 
-    public void setPerc(int perc) {
-	this.perc = perc;
-    }
+	public void setPerc(int perc) {
+		this.perc = perc;
+	}
 
 }

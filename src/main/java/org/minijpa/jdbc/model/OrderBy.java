@@ -17,21 +17,25 @@ package org.minijpa.jdbc.model;
 
 public class OrderBy {
 
-    private TableColumn tableColumn;
-    private boolean ascending;
+	private final TableColumn tableColumn;
+	private OrderByType orderByType;
 
-    public OrderBy(TableColumn tableColumn, boolean ascending) {
-	super();
-	this.tableColumn = tableColumn;
-	this.ascending = ascending;
-    }
+	public OrderBy(TableColumn tableColumn) {
+		this.tableColumn = tableColumn;
+	}
 
-    public TableColumn getTableColumn() {
-	return tableColumn;
-    }
+	public OrderBy(TableColumn tableColumn, OrderByType orderByType) {
+		super();
+		this.tableColumn = tableColumn;
+		this.orderByType = orderByType;
+	}
 
-    public boolean isAscending() {
-	return ascending;
-    }
+	public TableColumn getTableColumn() {
+		return tableColumn;
+	}
+
+	public OrderByType getOrderByType() {
+		return orderByType;
+	}
 
 }

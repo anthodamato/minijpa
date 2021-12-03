@@ -11,36 +11,36 @@ import javax.persistence.OneToMany;
 @Entity
 public class Department {
 
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue
+	private Long id;
 
-    private String name;
+	private String name;
 
-    @OneToMany(mappedBy = "department")
-    private Collection<Employee> employees = new HashSet<>();
+	@OneToMany(mappedBy = "department")
+	private Collection<Employee> employees = new HashSet<>();
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setId(Long id) {
-	this.id = id;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Collection<Employee> getEmployees() {
-	return employees;
-    }
+	public Collection<Employee> getEmployees() {
+		return employees;
+	}
 
-    public void setEmployees(Collection<Employee> employees) {
-	this.employees = employees;
-    }
+	public void setEmployees(Collection<Employee> employees) {
+		this.employees = employees;
+	}
 }

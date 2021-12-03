@@ -19,24 +19,22 @@ import javax.persistence.Table;
 @Table(name = "simple_product")
 public class SimpleProduct {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private String productType;
+	private String productType;
 
-    public Long getId() {
-	return id;
-    }
+	public Long getId() {
+		return id;
+	}
 
+	public String getProductType() {
+		return productType;
+	}
 
-    public String getProductType() {
-	return productType;
-    }
+	public void setProductType(String productType) {
+		this.productType = productType;
+	}
 
-    public void setProductType(String productType) {
-	this.productType = productType;
-    }
-    
-    
 }

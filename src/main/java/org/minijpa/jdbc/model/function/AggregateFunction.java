@@ -13,22 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc.model.aggregate;
+package org.minijpa.jdbc.model.function;
 
-import org.minijpa.jdbc.model.TableColumn;
-
-public class Count extends BasicAggregateFunction {
-
-    public Count(TableColumn tableColumn, boolean distinct) {
-	super(AggregateFunctionBasicType.COUNT, tableColumn, distinct);
-    }
-
-    public Count(String expression, boolean distinct) {
-	super(AggregateFunctionBasicType.COUNT, expression, distinct);
-    }
-
-    public static Count countStar() {
-	return new Count("*", false);
-    }
+public interface AggregateFunction extends Function {
 
 }

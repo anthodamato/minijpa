@@ -25,74 +25,78 @@ import org.minijpa.jdbc.db.DbJdbc;
  */
 public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-    private final SqlStatementExporter sqlDeleteExporter = new SqlDeleteExporter();
+	private final SqlStatementExporter sqlDeleteExporter = new SqlDeleteExporter();
 
-    public OracleSqlStatementGenerator(DbJdbc dbJdbc) {
-	super(dbJdbc);
-    }
-
-    @Override
-    public String export(SqlDelete sqlDelete) {
-	StringBuilder sb = new StringBuilder();
-	sb.append("delete from ");
-	sb.append(dbJdbc.getNameTranslator().toTableName(Optional.empty(),
-		sqlDelete.getFromTable().getName()));
-
-	if (sqlDelete.getCondition().isPresent()) {
-	    sb.append(" where ");
-	    sb.append(exportCondition(sqlDelete.getCondition().get(), sqlDeleteExporter));
+	public OracleSqlStatementGenerator(DbJdbc dbJdbc) {
+		super(dbJdbc);
 	}
-
-	return sb.toString();
-    }
-
-    @Override
-    public String export(SqlInsert sqlInsert) {
-	StringBuilder sb = new StringBuilder();
-	sb.append("insert into ");
-	sb.append(sqlInsert.getFromTable().getName());
-	sb.append(" (");
-	if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-	    sb.append(sqlInsert.getMetaEntity().get().getId().getAttribute().getColumnName());
-	    sb.append(",");
-	}
-
-	String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
-	sb.append(cols);
-	sb.append(") values (");
-	if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-	    sb.append("default,");
-	}
-
-	for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
-	    if (i > 0)
-		sb.append(",");
-
-	    sb.append("?");
-	}
-
-	sb.append(")");
-	return sb.toString();
-    }
-
-    private class SqlDeleteExporter extends DefaultSqlStatementExporter {
 
 	@Override
-	public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
-	    Optional<FromTable> optionalFromTable = tableColumn.getTable();
-	    Column column = tableColumn.getColumn();
-	    if (optionalFromTable.isPresent()) {
-		String tc = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
-		return exportColumnAlias(tc, Optional.empty());
-	    }
+	public String export(SqlDelete sqlDelete) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("delete from ");
+		sb.append(dbJdbc.getNameTranslator().toTableName(Optional.empty(),
+				sqlDelete.getFromTable().getName()));
 
-	    if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
-		return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
+		if (sqlDelete.getCondition().isPresent()) {
+			sb.append(" where ");
+			sb.append(exportCondition(sqlDelete.getCondition().get(), sqlDeleteExporter));
+		}
 
-	    String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
-	    return exportColumnAlias(c, Optional.empty());
+		return sb.toString();
 	}
 
-    }
+	@Override
+	public String export(SqlInsert sqlInsert) {
+		String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
+		StringBuilder sb = new StringBuilder();
+		sb.append("insert into ");
+		sb.append(sqlInsert.getFromTable().getName());
+		sb.append(" (");
+		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
+			sb.append(sqlInsert.getMetaEntity().get().getId().getAttribute().getColumnName());
+			if (!cols.isEmpty())
+				sb.append(",");
+		}
+
+		sb.append(cols);
+		sb.append(") values (");
+		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
+			sb.append("default");
+
+			if (!cols.isEmpty())
+				sb.append(",");
+		}
+
+		for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
+			if (i > 0)
+				sb.append(",");
+
+			sb.append("?");
+		}
+
+		sb.append(")");
+		return sb.toString();
+	}
+
+	private class SqlDeleteExporter extends DefaultSqlStatementExporter {
+
+		@Override
+		public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
+			Optional<FromTable> optionalFromTable = tableColumn.getTable();
+			Column column = tableColumn.getColumn();
+			if (optionalFromTable.isPresent()) {
+				String tc = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+				return exportColumnAlias(tc, Optional.empty());
+			}
+
+			if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
+				return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
+
+			String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+			return exportColumnAlias(c, Optional.empty());
+		}
+
+	}
 
 }
