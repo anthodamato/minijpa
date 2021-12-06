@@ -48,7 +48,7 @@ public final class MetaEntityHelper {
 	public static List<FetchParameter> toFetchParameter(List<JoinColumnAttribute> attributes) {
 		List<FetchParameter> list = new ArrayList<>();
 		for (JoinColumnAttribute a : attributes) {
-			FetchParameter columnNameValue = new FetchParameter(a.getColumnName(), a.getType(), a.getDatabaseType(),
+			FetchParameter columnNameValue = new FetchParameter(a.getColumnName(), a.getType(), a.getDatabaseType(), a.sqlType,
 					a.getForeignKeyAttribute(), null, true);
 			list.add(columnNameValue);
 		}

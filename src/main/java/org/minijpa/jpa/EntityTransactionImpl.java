@@ -25,119 +25,119 @@ import org.slf4j.LoggerFactory;
 
 public class EntityTransactionImpl implements EntityTransaction {
 
-    private final Logger LOG = LoggerFactory.getLogger(EntityTransactionImpl.class);
-    private final AbstractEntityManager abstractEntityManager;
-    private boolean active = false;
-    private boolean rollbackOnly = false;
+	private final Logger LOG = LoggerFactory.getLogger(EntityTransactionImpl.class);
+	private final AbstractEntityManager abstractEntityManager;
+	private boolean active = false;
+	private boolean rollbackOnly = false;
 
-    public EntityTransactionImpl(AbstractEntityManager abstractEntityManager) {
-	super();
-	this.abstractEntityManager = abstractEntityManager;
-    }
+	public EntityTransactionImpl(AbstractEntityManager abstractEntityManager) {
+		super();
+		this.abstractEntityManager = abstractEntityManager;
+	}
 
-    @Override
-    public void begin() {
+	@Override
+	public void begin() {
 //		if (active)
 //			throw new IllegalStateException("Transaction already active");
 
-	try {
-	    abstractEntityManager.connectionHolder.getConnection();
-	} catch (SQLException e) {
-	    LOG.error(e.getMessage());
-	    return;
+		try {
+			abstractEntityManager.connectionHolder.getConnection();
+		} catch (SQLException e) {
+			LOG.error(e.getMessage());
+			return;
+		}
+
+		this.active = true;
 	}
 
-	this.active = true;
-    }
+	@Override
+	public void commit() {
+		if (!active)
+			throw new IllegalStateException("Transaction not active");
 
-    @Override
-    public void commit() {
-	if (!active)
-	    throw new IllegalStateException("Transaction not active");
+		if (getRollbackOnly()) {
+			LOG.warn("Rollback transaction event");
+			try {
+				abstractEntityManager.connectionHolder.rollback();
+				return;
+			} catch (SQLException e1) {
+				LOG.error(e1.getMessage());
+				return;
+			}
+		}
 
-	if (getRollbackOnly()) {
-	    LOG.warn("Rollback transaction event");
-	    try {
-		abstractEntityManager.connectionHolder.rollback();
-		return;
-	    } catch (SQLException e1) {
-		LOG.error(e1.getMessage());
-		return;
-	    }
+		try {
+			abstractEntityManager.flush();
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			throw new RollbackException(e.getMessage());
+		}
+
+		try {
+			abstractEntityManager.connectionHolder.commit();
+			LOG.info("Commit");
+		} catch (SQLException e) {
+			LOG.error(e.getMessage());
+			throw new RollbackException(e.getMessage());
+		}
+
+		try {
+			abstractEntityManager.connectionHolder.closeConnection();
+		} catch (SQLException e) {
+			LOG.error(e.getMessage());
+		}
+
+		this.active = false;
+		abstractEntityManager.persistenceContext.resetLockType();
 	}
 
-	try {
-	    abstractEntityManager.flush();
-	} catch (Exception e) {
-	    LOG.error(e.getMessage());
-	    throw new RollbackException(e.getMessage());
+	@Override
+	public void rollback() {
+		if (!active)
+			throw new IllegalStateException("Transaction not active");
+
+		try {
+			abstractEntityManager.connectionHolder.rollback();
+			LOG.info("Rollback");
+		} catch (SQLException e) {
+			LOG.error(e.getMessage());
+			try {
+				abstractEntityManager.connectionHolder.rollback();
+			} catch (SQLException e1) {
+				LOG.error(e1.getMessage());
+			}
+
+			return;
+		}
+
+		try {
+			abstractEntityManager.connectionHolder.closeConnection();
+		} catch (SQLException e) {
+			LOG.error(e.getMessage());
+		}
+
+		try {
+			abstractEntityManager.persistenceContext.detachAll();
+		} catch (Exception ex) {
+			LOG.error(ex.getMessage());
+		}
+
+		this.active = false;
 	}
 
-	try {
-	    abstractEntityManager.connectionHolder.commit();
-	    LOG.info("Commit");
-	} catch (SQLException e) {
-	    LOG.error(e.getMessage());
-	    throw new RollbackException(e.getMessage());
+	@Override
+	public void setRollbackOnly() {
+		this.rollbackOnly = true;
 	}
 
-	try {
-	    abstractEntityManager.connectionHolder.closeConnection();
-	} catch (SQLException e) {
-	    LOG.error(e.getMessage());
+	@Override
+	public boolean getRollbackOnly() {
+		return rollbackOnly;
 	}
 
-	this.active = false;
-	abstractEntityManager.persistenceContext.resetLockType();
-    }
-
-    @Override
-    public void rollback() {
-	if (!active)
-	    throw new IllegalStateException("Transaction not active");
-
-	try {
-	    abstractEntityManager.connectionHolder.rollback();
-	    LOG.info("Rollback");
-	} catch (SQLException e) {
-	    LOG.error(e.getMessage());
-	    try {
-		abstractEntityManager.connectionHolder.rollback();
-	    } catch (SQLException e1) {
-		LOG.error(e1.getMessage());
-	    }
-
-	    return;
+	@Override
+	public boolean isActive() {
+		return active;
 	}
-
-	try {
-	    abstractEntityManager.connectionHolder.closeConnection();
-	} catch (SQLException e) {
-	    LOG.error(e.getMessage());
-	}
-
-	try {
-	    abstractEntityManager.persistenceContext.detachAll();
-	} catch (Exception ex) {
-	    LOG.error(ex.getMessage());
-	}
-
-	this.active = false;
-    }
-
-    @Override
-    public void setRollbackOnly() {
-	this.rollbackOnly = true;
-    }
-
-    @Override
-    public boolean getRollbackOnly() {
-	return rollbackOnly;
-    }
-
-    @Override
-    public boolean isActive() {
-	return active;
-    }
 
 }
