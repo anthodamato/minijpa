@@ -155,11 +155,10 @@ public class OneToOneUniTest {
 	}
 
 	/**
-	 * Avg function returns an integer value but it should be double, refactoring needed on fetching startegy.
+	 * Avg function returns an integer value but it should be double, refactoring needed on fetching strategy.
 	 *
 	 * @throws Exception
 	 */
-	@Disabled
 	@Test
 	public void avg() throws Exception {
 		final EntityManager em = emf.createEntityManager();
@@ -196,6 +195,47 @@ public class OneToOneUniTest {
 		Double avgPopulation = (Double) query.getSingleResult();
 		Assertions.assertNotNull(avgPopulation);
 		Assertions.assertEquals(381738.0, avgPopulation);
+
+		em.remove(yorkCity);
+		em.remove(manchesterCity);
+		em.remove(yorkShireRegion);
+		em.remove(northWestRegion);
+		tx.commit();
+		em.close();
+	}
+
+	@Test
+	public void avgNativeQuery() throws Exception {
+		final EntityManager em = emf.createEntityManager();
+		final EntityTransaction tx = em.getTransaction();
+		tx.begin();
+
+		City yorkCity = new City();
+		yorkCity.setName("York");
+		yorkCity.setPopulation(210618);
+
+		Region yorkShireRegion = createYorkshire();
+		em.persist(yorkShireRegion);
+
+		yorkCity.setRegion(yorkShireRegion);
+
+		em.persist(yorkCity);
+
+		City manchesterCity = new City();
+		manchesterCity.setName("Manchester");
+		manchesterCity.setPopulation(552858);
+
+		Region northWestRegion = createNorthWest();
+		em.persist(northWestRegion);
+
+		manchesterCity.setRegion(northWestRegion);
+
+		em.persist(manchesterCity);
+
+		Query query = em.createNativeQuery("select AVG(city0.population) from City AS city0");
+		Integer avgPopulation = (Integer) query.getSingleResult();
+		Assertions.assertNotNull(avgPopulation);
+		Assertions.assertEquals(381738, avgPopulation);
 
 		em.remove(yorkCity);
 		em.remove(manchesterCity);

@@ -50,13 +50,13 @@ public class JdbcRunner {
 		LOG.debug("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
 				+ queryParameter.getSqlType());
 		Object value = queryParameter.getValue();
+		if (queryParameter.getAttributeMapper().isPresent()) {
+			value = queryParameter.getAttributeMapper().get().attributeToDatabase(value);
+		}
+
 		if (value == null) {
 			preparedStatement.setNull(index, queryParameter.getSqlType());
 			return;
-		}
-
-		if (queryParameter.getAttributeMapper().isPresent()) {
-			value = queryParameter.getAttributeMapper().get().attributeToDatabase(value);
 		}
 
 		Class<?> type = value.getClass();
@@ -236,25 +236,24 @@ public class JdbcRunner {
 
 	private Object getValue(ResultSet rs,
 			int index,
-			ResultSetMetaData metaData) throws SQLException {
-		int columnType = metaData.getColumnType(index);
+			int columnType) throws SQLException {
 		Object value = null;
 		switch (columnType) {
 			case Types.VARCHAR:
 				return rs.getString(index);
 			case Types.INTEGER:
-				return rs.getObject(index);
+				return rs.getObject(index, Integer.class);
 			case Types.BIGINT:
-				return rs.getObject(index);
+				return rs.getObject(index, Long.class);
 			case Types.DECIMAL:
 				return rs.getBigDecimal(index);
 			case Types.NUMERIC:
 				return rs.getBigDecimal(index);
 			case Types.DOUBLE:
-				return rs.getObject(index);
+				return rs.getObject(index, Double.class);
 			case Types.FLOAT:
 			case Types.REAL:
-				return rs.getObject(index);
+				return rs.getObject(index, Float.class);
 			case Types.DATE:
 				return rs.getDate(index, Calendar.getInstance());
 			case Types.TIME:
@@ -323,36 +322,33 @@ public class JdbcRunner {
 		return value;
 	}
 
+	private Object getValue(ResultSet rs,
+			int index,
+			ResultSetMetaData metaData) throws SQLException {
+		int columnType = metaData.getColumnType(index);
+		return getValue(rs, index, columnType);
+	}
+
+	private Object getAttributeValue(ResultSet rs,
+			int index,
+			FetchParameter fetchParameter) throws SQLException {
+		LOG.debug("getAttributeValue: sqlType=" + fetchParameter.getSqlType());
+		Object value = getValue(rs, index, fetchParameter.getSqlType());
+		LOG.debug("getAttributeValue: value=" + value);
+		if (fetchParameter.getAttribute() != null && fetchParameter.getAttribute().attributeMapper.isPresent())
+			return fetchParameter.getAttribute().attributeMapper.get().databaseToAttribute(value);
+
+		return dbTypeMapper.convertToAttributeType(value, fetchParameter.getType());
+	}
+
 	private ModelValueArray<FetchParameter> createModelValueArrayFromResultSet(
 			List<FetchParameter> fetchParameters,
 			ResultSet rs,
 			ResultSetMetaData metaData) throws Exception {
 		ModelValueArray<FetchParameter> modelValueArray = new ModelValueArray<>();
 		int i = 1;
-		Object v = null;
 		for (FetchParameter fetchParameter : fetchParameters) {
-			MetaAttribute metaAttribute = fetchParameter.getAttribute();
-			LOG.debug("createModelValueArrayFromResultSet: metaAttribute=" + metaAttribute);
-
-			Object value = getValue(rs, i, metaData);
-			LOG.debug("createModelValueArrayFromResultSet: value=" + value);
-			LOG.debug("createModelValueArrayFromResultSet: metaData.getColumnType(i)=" + metaData.getColumnType(i));
-			if (value != null)
-				LOG.debug("createModelValueArrayFromResultSet: value.getClass()=" + value.getClass());
-
-			LOG.debug("createModelValueArrayFromResultSet: fetchParameter.getType()=" + fetchParameter.getType());
-			LOG.debug("createModelValueArrayFromResultSet: metaAttribute.attributeMapper.isPresent()=" + metaAttribute.attributeMapper.isPresent());
-			if (metaAttribute.attributeMapper.isPresent())
-				LOG.debug("createModelValueArrayFromResultSet: metaAttribute.attributeMapper.get()=" + metaAttribute.attributeMapper.get());
-
-			v = null;
-			if (value != null) {
-				if (metaAttribute.attributeMapper.isPresent())
-					v = metaAttribute.attributeMapper.get().databaseToAttribute(value);
-				else
-					v = dbTypeMapper.convertToAttributeType(value, fetchParameter.getType());
-			}
-
+			Object v = getAttributeValue(rs, i, fetchParameter);
 			LOG.debug("createModelValueArrayFromResultSet: v=" + v);
 			modelValueArray.add(fetchParameter, v);
 			++i;
@@ -367,13 +363,57 @@ public class JdbcRunner {
 			ResultSetMetaData metaData) throws Exception {
 		Object[] values = new Object[nc];
 		for (int i = 0; i < nc; ++i) {
-			Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
 			Object v = getValue(rs, i + 1, metaData);
-			v = dbTypeMapper.convertToAttributeType(v, readWriteType);
-			values[i] = v;
+			Class<?> readWriteType = fetchParameters.get(i).getReadWriteDbType();
+			values[i] = dbTypeMapper.convertToAttributeType(v, readWriteType);
 		}
 
 		return values;
+	}
+
+	public List<Object> runQuery(
+			Connection connection,
+			String sql,
+			List<QueryParameter> parameters,
+			List<FetchParameter> fetchParameters) throws Exception {
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		LOG.info("Running `" + sql + "`");
+		try {
+			preparedStatement = connection.prepareStatement(sql);
+			setPreparedStatementParameters(preparedStatement, parameters);
+
+			List<Object> objects = new ArrayList<>();
+			rs = preparedStatement.executeQuery();
+			LOG.debug("runQuery: fetchParameters=" + fetchParameters);
+			int nc = fetchParameters.size();
+
+			if (nc == 1) {
+				LOG.debug("runQuery: nc=" + nc);
+				while (rs.next()) {
+					Object v = getAttributeValue(rs, 1, fetchParameters.get(0));
+					objects.add(v);
+				}
+			} else {
+				while (rs.next()) {
+					Object[] values = new Object[nc];
+					for (int i = 0; i < nc; ++i) {
+						Object v = getAttributeValue(rs, i + 1, fetchParameters.get(i));
+						values[i] = v;
+					}
+
+					objects.add(values);
+				}
+			}
+
+			return objects;
+		} finally {
+			if (rs != null)
+				rs.close();
+
+			if (preparedStatement != null)
+				preparedStatement.close();
+		}
 	}
 
 	public List<Object> runQuery(
@@ -390,34 +430,9 @@ public class JdbcRunner {
 			List<Object> objects = new ArrayList<>();
 			rs = preparedStatement.executeQuery();
 			ResultSetMetaData metaData = rs.getMetaData();
-			int nc = metaData.getColumnCount();
-
-			if (nc == 1) {
-				while (rs.next()) {
-					int columnType = metaData.getColumnType(1);
-					Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType,
-							metaData.getPrecision(1), metaData.getScale(1));
-					Object v = getValue(rs, 1, metaData);
-					v = dbTypeMapper.convertToAttributeType(v, readWriteType);
-					objects.add(v);
-//		    LOG.debug("runQuery: values[i]=" + objects.get(objects.size() - 1));
-				}
-			} else {
-				while (rs.next()) {
-					Object[] values = new Object[nc];
-					for (int i = 0; i < nc; ++i) {
-						int columnType = metaData.getColumnType(i + 1);
-						Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType, metaData.getPrecision(i + 1), metaData.getScale(i + 1));
-//						LOG.debug("runQuery: readWriteType=" + readWriteType);
-//						LOG.debug("runQuery: columnType=" + columnType);
-//						LOG.debug("runQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
-						Object v = getValue(rs, i + 1, metaData);
-						values[i] = dbTypeMapper.convertToAttributeType(v, readWriteType);
-//			LOG.debug("runQuery: values[i]=" + values[i]);
-					}
-
-					objects.add(values);
-				}
+			while (rs.next()) {
+				Object value = buildNativeRecord(metaData, rs);
+				objects.add(value);
 			}
 
 			return objects;
@@ -430,7 +445,10 @@ public class JdbcRunner {
 		}
 	}
 
-	public List<Object> runNativeQuery(Connection connection, String sql, List<Object> parameterValues) throws Exception {
+	public List<Object> runNativeQuery(
+			Connection connection,
+			String sql,
+			List<Object> parameterValues) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		LOG.info("Running `" + sql + "`");
@@ -443,33 +461,9 @@ public class JdbcRunner {
 			List<Object> objects = new ArrayList<>();
 			rs = preparedStatement.executeQuery();
 			ResultSetMetaData metaData = rs.getMetaData();
-			int nc = metaData.getColumnCount();
-			if (nc == 1) {
-				while (rs.next()) {
-					int columnType = metaData.getColumnType(1);
-					Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType,
-							metaData.getPrecision(1), metaData.getScale(1));
-					Object v = getValue(rs, 1, metaData);
-					v = dbTypeMapper.convertToAttributeType(v, readWriteType);
-					objects.add(v);
-				}
-			} else {
-				while (rs.next()) {
-					Object[] values = new Object[nc];
-					for (int i = 0; i < nc; ++i) {
-						int columnType = metaData.getColumnType(i + 1);
-						Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType,
-								metaData.getPrecision(i + 1), metaData.getScale(i + 1));
-						Object v = getValue(rs, i + 1, metaData);
-						LOG.debug("runNativeQuery: readWriteType=" + readWriteType);
-						v = dbTypeMapper.convertToAttributeType(v, readWriteType);
-//			LOG.debug("runNativeQuery: columnType=" + columnType);
-//			LOG.debug("runNativeQuery: rs.getObject(i + 1)=" + rs.getObject(i + 1));
-						values[i] = v;
-					}
-
-					objects.add(values);
-				}
+			while (rs.next()) {
+				Object value = buildNativeRecord(metaData, rs);
+				objects.add(value);
 			}
 
 			return objects;
@@ -480,6 +474,63 @@ public class JdbcRunner {
 			if (preparedStatement != null)
 				preparedStatement.close();
 		}
+	}
+
+	private Object buildNativeRecord(
+			ResultSetMetaData metaData,
+			ResultSet rs) throws SQLException {
+		int nc = metaData.getColumnCount();
+		if (nc == 1)
+			return buildNativeValue(metaData, rs, 1);
+
+		Object[] values = new Object[nc];
+		for (int i = 0; i < nc; ++i) {
+			values[i] = buildNativeValue(metaData, rs, i + 1);
+		}
+
+		return values;
+	}
+
+	private Object buildNativeValue(
+			ResultSetMetaData metaData,
+			ResultSet rs,
+			int index) throws SQLException {
+		Object v = getValue(rs, index, metaData);
+		int columnType = metaData.getColumnType(index);
+		Class<?> readWriteType = JdbcTypes.classFromSqlType(columnType,
+				metaData.getPrecision(index), metaData.getScale(index));
+		return dbTypeMapper.convertToAttributeType(v, readWriteType);
+	}
+
+	private Object buildRecord(
+			ResultSetMetaData metaData,
+			ResultSet rs,
+			QueryResultMapping queryResultMapping,
+			EntityLoader entityLoader) throws Exception {
+		ModelValueArray<FetchParameter> modelValueArray = new ModelValueArray<>();
+		int nc = metaData.getColumnCount();
+		for (int i = 0; i < nc; ++i) {
+			String columnName = metaData.getColumnName(i + 1);
+			String columnAlias = metaData.getColumnLabel(i + 1);
+			Optional<FetchParameter> optional = findFetchParameter(columnName, columnAlias, queryResultMapping);
+			if (optional.isPresent()) {
+				Object v = getAttributeValue(rs, i + 1, optional.get());
+				modelValueArray.add(optional.get(), v);
+			}
+		}
+
+		int k = 0;
+		Object[] result = new Object[queryResultMapping.size()];
+		for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
+			Object entityInstance = entityLoader.buildByValues(modelValueArray, entityMapping.getMetaEntity(), LockType.NONE);
+			result[k] = entityInstance;
+			++k;
+		}
+
+		if (result.length == 1)
+			return result[0];
+
+		return result;
 	}
 
 	public List<Object> runNativeQuery(Connection connection, String sql, List<Object> parameterValues,
@@ -511,48 +562,6 @@ public class JdbcRunner {
 		}
 	}
 
-	private Object buildRecord(
-			ResultSetMetaData metaData,
-			ResultSet rs,
-			QueryResultMapping queryResultMapping,
-			EntityLoader entityLoader) throws Exception {
-		ModelValueArray<FetchParameter> modelValueArray = new ModelValueArray<>();
-		int nc = metaData.getColumnCount();
-		for (int i = 0; i < nc; ++i) {
-			String columnName = metaData.getColumnName(i + 1);
-			String columnAlias = metaData.getColumnLabel(i + 1);
-			Optional<FetchParameter> optional = findFetchParameter(columnName, columnAlias, queryResultMapping);
-			if (optional.isPresent()) {
-				MetaAttribute metaAttribute = optional.get().getAttribute();
-
-				Object value = getValue(rs, i + 1, metaData);
-
-				Object v = null;
-				if (value != null) {
-					if (metaAttribute.attributeMapper.isPresent())
-						v = metaAttribute.attributeMapper.get().databaseToAttribute(value);
-					else
-						v = dbTypeMapper.convertToAttributeType(value, optional.get().getType());
-				}
-
-				modelValueArray.add(optional.get(), v);
-			}
-		}
-
-		int k = 0;
-		Object[] result = new Object[queryResultMapping.size()];
-		for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
-			Object entityInstance = entityLoader.buildByValues(modelValueArray, entityMapping.getMetaEntity(), LockType.NONE);
-			result[k] = entityInstance;
-			++k;
-		}
-
-		if (result.length == 1)
-			return result[0];
-
-		return result;
-	}
-
 	private Optional<FetchParameter> findFetchParameter(
 			String columnName, String columnAlias, QueryResultMapping queryResultMapping) {
 		for (EntityMapping entityMapping : queryResultMapping.getEntityMappings()) {
@@ -570,7 +579,7 @@ public class JdbcRunner {
 		if (optional.isPresent()) {
 			MetaAttribute metaAttribute = optional.get();
 			FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(),
-					metaAttribute.getType(), metaAttribute.getDatabaseType(),
+					metaAttribute.getType(), metaAttribute.getDatabaseType(), metaAttribute.sqlType,
 					metaAttribute, entityMapping.getMetaEntity(), false);
 			return Optional.of(fetchParameter);
 		}
@@ -579,7 +588,7 @@ public class JdbcRunner {
 		if (optionalJoinColumn.isPresent()) {
 			JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
 			FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),
-					joinColumnAttribute.getType(), joinColumnAttribute.getDatabaseType(),
+					joinColumnAttribute.getType(), joinColumnAttribute.getDatabaseType(), joinColumnAttribute.sqlType,
 					joinColumnAttribute.getAttribute(),
 					entityMapping.getMetaEntity(), true);
 			return Optional.of(fetchParameter);

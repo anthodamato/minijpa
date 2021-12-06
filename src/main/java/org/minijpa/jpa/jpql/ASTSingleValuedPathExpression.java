@@ -2,7 +2,10 @@
  /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package org.minijpa.jpa.jpql;
 
+import java.util.List;
+import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.model.FromTable;
 
 public class ASTSingleValuedPathExpression extends SimpleNode {
 
@@ -13,6 +16,8 @@ public class ASTSingleValuedPathExpression extends SimpleNode {
 	private String stateField;
 	private MetaEntity metaEntity;
 	private String attributePath;
+	private List<MetaAttribute> metaAttributes;
+	private FromTable fromTable;
 
 	public ASTSingleValuedPathExpression(int id) {
 		super(id);
@@ -84,6 +89,22 @@ public class ASTSingleValuedPathExpression extends SimpleNode {
 
 	public void setAttributePath(String attributePath) {
 		this.attributePath = attributePath;
+	}
+
+	public List<MetaAttribute> getMetaAttributes() {
+		return metaAttributes;
+	}
+
+	public void setMetaAttributes(List<MetaAttribute> metaAttributes) {
+		this.metaAttributes = metaAttributes;
+	}
+
+	public FromTable getFromTable() {
+		return fromTable;
+	}
+
+	public void setFromTable(FromTable fromTable) {
+		this.fromTable = fromTable;
 	}
 
 }

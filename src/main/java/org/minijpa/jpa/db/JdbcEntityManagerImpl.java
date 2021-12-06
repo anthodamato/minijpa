@@ -478,7 +478,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 		// returns an aggregate expression result (max, min, etc)
 		return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
-				statementParameters.getParameters());
+				statementParameters.getParameters(), sqlSelect.getFetchParameters());
 	}
 
 	@Override
@@ -503,7 +503,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		}
 
 		return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), jpqlResult.getSql(),
-				new ArrayList<QueryParameter>());
+				new ArrayList<>(), sqlSelect.getFetchParameters());
 	}
 
 	@Override

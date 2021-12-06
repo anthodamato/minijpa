@@ -15,6 +15,7 @@
  */
 package org.minijpa.jpa.db;
 
+import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,7 +66,6 @@ import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
 import org.minijpa.jpa.jpql.AggregateFunctionType;
-import org.minijpa.jdbc.model.aggregate.BasicAggregateFunction;
 import org.minijpa.jdbc.model.condition.BetweenCondition;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.BinaryLogicConditionImpl;
@@ -606,12 +606,14 @@ public class SqlStatementFactory {
 			return Optional.of(columnNameValue);
 		} else if (selection instanceof AggregateFunctionExpression<?>) {
 			AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
-			if (aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT
-					|| aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.SUM) {
-				FetchParameter cnv = new FetchParameter("count", Long.class, Long.class, null, null, false);
+			if (aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT) {
+				FetchParameter cnv = new FetchParameter("count", Long.class, Long.class, Types.BIGINT, null, null, false);
+				return Optional.of(cnv);
+			} else if (aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.SUM) {
+				FetchParameter cnv = new FetchParameter("sum", Integer.class, Integer.class, Types.INTEGER, null, null, false);
 				return Optional.of(cnv);
 			} else if (aggregateFunctionExpression.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.AVG) {
-				FetchParameter cnv = new FetchParameter("avg", Double.class, Double.class, null, null, false);
+				FetchParameter cnv = new FetchParameter("avg", Double.class, Double.class, Types.DOUBLE, null, null, false);
 				return Optional.of(cnv);
 			} else {
 				Expression<?> expr = aggregateFunctionExpression.getX();
