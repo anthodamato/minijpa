@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Optional;
+
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
@@ -28,7 +29,6 @@ import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.db.BasicDbJdbc;
-import org.minijpa.jdbc.db.SqlFunction;
 
 public class MySQLJdbc extends BasicDbJdbc {
 
@@ -64,18 +64,18 @@ public class MySQLJdbc extends BasicDbJdbc {
 		return super.buildColumnDefinition(type, ddlData);
 	}
 
-	@Override
-	public String getFunction(SqlFunction sqlFunction) {
-		if (sqlFunction == SqlFunction.CURRENT_DATE)
-			return "CURRENT_DATE()";
-
-		if (sqlFunction == SqlFunction.CURRENT_TIME)
-			return "CURRENT_TIME()";
-
-		if (sqlFunction == SqlFunction.CURRENT_TIMESTAMP)
-			return "CURRENT_TIMESTAMP()";
-
-		return super.getFunction(sqlFunction);
-	}
+//	@Override
+//	public String getFunction(SqlFunction sqlFunction) {
+//		if (sqlFunction == SqlFunction.CURRENT_DATE)
+//			return "CURRENT_DATE()";
+//
+//		if (sqlFunction == SqlFunction.CURRENT_TIME)
+//			return "CURRENT_TIME()";
+//
+//		if (sqlFunction == SqlFunction.CURRENT_TIMESTAMP)
+//			return "CURRENT_TIMESTAMP()";
+//
+//		return super.getFunction(sqlFunction);
+//	}
 
 }

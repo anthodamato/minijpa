@@ -38,8 +38,8 @@ public class FetchParameter {
 	}
 
 	public static FetchParameter build(MetaAttribute attribute) {
-		return new FetchParameter(attribute.getColumnName(), attribute.getType(),
-				attribute.getDatabaseType(), attribute.sqlType, attribute, null, false);
+		return new FetchParameter(attribute.getColumnName(), attribute.getType(), attribute.getDatabaseType(),
+				attribute.sqlType, attribute, null, false); // , attribute.attributeMapper);
 	}
 
 	public String getColumnName() {

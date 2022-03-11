@@ -18,6 +18,7 @@ package org.minijpa.jdbc.model;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.minijpa.jdbc.db.DbJdbc;
+import org.minijpa.jdbc.model.function.Locate;
 
 /**
  *
@@ -25,36 +26,52 @@ import org.minijpa.jdbc.db.DbJdbc;
  */
 public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-    public PostgresSqlStatementGenerator(DbJdbc dbJdbc) {
-	super(dbJdbc);
-    }
-
-    @Override
-    public String export(SqlUpdate sqlUpdate) {
-	StringBuilder sb = new StringBuilder();
-	sb.append("update ");
-	sb.append(dbJdbc.getNameTranslator().toTableName(sqlUpdate.getFromTable().getAlias(),
-		sqlUpdate.getFromTable().getName()));
-	sb.append(" set ");
-
-	String sv = sqlUpdate.getTableColumns().stream().map(c -> {
-	    return exportTableColumnForUpdate(c) + " = ?";
-	}).collect(Collectors.joining(", "));
-	sb.append(sv);
-
-	if (sqlUpdate.getCondition().isPresent()) {
-	    sb.append(" where ");
-	    sb.append(exportCondition(sqlUpdate.getCondition().get(), getSqlStatementExporter()));
+	public PostgresSqlStatementGenerator(DbJdbc dbJdbc) {
+		super(dbJdbc);
 	}
 
-	return sb.toString();
-    }
+	@Override
+	protected String export(SqlUpdate sqlUpdate, SqlStatementExporter sqlStatementExporter) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("update ");
+		sb.append(dbJdbc.getNameTranslator().toTableName(sqlUpdate.getFromTable().getAlias(),
+				sqlUpdate.getFromTable().getName()));
+		sb.append(" set ");
 
-    private String exportTableColumnForUpdate(TableColumn tableColumn) {
-	Column column = tableColumn.getColumn();
+		String sv = sqlUpdate.getTableColumns().stream().map(c -> {
+			return exportTableColumnForUpdate(c) + " = ?";
+		}).collect(Collectors.joining(", "));
+		sb.append(sv);
 
-	String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
-	return c;
-    }
+		if (sqlUpdate.getCondition().isPresent()) {
+			sb.append(" where ");
+			sb.append(exportCondition(sqlUpdate.getCondition().get(), sqlStatementExporter));
+		}
+
+		return sb.toString();
+	}
+
+	private String exportTableColumnForUpdate(TableColumn tableColumn) {
+		Column column = tableColumn.getColumn();
+
+		String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+		return c;
+	}
+
+	@Override
+	protected String exportFunction(Locate locate) {
+		StringBuilder sb = new StringBuilder("POSITION(");
+
+		sb.append(exportExpression(locate.getSearchString(), sqlStatementExporter));
+		sb.append(" IN ");
+		sb.append(exportExpression(locate.getInputString(), sqlStatementExporter));
+		if (locate.getPosition().isPresent()) {
+			sb.append(", ");
+			sb.append(exportExpression(locate.getPosition().get(), sqlStatementExporter));
+		}
+
+		sb.append(")");
+		return sb.toString();
+	}
 
 }

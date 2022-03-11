@@ -1,6 +1,8 @@
 package org.minijpa.jpa.onetoone;
 
+import java.math.BigDecimal;
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -9,11 +11,10 @@ import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import org.junit.jupiter.api.AfterAll;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.City;
@@ -142,7 +143,7 @@ public class OneToOneUniTest {
 		Root<City> root = criteriaQuery.from(City.class);
 		criteriaQuery.select(cb.sum(root.get("population")));
 		Query query = em.createQuery(criteriaQuery);
-		Integer totalPopulation = (Integer) query.getSingleResult();
+		Long totalPopulation = (Long) query.getSingleResult();
 		Assertions.assertNotNull(totalPopulation);
 		Assertions.assertEquals(763476, totalPopulation);
 
@@ -155,7 +156,8 @@ public class OneToOneUniTest {
 	}
 
 	/**
-	 * Avg function returns an integer value but it should be double, refactoring needed on fetching strategy.
+	 * Avg function returns an integer value but it should be double, refactoring
+	 * needed on fetching strategy.
 	 *
 	 * @throws Exception
 	 */
@@ -192,9 +194,9 @@ public class OneToOneUniTest {
 		Root<City> root = criteriaQuery.from(City.class);
 		criteriaQuery.select(cb.avg(root.get("population")));
 		Query query = em.createQuery(criteriaQuery);
-		Double avgPopulation = (Double) query.getSingleResult();
+		BigDecimal avgPopulation = (BigDecimal) query.getSingleResult();
 		Assertions.assertNotNull(avgPopulation);
-		Assertions.assertEquals(381738.0, avgPopulation);
+		Assertions.assertEquals(381738.0, avgPopulation.doubleValue());
 
 		em.remove(yorkCity);
 		em.remove(manchesterCity);
@@ -232,10 +234,17 @@ public class OneToOneUniTest {
 
 		em.persist(manchesterCity);
 
-		Query query = em.createNativeQuery("select AVG(city0.population) from City AS city0");
-		Integer avgPopulation = (Integer) query.getSingleResult();
+		Query query = em.createNativeQuery("select AVG(city0.population) from City city0");
+		Object avgPopulation = query.getSingleResult();
 		Assertions.assertNotNull(avgPopulation);
-		Assertions.assertEquals(381738, avgPopulation);
+		if (avgPopulation instanceof BigDecimal) {
+			// Oracle
+			Assertions.assertEquals(new BigDecimal(381738).longValue(), ((BigDecimal) avgPopulation).longValue());
+		} else if (avgPopulation instanceof Double) {
+			// H2
+			Assertions.assertEquals(381738.0d, avgPopulation);
+		} else
+			Assertions.assertEquals(381738, avgPopulation);
 
 		em.remove(yorkCity);
 		em.remove(manchesterCity);
@@ -297,8 +306,8 @@ public class OneToOneUniTest {
 		Region southEastRegion = createSouthEast();
 		em.persist(southEastRegion);
 
-		Query query = em.createQuery("select CONCAT('Region',' ',r.name), r.population from Region r"
-				+ " order by r.name");
+		Query query = em
+				.createQuery("select CONCAT('Region',' ',r.name), r.population from Region r" + " order by r.name");
 		List list = query.getResultList();
 		Assertions.assertEquals(4, list.size());
 
@@ -319,7 +328,8 @@ public class OneToOneUniTest {
 		Assertions.assertEquals(5284000, objects[1]);
 
 		// 2nd test
-		query = em.createQuery("select r from Region r where LENGTH(CONCAT('Region',' ',r.name)) = (select MAX(LENGTH(CONCAT('Region',' ',r2.name))) from Region r2)");
+		query = em.createQuery(
+				"select r from Region r where LENGTH(CONCAT('Region',' ',r.name)) = (select MAX(LENGTH(CONCAT('Region',' ',r2.name))) from Region r2)");
 
 		list = query.getResultList();
 		Assertions.assertEquals(1, list.size());
@@ -355,7 +365,8 @@ public class OneToOneUniTest {
 		Region southEastRegion = createSouthEast();
 		em.persist(southEastRegion);
 
-		Query query = em.createQuery("select distinct TRIM(SUBSTRING(r.name,LOCATE(' ',r.name))) as sub from Region r order by sub");
+		Query query = em.createQuery(
+				"select distinct TRIM(SUBSTRING(r.name,LOCATE(' ',r.name))) as sub from Region r order by sub");
 		List list = query.getResultList();
 		Assertions.assertEquals(2, list.size());
 

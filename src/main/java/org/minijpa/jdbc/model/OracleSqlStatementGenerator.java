@@ -18,13 +18,16 @@ package org.minijpa.jdbc.model;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.minijpa.jdbc.db.DbJdbc;
+import org.minijpa.jdbc.model.function.Locate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
-
+	private Logger LOG = LoggerFactory.getLogger(OracleSqlStatementGenerator.class);
 	private final SqlStatementExporter sqlDeleteExporter = new SqlDeleteExporter();
 
 	public OracleSqlStatementGenerator(DbJdbc dbJdbc) {
@@ -33,14 +36,18 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
 	@Override
 	public String export(SqlDelete sqlDelete) {
+		return export(sqlDelete, sqlDeleteExporter);
+	}
+
+	@Override
+	protected String export(SqlDelete sqlDelete, SqlStatementExporter sqlStatementExporter) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("delete from ");
-		sb.append(dbJdbc.getNameTranslator().toTableName(Optional.empty(),
-				sqlDelete.getFromTable().getName()));
+		sb.append(dbJdbc.getNameTranslator().toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
 
 		if (sqlDelete.getCondition().isPresent()) {
 			sb.append(" where ");
-			sb.append(exportCondition(sqlDelete.getCondition().get(), sqlDeleteExporter));
+			sb.append(exportCondition(sqlDelete.getCondition().get(), sqlStatementExporter));
 		}
 
 		return sb.toString();
@@ -73,6 +80,22 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 				sb.append(",");
 
 			sb.append("?");
+		}
+
+		sb.append(")");
+		return sb.toString();
+	}
+
+	@Override
+	protected String exportFunction(Locate locate) {
+		StringBuilder sb = new StringBuilder("INSTR(");
+
+		sb.append(exportExpression(locate.getInputString(), sqlStatementExporter));
+		sb.append(", ");
+		sb.append(exportExpression(locate.getSearchString(), sqlStatementExporter));
+		if (locate.getPosition().isPresent()) {
+			sb.append(", ");
+			sb.append(exportExpression(locate.getPosition().get(), sqlStatementExporter));
 		}
 
 		sb.append(")");

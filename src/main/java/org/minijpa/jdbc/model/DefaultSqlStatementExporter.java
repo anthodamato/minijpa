@@ -17,19 +17,24 @@ package org.minijpa.jdbc.model;
 
 import java.util.Optional;
 import org.minijpa.jdbc.db.DbJdbc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class DefaultSqlStatementExporter implements SqlStatementExporter {
+	private Logger LOG = LoggerFactory.getLogger(DefaultSqlStatementExporter.class);
 
 	@Override
 	public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
 		Optional<FromTable> optionalFromTable = tableColumn.getTable();
 		Column column = tableColumn.getColumn();
 		if (optionalFromTable.isPresent()) {
+			LOG.debug("exportTableColumn: dbJdbc=" + dbJdbc);
 			String tc = dbJdbc.getNameTranslator().toColumnName(optionalFromTable.get().getAlias(), column.getName());
+			LOG.debug("exportTableColumn: tc=" + tc);
 			return exportColumnAlias(tc, column.getAlias());
 		}
 

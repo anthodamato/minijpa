@@ -41,13 +41,13 @@ public interface DbTypeMapper {
      */
     public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType);
 
-    /**
-     * Converts the 'value' read from a resultSet to an object with class 'attributeType'.
-     *
-     * @param value
-     * @param attributeType
-     * @return
-     */
-    public Object convertToAttributeType(Object value, Class<?> attributeType);
+//    /**
+//     * Converts the 'value' read from a resultSet to an object with class 'attributeType'.
+//     *
+//     * @param value
+//     * @param attributeType
+//     * @return
+//     */
+//    public Object convertToAttributeType(Object value, Class<?> attributeType);
 
 }

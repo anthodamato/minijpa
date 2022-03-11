@@ -32,66 +32,69 @@ import org.minijpa.jpa.model.TemporalDateSet;
  */
 public class TemporalDateSetTest {
 
-    private static EntityManagerFactory emf;
+	private static EntityManagerFactory emf;
 
-    @BeforeAll
-    public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("temporal_dates", PersistenceUnitProperties.getProperties());
-    }
+	@BeforeAll
+	public static void beforeAll() {
+		emf = Persistence.createEntityManagerFactory("temporal_dates", PersistenceUnitProperties.getProperties());
+	}
 
-    @AfterAll
-    public static void afterAll() {
-	emf.close();
-    }
+	@AfterAll
+	public static void afterAll() {
+		emf.close();
+	}
 
-    @Test
-    public void temporalDates() throws Exception {
-	TemporalDateSet dateSet = new TemporalDateSet();
-	java.util.Date utilDate = new java.util.Date();
-	dateSet.setDateToDate(utilDate);
-	dateSet.setDateToTime(utilDate);
-	dateSet.setDateToTimestamp(utilDate);
+	@Test
+	public void temporalDates() throws Exception {
+		TemporalDateSet dateSet = new TemporalDateSet();
+		java.util.Date utilDate = new java.util.Date();
+		dateSet.setDateToDate(utilDate);
+		dateSet.setDateToTime(utilDate);
+		dateSet.setDateToTimestamp(utilDate);
 
-	Calendar calendar = new GregorianCalendar(2021, 2, 14, 10, 20, 30);
-	dateSet.setCalendarToDate(calendar);
+		Calendar calendar = new GregorianCalendar(2021, 2, 14, 10, 20, 30);
+		dateSet.setCalendarToDate(calendar);
 //	dateSet.setCalendarToTime(calendar);
-	dateSet.setCalendarToTimestamp(calendar);
+		dateSet.setCalendarToTimestamp(calendar);
 
-	EntityManager em = emf.createEntityManager();
-	em.getTransaction().begin();
-	em.persist(dateSet);
-	em.flush();
+		EntityManager em = emf.createEntityManager();
+		em.getTransaction().begin();
+		em.persist(dateSet);
+		em.flush();
 
-	em.detach(dateSet);
+		em.detach(dateSet);
 
-	TemporalDateSet ds = em.find(TemporalDateSet.class, dateSet.getId());
+		TemporalDateSet ds = em.find(TemporalDateSet.class, dateSet.getId());
 
-	Assertions.assertEquals(utilDate.getYear(), ds.getDateToDate().getYear());
-	Assertions.assertEquals(utilDate.getMonth(), ds.getDateToDate().getMonth());
-	Assertions.assertEquals(utilDate.getDay(), ds.getDateToDate().getDay());
+		Assertions.assertEquals(utilDate.getYear(), ds.getDateToDate().getYear());
+		Assertions.assertEquals(utilDate.getMonth(), ds.getDateToDate().getMonth());
+		Assertions.assertEquals(utilDate.getDay(), ds.getDateToDate().getDay());
 
-	Assertions.assertEquals(utilDate.getHours(), ds.getDateToTime().getHours());
-	Assertions.assertEquals(utilDate.getMinutes(), ds.getDateToTime().getMinutes());
-	Assertions.assertEquals(utilDate.getSeconds(), ds.getDateToTime().getSeconds());
+		Assertions.assertEquals(utilDate.getHours(), ds.getDateToTime().getHours());
+		Assertions.assertEquals(utilDate.getMinutes(), ds.getDateToTime().getMinutes());
+		Assertions.assertEquals(utilDate.getSeconds(), ds.getDateToTime().getSeconds());
 
-	Assertions.assertEquals(utilDate.getTime(), ds.getDateToTimestamp().getTime());
+		// MariaDB truncates the last three digits
+		Assertions.assertEquals(utilDate.getTime() / 1000, ds.getDateToTimestamp().getTime() / 1000);
 
-	Assertions.assertEquals(calendar.get(Calendar.YEAR), ds.getCalendarToDate().get(Calendar.YEAR));
-	Assertions.assertEquals(calendar.get(Calendar.MONTH), ds.getCalendarToDate().get(Calendar.MONTH));
-	Assertions.assertEquals(calendar.get(Calendar.DAY_OF_WEEK), ds.getCalendarToDate().get(Calendar.DAY_OF_WEEK));
+		Assertions.assertEquals(calendar.get(Calendar.YEAR), ds.getCalendarToDate().get(Calendar.YEAR));
+		Assertions.assertEquals(calendar.get(Calendar.MONTH), ds.getCalendarToDate().get(Calendar.MONTH));
+		Assertions.assertEquals(calendar.get(Calendar.DAY_OF_WEEK), ds.getCalendarToDate().get(Calendar.DAY_OF_WEEK));
 
 //	Assertions.assertEquals(calendar, ds.getCalendarToTime());
-	Assertions.assertEquals(calendar.get(Calendar.YEAR), ds.getCalendarToTimestamp().get(Calendar.YEAR));
-	Assertions.assertEquals(calendar.get(Calendar.MONTH), ds.getCalendarToTimestamp().get(Calendar.MONTH));
-	Assertions.assertEquals(calendar.get(Calendar.DAY_OF_WEEK), ds.getCalendarToTimestamp().get(Calendar.DAY_OF_WEEK));
-	Assertions.assertEquals(calendar.get(Calendar.HOUR), ds.getCalendarToTimestamp().get(Calendar.HOUR));
-	Assertions.assertEquals(calendar.get(Calendar.MINUTE), ds.getCalendarToTimestamp().get(Calendar.MINUTE));
-	Assertions.assertEquals(calendar.get(Calendar.SECOND), ds.getCalendarToTimestamp().get(Calendar.SECOND));
-	Assertions.assertEquals(calendar.get(Calendar.MILLISECOND), ds.getCalendarToTimestamp().get(Calendar.MILLISECOND));
-	em.remove(ds);
+		Assertions.assertEquals(calendar.get(Calendar.YEAR), ds.getCalendarToTimestamp().get(Calendar.YEAR));
+		Assertions.assertEquals(calendar.get(Calendar.MONTH), ds.getCalendarToTimestamp().get(Calendar.MONTH));
+		Assertions.assertEquals(calendar.get(Calendar.DAY_OF_WEEK),
+				ds.getCalendarToTimestamp().get(Calendar.DAY_OF_WEEK));
+		Assertions.assertEquals(calendar.get(Calendar.HOUR), ds.getCalendarToTimestamp().get(Calendar.HOUR));
+		Assertions.assertEquals(calendar.get(Calendar.MINUTE), ds.getCalendarToTimestamp().get(Calendar.MINUTE));
+		Assertions.assertEquals(calendar.get(Calendar.SECOND), ds.getCalendarToTimestamp().get(Calendar.SECOND));
+		Assertions.assertEquals(calendar.get(Calendar.MILLISECOND),
+				ds.getCalendarToTimestamp().get(Calendar.MILLISECOND));
+		em.remove(ds);
 
-	em.getTransaction().commit();
-	em.close();
+		em.getTransaction().commit();
+		em.close();
 
-    }
+	}
 }

@@ -34,11 +34,11 @@ The @Enumerated annotation requires a conversion, from Varchar or Integer to Enu
 
 ## Supported Databases  
 - **Apache Derby** *10.15.2.0*  
-- **MySQL** *8.0.25*  
+- **MySQL** *8.0.28*  
 - **PostgreSQL** *13.3*  
-- **MariaDB** *10.5.10*  
+- **MariaDB** *10.5.15*  
 - **Oracle** *12.2.0.1*  
-- **H2** *1.4.200*  
+- **H2** *2.1.210*  
 
 ## Building  
 Built using Java SE 11    

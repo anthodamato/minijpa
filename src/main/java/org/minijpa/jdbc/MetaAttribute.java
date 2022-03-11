@@ -44,8 +44,10 @@ public class MetaAttribute extends AbstractAttribute {
 	private boolean version = false;
 	// it's a basic attribute
 	private boolean basic;
-	// The attribute path. If this is a basic attribute the path is the attribute name.
-	// If the parent is an embeddable the path is the embeddable path. For example 'jobInfo.jobDescription'.
+	// The attribute path. If this is a basic attribute the path is the attribute
+	// name.
+	// If the parent is an embeddable the path is the embeddable path. For example
+	// 'jobInfo.jobDescription'.
 	private String path;
 	private Optional<Method> joinColumnReadMethod = Optional.empty();
 	private Optional<Method> joinColumnWriteMethod = Optional.empty();

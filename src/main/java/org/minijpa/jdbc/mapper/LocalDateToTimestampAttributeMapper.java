@@ -24,14 +24,14 @@ import java.time.LocalDate;
  */
 public class LocalDateToTimestampAttributeMapper implements AttributeMapper<LocalDate, Timestamp> {
 
-    @Override
-    public Timestamp attributeToDatabase(LocalDate k) {
-	return Timestamp.valueOf(k.atStartOfDay());
-    }
+	@Override
+	public Timestamp attributeToDatabase(LocalDate k) {
+		return Timestamp.valueOf(k.atStartOfDay());
+	}
 
-    @Override
-    public LocalDate databaseToAttribute(Timestamp v) {
-	return v.toLocalDateTime().toLocalDate();
-    }
+	@Override
+	public LocalDate databaseToAttribute(Timestamp v) {
+		return v.toLocalDateTime().toLocalDate();
+	}
 
 }
