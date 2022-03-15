@@ -28,9 +28,11 @@ List of implemented (or partially implemented) annotations:
 XML mapping is not supported.  
 
 ## Implementation Notes  
-- Reading from database when attribute types are known, for example with a 'findById'. In this case entity class and attribute types are known.  
-If an attribute type is Integer, Long, String it can be read properly from Jdbc ResultSet. The conversion to the attribute type is straightforward.
-The @Enumerated annotation requires a conversion, from Varchar or Integer to Enumeration. The Boolean type is stored as Integer in Oracle databases.
+- Reading from database when attribute types are known:  
+(for example using a 'findById'). In this case entity class and attribute types are known.  
+In case the attribute type is simple like Integer, String, etc. the building of the value is straightforward but in other cases a conversion is needed. For example, the @Enumerated annotation requires a conversion, from Varchar or Integer to Enumeration. Also, the Boolean type is stored as Integer in Oracle databases. The conversion is made using an AttributeMapper.  
+- Reading from database using native queries:  
+the sql type returned by ResultSet is used  
 
 ## Supported Databases  
 - **Apache Derby** *10.15.2.0*  

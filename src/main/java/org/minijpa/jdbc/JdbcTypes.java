@@ -17,7 +17,6 @@ package org.minijpa.jdbc;
 
 import java.math.BigDecimal;
 import java.sql.Types;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 import org.slf4j.Logger;

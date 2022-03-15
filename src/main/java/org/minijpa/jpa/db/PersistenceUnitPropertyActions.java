@@ -68,11 +68,9 @@ public class PersistenceUnitPropertyActions {
 	public List<String> generateScriptFromMetadata(PersistenceUnitInfo persistenceUnitInfo) {
 		try {
 			PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-
+			DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
 			SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 			List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
-
-			DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
 			return dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
 		} catch (Exception ex) {
 			throw new IllegalStateException(ex.getMessage());

@@ -140,17 +140,4 @@ public interface DbJdbc {
 		return "in";
 	}
 
-//	public default String getFunction(SqlFunction sqlFunction) {
-//		if (sqlFunction == SqlFunction.CURRENT_DATE)
-//			return "CURRENT_DATE";
-//
-//		if (sqlFunction == SqlFunction.CURRENT_TIME)
-//			return "CURRENT_TIME";
-//
-//		if (sqlFunction == SqlFunction.CURRENT_TIMESTAMP)
-//			return "CURRENT_TIMESTAMP";
-//
-//		return "";
-//	}
-
 }

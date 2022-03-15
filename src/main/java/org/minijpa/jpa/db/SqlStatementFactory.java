@@ -15,8 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-import java.math.BigDecimal;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -603,18 +601,18 @@ public class SqlStatementFactory {
 			AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
 			if (aggregateFunctionExpression
 					.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT) {
-				FetchParameter cnv = new FetchParameter("count", Long.class, Long.class, Types.BIGINT, null, null,
-						false); // , Optional.of(toLongAttributeMapper));
+//				AttributeMapper attributeMapper = dbConfiguration.getDbTypeMapper().aggregateFunctionMapper(Count.class);
+				FetchParameter cnv = new FetchParameter("count", null, null);
 				return Optional.of(cnv);
 			} else if (aggregateFunctionExpression
 					.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.SUM) {
-				FetchParameter cnv = new FetchParameter("sum", Long.class, Long.class, Types.BIGINT, null, null,
-						false);
+//				AttributeMapper attributeMapper = dbConfiguration.getDbTypeMapper().aggregateFunctionMapper(Sum.class);
+				FetchParameter cnv = new FetchParameter("sum", null, null);
 				return Optional.of(cnv);
 			} else if (aggregateFunctionExpression
 					.getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.AVG) {
-				FetchParameter cnv = new FetchParameter("avg", BigDecimal.class, BigDecimal.class, Types.NUMERIC, null, null,
-						false);
+//				AttributeMapper attributeMapper = dbConfiguration.getDbTypeMapper().aggregateFunctionMapper(Avg.class);
+				FetchParameter cnv = new FetchParameter("avg", null, null);
 				return Optional.of(cnv);
 			} else {
 				Expression<?> expr = aggregateFunctionExpression.getX();
@@ -707,48 +705,48 @@ public class SqlStatementFactory {
 
 	private ConditionType getOperator(PredicateType predicateType) {
 		switch (predicateType) {
-		case EQUAL:
-			return ConditionType.EQUAL;
-		case NOT_EQUAL:
-			return ConditionType.NOT_EQUAL;
-		case AND:
-			return ConditionType.AND;
-		case IS_FALSE:
-			return ConditionType.IS_FALSE;
-		case IS_NOT_NULL:
-			return ConditionType.IS_NOT_NULL;
-		case IS_NULL:
-			return ConditionType.IS_NULL;
-		case IS_TRUE:
-			return ConditionType.IS_TRUE;
-		case NOT:
-			return ConditionType.NOT;
-		case OR:
-			return ConditionType.OR;
-		case EMPTY_CONJUNCTION:
-			return ConditionType.AND;
-		case EMPTY_DISJUNCTION:
-			return ConditionType.OR;
-		case GREATER_THAN:
-		case GT:
-			return ConditionType.GREATER_THAN;
-		case GREATER_THAN_OR_EQUAL_TO:
-			return ConditionType.GREATER_THAN_OR_EQUAL_TO;
-		case LESS_THAN:
-		case LT:
-			return ConditionType.LESS_THAN;
-		case LESS_THAN_OR_EQUAL_TO:
-			return ConditionType.LESS_THAN_OR_EQUAL_TO;
-		case BETWEEN_EXPRESSIONS:
-		case BETWEEN_VALUES:
-			return ConditionType.BETWEEN;
-		case LIKE_PATTERN:
-		case LIKE_PATTERN_EXPR:
-			return ConditionType.LIKE;
-		case IN:
-			return ConditionType.IN;
-		default:
-			break;
+			case EQUAL:
+				return ConditionType.EQUAL;
+			case NOT_EQUAL:
+				return ConditionType.NOT_EQUAL;
+			case AND:
+				return ConditionType.AND;
+			case IS_FALSE:
+				return ConditionType.IS_FALSE;
+			case IS_NOT_NULL:
+				return ConditionType.IS_NOT_NULL;
+			case IS_NULL:
+				return ConditionType.IS_NULL;
+			case IS_TRUE:
+				return ConditionType.IS_TRUE;
+			case NOT:
+				return ConditionType.NOT;
+			case OR:
+				return ConditionType.OR;
+			case EMPTY_CONJUNCTION:
+				return ConditionType.AND;
+			case EMPTY_DISJUNCTION:
+				return ConditionType.OR;
+			case GREATER_THAN:
+			case GT:
+				return ConditionType.GREATER_THAN;
+			case GREATER_THAN_OR_EQUAL_TO:
+				return ConditionType.GREATER_THAN_OR_EQUAL_TO;
+			case LESS_THAN:
+			case LT:
+				return ConditionType.LESS_THAN;
+			case LESS_THAN_OR_EQUAL_TO:
+				return ConditionType.LESS_THAN_OR_EQUAL_TO;
+			case BETWEEN_EXPRESSIONS:
+			case BETWEEN_VALUES:
+				return ConditionType.BETWEEN;
+			case LIKE_PATTERN:
+			case LIKE_PATTERN_EXPR:
+				return ConditionType.LIKE;
+			case IN:
+				return ConditionType.IN;
+			default:
+				break;
 		}
 
 		throw new IllegalArgumentException("Unknown condition type for predicate type: " + predicateType);
@@ -757,18 +755,18 @@ public class SqlStatementFactory {
 	private AggregateFunctionType getAggregateFunction(
 			org.minijpa.jpa.criteria.AggregateFunctionType aggregateFunctionType) {
 		switch (aggregateFunctionType) {
-		case AVG:
-			return AggregateFunctionType.AVG;
-		case MAX:
-			return AggregateFunctionType.MAX;
-		case MIN:
-			return AggregateFunctionType.MIN;
-		case COUNT:
-			return AggregateFunctionType.COUNT;
-		case SUM:
-			return AggregateFunctionType.SUM;
-		default:
-			break;
+			case AVG:
+				return AggregateFunctionType.AVG;
+			case MAX:
+				return AggregateFunctionType.MAX;
+			case MIN:
+				return AggregateFunctionType.MIN;
+			case COUNT:
+				return AggregateFunctionType.COUNT;
+			case SUM:
+				return AggregateFunctionType.SUM;
+			default:
+				break;
 		}
 
 		throw new IllegalArgumentException(
@@ -777,18 +775,18 @@ public class SqlStatementFactory {
 
 	private SqlExpressionOperator getSqlExpressionOperator(ExpressionOperator expressionOperator) {
 		switch (expressionOperator) {
-		case DIFF:
-			return SqlExpressionOperator.DIFF;
-		case MINUS:
-			return SqlExpressionOperator.MINUS;
-		case PROD:
-			return SqlExpressionOperator.PROD;
-		case QUOT:
-			return SqlExpressionOperator.QUOT;
-		case SUM:
-			return SqlExpressionOperator.SUM;
-		default:
-			break;
+			case DIFF:
+				return SqlExpressionOperator.DIFF;
+			case MINUS:
+				return SqlExpressionOperator.MINUS;
+			case PROD:
+				return SqlExpressionOperator.PROD;
+			case QUOT:
+				return SqlExpressionOperator.QUOT;
+			case SUM:
+				return SqlExpressionOperator.SUM;
+			default:
+				break;
 		}
 
 		throw new IllegalArgumentException("Unknown  operator for expression type: " + expressionOperator);

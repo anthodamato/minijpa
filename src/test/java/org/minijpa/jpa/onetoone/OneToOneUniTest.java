@@ -143,9 +143,18 @@ public class OneToOneUniTest {
 		Root<City> root = criteriaQuery.from(City.class);
 		criteriaQuery.select(cb.sum(root.get("population")));
 		Query query = em.createQuery(criteriaQuery);
-		Long totalPopulation = (Long) query.getSingleResult();
-		Assertions.assertNotNull(totalPopulation);
-		Assertions.assertEquals(763476, totalPopulation);
+		Object sum = query.getSingleResult();
+		Assertions.assertNotNull(sum);
+		if (sum instanceof Integer) {
+			Integer totalPopulation = (Integer) sum;
+			Assertions.assertEquals(763476, totalPopulation);
+		} else if (sum instanceof Long) {
+			// postgres
+			// Hibernate returns an Integer for Postgres (even if the ResultSet returns Long)
+			// probably because the criteria gets the column data type
+			Long totalPopulation = (Long) sum;
+			Assertions.assertEquals(763476L, totalPopulation);
+		}
 
 		em.remove(yorkCity);
 		em.remove(yorkCity.getRegion());
@@ -156,8 +165,8 @@ public class OneToOneUniTest {
 	}
 
 	/**
-	 * Avg function returns an integer value but it should be double, refactoring
-	 * needed on fetching strategy.
+	 * Avg function returns an integer value but it should be double,
+	 * refactoring needed on fetching strategy.
 	 *
 	 * @throws Exception
 	 */
@@ -194,9 +203,18 @@ public class OneToOneUniTest {
 		Root<City> root = criteriaQuery.from(City.class);
 		criteriaQuery.select(cb.avg(root.get("population")));
 		Query query = em.createQuery(criteriaQuery);
-		BigDecimal avgPopulation = (BigDecimal) query.getSingleResult();
-		Assertions.assertNotNull(avgPopulation);
-		Assertions.assertEquals(381738.0, avgPopulation.doubleValue());
+		Object avg = query.getSingleResult();
+		Assertions.assertNotNull(avg);
+		if (avg instanceof Integer) {
+			Integer avgPopulation = (Integer) avg;
+			Assertions.assertNotNull(avgPopulation);
+			Assertions.assertEquals(381738, avgPopulation);
+		} else if (avg instanceof BigDecimal) {
+			// postgres
+			BigDecimal avgPopulation = (BigDecimal) avg;
+			Assertions.assertNotNull(avgPopulation);
+			Assertions.assertEquals(381738.0d, avgPopulation.doubleValue());
+		}
 
 		em.remove(yorkCity);
 		em.remove(manchesterCity);

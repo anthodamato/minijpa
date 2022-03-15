@@ -107,12 +107,18 @@ public class EmbIdBookingTest {
 			query.select(cb.count(root));
 			TypedQuery<?> typedQuery = em.createQuery(query);
 			Object result = typedQuery.getSingleResult();
-			Assertions.assertEquals(1L, result);
+			if (result instanceof Integer)
+				Assertions.assertEquals(1, result);
+			else if (result instanceof Long)
+				Assertions.assertEquals(1L, result);
 
 			query.select(cb.countDistinct(root.get("customerId")));
 			typedQuery = em.createQuery(query);
 			result = typedQuery.getSingleResult();
-			Assertions.assertEquals(1L, result);
+			if (result instanceof Integer)
+				Assertions.assertEquals(1, result);
+			else if (result instanceof Long)
+				Assertions.assertEquals(1L, result);
 
 			tx.begin();
 			em.remove(hotelBooking);

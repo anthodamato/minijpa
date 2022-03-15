@@ -70,10 +70,6 @@ public class TemporalDateSetTest {
 		Assertions.assertEquals(utilDate.getMonth(), ds.getDateToDate().getMonth());
 		Assertions.assertEquals(utilDate.getDay(), ds.getDateToDate().getDay());
 
-		Assertions.assertEquals(utilDate.getHours(), ds.getDateToTime().getHours());
-		Assertions.assertEquals(utilDate.getMinutes(), ds.getDateToTime().getMinutes());
-		Assertions.assertEquals(utilDate.getSeconds(), ds.getDateToTime().getSeconds());
-
 		// MariaDB truncates the last three digits
 		Assertions.assertEquals(utilDate.getTime() / 1000, ds.getDateToTimestamp().getTime() / 1000);
 

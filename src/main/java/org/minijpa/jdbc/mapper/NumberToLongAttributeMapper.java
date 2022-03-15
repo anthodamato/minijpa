@@ -15,28 +15,20 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class InstantAttributeMapper implements AttributeMapper<Instant, Timestamp> {
-
-	private Logger LOG = LoggerFactory.getLogger(InstantAttributeMapper.class);
+public class NumberToLongAttributeMapper implements AttributeMapper<Long, Number> {
 
 	@Override
-	public Timestamp attributeToDatabase(Instant k) {
-		return Timestamp.from(k);
+	public Integer attributeToDatabase(Long k) {
+		return k.intValue();
 	}
 
 	@Override
-	public Instant databaseToAttribute(Timestamp v) {
-//		LOG.debug("databaseToAttribute: v=" + v);
-		return v.toInstant();
+	public Long databaseToAttribute(Number v) {
+		return v.longValue();
 	}
 
 }

@@ -8,7 +8,6 @@ package org.minijpa.jpa.db;
 import java.io.StringReader;
 import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlStatement;
-import org.minijpa.jdbc.model.StatementType;
 import org.minijpa.jpa.jpql.ASTQLStatement;
 import org.minijpa.jpa.jpql.JpqlParser;
 import org.minijpa.jpa.jpql.JpqlParserVisitor;
@@ -45,7 +44,7 @@ public class JpqlModule {
 
 		ASTQLStatement qlStatement = parser.QL_statement();
 		if (visitor == null) {
-			visitor = new JpqlParserVisitorImpl(persistenceUnitContext, sqlStatementFactory);
+			visitor = new JpqlParserVisitorImpl(persistenceUnitContext, sqlStatementFactory, dbConfiguration);
 		}
 
 		SqlStatement sqlStatement = (SqlStatement) qlStatement.jjtAccept(visitor, null);

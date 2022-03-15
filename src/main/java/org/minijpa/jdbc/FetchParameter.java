@@ -18,56 +18,52 @@ package org.minijpa.jdbc;
 public class FetchParameter {
 
 	private final String columnName;
-	private final Class<?> type;
-	private final Class<?> readWriteDbType;
-	private final int sqlType;
+	private final Integer sqlType;
 	private final MetaAttribute attribute;
-	private final MetaEntity metaEntity;
-	private final boolean joinColumn;
+//	private final AttributeMapper attributeMapper;
 
-	public FetchParameter(String columnName, Class<?> type, Class<?> readWriteDbType, int sqlType,
-			MetaAttribute attribute, MetaEntity metaEntity, boolean joinColumn) {
+	public FetchParameter(String columnName,
+			Integer sqlType,
+			MetaAttribute attribute) {
 		super();
 		this.columnName = columnName;
-		this.type = JdbcTypes.getWrapperClass(type);
-		this.readWriteDbType = readWriteDbType;
 		this.sqlType = sqlType;
 		this.attribute = attribute;
-		this.metaEntity = metaEntity;
-		this.joinColumn = joinColumn;
+//		this.attributeMapper = attributeMapper;
 	}
 
+//	public FetchParameter(String columnName,
+//			Integer sqlType,
+//			Integer suggestedSqlType,
+//			MetaAttribute attribute,
+//			AttributeMapper attributeMapper) {
+//		super();
+//		this.columnName = columnName;
+//		this.sqlType = sqlType;
+//		this.attribute = attribute;
+//		this.attributeMapper = attributeMapper;
+//	}
 	public static FetchParameter build(MetaAttribute attribute) {
-		return new FetchParameter(attribute.getColumnName(), attribute.getType(), attribute.getDatabaseType(),
-				attribute.sqlType, attribute, null, false); // , attribute.attributeMapper);
+		return new FetchParameter(attribute.getColumnName(), attribute.sqlType, attribute);
+
 	}
 
 	public String getColumnName() {
 		return columnName;
 	}
 
-	public Class<?> getType() {
-		return type;
-	}
-
-	public Class<?> getReadWriteDbType() {
-		return readWriteDbType;
-	}
-
-	public int getSqlType() {
+	public Integer getSqlType() {
 		return sqlType;
 	}
 
+//	public Integer getSuggestedSqlType() {
+//		return suggestedSqlType;
+//	}
 	public MetaAttribute getAttribute() {
 		return attribute;
 	}
 
-	public MetaEntity getMetaEntity() {
-		return metaEntity;
-	}
-
-	public boolean isJoinColumn() {
-		return joinColumn;
-	}
-
+//	public AttributeMapper getAttributeMapper() {
+//		return attributeMapper;
+//	}
 }

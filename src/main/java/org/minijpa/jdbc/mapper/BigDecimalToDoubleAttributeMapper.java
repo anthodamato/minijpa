@@ -15,28 +15,22 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.math.BigDecimal;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class InstantAttributeMapper implements AttributeMapper<Instant, Timestamp> {
-
-	private Logger LOG = LoggerFactory.getLogger(InstantAttributeMapper.class);
+public class BigDecimalToDoubleAttributeMapper implements AttributeMapper<Double, BigDecimal> {
 
 	@Override
-	public Timestamp attributeToDatabase(Instant k) {
-		return Timestamp.from(k);
+	public BigDecimal attributeToDatabase(Double k) {
+		return new BigDecimal(k);
 	}
 
 	@Override
-	public Instant databaseToAttribute(Timestamp v) {
-//		LOG.debug("databaseToAttribute: v=" + v);
-		return v.toInstant();
+	public Double databaseToAttribute(BigDecimal v) {
+		return v.doubleValue();
 	}
 
 }
