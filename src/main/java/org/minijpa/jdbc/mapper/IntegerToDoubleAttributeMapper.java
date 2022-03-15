@@ -15,23 +15,20 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Date;
-import java.time.LocalDate;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class LocalDateAttributeMapper implements AttributeMapper<LocalDate, Date> {
+public class IntegerToDoubleAttributeMapper implements AttributeMapper<Double, Integer> {
 
 	@Override
-	public Date attributeToDatabase(LocalDate k) {
-		return Date.valueOf((LocalDate) k);
+	public Integer attributeToDatabase(Double k) {
+		return k.intValue();
 	}
 
 	@Override
-	public LocalDate databaseToAttribute(Date v) {
-		return v.toLocalDate();
+	public Double databaseToAttribute(Integer v) {
+		return v.doubleValue();
 	}
 
 }

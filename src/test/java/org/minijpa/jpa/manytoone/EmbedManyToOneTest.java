@@ -5,6 +5,8 @@
  */
 package org.minijpa.jpa.manytoone;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -143,13 +145,29 @@ public class EmbedManyToOneTest {
 		List idList = q.getResultList();
 		Assertions.assertEquals(2, idList.size());
 		Object[] oo0 = (Object[]) idList.get(0);
-		Assertions.assertEquals(3, (int) oo0[0]);
-		Assertions.assertEquals(2, (int) oo0[1]);
+		if (oo0[0] instanceof BigDecimal) // Oracle, native query
+			Assertions.assertEquals(new BigDecimal(3), oo0[0]);
+		else
+			Assertions.assertEquals(3, oo0[0]);
+
+		if (oo0[1] instanceof BigDecimal) // Oracle, native query
+			Assertions.assertEquals(new BigDecimal(2), oo0[1]);
+		else
+			Assertions.assertEquals(2, oo0[1]);
+
 		Assertions.assertEquals("Developer", oo0[2]);
 		Assertions.assertEquals("Kate", oo0[3]);
 		Object[] oo1 = (Object[]) idList.get(1);
-		Assertions.assertEquals(2, (int) oo1[0]);
-		Assertions.assertEquals(1, (int) oo1[1]);
+		if (oo1[0] instanceof BigDecimal) // Oracle, native query
+			Assertions.assertEquals(new BigDecimal(2), oo1[0]);
+		else
+			Assertions.assertEquals(2, oo1[0]);
+
+		if (oo1[1] instanceof BigDecimal) // Oracle, native query
+			Assertions.assertEquals(new BigDecimal(1), oo1[1]);
+		else
+			Assertions.assertEquals(1, oo1[1]);
+
 		Assertions.assertEquals("Developer", oo1[2]);
 		Assertions.assertEquals("Paul", oo1[3]);
 
@@ -161,7 +179,7 @@ public class EmbedManyToOneTest {
 
 		Query query = em.createNativeQuery(
 				"select e.id as e_id, e.name as e_name, e.jd as jd, e.pm_id, p.id as p_id, p.name as p_name"
-				+ " from job_employee e, program_manager p where e.pm_id=p.id and e.jd='Developer' order by e.name",
+						+ " from job_employee e, program_manager p where e.pm_id=p.id and e.jd='Developer' order by e.name",
 				"JobEmployeeResult");
 		List result = query.getResultList();
 		Assertions.assertFalse(result.isEmpty());
@@ -267,7 +285,7 @@ public class EmbedManyToOneTest {
 
 		Query query = em.createNativeQuery(
 				"select e.id as e_id, e.name as e_name, e.jd as jd, e.pm_id, p.id as p_id, p.name as p_name"
-				+ " from job_employee e, program_manager p where e.pm_id=p.id order by e.name",
+						+ " from job_employee e, program_manager p where e.pm_id=p.id order by e.name",
 				"JobEmployeeResultConstructor");
 		List result = query.getResultList();
 		Assertions.assertFalse(result.isEmpty());

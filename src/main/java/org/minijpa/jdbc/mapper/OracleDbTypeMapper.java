@@ -15,57 +15,50 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetTime;
-import java.util.Optional;
-
 public class OracleDbTypeMapper extends AbstractDbTypeMapper {
 
-    @Override
-    public Object convertToAttributeType(Object value, Class<?> attributeType) {
-	Object v = super.convertToAttributeType(value, attributeType);
-	if (v == null)
-	    return null;
+//	@Override
+//	public Object convertToAttributeType(Object value, Class<?> attributeType) {
+//		Object v = super.convertToAttributeType(value, attributeType);
+//		if (v == null)
+//			return null;
+//
+//		if (attributeType == Boolean.class
+//				|| (attributeType.isPrimitive() && attributeType.getName().equals("boolean"))) {
+//			if (value instanceof Number) {
+//				return ((Number) value).intValue() == 0 ? Boolean.FALSE : Boolean.TRUE;
+//			}
+//		}
+//
+//		return v;
+//	}
 
-	if (attributeType == Boolean.class || (attributeType.isPrimitive() && attributeType.getName().equals("boolean"))) {
-	    if (value instanceof Number) {
-		return ((Number) value).intValue() == 0 ? Boolean.FALSE : Boolean.TRUE;
-	    }
-	}
-
-	return v;
-    }
-
-    @Override
-    public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType) {
-	if (attributeType == LocalDate.class)
-	    return localDateToTimestampAttributeMapper;
-
-	if (attributeType == LocalTime.class)
-	    return localTimeToTimestampAttributeMapper;
-
-	if (attributeType == OffsetTime.class)
-	    return offsetTimeToTimestampAttributeMapper;
-
-	if (attributeType == Duration.class)
-	    return durationToBigDecimalAttributeMapper;
-
-	if (attributeType == Time.class)
-	    return timeToTimestampAttributeMapper;
-
-	return super.attributeMapper(attributeType, databaseType);
-    }
-
-    @Override
-    public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType) {
-	if (attributeType == java.sql.Date.class || attributeType == java.sql.Time.class)
-	    return Timestamp.class;
-
-	return super.databaseType(attributeType, enumerationType);
-    }
+//	@Override
+//	public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType) {
+////		if (attributeType == LocalDate.class)
+////			return localDateToTimestampAttributeMapper;
+//
+////		if (attributeType == LocalTime.class)
+////			return localTimeToTimestampAttributeMapper;
+//
+////		if (attributeType == OffsetTime.class)
+////			return offsetTimeToTimestampAttributeMapper;
+//
+////		if (attributeType == Duration.class)
+////			return durationToBigDecimalAttributeMapper;
+//
+////		if (attributeType == Time.class)
+////			return timeToTimestampAttributeMapper;
+//
+//		return super.attributeMapper(attributeType, databaseType);
+//	}
+//
+//	@Override
+//	public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType) {
+////		if (attributeType == java.sql.Date.class || attributeType == java.sql.Time.class)
+////			return Timestamp.class;
+//
+//		return super.databaseType(attributeType, enumerationType);
+//	}
 
 }

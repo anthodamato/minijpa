@@ -475,6 +475,12 @@ public class Parser {
 		LOG.debug("readAttribute: path=" + path);
 		LOG.debug("readAttribute: idAnnotation=" + idAnnotation);
 		if (idAnnotation != null) {
+			AttributeMapper<?, ?> attributeMapper = dbConfiguration.getDbTypeMapper().attributeMapper(attributeClass, readWriteType);
+			LOG.debug("readAttribute: id attributeMapper=" + attributeMapper);
+			Optional<AttributeMapper> optionalAM=Optional.empty();
+			if (attributeMapper != null)
+				optionalAM= Optional.of(attributeMapper);
+
 			MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName())
 					.withColumnName(columnName)
 					.withType(attributeClass)
@@ -486,7 +492,8 @@ public class Parser {
 					.withJavaMember(field)
 					.isBasic(true)
 					.withPath(path)
-					.withDDLData(ddlData);
+					.withDDLData(ddlData)
+					.withAttributeMapper(optionalAM);
 
 			return builder.build();
 		}
@@ -513,7 +520,7 @@ public class Parser {
 				.withPath(path)
 				.withDDLData(ddlData);
 
-		AttributeMapper attributeMapper = dbConfiguration.getDbTypeMapper().attributeMapper(attributeClass, readWriteType);
+		AttributeMapper<?, ?> attributeMapper = dbConfiguration.getDbTypeMapper().attributeMapper(attributeClass, readWriteType);
 		if (attributeMapper != null)
 			builder.withAttributeMapper(Optional.of(attributeMapper));
 

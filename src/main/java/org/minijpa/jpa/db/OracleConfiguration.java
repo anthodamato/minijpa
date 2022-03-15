@@ -25,37 +25,37 @@ import org.minijpa.jdbc.model.SqlStatementGenerator;
 
 public class OracleConfiguration implements DbConfiguration {
 
-    private final DbJdbc dbJdbc;
-    private final DbTypeMapper dbTypeMapper;
-    private final SqlStatementGenerator sqlStatementGenerator;
-    private final JdbcRunner jdbcRunner;
+	private final DbJdbc dbJdbc;
+	private final DbTypeMapper dbTypeMapper;
+	private final SqlStatementGenerator sqlStatementGenerator;
+	private final JdbcRunner jdbcRunner;
 
-    public OracleConfiguration() {
-	super();
-	this.dbJdbc = new OracleJdbc();
-	this.dbTypeMapper = new OracleDbTypeMapper();
-	this.sqlStatementGenerator = new OracleSqlStatementGenerator(dbJdbc);
-	this.jdbcRunner = new OracleJdbcRunner(dbTypeMapper);
-    }
+	public OracleConfiguration() {
+		super();
+		this.dbJdbc = new OracleJdbc();
+		this.dbTypeMapper = new OracleDbTypeMapper();
+		this.sqlStatementGenerator = new OracleSqlStatementGenerator(dbJdbc);
+		this.jdbcRunner = new OracleJdbcRunner();
+	}
 
-    @Override
-    public DbJdbc getDbJdbc() {
-	return dbJdbc;
-    }
+	@Override
+	public DbJdbc getDbJdbc() {
+		return dbJdbc;
+	}
 
-    @Override
-    public DbTypeMapper getDbTypeMapper() {
-	return dbTypeMapper;
-    }
+	@Override
+	public DbTypeMapper getDbTypeMapper() {
+		return dbTypeMapper;
+	}
 
-    @Override
-    public SqlStatementGenerator getSqlStatementGenerator() {
-	return sqlStatementGenerator;
-    }
+	@Override
+	public SqlStatementGenerator getSqlStatementGenerator() {
+		return sqlStatementGenerator;
+	}
 
-    @Override
-    public JdbcRunner getJdbcRunner() {
-	return jdbcRunner;
-    }
+	@Override
+	public JdbcRunner getJdbcRunner() {
+		return jdbcRunner;
+	}
 
 }

@@ -16,12 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.minijpa.jdbc.db;
+package org.minijpa.jdbc.model.function;
+
+import org.minijpa.jdbc.model.Value;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public enum SqlFunction {
-	CURRENT_DATE, CURRENT_TIME, CURRENT_TIMESTAMP;
+public class CurrentDate implements Function, Value {
+
+	public CurrentDate() {
+	}
+
 }

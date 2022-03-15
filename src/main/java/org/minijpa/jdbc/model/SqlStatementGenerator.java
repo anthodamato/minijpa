@@ -23,34 +23,34 @@ import java.util.List;
  */
 public interface SqlStatementGenerator {
 
-    public SqlStatementExporter createSqlStatementExporter();
+//    public SqlStatementExporter createSqlStatementExporter();
 
-    public default String export(SqlStatement sqlStatement) {
-	if (sqlStatement instanceof SqlSelect)
-	    return export((SqlSelect) sqlStatement);
-	else if (sqlStatement instanceof SqlUpdate)
-	    return export((SqlUpdate) sqlStatement);
-	else if (sqlStatement instanceof SqlDelete)
-	    return export((SqlDelete) sqlStatement);
-	else if (sqlStatement instanceof SqlInsert)
-	    return export((SqlInsert) sqlStatement);
+	public default String export(SqlStatement sqlStatement) {
+		if (sqlStatement instanceof SqlSelect)
+			return export((SqlSelect) sqlStatement);
+		else if (sqlStatement instanceof SqlUpdate)
+			return export((SqlUpdate) sqlStatement);
+		else if (sqlStatement instanceof SqlDelete)
+			return export((SqlDelete) sqlStatement);
+		else if (sqlStatement instanceof SqlInsert)
+			return export((SqlInsert) sqlStatement);
 
-	throw new IllegalArgumentException("Unknown Sql Statement: " + sqlStatement);
-    }
+		throw new IllegalArgumentException("Unknown Sql Statement: " + sqlStatement);
+	}
 
-    public String export(SqlInsert sqlInsert);
+	public String export(SqlInsert sqlInsert);
 
-    public String export(SqlUpdate sqlUpdate);
+	public String export(SqlUpdate sqlUpdate);
 
-    public String export(SqlDelete sqlDelete);
+	public String export(SqlDelete sqlDelete);
 
-    public String export(SqlSelect sqlSelect);
+	public String export(SqlSelect sqlSelect);
 
-    public String export(SqlCreateTable sqlCreateTable);
+	public String export(SqlCreateTable sqlCreateTable);
 
-    public String export(SqlCreateSequence sqlCreateSequence);
+	public String export(SqlCreateSequence sqlCreateSequence);
 
-    public List<String> export(List<SqlDDLStatement> sqlDDLStatement);
+	public List<String> export(List<SqlDDLStatement> sqlDDLStatement);
 
-    public String export(SqlCreateJoinTable sqlCreateJoinTable);
+	public String export(SqlCreateJoinTable sqlCreateJoinTable);
 }

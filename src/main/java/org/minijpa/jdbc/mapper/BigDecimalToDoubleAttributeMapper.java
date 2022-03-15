@@ -15,23 +15,22 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.math.BigDecimal;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class LocalDateAttributeMapper implements AttributeMapper<LocalDate, Date> {
+public class BigDecimalToDoubleAttributeMapper implements AttributeMapper<Double, BigDecimal> {
 
 	@Override
-	public Date attributeToDatabase(LocalDate k) {
-		return Date.valueOf((LocalDate) k);
+	public BigDecimal attributeToDatabase(Double k) {
+		return new BigDecimal(k);
 	}
 
 	@Override
-	public LocalDate databaseToAttribute(Date v) {
-		return v.toLocalDate();
+	public Double databaseToAttribute(BigDecimal v) {
+		return v.doubleValue();
 	}
 
 }

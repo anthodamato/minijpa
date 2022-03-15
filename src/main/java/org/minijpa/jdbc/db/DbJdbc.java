@@ -22,7 +22,6 @@ import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.NameTranslator;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
-import org.minijpa.jdbc.model.function.Function;
 
 public interface DbJdbc {
 
@@ -139,19 +138,6 @@ public interface DbJdbc {
 
 	public default String inOperator() {
 		return "in";
-	}
-
-	public default String getFunction(SqlFunction sqlFunction) {
-		if (sqlFunction == SqlFunction.CURRENT_DATE)
-			return "CURRENT_DATE";
-
-		if (sqlFunction == SqlFunction.CURRENT_TIME)
-			return "CURRENT_TIME";
-
-		if (sqlFunction == SqlFunction.CURRENT_TIMESTAMP)
-			return "CURRENT_TIMESTAMP";
-
-		return "";
 	}
 
 }

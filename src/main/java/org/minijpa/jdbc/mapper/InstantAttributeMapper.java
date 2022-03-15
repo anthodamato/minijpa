@@ -26,17 +26,17 @@ import org.slf4j.LoggerFactory;
  */
 public class InstantAttributeMapper implements AttributeMapper<Instant, Timestamp> {
 
-    private Logger LOG = LoggerFactory.getLogger(InstantAttributeMapper.class);
-    
-    @Override
-    public Timestamp attributeToDatabase(Instant k) {
-	return Timestamp.from(k);
-    }
-    
-    @Override
-    public Instant databaseToAttribute(Timestamp v) {
-	LOG.debug("databaseToAttribute: v=" + v);
-	return v.toInstant();
-    }
-    
+	private Logger LOG = LoggerFactory.getLogger(InstantAttributeMapper.class);
+
+	@Override
+	public Timestamp attributeToDatabase(Instant k) {
+		return Timestamp.from(k);
+	}
+
+	@Override
+	public Instant databaseToAttribute(Timestamp v) {
+//		LOG.debug("databaseToAttribute: v=" + v);
+		return v.toInstant();
+	}
+
 }

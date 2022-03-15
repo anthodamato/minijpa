@@ -6,12 +6,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
-import org.minijpa.jdbc.db.SqlFunction;
+import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
@@ -32,6 +33,10 @@ import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.model.expression.SqlExpressionImpl;
 import org.minijpa.jdbc.model.function.Abs;
 import org.minijpa.jdbc.model.function.Concat;
+import org.minijpa.jdbc.model.function.CurrentDate;
+import org.minijpa.jdbc.model.function.CurrentTime;
+import org.minijpa.jdbc.model.function.CurrentTimestamp;
+import org.minijpa.jdbc.model.function.Function;
 import org.minijpa.jdbc.model.function.Length;
 import org.minijpa.jdbc.model.function.Locate;
 import org.minijpa.jdbc.model.function.Lower;
@@ -55,11 +60,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	private final PersistenceUnitContext persistenceUnitContext;
 	private final SqlStatementFactory sqlStatementFactory;
+	private final DbConfiguration dbConfiguration;
 	private AliasGenerator tableAliasGenerator;
 
-	public JpqlParserVisitorImpl(PersistenceUnitContext persistenceUnitContext, SqlStatementFactory sqlStatementFactory) {
+	public JpqlParserVisitorImpl(PersistenceUnitContext persistenceUnitContext,
+			SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration) {
 		this.persistenceUnitContext = persistenceUnitContext;
 		this.sqlStatementFactory = sqlStatementFactory;
+		this.dbConfiguration = dbConfiguration;
 	}
 
 	@Override
@@ -80,24 +88,28 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	private SqlSelect createFromParameters(JpqlVisitorParameters jpqlVisitorParameters) {
 		SqlSelect.SqlSelectBuilder selectBuilder = new SqlSelect.SqlSelectBuilder();
 
-		if (jpqlVisitorParameters.distinct)
+		if (jpqlVisitorParameters.distinct) {
 			selectBuilder.distinct();
+		}
 
 		if (jpqlVisitorParameters.identificationVariableEntity != null
-				&& jpqlVisitorParameters.identificationVariableEntity == jpqlVisitorParameters.sourceEntity)
+				&& jpqlVisitorParameters.identificationVariableEntity == jpqlVisitorParameters.sourceEntity) {
 			selectBuilder.withResult(jpqlVisitorParameters.sourceEntity);
+		}
 
 		jpqlVisitorParameters.fromTables.forEach(f -> selectBuilder.withFromTable(f));
-		if (jpqlVisitorParameters.fromJoins != null)
+		if (jpqlVisitorParameters.fromJoins != null) {
 			selectBuilder.withJoins(jpqlVisitorParameters.fromJoins);
+		}
 
 		selectBuilder.withValues(jpqlVisitorParameters.values);
 		jpqlVisitorParameters.values.forEach(v -> LOG.debug("createFromParameters: v=" + v));
 		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
 
 		selectBuilder.withConditions(jpqlVisitorParameters.conditions);
-		if (jpqlVisitorParameters.groupBy != null)
+		if (jpqlVisitorParameters.groupBy != null) {
 			selectBuilder.withGroupBy(jpqlVisitorParameters.groupBy);
+		}
 
 		selectBuilder.withOrderBy(jpqlVisitorParameters.orderByList);
 
@@ -108,12 +120,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	private Optional<MetaEntity> findMetaEntityBySqlAlias(String sqlAlias) {
 		Optional<String> objectName = tableAliasGenerator.findObjectNameByAlias(sqlAlias);
-		if (objectName.isEmpty())
+		if (objectName.isEmpty()) {
 			return Optional.empty();
+		}
 
 		Optional<MetaEntity> optional = persistenceUnitContext.findMetaEntityByTableName(objectName.get());
-		if (optional.isEmpty())
+		if (optional.isEmpty()) {
 			return Optional.empty();
+		}
 
 		return optional;
 	}
@@ -148,22 +162,27 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			if (node0 instanceof ASTSingleValuedPathExpression) {
 				ASTSingleValuedPathExpression singleValuedPathExpression = (ASTSingleValuedPathExpression) node0;
 				List<MetaAttribute> metaAttributes = singleValuedPathExpression.getMetaAttributes();
-				List<TableColumn> values = MetaEntityHelper.toValues(metaAttributes, singleValuedPathExpression.getFromTable());
+				List<TableColumn> values = MetaEntityHelper.toValues(metaAttributes,
+						singleValuedPathExpression.getFromTable());
 				jpqlVisitorParameters.values.addAll(values);
-				List<FetchParameter> fetchParameters = metaAttributes.stream().map(m -> MetaEntityHelper.toFetchParameter(m)).collect(Collectors.toList());
+				List<FetchParameter> fetchParameters = metaAttributes.stream()
+						.map(m -> MetaEntityHelper.toFetchParameter(m)).collect(Collectors.toList());
 				jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
 			} else if (node0 instanceof ASTScalarExpression) {
 				LOG.debug("visit: ASTSelectExpression node0=" + node0);
 				LOG.debug("visit: ASTSelectExpression node0_0.jjtGetNumChildren()=" + node0.jjtGetNumChildren());
-				if (node0.jjtGetNumChildren() > 0)
+				if (node0.jjtGetNumChildren() > 0) {
 					LOG.debug("visit: ASTSelectExpression node0_0.jjtGetChild(0)=" + node0.jjtGetChild(0));
+				}
 
 				Value value = ((ASTScalarExpression) node0).getValue();
 				jpqlVisitorParameters.values.add(value);
-				jpqlVisitorParameters.fetchParameters.add(createScalarExpressionFetchParameter((ASTScalarExpression) node0));
+				jpqlVisitorParameters.fetchParameters
+						.add(createScalarExpressionFetchParameter((ASTScalarExpression) node0));
 			} else if (node0 instanceof ASTAggregateExpression) {
 				jpqlVisitorParameters.values.add(((ASTAggregateExpression) node0).getValue());
-				jpqlVisitorParameters.fetchParameters.add(createAggregateExpressionFetchParameter((ASTAggregateExpression) node0));
+				jpqlVisitorParameters.fetchParameters
+						.add(createAggregateExpressionFetchParameter((ASTAggregateExpression) node0));
 			}
 		} else {
 			String identificationVariable = node.getIdentificationVariable();
@@ -171,12 +190,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			if (identificationVariable != null) {
 				String sqlTableAlias = jpqlVisitorParameters.aliases.get(identificationVariable);
 				Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-				if (optional.isEmpty())
+				if (optional.isEmpty()) {
 					throw new SemanticException("Entity not found for alias '" + identificationVariable + "'");
+				}
 
 				MetaEntity metaEntity = optional.get();
 				if (jpqlVisitorParameters.distinct) {
-					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity, sqlTableAlias));
+					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
+							FromTable.of(metaEntity, sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(values);
 
 					List<FetchParameter> fetchParameters = new ArrayList<>();
@@ -210,12 +231,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		LOG.debug("visit: ASTSelectItem values=" + values);
 		if (values != null) {
 			jpqlVisitorParameters.values.addAll(values);
-			if (result_variable != null && result_variable.length() > 0)
+			if (result_variable != null && result_variable.length() > 0) {
 				jpqlVisitorParameters.resultVariables.put(result_variable, values);
+			}
 		}
 
-		if (fetchParameters != null)
+		if (fetchParameters != null) {
 			jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
+		}
 
 		return object;
 	}
@@ -229,16 +252,18 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		String rvdEntityName = node.getEntityName();
 		LOG.debug("visit: ASTRangeVariableDeclaration rvdEntityName=" + rvdEntityName);
 		Optional<MetaEntity> optional = persistenceUnitContext.findMetaEntityByName(rvdEntityName);
-		if (optional.isEmpty())
+		if (optional.isEmpty()) {
 			throw new SemanticException("Entity name '" + node.getEntityName() + "' not found");
+		}
 
 		String rvdAlias = node.getAlias();
 		LOG.debug("visit: ASTRangeVariableDeclaration rvdAlias=" + rvdAlias);
 
 		MetaEntity sourceEntity = optional.get();
 		Optional<String> optionalExistsAlias = tableAliasGenerator.findAliasByObjectName(sourceEntity.getTableName());
-		if (optionalExistsAlias.isPresent() && optionalExistsAlias.get().equals(rvdAlias))
+		if (optionalExistsAlias.isPresent() && optionalExistsAlias.get().equals(rvdAlias)) {
 			throw new SemanticException("Entity alias '" + optionalExistsAlias.get() + "' already used");
+		}
 
 		if (optionalExistsAlias.isEmpty()) {
 			String tableAlias = tableAliasGenerator.getDefault(sourceEntity.getTableName());
@@ -279,8 +304,10 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		JoinType jt = node.getJoinType();
 		LOG.debug("visit: join.jjtGetNumChildren()=" + node.jjtGetNumChildren());
-		ASTJoinAssociationPathExpression joinAssociationPathExpression = (ASTJoinAssociationPathExpression) node.jjtGetChild(0);
-		ASTJoinSingleValuedPathExpression joinSingleValuedPathExpression = (ASTJoinSingleValuedPathExpression) joinAssociationPathExpression.jjtGetChild(0);
+		ASTJoinAssociationPathExpression joinAssociationPathExpression = (ASTJoinAssociationPathExpression) node
+				.jjtGetChild(0);
+		ASTJoinSingleValuedPathExpression joinSingleValuedPathExpression = (ASTJoinSingleValuedPathExpression) joinAssociationPathExpression
+				.jjtGetChild(0);
 
 		LOG.debug("visit: joinSingleValuedPathExpression=" + joinSingleValuedPathExpression);
 		String identificationVariable = node.getIdentificationVariable();
@@ -293,36 +320,42 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		String sqlTableAlias = jpqlVisitorParameters.aliases.get(jpqlAlias);
 		Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-		if (optional.isEmpty())
+		if (optional.isEmpty()) {
 			throw new SemanticException("Entity not found for alias '" + jpqlAlias + "'");
+		}
 
 		MetaEntity metaEntity = optional.get();
 		MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
-		if (metaAttribute == null)
-			throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+		if (metaAttribute == null) {
+			throw new SemanticException(
+					"Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+		}
 
-		if (metaAttribute.getRelationship() == null)
+		if (metaAttribute.getRelationship() == null) {
 			throw new SemanticException("Attribute '" + metaAttribute.getName() + "' is not a relationship attribute");
+		}
 
 		createRelationshipFromJoin(jpqlVisitorParameters, metaAttribute, metaEntity, identificationVariable);
 		return object;
 	}
 
-	private void createRelationshipFromJoin(
-			JpqlVisitorParameters jpqlVisitorParameters,
-			MetaAttribute metaAttribute,
-			MetaEntity metaEntity,
-			String entityAlias) {
-		LOG.debug("createRelationshipFromJoin: metaAttribute.getRelationship().getJoinTable()=" + metaAttribute.getRelationship().getJoinTable());
+	private void createRelationshipFromJoin(JpqlVisitorParameters jpqlVisitorParameters, MetaAttribute metaAttribute,
+			MetaEntity metaEntity, String entityAlias) {
+		LOG.debug("createRelationshipFromJoin: metaAttribute.getRelationship().getJoinTable()="
+				+ metaAttribute.getRelationship().getJoinTable());
 		if (metaAttribute.getRelationship().getJoinTable() != null) {
-			String tableAlias = tableAliasGenerator.getDefault(metaAttribute.getRelationship().getJoinTable().getTargetEntity().getTableName());
+			String tableAlias = tableAliasGenerator
+					.getDefault(metaAttribute.getRelationship().getJoinTable().getTargetEntity().getTableName());
 			jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);
-			List<FromJoin> fromJoins = sqlStatementFactory.calculateJoins(metaEntity, metaAttribute, tableAliasGenerator);
+			List<FromJoin> fromJoins = sqlStatementFactory.calculateJoins(metaEntity, metaAttribute,
+					tableAliasGenerator);
 			jpqlVisitorParameters.fromJoins.addAll(fromJoins);
 		} else if (metaAttribute.getRelationship().getJoinColumnMapping().isPresent()) {
-			String tableAlias = tableAliasGenerator.getDefault(metaAttribute.getRelationship().getAttributeType().getTableName());
+			String tableAlias = tableAliasGenerator
+					.getDefault(metaAttribute.getRelationship().getAttributeType().getTableName());
 			jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);
-			List<FromJoin> fromJoins = sqlStatementFactory.calculateJoins(metaEntity, metaAttribute, tableAliasGenerator);
+			List<FromJoin> fromJoins = sqlStatementFactory.calculateJoins(metaEntity, metaAttribute,
+					tableAliasGenerator);
 			jpqlVisitorParameters.fromJoins.addAll(fromJoins);
 		}
 	}
@@ -351,7 +384,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTSimpleSubpath node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		ASTGeneralIdentificationVariable generalIdentificationVariable = (ASTGeneralIdentificationVariable) node.jjtGetChild(0);
+		ASTGeneralIdentificationVariable generalIdentificationVariable = (ASTGeneralIdentificationVariable) node
+				.jjtGetChild(0);
 		node.setIdentificationVariable(generalIdentificationVariable.getIdentificationVariable());
 		node.setMapFieldIdentificationVariable(generalIdentificationVariable.getMapFieldIdentificationVariable());
 		return object;
@@ -393,8 +427,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTStateValuedPathExpression node.jjtGetNumChildren()=" + node.jjtGetNumChildren());
 		LOG.debug("visit: ASTStateValuedPathExpression data=" + data);
-		if (node.jjtGetNumChildren() == 0)
+		if (node.jjtGetNumChildren() == 0) {
 			return object;
+		}
 
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 		Node n0_0_0 = node.jjtGetChild(0);
@@ -408,7 +443,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			LOG.debug("visit: ASTStateValuedPathExpression n0_0_0_0=" + n0_0_0_0);
 			if (n0_0_0_0 instanceof ASTSimpleSubpath) {
 				ASTSimpleSubpath simpleSubpath = (ASTSimpleSubpath) n0_0_0_0;
-				ASTGeneralIdentificationVariable generalIdentificationVariable = (ASTGeneralIdentificationVariable) simpleSubpath.jjtGetChild(0);
+				ASTGeneralIdentificationVariable generalIdentificationVariable = (ASTGeneralIdentificationVariable) simpleSubpath
+						.jjtGetChild(0);
 				if (generalIdentificationVariable.jjtGetNumChildren() == 0) {
 					String identificationVariable = generalIdentificationVariable.getIdentificationVariable();
 
@@ -440,8 +476,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		LOG.debug("visit: ASTStringExpression node=" + node);
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTStringExpression node.jjtGetNumChildren()=" + node.jjtGetNumChildren());
-		if (node.jjtGetNumChildren() == 0)
+		if (node.jjtGetNumChildren() == 0) {
 			return object;
+		}
 
 		Node n0_0 = node.jjtGetChild(0);
 		LOG.debug("visit: ASTStringExpression n0_0=" + n0_0);
@@ -476,8 +513,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTBooleanExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		if (node.jjtGetNumChildren() == 0)
+		if (node.jjtGetNumChildren() == 0) {
 			return object;
+		}
 
 		Node n0_0 = node.jjtGetChild(0);
 		LOG.debug("visit: ASTBooleanExpression n0_0=" + n0_0);
@@ -534,8 +572,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTDatetimeExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		if (node.jjtGetNumChildren() == 0)
+		if (node.jjtGetNumChildren() == 0) {
 			return object;
+		}
 
 		Node n0_0 = node.jjtGetChild(0);
 		LOG.debug("visit: ASTDatetimeExpression n0_0=" + n0_0);
@@ -568,18 +607,24 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	}
 
 	private ConditionType decodeConditionType(String comparisonOperator) {
-		if (comparisonOperator.equals(">"))
+		if (comparisonOperator.equals(">")) {
 			return ConditionType.GREATER_THAN;
-		if (comparisonOperator.equals(">="))
+		}
+		if (comparisonOperator.equals(">=")) {
 			return ConditionType.GREATER_THAN_OR_EQUAL_TO;
-		if (comparisonOperator.equals("<"))
+		}
+		if (comparisonOperator.equals("<")) {
 			return ConditionType.LESS_THAN;
-		if (comparisonOperator.equals("<="))
+		}
+		if (comparisonOperator.equals("<=")) {
 			return ConditionType.LESS_THAN_OR_EQUAL_TO;
-		if (comparisonOperator.equals("<>"))
+		}
+		if (comparisonOperator.equals("<>")) {
 			return ConditionType.NOT_EQUAL;
-		if (comparisonOperator.equals("="))
+		}
+		if (comparisonOperator.equals("=")) {
 			return ConditionType.EQUAL;
+		}
 
 		return null;
 	}
@@ -590,15 +635,18 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			return sqlPath[0] + "." + sqlPath[2];
 		}
 
-		if (expression.getInputParameter() != null)
+		if (expression.getInputParameter() != null) {
 			return expression.getInputParameter();
+		}
 
 		Object result = expression.getResult();
-		if (result instanceof String)
+		if (result instanceof String) {
 			return (String) result;
+		}
 
-		if (result instanceof SqlSelect)
+		if (result instanceof SqlSelect) {
 			return (SqlSelect) result;
+		}
 
 		if (expression.jjtGetNumChildren() > 0) {
 			Node node0 = expression.jjtGetChild(0);
@@ -633,11 +681,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			return new Substring(param1, param2);
 		} else if (node instanceof ASTTrimFunction) {
 			Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters);
-			Optional<TrimType> trimType = ((ASTTrimFunction) node).getTrimType() != null ? Optional.of(((ASTTrimFunction) node).getTrimType()) : Optional.empty();
-			if (((ASTTrimFunction) node).getTrimCharacter() == null)
+			Optional<TrimType> trimType = ((ASTTrimFunction) node).getTrimType() != null
+					? Optional.of(((ASTTrimFunction) node).getTrimType())
+					: Optional.empty();
+			if (((ASTTrimFunction) node).getTrimCharacter() == null) {
 				return new Trim(param, trimType);
-			else
+			} else {
 				return new Trim(param, trimType, ((ASTTrimFunction) node).getTrimCharacter());
+			}
 		} else if (node instanceof ASTLowerFunction) {
 			Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters);
 			return new Lower(param);
@@ -682,11 +733,13 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			return sqlPath[0] + "." + sqlPath[2];
 		}
 
-		if (expression.getStringLiteral() != null)
+		if (expression.getStringLiteral() != null) {
 			return expression.getStringLiteral();
+		}
 
-		if (expression.getInputParameter() != null)
+		if (expression.getInputParameter() != null) {
 			return expression.getInputParameter();
+		}
 
 		if (expression.jjtGetNumChildren() > 0) {
 			Node node0 = expression.jjtGetChild(0);
@@ -700,47 +753,55 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	}
 
 	private Object decodeExpression(ASTBooleanExpression expression, JpqlVisitorParameters jpqlVisitorParameters) {
-		if (expression.getBooleanValue() != null)
+		if (expression.getBooleanValue() != null) {
 			return expression.getBooleanValue();
+		}
 
 		if (expression.getPath() != null) {
 			String[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
 			return sqlPath[0] + "." + sqlPath[2];
 		}
 
-		if (expression.getInputParameter() != null)
+		if (expression.getInputParameter() != null) {
 			return expression.getInputParameter();
+		}
 
 		return "";
 	}
 
 	private Object decodeExpression(ASTDatetimeExpression expression, JpqlVisitorParameters jpqlVisitorParameters) {
-		if (expression.getSqlFunction() != null)
-			return expression.getSqlFunction();
+		if (expression.getFunction() != null) {
+			return expression.getFunction();
+		}
 
 		if (expression.getPath() != null) {
 			String[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
 			return sqlPath[0] + "." + sqlPath[2];
 		}
 
-		if (expression.getInputParameter() != null)
+		if (expression.getInputParameter() != null) {
 			return expression.getInputParameter();
+		}
 
 		return "";
 	}
 
 	private Object decodeExpression(Node expression, JpqlVisitorParameters jpqlVisitorParameters) {
-		if (expression instanceof ASTArithmeticPrimary)
+		if (expression instanceof ASTArithmeticPrimary) {
 			return decodeExpression((ASTArithmeticPrimary) expression, jpqlVisitorParameters);
+		}
 
-		if (expression instanceof ASTStringExpression)
+		if (expression instanceof ASTStringExpression) {
 			return decodeExpression((ASTStringExpression) expression, jpqlVisitorParameters);
+		}
 
-		if (expression instanceof ASTBooleanExpression)
+		if (expression instanceof ASTBooleanExpression) {
 			return decodeExpression((ASTBooleanExpression) expression, jpqlVisitorParameters);
+		}
 
-		if (expression instanceof ASTDatetimeExpression)
+		if (expression instanceof ASTDatetimeExpression) {
 			return decodeExpression((ASTDatetimeExpression) expression, jpqlVisitorParameters);
+		}
 
 		return null;
 	}
@@ -788,10 +849,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTConditionalFactor object=" + object);
 		ASTConditionalPrimary conditionalPrimary = (ASTConditionalPrimary) node.jjtGetChild(0);
-		if (node.isNot())
+		if (node.isNot()) {
 			node.setCondition(new NotCondition(conditionalPrimary.getCondition()));
-		else
+		} else {
 			node.setCondition(conditionalPrimary.getCondition());
+		}
 
 		return object;
 	}
@@ -800,9 +862,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTConditionalTerm node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTConditionalTerm object=" + object);
-		if (node.jjtGetNumChildren() == 1)
+		if (node.jjtGetNumChildren() == 1) {
 			node.setCondition(((ASTConditionalFactor) node.jjtGetChild(0)).getCondition());
-		else {
+		} else {
 			List<Condition> conditions = new ArrayList<>();
 			for (int i = 0; i < node.jjtGetNumChildren(); ++i) {
 				Condition condition = ((ASTConditionalFactor) node.jjtGetChild(i)).getCondition();
@@ -819,9 +881,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTConditionalExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTConditionalExpression object=" + object);
-		if (node.jjtGetNumChildren() == 1)
+		if (node.jjtGetNumChildren() == 1) {
 			node.setCondition(((ASTConditionalTerm) node.jjtGetChild(0)).getCondition());
-		else {
+		} else {
 			List<Condition> conditions = new ArrayList<>();
 			for (int i = 0; i < node.jjtGetNumChildren(); ++i) {
 				Condition condition = ((ASTConditionalTerm) node.jjtGetChild(i)).getCondition();
@@ -862,8 +924,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTArithmeticPrimary node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		LOG.debug("visit: ASTArithmeticPrimary node.getResult()=" + node.getResult());
-		if (node.jjtGetNumChildren() == 0)
+		if (node.jjtGetNumChildren() == 0) {
 			return object;
+		}
 
 		Node n0_0 = node.jjtGetChild(0);
 		LOG.debug("visit: ASTArithmeticPrimary n0_0=" + n0_0);
@@ -963,26 +1026,36 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Value value = scalarExpression.getValue();
 
 		if (node0 instanceof ASTArithmeticExpression) {
-			return new FetchParameter("arithmeticExpression", Double.class, Double.class, Types.DOUBLE, null, null, false);
+			return new FetchParameter("arithmeticExpression", Types.DOUBLE, null);
 		} else if (node0 instanceof ASTDatetimeExpression) {
 			SqlExpressionImpl sqlExpressionImpl = (SqlExpressionImpl) value;
-			if (sqlExpressionImpl.getExpression() instanceof SqlFunction) {
-				SqlFunction sqlFunction = (SqlFunction) sqlExpressionImpl.getExpression();
-				switch (sqlFunction) {
-					case CURRENT_DATE:
-						return new FetchParameter("datetimeExpression", java.sql.Date.class, java.sql.Date.class, Types.DATE, null, null, false);
-					case CURRENT_TIME:
-						return new FetchParameter("datetimeExpression", java.sql.Time.class, java.sql.Time.class, Types.TIME, null, null, false);
-					case CURRENT_TIMESTAMP:
-						return new FetchParameter("datetimeExpression", java.sql.Timestamp.class, java.sql.Timestamp.class, Types.TIMESTAMP, null, null, false);
+			if (sqlExpressionImpl.getExpression() instanceof Function) {
+				Function function = (Function) sqlExpressionImpl.getExpression();
+				if (function instanceof CurrentDate) {
+					return new FetchParameter("datetimeExpression", Types.DATE, null);
 				}
-			} else
-				return new FetchParameter("datetimeExpression", null, null, -1, null, null, false);
+				if (function instanceof CurrentTime) {
+					return new FetchParameter("datetimeExpression", Types.TIME, null);
+				}
+				if (function instanceof CurrentTimestamp) {
+					return new FetchParameter("datetimeExpression", Types.TIMESTAMP, null);
+				}
+//				switch (sqlFunction) {
+//					case CURRENT_DATE:
+//						return new FetchParameter("datetimeExpression", java.sql.Date.class, java.sql.Date.class, Types.DATE, null, null, false);
+//					case CURRENT_TIME:
+//						return new FetchParameter("datetimeExpression", java.sql.Time.class, java.sql.Time.class, Types.TIME, null, null, false);
+//					case CURRENT_TIMESTAMP:
+//						return new FetchParameter("datetimeExpression", java.sql.Timestamp.class, java.sql.Timestamp.class, Types.TIMESTAMP, null, null, false);
+//				}
+			} else {
+				return new FetchParameter("datetimeExpression", -1, null);
+			}
 		} else if (node0 instanceof ASTBooleanExpression) {
-			return new FetchParameter("booleanExpression", Boolean.class, Boolean.class, Types.BOOLEAN, null, null, false);
+			return new FetchParameter("booleanExpression", Types.BOOLEAN, null);
 		}
 
-		return new FetchParameter("scalarExpression", String.class, String.class, Types.VARCHAR, null, null, false);
+		return new FetchParameter("scalarExpression", Types.VARCHAR, null);
 	}
 
 	@Override
@@ -1005,14 +1078,17 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Object object = node.childrenAccept(this, data);
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 		if (node.jjtGetNumChildren() > 0) {
-			ASTSingleValuedPathExpression singleValuedPathExpression = (ASTSingleValuedPathExpression) node.jjtGetChild(0);
+			ASTSingleValuedPathExpression singleValuedPathExpression = (ASTSingleValuedPathExpression) node
+					.jjtGetChild(0);
 			List<MetaAttribute> metaAttributes = singleValuedPathExpression.getMetaAttributes();
-			TableColumn value = MetaEntityHelper.toValue(metaAttributes.get(0), singleValuedPathExpression.getFromTable());
+			TableColumn value = MetaEntityHelper.toValue(metaAttributes.get(0),
+					singleValuedPathExpression.getFromTable());
 			Condition condition = null;
-			if (node.isNot())
+			if (node.isNot()) {
 				condition = new UnaryCondition(ConditionType.IS_NOT_NULL, value);
-			else
+			} else {
 				condition = new UnaryCondition(ConditionType.IS_NULL, value);
+			}
 
 			node.setCondition(condition);
 		} else {
@@ -1051,8 +1127,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			if (node.jjtGetChild(1) instanceof ASTInItem) {
 				for (int i = 1; i < node.jjtGetNumChildren(); ++i) {
 					ASTInItem inItem = (ASTInItem) node.jjtGetChild(i);
-					if (inItem.getLiteral() != null)
+					if (inItem.getLiteral() != null) {
 						items.add(inItem.getLiteral());
+					}
 				}
 			} else {
 				// subquery
@@ -1085,14 +1162,17 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			if (node.getIdentificationVariable() != null) {
 				String sqlTableAlias = jpqlVisitorParameters.aliases.get(node.getIdentificationVariable());
 				Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-				if (optional.isEmpty())
-					throw new SemanticException("Entity not found for alias '" + node.getIdentificationVariable() + "'");
+				if (optional.isEmpty()) {
+					throw new SemanticException(
+							"Entity not found for alias '" + node.getIdentificationVariable() + "'");
+				}
 
 				MetaEntity metaEntity = optional.get();
 
 				String attributePath = stateFieldPathExpression.getStateField();
-				if (!stateFieldPathExpression.getPath().isEmpty())
+				if (!stateFieldPathExpression.getPath().isEmpty()) {
 					attributePath = stateFieldPathExpression.getPath() + "." + stateFieldPathExpression.getStateField();
+				}
 
 				node.setMetaEntity(metaEntity);
 				node.setAttributePath(attributePath);
@@ -1100,10 +1180,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
 					node.setMetaAttributes(metaEntity.getId().getAttributes());
 				} else {
-					MetaAttribute metaAttribute
-							= AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
-					if (metaAttribute == null)
-						throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+					MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+					if (metaAttribute == null) {
+						throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName()
+								+ "' entity not found");
+					}
 
 					node.setMetaAttributes(Arrays.asList(metaAttribute));
 				}
@@ -1116,25 +1197,27 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	}
 
 	private List<MetaAttribute> createAttributesFromSingleValuedPathExpression(
-			ASTSingleValuedPathExpression singleValuedPathExpression,
-			JpqlVisitorParameters jpqlVisitorParameters) {
+			ASTSingleValuedPathExpression singleValuedPathExpression, JpqlVisitorParameters jpqlVisitorParameters) {
 		Node node1 = singleValuedPathExpression.jjtGetChild(0);
 		if (node1 instanceof ASTStateFieldPathExpression) {
 			ASTStateFieldPathExpression stateFieldPathExpression = (ASTStateFieldPathExpression) node1;
 			// identification variable.path.stateField
 			String identificationVariable = stateFieldPathExpression.getIdentificationVariable();
 			if (identificationVariable != null) {
-				LOG.debug("visit: ASTSelectExpression stateFieldPathExpression.getStateField()=" + stateFieldPathExpression.getStateField());
+				LOG.debug("visit: ASTSelectExpression stateFieldPathExpression.getStateField()="
+						+ stateFieldPathExpression.getStateField());
 
 				String sqlTableAlias = jpqlVisitorParameters.aliases.get(identificationVariable);
 				Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-				if (optional.isEmpty())
+				if (optional.isEmpty()) {
 					throw new SemanticException("Entity not found for alias '" + identificationVariable + "'");
+				}
 
 				MetaEntity metaEntity = optional.get();
 				String attributePath = singleValuedPathExpression.getAttributePath();
 				if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
-					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity, sqlTableAlias));
+					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
+							FromTable.of(metaEntity, sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(values);
 
 					List<FetchParameter> fetchParameters = new ArrayList<>();
@@ -1143,14 +1226,16 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 					});
 					jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
 				} else {
-					MetaAttribute metaAttribute
-							= AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
-					if (metaAttribute == null)
-						throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+					MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+					if (metaAttribute == null) {
+						throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName()
+								+ "' entity not found");
+					}
 
 					Value value = MetaEntityHelper.toValue(metaAttribute, FromTable.of(metaEntity, sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(Arrays.asList(value));
-					jpqlVisitorParameters.fetchParameters.addAll(Arrays.asList(MetaEntityHelper.toFetchParameter(metaAttribute)));
+					jpqlVisitorParameters.fetchParameters
+							.addAll(Arrays.asList(MetaEntityHelper.toFetchParameter(metaAttribute)));
 				}
 			}
 		}
@@ -1177,7 +1262,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				if (node0 instanceof ASTSingleValuedPathExpression) {
 					ASTSingleValuedPathExpression singleValuedPathExpression = (ASTSingleValuedPathExpression) node0;
 					List<MetaAttribute> metaAttributes = singleValuedPathExpression.getMetaAttributes();
-					List<TableColumn> values = MetaEntityHelper.toValues(metaAttributes, singleValuedPathExpression.getFromTable());
+					List<TableColumn> values = MetaEntityHelper.toValues(metaAttributes,
+							singleValuedPathExpression.getFromTable());
 					values.forEach(v -> groupBy.addColumn(v));
 				}
 			}
@@ -1207,30 +1293,38 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 					// identification variable.path.stateField
 					String identificationVariable = stateFieldPathExpression.getIdentificationVariable();
 					if (identificationVariable != null) {
-						LOG.debug("visit: ASTSelectExpression stateFieldPathExpression.getStateField()=" + stateFieldPathExpression.getStateField());
+						LOG.debug("visit: ASTSelectExpression stateFieldPathExpression.getStateField()="
+								+ stateFieldPathExpression.getStateField());
 						String sqlTableAlias = jpqlVisitorParameters.aliases.get(identificationVariable);
 						Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-						if (optional.isEmpty())
+						if (optional.isEmpty()) {
 							throw new SemanticException("Entity not found for alias '" + identificationVariable + "'");
+						}
 
 						MetaEntity metaEntity = optional.get();
 						String attributePath = stateFieldPathExpression.getStateField();
-						if (!stateFieldPathExpression.getPath().isEmpty())
-							attributePath = stateFieldPathExpression.getPath() + "." + stateFieldPathExpression.getStateField();
+						if (!stateFieldPathExpression.getPath().isEmpty()) {
+							attributePath = stateFieldPathExpression.getPath() + "."
+									+ stateFieldPathExpression.getStateField();
+						}
 
 						if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
-							List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity, sqlTableAlias));
+							List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
+									FromTable.of(metaEntity, sqlTableAlias));
 							values.forEach(v -> {
 								OrderBy orderBy = new OrderBy(v, orderByItem.getOrderByType());
 								jpqlVisitorParameters.orderByList.add(orderBy);
 							});
 						} else {
-							MetaAttribute metaAttribute
-									= AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
-							if (metaAttribute == null)
-								throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+							MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
+									metaEntity);
+							if (metaAttribute == null) {
+								throw new SemanticException("Attribute path '" + attributePath + "' on '"
+										+ metaEntity.getName() + "' entity not found");
+							}
 
-							TableColumn value = MetaEntityHelper.toValue(metaAttribute, FromTable.of(metaEntity, sqlTableAlias));
+							TableColumn value = MetaEntityHelper.toValue(metaAttribute,
+									FromTable.of(metaEntity, sqlTableAlias));
 							OrderBy orderBy = new OrderBy(value, orderByItem.getOrderByType());
 							jpqlVisitorParameters.orderByList.add(orderBy);
 						}
@@ -1312,32 +1406,39 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				String iv = simpleDerivedPath.getIdentificationVariable();
 				String sqlTableAlias = jpqlVisitorParameters.aliases.get(iv);
 				Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-				if (optional.isEmpty())
+				if (optional.isEmpty()) {
 					throw new SemanticException("Entity not found for alias '" + iv + "'");
+				}
 
 				MetaEntity metaEntity = optional.get();
 
 				String attributePath = simpleDerivedPath.getpath();
-				MetaAttribute metaAttribute
-						= AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
-				if (metaAttribute == null)
-					throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+				MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+				if (metaAttribute == null) {
+					throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName()
+							+ "' entity not found");
+				}
 
 				if (metaAttribute.getRelationship() != null) {
-					FromTable fromTable = FromTable.of(metaAttribute.getRelationship().getAttributeType(), tableAliasGenerator.getDefault(metaAttribute.getRelationship().getAttributeType().getTableName()));
+					FromTable fromTable = FromTable.of(metaAttribute.getRelationship().getAttributeType(),
+							tableAliasGenerator
+									.getDefault(metaAttribute.getRelationship().getAttributeType().getTableName()));
 					jpqlVisitorParameters.fromTables.add(fromTable);
 					if (metaAttribute.getRelationship().getJoinTable() != null) {
 						RelationshipJoinTable relationshipJoinTable = metaAttribute.getRelationship().getJoinTable();
-						String tableAlias = tableAliasGenerator.getDefault(relationshipJoinTable.getTargetEntity().getTableName());
+						String tableAlias = tableAliasGenerator
+								.getDefault(relationshipJoinTable.getTargetEntity().getTableName());
 						jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);
-						jpqlVisitorParameters.fromTables.add(new FromTableImpl(relationshipJoinTable.getTableName(), tableAliasGenerator.getDefault(relationshipJoinTable.getTableName())));
+						jpqlVisitorParameters.fromTables.add(new FromTableImpl(relationshipJoinTable.getTableName(),
+								tableAliasGenerator.getDefault(relationshipJoinTable.getTableName())));
 					} else {
-						String tableAlias = tableAliasGenerator.getDefault(metaAttribute.getRelationship().getAttributeType().getTableName());
+						String tableAlias = tableAliasGenerator
+								.getDefault(metaAttribute.getRelationship().getAttributeType().getTableName());
 						jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);
 					}
 
-					Condition condition = sqlStatementFactory.generateJoinCondition(
-							metaAttribute.getRelationship(), metaEntity, metaAttribute.getRelationship().getAttributeType(), tableAliasGenerator);
+					Condition condition = sqlStatementFactory.generateJoinCondition(metaAttribute.getRelationship(),
+							metaEntity, metaAttribute.getRelationship().getAttributeType(), tableAliasGenerator);
 					jpqlVisitorParameters.conditions.add(condition);
 				}
 
@@ -1377,11 +1478,13 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			// identification_variable
 			String sqlTableAlias = jpqlVisitorParameters.aliases.get(node.getIdentificationVariable());
 			Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-			if (optional.isEmpty())
+			if (optional.isEmpty()) {
 				throw new SemanticException("Entity not found for alias '" + node.getIdentificationVariable() + "'");
+			}
 
 			MetaEntity metaEntity = optional.get();
-			argument = new TableColumn(FromTable.of(metaEntity, sqlTableAlias), new Column(metaEntity.getId().getAttributes().get(0).getColumnName()));
+			argument = new TableColumn(FromTable.of(metaEntity, sqlTableAlias),
+					new Column(metaEntity.getId().getAttributes().get(0).getColumnName()));
 		} else {
 			Node n0 = node.jjtGetChild(0);
 			if (n0 instanceof ASTStateValuedPathExpression) {
@@ -1396,20 +1499,28 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			}
 		}
 
-		Value value = FunctionUtils.createAggregateFunction(node.getAggregateFunctionType(), argument, node.isDistinct());
+		Value value = FunctionUtils.createAggregateFunction(node.getAggregateFunctionType(), argument,
+				node.isDistinct());
 		node.setValue(value);
 		return object;
 	}
 
 	private FetchParameter createAggregateExpressionFetchParameter(ASTAggregateExpression aggregateExpression) {
 		AggregateFunctionType aggregateFunctionType = aggregateExpression.getAggregateFunctionType();
+		if (aggregateFunctionType == AggregateFunctionType.AVG) {
+			return new FetchParameter("aggregateExpression", null, null);
+		}
 
-		if (aggregateFunctionType == AggregateFunctionType.AVG)
-			return new FetchParameter("aggregateExpression", Double.class, Double.class, Types.DOUBLE, null, null, false);
-		else if (aggregateFunctionType == AggregateFunctionType.COUNT)
-			return new FetchParameter("aggregateExpression", Integer.class, Integer.class, Types.INTEGER, null, null, false);
+		if (aggregateFunctionType == AggregateFunctionType.COUNT) {
+			return new FetchParameter("aggregateExpression", null, null);
+		}
 
-		return new FetchParameter("aggregateExpression", Double.class, Double.class, Types.DOUBLE, null, null, false);
+		if (aggregateFunctionType == AggregateFunctionType.SUM) {
+			return new FetchParameter("aggregateExpression", null, null);
+		}
+
+		return null;
+//		return new FetchParameter("aggregateExpression", null, Types.BIGINT, null);
 	}
 
 	/**
@@ -1424,29 +1535,34 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		if (sps.length == 1) {
 			String sqlTableAlias = jpqlVisitorParameters.aliases.get(sps[0]);
 			Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-			if (optional.isEmpty())
+			if (optional.isEmpty()) {
 				throw new SemanticException("Entity not found for alias '" + sps[0] + "'");
+			}
 
 			MetaEntity metaEntity = optional.get();
 
-			String[] result = {jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(), metaEntity.getId().getAttributes().get(0).getColumnName()};
+			String[] result = {jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(),
+				metaEntity.getId().getAttributes().get(0).getColumnName()};
 			return result;
 		} else {
 			String identificationVariable = sps[0];
 			String attributePath = jpqlPath.substring(identificationVariable.length() + 1);
 			String sqlTableAlias = jpqlVisitorParameters.aliases.get(sps[0]);
 			Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-			if (optional.isEmpty())
+			if (optional.isEmpty()) {
 				throw new SemanticException("Entity not found for alias '" + sps[0] + "'");
+			}
 
 			MetaEntity metaEntity = optional.get();
 
-			MetaAttribute metaAttribute
-					= AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
-			if (metaAttribute == null)
-				throw new SemanticException("Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+			MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+			if (metaAttribute == null) {
+				throw new SemanticException(
+						"Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
+			}
 
-			String[] result = {jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(), metaAttribute.getColumnName()};
+			String[] result = {jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(),
+				metaAttribute.getColumnName()};
 			return result;
 		}
 	}
@@ -1468,12 +1584,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			String identificationVariable = node.getIdentificationVariable();
 			String sqlTableAlias = jpqlVisitorParameters.aliases.get(identificationVariable);
 			Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
-			if (optional.isEmpty())
+			if (optional.isEmpty()) {
 				throw new SemanticException("Entity not found for alias '" + identificationVariable + "'");
+			}
 
 			MetaEntity metaEntity = optional.get();
 			if (jpqlVisitorParameters.distinct) {
-				List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(), FromTable.of(metaEntity, sqlTableAlias));
+				List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
+						FromTable.of(metaEntity, sqlTableAlias));
 				jpqlVisitorParameters.values.addAll(values);
 			} else {
 				List<Value> values = MetaEntityHelper.toValues(metaEntity, FromTable.of(metaEntity, sqlTableAlias));
@@ -1491,7 +1609,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		} else if (n instanceof ASTSingleValuedPathExpression) {
 			ASTSingleValuedPathExpression singleValuedPathExpression = (ASTSingleValuedPathExpression) n;
 			List<MetaAttribute> metaAttributes = singleValuedPathExpression.getMetaAttributes();
-			List<TableColumn> values = MetaEntityHelper.toValues(metaAttributes, singleValuedPathExpression.getFromTable());
+			List<TableColumn> values = MetaEntityHelper.toValues(metaAttributes,
+					singleValuedPathExpression.getFromTable());
 			jpqlVisitorParameters.values.addAll(values);
 		}
 
@@ -1551,7 +1670,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
 		ASTStringExpression expression = (ASTStringExpression) node.jjtGetChild(0);
-		BetweenCondition.Builder builder = new BetweenCondition.Builder(decodeExpression(expression, jpqlVisitorParameters));
+		BetweenCondition.Builder builder = new BetweenCondition.Builder(
+				decodeExpression(expression, jpqlVisitorParameters));
 
 		expression = (ASTStringExpression) node.jjtGetChild(1);
 		builder.withLeftExpression(decodeExpression(expression, jpqlVisitorParameters));
@@ -1570,7 +1690,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Object object = node.childrenAccept(this, data);
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 		ASTDatetimeExpression expression = (ASTDatetimeExpression) node.jjtGetChild(0);
-		BetweenCondition.Builder builder = new BetweenCondition.Builder(decodeExpression(expression, jpqlVisitorParameters));
+		BetweenCondition.Builder builder = new BetweenCondition.Builder(
+				decodeExpression(expression, jpqlVisitorParameters));
 
 		expression = (ASTDatetimeExpression) node.jjtGetChild(1);
 		builder.withLeftExpression(decodeExpression(expression, jpqlVisitorParameters));

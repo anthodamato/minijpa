@@ -105,6 +105,15 @@ public class OrderTest {
 		Assertions.assertNotNull(o.getStatus());
 		Assertions.assertEquals(OrderStatus.APPROVED, o.getStatus());
 
+		tx.begin();
+		em.remove(o);
+		em.remove(order2);
+		em.remove(customer);
+		em.remove(product1);
+		em.remove(product2);
+		em.remove(product3);
+		tx.commit();
+
 		em.close();
 	}
 
@@ -160,13 +169,24 @@ public class OrderTest {
 		Assertions.assertNotNull(list);
 		Assertions.assertEquals(1, list.size());
 		Order o = list.get(0);
-		Optional<Product> optional = o.getProducts().stream().filter(p -> p.getName().equals("Medium Panel")).findFirst();
+		Optional<Product> optional = o.getProducts().stream().filter(p -> p.getName().equals("Medium Panel"))
+				.findFirst();
 		Assertions.assertTrue(optional.isPresent());
 		Assertions.assertEquals(50.3f, optional.get().getPrice());
 
 		optional = o.getProducts().stream().filter(p -> p.getName().equals("Large Panel")).findFirst();
 		Assertions.assertTrue(optional.isPresent());
 		Assertions.assertEquals(60.0f, optional.get().getPrice());
+		tx.commit();
+
+		tx.begin();
+		em.remove(o);
+		em.remove(order2);
+		em.remove(customer);
+		em.remove(product1);
+		em.remove(product2);
+		em.remove(product3);
+		em.remove(product4);
 		tx.commit();
 
 		em.close();

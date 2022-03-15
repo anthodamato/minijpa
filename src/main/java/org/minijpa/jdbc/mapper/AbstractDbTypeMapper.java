@@ -24,10 +24,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Optional;
+
 import org.minijpa.jdbc.DbTypeMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +55,9 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 	private final AttributeMapper calendarToSqlDateAttributeMapper = new CalendarToSqlDateAttributeMapper();
 	private final AttributeMapper zonedDateTimeAttributeMapper = new ZonedDateTimeAttributeMapper();
 	private final AttributeMapper calendarAttributeMapper = new CalendarAttributeMapper();
+	protected final AttributeMapper bigDecimalToDoubleAttributeMapper = new BigDecimalToDoubleAttributeMapper();
+	protected final AttributeMapper integerToDoubleAttributeMapper = new IntegerToDoubleAttributeMapper();
+	protected final AttributeMapper integerToLongAttributeMapper = new NumberToLongAttributeMapper();
 
 	@Override
 	public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType) {
@@ -147,120 +150,6 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
 			return Time.class;
 
 		return attributeType;
-	}
-
-	@Override
-	public Object convertToAttributeType(Object value, Class<?> attributeType) {
-		if (value == null)
-			return null;
-
-		Class<?> type = value.getClass();
-		if (value instanceof Number) {
-			if (attributeType == Long.class || (attributeType.isPrimitive() && attributeType.getName().equals("long")))
-				return ((Number) value).longValue();
-
-			if (attributeType == Integer.class || (attributeType.isPrimitive() && attributeType.getName().equals("int")))
-				return ((Number) value).intValue();
-
-			if (attributeType == Float.class || (attributeType.isPrimitive() && attributeType.getName().equals("float")))
-				return ((Number) value).floatValue();
-
-			if (attributeType == Double.class || (attributeType.isPrimitive() && attributeType.getName().equals("double")))
-				return ((Number) value).doubleValue();
-		}
-
-		if (type == String.class && attributeType.isEnum())
-			return Enum.valueOf((Class<Enum>) attributeType, (String) value);
-
-		if (type == Integer.class && attributeType.isEnum()) {
-			Object[] enums = attributeType.getEnumConstants();
-			for (Object o : enums) {
-				if (((Enum) o).ordinal() == (Integer) value)
-					return o;
-			}
-
-			return null;
-		}
-
-		if (attributeType == LocalDate.class) {
-			if (type == java.util.Date.class) {
-				java.util.Date date = (java.util.Date) value;
-				return new java.sql.Date(date.getTime()).toLocalDate();
-			}
-
-			if (type == java.sql.Date.class) {
-				java.sql.Date date = (java.sql.Date) value;
-				return date.toLocalDate();
-			}
-		}
-
-		if (attributeType == LocalTime.class) {
-			if (type == java.sql.Time.class) {
-				java.sql.Time date = (java.sql.Time) value;
-				return date.toLocalTime();
-			}
-		}
-
-		if (attributeType == Duration.class) {
-			if (type == Long.class) {
-				return Duration.ofMillis((Long) value);
-			}
-		}
-
-		if (type == Timestamp.class) {
-			if (attributeType == OffsetDateTime.class) {
-				Timestamp date = (Timestamp) value;
-				Calendar calendar = Calendar.getInstance();
-				calendar.setTime(date);
-				return OffsetDateTime.ofInstant(date.toInstant(), calendar.getTimeZone().toZoneId());
-			}
-
-			if (attributeType == LocalDateTime.class) {
-				Timestamp timestamp = (Timestamp) value;
-				return timestamp.toLocalDateTime();
-			}
-
-			if (attributeType == java.sql.Date.class) {
-				Timestamp timestamp = (Timestamp) value;
-				return new java.sql.Date(timestamp.getTime());
-			}
-
-			if (attributeType == java.util.Date.class) {
-				return value;
-			}
-
-			if (attributeType == Calendar.class) {
-				Timestamp date = (Timestamp) value;
-				Calendar calendar = Calendar.getInstance();
-				calendar.setTime(date);
-				return calendar;
-			}
-
-			if (attributeType == Instant.class) {
-				Timestamp timestamp = (Timestamp) value;
-				return timestamp.toInstant();
-			}
-
-			if (attributeType == ZonedDateTime.class) {
-				Timestamp timestamp = (Timestamp) value;
-				return ZonedDateTime.of(timestamp.toLocalDateTime(), ZoneOffset.UTC);
-			}
-		}
-
-		if (type == Time.class) {
-			if (attributeType == OffsetTime.class) {
-				Time time = (Time) value;
-				return OffsetTime.of(time.toLocalTime(), OffsetTime.now().getOffset());
-			}
-		}
-
-		if (type == java.sql.Date.class) {
-			if (attributeType == java.util.Date.class) {
-				return value;
-			}
-		}
-
-		return value;
 	}
 
 }

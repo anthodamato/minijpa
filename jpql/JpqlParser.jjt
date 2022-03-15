@@ -959,25 +959,25 @@ void upper_function() #UpperFunction :
 //      CURRENT_DATE |
 //      CURRENT_TIME |
 //      CURRENT_TIMESTAMP
-org.minijpa.jdbc.db.SqlFunction functions_returning_datetime() :
+org.minijpa.jdbc.model.function.Function functions_returning_datetime() :
 {
 }
 {
   <CURRENT_DATE>
   {
-    return org.minijpa.jdbc.db.SqlFunction.CURRENT_DATE;
+    return new org.minijpa.jdbc.model.function.CurrentDate();
   }
-  
+
   |
   <CURRENT_TIME>
   {
-    return org.minijpa.jdbc.db.SqlFunction.CURRENT_TIME;
+    return new org.minijpa.jdbc.model.function.CurrentTime();
   }
-    
+
   |
   <CURRENT_TIMESTAMP>
   {
-    return org.minijpa.jdbc.db.SqlFunction.CURRENT_TIMESTAMP;
+    return new org.minijpa.jdbc.model.function.CurrentTimestamp();
   }
 }
 
@@ -1647,7 +1647,7 @@ void datetime_expression() #DatetimeExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
-  org.minijpa.jdbc.db.SqlFunction sqlFunction;
+  org.minijpa.jdbc.model.function.Function function;
 }
 {
   LOOKAHEAD(2)
@@ -1660,9 +1660,9 @@ void datetime_expression() #DatetimeExpression :
   }
 
   |
-  sqlFunction=functions_returning_datetime()
+  function=functions_returning_datetime()
   {
-    jjtThis.setSqlFunction(sqlFunction);
+    jjtThis.setFunction(function);
   }
 
   |

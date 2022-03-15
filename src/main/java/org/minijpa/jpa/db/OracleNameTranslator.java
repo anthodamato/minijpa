@@ -24,12 +24,12 @@ import org.minijpa.jdbc.DefaultNameTranslator;
  */
 public class OracleNameTranslator extends DefaultNameTranslator {
 
-    @Override
-    public String toTableName(Optional<String> tableAlias, String tableName) {
-	if (tableAlias.isPresent())
-	    return tableName + " " + tableAlias.get();
+	@Override
+	public String toTableName(Optional<String> tableAlias, String tableName) {
+		if (tableAlias.isPresent())
+			return tableName + " " + tableAlias.get();
 
-	return tableName;
-    }
+		return tableName;
+	}
 
 }

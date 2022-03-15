@@ -627,11 +627,27 @@
     </persistence-unit>
 
     <persistence-unit name="item_sale_stats">
-        <description>Simple Order for Jpql</description>
+        <description>Item sales</description>
         <class>org.minijpa.jpa.model.ItemSaleStats</class>
 
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:item_sale_stats;create=true" />
+            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
+            <property
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="metadata" /> 
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="numeric_set">
+        <description>Numeric Set</description>
+        <class>org.minijpa.jpa.model.NumericSet</class>
+
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:numeric_set;create=true" />
             <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
             <property
                 name="javax.persistence.schema-generation.database.action" 

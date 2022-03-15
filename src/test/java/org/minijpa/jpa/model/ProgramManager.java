@@ -21,38 +21,38 @@ import javax.persistence.Table;
 @Table(name = "program_manager")
 public class ProgramManager {
 
-    @Id
-    int id;
+	@Id
+	int id;
 
-    @Column(nullable = false)
-    @Basic(optional = false)
-    String name;
+	@Column(nullable = false)
+	@Basic(optional = false)
+	String name;
 
-    @OneToMany(mappedBy = "jobInfo.pm")
-    Collection<JobEmployee> manages;
+	@OneToMany(mappedBy = "jobInfo.pm")
+	Collection<JobEmployee> manages;
 
-    public int getId() {
-	return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(int id) {
-	this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public Collection<JobEmployee> getManages() {
-	return manages;
-    }
+	public Collection<JobEmployee> getManages() {
+		return manages;
+	}
 
-    public void setManages(Collection<JobEmployee> manages) {
-	this.manages = manages;
-    }
+	public void setManages(Collection<JobEmployee> manages) {
+		this.manages = manages;
+	}
 
 }

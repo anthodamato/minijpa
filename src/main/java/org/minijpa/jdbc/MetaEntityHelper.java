@@ -48,16 +48,16 @@ public final class MetaEntityHelper {
 	public static List<FetchParameter> toFetchParameter(List<JoinColumnAttribute> attributes) {
 		List<FetchParameter> list = new ArrayList<>();
 		for (JoinColumnAttribute a : attributes) {
-			FetchParameter columnNameValue = new FetchParameter(a.getColumnName(), a.getType(), a.getDatabaseType(), a.sqlType,
-					a.getForeignKeyAttribute(), null, true);
+			FetchParameter columnNameValue = new FetchParameter(a.getColumnName(), a.sqlType,
+					a.getForeignKeyAttribute());
 			list.add(columnNameValue);
 		}
 
 		return list;
 	}
 
-	public static List<QueryParameter> convertAbstractAVToQP(
-			ModelValueArray<AbstractAttribute> attributeValueArray) throws Exception {
+	public static List<QueryParameter> convertAbstractAVToQP(ModelValueArray<AbstractAttribute> attributeValueArray)
+			throws Exception {
 		List<QueryParameter> list = new ArrayList<>();
 		for (int i = 0; i < attributeValueArray.size(); ++i) {
 			AbstractAttribute a = attributeValueArray.getModel(i);
@@ -81,16 +81,16 @@ public final class MetaEntityHelper {
 				list.addAll(convertAVToQP(v, a.getRelationship().getJoinColumnMapping().get()));
 			}
 		} else {
-			QueryParameter queryParameter = new QueryParameter(a.getColumnName(), value,
-					a.getType(), a.getSqlType(), a.attributeMapper);
+			QueryParameter queryParameter = new QueryParameter(a.getColumnName(), value, a.getType(), a.getSqlType(),
+					a.attributeMapper);
 			list.add(queryParameter);
 		}
 
 		return list;
 	}
 
-	public static List<QueryParameter> convertAVToQP(Object value,
-			JoinColumnMapping joinColumnMapping) throws Exception {
+	public static List<QueryParameter> convertAVToQP(Object value, JoinColumnMapping joinColumnMapping)
+			throws Exception {
 		List<QueryParameter> list = new ArrayList<>();
 		ModelValueArray<JoinColumnAttribute> modelValueArray = new ModelValueArray();
 		expand(joinColumnMapping, value, modelValueArray);
@@ -98,16 +98,16 @@ public final class MetaEntityHelper {
 			JoinColumnAttribute joinColumnAttribute = modelValueArray.getModel(i);
 			MetaAttribute attribute = joinColumnAttribute.getForeignKeyAttribute();
 			LOG.debug("convertAVToQP: joinColumnAttribute.getColumnName()=" + joinColumnAttribute.getColumnName());
-			QueryParameter queryParameter = new QueryParameter(joinColumnAttribute.getColumnName(), modelValueArray.getValue(i),
-					attribute.getType(), attribute.getSqlType(), attribute.attributeMapper);
+			QueryParameter queryParameter = new QueryParameter(joinColumnAttribute.getColumnName(),
+					modelValueArray.getValue(i), attribute.getType(), attribute.getSqlType(),
+					attribute.attributeMapper);
 			list.add(queryParameter);
 		}
 
 		return list;
 	}
 
-	public static void expand(JoinColumnMapping joinColumnMapping,
-			Object value,
+	public static void expand(JoinColumnMapping joinColumnMapping, Object value,
 			ModelValueArray<JoinColumnAttribute> modelValueArray) throws Exception {
 		for (int i = 0; i < joinColumnMapping.size(); ++i) {
 			JoinColumnAttribute joinColumnAttribute = joinColumnMapping.get(i);
@@ -130,8 +130,8 @@ public final class MetaEntityHelper {
 			return list;
 		}
 
-		QueryParameter queryParameter = new QueryParameter(pk.getAttribute().getColumnName(), value,
-				pk.getType(), pk.getAttribute().getSqlType(), pk.getAttribute().attributeMapper);
+		QueryParameter queryParameter = new QueryParameter(pk.getAttribute().getColumnName(), value, pk.getType(),
+				pk.getAttribute().getSqlType(), pk.getAttribute().attributeMapper);
 		list.add(queryParameter);
 		return list;
 	}
@@ -155,8 +155,9 @@ public final class MetaEntityHelper {
 			MetaAttribute attribute = modelValueArray.getModel(i);
 			int index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, attribute);
 			MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
-			QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(), modelValueArray.getValue(i),
-					metaAttribute.getType(), metaAttribute.getSqlType(), metaAttribute.attributeMapper);
+			QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(),
+					modelValueArray.getValue(i), metaAttribute.getType(), metaAttribute.getSqlType(),
+					metaAttribute.attributeMapper);
 			queryParameters.add(qp);
 		}
 
@@ -200,7 +201,8 @@ public final class MetaEntityHelper {
 		return tableColumns;
 	}
 
-	public static List<TableColumn> queryParametersToTableColumns(List<QueryParameter> parameters, FromTable fromTable) {
+	public static List<TableColumn> queryParametersToTableColumns(List<QueryParameter> parameters,
+			FromTable fromTable) {
 		return parameters.stream().map(p -> new TableColumn(fromTable, new Column(p.getColumnName())))
 				.collect(Collectors.toList());
 	}
@@ -238,9 +240,7 @@ public final class MetaEntityHelper {
 		modelValueArray.add(entity.getVersionAttribute().get(), versionValue);
 	}
 
-	public static void expand(Pk pk,
-			Object value,
-			ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
+	public static void expand(Pk pk, Object value, ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
 		if (pk.isEmbedded()) {
 			for (MetaAttribute a : pk.getAttributes()) {
 				LOG.debug("expand: a=" + a);
@@ -286,7 +286,8 @@ public final class MetaEntityHelper {
 		return (EntityStatus) entity.getEntityStatusAttributeReadMethod().get().invoke(entityInstance);
 	}
 
-	public static void setEntityStatus(MetaEntity entity, Object entityInstance, EntityStatus entityStatus) throws Exception {
+	public static void setEntityStatus(MetaEntity entity, Object entityInstance, EntityStatus entityStatus)
+			throws Exception {
 		entity.getEntityStatusAttributeWriteMethod().get().invoke(entityInstance, entityStatus);
 	}
 
@@ -324,7 +325,8 @@ public final class MetaEntityHelper {
 		list.clear();
 	}
 
-	public static void removeChanges(MetaEntity entity, Object entityInstance) throws IllegalAccessException, InvocationTargetException {
+	public static void removeChanges(MetaEntity entity, Object entityInstance)
+			throws IllegalAccessException, InvocationTargetException {
 		MetaEntityHelper.clearModificationAttributes(entity, entityInstance);
 	}
 
@@ -365,7 +367,8 @@ public final class MetaEntityHelper {
 		return attribute.getReadMethod().invoke(parentInstance);
 	}
 
-	public static Object getEmbeddableValue(Object parentInstance, MetaEntity embeddable) throws IllegalAccessException, InvocationTargetException {
+	public static Object getEmbeddableValue(Object parentInstance, MetaEntity embeddable)
+			throws IllegalAccessException, InvocationTargetException {
 		return embeddable.getReadMethod().invoke(parentInstance);
 	}
 
@@ -404,13 +407,11 @@ public final class MetaEntityHelper {
 			Object value) throws Exception {
 		LOG.debug("writeAttributeValue: parentInstance=" + parentInstance);
 		LOG.debug("writeAttributeValue: attribute.getName()=" + attribute.getName() + "; value=" + value);
-		return findAndSetAttributeValue(entity.getEntityClass(), parentInstance, attribute,
-				value, entity);
+		return findAndSetAttributeValue(entity.getEntityClass(), parentInstance, attribute, value, entity);
 	}
 
-	private static Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance,
-			MetaAttribute attribute, Object value, MetaEntity entity)
-			throws Exception {
+	private static Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance, MetaAttribute attribute,
+			Object value, MetaEntity entity) throws Exception {
 		LOG.debug("findAndSetAttributeValue: value=" + value + "; attribute=" + attribute);
 		LOG.debug("findAndSetAttributeValue: parentInstance=" + parentInstance + "; parentClass=" + parentClass);
 		LOG.debug("findAndSetAttributeValue: entity=" + entity);
@@ -424,10 +425,11 @@ public final class MetaEntityHelper {
 
 		for (MetaEntity embeddable : entity.getEmbeddables()) {
 			Object parent = MetaEntityHelper.getEmbeddableValue(parentInstance, embeddable);
-			Object aInstance = findAndSetAttributeValue(embeddable.getEntityClass(), parent,
-					attribute, value, embeddable);
+			Object aInstance = findAndSetAttributeValue(embeddable.getEntityClass(), parent, attribute, value,
+					embeddable);
 			if (aInstance != null) {
-				return MetaEntityHelper.writeEmbeddableValue(parentInstance, parentClass, embeddable, aInstance, entity);
+				return MetaEntityHelper.writeEmbeddableValue(parentInstance, parentClass, embeddable, aInstance,
+						entity);
 			}
 		}
 

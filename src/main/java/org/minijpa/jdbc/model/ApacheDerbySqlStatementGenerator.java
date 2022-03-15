@@ -24,41 +24,41 @@ import org.minijpa.jdbc.db.DbJdbc;
  */
 public class ApacheDerbySqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-    public ApacheDerbySqlStatementGenerator(DbJdbc dbJdbc) {
-	super(dbJdbc);
-    }
-
-    @Override
-    public String export(SqlInsert sqlInsert) {
-	String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
-	StringBuilder sb = new StringBuilder();
-	sb.append("insert into ");
-	sb.append(sqlInsert.getFromTable().getName());
-	sb.append(" (");
-	if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-	    sb.append(sqlInsert.getMetaEntity().get().getId().getAttribute().getColumnName());
-	    if (!cols.isEmpty())
-		sb.append(",");
+	public ApacheDerbySqlStatementGenerator(DbJdbc dbJdbc) {
+		super(dbJdbc);
 	}
 
-	sb.append(cols);
-	sb.append(") values (");
-	if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-	    sb.append("default");
+	@Override
+	public String export(SqlInsert sqlInsert) {
+		String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
+		StringBuilder sb = new StringBuilder();
+		sb.append("insert into ");
+		sb.append(sqlInsert.getFromTable().getName());
+		sb.append(" (");
+		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
+			sb.append(sqlInsert.getMetaEntity().get().getId().getAttribute().getColumnName());
+			if (!cols.isEmpty())
+				sb.append(",");
+		}
 
-	    if (!cols.isEmpty())
-		sb.append(",");
+		sb.append(cols);
+		sb.append(") values (");
+		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
+			sb.append("default");
+
+			if (!cols.isEmpty())
+				sb.append(",");
+		}
+
+		for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
+			if (i > 0)
+				sb.append(",");
+
+			sb.append("?");
+		}
+
+		sb.append(")");
+		return sb.toString();
 	}
-
-	for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
-	    if (i > 0)
-		sb.append(",");
-
-	    sb.append("?");
-	}
-
-	sb.append(")");
-	return sb.toString();
-    }
 
 }

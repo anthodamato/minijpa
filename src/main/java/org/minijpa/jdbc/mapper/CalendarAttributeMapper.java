@@ -25,16 +25,16 @@ import java.util.TimeZone;
  */
 public class CalendarAttributeMapper implements AttributeMapper<Calendar, Timestamp> {
 
-    @Override
-    public Timestamp attributeToDatabase(Calendar k) {
-	return new Timestamp(k.getTimeInMillis());
-    }
+	@Override
+	public Timestamp attributeToDatabase(Calendar k) {
+		return new Timestamp(k.getTimeInMillis());
+	}
 
-    @Override
-    public Calendar databaseToAttribute(Timestamp v) {
-	Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
-	calendar.setTimeInMillis(v.getTime());
-	return calendar;
-    }
+	@Override
+	public Calendar databaseToAttribute(Timestamp v) {
+		Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+		calendar.setTimeInMillis(v.getTime());
+		return calendar;
+	}
 
 }

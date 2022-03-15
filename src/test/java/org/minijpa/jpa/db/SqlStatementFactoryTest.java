@@ -26,6 +26,7 @@ import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.MetaEntityHelper;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
 import org.minijpa.jdbc.model.StatementParameters;
@@ -54,6 +55,7 @@ public class SqlStatementFactoryTest {
 		if (!optional.isPresent())
 			Assertions.fail("Meta entities not found");
 
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("manytoone_bid");
 		Map<String, MetaEntity> map = optional.get().getEntities();
 
 		Department department = new Department();
@@ -103,6 +105,7 @@ public class SqlStatementFactoryTest {
 		if (!optional.isPresent())
 			Assertions.fail("Meta entities not found");
 
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("onetomany_uni");
 		Map<String, MetaEntity> map = optional.get().getEntities();
 		Store store = new Store();
 		store.setName("Upton Store");
@@ -161,6 +164,7 @@ public class SqlStatementFactoryTest {
 		if (!optional.isPresent())
 			Assertions.fail("Meta entities not found");
 
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("onetomany_uni");
 		Map<String, MetaEntity> map = optional.get().getEntities();
 
 		MetaEntity storeEntity = map.get(Store.class.getName());
@@ -198,6 +202,7 @@ public class SqlStatementFactoryTest {
 		if (!optional.isPresent())
 			Assertions.fail("Meta entities not found");
 
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("citizens");
 		EntityTransaction tx = em.getTransaction();
 		tx.begin();
 

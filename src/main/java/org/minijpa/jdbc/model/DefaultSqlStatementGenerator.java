@@ -20,15 +20,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
-
 import org.minijpa.jdbc.db.DbJdbc;
-import org.minijpa.jdbc.db.SqlFunction;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.BetweenCondition;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
@@ -45,6 +44,9 @@ import org.minijpa.jdbc.model.function.Abs;
 import org.minijpa.jdbc.model.function.Avg;
 import org.minijpa.jdbc.model.function.Concat;
 import org.minijpa.jdbc.model.function.Count;
+import org.minijpa.jdbc.model.function.CurrentDate;
+import org.minijpa.jdbc.model.function.CurrentTime;
+import org.minijpa.jdbc.model.function.CurrentTimestamp;
 import org.minijpa.jdbc.model.function.Function;
 import org.minijpa.jdbc.model.function.Length;
 import org.minijpa.jdbc.model.function.Locate;
@@ -67,25 +69,25 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	private final Logger LOG = LoggerFactory.getLogger(DefaultSqlStatementGenerator.class);
 
 	protected final DbJdbc dbJdbc;
-	private SqlStatementExporter sqlStatementExporter;
+	protected SqlStatementExporter sqlStatementExporter = new DefaultSqlStatementExporter();
 
 	public DefaultSqlStatementGenerator(DbJdbc dbJdbc) {
 		super();
 		this.dbJdbc = dbJdbc;
 	}
 
-	protected final SqlStatementExporter getSqlStatementExporter() {
-		if (sqlStatementExporter != null)
-			return sqlStatementExporter;
-
-		sqlStatementExporter = createSqlStatementExporter();
-		return sqlStatementExporter;
-	}
-
-	@Override
-	public SqlStatementExporter createSqlStatementExporter() {
-		return new DefaultSqlStatementExporter();
-	}
+//	protected final SqlStatementExporter getSqlStatementExporter() {
+//		if (sqlStatementExporter != null)
+//			return sqlStatementExporter;
+//
+//		sqlStatementExporter = createSqlStatementExporter();
+//		return sqlStatementExporter;
+//	}
+//
+//	@Override
+//	public SqlStatementExporter createSqlStatementExporter() {
+//		return new DefaultSqlStatementExporter();
+//	}
 
 	@Override
 	public String export(SqlInsert sqlInsert) {
@@ -110,6 +112,10 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 	@Override
 	public String export(SqlUpdate sqlUpdate) {
+		return export(sqlUpdate, sqlStatementExporter);
+	}
+
+	protected String export(SqlUpdate sqlUpdate, SqlStatementExporter sqlStatementExporter) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("update ");
 		sb.append(dbJdbc.getNameTranslator().toTableName(sqlUpdate.getFromTable().getAlias(),
@@ -117,13 +123,13 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		sb.append(" set ");
 
 		String sv = sqlUpdate.getTableColumns().stream().map(c -> {
-			return getSqlStatementExporter().exportTableColumn(c, dbJdbc) + " = ?";
+			return sqlStatementExporter.exportTableColumn(c, dbJdbc) + " = ?";
 		}).collect(Collectors.joining(", "));
 		sb.append(sv);
 
 		if (sqlUpdate.getCondition().isPresent()) {
 			sb.append(" where ");
-			sb.append(exportCondition(sqlUpdate.getCondition().get(), getSqlStatementExporter()));
+			sb.append(exportCondition(sqlUpdate.getCondition().get(), sqlStatementExporter));
 		}
 
 		return sb.toString();
@@ -131,6 +137,10 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 	@Override
 	public String export(SqlDelete sqlDelete) {
+		return export(sqlDelete, sqlStatementExporter);
+	}
+
+	protected String export(SqlDelete sqlDelete, SqlStatementExporter sqlStatementExporter) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("delete from ");
 		sb.append(dbJdbc.getNameTranslator().toTableName(sqlDelete.getFromTable().getAlias(),
@@ -138,7 +148,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 		if (sqlDelete.getCondition().isPresent()) {
 			sb.append(" where ");
-			sb.append(exportCondition(sqlDelete.getCondition().get(), getSqlStatementExporter()));
+			sb.append(exportCondition(sqlDelete.getCondition().get(), sqlStatementExporter));
 		}
 
 		return sb.toString();
@@ -146,19 +156,19 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 	private String getSqlOperator(SqlExpressionOperator operator) {
 		switch (operator) {
-			case SUM:
-				return "+";
-			case PROD:
-				return "*";
-			case MINUS:
-				return "-";
-			case DIFF:
-				return "-";
-			case QUOT:
-				return "/";
+		case SUM:
+			return "+";
+		case PROD:
+			return "*";
+		case MINUS:
+			return "-";
+		case DIFF:
+			return "-";
+		case QUOT:
+			return "/";
 
-			default:
-				break;
+		default:
+			break;
 		}
 
 		throw new IllegalArgumentException("Sql operator '" + operator + "' not supported");
@@ -177,15 +187,16 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 //		return "";
 //	}
 	protected String exportFunction(Abs abs) {
-		return "ABS(" + exportExpression(abs.getArgument()) + ")";
+		return "ABS(" + exportExpression(abs.getArgument(), sqlStatementExporter) + ")";
 	}
 
 	protected String exportFunction(Avg avg) {
-		return "AVG(" + exportExpression(avg.getArgument()) + ")";
+		return "AVG(" + exportExpression(avg.getArgument(), sqlStatementExporter) + ")";
 	}
 
 	protected String exportFunction(Concat concat) {
-		return Arrays.stream(concat.getParams()).map(p -> exportExpression(p)).collect(Collectors.joining("||"));
+		return Arrays.stream(concat.getParams()).map(p -> exportExpression(p, sqlStatementExporter))
+				.collect(Collectors.joining("||"));
 	}
 
 	protected String exportFunction(Count count) {
@@ -193,24 +204,24 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		if (count.isDistinct())
 			sb.append("distinct ");
 
-		sb.append(exportExpression(count.getArgument()));
+		sb.append(exportExpression(count.getArgument(), sqlStatementExporter));
 		sb.append(")");
 		return sb.toString();
 	}
 
 	protected String exportFunction(Length length) {
-		return "LENGTH(" + exportExpression(length.getArgument()) + ")";
+		return "LENGTH(" + exportExpression(length.getArgument(), sqlStatementExporter) + ")";
 	}
 
 	protected String exportFunction(Locate locate) {
 		StringBuilder sb = new StringBuilder("LOCATE(");
 
-		sb.append(exportExpression(locate.getSearchString()));
+		sb.append(exportExpression(locate.getSearchString(), sqlStatementExporter));
 		sb.append(", ");
-		sb.append(exportExpression(locate.getInputString()));
+		sb.append(exportExpression(locate.getInputString(), sqlStatementExporter));
 		if (locate.getPosition().isPresent()) {
 			sb.append(", ");
-			sb.append(exportExpression(locate.getPosition().get()));
+			sb.append(exportExpression(locate.getPosition().get(), sqlStatementExporter));
 		}
 
 		sb.append(")");
@@ -218,40 +229,56 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	}
 
 	protected String exportFunction(Lower lower) {
-		return "LOWER(" + exportExpression(lower.getArgument()) + ")";
+		return "LOWER(" + exportExpression(lower.getArgument(), sqlStatementExporter) + ")";
+	}
+
+	protected String exportFunction(Upper upper) {
+		return "UPPER(" + exportExpression(upper.getArgument(), sqlStatementExporter) + ")";
 	}
 
 	protected String exportFunction(Max max) {
-		return "MAX(" + exportExpression(max.getArgument()) + ")";
+		return "MAX(" + exportExpression(max.getArgument(), sqlStatementExporter) + ")";
 	}
 
 	protected String exportFunction(Min min) {
-		return "MIN(" + exportExpression(min.getArgument()) + ")";
+		return "MIN(" + exportExpression(min.getArgument(), sqlStatementExporter) + ")";
 	}
 
 	protected String exportFunction(Mod mod) {
 		StringBuilder sb = new StringBuilder("MOD(");
 
-		sb.append(exportExpression(mod.getDividend()));
+		sb.append(exportExpression(mod.getDividend(), sqlStatementExporter));
 		sb.append(", ");
-		sb.append(exportExpression(mod.getDivider()));
+		sb.append(exportExpression(mod.getDivider(), sqlStatementExporter));
 		sb.append(")");
 		return sb.toString();
 	}
 
 	protected String exportFunction(Sqrt sqrt) {
-		return "SQRT(" + exportExpression(sqrt.getArgument()) + ")";
+		return "SQRT(" + exportExpression(sqrt.getArgument(), sqlStatementExporter) + ")";
+	}
+
+	protected String exportFunction(CurrentDate currentDate) {
+		return "CURRENT_DATE";
+	}
+
+	protected String exportFunction(CurrentTime currentTime) {
+		return "CURRENT_TIME";
+	}
+
+	protected String exportFunction(CurrentTimestamp currentTimestamp) {
+		return "CURRENT_TIMESTAMP";
 	}
 
 	protected String exportFunction(Substring substring) {
 		StringBuilder sb = new StringBuilder("SUBSTR(");
 
-		sb.append(exportExpression(substring.getArgument()));
+		sb.append(exportExpression(substring.getArgument(), sqlStatementExporter));
 		sb.append(", ");
-		sb.append(exportExpression(substring.getStartIndex()));
+		sb.append(exportExpression(substring.getStartIndex(), sqlStatementExporter));
 		if (substring.getLength().isPresent()) {
 			sb.append(", ");
-			sb.append(exportExpression(substring.getLength().get()));
+			sb.append(exportExpression(substring.getLength().get(), sqlStatementExporter));
 		}
 
 		sb.append(")");
@@ -259,24 +286,24 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	}
 
 	protected String exportFunction(Sum sum) {
-		return "SUM(" + exportExpression(sum.getArgument()) + ")";
+		return "SUM(" + exportExpression(sum.getArgument(), sqlStatementExporter) + ")";
 	}
 
 	protected String exportFunction(Trim trim) {
 		StringBuilder sb = new StringBuilder("TRIM(");
 		if (trim.getTrimType().isPresent()) {
 			switch (trim.getTrimType().get()) {
-				case BOTH:
-					sb.append("BOTH");
-					break;
-				case LEADING:
-					sb.append("LEADING");
-					break;
-				case TRAILING:
-					sb.append("TRAILING");
-					break;
-				default:
-					break;
+			case BOTH:
+				sb.append("BOTH");
+				break;
+			case LEADING:
+				sb.append("LEADING");
+				break;
+			case TRAILING:
+				sb.append("TRAILING");
+				break;
+			default:
+				break;
 			}
 
 			if (trim.getTrimCharacter() != null) {
@@ -288,12 +315,12 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 			sb.append(" FROM ");
 		}
 
-		sb.append(exportExpression(trim.getArgument()));
+		sb.append(exportExpression(trim.getArgument(), sqlStatementExporter));
 		sb.append(")");
 		return sb.toString();
 	}
 
-	protected String exportFunction(Function function) {
+	protected String exportFunction(Function function, SqlStatementExporter sqlStatementExporter) {
 		if (function instanceof Abs)
 			return exportFunction((Abs) function);
 		else if (function instanceof Avg)
@@ -324,20 +351,24 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 			return exportFunction((Trim) function);
 		else if (function instanceof Upper)
 			return exportFunction((Upper) function);
+		else if (function instanceof CurrentDate)
+			return exportFunction((CurrentDate) function);
+		else if (function instanceof CurrentTime)
+			return exportFunction((CurrentTime) function);
+		else if (function instanceof CurrentTimestamp)
+			return exportFunction((CurrentTimestamp) function);
 
 		return "";
 	}
 
-	protected String exportExpression(Object expression) {
+	protected String exportExpression(Object expression, SqlStatementExporter sqlStatementExporter) {
 		LOG.debug("exportExpression: expression=" + expression);
+		LOG.debug("exportExpression: sqlStatementExporter=" + sqlStatementExporter);
 		if (expression instanceof TableColumn)
-			return getSqlStatementExporter().exportTableColumn((TableColumn) expression, dbJdbc);
+			return sqlStatementExporter.exportTableColumn((TableColumn) expression, dbJdbc);
 
 		if (expression instanceof String)
 			return (String) expression;
-
-		if (expression instanceof SqlFunction)
-			return dbJdbc.getFunction((SqlFunction) expression);
 
 		if (expression instanceof Boolean)
 			return dbJdbc.booleanValue((Boolean) expression);
@@ -354,14 +385,14 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 			List<Object> list = (List) expression;
 			StringBuilder sb = new StringBuilder();
 			list.forEach(obj -> {
-				sb.append(exportExpression(obj));
+				sb.append(exportExpression(obj, sqlStatementExporter));
 			});
 
 			return sb.toString();
 		}
 
 		if (expression instanceof Function)
-			return exportFunction((Function) expression);
+			return exportFunction((Function) expression, sqlStatementExporter);
 
 		return "";
 	}
@@ -369,21 +400,21 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	private String exportSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression) {
 		StringBuilder sb = new StringBuilder();
 		Object leftExpression = sqlBinaryExpression.getLeftExpression();
-		sb.append(exportExpression(leftExpression));
+		sb.append(exportExpression(leftExpression, sqlStatementExporter));
 
 		sb.append(getSqlOperator(sqlBinaryExpression.getOperator()));
 
-		sb.append(exportExpression(sqlBinaryExpression.getRightExpression()));
+		sb.append(exportExpression(sqlBinaryExpression.getRightExpression(), sqlStatementExporter));
 
 		return sb.toString();
 	}
 
 	private String exportSqlExpression(SqlExpression sqlExpression) {
-		return exportExpression(sqlExpression.getExpression());
+		return exportExpression(sqlExpression.getExpression(), sqlStatementExporter);
 	}
 
 	protected String exportCondition(Condition condition, SqlStatementExporter sqlStatementExporter) {
-//	LOG.debug("exportCondition: condition=" + condition);
+		LOG.debug("exportCondition: condition=" + condition);
 		if (condition instanceof BinaryLogicCondition) {
 			BinaryLogicCondition binaryLogicCondition = (BinaryLogicCondition) condition;
 			StringBuilder sb = new StringBuilder();
@@ -430,7 +461,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 					|| unaryCondition.getConditionType() == ConditionType.IS_FALSE
 					|| unaryCondition.getConditionType() == ConditionType.IS_NULL
 					|| unaryCondition.getConditionType() == ConditionType.IS_NOT_NULL) {
-				sb.append(exportExpression(unaryCondition.getTableColumn()));
+				sb.append(exportExpression(unaryCondition.getTableColumn(), sqlStatementExporter));
 
 				sb.append(" ");
 				sb.append(getOperator(condition.getConditionType()));
@@ -453,14 +484,14 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 			Object left = binaryCondition.getLeft();
 			LOG.debug("exportCondition: left=" + left);
-			sb.append(exportExpression(left));
+			sb.append(exportExpression(left, sqlStatementExporter));
 
 			sb.append(" ");
 			sb.append(getOperator(condition.getConditionType()));
 			sb.append(" ");
 			Object right = binaryCondition.getRight();
 			LOG.debug("exportCondition: right=" + right);
-			sb.append(exportExpression(right));
+			sb.append(exportExpression(right, sqlStatementExporter));
 
 			return sb.toString();
 		}
@@ -468,7 +499,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		if (condition instanceof BetweenCondition) {
 			BetweenCondition betweenCondition = (BetweenCondition) condition;
 			StringBuilder sb = new StringBuilder();
-			sb.append(exportExpression(betweenCondition.getOperand()));
+			sb.append(exportExpression(betweenCondition.getOperand(), sqlStatementExporter));
 			sb.append(" ");
 			if (betweenCondition.isNot())
 				sb.append("NOT ");
@@ -476,9 +507,9 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 			sb.append(getOperator(condition.getConditionType()));
 			sb.append(" ");
 
-			sb.append(exportExpression(betweenCondition.getLeftExpression()));
+			sb.append(exportExpression(betweenCondition.getLeftExpression(), sqlStatementExporter));
 			sb.append(" and ");
-			sb.append(exportExpression(betweenCondition.getRightExpression()));
+			sb.append(exportExpression(betweenCondition.getRightExpression(), sqlStatementExporter));
 
 			return sb.toString();
 		}
@@ -494,7 +525,8 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 			sb.append(getOperator(condition.getConditionType()));
 			sb.append(" (");
 
-			String s = inCondition.getRightExpressions().stream().map(v -> exportExpression(v)).collect(Collectors.joining(", "));
+			String s = inCondition.getRightExpressions().stream().map(v -> exportExpression(v, sqlStatementExporter))
+					.collect(Collectors.joining(", "));
 			sb.append(s);
 			sb.append(")");
 			return sb.toString();
@@ -542,8 +574,8 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	}
 
 	private String exportGroupBy(GroupBy groupBy) {
-		return "group by "
-				+ groupBy.getColumns().stream().map(c -> getSqlStatementExporter().exportTableColumn(c, dbJdbc)).collect(Collectors.joining(", "));
+		return "group by " + groupBy.getColumns().stream().map(c -> sqlStatementExporter.exportTableColumn(c, dbJdbc))
+				.collect(Collectors.joining(", "));
 	}
 
 	private String exportOrderBy(OrderBy orderBy) {
@@ -551,7 +583,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		if (orderBy.getOrderByType() != null)
 			ad = orderBy.getOrderByType() == OrderByType.ASC ? " ASC" : " DESC";
 
-		return getSqlStatementExporter().exportTableColumn(orderBy.getTableColumn(), dbJdbc) + ad;
+		return sqlStatementExporter.exportTableColumn(orderBy.getTableColumn(), dbJdbc) + ad;
 	}
 
 	@Override
@@ -564,9 +596,9 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 		String cc = sqlSelect.getValues().stream().map(c -> {
 			if (c instanceof TableColumn)
-				return getSqlStatementExporter().exportTableColumn((TableColumn) c, dbJdbc);
+				return sqlStatementExporter.exportTableColumn((TableColumn) c, dbJdbc);
 			if (c instanceof Function)
-				return exportFunction((Function) c);
+				return exportFunction((Function) c, sqlStatementExporter);
 			if (c instanceof SqlExpression)
 				return exportSqlExpression((SqlExpression) c);
 			if (c instanceof SqlBinaryExpression)
@@ -583,7 +615,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 		if (sqlSelect.getConditions().isPresent()) {
 			sb.append(" where ");
-			String ccs = sqlSelect.getConditions().get().stream().map(c -> exportCondition(c, getSqlStatementExporter()))
+			String ccs = sqlSelect.getConditions().get().stream().map(c -> exportCondition(c, sqlStatementExporter))
 					.collect(Collectors.joining(" "));
 			sb.append(ccs);
 			LOG.debug("export: ccs=" + ccs);
@@ -613,44 +645,44 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 	private String getOperator(ConditionType conditionType) {
 		switch (conditionType) {
-			case EQUAL:
-				return dbJdbc.equalOperator();
-			case NOT_EQUAL:
-				return dbJdbc.notEqualOperator();
-			case AND:
-				return dbJdbc.andOperator();
-			case IS_FALSE:
-				return dbJdbc.falseOperator();
-			case IS_NOT_NULL:
-				return dbJdbc.notNullOperator();
-			case IS_NULL:
-				return dbJdbc.isNullOperator();
-			case IS_TRUE:
-				return dbJdbc.trueOperator();
-			case NOT:
-				return dbJdbc.notOperator();
-			case OR:
-				return dbJdbc.orOperator();
-			case EMPTY_CONJUNCTION:
-				return dbJdbc.emptyConjunctionOperator();
-			case EMPTY_DISJUNCTION:
-				return dbJdbc.emptyDisjunctionOperator();
-			case GREATER_THAN:
-				return dbJdbc.greaterThanOperator();
-			case GREATER_THAN_OR_EQUAL_TO:
-				return dbJdbc.greaterThanOrEqualToOperator();
-			case LESS_THAN:
-				return dbJdbc.lessThanOperator();
-			case LESS_THAN_OR_EQUAL_TO:
-				return dbJdbc.lessThanOrEqualToOperator();
-			case BETWEEN:
-				return dbJdbc.betweenOperator();
-			case LIKE:
-				return dbJdbc.likeOperator();
-			case IN:
-				return dbJdbc.inOperator();
-			default:
-				break;
+		case EQUAL:
+			return dbJdbc.equalOperator();
+		case NOT_EQUAL:
+			return dbJdbc.notEqualOperator();
+		case AND:
+			return dbJdbc.andOperator();
+		case IS_FALSE:
+			return dbJdbc.falseOperator();
+		case IS_NOT_NULL:
+			return dbJdbc.notNullOperator();
+		case IS_NULL:
+			return dbJdbc.isNullOperator();
+		case IS_TRUE:
+			return dbJdbc.trueOperator();
+		case NOT:
+			return dbJdbc.notOperator();
+		case OR:
+			return dbJdbc.orOperator();
+		case EMPTY_CONJUNCTION:
+			return dbJdbc.emptyConjunctionOperator();
+		case EMPTY_DISJUNCTION:
+			return dbJdbc.emptyDisjunctionOperator();
+		case GREATER_THAN:
+			return dbJdbc.greaterThanOperator();
+		case GREATER_THAN_OR_EQUAL_TO:
+			return dbJdbc.greaterThanOrEqualToOperator();
+		case LESS_THAN:
+			return dbJdbc.lessThanOperator();
+		case LESS_THAN_OR_EQUAL_TO:
+			return dbJdbc.lessThanOrEqualToOperator();
+		case BETWEEN:
+			return dbJdbc.betweenOperator();
+		case LIKE:
+			return dbJdbc.likeOperator();
+		case IN:
+			return dbJdbc.inOperator();
+		default:
+			break;
 		}
 
 		throw new IllegalArgumentException("Unknown operator for condition type: " + conditionType);
@@ -664,7 +696,8 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		}
 
 		String s = dbJdbc.buildColumnDefinition(attribute);
-		if (ddlData.isPresent() && ddlData.get().getNullable().isPresent() && ddlData.get().getNullable().get() == false) {
+		if (ddlData.isPresent() && ddlData.get().getNullable().isPresent()
+				&& ddlData.get().getNullable().get() == false) {
 			return s + " not null";
 		}
 
@@ -676,31 +709,30 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	}
 
 	protected String buildAttributeDeclaration(MetaAttribute attribute) {
-		return dbJdbc.getNameTranslator().adjustName(attribute.getColumnName())
-				+ " " + buildColumnDefinition(attribute);
+		return dbJdbc.getNameTranslator().adjustName(attribute.getColumnName()) + " "
+				+ buildColumnDefinition(attribute);
 	}
 
 	private String buildPkDeclaration(Pk pk) {
 		if (pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY) {
-			return dbJdbc.getNameTranslator().adjustName(pk.getAttribute().getColumnName())
-					+ " " + dbJdbc.buildIdentityColumnDefinition(pk.getAttribute());
+			return dbJdbc.getNameTranslator().adjustName(pk.getAttribute().getColumnName()) + " "
+					+ dbJdbc.buildIdentityColumnDefinition(pk.getAttribute());
 		}
 
-		String cols = pk.getAttributes().stream()
-				.map(a -> buildAttributeDeclaration(a))
+		String cols = pk.getAttributes().stream().map(a -> buildAttributeDeclaration(a))
 				.collect(Collectors.joining(", "));
 
 		return cols;
 	}
 
 	protected String buildDeclaration(JoinColumnAttribute joinColumnAttribute) {
-		return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName())
-				+ " " + buildJoinColumnDefinition(joinColumnAttribute);
+		return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName()) + " "
+				+ buildJoinColumnDefinition(joinColumnAttribute);
 	}
 
 	protected String buildJoinTableColumnDeclaration(JoinColumnAttribute joinColumnAttribute) {
-		return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName())
-				+ " " + buildJoinColumnDefinition(joinColumnAttribute) + " not null";
+		return dbJdbc.getNameTranslator().adjustName(joinColumnAttribute.getColumnName()) + " "
+				+ buildJoinColumnDefinition(joinColumnAttribute) + " not null";
 	}
 
 	@Override
@@ -714,8 +746,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 		if (!sqlCreateTable.getAttributes().isEmpty()) {
 			sb.append(", ");
-			cols = sqlCreateTable.getAttributes().stream()
-					.map(a -> buildAttributeDeclaration(a))
+			cols = sqlCreateTable.getAttributes().stream().map(a -> buildAttributeDeclaration(a))
 					.collect(Collectors.joining(", "));
 			sb.append(cols);
 		}
@@ -723,8 +754,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
 			sb.append(", ");
 			cols = foreignKeyDeclaration.getJoinColumnMapping().getJoinColumnAttributes().stream()
-					.map(a -> buildDeclaration(a))
-					.collect(Collectors.joining(", "));
+					.map(a -> buildDeclaration(a)).collect(Collectors.joining(", "));
 			sb.append(cols);
 		}
 
@@ -764,10 +794,9 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 		sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateJoinTable.getTableName()));
 		sb.append(" (");
 		List<JoinColumnAttribute> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations().stream()
-				.map(d -> d.getJoinColumnMapping().getJoinColumnAttributes())
-				.flatMap(List::stream).collect(Collectors.toList());
-		String cols = joinColumnAttributes.stream()
-				.map(a -> buildJoinTableColumnDeclaration(a))
+				.map(d -> d.getJoinColumnMapping().getJoinColumnAttributes()).flatMap(List::stream)
+				.collect(Collectors.toList());
+		String cols = joinColumnAttributes.stream().map(a -> buildJoinTableColumnDeclaration(a))
 				.collect(Collectors.joining(", "));
 		sb.append(cols);
 
@@ -790,7 +819,8 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	public String export(SqlCreateSequence sqlCreateSequence) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("create sequence ");
-		LOG.debug("export: sqlCreateSequence.getPkSequenceGenerator().getSequenceName()=" + sqlCreateSequence.getPkSequenceGenerator().getSequenceName());
+		LOG.debug("export: sqlCreateSequence.getPkSequenceGenerator().getSequenceName()="
+				+ sqlCreateSequence.getPkSequenceGenerator().getSequenceName());
 		sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateSequence.getPkSequenceGenerator().getSequenceName()));
 		sb.append(" start with ");
 		sb.append(sqlCreateSequence.getPkSequenceGenerator().getInitialValue());
@@ -802,22 +832,17 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 	@Override
 	public List<String> export(List<SqlDDLStatement> sqlDDLStatement) {
 		List<String> result = new ArrayList<>();
-		List<SqlCreateTable> createTables = sqlDDLStatement.stream()
-				.filter(c -> c instanceof SqlCreateTable)
-				.map(c -> (SqlCreateTable) c)
-				.collect(Collectors.toList());
+		List<SqlCreateTable> createTables = sqlDDLStatement.stream().filter(c -> c instanceof SqlCreateTable)
+				.map(c -> (SqlCreateTable) c).collect(Collectors.toList());
 
 		List<String> createTableStrs = createTables.stream().map(c -> export(c)).collect(Collectors.toList());
 		result.addAll(createTableStrs);
 
 		List<PkSequenceGenerator> pkSequenceGenerators = createTables.stream()
 				.filter(c -> c.getPk().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE)
-				.map(c -> c.getPk().getPkGeneration().getPkSequenceGenerator()).distinct()
-				.collect(Collectors.toList());
-		List<String> createSequenceStrs = pkSequenceGenerators.stream()
-				.map(c -> new SqlCreateSequence(c))
-				.map(c -> export(c))
-				.collect(Collectors.toList());
+				.map(c -> c.getPk().getPkGeneration().getPkSequenceGenerator()).distinct().collect(Collectors.toList());
+		List<String> createSequenceStrs = pkSequenceGenerators.stream().map(c -> new SqlCreateSequence(c))
+				.map(c -> export(c)).collect(Collectors.toList());
 		result.addAll(createSequenceStrs);
 
 		if (sqlDDLStatement instanceof SqlCreateTable) {
@@ -825,7 +850,8 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
 			SqlCreateTable sqlCreateTable = (SqlCreateTable) sqlDDLStatement;
 			if (sqlCreateTable.getPk().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
-				SqlCreateSequence sqlCreateSequence = new SqlCreateSequence(sqlCreateTable.getPk().getPkGeneration().getPkSequenceGenerator());
+				SqlCreateSequence sqlCreateSequence = new SqlCreateSequence(
+						sqlCreateTable.getPk().getPkGeneration().getPkSequenceGenerator());
 				String sc = export(sqlCreateSequence);
 				return Arrays.asList(s, sc);
 			}
@@ -836,8 +862,7 @@ public class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 //	if (sqlDDLStatement instanceof SqlCreateJoinTable)
 //	    return Arrays.asList(export((SqlCreateJoinTable) sqlDDLStatement));
 		List<SqlCreateJoinTable> createJoinTables = sqlDDLStatement.stream()
-				.filter(c -> c instanceof SqlCreateJoinTable)
-				.map(c -> (SqlCreateJoinTable) c)
+				.filter(c -> c instanceof SqlCreateJoinTable).map(c -> (SqlCreateJoinTable) c)
 				.collect(Collectors.toList());
 
 		List<String> createJoinTableStrs = createJoinTables.stream().map(c -> export(c)).collect(Collectors.toList());
