@@ -122,7 +122,7 @@ TOKEN :
 | 
   <STRING_LITERAL: "'" ( (~["'","\n","\r"]) | ("''") )* "'">
 |
-  <NUMERIC_LITERAL: ( ["0"-"9"] )+ >
+  <NUMERIC_LITERAL: ( ["0"-"9"] )+ ("." (["0"-"9"])+)?>
 |
   <INPUT_PARAMETER: "?" <NUMERIC_LITERAL> | ":" <NAME> >
 |
@@ -324,10 +324,9 @@ void select_expression() #SelectExpression :
  LOOKAHEAD(2)
  single_valued_path_expression()
 
- |
-// LOOKAHEAD(aggregate_expression())
- LOOKAHEAD(2)
- aggregate_expression()
+// |
+// LOOKAHEAD(2)
+// aggregate_expression()
 
  |
 // LOOKAHEAD(scalar_expression())
@@ -1275,9 +1274,6 @@ void function_arg() #FunctionArg :
 //    entity_type_expression
 void scalar_expression() #ScalarExpression :
 {
-  Token t;
-  StringBuilder sb=new StringBuilder();
-  String s;
 }
 {
   LOOKAHEAD(3)
@@ -1665,9 +1661,9 @@ void datetime_expression() #DatetimeExpression :
     jjtThis.setFunction(function);
   }
 
-  |
-  LOOKAHEAD(3)
-  aggregate_expression()
+//  |
+//  LOOKAHEAD(3)
+//  aggregate_expression()
 
   |
   case_expression()
@@ -1724,9 +1720,9 @@ void string_expression() #StringExpression :
   |
   functions_returning_strings()
 
-  |
-  LOOKAHEAD(3)
-  aggregate_expression()
+//  |
+//  LOOKAHEAD(3)
+//  aggregate_expression()
   |
   case_expression()
   |
@@ -1974,8 +1970,6 @@ void arithmetic_expression_comparison() #ArithmeticExpressionComparison :
 // boolean_expression_comparison ::= boolean_expression {= | <>} {boolean_expression | all_or_any_expression}
 void boolean_expression_comparison() #BooleanExpressionComparison :
 {
-  String s;
-  StringBuilder sb=new StringBuilder();
 }
 {
   boolean_expression()

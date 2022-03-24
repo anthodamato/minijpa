@@ -63,8 +63,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	private final DbConfiguration dbConfiguration;
 	private AliasGenerator tableAliasGenerator;
 
-	public JpqlParserVisitorImpl(PersistenceUnitContext persistenceUnitContext,
-			SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration) {
+	public JpqlParserVisitorImpl(PersistenceUnitContext persistenceUnitContext, SqlStatementFactory sqlStatementFactory,
+			DbConfiguration dbConfiguration) {
 		this.persistenceUnitContext = persistenceUnitContext;
 		this.sqlStatementFactory = sqlStatementFactory;
 		this.dbConfiguration = dbConfiguration;
@@ -653,6 +653,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			if (node0 instanceof ASTFunctionsReturningNumerics) {
 				Node node1 = node0.jjtGetChild(0);
 				return decodeFunction(node1, jpqlVisitorParameters);
+			} else if (node0 instanceof ASTAggregateExpression) {
+				return ((ASTAggregateExpression) node0).getValue();
 			}
 		}
 
@@ -996,12 +998,12 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Object object = node.childrenAccept(this, data);
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
-		// ScalarExpression Node is duplicated. Why!?
 		Node node0 = node.jjtGetChild(0);
-
 		if (node0 instanceof ASTArithmeticExpression) {
 			ASTArithmeticExpression arithmeticExpression = (ASTArithmeticExpression) node0;
-			Value value = new SqlExpressionImpl(arithmeticExpression.getResult());
+			List<Object> list = new ArrayList<>();
+			processArithmeticExpressionResult(arithmeticExpression, list);
+			Value value = new SqlExpressionImpl(list);
 			node.setValue(value);
 		} else if (node0 instanceof ASTDatetimeExpression) {
 			ASTDatetimeExpression datetimeExpression = (ASTDatetimeExpression) node0;
@@ -1026,7 +1028,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Value value = scalarExpression.getValue();
 
 		if (node0 instanceof ASTArithmeticExpression) {
-			return new FetchParameter("arithmeticExpression", Types.DOUBLE, null);
+			return new FetchParameter("arithmeticExpression", null, null);
 		} else if (node0 instanceof ASTDatetimeExpression) {
 			SqlExpressionImpl sqlExpressionImpl = (SqlExpressionImpl) value;
 			if (sqlExpressionImpl.getExpression() instanceof Function) {
@@ -1526,7 +1528,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	/**
 	 * Splits the given Jpql path to a Sql path.
 	 *
-	 * @param jpqlPath Jpql path
+	 * @param jpqlPath              Jpql path
 	 * @param jpqlVisitorParameters visitor parameters
 	 * @return a string array like [table alias, table name, column name]
 	 */
@@ -1541,8 +1543,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 			MetaEntity metaEntity = optional.get();
 
-			String[] result = {jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(),
-				metaEntity.getId().getAttributes().get(0).getColumnName()};
+			String[] result = { jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(),
+					metaEntity.getId().getAttributes().get(0).getColumnName() };
 			return result;
 		} else {
 			String identificationVariable = sps[0];
@@ -1561,8 +1563,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 						"Attribute path '" + attributePath + "' on '" + metaEntity.getName() + "' entity not found");
 			}
 
-			String[] result = {jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(),
-				metaAttribute.getColumnName()};
+			String[] result = { jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(),
+					metaAttribute.getColumnName() };
 			return result;
 		}
 	}
