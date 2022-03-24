@@ -34,13 +34,13 @@ public class ASTArithmeticExpression extends SimpleNode {
 		this.signs.add(sign);
 	}
 
-	public String getResult() {
-		return result;
-	}
-
-	public void setResult(String result) {
-		this.result = result;
-	}
+//	public String getResult() {
+//		return result;
+//	}
+//
+//	public void setResult(String result) {
+//		this.result = result;
+//	}
 
 	@Override
 	public void dump(String prefix) {

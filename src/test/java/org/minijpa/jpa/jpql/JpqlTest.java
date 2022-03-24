@@ -435,4 +435,44 @@ public class JpqlTest {
 
 		emf.close();
 	}
+
+	@Test
+	public void sumValues() throws Exception {
+		String persistenceUnitName = "numeric_set";
+		EntityManagerFactory emf = Persistence.createEntityManagerFactory(persistenceUnitName,
+				PersistenceUnitProperties.getProperties());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
+
+		PersistenceUnitEnv persistenceUnitEnv = PersistenceUnitEnv.build(dbConfiguration, persistenceUnitName);
+		PersistenceUnitContext persistenceUnitContext = persistenceUnitEnv.getPersistenceUnitContext();
+		String query = "select sum(ns.doubleValue)+0.2 from NumericSet ns";
+		JpqlModule jpqlModule = new JpqlModule(dbConfiguration, new SqlStatementFactory(), persistenceUnitContext);
+
+		try {
+			JpqlResult jpqlResult = jpqlModule.parse(query);
+			if (testDb != null && testDb.equals("oracle"))
+				Assertions.assertEquals("select SUM(numeric_set0.double_value)+0.2 from numeric_set numeric_set0",
+						jpqlResult.getSql());
+			else if (testDb != null && (testDb.equals("mysql") || testDb.equals("mariadb")))
+				Assertions.assertEquals("select SUM(numeric_set0.double_value)+0.2 from numeric_set AS numeric_set0",
+						jpqlResult.getSql());
+			else
+				Assertions.assertEquals("select SUM(numeric_set0.double_value)+0.2 from numeric_set AS numeric_set0",
+						jpqlResult.getSql());
+
+		} catch (Exception ex) {
+			LOG.debug(ex.getMessage());
+			Throwable t = ex.getCause();
+			LOG.debug("t=" + t);
+			ex.printStackTrace();
+			Assertions.fail();
+		} catch (Error error) {
+			LOG.debug(error.getMessage());
+			Throwable t = error.getCause();
+			LOG.debug("t=" + t);
+			Assertions.fail();
+		}
+
+		emf.close();
+	}
 }
