@@ -6,10 +6,10 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>minijpa-jar</artifactId>
+	<artifactId>minijpa-assembly</artifactId>
 	<packaging>jar</packaging>
 
-	<name>minijpa Jar</name>
+	<name>minijpa Assembly</name>
 
 	<dependencies>
 		<dependency>
