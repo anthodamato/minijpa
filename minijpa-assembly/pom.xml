@@ -1,0 +1,75 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.minijpa</groupId>
+		<artifactId>minijpa</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>minijpa-assembly</artifactId>
+	<packaging>jar</packaging>
+
+	<name>minijpa Assembly</name>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.minijpa</groupId>
+			<artifactId>minijpa-jdbc</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.minijpa</groupId>
+			<artifactId>minijpa-jpa</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Main-Class>org.minijpa.Main</Main-Class>
+							<Premain-Class>org.minijpa.agent.EntityAgent</Premain-Class>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.4</version>
+				<configuration>
+				<finalName>minijpa-${project.version}</finalName>
+					<artifactSet>
+						<includes>
+							<include>org.minijpa:minijpa-jdbc</include>
+							<include>org.minijpa:minijpa-jpa</include>
+							<include>javax.persistence:javax.persistence-api</include>
+							<include>org.javassist:javassist</include>
+							<include>ch.qos.logback:logback-core</include>
+							<include>org.slf4j:slf4j-api</include>
+						</includes>
+						<excludes>
+							<exclude>ch.qos.logback:logback-classic</exclude>
+						</excludes>
+					</artifactSet>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+</project>
