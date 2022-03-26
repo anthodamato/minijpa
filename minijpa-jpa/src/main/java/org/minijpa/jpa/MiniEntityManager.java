@@ -518,8 +518,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public void close() {
-		if (((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType() == EntityManagerType.CONTAINER_MANAGED)
-			throw new IllegalStateException("Can't close a Container Managed Entity Manager");
+//		if (((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType() == EntityManagerType.CONTAINER_MANAGED)
+//			throw new IllegalStateException("Can't close a Container Managed Entity Manager");
 
 		this.open = false;
 	}
