@@ -53,11 +53,9 @@
 							<include>javax.persistence:javax.persistence-api</include>
 							<include>org.javassist:javassist</include>
 							<include>ch.qos.logback:logback-core</include>
+							<include>ch.qos.logback:logback-classic</include>
 							<include>org.slf4j:slf4j-api</include>
 						</includes>
-						<excludes>
-							<exclude>ch.qos.logback:logback-classic</exclude>
-						</excludes>
 					</artifactSet>
 				</configuration>
 				<executions>
