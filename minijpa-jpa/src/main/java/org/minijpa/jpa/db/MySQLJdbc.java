@@ -15,20 +15,14 @@
  */
 package org.minijpa.jpa.db;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.Calendar;
-import java.util.Optional;
+import java.util.Collections;
+import java.util.List;
 
-import org.minijpa.jdbc.DDLData;
-import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkGenerationType;
-import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
-import org.minijpa.jdbc.db.BasicDbJdbc;
+import org.minijpa.jdbc.model.SqlDDLStatement;
+import org.minijpa.metadata.PersistenceUnitContext;
 
 public class MySQLJdbc extends BasicDbJdbc {
 
@@ -42,27 +36,19 @@ public class MySQLJdbc extends BasicDbJdbc {
 	}
 
 	@Override
-	public String sequenceNextValueStatement(MetaEntity entity) {
-		PkSequenceGenerator pkSequenceGenerator = entity.getId().getPkGeneration().getPkSequenceGenerator();
-		return "VALUES (NEXT VALUE FOR " + pkSequenceGenerator.getSequenceName() + ")";
+	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(PersistenceUnitContext persistenceUnitContext,
+			List<MetaEntity> sorted) {
+		return Collections.EMPTY_LIST;
 	}
 
-	@Override
-	public String forUpdate(LockType lockType) {
-		if (lockType == LockType.PESSIMISTIC_WRITE)
-			return "for update";
-
-		return "";
-	}
-
-	@Override
-	public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
-		if (type == Timestamp.class || type == Calendar.class || type == LocalDateTime.class
-				|| type == Instant.class || type == ZonedDateTime.class)
-			return "datetime(6)";
-
-		return super.buildColumnDefinition(type, ddlData);
-	}
+//	@Override
+//	public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
+//		if (type == Timestamp.class || type == Calendar.class || type == LocalDateTime.class || type == Instant.class
+//				|| type == ZonedDateTime.class)
+//			return "datetime(6)";
+//
+//		return super.buildColumnDefinition(type, ddlData);
+//	}
 
 //	@Override
 //	public String getFunction(SqlFunction sqlFunction) {

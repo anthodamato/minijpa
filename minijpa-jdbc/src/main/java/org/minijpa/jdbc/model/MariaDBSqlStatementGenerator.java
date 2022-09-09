@@ -20,10 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.minijpa.jdbc.JoinColumnAttribute;
-import org.minijpa.jdbc.Pk;
-import org.minijpa.jdbc.PkStrategy;
-import org.minijpa.jdbc.db.DbJdbc;
+
 import org.minijpa.jdbc.model.function.Concat;
 import org.minijpa.jdbc.model.function.CurrentDate;
 import org.minijpa.jdbc.model.function.CurrentTime;
@@ -37,85 +34,97 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
 	private final SqlStatementExporter sqlDeleteExporter = new SqlDeleteExporter();
 
-	public MariaDBSqlStatementGenerator(DbJdbc dbJdbc) {
-		super(dbJdbc);
+	public MariaDBSqlStatementGenerator() {
+		super();
 	}
 
-	private String buildPkDeclaration(Pk pk) {
-		if (pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY) {
-			return buildAttributeDeclaration(pk.getAttribute()) + " AUTO_INCREMENT";
+	@Override
+	public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+		if (optionalSchema.isEmpty())
+			return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
+
+		return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
+	}
+
+	@Override
+	public String forUpdateClause(ForUpdate forUpdate) {
+		return "for update";
+	}
+
+	private String buildPkDeclaration(JdbcPk pk) {
+		if (pk.isIdentityColumn()) {
+			return buildAttributeDeclaration(pk.getColumn()) + " AUTO_INCREMENT";
 		}
 
-		String cols = pk.getAttributes().stream().map(a -> buildAttributeDeclaration(a))
-				.collect(Collectors.joining(", "));
+		if (pk.isComposite())
+			return pk.getColumns().stream().map(a -> buildAttributeDeclaration(a)).collect(Collectors.joining(", "));
 
-		return cols;
+		return buildAttributeDeclaration(pk.getColumn());
 	}
 
 	@Override
 	public String export(SqlCreateTable sqlCreateTable) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("create table ");
-		sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateTable.getTableName()));
+		sb.append(nameTranslator.adjustName(sqlCreateTable.getTableName()));
 		sb.append(" (");
-		String cols = buildPkDeclaration(sqlCreateTable.getPk());
+		String cols = buildPkDeclaration(sqlCreateTable.getJdbcPk());
 		sb.append(cols);
 
-		if (!sqlCreateTable.getAttributes().isEmpty()) {
+		if (!sqlCreateTable.getColumnDeclarations().isEmpty()) {
 			sb.append(", ");
-			cols = sqlCreateTable.getAttributes().stream().map(a -> buildAttributeDeclaration(a))
+			cols = sqlCreateTable.getColumnDeclarations().stream().map(a -> buildAttributeDeclaration(a))
 					.collect(Collectors.joining(", "));
 			sb.append(cols);
 		}
 
 		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
 			sb.append(", ");
-			cols = foreignKeyDeclaration.getJoinColumnMapping().getJoinColumnAttributes().stream()
+			cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
 					.map(a -> buildDeclaration(a)).collect(Collectors.joining(", "));
 			sb.append(cols);
 		}
 
 		sb.append(", primary key ");
-		appendPrimaryKey(sqlCreateTable.getPk(), sb);
+		appendPrimaryKey(sqlCreateTable.getJdbcPk(), sb);
 //	if (sqlCreateTable.getPk().isComposite()) {
 //	    sb.append("(");
 //	    cols = sqlCreateTable.getPk().getAttributes().stream()
-//		    .map(a -> dbJdbc.getNameTranslator().adjustName(a.getColumnName()))
+//		    .map(a -> nameTranslator.adjustName(a.getColumnName()))
 //		    .collect(Collectors.joining(", "));
 //	    sb.append(cols);
 //	    sb.append(")");
 //	} else {
 //	    sb.append("(");
-//	    sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateTable.getPk().getAttribute().getColumnName()));
+//	    sb.append(nameTranslator.adjustName(sqlCreateTable.getPk().getAttribute().getColumnName()));
 //	    sb.append(")");
 //	}
 
 		// foreign keys
 		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
 			sb.append(", foreign key (");
-			cols = foreignKeyDeclaration.getJoinColumnMapping().getJoinColumnAttributes().stream()
-					.map(a -> dbJdbc.getNameTranslator().adjustName(a.getColumnName()))
-					.collect(Collectors.joining(", "));
+			cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
+					.map(a -> nameTranslator.adjustName(a.getName())).collect(Collectors.joining(", "));
 			sb.append(cols);
 			sb.append(") references ");
 			sb.append(foreignKeyDeclaration.getReferenceTable());
-			appendPrimaryKey(foreignKeyDeclaration.getJoinColumnMapping().getForeignKey(), sb);
+			appendPrimaryKey(foreignKeyDeclaration.getJdbcJoinColumnMapping().getForeignKey(), sb);
 		}
 
 		sb.append(")");
 		return sb.toString();
 	}
 
-	private void appendPrimaryKey(Pk pk, StringBuilder sb) {
+	private void appendPrimaryKey(JdbcPk pk, StringBuilder sb) {
 		if (pk.isComposite()) {
 			sb.append("(");
-			String cols = pk.getAttributes().stream().map(a -> dbJdbc.getNameTranslator().adjustName(a.getColumnName()))
+			String cols = pk.getColumns().stream().map(a -> nameTranslator.adjustName(a.getName()))
 					.collect(Collectors.joining(", "));
 			sb.append(cols);
 			sb.append(")");
 		} else {
 			sb.append("(");
-			sb.append(dbJdbc.getNameTranslator().adjustName(pk.getAttribute().getColumnName()));
+			sb.append(nameTranslator.adjustName(pk.getColumn().getName()));
 			sb.append(")");
 		}
 	}
@@ -129,7 +138,7 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 	protected String export(SqlDelete sqlDelete, SqlStatementExporter sqlStatementExporter) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("delete from ");
-		sb.append(dbJdbc.getNameTranslator().toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
+		sb.append(nameTranslator.toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
 
 		if (sqlDelete.getCondition().isPresent()) {
 			sb.append(" where ");
@@ -143,10 +152,10 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 	public String export(SqlCreateJoinTable sqlCreateJoinTable) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("create table ");
-		sb.append(dbJdbc.getNameTranslator().adjustName(sqlCreateJoinTable.getTableName()));
+		sb.append(nameTranslator.adjustName(sqlCreateJoinTable.getTableName()));
 		sb.append(" (");
-		List<JoinColumnAttribute> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations().stream()
-				.map(d -> d.getJoinColumnMapping().getJoinColumnAttributes()).flatMap(List::stream)
+		List<ColumnDeclaration> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations().stream()
+				.map(d -> d.getJdbcJoinColumnMapping().getJoinColumns()).flatMap(List::stream)
 				.collect(Collectors.toList());
 		String cols = joinColumnAttributes.stream().map(a -> buildJoinTableColumnDeclaration(a))
 				.collect(Collectors.joining(", "));
@@ -155,13 +164,12 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 		// foreign keys
 		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateJoinTable.getForeignKeyDeclarations()) {
 			sb.append(", foreign key (");
-			cols = foreignKeyDeclaration.getJoinColumnMapping().getJoinColumnAttributes().stream()
-					.map(a -> dbJdbc.getNameTranslator().adjustName(a.getColumnName()))
-					.collect(Collectors.joining(", "));
+			cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
+					.map(a -> nameTranslator.adjustName(a.getName())).collect(Collectors.joining(", "));
 			sb.append(cols);
 			sb.append(") references ");
 			sb.append(foreignKeyDeclaration.getReferenceTable());
-			appendPrimaryKey(foreignKeyDeclaration.getJoinColumnMapping().getForeignKey(), sb);
+			appendPrimaryKey(foreignKeyDeclaration.getJdbcJoinColumnMapping().getForeignKey(), sb);
 		}
 
 		sb.append(")");
@@ -206,18 +214,18 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 	private class SqlDeleteExporter extends DefaultSqlStatementExporter {
 
 		@Override
-		public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
+		public String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
 			Optional<FromTable> optionalFromTable = tableColumn.getTable();
 			Column column = tableColumn.getColumn();
 			if (optionalFromTable.isPresent()) {
-				String tc = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+				String tc = nameTranslator.toColumnName(Optional.empty(), column.getName());
 				return exportColumnAlias(tc, Optional.empty());
 			}
 
 			if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
 				return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
 
-			String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+			String c = nameTranslator.toColumnName(Optional.empty(), column.getName());
 			return exportColumnAlias(c, Optional.empty());
 		}
 	}

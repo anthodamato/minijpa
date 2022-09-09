@@ -27,7 +27,6 @@ import java.util.Properties;
 import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.minijpa.jdbc.ScriptRunner;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.jpa.PersistenceUnitContextManager;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -38,7 +37,8 @@ public class PersistenceUnitPropertyActions {
 
 	private Logger LOG = LoggerFactory.getLogger(PersistenceUnitPropertyActions.class);
 
-	private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo) throws IOException, SQLException, URISyntaxException {
+	private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo)
+			throws IOException, SQLException, URISyntaxException {
 		String filePath = scriptPath;
 		if (!scriptPath.startsWith("/"))
 			filePath = "/" + filePath;
@@ -57,27 +57,32 @@ public class PersistenceUnitPropertyActions {
 			scriptRunner.runDDLStatements(statements, connection);
 		} finally {
 			if (connection != null)
-	    try {
-				connection.close();
-			} catch (Exception e2) {
-				LOG.error(e2.getMessage());
-			}
+				try {
+					connection.close();
+				} catch (Exception e2) {
+					LOG.error(e2.getMessage());
+				}
 		}
 	}
 
 	public List<String> generateScriptFromMetadata(PersistenceUnitInfo persistenceUnitInfo) {
 		try {
-			PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-			DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
-			SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-			List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
+			PersistenceUnitContext persistenceUnitContext = PersistenceUnitContextManager.getInstance()
+					.get(persistenceUnitInfo);
+			DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
+					.getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
+//			SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+//			List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
+			List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc()
+					.buildDDLStatements(persistenceUnitContext);
 			return dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
 		} catch (Exception ex) {
 			throw new IllegalStateException(ex.getMessage());
 		}
 	}
 
-	public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo) throws IOException, SQLException, URISyntaxException {
+	public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo)
+			throws IOException, SQLException, URISyntaxException {
 		Properties properties = persistenceUnitInfo.getProperties();
 		LOG.debug("properties=" + properties);
 		String action = (String) properties.get("javax.persistence.schema-generation.database.action");

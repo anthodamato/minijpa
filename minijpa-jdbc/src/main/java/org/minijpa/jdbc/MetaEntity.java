@@ -31,7 +31,6 @@ public class MetaEntity {
 	private Class<?> entityClass;
 	private String name;
 	private String tableName;
-//	private String alias;
 	private Pk id;
 	/**
 	 * Collection of basic and relationship attributes.
@@ -73,10 +72,6 @@ public class MetaEntity {
 	public String getTableName() {
 		return tableName;
 	}
-
-//	public String getAlias() {
-//		return alias;
-//	}
 
 	public Pk getId() {
 		return id;
@@ -207,7 +202,8 @@ public class MetaEntity {
 	}
 
 	public Optional<MetaAttribute> findJoinColumnMappingAttribute(String attributeName) {
-		Optional<JoinColumnMapping> o = joinColumnMappings.stream().filter(j -> j.getAttribute().getName().equals(attributeName)).findFirst();
+		Optional<JoinColumnMapping> o = joinColumnMappings.stream()
+				.filter(j -> j.getAttribute().getName().equals(attributeName)).findFirst();
 		if (o.isPresent())
 			return Optional.of(o.get().getAttribute());
 
@@ -296,7 +292,6 @@ public class MetaEntity {
 		private Class<?> entityClass;
 		private String name;
 		private String tableName;
-//		private String alias;
 		private Pk id;
 		private boolean embeddedId;
 		private List<MetaAttribute> attributes;
@@ -329,11 +324,6 @@ public class MetaEntity {
 			this.tableName = tableName;
 			return this;
 		}
-
-//		public Builder withAlias(String alias) {
-//			this.alias = alias;
-//			return this;
-//		}
 
 		public Builder withId(Pk id) {
 			this.id = id;
@@ -395,7 +385,8 @@ public class MetaEntity {
 			return this;
 		}
 
-		public Builder withJoinColumnPostponedUpdateAttributeReadMethod(Optional<Method> joinColumnPostponedUpdateAttributeReadMethod) {
+		public Builder withJoinColumnPostponedUpdateAttributeReadMethod(
+				Optional<Method> joinColumnPostponedUpdateAttributeReadMethod) {
 			this.joinColumnPostponedUpdateAttributeReadMethod = joinColumnPostponedUpdateAttributeReadMethod;
 			return this;
 		}
@@ -425,7 +416,6 @@ public class MetaEntity {
 			metaEntity.entityClass = entityClass;
 			metaEntity.name = name;
 			metaEntity.tableName = tableName;
-//			metaEntity.alias = alias;
 			metaEntity.id = id;
 			metaEntity.embeddedId = embeddedId;
 			metaEntity.attributes = attributes;

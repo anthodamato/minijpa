@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jdbc.model;
 
-import org.minijpa.jdbc.LockType;
-import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.BasicDbJdbc;
+import java.util.Optional;
 
-public class DefaultDbJdbc extends BasicDbJdbc {
+/**
+ *
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
+public class OracleNameTranslator extends DefaultNameTranslator {
 
-    @Override
-    public String sequenceNextValueStatement(MetaEntity entity) {
-	return "";
-    }
+	@Override
+	public String toTableName(Optional<String> tableAlias, String tableName) {
+		if (tableAlias.isPresent())
+			return tableName + " " + tableAlias.get();
 
-    @Override
-    public String forUpdate(LockType lockType) {
-	return "for update";
-    }
+		return tableName;
+	}
 
 }

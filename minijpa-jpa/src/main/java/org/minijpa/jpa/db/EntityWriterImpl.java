@@ -34,7 +34,6 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlInsert;

@@ -15,21 +15,17 @@
  */
 package org.minijpa.jpa.db;
 
-import java.util.Optional;
-import org.minijpa.jdbc.DefaultNameTranslator;
+import org.minijpa.jdbc.DbTypeMapper;
+import org.minijpa.jdbc.JdbcRunner;
+import org.minijpa.jdbc.model.SqlStatementGenerator;
 
-/**
- *
- * @author Antonio Damato <anto.damato@gmail.com>
- */
-public class OracleNameTranslator extends DefaultNameTranslator {
+public interface DbConfiguration {
 
-	@Override
-	public String toTableName(Optional<String> tableAlias, String tableName) {
-		if (tableAlias.isPresent())
-			return tableName + " " + tableAlias.get();
+	public DbJdbc getDbJdbc();
 
-		return tableName;
-	}
+	public DbTypeMapper getDbTypeMapper();
 
+	public SqlStatementGenerator getSqlStatementGenerator();
+
+	public JdbcRunner getJdbcRunner();
 }

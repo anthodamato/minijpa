@@ -22,11 +22,11 @@ import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.EntityLoader;
+import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jpa.MetaEntityHelper;
@@ -43,20 +43,15 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 	private final ConnectionHolder connectionHolder;
 	private final AliasGenerator tableAliasGenerator;
 
-	public JoinTableCollectionQueryLevel(
-			SqlStatementFactory sqlStatementFactory,
-			DbConfiguration dbConfiguration,
-			ConnectionHolder connectionHolder,
-			AliasGenerator tableAliasGenerator) {
+	public JoinTableCollectionQueryLevel(SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration,
+			ConnectionHolder connectionHolder, AliasGenerator tableAliasGenerator) {
 		this.sqlStatementFactory = sqlStatementFactory;
 		this.dbConfiguration = dbConfiguration;
 		this.connectionHolder = connectionHolder;
 		this.tableAliasGenerator = tableAliasGenerator;
 	}
 
-	public Object run(Object primaryKey, Pk id,
-			Relationship relationship,
-			MetaAttribute metaAttribute,
+	public Object run(Object primaryKey, Pk id, Relationship relationship, MetaAttribute metaAttribute,
 			EntityLoader entityLoader) throws Exception {
 		ModelValueArray<AbstractAttribute> modelValueArray = null;
 		SqlSelect sqlSelect = null;
@@ -64,7 +59,6 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 			modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
 					relationship.getJoinTable().getOwningJoinColumnMapping().getJoinColumnAttributes());
 			List<AbstractAttribute> attributes = modelValueArray.getModels();
-
 			sqlSelect = sqlStatementFactory.generateSelectByJoinTable(relationship.getAttributeType(),
 					relationship.getJoinTable(), attributes, tableAliasGenerator);
 		} else {
@@ -79,8 +73,8 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
 		Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 				metaAttribute.getCollectionImplementationClass());
-		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
-				sqlSelect, collectionResult, entityLoader, parameters);
+		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql, sqlSelect, LockType.NONE,
+				collectionResult, entityLoader, parameters);
 		return collectionResult;
 	}
 

@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.LockType;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.join.FromJoin;
@@ -32,13 +30,14 @@ public class SqlSelect implements SqlStatement {
 	private List<FromTable> fromTables;
 	private Optional<List<FromJoin>> fromJoins = Optional.empty();
 	private List<FetchParameter> fetchParameters;
-	private MetaEntity result;
+	private FromTable result;
 	private List<Value> values;
 	private Optional<List<Condition>> conditions = Optional.empty();
 	private Optional<GroupBy> groupBy = Optional.empty();
 	private Optional<List<OrderBy>> orderByList = Optional.empty();
 	private boolean distinct = false;
-	private LockType lockType = LockType.NONE;
+//	private LockType lockType = LockType.NONE;
+	private Optional<ForUpdate> optionalForUpdate = Optional.empty();
 
 	private SqlSelect() {
 		super();
@@ -68,7 +67,7 @@ public class SqlSelect implements SqlStatement {
 		return fetchParameters;
 	}
 
-	public MetaEntity getResult() {
+	public FromTable getResult() {
 		return result;
 	}
 
@@ -80,8 +79,12 @@ public class SqlSelect implements SqlStatement {
 		return distinct;
 	}
 
-	public LockType getLockType() {
-		return lockType;
+//	public LockType getLockType() {
+//		return lockType;
+//	}
+
+	public Optional<ForUpdate> getOptionalForUpdate() {
+		return optionalForUpdate;
 	}
 
 	@Override
@@ -97,10 +100,10 @@ public class SqlSelect implements SqlStatement {
 		private List<Condition> conditions;
 		private List<FetchParameter> fetchColumnNameValues;
 		private GroupBy groupBy;
-		private MetaEntity result;
+		private FromTable result;
 		private List<OrderBy> orderByList;
 		private boolean distinct = false;
-		private LockType lockType = LockType.NONE;
+		private Optional<ForUpdate> optionalForUpdate = Optional.empty();
 
 		public SqlSelectBuilder() {
 			super();
@@ -154,7 +157,7 @@ public class SqlSelect implements SqlStatement {
 			return this;
 		}
 
-		public SqlSelectBuilder withResult(MetaEntity result) {
+		public SqlSelectBuilder withResult(FromTable result) {
 			this.result = result;
 			return this;
 		}
@@ -164,13 +167,18 @@ public class SqlSelect implements SqlStatement {
 			return this;
 		}
 
-		public SqlSelectBuilder withLockType(LockType lockType) {
-			if (lockType == LockType.PESSIMISTIC_READ)
-				this.lockType = LockType.PESSIMISTIC_READ;
+//		public SqlSelectBuilder withLockType(LockType lockType) {
+//			if (lockType == LockType.PESSIMISTIC_READ)
+//				this.lockType = LockType.PESSIMISTIC_READ;
+//
+//			if (lockType == LockType.PESSIMISTIC_WRITE)
+//				this.lockType = LockType.PESSIMISTIC_WRITE;
+//
+//			return this;
+//		}
 
-			if (lockType == LockType.PESSIMISTIC_WRITE)
-				this.lockType = LockType.PESSIMISTIC_WRITE;
-
+		public SqlSelectBuilder withForUpdate(Optional<ForUpdate> optionalForUpdate) {
+			this.optionalForUpdate = optionalForUpdate;
 			return this;
 		}
 
@@ -191,7 +199,8 @@ public class SqlSelect implements SqlStatement {
 
 			sqlSelect.result = result;
 			sqlSelect.distinct = distinct;
-			sqlSelect.lockType = lockType;
+//			sqlSelect.lockType = lockType;
+			sqlSelect.optionalForUpdate = optionalForUpdate;
 			return sqlSelect;
 		}
 	}

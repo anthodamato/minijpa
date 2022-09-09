@@ -17,8 +17,6 @@ package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
-import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.db.DbJdbc;
 import org.minijpa.jdbc.mapper.OracleDbTypeMapper;
 import org.minijpa.jdbc.model.OracleSqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
@@ -34,7 +32,8 @@ public class OracleConfiguration implements DbConfiguration {
 		super();
 		this.dbJdbc = new OracleJdbc();
 		this.dbTypeMapper = new OracleDbTypeMapper();
-		this.sqlStatementGenerator = new OracleSqlStatementGenerator(dbJdbc);
+		this.sqlStatementGenerator = new OracleSqlStatementGenerator();
+		this.sqlStatementGenerator.init();
 		this.jdbcRunner = new OracleJdbcRunner();
 	}
 

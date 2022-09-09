@@ -16,8 +16,6 @@
 package org.minijpa.jdbc.model;
 
 import java.util.List;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.Pk;
 
 /**
  *
@@ -25,35 +23,35 @@ import org.minijpa.jdbc.Pk;
  */
 public class SqlCreateTable implements SqlDDLStatement {
 
-    private final String tableName;
-    private final Pk pk;
-    private final List<MetaAttribute> attributes;
-    private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
+	private final String tableName;
+//	private final Pk pk;
+	private final JdbcPk jdbcPk;
+//	private final List<MetaAttribute> attributes;
+	private final List<ColumnDeclaration> columnDeclarations;
+	private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
 
-    public SqlCreateTable(String tableName,
-	    Pk pk,
-	    List<MetaAttribute> attributes,
-	    List<ForeignKeyDeclaration> foreignKeyDeclarations) {
-	this.tableName = tableName;
-	this.pk = pk;
-	this.attributes = attributes;
-	this.foreignKeyDeclarations = foreignKeyDeclarations;
-    }
+	public SqlCreateTable(String tableName, JdbcPk jdbcPk, List<ColumnDeclaration> columnDeclarations,
+			List<ForeignKeyDeclaration> foreignKeyDeclarations) {
+		this.tableName = tableName;
+		this.jdbcPk = jdbcPk;
+		this.columnDeclarations = columnDeclarations;
+		this.foreignKeyDeclarations = foreignKeyDeclarations;
+	}
 
-    public String getTableName() {
-	return tableName;
-    }
+	public String getTableName() {
+		return tableName;
+	}
 
-    public Pk getPk() {
-	return pk;
-    }
+	public JdbcPk getJdbcPk() {
+		return jdbcPk;
+	}
 
-    public List<MetaAttribute> getAttributes() {
-	return attributes;
-    }
+	public List<ColumnDeclaration> getColumnDeclarations() {
+		return columnDeclarations;
+	}
 
-    public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
-	return foreignKeyDeclarations;
-    }
+	public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
+		return foreignKeyDeclarations;
+	}
 
 }

@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc;
+package org.minijpa.jdbc.model;
 
 import java.util.Optional;
 
 public interface NameTranslator {
 
-    public String toColumnName(Optional<String> tableAlias, String columnName);
+	public String toColumnName(Optional<String> tableAlias, String columnName);
 
-    public String toTableName(Optional<String> tableAlias, String tableName);
+	public String toTableName(Optional<String> tableAlias, String tableName);
 
-    public default String adjustName(String name) {
-	return name;
-    }
+	public default String adjustName(String name) {
+		return name;
+	}
 }

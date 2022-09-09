@@ -23,7 +23,6 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.metadata.AliasGenerator;

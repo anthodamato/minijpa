@@ -15,32 +15,36 @@
  */
 package org.minijpa.jdbc;
 
+import org.minijpa.jdbc.model.FromTable;
+
 /**
  *
  * @author adamato
  */
 public interface EntityLoader {
 
-    public Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType) throws Exception;
+	public Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType) throws Exception;
 
-    public Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception;
+	public Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception;
 
-    public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType) throws Exception;
+	public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType)
+			throws Exception;
 
-    public Object build(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity, LockType lockType) throws Exception;
+	public Object build(ModelValueArray<FetchParameter> modelValueArray, FromTable fromTable, LockType lockType)
+			throws Exception;
 
-    /**
-     * Build the entity instance.
-     *
-     * @param modelValueArray
-     * @param entity
-     * @param lockType
-     * @return
-     * @throws Exception
-     */
-    public Object buildByValues(ModelValueArray<FetchParameter> modelValueArray,
-	    MetaEntity entity, LockType lockType) throws Exception;
+	/**
+	 * Build the entity instance.
+	 *
+	 * @param modelValueArray
+	 * @param entity
+	 * @param lockType
+	 * @return
+	 * @throws Exception
+	 */
+	public Object buildByValues(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity, LockType lockType)
+			throws Exception;
 
-    public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value) throws Exception;
+	public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value) throws Exception;
 
 }

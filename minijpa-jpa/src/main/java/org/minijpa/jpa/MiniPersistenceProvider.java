@@ -25,8 +25,8 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
 
 import org.minijpa.jpa.db.ConnectionProviderImpl;
+import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jdbc.DbMetaData;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationFactory;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.PersistenceUnitPropertyActions;

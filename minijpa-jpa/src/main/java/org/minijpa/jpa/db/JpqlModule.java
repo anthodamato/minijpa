@@ -6,7 +6,7 @@
 package org.minijpa.jpa.db;
 
 import java.io.StringReader;
-import org.minijpa.jdbc.db.DbConfiguration;
+
 import org.minijpa.jdbc.model.SqlStatement;
 import org.minijpa.jpa.jpql.ASTQLStatement;
 import org.minijpa.jpa.jpql.JpqlParser;

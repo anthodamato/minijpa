@@ -15,32 +15,40 @@
  */
 package org.minijpa.jdbc.model;
 
+import java.util.Optional;
+
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class ColumnDeclaration {
 
-    private final String name;
-    private final Class<?> type;
-    private final boolean pk;
+	private final String name;
+	private final Class<?> databaseType;
+	private Optional<JdbcDDLData> optionalJdbcDDLData = Optional.empty();
 
-    public ColumnDeclaration(String name, Class<?> type, boolean pk) {
-	this.name = name;
-	this.type = type;
-	this.pk = pk;
-    }
+	public ColumnDeclaration(String name, Class<?> databaseType) {
+		this.name = name;
+		this.databaseType = databaseType;
+	}
 
-    public String getName() {
-	return name;
-    }
+	public ColumnDeclaration(String name, Class<?> databaseType, Optional<JdbcDDLData> optionalJdbcDDLData) {
+		super();
+		this.name = name;
+		this.databaseType = databaseType;
+		this.optionalJdbcDDLData = optionalJdbcDDLData;
+	}
 
-    public Class<?> getType() {
-	return type;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public boolean isPk() {
-	return pk;
-    }
+	public Class<?> getDatabaseType() {
+		return databaseType;
+	}
+
+	public Optional<JdbcDDLData> getOptionalJdbcDDLData() {
+		return optionalJdbcDDLData;
+	}
 
 }

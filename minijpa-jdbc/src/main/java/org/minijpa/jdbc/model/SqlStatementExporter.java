@@ -16,7 +16,6 @@
 package org.minijpa.jdbc.model;
 
 import java.util.Optional;
-import org.minijpa.jdbc.db.DbJdbc;
 
 /**
  *
@@ -24,9 +23,9 @@ import org.minijpa.jdbc.db.DbJdbc;
  */
 public interface SqlStatementExporter {
 
-    public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc);
+	public String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator);
 
-    public String exportColumnAlias(String columnName, Optional<String> alias);
+	public String exportColumnAlias(String columnName, Optional<String> alias);
 
-    public String exportColumn(Column column);
+	public String exportColumn(Column column);
 }

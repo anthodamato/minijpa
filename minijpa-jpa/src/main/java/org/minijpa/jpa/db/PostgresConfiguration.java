@@ -17,8 +17,6 @@ package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
-import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.db.DbJdbc;
 import org.minijpa.jdbc.mapper.PostgresDbTypeMapper;
 import org.minijpa.jdbc.model.PostgresSqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
@@ -34,7 +32,8 @@ public class PostgresConfiguration implements DbConfiguration {
 		super();
 		this.dbJdbc = new PostgresJdbc();
 		this.dbTypeMapper = new PostgresDbTypeMapper();
-		this.sqlStatementGenerator = new PostgresSqlStatementGenerator(dbJdbc);
+		this.sqlStatementGenerator = new PostgresSqlStatementGenerator();
+		this.sqlStatementGenerator.init();
 		this.jdbcRunner = new JpaJdbcRunner();
 	}
 

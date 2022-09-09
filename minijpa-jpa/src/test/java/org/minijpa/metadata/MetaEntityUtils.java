@@ -14,7 +14,7 @@ import java.util.Optional;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.QueryResultMapping;
-import org.minijpa.jdbc.db.DbConfiguration;
+import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.metadata.enhancer.BytecodeEnhancer;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;

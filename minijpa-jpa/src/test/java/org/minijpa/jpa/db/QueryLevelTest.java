@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.db.DbConfigurationList;

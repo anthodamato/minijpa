@@ -11,7 +11,6 @@ import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
@@ -48,6 +47,7 @@ import org.minijpa.jdbc.model.function.Upper;
 import org.minijpa.jdbc.model.join.FromJoin;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.metadata.AliasGenerator;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -94,7 +94,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		if (jpqlVisitorParameters.identificationVariableEntity != null
 				&& jpqlVisitorParameters.identificationVariableEntity == jpqlVisitorParameters.sourceEntity) {
-			selectBuilder.withResult(jpqlVisitorParameters.sourceEntity);
+			selectBuilder.withResult(FromTable.of(jpqlVisitorParameters.sourceEntity.getTableName()));
 		}
 
 		jpqlVisitorParameters.fromTables.forEach(f -> selectBuilder.withFromTable(f));
@@ -1042,14 +1042,17 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				if (function instanceof CurrentTimestamp) {
 					return new FetchParameter("datetimeExpression", Types.TIMESTAMP, null);
 				}
-//				switch (sqlFunction) {
-//					case CURRENT_DATE:
-//						return new FetchParameter("datetimeExpression", java.sql.Date.class, java.sql.Date.class, Types.DATE, null, null, false);
-//					case CURRENT_TIME:
-//						return new FetchParameter("datetimeExpression", java.sql.Time.class, java.sql.Time.class, Types.TIME, null, null, false);
-//					case CURRENT_TIMESTAMP:
-//						return new FetchParameter("datetimeExpression", java.sql.Timestamp.class, java.sql.Timestamp.class, Types.TIMESTAMP, null, null, false);
-//				}
+				// switch (sqlFunction) {
+				// case CURRENT_DATE:
+				// return new FetchParameter("datetimeExpression", java.sql.Date.class,
+				// java.sql.Date.class, Types.DATE, null, null, false);
+				// case CURRENT_TIME:
+				// return new FetchParameter("datetimeExpression", java.sql.Time.class,
+				// java.sql.Time.class, Types.TIME, null, null, false);
+				// case CURRENT_TIMESTAMP:
+				// return new FetchParameter("datetimeExpression", java.sql.Timestamp.class,
+				// java.sql.Timestamp.class, Types.TIMESTAMP, null, null, false);
+				// }
 			} else {
 				return new FetchParameter("datetimeExpression", -1, null);
 			}
@@ -1522,7 +1525,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		}
 
 		return null;
-//		return new FetchParameter("aggregateExpression", null, Types.BIGINT, null);
+		// return new FetchParameter("aggregateExpression", null, Types.BIGINT, null);
 	}
 
 	/**

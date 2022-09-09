@@ -17,7 +17,7 @@ package org.minijpa.jdbc.model;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.minijpa.jdbc.db.DbJdbc;
+
 import org.minijpa.jdbc.model.function.Locate;
 
 /**
@@ -26,16 +26,39 @@ import org.minijpa.jdbc.model.function.Locate;
  */
 public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-	public PostgresSqlStatementGenerator(DbJdbc dbJdbc) {
-		super(dbJdbc);
+	public PostgresSqlStatementGenerator() {
+		super();
+	}
+
+	@Override
+	public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+		if (optionalSchema.isEmpty())
+			return "select nextval('" + sequenceName + "')";
+
+		return "select nextval(" + optionalSchema.get() + "." + sequenceName + "')";
+	}
+
+	@Override
+	public String forUpdateClause(ForUpdate forUpdate) {
+		return "for update";
+	}
+
+	@Override
+	public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+		if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
+			return "double precision";
+
+		if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
+			return "real";
+
+		return super.buildColumnDefinition(type, ddlData);
 	}
 
 	@Override
 	protected String export(SqlUpdate sqlUpdate, SqlStatementExporter sqlStatementExporter) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("update ");
-		sb.append(dbJdbc.getNameTranslator().toTableName(sqlUpdate.getFromTable().getAlias(),
-				sqlUpdate.getFromTable().getName()));
+		sb.append(nameTranslator.toTableName(sqlUpdate.getFromTable().getAlias(), sqlUpdate.getFromTable().getName()));
 		sb.append(" set ");
 
 		String sv = sqlUpdate.getTableColumns().stream().map(c -> {
@@ -54,7 +77,7 @@ public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator 
 	private String exportTableColumnForUpdate(TableColumn tableColumn) {
 		Column column = tableColumn.getColumn();
 
-		String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+		String c = nameTranslator.toColumnName(Optional.empty(), column.getName());
 		return c;
 	}
 

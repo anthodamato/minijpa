@@ -13,19 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc.db;
+package org.minijpa.jdbc.model;
 
-import org.minijpa.jdbc.DbTypeMapper;
-import org.minijpa.jdbc.JdbcRunner;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
+import java.util.Optional;
 
-public interface DbConfiguration {
+public class DefaultNameTranslator implements NameTranslator {
 
-    public DbJdbc getDbJdbc();
+	@Override
+	public String toColumnName(Optional<String> tableAlias, String columnName) {
+		if (tableAlias.isPresent())
+			return tableAlias.get() + "." + columnName;
 
-    public DbTypeMapper getDbTypeMapper();
+		return columnName;
+	}
 
-    public SqlStatementGenerator getSqlStatementGenerator();
+	@Override
+	public String toTableName(Optional<String> tableAlias, String tableName) {
+		if (tableAlias.isPresent())
+			return tableName + " AS " + tableAlias.get();
 
-    public JdbcRunner getJdbcRunner();
+		return tableName;
+	}
+
 }

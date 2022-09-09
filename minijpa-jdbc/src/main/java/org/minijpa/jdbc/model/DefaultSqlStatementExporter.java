@@ -16,7 +16,7 @@
 package org.minijpa.jdbc.model;
 
 import java.util.Optional;
-import org.minijpa.jdbc.db.DbJdbc;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +28,16 @@ public class DefaultSqlStatementExporter implements SqlStatementExporter {
 	private Logger LOG = LoggerFactory.getLogger(DefaultSqlStatementExporter.class);
 
 	@Override
-	public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
+	public String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
 		Optional<FromTable> optionalFromTable = tableColumn.getTable();
+		LOG.debug("exportTableColumn: optionalFromTable=" + optionalFromTable);
 		Column column = tableColumn.getColumn();
+		LOG.debug("exportTableColumn: column=" + column);
+		LOG.debug("exportTableColumn: nameTranslator=" + nameTranslator);
+		LOG.debug("exportTableColumn: column.getName()=" + column.getName());
 		if (optionalFromTable.isPresent()) {
-			LOG.debug("exportTableColumn: dbJdbc=" + dbJdbc);
-			String tc = dbJdbc.getNameTranslator().toColumnName(optionalFromTable.get().getAlias(), column.getName());
+			LOG.debug("exportTableColumn: optionalFromTable.get().getAlias()=" + optionalFromTable.get().getAlias());
+			String tc = nameTranslator.toColumnName(optionalFromTable.get().getAlias(), column.getName());
 			LOG.debug("exportTableColumn: tc=" + tc);
 			return exportColumnAlias(tc, column.getAlias());
 		}
@@ -41,7 +45,7 @@ public class DefaultSqlStatementExporter implements SqlStatementExporter {
 		if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
 			return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
 
-		String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+		String c = nameTranslator.toColumnName(Optional.empty(), column.getName());
 		return exportColumnAlias(c, column.getAlias());
 	}
 

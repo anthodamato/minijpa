@@ -23,14 +23,14 @@ import org.minijpa.jdbc.PkSequenceGenerator;
  */
 public class SqlCreateSequence implements SqlDDLStatement {
 
-    private final PkSequenceGenerator pkSequenceGenerator;
+	private final PkSequenceGenerator pkSequenceGenerator;
 
-    public SqlCreateSequence(PkSequenceGenerator pkSequenceGenerator) {
-	this.pkSequenceGenerator = pkSequenceGenerator;
-    }
+	public SqlCreateSequence(PkSequenceGenerator pkSequenceGenerator) {
+		this.pkSequenceGenerator = pkSequenceGenerator;
+	}
 
-    public PkSequenceGenerator getPkSequenceGenerator() {
-	return pkSequenceGenerator;
-    }
+	public PkSequenceGenerator getPkSequenceGenerator() {
+		return pkSequenceGenerator;
+	}
 
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc;
+package org.minijpa.jdbc.model;
 
 import java.util.Optional;
 
@@ -21,7 +21,7 @@ import java.util.Optional;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class DDLData {
+public class JdbcDDLData {
 
 	private final Optional<String> columnDefinition;
 	private final Optional<Integer> length;
@@ -29,7 +29,7 @@ public class DDLData {
 	private final Optional<Integer> scale;
 	private final Optional<Boolean> nullable;
 
-	public DDLData(Optional<String> columnDefinition, Optional<Integer> length, Optional<Integer> precision,
+	public JdbcDDLData(Optional<String> columnDefinition, Optional<Integer> length, Optional<Integer> precision,
 			Optional<Integer> scale, Optional<Boolean> nullable) {
 		this.columnDefinition = columnDefinition;
 		this.length = length;

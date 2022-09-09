@@ -15,8 +15,8 @@
  */
 package org.minijpa.jdbc.model;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
-import org.minijpa.jdbc.db.DbJdbc;
 
 /**
  *
@@ -24,8 +24,32 @@ import org.minijpa.jdbc.db.DbJdbc;
  */
 public class ApacheDerbySqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-	public ApacheDerbySqlStatementGenerator(DbJdbc dbJdbc) {
-		super(dbJdbc);
+	public ApacheDerbySqlStatementGenerator() {
+		super();
+	}
+
+	@Override
+	public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+		if (optionalSchema.isEmpty())
+			return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
+
+		return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
+	}
+
+	@Override
+	public String forUpdateClause(ForUpdate forUpdate) {
+		return "for update with rs";
+	}
+
+	@Override
+	public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+		if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
+			return "double precision";
+
+		if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
+			return "real";
+
+		return super.buildColumnDefinition(type, ddlData);
 	}
 
 	@Override
@@ -36,7 +60,7 @@ public class ApacheDerbySqlStatementGenerator extends DefaultSqlStatementGenerat
 		sb.append(sqlInsert.getFromTable().getName());
 		sb.append(" (");
 		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-			sb.append(sqlInsert.getMetaEntity().get().getId().getAttribute().getColumnName());
+			sb.append(sqlInsert.getIdentityColumn().get());
 			if (!cols.isEmpty())
 				sb.append(",");
 		}

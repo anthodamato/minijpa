@@ -17,10 +17,8 @@ package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
-import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.db.DbJdbc;
 import org.minijpa.jdbc.mapper.H2DbTypeMapper;
-import org.minijpa.jdbc.model.DefaultSqlStatementGenerator;
+import org.minijpa.jdbc.model.H2SqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
 
 public class H2Configuration implements DbConfiguration {
@@ -34,7 +32,8 @@ public class H2Configuration implements DbConfiguration {
 		super();
 		this.dbJdbc = new H2Jdbc();
 		this.dbTypeMapper = new H2DbTypeMapper();
-		this.sqlStatementGenerator = new DefaultSqlStatementGenerator(dbJdbc);
+		this.sqlStatementGenerator = new H2SqlStatementGenerator();
+		this.sqlStatementGenerator.init();
 		this.jdbcRunner = new JpaJdbcRunner();
 	}
 

@@ -15,28 +15,26 @@
  */
 package org.minijpa.jdbc.model;
 
-import org.minijpa.jdbc.relationship.JoinColumnMapping;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class ForeignKeyDeclaration {
 
-    private final JoinColumnMapping joinColumnMapping;
-    private final String referenceTable;
+	private final JdbcJoinColumnMapping jdbcJoinColumnMapping;
+	private final String referenceTable;
 
-    public ForeignKeyDeclaration(JoinColumnMapping joinColumnMapping, String referenceTable) {
-	this.joinColumnMapping = joinColumnMapping;
-	this.referenceTable = referenceTable;
-    }
+	public ForeignKeyDeclaration(JdbcJoinColumnMapping jdbcJoinColumnMapping, String referenceTable) {
+		this.jdbcJoinColumnMapping = jdbcJoinColumnMapping;
+		this.referenceTable = referenceTable;
+	}
 
-    public JoinColumnMapping getJoinColumnMapping() {
-	return joinColumnMapping;
-    }
+	public JdbcJoinColumnMapping getJdbcJoinColumnMapping() {
+		return jdbcJoinColumnMapping;
+	}
 
-    public String getReferenceTable() {
-	return referenceTable;
-    }
+	public String getReferenceTable() {
+		return referenceTable;
+	}
 
 }

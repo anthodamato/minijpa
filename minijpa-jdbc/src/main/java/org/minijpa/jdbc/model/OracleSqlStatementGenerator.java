@@ -15,9 +15,10 @@
  */
 package org.minijpa.jdbc.model;
 
+import java.sql.Time;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.minijpa.jdbc.db.DbJdbc;
+
 import org.minijpa.jdbc.model.function.Locate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,59 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 	private Logger LOG = LoggerFactory.getLogger(OracleSqlStatementGenerator.class);
 	private final SqlStatementExporter sqlDeleteExporter = new SqlDeleteExporter();
 
-	public OracleSqlStatementGenerator(DbJdbc dbJdbc) {
-		super(dbJdbc);
+	public OracleSqlStatementGenerator() {
+		super();
+	}
+
+	@Override
+	public NameTranslator createNameTranslator() {
+		return new OracleNameTranslator();
+	}
+
+	@Override
+	public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+		if (optionalSchema.isEmpty())
+			return "select " + sequenceName + ".nextval from dual";
+
+		return "select " + optionalSchema.get() + "." + sequenceName + ".nextval from dual";
+	}
+
+	@Override
+	public String forUpdateClause(ForUpdate forUpdate) {
+		return "for update";
+	}
+
+	@Override
+	public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+		if (type == Long.class || (type.isPrimitive() && type.getName().equals("long")))
+			return "number(19)";
+
+		if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int")))
+			return "number(10)";
+
+		if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
+			return "double precision";
+
+		if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
+			return "number(19,4)";
+
+		if (type == Boolean.class || (type.isPrimitive() && type.getName().equals("boolean")))
+			return "number(1)";
+
+		if (type == Time.class)
+			return "date";
+
+		return super.buildColumnDefinition(type, ddlData);
+	}
+
+	@Override
+	public String trueValue() {
+		return "1";
+	}
+
+	@Override
+	public String falseValue() {
+		return "0";
 	}
 
 	@Override
@@ -43,7 +95,7 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 	protected String export(SqlDelete sqlDelete, SqlStatementExporter sqlStatementExporter) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("delete from ");
-		sb.append(dbJdbc.getNameTranslator().toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
+		sb.append(nameTranslator.toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
 
 		if (sqlDelete.getCondition().isPresent()) {
 			sb.append(" where ");
@@ -61,7 +113,7 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 		sb.append(sqlInsert.getFromTable().getName());
 		sb.append(" (");
 		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-			sb.append(sqlInsert.getMetaEntity().get().getId().getAttribute().getColumnName());
+			sb.append(sqlInsert.getIdentityColumn().get());
 			if (!cols.isEmpty())
 				sb.append(",");
 		}
@@ -105,18 +157,18 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 	private class SqlDeleteExporter extends DefaultSqlStatementExporter {
 
 		@Override
-		public String exportTableColumn(TableColumn tableColumn, DbJdbc dbJdbc) {
+		public String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
 			Optional<FromTable> optionalFromTable = tableColumn.getTable();
 			Column column = tableColumn.getColumn();
 			if (optionalFromTable.isPresent()) {
-				String tc = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+				String tc = nameTranslator.toColumnName(Optional.empty(), column.getName());
 				return exportColumnAlias(tc, Optional.empty());
 			}
 
 			if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
 				return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
 
-			String c = dbJdbc.getNameTranslator().toColumnName(Optional.empty(), column.getName());
+			String c = nameTranslator.toColumnName(Optional.empty(), column.getName());
 			return exportColumnAlias(c, Optional.empty());
 		}
 
