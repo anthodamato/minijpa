@@ -200,7 +200,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				MetaEntity metaEntity = optional.get();
 				if (jpqlVisitorParameters.distinct) {
 					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
-							FromTable.of(metaEntity, sqlTableAlias));
+							FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(values);
 
 					List<FetchParameter> fetchParameters = new ArrayList<>();
@@ -211,7 +211,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 					jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
 					jpqlVisitorParameters.identificationVariableEntity = metaEntity;
 				} else {
-					List<Value> values = MetaEntityHelper.toValues(metaEntity, FromTable.of(metaEntity, sqlTableAlias));
+					List<Value> values = MetaEntityHelper.toValues(metaEntity,
+							FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(values);
 					List<FetchParameter> fetchParameters = MetaEntityHelper.convertAllAttributes(metaEntity);
 					jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
@@ -273,14 +274,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			LOG.debug("visit: ASTRangeVariableDeclaration optionalAlias.isEmpty() tableAlias=" + tableAlias);
 			jpqlVisitorParameters.aliases.put(rvdAlias, tableAlias);
 			jpqlVisitorParameters.sourceEntity = sourceEntity;
-			FromTable fromTable = FromTable.of(sourceEntity, tableAlias);
+			FromTable fromTable = FromTable.of(sourceEntity.getTableName(), tableAlias);
 			jpqlVisitorParameters.fromTables.add(fromTable);
 		} else {
 			String tableAlias = tableAliasGenerator.next(sourceEntity.getTableName());
 			LOG.debug("visit: ASTRangeVariableDeclaration !optionalAlias.isEmpty() tableAlias=" + tableAlias);
 			jpqlVisitorParameters.aliases.put(rvdAlias, tableAlias);
 			jpqlVisitorParameters.sourceEntity = sourceEntity;
-			FromTable fromTable = FromTable.of(sourceEntity, tableAlias);
+			FromTable fromTable = FromTable.of(sourceEntity.getTableName(), tableAlias);
 			jpqlVisitorParameters.fromTables.add(fromTable);
 		}
 
@@ -1201,7 +1202,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 					node.setMetaAttributes(Arrays.asList(metaAttribute));
 				}
 
-				node.setFromTable(FromTable.of(metaEntity, sqlTableAlias));
+				node.setFromTable(FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 			}
 		}
 
@@ -1229,7 +1230,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				String attributePath = singleValuedPathExpression.getAttributePath();
 				if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
 					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
-							FromTable.of(metaEntity, sqlTableAlias));
+							FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(values);
 
 					List<FetchParameter> fetchParameters = new ArrayList<>();
@@ -1244,7 +1245,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 								+ "' entity not found");
 					}
 
-					Value value = MetaEntityHelper.toValue(metaAttribute, FromTable.of(metaEntity, sqlTableAlias));
+					Value value = MetaEntityHelper.toValue(metaAttribute,
+							FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(Arrays.asList(value));
 					jpqlVisitorParameters.fetchParameters
 							.addAll(Arrays.asList(MetaEntityHelper.toFetchParameter(metaAttribute)));
@@ -1322,7 +1324,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 						if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
 							List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
-									FromTable.of(metaEntity, sqlTableAlias));
+									FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 							values.forEach(v -> {
 								OrderBy orderBy = new OrderBy(v, orderByItem.getOrderByType());
 								jpqlVisitorParameters.orderByList.add(orderBy);
@@ -1336,7 +1338,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 							}
 
 							TableColumn value = MetaEntityHelper.toValue(metaAttribute,
-									FromTable.of(metaEntity, sqlTableAlias));
+									FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 							OrderBy orderBy = new OrderBy(value, orderByItem.getOrderByType());
 							jpqlVisitorParameters.orderByList.add(orderBy);
 						}
@@ -1432,8 +1434,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				}
 
 				if (metaAttribute.getRelationship() != null) {
-					FromTable fromTable = FromTable.of(metaAttribute.getRelationship().getAttributeType(),
-							tableAliasGenerator
+					FromTable fromTable = FromTable
+							.of(metaAttribute.getRelationship().getAttributeType().getTableName(), tableAliasGenerator
 									.getDefault(metaAttribute.getRelationship().getAttributeType().getTableName()));
 					jpqlVisitorParameters.fromTables.add(fromTable);
 					if (metaAttribute.getRelationship().getJoinTable() != null) {
@@ -1495,7 +1497,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			}
 
 			MetaEntity metaEntity = optional.get();
-			argument = new TableColumn(FromTable.of(metaEntity, sqlTableAlias),
+			argument = new TableColumn(FromTable.of(metaEntity.getTableName(), sqlTableAlias),
 					new Column(metaEntity.getId().getAttributes().get(0).getColumnName()));
 		} else {
 			Node n0 = node.jjtGetChild(0);
@@ -1603,10 +1605,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			MetaEntity metaEntity = optional.get();
 			if (jpqlVisitorParameters.distinct) {
 				List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
-						FromTable.of(metaEntity, sqlTableAlias));
+						FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 				jpqlVisitorParameters.values.addAll(values);
 			} else {
-				List<Value> values = MetaEntityHelper.toValues(metaEntity, FromTable.of(metaEntity, sqlTableAlias));
+				List<Value> values = MetaEntityHelper.toValues(metaEntity,
+						FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 				jpqlVisitorParameters.values.addAll(values);
 			}
 

@@ -6,10 +6,10 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>minijpa-jdbc</artifactId>
+	<artifactId>minijpa-jdbc-model</artifactId>
 	<packaging>jar</packaging>
 
-	<name>minijpa Jdbc</name>
+	<name>minijpa Jdbc Model</name>
 
 	<build>
 		<plugins>
@@ -28,11 +28,6 @@
 	</build>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.minijpa</groupId>
-			<artifactId>minijpa-jdbc-model</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>

@@ -133,8 +133,8 @@ public class SqlStatementFactory {
 			return new Column(c);
 		}).collect(Collectors.toList());
 
-		return new SqlInsert(FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName())), cs,
-				hasIdentityColumn, identityColumnNull,
+		return new SqlInsert(FromTable.of(entity.getTableName(), tableAliasGenerator.getDefault(entity.getTableName())),
+				cs, hasIdentityColumn, identityColumnNull,
 				metaEntity.isPresent() ? Optional.of(metaEntity.get().getId().getAttribute().getColumnName())
 						: Optional.empty());
 	}
@@ -152,7 +152,8 @@ public class SqlStatementFactory {
 	public SqlSelectData generateSelectById(MetaEntity entity, LockType lockType, AliasGenerator tableAliasGenerator)
 			throws Exception {
 		List<FetchParameter> fetchParameters = MetaEntityHelper.convertAllAttributes(entity);
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		List<TableColumn> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
 			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
@@ -172,7 +173,8 @@ public class SqlStatementFactory {
 			throws Exception {
 		FetchParameter fetchParameter = MetaEntityHelper.toFetchParameter(entity.getVersionAttribute().get());
 
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		List<TableColumn> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
 		List<Condition> conditions = tableColumns.stream().map(t -> {
 			return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
@@ -195,7 +197,8 @@ public class SqlStatementFactory {
 		// LOG.info("generateSelectByForeignKey: fetchColumnNameValues=" +
 		// fetchColumnNameValues);
 		// LOG.info("generateSelectByForeignKey: parameters=" + parameters);
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		List<TableColumn> tableColumns = columns.stream().map(c -> new TableColumn(fromTable, new Column(c)))
 				.collect(Collectors.toList());
 		List<Condition> conditions = tableColumns.stream().map(t -> {
@@ -345,7 +348,7 @@ public class SqlStatementFactory {
 			List<Condition> conditions = new ArrayList<>();
 			FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(),
 					tableAliasGenerator.getDefault(relationshipJoinTable.getTableName()));
-			FromTable fromTable = FromTable.of(owningEntity,
+			FromTable fromTable = FromTable.of(owningEntity.getTableName(),
 					tableAliasGenerator.getDefault(owningEntity.getTableName()));
 			// op.orders_id = o.id
 			// handle composite primary key
@@ -361,7 +364,7 @@ public class SqlStatementFactory {
 			}
 
 			// p.id = op.products_id
-			FromTable targetTable = FromTable.of(targetEntity,
+			FromTable targetTable = FromTable.of(targetEntity.getTableName(),
 					tableAliasGenerator.getDefault(targetEntity.getTableName()));
 			List<JoinColumnAttribute> targetJoinColumnAttributes = relationshipJoinTable.getTargetJoinColumnMapping()
 					.getJoinColumnAttributes();
@@ -399,7 +402,8 @@ public class SqlStatementFactory {
 		FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(),
 				tableAliasGenerator.getDefault(relationshipJoinTable.getTableName()));
 		FromJoin fromJoin = calculateFromTableByJoinTable(entity, relationshipJoinTable, tableAliasGenerator);
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		// handles multiple column pk
 
 		List<TableColumn> tableColumns = MetaEntityHelper.attributesToTableColumns(attributes, joinTable);
@@ -435,7 +439,8 @@ public class SqlStatementFactory {
 				tableAliasGenerator.getDefault(relationshipJoinTable.getTableName()));
 		String tableAlias = tableAliasGenerator.getDefault(entity.getTableName());
 		FromJoin fromJoin = new FromJoinImpl(joinTable, tableAlias, idColumns, idTargetColumns);
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		// handles multiple column pk
 
 		List<TableColumn> tableColumns = MetaEntityHelper.attributesToTableColumns(attributes, joinTable);
@@ -479,7 +484,8 @@ public class SqlStatementFactory {
 
 	public SqlUpdate generateUpdate(MetaEntity entity, List<String> columns, List<String> idColumnNames,
 			AliasGenerator tableAliasGenerator) throws Exception {
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		List<TableColumn> cs = columns.stream().map(c -> {
 			return new TableColumn(fromTable, new Column(c));
 		}).collect(Collectors.toList());
@@ -490,7 +496,8 @@ public class SqlStatementFactory {
 
 	public SqlDelete generateDeleteById(MetaEntity entity, List<String> idColumnNames,
 			AliasGenerator tableAliasGenerator) throws Exception {
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		Condition condition = createAttributeEqualCondition(fromTable, idColumnNames);
 		return new SqlDelete(fromTable, Optional.of(condition));
 	}
@@ -541,7 +548,7 @@ public class SqlStatementFactory {
 					return Optional
 							.of(new Count(
 									new TableColumn(
-											FromTable.of(metaEntity,
+											FromTable.of(metaEntity.getTableName(),
 													tableAliasGenerator.getDefault(metaEntity.getTableName())),
 											new Column(idAttrs.get(0).getColumnName())),
 									aggregateFunctionExpression.isDistinct()));
@@ -566,7 +573,7 @@ public class SqlStatementFactory {
 				AttributePath<?> miniPath = (AttributePath<?>) binaryExpression.getX().get();
 				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
 				builder.setLeftExpression(new TableColumn(
-						FromTable.of(miniPath.getMetaEntity(),
+						FromTable.of(miniPath.getMetaEntity().getTableName(),
 								tableAliasGenerator.getDefault(miniPath.getMetaEntity().getTableName())),
 						new Column(metaAttribute.getColumnName())));
 			}
@@ -581,7 +588,7 @@ public class SqlStatementFactory {
 				AttributePath<?> miniPath = (AttributePath<?>) binaryExpression.getY().get();
 				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
 				builder.setRightExpression(new TableColumn(
-						FromTable.of(miniPath.getMetaEntity(),
+						FromTable.of(miniPath.getMetaEntity().getTableName(),
 								tableAliasGenerator.getDefault(miniPath.getMetaEntity().getTableName())),
 						new Column(metaAttribute.getColumnName())));
 			}
@@ -734,7 +741,7 @@ public class SqlStatementFactory {
 	private TableColumn createTableColumnFromPath(AttributePath<?> miniPath, AliasGenerator tableAliasGenerator) {
 		MetaAttribute attribute1 = miniPath.getMetaAttribute();
 		return new TableColumn(
-				FromTable.of(miniPath.getMetaEntity(),
+				FromTable.of(miniPath.getMetaEntity().getTableName(),
 						tableAliasGenerator.getDefault(miniPath.getMetaEntity().getTableName())),
 				new Column(attribute1.getColumnName()));
 	}
@@ -1140,7 +1147,7 @@ public class SqlStatementFactory {
 				AttributePath<?> miniPath = (AttributePath<?>) expression;
 				MetaAttribute metaAttribute = miniPath.getMetaAttribute();
 				TableColumn tableColumn = new TableColumn(
-						FromTable.of(miniPath.getMetaEntity(),
+						FromTable.of(miniPath.getMetaEntity().getTableName(),
 								tableAliasGenerator.getDefault(miniPath.getMetaEntity().getTableName())),
 						new Column(metaAttribute.getColumnName()));
 				OrderByType orderByType = order.isAscending() ? OrderByType.ASC : OrderByType.DESC;
@@ -1182,7 +1189,8 @@ public class SqlStatementFactory {
 			entity.getBasicAttributes().forEach(b -> LOG.debug("select: b=" + b));
 			fetchParameters.forEach(f -> LOG.debug("select: f.getAttribute()=" + f.getAttribute()));
 
-			FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+			FromTable fromTable = FromTable.of(entity.getTableName(),
+					tableAliasGenerator.getDefault(entity.getTableName()));
 			SqlSelect.SqlSelectBuilder sqlSelectBuilder = new SqlSelect.SqlSelectBuilder(fromTable);
 			if (lockType != null)
 				sqlSelectBuilder.withForUpdate(calcForUpdate(lockType));
@@ -1192,7 +1200,8 @@ public class SqlStatementFactory {
 			return new StatementParameters(new SqlSelectData(sqlSelect, fetchParameters), parameters);
 		}
 
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		List<Value> values = createSelectionValues(fromTable, selection, tableAliasGenerator);
 		List<FetchParameter> fetchParameters = createFetchParameters(selection);
 		Optional<List<OrderBy>> optionalOrderBy = createOrderByList(criteriaQuery, tableAliasGenerator);
@@ -1222,7 +1231,8 @@ public class SqlStatementFactory {
 		CriteriaUpdate<?> criteriaUpdate = ((UpdateQuery) query).getCriteriaUpdate();
 		MetaEntity entity = ((MiniRoot<?>) criteriaUpdate.getRoot()).getMetaEntity();
 
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		List<TableColumn> columns = new ArrayList<>();
 		Map<Path<?>, Object> setValues = ((MiniCriteriaUpdate) criteriaUpdate).getSetValues();
 		setValues.forEach((k, v) -> {
@@ -1257,7 +1267,8 @@ public class SqlStatementFactory {
 		CriteriaDelete<?> criteriaDelete = ((DeleteQuery) query).getCriteriaDelete();
 		MetaEntity entity = ((MiniRoot<?>) criteriaDelete.getRoot()).getMetaEntity();
 
-		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
+		FromTable fromTable = FromTable.of(entity.getTableName(),
+				tableAliasGenerator.getDefault(entity.getTableName()));
 		List<QueryParameter> parameters = new ArrayList<>();
 
 		Predicate restriction = criteriaDelete.getRestriction();

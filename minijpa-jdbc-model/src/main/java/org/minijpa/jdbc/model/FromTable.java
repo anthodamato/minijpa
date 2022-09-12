@@ -17,7 +17,7 @@ package org.minijpa.jdbc.model;
 
 import java.util.Optional;
 
-import org.minijpa.jdbc.MetaEntity;
+//import org.minijpa.jdbc.MetaEntity;
 
 public interface FromTable {
 
@@ -25,9 +25,9 @@ public interface FromTable {
 
 	public Optional<String> getAlias();
 
-	public static FromTable of(MetaEntity entity, String alias) {
-		return new FromTableImpl(entity.getTableName(), alias);
-	}
+//	public static FromTable of(MetaEntity entity, String alias) {
+//		return new FromTableImpl(entity.getTableName(), alias);
+//	}
 
 	public static FromTable of(String tableName) {
 		return new FromTableImpl(tableName);

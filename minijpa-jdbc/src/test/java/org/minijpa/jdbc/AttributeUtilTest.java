@@ -23,10 +23,10 @@ import org.junit.jupiter.api.Test;
 
 public class AttributeUtilTest {
 
-    @Test
-    public void isCollectionClass() {
-	List<String> list = Arrays.asList("test1", "test2");
-	boolean isCollection = CollectionUtils.isCollectionClass(list.getClass());
-	Assertions.assertTrue(isCollection);
-    }
+	@Test
+	public void isCollectionClass() {
+		List<String> list = Arrays.asList("test1", "test2");
+		boolean isCollection = CollectionUtils.isCollectionClass(list.getClass());
+		Assertions.assertTrue(isCollection);
+	}
 }

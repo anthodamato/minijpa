@@ -16,6 +16,7 @@
 	</properties>
 
 	<modules>
+		<module>minijpa-jdbc-model</module>
 		<module>minijpa-jdbc</module>
 		<module>minijpa-jpa</module>
 		<module>minijpa-assembly</module>
