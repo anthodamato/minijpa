@@ -11,6 +11,7 @@ import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.model.FromTableImpl;
@@ -82,10 +83,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		this.tableAliasGenerator = persistenceUnitContext.createTableAliasGenerator();
 		JpqlVisitorParameters jpqlVisitorParameters = new JpqlVisitorParameters();
 		node.childrenAccept(this, jpqlVisitorParameters);
+		LOG.debug("visit: ASTSelectStatement - ");
 		return createFromParameters(jpqlVisitorParameters);
 	}
 
-	private SqlSelect createFromParameters(JpqlVisitorParameters jpqlVisitorParameters) {
+	private SqlSelectData createFromParameters(JpqlVisitorParameters jpqlVisitorParameters) {
 		SqlSelect.SqlSelectBuilder selectBuilder = new SqlSelect.SqlSelectBuilder();
 
 		if (jpqlVisitorParameters.distinct) {
@@ -104,7 +106,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		selectBuilder.withValues(jpqlVisitorParameters.values);
 		jpqlVisitorParameters.values.forEach(v -> LOG.debug("createFromParameters: v=" + v));
-		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
+//		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
 
 		selectBuilder.withConditions(jpqlVisitorParameters.conditions);
 		if (jpqlVisitorParameters.groupBy != null) {
@@ -115,7 +117,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		LOG.debug("createFromParameters: jpqlVisitorParameters.conditions=" + jpqlVisitorParameters.conditions);
 
-		return selectBuilder.build();
+		SqlSelect sqlSelect = selectBuilder.build();
+		return new SqlSelectData(sqlSelect, jpqlVisitorParameters.fetchParameters);
 	}
 
 	private Optional<MetaEntity> findMetaEntityBySqlAlias(String sqlAlias) {
@@ -648,6 +651,10 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			return (SqlSelect) result;
 		}
 
+		if (result instanceof SqlSelectData) {
+			return (SqlSelectData) result;
+		}
+
 		if (expression.jjtGetNumChildren() > 0) {
 			Node node0 = expression.jjtGetChild(0);
 			if (node0 instanceof ASTFunctionsReturningNumerics) {
@@ -937,7 +944,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			node.setPath(stateValuedPathExpression.getPath());
 		} else if (n0_0 instanceof ASTSubquery) {
 			ASTSubquery subquery = (ASTSubquery) n0_0;
-			node.setResult(subquery.getSqlSelect());
+			node.setResult(subquery.getSqlSelectData().getSqlSelect());
 		}
 
 		return object;
@@ -1139,7 +1146,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			} else {
 				// subquery
 				ASTSubquery subquery = (ASTSubquery) node.jjtGetChild(1);
-				items.add(subquery.getSqlSelect());
+				items.add(subquery.getSqlSelectData().getSqlSelect());
 			}
 
 			Condition condition = new InCondition(tableColumn, items, node.isNot());
@@ -1469,8 +1476,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		jvp.aliases.putAll(jpqlVisitorParameters.aliases);
 		Object object = node.childrenAccept(this, jvp);
 
-		SqlSelect sqlSelect = createFromParameters(jvp);
-		node.setSqlSelect(sqlSelect);
+		SqlSelectData sqlSelectData = createFromParameters(jvp);
+		node.setSqlSelectData(sqlSelectData);
 		return jpqlVisitorParameters;
 	}
 

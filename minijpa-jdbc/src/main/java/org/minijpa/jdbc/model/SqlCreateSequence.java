@@ -15,22 +15,20 @@
  */
 package org.minijpa.jdbc.model;
 
-import org.minijpa.jdbc.PkSequenceGenerator;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class SqlCreateSequence implements SqlDDLStatement {
 
-	private final PkSequenceGenerator pkSequenceGenerator;
+	private final JdbcSequenceParams jdbcSequenceParams;
 
-	public SqlCreateSequence(PkSequenceGenerator pkSequenceGenerator) {
-		this.pkSequenceGenerator = pkSequenceGenerator;
+	public SqlCreateSequence(JdbcSequenceParams jdbcSequenceParams) {
+		this.jdbcSequenceParams = jdbcSequenceParams;
 	}
 
-	public PkSequenceGenerator getPkSequenceGenerator() {
-		return pkSequenceGenerator;
+	public JdbcSequenceParams getJdbcSequenceParams() {
+		return jdbcSequenceParams;
 	}
 
 }

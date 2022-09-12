@@ -916,13 +916,11 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 	public String export(SqlCreateSequence sqlCreateSequence) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("create sequence ");
-		LOG.debug("export: sqlCreateSequence.getPkSequenceGenerator().getSequenceName()="
-				+ sqlCreateSequence.getPkSequenceGenerator().getSequenceName());
-		sb.append(nameTranslator.adjustName(sqlCreateSequence.getPkSequenceGenerator().getSequenceName()));
+		sb.append(nameTranslator.adjustName(sqlCreateSequence.getJdbcSequenceParams().getSequenceName()));
 		sb.append(" start with ");
-		sb.append(sqlCreateSequence.getPkSequenceGenerator().getInitialValue());
+		sb.append(sqlCreateSequence.getJdbcSequenceParams().getInitialValue());
 		sb.append(" increment by ");
-		sb.append(sqlCreateSequence.getPkSequenceGenerator().getAllocationSize());
+		sb.append(sqlCreateSequence.getJdbcSequenceParams().getAllocationSize());
 		return sb.toString();
 	}
 

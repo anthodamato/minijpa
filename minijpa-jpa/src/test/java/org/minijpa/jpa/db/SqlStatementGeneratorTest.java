@@ -126,7 +126,6 @@ public class SqlStatementGeneratorTest {
 		DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
 		DbConfigurationList.getInstance().setDbConfiguration("booking_sale", dbConfiguration);
 		PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("booking_sale");
-		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc().buildDDLStatements(persistenceUnitContext);
 		Assertions.assertEquals(3, sqlStatements.size());
 		List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
@@ -169,7 +168,6 @@ public class SqlStatementGeneratorTest {
 		DbConfiguration dbConfiguration = new ApacheDerbyConfiguration();
 		DbConfigurationList.getInstance().setDbConfiguration("emb_booking", dbConfiguration);
 		PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("emb_booking");
-		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc().buildDDLStatements(persistenceUnitContext);
 		Assertions.assertEquals(1, sqlStatements.size());
 		List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
@@ -186,7 +184,6 @@ public class SqlStatementGeneratorTest {
 		DbConfigurationList.getInstance().setDbConfiguration("embed_many_to_one", dbConfiguration);
 		PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("embed_many_to_one");
 
-		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc().buildDDLStatements(persistenceUnitContext);
 		Assertions.assertEquals(2, sqlStatements.size());
 		List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
@@ -239,7 +236,6 @@ public class SqlStatementGeneratorTest {
 		DbConfigurationList.getInstance().setDbConfiguration("purchase_stats", dbConfiguration);
 		PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("purchase_stats");
 
-		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc().buildDDLStatements(persistenceUnitContext);
 		Assertions.assertEquals(2, sqlStatements.size());
 		List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
@@ -281,7 +277,6 @@ public class SqlStatementGeneratorTest {
 		DbConfigurationList.getInstance().setDbConfiguration("otm_emb_booking", dbConfiguration);
 		PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("otm_emb_booking");
 
-		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc().buildDDLStatements(persistenceUnitContext);
 		Assertions.assertEquals(4, sqlStatements.size());
 		List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);

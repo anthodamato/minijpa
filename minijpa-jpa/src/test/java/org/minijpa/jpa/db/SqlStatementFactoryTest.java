@@ -26,10 +26,10 @@ import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.db.SqlSelectData;
+import org.minijpa.jdbc.db.StatementParameters;
 import org.minijpa.jdbc.model.ApacheDerbySqlStatementGenerator;
-import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlStatementGenerator;
-import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.condition.BinaryCondition;
 import org.minijpa.jdbc.model.condition.Condition;
@@ -85,9 +85,9 @@ public class SqlStatementFactoryTest {
 		List<String> columns = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 
 		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(employeeEntity, foreignKeyAttribute,
-				columns, optional.get().getTableAliasGenerator());
-		Optional<List<Condition>> opt = sqlSelect.getConditions();
+		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(employeeEntity,
+				foreignKeyAttribute, columns, optional.get().getTableAliasGenerator());
+		Optional<List<Condition>> opt = sqlSelectData.getSqlSelect().getConditions();
 		Assertions.assertTrue(opt.isPresent());
 		List<Condition> conditions = opt.get();
 		Assertions.assertEquals(1, conditions.size());
@@ -97,7 +97,7 @@ public class SqlStatementFactoryTest {
 		Assertions.assertEquals("department_id",
 				((TableColumn) equalColumnExprCondition.getLeft()).getColumn().getName());
 
-		String sql = sqlStatementGenerator.export(sqlSelect);
+		String sql = sqlStatementGenerator.export(sqlSelectData.getSqlSelect());
 		Assertions.assertEquals(
 				"select employee0.id, employee0.salary, employee0.name, employee0.department_id from Employee AS employee0 where employee0.department_id = ?",
 				sql);
@@ -150,13 +150,13 @@ public class SqlStatementFactoryTest {
 				store.getId(), relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
 		List<AbstractAttribute> attributes = modelValueArray.getModels();
 		List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
-		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
+		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
 				attributes, optional.get().getTableAliasGenerator());
 
-		Optional<List<Condition>> opt = sqlSelect.getConditions();
+		Optional<List<Condition>> opt = sqlSelectData.getSqlSelect().getConditions();
 		Assertions.assertTrue(opt.isPresent());
 
-		String sql = sqlStatementGenerator.export(sqlSelect);
+		String sql = sqlStatementGenerator.export(sqlSelectData.getSqlSelect());
 		Assertions.assertEquals(
 				"select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
 				sql);
@@ -189,13 +189,13 @@ public class SqlStatementFactoryTest {
 				relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
 		List<AbstractAttribute> attributes = modelValueArray.getModels();
 		List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
-		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
+		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
 				attributes, optional.get().getTableAliasGenerator());
 
-		Optional<List<Condition>> opt = sqlSelect.getConditions();
+		Optional<List<Condition>> opt = sqlSelectData.getSqlSelect().getConditions();
 		Assertions.assertTrue(opt.isPresent());
 
-		String sql = sqlStatementGenerator.export(sqlSelect);
+		String sql = sqlStatementGenerator.export(sqlSelectData.getSqlSelect());
 		Assertions.assertEquals(
 				"select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
 				sql);
@@ -235,9 +235,9 @@ public class SqlStatementFactoryTest {
 		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		StatementParameters statementParameters = sqlStatementFactory.select(typedQuery,
 				optional.get().getTableAliasGenerator());
-		SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
-		Assertions.assertNotNull(sqlSelect.getValues());
-		Optional<List<Condition>> opt = sqlSelect.getConditions();
+		SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+		Assertions.assertNotNull(sqlSelectData.getSqlSelect().getValues());
+		Optional<List<Condition>> opt = sqlSelectData.getSqlSelect().getConditions();
 		Assertions.assertTrue(opt.isPresent());
 		List<Condition> conditions = opt.get();
 		Assertions.assertEquals(1, conditions.size());
@@ -247,7 +247,7 @@ public class SqlStatementFactoryTest {
 		UnaryCondition unaryCondition = (UnaryCondition) condition;
 		Assertions.assertNotNull(unaryCondition.getTableColumn());
 
-		String sql = sqlStatementGenerator.export(sqlSelect);
+		String sql = sqlStatementGenerator.export(sqlSelectData.getSqlSelect());
 		Assertions.assertEquals(
 				"select address0.id, address0.name, address0.postcode, address0.tt from Address AS address0 where address0.postcode is null",
 				sql);

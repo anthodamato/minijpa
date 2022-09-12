@@ -22,9 +22,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.minijpa.jdbc.model.MySQLSqlStatementGenerator;
 import org.minijpa.jdbc.model.SqlDDLStatement;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
 import org.minijpa.metadata.PersistenceUnitContext;
 
 /**
@@ -33,14 +31,12 @@ import org.minijpa.metadata.PersistenceUnitContext;
  */
 public class MySQLStatementGeneratorTest {
 
-	private final SqlStatementGenerator sqlStatementGenerator = new MySQLSqlStatementGenerator();
 	private final DbConfiguration dbConfiguration = new MySQLConfiguration();
 
 	@Test
 	public void ddlCitizens() throws Exception {
 		DbConfigurationList.getInstance().setDbConfiguration("citizens", dbConfiguration);
 		PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("citizens");
-		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc().buildDDLStatements(persistenceUnitContext);
 		Assertions.assertEquals(2, sqlStatements.size());
 //	List<String> ddlStatements = sqlStatements.stream()

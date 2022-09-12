@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.model.aggregate.GroupBy;
 import org.minijpa.jdbc.model.condition.Condition;
 import org.minijpa.jdbc.model.join.FromJoin;
@@ -29,14 +28,13 @@ public class SqlSelect implements SqlStatement {
 
 	private List<FromTable> fromTables;
 	private Optional<List<FromJoin>> fromJoins = Optional.empty();
-	private List<FetchParameter> fetchParameters;
+//	private List<FetchParameter> fetchParameters;
 	private FromTable result;
 	private List<Value> values;
 	private Optional<List<Condition>> conditions = Optional.empty();
 	private Optional<GroupBy> groupBy = Optional.empty();
 	private Optional<List<OrderBy>> orderByList = Optional.empty();
 	private boolean distinct = false;
-//	private LockType lockType = LockType.NONE;
 	private Optional<ForUpdate> optionalForUpdate = Optional.empty();
 
 	private SqlSelect() {
@@ -63,9 +61,9 @@ public class SqlSelect implements SqlStatement {
 		return groupBy;
 	}
 
-	public List<FetchParameter> getFetchParameters() {
-		return fetchParameters;
-	}
+//	public List<FetchParameter> getFetchParameters() {
+//		return fetchParameters;
+//	}
 
 	public FromTable getResult() {
 		return result;
@@ -98,7 +96,7 @@ public class SqlSelect implements SqlStatement {
 		private List<FromJoin> fromJoins;
 		private List<Value> values;
 		private List<Condition> conditions;
-		private List<FetchParameter> fetchColumnNameValues;
+//		private List<FetchParameter> fetchColumnNameValues;
 		private GroupBy groupBy;
 		private FromTable result;
 		private List<OrderBy> orderByList;
@@ -142,10 +140,10 @@ public class SqlSelect implements SqlStatement {
 			return this;
 		}
 
-		public SqlSelectBuilder withFetchParameters(List<FetchParameter> fetchColumnNameValues) {
-			this.fetchColumnNameValues = Collections.unmodifiableList(fetchColumnNameValues);
-			return this;
-		}
+//		public SqlSelectBuilder withFetchParameters(List<FetchParameter> fetchColumnNameValues) {
+//			this.fetchColumnNameValues = Collections.unmodifiableList(fetchColumnNameValues);
+//			return this;
+//		}
 
 		public SqlSelectBuilder withGroupBy(GroupBy groupBy) {
 			this.groupBy = groupBy;
@@ -192,7 +190,7 @@ public class SqlSelect implements SqlStatement {
 			if (conditions != null && !conditions.isEmpty())
 				sqlSelect.conditions = Optional.ofNullable(conditions);
 
-			sqlSelect.fetchParameters = fetchColumnNameValues;
+//			sqlSelect.fetchParameters = fetchColumnNameValues;
 			sqlSelect.groupBy = Optional.ofNullable(groupBy);
 			if (orderByList != null && !orderByList.isEmpty())
 				sqlSelect.orderByList = Optional.ofNullable(orderByList);

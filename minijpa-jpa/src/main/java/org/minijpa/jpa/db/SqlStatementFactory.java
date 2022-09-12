@@ -49,6 +49,8 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.db.SqlSelectData;
+import org.minijpa.jdbc.db.StatementParameters;
 import org.minijpa.jdbc.model.Column;
 import org.minijpa.jdbc.model.ColumnDeclaration;
 import org.minijpa.jdbc.model.CompositeJdbcJoinColumnMapping;
@@ -67,7 +69,6 @@ import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlInsert;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlUpdate;
-import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.model.TableColumn;
 import org.minijpa.jdbc.model.Value;
 import org.minijpa.jdbc.model.condition.BetweenCondition;
@@ -148,7 +149,7 @@ public class SqlStatementFactory {
 		return Optional.empty();
 	}
 
-	public SqlSelect generateSelectById(MetaEntity entity, LockType lockType, AliasGenerator tableAliasGenerator)
+	public SqlSelectData generateSelectById(MetaEntity entity, LockType lockType, AliasGenerator tableAliasGenerator)
 			throws Exception {
 		List<FetchParameter> fetchParameters = MetaEntityHelper.convertAllAttributes(entity);
 		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
@@ -162,11 +163,12 @@ public class SqlStatementFactory {
 		if (lockType != null)
 			sqlSelectBuilder.withForUpdate(calcForUpdate(lockType));
 
-		return sqlSelectBuilder.withValues(MetaEntityHelper.toValues(entity, fromTable))
-				.withFetchParameters(fetchParameters).withConditions(Arrays.asList(condition)).build();
+		SqlSelect sqlSelect = sqlSelectBuilder.withValues(MetaEntityHelper.toValues(entity, fromTable))
+				.withConditions(Arrays.asList(condition)).build();
+		return new SqlSelectData(sqlSelect, fetchParameters);
 	}
 
-	public SqlSelect generateSelectVersion(MetaEntity entity, LockType lockType, AliasGenerator tableAliasGenerator)
+	public SqlSelectData generateSelectVersion(MetaEntity entity, LockType lockType, AliasGenerator tableAliasGenerator)
 			throws Exception {
 		FetchParameter fetchParameter = MetaEntityHelper.toFetchParameter(entity.getVersionAttribute().get());
 
@@ -181,12 +183,13 @@ public class SqlStatementFactory {
 		if (lockType != null)
 			sqlSelectBuilder.withForUpdate(calcForUpdate(lockType));
 
-		return sqlSelectBuilder
+		SqlSelect sqlSelect = sqlSelectBuilder
 				.withValues(Arrays.asList(MetaEntityHelper.toValue(entity.getVersionAttribute().get(), fromTable)))
-				.withFetchParameters(Arrays.asList(fetchParameter)).withConditions(Arrays.asList(condition)).build();
+				.withConditions(Arrays.asList(condition)).build();
+		return new SqlSelectData(sqlSelect, Arrays.asList(fetchParameter));
 	}
 
-	public SqlSelect generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
+	public SqlSelectData generateSelectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
 			List<String> columns, AliasGenerator tableAliasGenerator) throws Exception {
 		List<FetchParameter> fetchColumnNameValues = MetaEntityHelper.convertAllAttributes(entity);
 		// LOG.info("generateSelectByForeignKey: fetchColumnNameValues=" +
@@ -200,9 +203,10 @@ public class SqlStatementFactory {
 		}).collect(Collectors.toList());
 
 		Condition condition = Condition.toAnd(conditions);
-		return new SqlSelect.SqlSelectBuilder(fromTable).withValues(MetaEntityHelper.toValues(entity, fromTable))
-				.withFetchParameters(fetchColumnNameValues).withConditions(Arrays.asList(condition))
+		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable)
+				.withValues(MetaEntityHelper.toValues(entity, fromTable)).withConditions(Arrays.asList(condition))
 				.withResult(fromTable).build();
+		return new SqlSelectData(sqlSelect, fetchColumnNameValues);
 	}
 
 	public ModelValueArray<AbstractAttribute> expandJoinColumnAttributes(Pk owningId, Object joinTableForeignKey,
@@ -388,7 +392,7 @@ public class SqlStatementFactory {
 	 * @return
 	 * @throws Exception
 	 */
-	public SqlSelect generateSelectByJoinTable(MetaEntity entity, RelationshipJoinTable relationshipJoinTable,
+	public SqlSelectData generateSelectByJoinTable(MetaEntity entity, RelationshipJoinTable relationshipJoinTable,
 			List<AbstractAttribute> attributes, AliasGenerator tableAliasGenerator) throws Exception {
 		// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
 		// where j.t2=fk
@@ -406,13 +410,15 @@ public class SqlStatementFactory {
 		Condition condition = Condition.toAnd(conditions);
 		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<FetchParameter> fetchColumnNameValues = MetaEntityHelper.convertAttributes(expandedAttributes);
-		return new SqlSelect.SqlSelectBuilder(fromTable).withJoin(fromJoin)
-				.withValues(MetaEntityHelper.toValues(entity, fromTable)).withFetchParameters(fetchColumnNameValues)
-				.withConditions(Arrays.asList(condition)).withResult(fromTable).build();
+		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withJoin(fromJoin)
+				.withValues(MetaEntityHelper.toValues(entity, fromTable)).withConditions(Arrays.asList(condition))
+				.withResult(fromTable).build();
+		return new SqlSelectData(sqlSelect, fetchColumnNameValues);
 	}
 
-	public SqlSelect generateSelectByJoinTableFromTarget(MetaEntity entity, RelationshipJoinTable relationshipJoinTable,
-			List<AbstractAttribute> attributes, AliasGenerator tableAliasGenerator) throws Exception {
+	public SqlSelectData generateSelectByJoinTableFromTarget(MetaEntity entity,
+			RelationshipJoinTable relationshipJoinTable, List<AbstractAttribute> attributes,
+			AliasGenerator tableAliasGenerator) throws Exception {
 		// select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
 		// where j.t2=fk
 		List<MetaAttribute> idAttributes = entity.getId().getAttributes();
@@ -441,9 +447,10 @@ public class SqlStatementFactory {
 		Condition condition = Condition.toAnd(conditions);
 		List<MetaAttribute> expandedAttributes = entity.expandAllAttributes();
 		List<FetchParameter> fetchColumnNameValues = MetaEntityHelper.convertAttributes(expandedAttributes);
-		return new SqlSelect.SqlSelectBuilder(fromTable).withJoin(fromJoin)
-				.withValues(MetaEntityHelper.toValues(entity, fromTable)).withFetchParameters(fetchColumnNameValues)
-				.withConditions(Arrays.asList(condition)).withResult(fromTable).build();
+		SqlSelect sqlSelect = new SqlSelect.SqlSelectBuilder(fromTable).withJoin(fromJoin)
+				.withValues(MetaEntityHelper.toValues(entity, fromTable)).withConditions(Arrays.asList(condition))
+				.withResult(fromTable).build();
+		return new SqlSelectData(sqlSelect, fetchColumnNameValues);
 	}
 
 	public List<QueryParameter> createRelationshipJoinTableParameters(RelationshipJoinTable relationshipJoinTable,
@@ -1181,8 +1188,8 @@ public class SqlStatementFactory {
 				sqlSelectBuilder.withForUpdate(calcForUpdate(lockType));
 
 			SqlSelect sqlSelect = sqlSelectBuilder.withValues(MetaEntityHelper.toValues(entity, fromTable))
-					.withFetchParameters(fetchParameters).withConditions(conditions).withResult(fromTable).build();
-			return new StatementParameters(sqlSelect, parameters);
+					.withConditions(conditions).withResult(fromTable).build();
+			return new StatementParameters(new SqlSelectData(sqlSelect, fetchParameters), parameters);
 		}
 
 		FromTable fromTable = FromTable.of(entity, tableAliasGenerator.getDefault(entity.getTableName()));
@@ -1191,7 +1198,7 @@ public class SqlStatementFactory {
 		Optional<List<OrderBy>> optionalOrderBy = createOrderByList(criteriaQuery, tableAliasGenerator);
 
 		SqlSelect.SqlSelectBuilder builder = new SqlSelect.SqlSelectBuilder(fromTable).withValues(values)
-				.withFetchParameters(fetchParameters).withConditions(conditions);
+				.withConditions(conditions);
 
 		if (optionalOrderBy.isPresent())
 			builder.withOrderBy(optionalOrderBy.get());
@@ -1203,7 +1210,7 @@ public class SqlStatementFactory {
 			builder.withForUpdate(calcForUpdate(lockType));
 
 		SqlSelect sqlSelect = builder.build();
-		return new StatementParameters(sqlSelect, parameters);
+		return new StatementParameters(new SqlSelectData(sqlSelect, fetchParameters), parameters);
 	}
 
 	private QueryParameter createQueryParameter(AttributePath<?> miniPath, Object value) {

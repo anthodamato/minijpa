@@ -23,21 +23,20 @@ import java.util.List;
  */
 public class SqlCreateJoinTable implements SqlDDLStatement {
 
-    private final String tableName;
-    private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
+	private final String tableName;
+	private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
 
-    public SqlCreateJoinTable(String tableName,
-	    List<ForeignKeyDeclaration> foreignKeyDeclarations) {
-	this.tableName = tableName;
-	this.foreignKeyDeclarations = foreignKeyDeclarations;
-    }
+	public SqlCreateJoinTable(String tableName, List<ForeignKeyDeclaration> foreignKeyDeclarations) {
+		this.tableName = tableName;
+		this.foreignKeyDeclarations = foreignKeyDeclarations;
+	}
 
-    public String getTableName() {
-	return tableName;
-    }
+	public String getTableName() {
+		return tableName;
+	}
 
-    public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
-	return foreignKeyDeclarations;
-    }
+	public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
+		return foreignKeyDeclarations;
+	}
 
 }

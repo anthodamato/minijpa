@@ -26,7 +26,7 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.metadata.AliasGenerator;
 
@@ -62,13 +62,14 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 			EntityLoader entityLoader) throws Exception {
 		List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
 		List<String> columns = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
-		SqlSelect sqlSelect = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute, columns,
-				tableAliasGenerator);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
+		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute,
+				columns, tableAliasGenerator);
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
 		Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 				CollectionUtils.findCollectionImplementationClass(List.class));
-		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql, sqlSelect, lockType,
-				collectionResult, entityLoader, parameters);
+		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
+				sqlSelectData.getSqlSelect(), sqlSelectData.getFetchParameters(), lockType, collectionResult,
+				entityLoader, parameters);
 		return (List<Object>) collectionResult;
 	}
 

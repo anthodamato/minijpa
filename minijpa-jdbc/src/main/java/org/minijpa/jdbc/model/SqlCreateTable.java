@@ -24,9 +24,7 @@ import java.util.List;
 public class SqlCreateTable implements SqlDDLStatement {
 
 	private final String tableName;
-//	private final Pk pk;
 	private final JdbcPk jdbcPk;
-//	private final List<MetaAttribute> attributes;
 	private final List<ColumnDeclaration> columnDeclarations;
 	private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
 

@@ -44,10 +44,11 @@ import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.db.MiniFlushMode;
+import org.minijpa.jdbc.db.SqlSelectData;
+import org.minijpa.jdbc.db.StatementParameters;
 import org.minijpa.jdbc.model.SqlDelete;
 import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.model.SqlUpdate;
-import org.minijpa.jdbc.model.StatementParameters;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MetaEntityHelper;
@@ -456,16 +457,17 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 		StatementParameters statementParameters = sqlStatementFactory.select(query,
 				persistenceUnitContext.getTableAliasGenerator());
-		SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
+		SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
 		LOG.debug("select: sql=" + sql);
-		LOG.debug("select: sqlSelect.getResult()=" + sqlSelect.getResult());
-		if (sqlSelect.getResult() != null) {
+		LOG.debug("select: sqlSelectData.getSqlSelect().getResult()=" + sqlSelectData.getSqlSelect().getResult());
+		if (sqlSelectData.getSqlSelect().getResult() != null) {
 			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 					CollectionUtils.findCollectionImplementationClass(List.class));
 			LOG.debug("select: collectionResult=" + collectionResult);
-			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql, sqlSelect,
-					LockType.NONE, collectionResult, entityLoader, statementParameters.getParameters());
+			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
+					sqlSelectData.getSqlSelect(), sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult,
+					entityLoader, statementParameters.getParameters());
 			return (List<?>) collectionResult;
 		}
 
@@ -475,38 +477,41 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 						"Selection '" + criteriaQuery.getSelection() + "' is not a compound selection");
 
 			return ((JpaJdbcRunner) dbConfiguration.getJdbcRunner()).runTupleQuery(connectionHolder.getConnection(),
-					sql, sqlSelect, (CompoundSelection<?>) criteriaQuery.getSelection(),
+					sql, sqlSelectData, (CompoundSelection<?>) criteriaQuery.getSelection(),
 					statementParameters.getParameters());
 		}
 
 		// returns an aggregate expression result (max, min, etc)
 		return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
-				statementParameters.getParameters(), sqlSelect.getFetchParameters());
+				statementParameters.getParameters(), sqlSelectData.getFetchParameters());
 	}
 
 	@Override
 	public List<?> selectJpql(String jpqlStatement) throws Exception {
 		JpqlResult jpqlResult = null;
 		try {
+			LOG.debug("selectJpql: start parsing");
 			jpqlResult = jpqlModule.parse(jpqlStatement);
+			LOG.debug("selectJpql: end parsing");
 		} catch (Error e) {
 			throw new IllegalStateException("Internal Jpql Parser Error: " + e.getMessage());
 		}
 
-		SqlSelect sqlSelect = (SqlSelect) jpqlResult.getSqlStatement();
+		SqlSelectData sqlSelectData = (SqlSelectData) jpqlResult.getSqlStatement();
+		SqlSelect sqlSelect = sqlSelectData.getSqlSelect();
 		LOG.debug("selectJpql: sqlSelect.getResult()=" + sqlSelect.getResult());
 		if (sqlSelect.getResult() != null) {
 			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 					CollectionUtils.findCollectionImplementationClass(List.class));
 			LOG.debug("selectJpql: collectionResult=" + collectionResult);
 			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), jpqlResult.getSql(),
-					(SqlSelect) jpqlResult.getSqlStatement(), LockType.NONE, collectionResult, entityLoader,
+					sqlSelect, sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult, entityLoader,
 					new ArrayList<>());
 			return (List<?>) collectionResult;
 		}
 
 		return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), jpqlResult.getSql(),
-				new ArrayList<>(), sqlSelect.getFetchParameters());
+				new ArrayList<>(), sqlSelectData.getFetchParameters());
 	}
 
 	@Override

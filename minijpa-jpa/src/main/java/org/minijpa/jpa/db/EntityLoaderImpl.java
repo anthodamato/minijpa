@@ -161,7 +161,6 @@ public class EntityLoaderImpl implements EntityLoader {
 
 		entityInstance = MetaEntityHelper.build(entity, primaryKey);
 		LOG.debug("build: entityInstance=" + entityInstance);
-//	buildEntity(entityInstance, modelValueArray, entity, primaryKey, lockType);
 		buildAttributeValuesLoadFK(entityInstance, entity, entity.getAttributes(), modelValueArray, lockType);
 		entityContainer.addManaged(entityInstance, primaryKey);
 		MetaEntityHelper.setEntityStatus(entity, entityInstance, EntityStatus.FLUSHED_LOADED_FROM_DB);

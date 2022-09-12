@@ -34,6 +34,7 @@ import org.minijpa.jdbc.model.ForeignKeyDeclaration;
 import org.minijpa.jdbc.model.JdbcDDLData;
 import org.minijpa.jdbc.model.JdbcJoinColumnMapping;
 import org.minijpa.jdbc.model.JdbcPk;
+import org.minijpa.jdbc.model.JdbcSequenceParams;
 import org.minijpa.jdbc.model.SimpleJdbcPk;
 import org.minijpa.jdbc.model.SqlCreateJoinTable;
 import org.minijpa.jdbc.model.SqlCreateSequence;
@@ -145,6 +146,17 @@ public abstract class BasicDbJdbc implements DbJdbc {
 		return sqlStatements;
 	}
 
+	protected JdbcSequenceParams toJdbcSequenceParams(PkSequenceGenerator pkSequenceGenerator) {
+		JdbcSequenceParams jdbcSequenceParams = new JdbcSequenceParams();
+		jdbcSequenceParams.setAllocationSize(pkSequenceGenerator.getAllocationSize());
+		jdbcSequenceParams.setCatalog(pkSequenceGenerator.getCatalog());
+		jdbcSequenceParams.setInitialValue(pkSequenceGenerator.getInitialValue());
+		jdbcSequenceParams.setName(pkSequenceGenerator.getName());
+		jdbcSequenceParams.setSchema(pkSequenceGenerator.getSchema());
+		jdbcSequenceParams.setSequenceName(pkSequenceGenerator.getSequenceName());
+		return jdbcSequenceParams;
+	}
+
 	@Override
 	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(PersistenceUnitContext persistenceUnitContext,
 			List<MetaEntity> sorted) {
@@ -153,8 +165,8 @@ public abstract class BasicDbJdbc implements DbJdbc {
 				.map(c -> c.getId().getPkGeneration().getPkSequenceGenerator()).distinct().collect(Collectors.toList());
 
 		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-		List<SqlCreateSequence> createSequenceStrs = pkSequenceGenerators.stream().map(c -> new SqlCreateSequence(c))
-				.collect(Collectors.toList());
+		List<SqlCreateSequence> createSequenceStrs = pkSequenceGenerators.stream()
+				.map(c -> new SqlCreateSequence(toJdbcSequenceParams(c))).collect(Collectors.toList());
 		sqlStatements.addAll(createSequenceStrs);
 		return sqlStatements;
 	}

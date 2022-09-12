@@ -213,9 +213,9 @@ public class JdbcRunner {
 		}
 	}
 
-	public void findCollection(Connection connection, String sql, SqlSelect sqlSelect, LockType lockType,
-			Collection<Object> collectionResult, EntityLoader entityLoader, List<QueryParameter> parameters)
-			throws Exception {
+	public void findCollection(Connection connection, String sql, SqlSelect sqlSelect,
+			List<FetchParameter> fetchParameters, LockType lockType, Collection<Object> collectionResult,
+			EntityLoader entityLoader, List<QueryParameter> parameters) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
@@ -225,8 +225,8 @@ public class JdbcRunner {
 			rs = preparedStatement.executeQuery();
 			ResultSetMetaData metaData = rs.getMetaData();
 			while (rs.next()) {
-				ModelValueArray<FetchParameter> modelValueArray = createModelValueArrayFromResultSetAM(
-						sqlSelect.getFetchParameters(), rs, metaData);
+				ModelValueArray<FetchParameter> modelValueArray = createModelValueArrayFromResultSetAM(fetchParameters,
+						rs, metaData);
 				Object instance = entityLoader.build(modelValueArray, sqlSelect.getResult(), lockType);
 				collectionResult.add(instance);
 			}

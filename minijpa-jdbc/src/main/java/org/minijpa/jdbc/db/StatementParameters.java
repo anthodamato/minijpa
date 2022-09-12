@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc.model;
+package org.minijpa.jdbc.db;
 
 import java.util.List;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.model.SqlStatement;
 
 /**
  *
@@ -24,20 +25,20 @@ import org.minijpa.jdbc.QueryParameter;
  */
 public class StatementParameters {
 
-    private final SqlStatement sqlStatement;
-    private final List<QueryParameter> parameters;
+	private final SqlStatement sqlStatement;
+	private final List<QueryParameter> parameters;
 
-    public StatementParameters(SqlStatement sqlStatement, List<QueryParameter> parameters) {
-	this.sqlStatement = sqlStatement;
-	this.parameters = parameters;
-    }
+	public StatementParameters(SqlStatement sqlStatement, List<QueryParameter> parameters) {
+		this.sqlStatement = sqlStatement;
+		this.parameters = parameters;
+	}
 
-    public SqlStatement getSqlStatement() {
-	return sqlStatement;
-    }
+	public SqlStatement getSqlStatement() {
+		return sqlStatement;
+	}
 
-    public List<QueryParameter> getParameters() {
-	return parameters;
-    }
+	public List<QueryParameter> getParameters() {
+		return parameters;
+	}
 
 }

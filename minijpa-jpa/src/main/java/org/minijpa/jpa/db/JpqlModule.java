@@ -7,6 +7,7 @@ package org.minijpa.jpa.db;
 
 import java.io.StringReader;
 
+import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.model.SqlStatement;
 import org.minijpa.jpa.jpql.ASTQLStatement;
 import org.minijpa.jpa.jpql.JpqlParser;
@@ -27,8 +28,7 @@ public class JpqlModule {
 	private JpqlParser parser;
 	private JpqlParserVisitor visitor;
 
-	public JpqlModule(DbConfiguration dbConfiguration,
-			SqlStatementFactory sqlStatementFactory,
+	public JpqlModule(DbConfiguration dbConfiguration, SqlStatementFactory sqlStatementFactory,
 			PersistenceUnitContext persistenceUnitContext) {
 		this.dbConfiguration = dbConfiguration;
 		this.sqlStatementFactory = sqlStatementFactory;
@@ -51,7 +51,12 @@ public class JpqlModule {
 		if (sqlStatement == null)
 			throw new IllegalStateException("Jpql Parsing failed: '" + jpqlQuery + "'");
 
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlStatement);
+		String sql = null;
+		if (sqlStatement instanceof SqlSelectData)
+			sql = dbConfiguration.getSqlStatementGenerator().export(((SqlSelectData) sqlStatement).getSqlSelect());
+		else
+			sql = dbConfiguration.getSqlStatementGenerator().export(sqlStatement);
+
 		return new JpqlResult(sqlStatement, sql);
 	}
 }
