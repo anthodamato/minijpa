@@ -28,7 +28,6 @@ public class SqlSelect implements SqlStatement {
 
 	private List<FromTable> fromTables;
 	private Optional<List<FromJoin>> fromJoins = Optional.empty();
-//	private List<FetchParameter> fetchParameters;
 	private FromTable result;
 	private List<Value> values;
 	private Optional<List<Condition>> conditions = Optional.empty();
@@ -61,10 +60,6 @@ public class SqlSelect implements SqlStatement {
 		return groupBy;
 	}
 
-//	public List<FetchParameter> getFetchParameters() {
-//		return fetchParameters;
-//	}
-
 	public FromTable getResult() {
 		return result;
 	}
@@ -76,10 +71,6 @@ public class SqlSelect implements SqlStatement {
 	public boolean isDistinct() {
 		return distinct;
 	}
-
-//	public LockType getLockType() {
-//		return lockType;
-//	}
 
 	public Optional<ForUpdate> getOptionalForUpdate() {
 		return optionalForUpdate;
@@ -96,7 +87,6 @@ public class SqlSelect implements SqlStatement {
 		private List<FromJoin> fromJoins;
 		private List<Value> values;
 		private List<Condition> conditions;
-//		private List<FetchParameter> fetchColumnNameValues;
 		private GroupBy groupBy;
 		private FromTable result;
 		private List<OrderBy> orderByList;
@@ -140,11 +130,6 @@ public class SqlSelect implements SqlStatement {
 			return this;
 		}
 
-//		public SqlSelectBuilder withFetchParameters(List<FetchParameter> fetchColumnNameValues) {
-//			this.fetchColumnNameValues = Collections.unmodifiableList(fetchColumnNameValues);
-//			return this;
-//		}
-
 		public SqlSelectBuilder withGroupBy(GroupBy groupBy) {
 			this.groupBy = groupBy;
 			return this;
@@ -165,16 +150,6 @@ public class SqlSelect implements SqlStatement {
 			return this;
 		}
 
-//		public SqlSelectBuilder withLockType(LockType lockType) {
-//			if (lockType == LockType.PESSIMISTIC_READ)
-//				this.lockType = LockType.PESSIMISTIC_READ;
-//
-//			if (lockType == LockType.PESSIMISTIC_WRITE)
-//				this.lockType = LockType.PESSIMISTIC_WRITE;
-//
-//			return this;
-//		}
-
 		public SqlSelectBuilder withForUpdate(Optional<ForUpdate> optionalForUpdate) {
 			this.optionalForUpdate = optionalForUpdate;
 			return this;
@@ -190,14 +165,12 @@ public class SqlSelect implements SqlStatement {
 			if (conditions != null && !conditions.isEmpty())
 				sqlSelect.conditions = Optional.ofNullable(conditions);
 
-//			sqlSelect.fetchParameters = fetchColumnNameValues;
 			sqlSelect.groupBy = Optional.ofNullable(groupBy);
 			if (orderByList != null && !orderByList.isEmpty())
 				sqlSelect.orderByList = Optional.ofNullable(orderByList);
 
 			sqlSelect.result = result;
 			sqlSelect.distinct = distinct;
-//			sqlSelect.lockType = lockType;
 			sqlSelect.optionalForUpdate = optionalForUpdate;
 			return sqlSelect;
 		}

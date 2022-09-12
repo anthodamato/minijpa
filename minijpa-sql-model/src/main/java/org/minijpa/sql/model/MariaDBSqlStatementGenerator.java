@@ -87,18 +87,6 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
 		sb.append(", primary key ");
 		appendPrimaryKey(sqlCreateTable.getJdbcPk(), sb);
-//	if (sqlCreateTable.getPk().isComposite()) {
-//	    sb.append("(");
-//	    cols = sqlCreateTable.getPk().getAttributes().stream()
-//		    .map(a -> nameTranslator.adjustName(a.getColumnName()))
-//		    .collect(Collectors.joining(", "));
-//	    sb.append(cols);
-//	    sb.append(")");
-//	} else {
-//	    sb.append("(");
-//	    sb.append(nameTranslator.adjustName(sqlCreateTable.getPk().getAttribute().getColumnName()));
-//	    sb.append(")");
-//	}
 
 		// foreign keys
 		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
@@ -192,13 +180,6 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 		List<String> createJoinTableStrs = createJoinTables.stream().map(c -> export(c)).collect(Collectors.toList());
 		result.addAll(createJoinTableStrs);
 
-//	if (sqlDDLStatement instanceof SqlCreateTable) {
-//	    String s = export((SqlCreateTable) sqlDDLStatement);
-//	    return Arrays.asList(s);
-//	}
-//
-//	if (sqlDDLStatement instanceof SqlCreateJoinTable)
-//	    return Arrays.asList(export((SqlCreateJoinTable) sqlDDLStatement));
 		return result;
 	}
 

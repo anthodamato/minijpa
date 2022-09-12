@@ -99,18 +99,6 @@ public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
 		sb.append(", primary key ");
 		appendPrimaryKey(sqlCreateTable.getJdbcPk(), sb);
-//	if (sqlCreateTable.getPk().isComposite()) {
-//	    sb.append("(");
-//	    cols = sqlCreateTable.getPk().getAttributes().stream()
-//		    .map(a -> nameTranslator.adjustName(a.getColumnName()))
-//		    .collect(Collectors.joining(", "));
-//	    sb.append(cols);
-//	    sb.append(")");
-//	} else {
-//	    sb.append("(");
-//	    sb.append(nameTranslator.adjustName(sqlCreateTable.getPk().getAttribute().getColumnName()));
-//	    sb.append(")");
-//	}
 
 		// foreign keys
 		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {

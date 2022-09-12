@@ -735,22 +735,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 		throw new IllegalArgumentException("Unknown operator for condition type: " + conditionType);
 	}
 
-//	private String buildColumnDefinition(MetaAttribute attribute) {
-//		Optional<DDLData> ddlData = attribute.getDdlData();
-//		if (ddlData.isPresent()) {
-//			if (ddlData.get().getColumnDefinition().isPresent())
-//				return ddlData.get().getColumnDefinition().get();
-//		}
-//
-//		String s = buildColumnDefinition(attribute.getDatabaseType(), attribute.getDdlData());
-//		if (ddlData.isPresent() && ddlData.get().getNullable().isPresent()
-//				&& ddlData.get().getNullable().get() == false) {
-//			return s + " not null";
-//		}
-//
-//		return s;
-//	}
-
 	private String buildColumnDefinition(ColumnDeclaration columnDeclaration) {
 		Optional<JdbcDDLData> ddlData = columnDeclaration.getOptionalJdbcDDLData();
 		if (ddlData.isPresent()) {
@@ -768,29 +752,9 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 		return s;
 	}
 
-//	private String buildJoinColumnDefinition(JoinColumnAttribute joinColumnAttribute) {
-//		return buildColumnDefinition(joinColumnAttribute.getDatabaseType(), Optional.empty());
-//	}
-
-//	protected String buildAttributeDeclaration(MetaAttribute attribute) {
-//		return nameTranslator.adjustName(attribute.getColumnName()) + " " + buildColumnDefinition(attribute);
-//	}
-
 	protected String buildAttributeDeclaration(ColumnDeclaration columnDeclaration) {
 		return nameTranslator.adjustName(columnDeclaration.getName()) + " " + buildColumnDefinition(columnDeclaration);
 	}
-
-//	private String buildPkDeclaration(Pk pk) {
-//		if (pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY) {
-//			return nameTranslator.adjustName(pk.getAttribute().getColumnName()) + " " + buildIdentityColumnDefinition(
-//					pk.getAttribute().getDatabaseType(), pk.getAttribute().getDdlData());
-//		}
-//
-//		String cols = pk.getAttributes().stream().map(a -> buildAttributeDeclaration(a))
-//				.collect(Collectors.joining(", "));
-//
-//		return cols;
-//	}
 
 	private String buildPkDeclaration(JdbcPk jdbcPk) {
 		if (jdbcPk.isIdentityColumn()) {
@@ -805,16 +769,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
 		return buildAttributeDeclaration(jdbcPk.getColumn());
 	}
-
-//	protected String buildDeclaration(JoinColumnAttribute joinColumnAttribute) {
-//		return nameTranslator.adjustName(joinColumnAttribute.getColumnName()) + " "
-//				+ buildColumnDefinition(joinColumnAttribute.getDatabaseType(), Optional.empty());
-//	}
-//
-//	protected String buildJoinTableColumnDeclaration(JoinColumnAttribute joinColumnAttribute) {
-//		return nameTranslator.adjustName(joinColumnAttribute.getColumnName()) + " "
-//				+ buildColumnDefinition(joinColumnAttribute.getDatabaseType(), Optional.empty()) + " not null";
-//	}
 
 	protected String buildJoinTableColumnDeclaration(ColumnDeclaration columnDeclaration) {
 		return nameTranslator.adjustName(columnDeclaration.getName()) + " "
@@ -936,19 +890,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 		List<String> createSequenceStrs = sqlDDLStatement.stream().filter(c -> c instanceof SqlCreateSequence)
 				.map(c -> export((SqlCreateSequence) c)).collect(Collectors.toList());
 		result.addAll(createSequenceStrs);
-
-//		if (sqlDDLStatement instanceof SqlCreateTable) {
-//			String s = export((SqlCreateTable) sqlDDLStatement);
-//			SqlCreateTable sqlCreateTable = (SqlCreateTable) sqlDDLStatement;
-//			if (sqlCreateTable.getPk().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
-//				SqlCreateSequence sqlCreateSequence = new SqlCreateSequence(
-//						sqlCreateTable.getPk().getPkGeneration().getPkSequenceGenerator());
-//				String sc = export(sqlCreateSequence);
-//				return Arrays.asList(s, sc);
-//			}
-//
-//			return Arrays.asList(s);
-//		}
 
 //	if (sqlDDLStatement instanceof SqlCreateJoinTable)
 //	    return Arrays.asList(export((SqlCreateJoinTable) sqlDDLStatement));
