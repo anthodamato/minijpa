@@ -23,8 +23,7 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.metadata.AliasGenerator;
 
@@ -39,31 +38,30 @@ public class EntityQueryLevel implements QueryLevel {
 	private final ConnectionHolder connectionHolder;
 	private final AliasGenerator tableAliasGenerator;
 
-	public EntityQueryLevel(SqlStatementFactory sqlStatementFactory,
-			DbConfiguration dbConfiguration,
-			ConnectionHolder connectionHolder,
-			AliasGenerator tableAliasGenerator) {
+	public EntityQueryLevel(SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration,
+			ConnectionHolder connectionHolder, AliasGenerator tableAliasGenerator) {
 		this.sqlStatementFactory = sqlStatementFactory;
 		this.dbConfiguration = dbConfiguration;
 		this.connectionHolder = connectionHolder;
 		this.tableAliasGenerator = tableAliasGenerator;
 	}
 
-	public ModelValueArray<FetchParameter> run(MetaEntity entity, Object primaryKey, LockType lockType) throws Exception {
-		SqlSelect sqlSelect = sqlStatementFactory.generateSelectById(entity, lockType, tableAliasGenerator);
+	public ModelValueArray<FetchParameter> run(MetaEntity entity, Object primaryKey, LockType lockType)
+			throws Exception {
+		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectById(entity, lockType, tableAliasGenerator);
 		List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
 		return dbConfiguration.getJdbcRunner().findById(sql, connectionHolder.getConnection(),
-				sqlSelect.getFetchParameters(), parameters);
+				sqlSelectData.getFetchParameters(), parameters);
 	}
 
-	public ModelValueArray<FetchParameter> runVersionQuery(MetaEntity entity, Object primaryKey,
-			LockType lockType) throws Exception {
-		SqlSelect sqlSelect = sqlStatementFactory.generateSelectVersion(entity, lockType, tableAliasGenerator);
+	public ModelValueArray<FetchParameter> runVersionQuery(MetaEntity entity, Object primaryKey, LockType lockType)
+			throws Exception {
+		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectVersion(entity, lockType, tableAliasGenerator);
 		List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
 		return dbConfiguration.getJdbcRunner().findById(sql, connectionHolder.getConnection(),
-				sqlSelect.getFetchParameters(), parameters);
+				sqlSelectData.getFetchParameters(), parameters);
 	}
 
 }

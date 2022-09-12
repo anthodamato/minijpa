@@ -5,7 +5,7 @@
  */
 package org.minijpa.jpa.db;
 
-import org.minijpa.jdbc.model.SqlStatement;
+import org.minijpa.sql.model.SqlStatement;
 
 /**
  *

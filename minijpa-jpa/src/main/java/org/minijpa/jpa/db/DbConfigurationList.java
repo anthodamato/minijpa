@@ -18,7 +18,6 @@ package org.minijpa.jpa.db;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -27,57 +27,57 @@ import org.minijpa.jdbc.Pk;
  */
 public class SingleJoinColumnMapping implements JoinColumnMapping {
 
-    private final JoinColumnAttribute joinColumnAttribute;
-    private final MetaAttribute attribute;
-    private final Pk pk;
+	private final JoinColumnAttribute joinColumnAttribute;
+	private final MetaAttribute attribute;
+	private final Pk pk;
 
-    public SingleJoinColumnMapping(JoinColumnAttribute joinColumnAttribute, MetaAttribute attribute, Pk pk) {
-	this.joinColumnAttribute = joinColumnAttribute;
-	this.attribute = attribute;
-	this.pk = pk;
-    }
+	public SingleJoinColumnMapping(JoinColumnAttribute joinColumnAttribute, MetaAttribute attribute, Pk pk) {
+		this.joinColumnAttribute = joinColumnAttribute;
+		this.attribute = attribute;
+		this.pk = pk;
+	}
 
-    @Override
-    public MetaAttribute getAttribute() {
-	return attribute;
-    }
+	@Override
+	public MetaAttribute getAttribute() {
+		return attribute;
+	}
 
-    @Override
-    public boolean isComposite() {
-	return false;
-    }
+	@Override
+	public boolean isComposite() {
+		return false;
+	}
 
-    @Override
-    public int size() {
-	return 1;
-    }
+	@Override
+	public int size() {
+		return 1;
+	}
 
-    @Override
-    public JoinColumnAttribute get(int index) {
-	if (index == 0)
-	    return joinColumnAttribute;
+	@Override
+	public JoinColumnAttribute get(int index) {
+		if (index == 0)
+			return joinColumnAttribute;
 
-	throw new IndexOutOfBoundsException("Index '" + index + "' out of bounds");
-    }
+		throw new IndexOutOfBoundsException("Index '" + index + "' out of bounds");
+	}
 
-    @Override
-    public JoinColumnAttribute get() {
-	return joinColumnAttribute;
-    }
+	@Override
+	public JoinColumnAttribute get() {
+		return joinColumnAttribute;
+	}
 
-    @Override
-    public Pk getForeignKey() {
-	return pk;
-    }
+	@Override
+	public Pk getForeignKey() {
+		return pk;
+	}
 
-    @Override
-    public boolean isLazy() {
-	return joinColumnAttribute.getAttribute().isLazy();
-    }
+	@Override
+	public boolean isLazy() {
+		return joinColumnAttribute.getAttribute().isLazy();
+	}
 
-    @Override
-    public List<JoinColumnAttribute> getJoinColumnAttributes() {
-	return Arrays.asList(joinColumnAttribute);
-    }
+	@Override
+	public List<JoinColumnAttribute> getJoinColumnAttributes() {
+		return Arrays.asList(joinColumnAttribute);
+	}
 
 }

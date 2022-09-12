@@ -39,15 +39,13 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.QueryResultMapping;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.db.MiniFlushMode;
-import org.minijpa.jdbc.model.SqlDelete;
-import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.SqlUpdate;
-import org.minijpa.jdbc.model.StatementParameters;
+import org.minijpa.jdbc.db.SqlSelectData;
+import org.minijpa.jdbc.db.StatementParameters;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MetaEntityHelper;
@@ -55,6 +53,9 @@ import org.minijpa.jpa.MiniNativeQuery;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.SqlDelete;
+import org.minijpa.sql.model.SqlSelect;
+import org.minijpa.sql.model.SqlUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +72,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	private final JpqlModule jpqlModule;
 
 	public JdbcEntityManagerImpl(DbConfiguration dbConfiguration, PersistenceUnitContext persistenceUnitContext,
-			EntityContainer entityContainer,
-			ConnectionHolder connectionHolder) {
+			EntityContainer entityContainer, ConnectionHolder connectionHolder) {
 		super();
 		this.dbConfiguration = dbConfiguration;
 		this.persistenceUnitContext = persistenceUnitContext;
@@ -80,12 +80,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		this.connectionHolder = connectionHolder;
 		this.sqlStatementFactory = new SqlStatementFactory();
 		this.entityLoader = new EntityLoaderImpl(persistenceUnitContext, entityContainer,
-				new EntityQueryLevel(sqlStatementFactory,
-						dbConfiguration, connectionHolder, persistenceUnitContext.getTableAliasGenerator()),
-				new ForeignKeyCollectionQueryLevel(sqlStatementFactory, dbConfiguration,
-						connectionHolder, persistenceUnitContext.getTableAliasGenerator()),
-				new JoinTableCollectionQueryLevel(sqlStatementFactory, dbConfiguration,
-						connectionHolder, persistenceUnitContext.getTableAliasGenerator()));
+				new EntityQueryLevel(sqlStatementFactory, dbConfiguration, connectionHolder,
+						persistenceUnitContext.getTableAliasGenerator()),
+				new ForeignKeyCollectionQueryLevel(sqlStatementFactory, dbConfiguration, connectionHolder,
+						persistenceUnitContext.getTableAliasGenerator()),
+				new JoinTableCollectionQueryLevel(sqlStatementFactory, dbConfiguration, connectionHolder,
+						persistenceUnitContext.getTableAliasGenerator()));
 		this.entityWriter = new EntityWriterImpl(persistenceUnitContext, entityContainer, sqlStatementFactory,
 				dbConfiguration, entityLoader, connectionHolder);
 		this.jpqlModule = new JpqlModule(dbConfiguration, sqlStatementFactory, persistenceUnitContext);
@@ -163,14 +163,19 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	public void persist(MetaEntity entity, Object entityInstance, MiniFlushMode miniFlushMode) throws Exception {
 		Object idValue = entity.getId().getReadMethod().invoke(entityInstance);
 		if (idValue == null && entity.getId().getPkGeneration().getPkStrategy() == PkStrategy.PLAIN)
-			throw new PersistenceException("Id must be manually assigned for '" + entity.getEntityClass().getName() + "'");
+			throw new PersistenceException(
+					"Id must be manually assigned for '" + entity.getEntityClass().getName() + "'");
 
 		ModelValueArray<MetaAttribute> modelValueArray = MetaEntityHelper.getModifications(entity, entityInstance);
 		checkNullableAttributes(entity, entityInstance, modelValueArray);
 		if (idValue == null) {
 			if (entity.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
-				String seqStm = dbConfiguration.getDbJdbc().sequenceNextValueStatement(entity);
-				idValue = dbConfiguration.getJdbcRunner().generateNextSequenceValue(connectionHolder.getConnection(), seqStm);
+				PkSequenceGenerator pkSequenceGenerator = entity.getId().getPkGeneration().getPkSequenceGenerator();
+				String seqStm = dbConfiguration.getSqlStatementGenerator().sequenceNextValueStatement(Optional.empty(),
+						pkSequenceGenerator.getSequenceName());
+
+				idValue = dbConfiguration.getJdbcRunner().generateNextSequenceValue(connectionHolder.getConnection(),
+						seqStm);
 				entity.getId().getWriteMethod().invoke(entityInstance, idValue);
 			} else if (entity.getId().getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY) {
 				List<Object> managedEntityList = entityContainer.getManagedEntityList();
@@ -204,22 +209,21 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		}
 	}
 
-	private void addInfoForPostponedUpdateEntities(
-			Object idValue,
-			MetaEntity entity,
-			ModelValueArray<MetaAttribute> modelValueArray)
-			throws IllegalAccessException, InvocationTargetException {
+	private void addInfoForPostponedUpdateEntities(Object idValue, MetaEntity entity,
+			ModelValueArray<MetaAttribute> modelValueArray) throws IllegalAccessException, InvocationTargetException {
 		for (JoinColumnMapping joinColumnMapping : entity.getJoinColumnMappings()) {
 			int index = modelValueArray.indexOfModel(joinColumnMapping.getAttribute());
 			LOG.debug("addInfoForPostponedUpdateEntities: index=" + index);
-			LOG.debug("addInfoForPostponedUpdateEntities: joinColumnMapping.getAttribute()=" + joinColumnMapping.getAttribute());
+			LOG.debug("addInfoForPostponedUpdateEntities: joinColumnMapping.getAttribute()="
+					+ joinColumnMapping.getAttribute());
 			if (index != -1) {
 				Object instance = modelValueArray.getValue(index);
 				LOG.debug("addInfoForPostponedUpdateEntities: instance=" + instance);
 				MetaEntity e = persistenceUnitContext.getEntities().get(instance.getClass().getName());
 				LOG.debug("addInfoForPostponedUpdateEntities: e=" + e);
 				List list = MetaEntityHelper.getJoinColumnPostponedUpdateAttributeList(e, instance);
-				list.add(new PostponedUpdateInfo(idValue, entity.getEntityClass(), modelValueArray.getModel(index).getName()));
+				list.add(new PostponedUpdateInfo(idValue, entity.getEntityClass(),
+						modelValueArray.getModel(index).getName()));
 			}
 		}
 	}
@@ -227,7 +231,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	/**
 	 * The modified attributes must include the not nullable attributes.
 	 *
-	 * @param entity the meta entity
+	 * @param entity   the meta entity
 	 * @param optional the modified attributes
 	 * @throws PersistenceException
 	 */
@@ -265,43 +269,43 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 			EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
 			LOG.debug("flush: entityInstance=" + entityInstance + "; entityStatus=" + entityStatus);
 			switch (entityStatus) {
-				case FLUSHED:
-				case FLUSHED_LOADED_FROM_DB:
-					// makes updates
-					LOG.debug("flush: FLUSHED_LOADED_FROM_DB entityInstance=" + entityInstance);
-					ModelValueArray<MetaAttribute> modelValueArray = MetaEntityHelper.getModifications(me, entityInstance);
-					LOG.debug("flush: FLUSHED_LOADED_FROM_DB modelValueArray.size()=" + modelValueArray.size());
-					if (!modelValueArray.isEmpty()) {
-						entityWriter.persist(me, entityInstance, modelValueArray);
-						MetaEntityHelper.removeChanges(me, entityInstance);
-					}
-					break;
-				case PERSIST_NOT_FLUSHED:
-					LOG.debug("flush: PERSIST_NOT_FLUSHED entityInstance=" + entityInstance);
-					modelValueArray = MetaEntityHelper.getModifications(me, entityInstance);
-					persistEarlyInsertEntityInstance(me, modelValueArray, managedEntityList);
+			case FLUSHED:
+			case FLUSHED_LOADED_FROM_DB:
+				// makes updates
+				LOG.debug("flush: FLUSHED_LOADED_FROM_DB entityInstance=" + entityInstance);
+				ModelValueArray<MetaAttribute> modelValueArray = MetaEntityHelper.getModifications(me, entityInstance);
+				LOG.debug("flush: FLUSHED_LOADED_FROM_DB modelValueArray.size()=" + modelValueArray.size());
+				if (!modelValueArray.isEmpty()) {
 					entityWriter.persist(me, entityInstance, modelValueArray);
-					MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
 					MetaEntityHelper.removeChanges(me, entityInstance);
-					EntityStatus es = MetaEntityHelper.getEntityStatus(me, entityInstance);
-					LOG.debug("flush: es=" + es);
-					break;
-				case REMOVED_NOT_FLUSHED:
-					LOG.debug("flush: 1 REMOVED_NOT_FLUSHED entityInstance=" + entityInstance);
-					persistEarlyDeleteEntityInstance(me, entityInstance, managedEntityList);
-					entityWriter.delete(entityInstance, me);
-					entityContainer.removeManaged(entityInstance);
-					LOG.debug("flush: 2 REMOVED_NOT_FLUSHED entityInstance=" + entityInstance);
-					MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.REMOVED);
-					break;
-				case EARLY_INSERT:
-					LOG.debug("flush: EARLY_INSERT entityInstance=" + entityInstance);
-					MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
-					break;
-				case EARLY_REMOVE:
-					LOG.debug("flush: EARLY_REMOVE entityInstance=" + entityInstance);
-					MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.REMOVED);
-					break;
+				}
+				break;
+			case PERSIST_NOT_FLUSHED:
+				LOG.debug("flush: PERSIST_NOT_FLUSHED entityInstance=" + entityInstance);
+				modelValueArray = MetaEntityHelper.getModifications(me, entityInstance);
+				persistEarlyInsertEntityInstance(me, modelValueArray, managedEntityList);
+				entityWriter.persist(me, entityInstance, modelValueArray);
+				MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
+				MetaEntityHelper.removeChanges(me, entityInstance);
+				EntityStatus es = MetaEntityHelper.getEntityStatus(me, entityInstance);
+				LOG.debug("flush: es=" + es);
+				break;
+			case REMOVED_NOT_FLUSHED:
+				LOG.debug("flush: 1 REMOVED_NOT_FLUSHED entityInstance=" + entityInstance);
+				persistEarlyDeleteEntityInstance(me, entityInstance, managedEntityList);
+				entityWriter.delete(entityInstance, me);
+				entityContainer.removeManaged(entityInstance);
+				LOG.debug("flush: 2 REMOVED_NOT_FLUSHED entityInstance=" + entityInstance);
+				MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.REMOVED);
+				break;
+			case EARLY_INSERT:
+				LOG.debug("flush: EARLY_INSERT entityInstance=" + entityInstance);
+				MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
+				break;
+			case EARLY_REMOVE:
+				LOG.debug("flush: EARLY_REMOVE entityInstance=" + entityInstance);
+				MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.REMOVED);
+				break;
 			}
 		}
 
@@ -325,9 +329,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	 * @param managedEntityList
 	 * @throws Exception
 	 */
-	private void persistEarlyInsertEntityInstance(
-			MetaEntity me,
-			ModelValueArray<MetaAttribute> modelValueArray,
+	private void persistEarlyInsertEntityInstance(MetaEntity me, ModelValueArray<MetaAttribute> modelValueArray,
 			List<Object> managedEntityList) throws Exception {
 		List<JoinColumnMapping> joinColumnMappings = me.getJoinColumnMappings();
 		LOG.debug("persistEarlyInsertEntityInstance: joinColumnMappings=" + joinColumnMappings);
@@ -364,17 +366,16 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	 * @param managedEntityList
 	 * @throws Exception
 	 */
-	private void persistEarlyDeleteEntityInstance(
-			MetaEntity me,
-			Object entityInstance,
-			List<Object> managedEntityList) throws Exception {
+	private void persistEarlyDeleteEntityInstance(MetaEntity me, Object entityInstance, List<Object> managedEntityList)
+			throws Exception {
 		List<MetaAttribute> relationshipAttributes = me.getRelationshipAttributes();
 		for (MetaAttribute relationshipAttribute : relationshipAttributes) {
 			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute=" + relationshipAttribute);
-			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute.getRelationship()=" + relationshipAttribute.getRelationship());
-			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute.getRelationship().isOwner()=" + relationshipAttribute.getRelationship().isOwner());
-			if (!relationshipAttribute.getRelationship().isOwner()
-					&& relationshipAttribute.getRelationship().toOne()) {
+			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute.getRelationship()="
+					+ relationshipAttribute.getRelationship());
+			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute.getRelationship().isOwner()="
+					+ relationshipAttribute.getRelationship().isOwner());
+			if (!relationshipAttribute.getRelationship().isOwner() && relationshipAttribute.getRelationship().toOne()) {
 				LOG.debug("persistEarlyDeleteEntityInstance: 1");
 				Object instance = MetaEntityHelper.getAttributeValue(entityInstance, relationshipAttribute);
 				LOG.debug("persistEarlyDeleteEntityInstance: instance=" + instance);
@@ -454,15 +455,18 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		if (criteriaQuery.getSelection() == null)
 			throw new IllegalStateException("Selection not defined or not inferable");
 
-		StatementParameters statementParameters = sqlStatementFactory.select(query, persistenceUnitContext.getTableAliasGenerator());
-		SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelect);
+		StatementParameters statementParameters = sqlStatementFactory.select(query,
+				persistenceUnitContext.getTableAliasGenerator());
+		SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
 		LOG.debug("select: sql=" + sql);
-		LOG.debug("select: sqlSelect.getResult()=" + sqlSelect.getResult());
-		if (sqlSelect.getResult() != null) {
-			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null, CollectionUtils.findCollectionImplementationClass(List.class));
+		LOG.debug("select: sqlSelectData.getSqlSelect().getResult()=" + sqlSelectData.getSqlSelect().getResult());
+		if (sqlSelectData.getSqlSelect().getResult() != null) {
+			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
+					CollectionUtils.findCollectionImplementationClass(List.class));
 			LOG.debug("select: collectionResult=" + collectionResult);
-			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql, sqlSelect, collectionResult,
+			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
+					sqlSelectData.getSqlSelect(), sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult,
 					entityLoader, statementParameters.getParameters());
 			return (List<?>) collectionResult;
 		}
@@ -472,38 +476,42 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 				throw new IllegalArgumentException(
 						"Selection '" + criteriaQuery.getSelection() + "' is not a compound selection");
 
-			return ((JpaJdbcRunner) dbConfiguration.getJdbcRunner()).runTupleQuery(connectionHolder.getConnection(), sql, sqlSelect,
-					(CompoundSelection<?>) criteriaQuery.getSelection(), statementParameters.getParameters());
+			return ((JpaJdbcRunner) dbConfiguration.getJdbcRunner()).runTupleQuery(connectionHolder.getConnection(),
+					sql, sqlSelectData, (CompoundSelection<?>) criteriaQuery.getSelection(),
+					statementParameters.getParameters());
 		}
 
 		// returns an aggregate expression result (max, min, etc)
 		return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
-				statementParameters.getParameters(), sqlSelect.getFetchParameters());
+				statementParameters.getParameters(), sqlSelectData.getFetchParameters());
 	}
 
 	@Override
 	public List<?> selectJpql(String jpqlStatement) throws Exception {
 		JpqlResult jpqlResult = null;
 		try {
+			LOG.debug("selectJpql: start parsing");
 			jpqlResult = jpqlModule.parse(jpqlStatement);
+			LOG.debug("selectJpql: end parsing");
 		} catch (Error e) {
 			throw new IllegalStateException("Internal Jpql Parser Error: " + e.getMessage());
 		}
 
-		SqlSelect sqlSelect = (SqlSelect) jpqlResult.getSqlStatement();
+		SqlSelectData sqlSelectData = (SqlSelectData) jpqlResult.getSqlStatement();
+		SqlSelect sqlSelect = sqlSelectData.getSqlSelect();
 		LOG.debug("selectJpql: sqlSelect.getResult()=" + sqlSelect.getResult());
 		if (sqlSelect.getResult() != null) {
-			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
-					null, CollectionUtils.findCollectionImplementationClass(List.class));
+			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
+					CollectionUtils.findCollectionImplementationClass(List.class));
 			LOG.debug("selectJpql: collectionResult=" + collectionResult);
-			dbConfiguration.getJdbcRunner().findCollection(
-					connectionHolder.getConnection(), jpqlResult.getSql(), (SqlSelect) jpqlResult.getSqlStatement(),
-					collectionResult, entityLoader, new ArrayList<>());
+			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), jpqlResult.getSql(),
+					sqlSelect, sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult, entityLoader,
+					new ArrayList<>());
 			return (List<?>) collectionResult;
 		}
 
 		return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), jpqlResult.getSql(),
-				new ArrayList<>(), sqlSelect.getFetchParameters());
+				new ArrayList<>(), sqlSelectData.getFetchParameters());
 	}
 
 	@Override
@@ -511,26 +519,28 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		Optional<QueryResultMapping> queryResultMapping = Optional.empty();
 		if (query.getResultClass().isPresent()) {
 			EntityMapping entityMapping = new EntityMapping(
-					persistenceUnitContext.getEntities().get(
-							query.getResultClass().get().getName()), Collections.emptyList());
+					persistenceUnitContext.getEntities().get(query.getResultClass().get().getName()),
+					Collections.emptyList());
 			queryResultMapping = Optional.of(new QueryResultMapping("", Arrays.asList(entityMapping),
 					Collections.emptyList(), Collections.emptyList()));
 		}
 
 		if (query.getResultSetMapping().isPresent()) {
 			if (persistenceUnitContext.getQueryResultMappings().isEmpty())
-				throw new IllegalArgumentException("Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
+				throw new IllegalArgumentException(
+						"Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
 
 			String resultSetMapping = query.getResultSetMapping().get();
 			QueryResultMapping qrm = persistenceUnitContext.getQueryResultMappings().get().get(resultSetMapping);
 			if (qrm == null)
-				throw new IllegalArgumentException("Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
+				throw new IllegalArgumentException(
+						"Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
 
 			queryResultMapping = Optional.of(qrm);
 		}
 
-		return ((JpaJdbcRunner) dbConfiguration.getJdbcRunner()).runNativeQuery(connectionHolder.getConnection(), query.getSqlString(),
-				query, queryResultMapping, entityLoader);
+		return ((JpaJdbcRunner) dbConfiguration.getJdbcRunner()).runNativeQuery(connectionHolder.getConnection(),
+				query.getSqlString(), query, queryResultMapping, entityLoader);
 	}
 
 	@Override
@@ -544,7 +554,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 			throw new IllegalArgumentException("Criteria Update Root not defined");
 
 		List<QueryParameter> parameters = sqlStatementFactory.createUpdateParameters(updateQuery);
-		SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery, parameters, persistenceUnitContext.getTableAliasGenerator());
+		SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery, parameters,
+				persistenceUnitContext.getTableAliasGenerator());
 		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlUpdate);
 		return dbConfiguration.getJdbcRunner().update(connectionHolder.getConnection(), sql, parameters);
 	}
@@ -554,10 +565,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		if (deleteQuery.getCriteriaDelete().getRoot() == null)
 			throw new IllegalArgumentException("Criteria Delete Root not defined");
 
-		StatementParameters statementParameters = sqlStatementFactory.delete(deleteQuery, persistenceUnitContext.getTableAliasGenerator());
+		StatementParameters statementParameters = sqlStatementFactory.delete(deleteQuery,
+				persistenceUnitContext.getTableAliasGenerator());
 		SqlDelete sqlDelete = (SqlDelete) statementParameters.getSqlStatement();
 		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
-		return dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), statementParameters.getParameters());
+		return dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(),
+				statementParameters.getParameters());
 	}
 
 }

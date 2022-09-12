@@ -4,7 +4,7 @@ package org.minijpa.jpa.jpql;
 
 import java.util.List;
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.model.Value;
+import org.minijpa.sql.model.Value;
 
 public class ASTSelectExpression extends SimpleNode {
 

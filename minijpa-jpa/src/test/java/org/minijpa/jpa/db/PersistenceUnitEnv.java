@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Assertions;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.ConnectionHolderImpl;
 import org.minijpa.jdbc.EntityLoader;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jpa.MiniPersistenceContext;
 import org.minijpa.jpa.PersistenceProviderHelper;
 import org.minijpa.jpa.PersistenceUnitProperties;

@@ -25,59 +25,59 @@ import java.util.List;
  */
 public class BasicAttributePk implements Pk {
 
-    private final MetaAttribute attribute;
-    private final PkGeneration pkGeneration;
-    private final List<MetaAttribute> attributes;
+	private final MetaAttribute attribute;
+	private final PkGeneration pkGeneration;
+	private final List<MetaAttribute> attributes;
 
-    public BasicAttributePk(MetaAttribute attribute, PkGeneration pkGeneration) {
-	this.attribute = attribute;
-	this.pkGeneration = pkGeneration;
-	this.attributes = Arrays.asList(attribute);
-    }
+	public BasicAttributePk(MetaAttribute attribute, PkGeneration pkGeneration) {
+		this.attribute = attribute;
+		this.pkGeneration = pkGeneration;
+		this.attributes = Arrays.asList(attribute);
+	}
 
-    @Override
-    public PkGeneration getPkGeneration() {
-	return pkGeneration;
-    }
+	@Override
+	public PkGeneration getPkGeneration() {
+		return pkGeneration;
+	}
 
-    @Override
-    public boolean isEmbedded() {
-	return false;
-    }
+	@Override
+	public boolean isEmbedded() {
+		return false;
+	}
 
-    @Override
-    public boolean isComposite() {
-	return false;
-    }
+	@Override
+	public boolean isComposite() {
+		return false;
+	}
 
-    @Override
-    public MetaAttribute getAttribute() {
-	return attribute;
-    }
+	@Override
+	public MetaAttribute getAttribute() {
+		return attribute;
+	}
 
-    @Override
-    public List<MetaAttribute> getAttributes() {
-	return attributes;
-    }
+	@Override
+	public List<MetaAttribute> getAttributes() {
+		return attributes;
+	}
 
-    @Override
-    public Class<?> getType() {
-	return attribute.getType();
-    }
+	@Override
+	public Class<?> getType() {
+		return attribute.getType();
+	}
 
-    @Override
-    public String getName() {
-	return attribute.getName();
-    }
+	@Override
+	public String getName() {
+		return attribute.getName();
+	}
 
-    @Override
-    public Method getReadMethod() {
-	return attribute.getReadMethod();
-    }
+	@Override
+	public Method getReadMethod() {
+		return attribute.getReadMethod();
+	}
 
-    @Override
-    public Method getWriteMethod() {
-	return attribute.getWriteMethod();
-    }
+	@Override
+	public Method getWriteMethod() {
+		return attribute.getWriteMethod();
+	}
 
 }

@@ -22,11 +22,11 @@ import java.util.Optional;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.relationship.CompositeJoinColumnMapping;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.SingleJoinColumnMapping;
+import org.minijpa.jpa.db.DbConfiguration;
 
 /**
  *

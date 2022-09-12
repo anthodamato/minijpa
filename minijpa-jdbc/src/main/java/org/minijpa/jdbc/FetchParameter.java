@@ -20,29 +20,14 @@ public class FetchParameter {
 	private final String columnName;
 	private final Integer sqlType;
 	private final MetaAttribute attribute;
-//	private final AttributeMapper attributeMapper;
 
-	public FetchParameter(String columnName,
-			Integer sqlType,
-			MetaAttribute attribute) {
+	public FetchParameter(String columnName, Integer sqlType, MetaAttribute attribute) {
 		super();
 		this.columnName = columnName;
 		this.sqlType = sqlType;
 		this.attribute = attribute;
-//		this.attributeMapper = attributeMapper;
 	}
 
-//	public FetchParameter(String columnName,
-//			Integer sqlType,
-//			Integer suggestedSqlType,
-//			MetaAttribute attribute,
-//			AttributeMapper attributeMapper) {
-//		super();
-//		this.columnName = columnName;
-//		this.sqlType = sqlType;
-//		this.attribute = attribute;
-//		this.attributeMapper = attributeMapper;
-//	}
 	public static FetchParameter build(MetaAttribute attribute) {
 		return new FetchParameter(attribute.getColumnName(), attribute.sqlType, attribute);
 
@@ -56,14 +41,8 @@ public class FetchParameter {
 		return sqlType;
 	}
 
-//	public Integer getSuggestedSqlType() {
-//		return suggestedSqlType;
-//	}
 	public MetaAttribute getAttribute() {
 		return attribute;
 	}
 
-//	public AttributeMapper getAttributeMapper() {
-//		return attributeMapper;
-//	}
 }

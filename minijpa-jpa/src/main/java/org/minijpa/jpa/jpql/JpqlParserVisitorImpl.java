@@ -11,46 +11,47 @@ import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.DbConfiguration;
-import org.minijpa.jdbc.model.Column;
-import org.minijpa.jdbc.model.FromTable;
-import org.minijpa.jdbc.model.FromTableImpl;
-import org.minijpa.jdbc.model.OrderBy;
-import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.TableColumn;
-import org.minijpa.jdbc.model.Value;
-import org.minijpa.jdbc.model.aggregate.GroupBy;
-import org.minijpa.jdbc.model.condition.BetweenCondition;
-import org.minijpa.jdbc.model.condition.BinaryCondition;
-import org.minijpa.jdbc.model.condition.BinaryLogicConditionImpl;
-import org.minijpa.jdbc.model.condition.Condition;
-import org.minijpa.jdbc.model.condition.ConditionType;
-import org.minijpa.jdbc.model.condition.InCondition;
-import org.minijpa.jdbc.model.condition.NestedCondition;
-import org.minijpa.jdbc.model.condition.NotCondition;
-import org.minijpa.jdbc.model.condition.UnaryCondition;
-import org.minijpa.jdbc.model.expression.SqlExpressionImpl;
-import org.minijpa.jdbc.model.function.Abs;
-import org.minijpa.jdbc.model.function.Concat;
-import org.minijpa.jdbc.model.function.CurrentDate;
-import org.minijpa.jdbc.model.function.CurrentTime;
-import org.minijpa.jdbc.model.function.CurrentTimestamp;
-import org.minijpa.jdbc.model.function.Function;
-import org.minijpa.jdbc.model.function.Length;
-import org.minijpa.jdbc.model.function.Locate;
-import org.minijpa.jdbc.model.function.Lower;
-import org.minijpa.jdbc.model.function.Mod;
-import org.minijpa.jdbc.model.function.Sqrt;
-import org.minijpa.jdbc.model.function.Substring;
-import org.minijpa.jdbc.model.function.Trim;
-import org.minijpa.jdbc.model.function.TrimType;
-import org.minijpa.jdbc.model.function.Upper;
-import org.minijpa.jdbc.model.join.FromJoin;
+import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.metadata.AliasGenerator;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.Column;
+import org.minijpa.sql.model.FromTable;
+import org.minijpa.sql.model.FromTableImpl;
+import org.minijpa.sql.model.OrderBy;
+import org.minijpa.sql.model.SqlSelect;
+import org.minijpa.sql.model.TableColumn;
+import org.minijpa.sql.model.Value;
+import org.minijpa.sql.model.aggregate.GroupBy;
+import org.minijpa.sql.model.condition.BetweenCondition;
+import org.minijpa.sql.model.condition.BinaryCondition;
+import org.minijpa.sql.model.condition.BinaryLogicConditionImpl;
+import org.minijpa.sql.model.condition.Condition;
+import org.minijpa.sql.model.condition.ConditionType;
+import org.minijpa.sql.model.condition.InCondition;
+import org.minijpa.sql.model.condition.NestedCondition;
+import org.minijpa.sql.model.condition.NotCondition;
+import org.minijpa.sql.model.condition.UnaryCondition;
+import org.minijpa.sql.model.expression.SqlExpressionImpl;
+import org.minijpa.sql.model.function.Abs;
+import org.minijpa.sql.model.function.Concat;
+import org.minijpa.sql.model.function.CurrentDate;
+import org.minijpa.sql.model.function.CurrentTime;
+import org.minijpa.sql.model.function.CurrentTimestamp;
+import org.minijpa.sql.model.function.Function;
+import org.minijpa.sql.model.function.Length;
+import org.minijpa.sql.model.function.Locate;
+import org.minijpa.sql.model.function.Lower;
+import org.minijpa.sql.model.function.Mod;
+import org.minijpa.sql.model.function.Sqrt;
+import org.minijpa.sql.model.function.Substring;
+import org.minijpa.sql.model.function.Trim;
+import org.minijpa.sql.model.function.TrimType;
+import org.minijpa.sql.model.function.Upper;
+import org.minijpa.sql.model.join.FromJoin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,10 +83,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		this.tableAliasGenerator = persistenceUnitContext.createTableAliasGenerator();
 		JpqlVisitorParameters jpqlVisitorParameters = new JpqlVisitorParameters();
 		node.childrenAccept(this, jpqlVisitorParameters);
+		LOG.debug("visit: ASTSelectStatement - ");
 		return createFromParameters(jpqlVisitorParameters);
 	}
 
-	private SqlSelect createFromParameters(JpqlVisitorParameters jpqlVisitorParameters) {
+	private SqlSelectData createFromParameters(JpqlVisitorParameters jpqlVisitorParameters) {
 		SqlSelect.SqlSelectBuilder selectBuilder = new SqlSelect.SqlSelectBuilder();
 
 		if (jpqlVisitorParameters.distinct) {
@@ -94,7 +96,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		if (jpqlVisitorParameters.identificationVariableEntity != null
 				&& jpqlVisitorParameters.identificationVariableEntity == jpqlVisitorParameters.sourceEntity) {
-			selectBuilder.withResult(jpqlVisitorParameters.sourceEntity);
+			selectBuilder.withResult(FromTable.of(jpqlVisitorParameters.sourceEntity.getTableName()));
 		}
 
 		jpqlVisitorParameters.fromTables.forEach(f -> selectBuilder.withFromTable(f));
@@ -104,7 +106,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		selectBuilder.withValues(jpqlVisitorParameters.values);
 		jpqlVisitorParameters.values.forEach(v -> LOG.debug("createFromParameters: v=" + v));
-		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
+//		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
 
 		selectBuilder.withConditions(jpqlVisitorParameters.conditions);
 		if (jpqlVisitorParameters.groupBy != null) {
@@ -115,7 +117,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		LOG.debug("createFromParameters: jpqlVisitorParameters.conditions=" + jpqlVisitorParameters.conditions);
 
-		return selectBuilder.build();
+		SqlSelect sqlSelect = selectBuilder.build();
+		return new SqlSelectData(sqlSelect, jpqlVisitorParameters.fetchParameters);
 	}
 
 	private Optional<MetaEntity> findMetaEntityBySqlAlias(String sqlAlias) {
@@ -197,7 +200,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				MetaEntity metaEntity = optional.get();
 				if (jpqlVisitorParameters.distinct) {
 					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
-							FromTable.of(metaEntity, sqlTableAlias));
+							FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(values);
 
 					List<FetchParameter> fetchParameters = new ArrayList<>();
@@ -208,7 +211,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 					jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
 					jpqlVisitorParameters.identificationVariableEntity = metaEntity;
 				} else {
-					List<Value> values = MetaEntityHelper.toValues(metaEntity, FromTable.of(metaEntity, sqlTableAlias));
+					List<Value> values = MetaEntityHelper.toValues(metaEntity,
+							FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(values);
 					List<FetchParameter> fetchParameters = MetaEntityHelper.convertAllAttributes(metaEntity);
 					jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
@@ -270,14 +274,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			LOG.debug("visit: ASTRangeVariableDeclaration optionalAlias.isEmpty() tableAlias=" + tableAlias);
 			jpqlVisitorParameters.aliases.put(rvdAlias, tableAlias);
 			jpqlVisitorParameters.sourceEntity = sourceEntity;
-			FromTable fromTable = FromTable.of(sourceEntity, tableAlias);
+			FromTable fromTable = FromTable.of(sourceEntity.getTableName(), tableAlias);
 			jpqlVisitorParameters.fromTables.add(fromTable);
 		} else {
 			String tableAlias = tableAliasGenerator.next(sourceEntity.getTableName());
 			LOG.debug("visit: ASTRangeVariableDeclaration !optionalAlias.isEmpty() tableAlias=" + tableAlias);
 			jpqlVisitorParameters.aliases.put(rvdAlias, tableAlias);
 			jpqlVisitorParameters.sourceEntity = sourceEntity;
-			FromTable fromTable = FromTable.of(sourceEntity, tableAlias);
+			FromTable fromTable = FromTable.of(sourceEntity.getTableName(), tableAlias);
 			jpqlVisitorParameters.fromTables.add(fromTable);
 		}
 
@@ -648,6 +652,10 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			return (SqlSelect) result;
 		}
 
+		if (result instanceof SqlSelectData) {
+			return (SqlSelectData) result;
+		}
+
 		if (expression.jjtGetNumChildren() > 0) {
 			Node node0 = expression.jjtGetChild(0);
 			if (node0 instanceof ASTFunctionsReturningNumerics) {
@@ -937,7 +945,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			node.setPath(stateValuedPathExpression.getPath());
 		} else if (n0_0 instanceof ASTSubquery) {
 			ASTSubquery subquery = (ASTSubquery) n0_0;
-			node.setResult(subquery.getSqlSelect());
+			node.setResult(subquery.getSqlSelectData().getSqlSelect());
 		}
 
 		return object;
@@ -1042,14 +1050,17 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				if (function instanceof CurrentTimestamp) {
 					return new FetchParameter("datetimeExpression", Types.TIMESTAMP, null);
 				}
-//				switch (sqlFunction) {
-//					case CURRENT_DATE:
-//						return new FetchParameter("datetimeExpression", java.sql.Date.class, java.sql.Date.class, Types.DATE, null, null, false);
-//					case CURRENT_TIME:
-//						return new FetchParameter("datetimeExpression", java.sql.Time.class, java.sql.Time.class, Types.TIME, null, null, false);
-//					case CURRENT_TIMESTAMP:
-//						return new FetchParameter("datetimeExpression", java.sql.Timestamp.class, java.sql.Timestamp.class, Types.TIMESTAMP, null, null, false);
-//				}
+				// switch (sqlFunction) {
+				// case CURRENT_DATE:
+				// return new FetchParameter("datetimeExpression", java.sql.Date.class,
+				// java.sql.Date.class, Types.DATE, null, null, false);
+				// case CURRENT_TIME:
+				// return new FetchParameter("datetimeExpression", java.sql.Time.class,
+				// java.sql.Time.class, Types.TIME, null, null, false);
+				// case CURRENT_TIMESTAMP:
+				// return new FetchParameter("datetimeExpression", java.sql.Timestamp.class,
+				// java.sql.Timestamp.class, Types.TIMESTAMP, null, null, false);
+				// }
 			} else {
 				return new FetchParameter("datetimeExpression", -1, null);
 			}
@@ -1136,7 +1147,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			} else {
 				// subquery
 				ASTSubquery subquery = (ASTSubquery) node.jjtGetChild(1);
-				items.add(subquery.getSqlSelect());
+				items.add(subquery.getSqlSelectData().getSqlSelect());
 			}
 
 			Condition condition = new InCondition(tableColumn, items, node.isNot());
@@ -1191,7 +1202,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 					node.setMetaAttributes(Arrays.asList(metaAttribute));
 				}
 
-				node.setFromTable(FromTable.of(metaEntity, sqlTableAlias));
+				node.setFromTable(FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 			}
 		}
 
@@ -1219,7 +1230,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				String attributePath = singleValuedPathExpression.getAttributePath();
 				if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
 					List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
-							FromTable.of(metaEntity, sqlTableAlias));
+							FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(values);
 
 					List<FetchParameter> fetchParameters = new ArrayList<>();
@@ -1234,7 +1245,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 								+ "' entity not found");
 					}
 
-					Value value = MetaEntityHelper.toValue(metaAttribute, FromTable.of(metaEntity, sqlTableAlias));
+					Value value = MetaEntityHelper.toValue(metaAttribute,
+							FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 					jpqlVisitorParameters.values.addAll(Arrays.asList(value));
 					jpqlVisitorParameters.fetchParameters
 							.addAll(Arrays.asList(MetaEntityHelper.toFetchParameter(metaAttribute)));
@@ -1312,7 +1324,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 						if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
 							List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
-									FromTable.of(metaEntity, sqlTableAlias));
+									FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 							values.forEach(v -> {
 								OrderBy orderBy = new OrderBy(v, orderByItem.getOrderByType());
 								jpqlVisitorParameters.orderByList.add(orderBy);
@@ -1326,7 +1338,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 							}
 
 							TableColumn value = MetaEntityHelper.toValue(metaAttribute,
-									FromTable.of(metaEntity, sqlTableAlias));
+									FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 							OrderBy orderBy = new OrderBy(value, orderByItem.getOrderByType());
 							jpqlVisitorParameters.orderByList.add(orderBy);
 						}
@@ -1422,8 +1434,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				}
 
 				if (metaAttribute.getRelationship() != null) {
-					FromTable fromTable = FromTable.of(metaAttribute.getRelationship().getAttributeType(),
-							tableAliasGenerator
+					FromTable fromTable = FromTable
+							.of(metaAttribute.getRelationship().getAttributeType().getTableName(), tableAliasGenerator
 									.getDefault(metaAttribute.getRelationship().getAttributeType().getTableName()));
 					jpqlVisitorParameters.fromTables.add(fromTable);
 					if (metaAttribute.getRelationship().getJoinTable() != null) {
@@ -1466,8 +1478,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		jvp.aliases.putAll(jpqlVisitorParameters.aliases);
 		Object object = node.childrenAccept(this, jvp);
 
-		SqlSelect sqlSelect = createFromParameters(jvp);
-		node.setSqlSelect(sqlSelect);
+		SqlSelectData sqlSelectData = createFromParameters(jvp);
+		node.setSqlSelectData(sqlSelectData);
 		return jpqlVisitorParameters;
 	}
 
@@ -1485,7 +1497,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			}
 
 			MetaEntity metaEntity = optional.get();
-			argument = new TableColumn(FromTable.of(metaEntity, sqlTableAlias),
+			argument = new TableColumn(FromTable.of(metaEntity.getTableName(), sqlTableAlias),
 					new Column(metaEntity.getId().getAttributes().get(0).getColumnName()));
 		} else {
 			Node n0 = node.jjtGetChild(0);
@@ -1522,7 +1534,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		}
 
 		return null;
-//		return new FetchParameter("aggregateExpression", null, Types.BIGINT, null);
+		// return new FetchParameter("aggregateExpression", null, Types.BIGINT, null);
 	}
 
 	/**
@@ -1593,10 +1605,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			MetaEntity metaEntity = optional.get();
 			if (jpqlVisitorParameters.distinct) {
 				List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
-						FromTable.of(metaEntity, sqlTableAlias));
+						FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 				jpqlVisitorParameters.values.addAll(values);
 			} else {
-				List<Value> values = MetaEntityHelper.toValues(metaEntity, FromTable.of(metaEntity, sqlTableAlias));
+				List<Value> values = MetaEntityHelper.toValues(metaEntity,
+						FromTable.of(metaEntity.getTableName(), sqlTableAlias));
 				jpqlVisitorParameters.values.addAll(values);
 			}
 

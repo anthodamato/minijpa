@@ -23,13 +23,13 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.DbConfiguration;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
 import org.minijpa.jdbc.relationship.ManyToManyRelationship;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
+import org.minijpa.jpa.db.DbConfiguration;
 
 /**
  *

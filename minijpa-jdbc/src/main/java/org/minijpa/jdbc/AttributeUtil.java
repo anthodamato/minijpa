@@ -59,7 +59,6 @@ public class AttributeUtil {
 
 	private static void buildPK(ModelValueArray<FetchParameter> modelValueArray,
 			List<MetaAttribute> attributes, Object pkObject) throws Exception {
-//	LOG.debug("buildPK: pkObject=" + pkObject);
 		for (MetaAttribute a : attributes) {
 			int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, a);
 			LOG.debug("buildPK: index=" + index);

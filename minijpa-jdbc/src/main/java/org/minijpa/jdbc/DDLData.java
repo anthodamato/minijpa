@@ -23,42 +23,39 @@ import java.util.Optional;
  */
 public class DDLData {
 
-    private final Optional<String> columnDefinition;
-    private final Optional<Integer> length;
-    private final Optional<Integer> precision;
-    private final Optional<Integer> scale;
-    private final Optional<Boolean> nullable;
+	private final Optional<String> columnDefinition;
+	private final Optional<Integer> length;
+	private final Optional<Integer> precision;
+	private final Optional<Integer> scale;
+	private final Optional<Boolean> nullable;
 
-    public DDLData(Optional<String> columnDefinition,
-	    Optional<Integer> length,
-	    Optional<Integer> precision,
-	    Optional<Integer> scale,
-	    Optional<Boolean> nullable) {
-	this.columnDefinition = columnDefinition;
-	this.length = length;
-	this.precision = precision;
-	this.scale = scale;
-	this.nullable = nullable;
-    }
+	public DDLData(Optional<String> columnDefinition, Optional<Integer> length, Optional<Integer> precision,
+			Optional<Integer> scale, Optional<Boolean> nullable) {
+		this.columnDefinition = columnDefinition;
+		this.length = length;
+		this.precision = precision;
+		this.scale = scale;
+		this.nullable = nullable;
+	}
 
-    public Optional<String> getColumnDefinition() {
-	return columnDefinition;
-    }
+	public Optional<String> getColumnDefinition() {
+		return columnDefinition;
+	}
 
-    public Optional<Integer> getLength() {
-	return length;
-    }
+	public Optional<Integer> getLength() {
+		return length;
+	}
 
-    public Optional<Integer> getPrecision() {
-	return precision;
-    }
+	public Optional<Integer> getPrecision() {
+		return precision;
+	}
 
-    public Optional<Integer> getScale() {
-	return scale;
-    }
+	public Optional<Integer> getScale() {
+		return scale;
+	}
 
-    public Optional<Boolean> getNullable() {
-	return nullable;
-    }
+	public Optional<Boolean> getNullable() {
+		return nullable;
+	}
 
 }

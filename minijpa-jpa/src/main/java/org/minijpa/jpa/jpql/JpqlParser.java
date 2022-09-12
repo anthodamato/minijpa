@@ -1590,15 +1590,15 @@ String entity_name() :
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case LEADING:
             jj_consume_token(LEADING);
-      jjtn000.setTrimType(org.minijpa.jdbc.model.function.TrimType.LEADING);
+      jjtn000.setTrimType(org.minijpa.sql.model.function.TrimType.LEADING);
             break;
           case TRAILING:
             jj_consume_token(TRAILING);
-      jjtn000.setTrimType(org.minijpa.jdbc.model.function.TrimType.TRAILING);
+      jjtn000.setTrimType(org.minijpa.sql.model.function.TrimType.TRAILING);
             break;
           case BOTH:
             jj_consume_token(BOTH);
-      jjtn000.setTrimType(org.minijpa.jdbc.model.function.TrimType.BOTH);
+      jjtn000.setTrimType(org.minijpa.sql.model.function.TrimType.BOTH);
             break;
           default:
             jj_la1[31] = jj_gen;
@@ -1714,19 +1714,19 @@ String entity_name() :
 //      CURRENT_DATE |
 //      CURRENT_TIME |
 //      CURRENT_TIMESTAMP
-  final public org.minijpa.jdbc.model.function.Function functions_returning_datetime() throws ParseException {
+  final public org.minijpa.sql.model.function.Function functions_returning_datetime() throws ParseException {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case CURRENT_DATE:
       jj_consume_token(CURRENT_DATE);
-    {if (true) return new org.minijpa.jdbc.model.function.CurrentDate();}
+    {if (true) return new org.minijpa.sql.model.function.CurrentDate();}
       break;
     case CURRENT_TIME:
       jj_consume_token(CURRENT_TIME);
-    {if (true) return new org.minijpa.jdbc.model.function.CurrentTime();}
+    {if (true) return new org.minijpa.sql.model.function.CurrentTime();}
       break;
     case CURRENT_TIMESTAMP:
       jj_consume_token(CURRENT_TIMESTAMP);
-    {if (true) return new org.minijpa.jdbc.model.function.CurrentTimestamp();}
+    {if (true) return new org.minijpa.sql.model.function.CurrentTimestamp();}
       break;
     default:
       jj_la1[34] = jj_gen;
@@ -2969,7 +2969,7 @@ String entity_name() :
   boolean jjtc000 = true;
   jjtree.openNodeScope(jjtn000);Token t;
   StringBuilder sb=new StringBuilder();
-  org.minijpa.jdbc.model.function.Function function;
+  org.minijpa.sql.model.function.Function function;
     try {
       if (jj_2_32(2)) {
         state_valued_path_expression();
@@ -5272,11 +5272,11 @@ String entity_name() :
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case ASC:
           jj_consume_token(ASC);
-    jjtn000.setOrderByType(org.minijpa.jdbc.model.OrderByType.ASC);
+    jjtn000.setOrderByType(org.minijpa.sql.model.OrderByType.ASC);
           break;
         case DESC:
           jj_consume_token(DESC);
-    jjtn000.setOrderByType(org.minijpa.jdbc.model.OrderByType.DESC);
+    jjtn000.setOrderByType(org.minijpa.sql.model.OrderByType.DESC);
           break;
         default:
           jj_la1[110] = jj_gen;

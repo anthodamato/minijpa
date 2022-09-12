@@ -20,7 +20,6 @@ import java.sql.SQLException;
 
 import org.minijpa.jdbc.Database;
 import org.minijpa.jdbc.DbMetaData;
-import org.minijpa.jdbc.db.DbConfiguration;
 
 public class DbConfigurationFactory {
 

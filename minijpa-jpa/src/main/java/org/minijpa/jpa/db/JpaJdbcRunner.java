@@ -29,12 +29,12 @@ import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 
-import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.EntityLoader;
 import org.minijpa.jdbc.FetchParameter;
+import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.QueryResultMapping;
-import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
 import org.slf4j.Logger;
@@ -48,7 +48,7 @@ public class JpaJdbcRunner extends JdbcRunner {
 		super();
 	}
 
-	public List<Tuple> runTupleQuery(Connection connection, String sql, SqlSelect sqlSelect,
+	public List<Tuple> runTupleQuery(Connection connection, String sql, SqlSelectData sqlSelectData,
 			CompoundSelection<?> compoundSelection, List<QueryParameter> parameters) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
@@ -59,8 +59,8 @@ public class JpaJdbcRunner extends JdbcRunner {
 			LOG.info("Running `" + sql + "`");
 			List<Tuple> objects = new ArrayList<>();
 			rs = preparedStatement.executeQuery();
-			int nc = sqlSelect.getValues().size();
-			List<FetchParameter> fetchParameters = sqlSelect.getFetchParameters();
+			int nc = sqlSelectData.getSqlSelect().getValues().size();
+			List<FetchParameter> fetchParameters = sqlSelectData.getFetchParameters();
 			ResultSetMetaData metaData = rs.getMetaData();
 			while (rs.next()) {
 				Object[] values = createRecord(nc, fetchParameters, rs, metaData);
