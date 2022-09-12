@@ -17,7 +17,7 @@ package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
+import org.minijpa.sql.model.SqlStatementGenerator;
 
 public interface DbConfiguration {
 

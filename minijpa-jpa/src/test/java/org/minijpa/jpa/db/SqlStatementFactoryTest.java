@@ -28,13 +28,6 @@ import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.db.StatementParameters;
-import org.minijpa.jdbc.model.ApacheDerbySqlStatementGenerator;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
-import org.minijpa.jdbc.model.TableColumn;
-import org.minijpa.jdbc.model.condition.BinaryCondition;
-import org.minijpa.jdbc.model.condition.Condition;
-import org.minijpa.jdbc.model.condition.ConditionType;
-import org.minijpa.jdbc.model.condition.UnaryCondition;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.PersistenceUnitProperties;
@@ -45,6 +38,13 @@ import org.minijpa.jpa.model.Item;
 import org.minijpa.jpa.model.Store;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.ApacheDerbySqlStatementGenerator;
+import org.minijpa.sql.model.SqlStatementGenerator;
+import org.minijpa.sql.model.TableColumn;
+import org.minijpa.sql.model.condition.BinaryCondition;
+import org.minijpa.sql.model.condition.Condition;
+import org.minijpa.sql.model.condition.ConditionType;
+import org.minijpa.sql.model.condition.UnaryCondition;
 
 public class SqlStatementFactoryTest {
 	private final SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();

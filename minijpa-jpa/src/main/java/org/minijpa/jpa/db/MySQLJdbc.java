@@ -21,8 +21,8 @@ import java.util.List;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
-import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.SqlDDLStatement;
 
 public class MySQLJdbc extends BasicDbJdbc {
 

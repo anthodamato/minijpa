@@ -27,11 +27,11 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
-import org.minijpa.jdbc.model.FromTable;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.FromTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

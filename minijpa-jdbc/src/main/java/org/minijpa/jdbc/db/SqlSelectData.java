@@ -3,9 +3,9 @@ package org.minijpa.jdbc.db;
 import java.util.List;
 
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.model.SqlSelect;
-import org.minijpa.jdbc.model.SqlStatement;
-import org.minijpa.jdbc.model.StatementType;
+import org.minijpa.sql.model.SqlSelect;
+import org.minijpa.sql.model.SqlStatement;
+import org.minijpa.sql.model.StatementType;
 
 public class SqlSelectData implements SqlStatement {
 	private SqlSelect sqlSelect;

@@ -18,12 +18,12 @@
  */
 package org.minijpa.jpa.jpql;
 
-import org.minijpa.jdbc.model.Value;
-import org.minijpa.jdbc.model.function.Avg;
-import org.minijpa.jdbc.model.function.Count;
-import org.minijpa.jdbc.model.function.Max;
-import org.minijpa.jdbc.model.function.Min;
-import org.minijpa.jdbc.model.function.Sum;
+import org.minijpa.sql.model.Value;
+import org.minijpa.sql.model.function.Avg;
+import org.minijpa.sql.model.function.Count;
+import org.minijpa.sql.model.function.Max;
+import org.minijpa.sql.model.function.Min;
+import org.minijpa.sql.model.function.Sum;
 
 /**
  *

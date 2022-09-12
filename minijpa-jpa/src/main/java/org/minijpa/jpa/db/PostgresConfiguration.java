@@ -18,8 +18,8 @@ package org.minijpa.jpa.db;
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.mapper.PostgresDbTypeMapper;
-import org.minijpa.jdbc.model.PostgresSqlStatementGenerator;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
+import org.minijpa.sql.model.PostgresSqlStatementGenerator;
+import org.minijpa.sql.model.SqlStatementGenerator;
 
 public class PostgresConfiguration implements DbConfiguration {
 

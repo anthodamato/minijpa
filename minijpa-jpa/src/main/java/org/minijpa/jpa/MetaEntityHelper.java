@@ -34,12 +34,12 @@ import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.model.Column;
-import org.minijpa.jdbc.model.FromTable;
-import org.minijpa.jdbc.model.TableColumn;
-import org.minijpa.jdbc.model.Value;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jpa.db.EntityStatus;
+import org.minijpa.sql.model.Column;
+import org.minijpa.sql.model.FromTable;
+import org.minijpa.sql.model.TableColumn;
+import org.minijpa.sql.model.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

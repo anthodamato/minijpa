@@ -17,7 +17,7 @@ package org.minijpa.jdbc.db;
 
 import java.util.List;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.model.SqlStatement;
+import org.minijpa.sql.model.SqlStatement;
 
 /**
  *

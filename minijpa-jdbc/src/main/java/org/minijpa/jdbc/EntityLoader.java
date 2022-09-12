@@ -15,7 +15,7 @@
  */
 package org.minijpa.jdbc;
 
-import org.minijpa.jdbc.model.FromTable;
+import org.minijpa.sql.model.FromTable;
 
 /**
  *

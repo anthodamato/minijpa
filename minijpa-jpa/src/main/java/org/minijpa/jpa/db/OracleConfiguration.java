@@ -18,8 +18,8 @@ package org.minijpa.jpa.db;
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.mapper.OracleDbTypeMapper;
-import org.minijpa.jdbc.model.OracleSqlStatementGenerator;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
+import org.minijpa.sql.model.OracleSqlStatementGenerator;
+import org.minijpa.sql.model.SqlStatementGenerator;
 
 public class OracleConfiguration implements DbConfiguration {
 

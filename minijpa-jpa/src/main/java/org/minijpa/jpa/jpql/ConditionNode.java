@@ -5,7 +5,7 @@
  */
 package org.minijpa.jpa.jpql;
 
-import org.minijpa.jdbc.model.condition.Condition;
+import org.minijpa.sql.model.condition.Condition;
 
 /**
  *

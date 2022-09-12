@@ -34,13 +34,13 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.model.FromTable;
-import org.minijpa.jdbc.model.SqlDelete;
-import org.minijpa.jdbc.model.SqlInsert;
-import org.minijpa.jdbc.model.SqlUpdate;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.FromTable;
+import org.minijpa.sql.model.SqlDelete;
+import org.minijpa.sql.model.SqlInsert;
+import org.minijpa.sql.model.SqlUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

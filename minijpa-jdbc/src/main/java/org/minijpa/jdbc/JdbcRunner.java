@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 
 import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jdbc.model.SqlSelect;
+import org.minijpa.sql.model.SqlSelect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

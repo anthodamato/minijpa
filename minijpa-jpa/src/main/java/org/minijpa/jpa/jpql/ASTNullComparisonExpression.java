@@ -2,7 +2,7 @@
  /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=false,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package org.minijpa.jpa.jpql;
 
-import org.minijpa.jdbc.model.condition.Condition;
+import org.minijpa.sql.model.condition.Condition;
 
 public class ASTNullComparisonExpression extends SimpleNode implements ConditionNode {
 

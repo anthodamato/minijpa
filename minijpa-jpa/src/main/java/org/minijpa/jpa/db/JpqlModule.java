@@ -8,13 +8,13 @@ package org.minijpa.jpa.db;
 import java.io.StringReader;
 
 import org.minijpa.jdbc.db.SqlSelectData;
-import org.minijpa.jdbc.model.SqlStatement;
 import org.minijpa.jpa.jpql.ASTQLStatement;
 import org.minijpa.jpa.jpql.JpqlParser;
 import org.minijpa.jpa.jpql.JpqlParserVisitor;
 import org.minijpa.jpa.jpql.JpqlParserVisitorImpl;
 import org.minijpa.jpa.jpql.ParseException;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.SqlStatement;
 
 /**
  *

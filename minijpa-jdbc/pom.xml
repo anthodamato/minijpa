@@ -30,7 +30,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.minijpa</groupId>
-			<artifactId>minijpa-jdbc-model</artifactId>
+			<artifactId>minijpa-sql-model</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

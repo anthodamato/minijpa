@@ -18,8 +18,8 @@ package org.minijpa.jpa.db;
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.mapper.ApacheDerbyDbTypeMapper;
-import org.minijpa.jdbc.model.ApacheDerbySqlStatementGenerator;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
+import org.minijpa.sql.model.ApacheDerbySqlStatementGenerator;
+import org.minijpa.sql.model.SqlStatementGenerator;
 
 public class ApacheDerbyConfiguration implements DbConfiguration {
 

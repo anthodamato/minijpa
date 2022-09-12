@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.model.FromTable;
-import org.minijpa.jdbc.model.OrderBy;
-import org.minijpa.jdbc.model.Value;
-import org.minijpa.jdbc.model.aggregate.GroupBy;
-import org.minijpa.jdbc.model.condition.Condition;
-import org.minijpa.jdbc.model.join.FromJoin;
+import org.minijpa.sql.model.FromTable;
+import org.minijpa.sql.model.OrderBy;
+import org.minijpa.sql.model.Value;
+import org.minijpa.sql.model.aggregate.GroupBy;
+import org.minijpa.sql.model.condition.Condition;
+import org.minijpa.sql.model.join.FromJoin;
 
 /**
  *

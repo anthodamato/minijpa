@@ -22,8 +22,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.minijpa.jdbc.model.SqlDDLStatement;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.SqlDDLStatement;
 
 /**
  *

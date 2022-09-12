@@ -25,10 +25,10 @@ import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.SqlSelectData;
-import org.minijpa.jdbc.model.SqlInsert;
-import org.minijpa.jdbc.model.SqlSelect;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.metadata.AliasGenerator;
+import org.minijpa.sql.model.SqlInsert;
+import org.minijpa.sql.model.SqlSelect;
 
 /**
  *

@@ -18,8 +18,8 @@ package org.minijpa.jpa.db;
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
 import org.minijpa.jdbc.mapper.MySQLDbTypeMapper;
-import org.minijpa.jdbc.model.MySQLSqlStatementGenerator;
-import org.minijpa.jdbc.model.SqlStatementGenerator;
+import org.minijpa.sql.model.MySQLSqlStatementGenerator;
+import org.minijpa.sql.model.SqlStatementGenerator;
 
 public class MySQLConfiguration implements DbConfiguration {
 
