@@ -41,7 +41,8 @@ public class AttributeUtil {
 	@SuppressWarnings("unused")
 	private static final Logger LOG = LoggerFactory.getLogger(AttributeUtil.class);
 
-	public static final Function<FetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f.getAttribute();
+	public static final Function<AttributeFetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f
+			.getAttribute();
 
 	public static Object buildPK(Pk id, ModelValueArray<FetchParameter> modelValueArray) throws Exception {
 		if (id.isEmbedded()) {
@@ -50,23 +51,34 @@ public class AttributeUtil {
 			return pkObject;
 		}
 
-		int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, id.getAttribute());
+//		int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, id.getAttribute());
+		int index = indexOfAttribute(modelValueArray, id.getAttribute());
 		if (index == -1)
 			throw new IllegalArgumentException("Column '" + id.getAttribute().getColumnName() + "' is missing");
 
 		return modelValueArray.getValue(index);
 	}
 
-	private static void buildPK(ModelValueArray<FetchParameter> modelValueArray,
-			List<MetaAttribute> attributes, Object pkObject) throws Exception {
+	private static void buildPK(ModelValueArray<FetchParameter> modelValueArray, List<MetaAttribute> attributes,
+			Object pkObject) throws Exception {
 		for (MetaAttribute a : attributes) {
-			int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, a);
+//			int index = modelValueArray.indexOfModel(fetchParameterToMetaAttribute, a);
+			int index = indexOfAttribute(modelValueArray, a);
 			LOG.debug("buildPK: index=" + index);
 			if (index == -1)
 				throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
 
 			a.getWriteMethod().invoke(pkObject, modelValueArray.getValue(index));
 		}
+	}
+
+	public static int indexOfAttribute(ModelValueArray<FetchParameter> modelValueArray, MetaAttribute attribute) {
+		for (int i = 0; i < modelValueArray.size(); ++i) {
+			if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute)
+				return i;
+		}
+
+		return -1;
 	}
 
 	public static int indexOf(List<MetaAttribute> attributes, String name) {

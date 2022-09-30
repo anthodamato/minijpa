@@ -56,16 +56,16 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 		Optional<ManagedData> optionalMD = enhancedClasses.stream()
 				.filter(e -> e.getCtClass().getName().equals(className)).findFirst();
 		if (optionalMD.isPresent()) {
-			LOG.debug("toBytecode: className=" + className + " found in the registry");
+			LOG.debug("toBytecode: className={} found in the registry", className);
 			if (optionalMD.get().getCtClass().isFrozen())
 				throw new IllegalStateException("Class '" + className + "' is frozen");
 
 			return optionalMD.get().getCtClass().toBytecode();
 		}
 
-		LOG.debug("toBytecode: className=" + className + "; optionalMD=" + optionalMD);
+		LOG.debug("toBytecode: className={}; optionalMD={}", className, optionalMD);
 		ManagedData managedData = classInspector.inspect(className);
-		LOG.debug("toBytecode: managedData=" + managedData);
+		LOG.debug("toBytecode: managedData={}", managedData);
 		EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
 		parsedEntities.add(enhEntity);
 		if (managedData.mappedSuperclass != null)
@@ -88,7 +88,7 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 		Optional<EnhEntity> optionalEnhEntity = parsedEntities.stream().filter(e -> e.getClassName().equals(className))
 				.findFirst();
 		if (optionalEnhEntity.isPresent()) {
-			LOG.debug("enhance: className=" + className + " found in registry");
+			LOG.debug("enhance: className={} found in registry", className);
 			EnhEntity enhEntity = optionalEnhEntity.get();
 			parsedEntities.add(enhEntity);
 			return optionalEnhEntity.get();
@@ -96,15 +96,15 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 			ManagedData managedData = null;
 			Optional<ManagedData> optionalMD = enhancedClasses.stream()
 					.filter(e -> e.getCtClass().getName().equals(className)).findFirst();
-			LOG.debug("enhance: className=" + className + "; optionalMD.isPresent()=" + optionalMD.isPresent());
+			LOG.debug("enhance: className={}; optionalMD.isPresent()=", className, optionalMD.isPresent());
 			if (optionalMD.isPresent())
 				managedData = optionalMD.get();
 			else
 				managedData = classInspector.inspect(className);
 
-			LOG.debug("enhance: className=" + className + "; managedData=" + managedData);
+			LOG.debug("enhance: className={}; managedData={}", className, managedData);
 			EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-			LOG.debug("enhance: className=" + className + "; enhEntity=" + enhEntity);
+			LOG.debug("enhance: className={}; enhEntity={}", className, enhEntity);
 			parsedEntities.add(enhEntity);
 
 			enhancedClasses.add(managedData);

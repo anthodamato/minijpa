@@ -48,7 +48,7 @@ public class EntityFileTransformer implements ClassFileTransformer {
 //		if (log)
 //			LOG.debug("transform: className=" + className);
 		String fullClassName = className.replaceAll("/", ".");
-		LOG.trace("transform: fullClassName=" + fullClassName);
+		LOG.trace("transform: fullClassName={}", fullClassName);
 
 		try {
 			return bytecodeEnhancer.toBytecode(fullClassName);

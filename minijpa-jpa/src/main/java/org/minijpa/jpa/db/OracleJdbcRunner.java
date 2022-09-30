@@ -44,7 +44,7 @@ public class OracleJdbcRunner extends JpaJdbcRunner {
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 		try {
-			LOG.info("Running `" + sql + "`");
+			LOG.info("Running `{}`", sql);
 			String[] generatedKeyColumns = {pk.getAttribute().getColumnName()};
 			preparedStatement = connection.prepareStatement(sql, generatedKeyColumns);
 			setPreparedStatementParameters(preparedStatement, parameters);

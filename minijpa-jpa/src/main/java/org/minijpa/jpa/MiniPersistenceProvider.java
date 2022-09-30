@@ -40,7 +40,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo) {
 		try {
 			LOG.info("Processing Db Configuration...");
-			LOG.debug("processConfiguration: persistenceUnitInfo=" + persistenceUnitInfo);
+			LOG.debug("processConfiguration: persistenceUnitInfo={}", persistenceUnitInfo);
 			Connection connection = null;
 //	    try {
 			new ConnectionProviderImpl(persistenceUnitInfo).init();
@@ -49,7 +49,8 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 			DbMetaData dbMetaData = new DbMetaData();
 //	    dbMetaData.showDatabaseMetadata(connection);
 			DbConfiguration dbConfiguration = DbConfigurationFactory.create(connection);
-			DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo.getPersistenceUnitName(), dbConfiguration);
+			DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo.getPersistenceUnitName(),
+					dbConfiguration);
 //	    } catch (Exception e) {
 //		LOG.error("processConfiguration: Exception " + e.getClass());
 //		if (connection != null)
@@ -75,11 +76,11 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 	private EntityManagerFactory createEntityManagerFactory(String path, String emName,
 			@SuppressWarnings("rawtypes") Map map) {
 		PersistenceUnitInfo persistenceUnitInfo = null;
-		LOG.debug("createEntityManagerFactory: emName=" + emName);
+		LOG.debug("createEntityManagerFactory: emName={}", emName);
 		try {
 			persistenceUnitInfo = new PersistenceProviderHelper().parseXml(path, emName, map);
 			if (persistenceUnitInfo == null) {
-				LOG.error("Persistence Unit '" + emName + "' not found");
+				LOG.error("Persistence Unit '{}' not found", emName);
 				return null;
 			}
 		} catch (Exception e) {
@@ -119,7 +120,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 			persistenceUnitPropertyActions.runScript(script, info);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
-			LOG.error("generateSchema: e.getClass()=" + e.getClass());
+			LOG.error("generateSchema: e.getClass()={}", e.getClass());
 		}
 	}
 
@@ -132,7 +133,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 			processConfiguration(persistenceUnitInfo);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
-			LOG.error("generateSchema: e.getClass()=" + e.getClass());
+			LOG.error("generateSchema: e.getClass()={}", e.getClass());
 			return false;
 		}
 
@@ -142,7 +143,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 			persistenceUnitPropertyActions.runScript(script, persistenceUnitInfo);
 		} catch (Exception e) {
 			LOG.error(e.getMessage());
-			LOG.error("generateSchema: e.getClass()=" + e.getClass());
+			LOG.error("generateSchema: e.getClass()={}", e.getClass());
 			return false;
 		}
 

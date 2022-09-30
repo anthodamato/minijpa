@@ -32,7 +32,7 @@ public class OrderTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception {
 		emf = Persistence.createEntityManagerFactory("order_many_to_many", PersistenceUnitProperties.getProperties());
 	}
 

@@ -28,7 +28,7 @@ public class PropertyTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception{
 		emf = Persistence.createEntityManagerFactory("property_many_to_many_uni", PersistenceUnitProperties.getProperties());
 	}
 

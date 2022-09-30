@@ -17,6 +17,7 @@ package org.minijpa.jpa.db;
 
 import java.util.List;
 
+import org.minijpa.jdbc.AttributeFetchParameter;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.LockType;
@@ -50,16 +51,16 @@ public class EntityQueryLevel implements QueryLevel {
 			throws Exception {
 		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectById(entity, lockType, tableAliasGenerator);
 		List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
 		return dbConfiguration.getJdbcRunner().findById(sql, connectionHolder.getConnection(),
 				sqlSelectData.getFetchParameters(), parameters);
 	}
 
-	public ModelValueArray<FetchParameter> runVersionQuery(MetaEntity entity, Object primaryKey, LockType lockType)
-			throws Exception {
+	public ModelValueArray<FetchParameter> runVersionQuery(MetaEntity entity, Object primaryKey,
+			LockType lockType) throws Exception {
 		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectVersion(entity, lockType, tableAliasGenerator);
 		List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
 		return dbConfiguration.getJdbcRunner().findById(sql, connectionHolder.getConnection(),
 				sqlSelectData.getFetchParameters(), parameters);
 	}

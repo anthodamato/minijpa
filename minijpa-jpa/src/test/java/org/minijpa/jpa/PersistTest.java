@@ -29,7 +29,7 @@ public class PersistTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception {
 		emf = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
 	}
 

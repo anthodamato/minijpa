@@ -76,7 +76,7 @@ public class EntityWriterImpl implements EntityWriter {
 	public void persist(MetaEntity entity, Object entityInstance,
 			ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
 		EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(entity, entityInstance);
-		LOG.debug("persist: entityStatus=" + entityStatus);
+		LOG.debug("persist: entityStatus={}", entityStatus);
 		if (MetaEntityHelper.isFlushed(entity, entityInstance)) {
 			update(entity, entityInstance, modelValueArray);
 		} else {
@@ -95,7 +95,7 @@ public class EntityWriterImpl implements EntityWriter {
 //	Object instance = entityLoader.findById(entity, idValue, LockType.NONE);
 //	Object currentVersionValue2 = entity.getVersionAttribute().get().getReadMethod().invoke(instance);
 //
-//	LOG.debug("checkOptimisticLock: dbVersionValue=" + dbVersionValue + "; currentVersionValue=" + currentVersionValue);
+//	LOG.debug("checkOptimisticLock: dbVersionValue={}", dbVersionValue + "; currentVersionValue={}", currentVersionValue);
 //	if (dbVersionValue == null || !dbVersionValue.equals(currentVersionValue))
 //	    throw new OptimisticLockException("Entity was written by another transaction, version" + dbVersionValue);
 //    }
@@ -107,7 +107,7 @@ public class EntityWriterImpl implements EntityWriter {
 
 		Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
 //	checkOptimisticLock(entity, entityInstance, idValue);
-		LOG.debug("update: idValue=" + idValue);
+		LOG.debug("update: idValue={}", idValue);
 		List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(entity.getId(), idValue);
 		List<String> idColumns = idParameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 		if (MetaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
@@ -140,14 +140,14 @@ public class EntityWriterImpl implements EntityWriter {
 			}
 		}
 
-		LOG.debug("update: updateCount=" + updateCount);
+		LOG.debug("update: updateCount={}", updateCount);
 		MetaEntityHelper.updateVersionAttributeValue(entity, entityInstance);
 	}
 
 	protected void insert(MetaEntity entity, Object entityInstance,
 			ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
 		Pk pk = entity.getId();
-//	LOG.info("persist: id.getPkGeneration()=" + id.getPkGeneration());
+//	LOG.info("persist: id.getPkGeneration()={}", id.getPkGeneration());
 		PkStrategy pkStrategy = pk.getPkGeneration().getPkStrategy();
 //	LOG.info("Primary Key Generation Strategy: " + pkStrategy);
 		if (pkStrategy == PkStrategy.IDENTITY) {
@@ -175,9 +175,9 @@ public class EntityWriterImpl implements EntityWriter {
 
 //	    Object idv = entity.getId().getAttribute().getDbTypeMapper().convertGeneratedKey(pkId, entity.getId().getType());
 			Object idv = entity.getId().convertGeneratedKey(pkId);
-			LOG.info("persist: pk=" + pkId);
+			LOG.info("persist: pk={}", pkId);
 			if (pkId != null)
-				LOG.info("persist: pk.getClass()=" + pkId.getClass());
+				LOG.info("persist: pk.getClass()={}", pkId.getClass());
 
 			entity.getId().getWriteMethod().invoke(entityInstance, idv);
 
@@ -210,25 +210,25 @@ public class EntityWriterImpl implements EntityWriter {
 
 	private void updatePostponedJoinColumnUpdate(MetaEntity entity, Object entityInstance)
 			throws Exception {
-		LOG.debug("updatePostponedJoinColumnUpdate: entity.getName()=" + entity.getName());
-		LOG.debug("updatePostponedJoinColumnUpdate: entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty()=" + entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty());
+		LOG.debug("updatePostponedJoinColumnUpdate: entity.getName()={}", entity.getName());
+		LOG.debug("updatePostponedJoinColumnUpdate: entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty()={}", entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty());
 //	if (entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty())
 //	    return;
 
 		List list = MetaEntityHelper.getJoinColumnPostponedUpdateAttributeList(entity, entityInstance);
-		LOG.debug("updatePostponedJoinColumnUpdate: list.isEmpty()=" + list.isEmpty());
+		LOG.debug("updatePostponedJoinColumnUpdate: list.isEmpty()={}", list.isEmpty());
 		if (list.isEmpty())
 			return;
 
 		for (Object o : list) {
 			PostponedUpdateInfo postponedUpdateInfo = (PostponedUpdateInfo) o;
-			LOG.debug("updatePostponedJoinColumnUpdate: postponedUpdateInfo.getC()=" + postponedUpdateInfo.getC());
+			LOG.debug("updatePostponedJoinColumnUpdate: postponedUpdateInfo.getC()={}", postponedUpdateInfo.getC());
 			Object instance = entityContainer.find(postponedUpdateInfo.getC(), postponedUpdateInfo.getId());
 			MetaEntity toEntity = persistenceUnitContext.getEntities().get(postponedUpdateInfo.getC().getName());
-			LOG.debug("updatePostponedJoinColumnUpdate: toEntity=" + toEntity);
-			LOG.debug("updatePostponedJoinColumnUpdate: postponedUpdateInfo.getAttributeName()=" + postponedUpdateInfo.getAttributeName());
+			LOG.debug("updatePostponedJoinColumnUpdate: toEntity={}", toEntity);
+			LOG.debug("updatePostponedJoinColumnUpdate: postponedUpdateInfo.getAttributeName()={}", postponedUpdateInfo.getAttributeName());
 			Optional<MetaAttribute> optional = toEntity.findJoinColumnMappingAttribute(postponedUpdateInfo.getAttributeName());
-			LOG.debug("updatePostponedJoinColumnUpdate: optional.isEmpty()=" + optional.isEmpty());
+			LOG.debug("updatePostponedJoinColumnUpdate: optional.isEmpty()={}", optional.isEmpty());
 			if (optional.isEmpty())
 				continue;
 
@@ -251,8 +251,8 @@ public class EntityWriterImpl implements EntityWriter {
 				removeJoinTableRecords(entity, idValue, idParameters, a.getRelationship().getJoinTable());
 
 				Object attributeInstance = MetaEntityHelper.getAttributeValue(entityInstance, a);
-//		LOG.info("persist: attributeInstance=" + attributeInstance);
-//		LOG.info("persist: attributeInstance.getClass()=" + attributeInstance.getClass());
+//		LOG.info("persist: attributeInstance={}", attributeInstance);
+//		LOG.info("persist: attributeInstance.getClass()={}", attributeInstance.getClass());
 				if (CollectionUtils.isCollectionClass(attributeInstance.getClass())
 						&& !CollectionUtils.isCollectionEmpty(attributeInstance)) {
 					Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
@@ -300,7 +300,7 @@ public class EntityWriterImpl implements EntityWriter {
 			Object primaryKey,
 			List<QueryParameter> idParameters) throws Exception {
 		List<RelationshipJoinTable> relationshipJoinTables = findRelationshipJoinTable(entity);
-		LOG.debug("removeJoinTableRecords: relationshipJoinTables.size()=" + relationshipJoinTables.size());
+		LOG.debug("removeJoinTableRecords: relationshipJoinTables.size()={}", relationshipJoinTables.size());
 		for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
 			removeJoinTableRecords(entity, primaryKey, idParameters, relationshipJoinTable);
 		}
@@ -337,7 +337,7 @@ public class EntityWriterImpl implements EntityWriter {
 	@Override
 	public void delete(Object entityInstance, MetaEntity e) throws Exception {
 		Object idValue = AttributeUtil.getIdValue(e, entityInstance);
-		LOG.debug("delete: idValue=" + idValue);
+		LOG.debug("delete: idValue={}", idValue);
 
 		List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(e.getId(), idValue);
 		removeJoinTableRecords(e, idValue, idParameters);

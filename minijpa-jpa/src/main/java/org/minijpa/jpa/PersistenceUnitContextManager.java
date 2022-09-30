@@ -18,7 +18,9 @@ package org.minijpa.jpa;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
 import javax.persistence.spi.PersistenceUnitInfo;
+
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jpa.db.DbConfiguration;
@@ -69,7 +71,8 @@ public class PersistenceUnitContextManager {
 
 		LOG.info("Parsing entities...");
 		Map<String, MetaEntity> entityMap = new HashMap<>();
-		DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
+		DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
+				.getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
 		Parser parser = new Parser(dbConfiguration);
 		for (String className : persistenceUnitInfo.getManagedClassNames()) {
 			EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
@@ -83,12 +86,12 @@ public class PersistenceUnitContextManager {
 		parser.fillRelationships(entityMap);
 		Optional<Map<String, QueryResultMapping>> queryResultMappings = parser.parseSqlResultSetMappings(entityMap);
 
-		PersistenceUnitContext puc = new PersistenceUnitContext(persistenceUnitInfo.getPersistenceUnitName(),
-				entityMap, queryResultMappings);
+		PersistenceUnitContext puc = new PersistenceUnitContext(persistenceUnitInfo.getPersistenceUnitName(), entityMap,
+				queryResultMappings);
 
 		entityMap.forEach((k, v) -> {
-			LOG.debug("get: v.getName()=" + v.getName());
-			v.getBasicAttributes().forEach(a -> LOG.debug("get: ba a.getName()=" + a.getName()));
+			LOG.debug("get: v.getName()={}", v.getName());
+			v.getBasicAttributes().forEach(a -> LOG.debug("get: ba a.getName()={}", a.getName()));
 		});
 
 		EntityDelegate.getInstance().addPersistenceUnitContext(puc);

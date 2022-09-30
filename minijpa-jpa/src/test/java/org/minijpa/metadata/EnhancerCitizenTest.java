@@ -31,25 +31,25 @@ import org.minijpa.metadata.enhancer.EnhEntity;
 
 public class EnhancerCitizenTest {
 
-    private static EntityManagerFactory emf;
+	private static EntityManagerFactory emf;
 
-    @BeforeAll
-    public static void beforeAll() {
-	emf = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
-    }
+	@BeforeAll
+	public static void beforeAll() throws Exception {
+		emf = Persistence.createEntityManagerFactory("citizens", PersistenceUnitProperties.getProperties());
+	}
 
-    @AfterAll
-    public static void afterAll() {
-	emf.close();
-    }
+	@AfterAll
+	public static void afterAll() {
+		emf.close();
+	}
 
-    @Test
-    public void enhance() throws Exception {
-	String className = "org.minijpa.jpa.model.Citizen";
-	EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
+	@Test
+	public void enhance() throws Exception {
+		String className = "org.minijpa.jpa.model.Citizen";
+		EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
 
-	Assertions.assertNotNull(enhEntity);
-	Assertions.assertNotNull(enhEntity.getClassName());
-    }
+		Assertions.assertNotNull(enhEntity);
+		Assertions.assertNotNull(enhEntity.getClassName());
+	}
 
 }

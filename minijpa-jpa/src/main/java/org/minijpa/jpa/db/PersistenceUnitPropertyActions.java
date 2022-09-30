@@ -84,13 +84,13 @@ public class PersistenceUnitPropertyActions {
 	public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo)
 			throws IOException, SQLException, URISyntaxException {
 		Properties properties = persistenceUnitInfo.getProperties();
-		LOG.debug("properties=" + properties);
+		LOG.debug("properties={}", properties);
 		String action = (String) properties.get("javax.persistence.schema-generation.database.action");
 		String createSource = (String) properties.get("javax.persistence.schema-generation.create-source");
 		String createScriptSource = (String) properties.get("javax.persistence.schema-generation.create-script-source");
 		String dropSource = (String) properties.get("javax.persistence.schema-generation.drop-source");
 		String dropScriptSource = (String) properties.get("javax.persistence.schema-generation.drop-script-source");
-		LOG.debug("action=" + action);
+		LOG.debug("action={}", action);
 		if (action == null || action.isEmpty())
 			return;
 
@@ -101,7 +101,7 @@ public class PersistenceUnitPropertyActions {
 						runScript(createScriptSource, persistenceUnitInfo);
 				} else if (createSource.equals("metadata")) {
 					List<String> script = generateScriptFromMetadata(persistenceUnitInfo);
-					LOG.debug("script=" + script);
+					LOG.debug("script={}", script);
 					runScript(script, persistenceUnitInfo);
 				}
 			}

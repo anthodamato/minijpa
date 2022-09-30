@@ -22,68 +22,68 @@ import java.util.Properties;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
-import org.minijpa.jdbc.ConnectionProvider;
 
+import org.minijpa.jdbc.ConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConnectionProviderImpl implements ConnectionProvider {
 
-    private final Logger LOG = LoggerFactory.getLogger(ConnectionProviderImpl.class);
+	private final Logger LOG = LoggerFactory.getLogger(ConnectionProviderImpl.class);
 
-    private final PersistenceUnitInfo persistenceUnitInfo;
+	private final PersistenceUnitInfo persistenceUnitInfo;
 
-    public ConnectionProviderImpl(PersistenceUnitInfo persistenceUnitInfo) {
-	super();
-	this.persistenceUnitInfo = persistenceUnitInfo;
-    }
-
-    @Override
-    public Connection getConnection() throws SQLException {
-	DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
-	if (dataSource != null)
-	    return dataSource.getConnection();
-
-	dataSource = persistenceUnitInfo.getJtaDataSource();
-	if (dataSource != null)
-	    return dataSource.getConnection();
-
-	Properties connectionProps = new Properties();
-	Properties properties = persistenceUnitInfo.getProperties();
-	String user = (String) properties.get("javax.persistence.jdbc.user");
-	String password = (String) properties.get("javax.persistence.jdbc.password");
-	if (user != null && password != null) {
-	    connectionProps.put("user", user);
-	    connectionProps.put("password", password);
+	public ConnectionProviderImpl(PersistenceUnitInfo persistenceUnitInfo) {
+		super();
+		this.persistenceUnitInfo = persistenceUnitInfo;
 	}
 
-	String url = (String) properties.get("javax.persistence.jdbc.url");
-	Connection connection = DriverManager.getConnection(url, connectionProps);
-	connection.setAutoCommit(false);
-	return connection;
-    }
+	@Override
+	public Connection getConnection() throws SQLException {
+		DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
+		if (dataSource != null)
+			return dataSource.getConnection();
 
-    /**
-     *
-     * @throws Exception
-     */
-    @Override
-    public void init() throws Exception {
-	DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
-	if (dataSource != null)
-	    return;
+		dataSource = persistenceUnitInfo.getJtaDataSource();
+		if (dataSource != null)
+			return dataSource.getConnection();
 
-	dataSource = persistenceUnitInfo.getJtaDataSource();
-	if (dataSource != null)
-	    return;
+		Properties connectionProps = new Properties();
+		Properties properties = persistenceUnitInfo.getProperties();
+		String user = (String) properties.get("javax.persistence.jdbc.user");
+		String password = (String) properties.get("javax.persistence.jdbc.password");
+		if (user != null && password != null) {
+			connectionProps.put("user", user);
+			connectionProps.put("password", password);
+		}
 
-	Properties properties = persistenceUnitInfo.getProperties();
-	String driverClass = (String) properties.get("javax.persistence.jdbc.driver");
-	if (driverClass != null)
-	    Class.forName(driverClass).getDeclaredConstructor().newInstance();
+		String url = (String) properties.get("javax.persistence.jdbc.url");
+		Connection connection = DriverManager.getConnection(url, connectionProps);
+		connection.setAutoCommit(false);
+		return connection;
+	}
 
-	String url = (String) properties.get("javax.persistence.jdbc.url");
-	if (url == null)
-	    throw new IllegalArgumentException("'javax.persistence.jdbc.url' property not found");
-    }
+	/**
+	 *
+	 * @throws Exception
+	 */
+	@Override
+	public void init() throws Exception {
+		DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
+		if (dataSource != null)
+			return;
+
+		dataSource = persistenceUnitInfo.getJtaDataSource();
+		if (dataSource != null)
+			return;
+
+		Properties properties = persistenceUnitInfo.getProperties();
+		String driverClass = (String) properties.get("javax.persistence.jdbc.driver");
+		if (driverClass != null)
+			Class.forName(driverClass).getDeclaredConstructor().newInstance();
+
+		String url = (String) properties.get("javax.persistence.jdbc.url");
+		if (url == null)
+			throw new IllegalArgumentException("'javax.persistence.jdbc.url' property not found");
+	}
 }

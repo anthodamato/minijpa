@@ -28,45 +28,45 @@ import org.slf4j.LoggerFactory;
 
 public class UpdateQuery extends AbstractQuery {
 
-    private final Logger LOG = LoggerFactory.getLogger(UpdateQuery.class);
-    private final CriteriaUpdate<?> criteriaUpdate;
-    private final EntityManager entityManager;
+	private final Logger LOG = LoggerFactory.getLogger(UpdateQuery.class);
+	private final CriteriaUpdate<?> criteriaUpdate;
+	private final EntityManager entityManager;
 
-    public UpdateQuery(CriteriaUpdate<?> criteriaUpdate, EntityManager entityManager,
-	    JdbcEntityManager jdbcEntityManager) {
-	super();
-	this.criteriaUpdate = criteriaUpdate;
-	this.entityManager = entityManager;
-	this.jdbcEntityManager = jdbcEntityManager;
-    }
-
-    public CriteriaUpdate<?> getCriteriaUpdate() {
-	return criteriaUpdate;
-    }
-
-    @Override
-    public List getResultList() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public Object getSingleResult() {
-	// TODO Auto-generated method stub
-	return null;
-    }
-
-    @Override
-    public int executeUpdate() {
-	if (!entityManager.getTransaction().isActive())
-	    throw new TransactionRequiredException("Update requires an active transaction");
-
-	try {
-	    return jdbcEntityManager.update(this);
-	} catch (Exception e) {
-	    LOG.error(e.getMessage());
-	    throw new PersistenceException(e.getMessage());
+	public UpdateQuery(CriteriaUpdate<?> criteriaUpdate, EntityManager entityManager,
+			JdbcEntityManager jdbcEntityManager) {
+		super();
+		this.criteriaUpdate = criteriaUpdate;
+		this.entityManager = entityManager;
+		this.jdbcEntityManager = jdbcEntityManager;
 	}
-    }
+
+	public CriteriaUpdate<?> getCriteriaUpdate() {
+		return criteriaUpdate;
+	}
+
+	@Override
+	public List getResultList() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object getSingleResult() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int executeUpdate() {
+		if (!entityManager.getTransaction().isActive())
+			throw new TransactionRequiredException("Update requires an active transaction");
+
+		try {
+			return jdbcEntityManager.update(this);
+		} catch (Exception e) {
+			LOG.error(e.getMessage());
+			throw new PersistenceException(e.getMessage());
+		}
+	}
 
 }

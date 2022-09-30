@@ -35,7 +35,7 @@ public class TemporalDateSetTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception {
 		emf = Persistence.createEntityManagerFactory("temporal_dates", PersistenceUnitProperties.getProperties());
 	}
 

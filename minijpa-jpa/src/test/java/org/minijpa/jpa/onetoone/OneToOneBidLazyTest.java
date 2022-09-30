@@ -27,7 +27,7 @@ public class OneToOneBidLazyTest {
     private static EntityManagerFactory emf;
 
     @BeforeAll
-    public static void beforeAll() {
+    public static void beforeAll() throws Exception {
 	emf = Persistence.createEntityManagerFactory("onetoone_bid_lazy", PersistenceUnitProperties.getProperties());
     }
 

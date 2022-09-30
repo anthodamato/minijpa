@@ -70,14 +70,14 @@ public class ClassInspector {
 	public ManagedData inspect(String className) throws Exception {
 		// already inspected
 		for (ManagedData managedData : inspectedClasses) {
-			LOG.debug("inspect: managedData=" + managedData + "; managedData.getClassName()="
-					+ managedData.getClassName() + "; attrs=" + managedData.getAttributeDataList().stream()
-					.map(a -> a.getProperty().getCtField().getName()).collect(Collectors.toList()));
+			LOG.debug("inspect: managedData={}; managedData.getClassName()={}; attrs=", managedData,
+					managedData.getClassName(), managedData.getAttributeDataList().stream()
+							.map(a -> a.getProperty().getCtField().getName()).collect(Collectors.toList()));
 			if (managedData.getClassName().equals(className))
 				return managedData;
 		}
 
-		LOG.debug("Inspecting " + className);
+		LOG.debug("Inspecting {}", className);
 		ClassPool pool = ClassPool.getDefault();
 		CtClass ct = null;
 		try {
@@ -109,7 +109,7 @@ public class ClassInspector {
 			managedData.mappedSuperclass = optional.get();
 
 		List<Property> properties = findProperties(ct);
-		LOG.debug("Found " + properties.size() + " attributes in '" + ct.getName() + "'");
+		LOG.debug("Found {} attributes in '{}'", properties.size(), ct.getName());
 
 		// modification attribute
 		Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties, ct);
@@ -121,7 +121,7 @@ public class ClassInspector {
 		Optional<String> entityStatusAttribute = findAvailableAttribute(entityStatusAttributePrefix, properties, ct);
 		removeAttributeFromProperties(entityStatusAttribute.get(), properties);
 
-		// lazy loaded attribute tracker	
+		// lazy loaded attribute tracker
 		Optional<String> lazyLoadedAttribute = createLazyLoadedAttribute(properties, ct);
 //	Optional<Property> optionalLazy = properties.stream()
 //		.filter(p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().isLazy())
@@ -134,7 +134,8 @@ public class ClassInspector {
 		// join column postponed update attribute
 //	createJoinColumnPostponedUpdateAttributeOnDest(properties, ct);
 		Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(properties, ct);
-		LOG.debug("inspect: joinColumnPostponedUpdateAttribute.isPresent()=" + joinColumnPostponedUpdateAttribute.isPresent());
+		LOG.debug("inspect: joinColumnPostponedUpdateAttribute.isPresent()={}",
+				joinColumnPostponedUpdateAttribute.isPresent());
 		// join column fields
 		findJoinColumnAttributeFields(properties, ct);
 
@@ -152,7 +153,7 @@ public class ClassInspector {
 		List<ManagedData> embeddables = new ArrayList<>();
 		createEmbeddables(attrs, embeddables);
 		managedData.getEmbeddables().addAll(embeddables);
-		LOG.debug("Found " + embeddables.size() + " embeddables in '" + ct.getName() + "'");
+		LOG.debug("Found {} embeddables in '{}'", embeddables.size(), ct.getName());
 
 		List<BMTMethodInfo> methodInfos = inspectConstructorsAndMethods(ct);
 		addPrimitiveAttributesToInitialization(properties, methodInfos);
@@ -176,17 +177,16 @@ public class ClassInspector {
 	}
 
 	private Optional<String> createJoinColumnPostponedUpdateAttribute(List<Property> properties, CtClass ct) {
-		Optional<String> optionalName = findAvailableAttribute(joinColumnPostponedUpdateAttributePrefix, properties, ct);
+		Optional<String> optionalName = findAvailableAttribute(joinColumnPostponedUpdateAttributePrefix, properties,
+				ct);
 		removeAttributeFromProperties(optionalName.get(), properties);
 		return optionalName;
 	}
 
-	private void createJoinColumnPostponedUpdateAttributeOnDest(
-			List<Property> properties,
-			CtClass ct) throws Exception {
-		List<Property> list = properties.stream()
-				.filter(p -> p.getRelationshipProperties().isPresent()
-				&& p.getRelationshipProperties().get().hasJoinColumn())
+	private void createJoinColumnPostponedUpdateAttributeOnDest(List<Property> properties, CtClass ct)
+			throws Exception {
+		List<Property> list = properties.stream().filter(
+				p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().hasJoinColumn())
 				.collect(Collectors.toList());
 		for (Property p : list) {
 			Optional<ManagedData> o = Optional.empty();
@@ -197,8 +197,9 @@ public class ClassInspector {
 				}
 			}
 
-			LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: p.getCtField().getName()=" + p.getCtField().getName());
-			LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: o.isEmpty()=" + o.isEmpty());
+			LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: p.getCtField().getName()={}",
+					p.getCtField().getName());
+			LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: o.isEmpty()={}", o.isEmpty());
 			if (o.isEmpty()) {
 				ManagedData managedData = inspect(p.getCtField().getType().getName());
 				o = Optional.of(managedData);
@@ -207,21 +208,22 @@ public class ClassInspector {
 			if (o.get().getJoinColumnPostponedUpdateAttribute().isEmpty()) {
 				Optional<String> optionalName = findAvailableAttribute(joinColumnPostponedUpdateAttributePrefix,
 						properties, o.get().getCtClass());
-				LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: optionalName.get()=" + optionalName.get());
+				LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: optionalName.get()={}", optionalName.get());
 				o.get().setJoinColumnPostponedUpdateAttribute(optionalName);
 			}
 		}
 	}
 
-	private void addPrimitiveAttributesToInitialization(
-			List<Property> properties,
-			List<BMTMethodInfo> methodInfos) throws NotFoundException {
+	private void addPrimitiveAttributesToInitialization(List<Property> properties, List<BMTMethodInfo> methodInfos)
+			throws NotFoundException {
 		for (Property property : properties) {
 			if (property.getCtField().getType().isPrimitive()) {
 				for (BMTMethodInfo bMTMethodInfo : methodInfos) {
-					Optional<BMTFieldInfo> optional = bMTMethodInfo.getBmtFieldInfos().stream().filter(f -> f.name.equals(property.getCtField().getName())).findFirst();
+					Optional<BMTFieldInfo> optional = bMTMethodInfo.getBmtFieldInfos().stream()
+							.filter(f -> f.name.equals(property.getCtField().getName())).findFirst();
 					if (optional.isEmpty()) {
-						bMTMethodInfo.getBmtFieldInfos().add(new BMTFieldInfo(BMTFieldInfo.PRIMITIVE, property.getCtField().getName(), null));
+						bMTMethodInfo.getBmtFieldInfos()
+								.add(new BMTFieldInfo(BMTFieldInfo.PRIMITIVE, property.getCtField().getName(), null));
 					}
 				}
 			}
@@ -252,7 +254,8 @@ public class ClassInspector {
 			CtClass ctClass) {
 		for (int i = 0; i < 100; ++i) {
 			String name = attributePrefix + Integer.toString(i);
-			Optional<Property> optional = properties.stream().filter(p -> p.getCtField().getName().equals(name)).findFirst();
+			Optional<Property> optional = properties.stream().filter(p -> p.getCtField().getName().equals(name))
+					.findFirst();
 			if (optional.isEmpty())
 				return Optional.of(name);
 
@@ -271,13 +274,13 @@ public class ClassInspector {
 	 * @param properties
 	 */
 	private void removeAttributeFromProperties(String attributeName, List<Property> properties) {
-		Optional<Property> optionalMA = properties.stream().filter(p -> p.getCtField().getName().equals(attributeName)).findFirst();
+		Optional<Property> optionalMA = properties.stream().filter(p -> p.getCtField().getName().equals(attributeName))
+				.findFirst();
 		if (optionalMA.isPresent())
 			properties.remove(optionalMA.get());
 	}
 
-	private Optional<ManagedData> findMappedSuperclass(CtClass ct)
-			throws Exception {
+	private Optional<ManagedData> findMappedSuperclass(CtClass ct) throws Exception {
 		CtClass superClass = ct.getSuperclass();
 		if (superClass == null)
 			return Optional.empty();
@@ -285,19 +288,20 @@ public class ClassInspector {
 		if (superClass.getName().equals("java.lang.Object"))
 			return Optional.empty();
 
-		LOG.debug("findMappedSuperclass: superClass.getName()=" + superClass.getName());
+		LOG.debug("findMappedSuperclass: superClass.getName()={}", superClass.getName());
 		Object mappedSuperclassAnnotation = superClass.getAnnotation(MappedSuperclass.class);
 		if (mappedSuperclassAnnotation == null)
 			return Optional.empty();
 
 		// checks if the mapped superclass id already inspected
 		ManagedData mappedSuperclassEnhEntity = findInspectedMappedSuperclass(superClass.getName());
-		LOG.debug("findMappedSuperclass: mappedSuperclassEnhEntity=" + mappedSuperclassEnhEntity);
+		LOG.debug("findMappedSuperclass: mappedSuperclassEnhEntity={}", mappedSuperclassEnhEntity);
 		if (mappedSuperclassEnhEntity != null)
 			return Optional.of(mappedSuperclassEnhEntity);
 
 		List<Property> properties = findProperties(superClass);
-		Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties, superClass);
+		Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties,
+				superClass);
 		removeAttributeFromProperties(modificationAttribute.get(), properties);
 
 		// lazy loaded attribute tracker
@@ -314,9 +318,9 @@ public class ClassInspector {
 //	createJoinColumnPostponedUpdateAttributeOnDest(properties, ct);
 		Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(properties, ct);
 
-		LOG.debug("Found " + properties.size() + " attributes in '" + superClass.getName() + "'");
+		LOG.debug("Found {} attributes in '{}'", properties.size(), superClass.getName());
 		List<AttributeData> attrs = createDataAttributes(properties, false);
-		LOG.debug("findMappedSuperclass: attrs.size()=" + attrs.size());
+		LOG.debug("findMappedSuperclass: attrs.size()={}", attrs.size());
 		if (attrs.isEmpty())
 			return Optional.empty();
 
@@ -401,9 +405,9 @@ public class ClassInspector {
 		for (CtConstructor ctConstructor : ctConstructors) {
 			ctConstructor.instrument(exprEditorExt);
 			List<BMTFieldInfo> fieldInfos = exprEditorExt.getFieldInfos();
-			LOG.debug("inspectConstructorsAndMethods: fieldInfos.size()=" + fieldInfos.size());
+			LOG.debug("inspectConstructorsAndMethods: fieldInfos.size()={}", fieldInfos.size());
 			BMTMethodInfo methodInfo = new BMTMethodInfo();
-			LOG.debug("inspectConstructorsAndMethods: methodInfo=" + methodInfo);
+			LOG.debug("inspectConstructorsAndMethods: methodInfo={}", methodInfo);
 			methodInfo.setCtConstructor(ctConstructor);
 			methodInfo.addFieldInfos(fieldInfos);
 			methodInfos.add(methodInfo);
@@ -419,9 +423,9 @@ public class ClassInspector {
 	}
 
 	private AttributeData createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
-		LOG.debug("createAttributeFromProperty: property.ctField.getName()=" + property.getCtField().getName()
-				+ "; property.embedded=" + property.isEmbedded() + "; property.ctField.getType().getName()="
-				+ property.getCtField().getType().getName());
+		LOG.debug(
+				"createAttributeFromProperty: property.ctField.getName()={}; property.embedded={}; property.ctField.getType().getName()={}",
+				property.getCtField().getName(), property.isEmbedded(), property.getCtField().getType().getName());
 		ManagedData embeddedData = null;
 		if (property.isEmbedded()) {
 			Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix,
@@ -429,7 +433,8 @@ public class ClassInspector {
 			removeAttributeFromProperties(modificationAttribute.get(), property.getEmbeddedProperties());
 
 			// lazy loaded attribute tracker
-			Optional<String> lazyLoadedAttribute = createLazyLoadedAttribute(property.getEmbeddedProperties(), property.getCtField().getType());
+			Optional<String> lazyLoadedAttribute = createLazyLoadedAttribute(property.getEmbeddedProperties(),
+					property.getCtField().getType());
 //	    Optional<Property> optionalLazy = property.embeddedProperties.stream()
 //		    .filter(p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().isLazy())
 //		    .findFirst();
@@ -440,7 +445,8 @@ public class ClassInspector {
 
 			// join column postponed update attribute
 //	    createJoinColumnPostponedUpdateAttributeOnDest(property.embeddedProperties, property.ctField.getType());
-			Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(property.getEmbeddedProperties(), property.getCtField().getType());
+			Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(
+					property.getEmbeddedProperties(), property.getCtField().getType());
 
 			embeddedData = new ManagedData(ManagedData.EMBEDDABLE);
 			embeddedData.addAttributeDatas(createDataAttributes(property.getEmbeddedProperties(), property.isId()));
@@ -473,12 +479,12 @@ public class ClassInspector {
 	}
 
 	private Optional<Property> readProperty(CtField ctField, CtClass ctClass) throws Exception {
-		LOG.debug("readProperty: ctField.getName()=" + ctField.getName());
-		LOG.debug("readProperty: ctField.getModifiers()=" + ctField.getModifiers());
-		LOG.debug("readProperty: ctField.getType().getName()=" + ctField.getType().getName());
-//		LOG.info("readAttribute: ctField.getSignature()=" + ctField.getSignature());
-//		LOG.info("readAttribute: ctField.getFieldInfo()=" + ctField.getFieldInfo());
-//		LOG.info("readAttribute: ctField.getFieldInfo2()=" + ctField.getFieldInfo2());
+		LOG.debug("readProperty: ctField.getName()={}", ctField.getName());
+		LOG.debug("readProperty: ctField.getModifiers()={}", ctField.getModifiers());
+		LOG.debug("readProperty: ctField.getType().getName()={}", ctField.getType().getName());
+//		LOG.info("readAttribute: ctField.getSignature()={}", ctField.getSignature());
+//		LOG.info("readAttribute: ctField.getFieldInfo()={}", ctField.getFieldInfo());
+//		LOG.info("readAttribute: ctField.getFieldInfo2()={}", ctField.getFieldInfo2());
 		int modifier = ctField.getModifiers();
 		if (!Modifier.isPrivate(modifier) && !Modifier.isProtected(modifier) && !Modifier.isPackage(modifier))
 			return Optional.empty();
@@ -537,7 +543,8 @@ public class ClassInspector {
 				lazy = true;
 
 			Optional<String> mappedBy = RelationshipHelper.getMappedBy(oneToOne);
-			return Optional.of(new RelationshipProperties(ctField.getName(), ctField.getType(), lazy, mappedBy.isEmpty()));
+			return Optional
+					.of(new RelationshipProperties(ctField.getName(), ctField.getType(), lazy, mappedBy.isEmpty()));
 		}
 
 		OneToMany oneToMany = (OneToMany) ctField.getAnnotation(OneToMany.class);
@@ -556,7 +563,8 @@ public class ClassInspector {
 				lazy = true;
 
 			Optional<String> mappedBy = RelationshipHelper.getMappedBy(manyToOne);
-			return Optional.of(new RelationshipProperties(ctField.getName(), ctField.getType(), lazy, mappedBy.isEmpty()));
+			return Optional
+					.of(new RelationshipProperties(ctField.getName(), ctField.getType(), lazy, mappedBy.isEmpty()));
 		}
 
 		ManyToMany manyToMany = (ManyToMany) ctField.getAnnotation(ManyToMany.class);
@@ -678,23 +686,23 @@ public class ClassInspector {
 
 		@Override
 		public void edit(FieldAccess f) throws CannotCompileException {
-			LOG.debug("ExprEditorExt: f.getFieldName()=" + f.getFieldName());
-			LOG.debug("ExprEditorExt: f.getSignature()=" + f.getSignature());
-			LOG.debug("ExprEditorExt: f.getClassName()=" + f.getClassName());
-			LOG.debug("ExprEditorExt: newExprClassName=" + newExprClassName);
+			LOG.debug("ExprEditorExt: f.getFieldName()={}", f.getFieldName());
+			LOG.debug("ExprEditorExt: f.getSignature()={}", f.getSignature());
+			LOG.debug("ExprEditorExt: f.getClassName()={}", f.getClassName());
+			LOG.debug("ExprEditorExt: newExprClassName={}", newExprClassName);
 			try {
 				CtField ctField = f.getField();
-				LOG.debug("ExprEditorExt: ctField.getName()=" + ctField.getName());
+				LOG.debug("ExprEditorExt: ctField.getName()={}", ctField.getName());
 				CtClass ctClass = ctField.getType();
-				LOG.debug("ExprEditorExt: ctClass.getName()=" + ctClass.getName());
+				LOG.debug("ExprEditorExt: ctClass.getName()={}", ctClass.getName());
 				boolean isEnum = ctClass.isEnum();
-				LOG.debug("ExprEditorExt: isEnum=" + isEnum);
+				LOG.debug("ExprEditorExt: isEnum={}", isEnum);
 			} catch (NotFoundException ex) {
 				java.util.logging.Logger.getLogger(ClassInspector.class.getName()).log(Level.SEVERE, null, ex);
 			}
 
-			LOG.debug("ExprEditorExt: fieldInfos.size()=" + fieldInfos.size());
-			LOG.debug("ExprEditorExt: latestOpType=" + latestOpType);
+			LOG.debug("ExprEditorExt: fieldInfos.size()={}", fieldInfos.size());
+			LOG.debug("ExprEditorExt: latestOpType={}", latestOpType);
 			if (f.getClassName().equals(className)) {
 				BMTFieldInfo fieldInfo = new BMTFieldInfo(BMTFieldInfo.ASSIGNMENT, f.getFieldName(), newExprClassName);
 				fieldInfos.add(fieldInfo);

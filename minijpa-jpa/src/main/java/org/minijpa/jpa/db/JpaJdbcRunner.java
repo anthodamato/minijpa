@@ -56,10 +56,10 @@ public class JpaJdbcRunner extends JdbcRunner {
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementParameters(preparedStatement, parameters);
 
-			LOG.info("Running `" + sql + "`");
+			LOG.info("Running `{}`", sql);
 			List<Tuple> objects = new ArrayList<>();
 			rs = preparedStatement.executeQuery();
-			int nc = sqlSelectData.getSqlSelect().getValues().size();
+			int nc = sqlSelectData.getValues().size();
 			List<FetchParameter> fetchParameters = sqlSelectData.getFetchParameters();
 			ResultSetMetaData metaData = rs.getMetaData();
 			while (rs.next()) {

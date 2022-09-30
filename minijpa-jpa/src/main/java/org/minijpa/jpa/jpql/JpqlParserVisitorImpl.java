@@ -8,10 +8,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.minijpa.jdbc.AttributeUtil;
+import org.minijpa.jdbc.BasicFetchParameter;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.SqlSelectData;
+import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.DbConfiguration;
@@ -73,8 +75,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	@Override
 	public Object visit(ASTQLStatement node, Object data) {
-		LOG.debug("visit: ASTQLStatement data=" + data);
-		LOG.debug("visit: ASTQLStatement node=" + node);
+		LOG.debug("visit: ASTQLStatement data={}", data);
+		LOG.debug("visit: ASTQLStatement node={}", node);
 		return node.childrenAccept(this, data);
 	}
 
@@ -88,7 +90,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	}
 
 	private SqlSelectData createFromParameters(JpqlVisitorParameters jpqlVisitorParameters) {
-		SqlSelect.SqlSelectBuilder selectBuilder = new SqlSelect.SqlSelectBuilder();
+		SqlSelectDataBuilder selectBuilder = new SqlSelectDataBuilder();
 
 		if (jpqlVisitorParameters.distinct) {
 			selectBuilder.distinct();
@@ -105,8 +107,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		}
 
 		selectBuilder.withValues(jpqlVisitorParameters.values);
-		jpqlVisitorParameters.values.forEach(v -> LOG.debug("createFromParameters: v=" + v));
-//		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
+		jpqlVisitorParameters.values.forEach(v -> LOG.debug("createFromParameters: v={}", v));
 
 		selectBuilder.withConditions(jpqlVisitorParameters.conditions);
 		if (jpqlVisitorParameters.groupBy != null) {
@@ -115,10 +116,12 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		selectBuilder.withOrderBy(jpqlVisitorParameters.orderByList);
 
-		LOG.debug("createFromParameters: jpqlVisitorParameters.conditions=" + jpqlVisitorParameters.conditions);
+		LOG.debug("createFromParameters: jpqlVisitorParameters.conditions={}", jpqlVisitorParameters.conditions);
 
+		selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
 		SqlSelect sqlSelect = selectBuilder.build();
-		return new SqlSelectData(sqlSelect, jpqlVisitorParameters.fetchParameters);
+//		return new SqlSelectData(sqlSelect, jpqlVisitorParameters.fetchParameters);
+		return (SqlSelectData) sqlSelect;
 	}
 
 	private Optional<MetaEntity> findMetaEntityBySqlAlias(String sqlAlias) {
@@ -153,7 +156,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	public Object visit(ASTSelectExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
-		LOG.debug("visit: ASTSelectExpression node.jjtGetNumChildren()=" + node.jjtGetNumChildren());
+		LOG.debug("visit: ASTSelectExpression node.jjtGetNumChildren()={}", node.jjtGetNumChildren());
 		processSelectExpression(node, jpqlVisitorParameters);
 		return object;
 	}
@@ -161,7 +164,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	private void processSelectExpression(ASTSelectExpression node, JpqlVisitorParameters jpqlVisitorParameters) {
 		if (node.jjtGetNumChildren() > 0) {
 			Node node0 = node.jjtGetChild(0);
-			LOG.debug("visit: ASTSelectExpression node0=" + node0);
+			LOG.debug("visit: ASTSelectExpression node0={}", node0);
 			if (node0 instanceof ASTSingleValuedPathExpression) {
 				ASTSingleValuedPathExpression singleValuedPathExpression = (ASTSingleValuedPathExpression) node0;
 				List<MetaAttribute> metaAttributes = singleValuedPathExpression.getMetaAttributes();
@@ -172,10 +175,10 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 						.map(m -> MetaEntityHelper.toFetchParameter(m)).collect(Collectors.toList());
 				jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
 			} else if (node0 instanceof ASTScalarExpression) {
-				LOG.debug("visit: ASTSelectExpression node0=" + node0);
-				LOG.debug("visit: ASTSelectExpression node0_0.jjtGetNumChildren()=" + node0.jjtGetNumChildren());
+				LOG.debug("visit: ASTSelectExpression node0={}", node0);
+				LOG.debug("visit: ASTSelectExpression node0_0.jjtGetNumChildren()={}", node0.jjtGetNumChildren());
 				if (node0.jjtGetNumChildren() > 0) {
-					LOG.debug("visit: ASTSelectExpression node0_0.jjtGetChild(0)=" + node0.jjtGetChild(0));
+					LOG.debug("visit: ASTSelectExpression node0_0.jjtGetChild(0)={}", node0.jjtGetChild(0));
 				}
 
 				Value value = ((ASTScalarExpression) node0).getValue();
@@ -189,7 +192,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			}
 		} else {
 			String identificationVariable = node.getIdentificationVariable();
-			LOG.debug("visit: ASTSelectItem identificationVariable=" + identificationVariable);
+			LOG.debug("visit: ASTSelectItem identificationVariable={}", identificationVariable);
 			if (identificationVariable != null) {
 				String sqlTableAlias = jpqlVisitorParameters.aliases.get(identificationVariable);
 				Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
@@ -228,11 +231,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
 		String result_variable = node.getAlias();
-		LOG.debug("visit: ASTSelectItem result_variable=" + result_variable);
+		LOG.debug("visit: ASTSelectItem result_variable={}", result_variable);
 		ASTSelectExpression selectExpression = (ASTSelectExpression) node.jjtGetChild(0);
 		List<Value> values = selectExpression.getValues();
 		List<FetchParameter> fetchParameters = selectExpression.getFetchParameters();
-		LOG.debug("visit: ASTSelectItem values=" + values);
+		LOG.debug("visit: ASTSelectItem values={}", values);
 		if (values != null) {
 			jpqlVisitorParameters.values.addAll(values);
 			if (result_variable != null && result_variable.length() > 0) {
@@ -254,14 +257,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
 		String rvdEntityName = node.getEntityName();
-		LOG.debug("visit: ASTRangeVariableDeclaration rvdEntityName=" + rvdEntityName);
+		LOG.debug("visit: ASTRangeVariableDeclaration rvdEntityName={}", rvdEntityName);
 		Optional<MetaEntity> optional = persistenceUnitContext.findMetaEntityByName(rvdEntityName);
 		if (optional.isEmpty()) {
 			throw new SemanticException("Entity name '" + node.getEntityName() + "' not found");
 		}
 
 		String rvdAlias = node.getAlias();
-		LOG.debug("visit: ASTRangeVariableDeclaration rvdAlias=" + rvdAlias);
+		LOG.debug("visit: ASTRangeVariableDeclaration rvdAlias={}", rvdAlias);
 
 		MetaEntity sourceEntity = optional.get();
 		Optional<String> optionalExistsAlias = tableAliasGenerator.findAliasByObjectName(sourceEntity.getTableName());
@@ -271,14 +274,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 		if (optionalExistsAlias.isEmpty()) {
 			String tableAlias = tableAliasGenerator.getDefault(sourceEntity.getTableName());
-			LOG.debug("visit: ASTRangeVariableDeclaration optionalAlias.isEmpty() tableAlias=" + tableAlias);
+			LOG.debug("visit: ASTRangeVariableDeclaration optionalAlias.isEmpty() tableAlias={}", tableAlias);
 			jpqlVisitorParameters.aliases.put(rvdAlias, tableAlias);
 			jpqlVisitorParameters.sourceEntity = sourceEntity;
 			FromTable fromTable = FromTable.of(sourceEntity.getTableName(), tableAlias);
 			jpqlVisitorParameters.fromTables.add(fromTable);
 		} else {
 			String tableAlias = tableAliasGenerator.next(sourceEntity.getTableName());
-			LOG.debug("visit: ASTRangeVariableDeclaration !optionalAlias.isEmpty() tableAlias=" + tableAlias);
+			LOG.debug("visit: ASTRangeVariableDeclaration !optionalAlias.isEmpty() tableAlias={}", tableAlias);
 			jpqlVisitorParameters.aliases.put(rvdAlias, tableAlias);
 			jpqlVisitorParameters.sourceEntity = sourceEntity;
 			FromTable fromTable = FromTable.of(sourceEntity.getTableName(), tableAlias);
@@ -295,32 +298,32 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	@Override
 	public Object visit(ASTSubtype node, Object data) {
-		LOG.debug("visit: ASTSubtype data=" + data);
-		LOG.debug("visit: ASTSubtype node=" + node);
+		LOG.debug("visit: ASTSubtype data={}", data);
+		LOG.debug("visit: ASTSubtype node={}", node);
 		return node.childrenAccept(this, data);
 	}
 
 	@Override
 	public Object visit(ASTJoin node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTJoin data=" + data);
+		LOG.debug("visit: ASTJoin data={}", data);
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
 		JoinType jt = node.getJoinType();
-		LOG.debug("visit: join.jjtGetNumChildren()=" + node.jjtGetNumChildren());
+		LOG.debug("visit: join.jjtGetNumChildren()={}", node.jjtGetNumChildren());
 		ASTJoinAssociationPathExpression joinAssociationPathExpression = (ASTJoinAssociationPathExpression) node
 				.jjtGetChild(0);
 		ASTJoinSingleValuedPathExpression joinSingleValuedPathExpression = (ASTJoinSingleValuedPathExpression) joinAssociationPathExpression
 				.jjtGetChild(0);
 
-		LOG.debug("visit: joinSingleValuedPathExpression=" + joinSingleValuedPathExpression);
+		LOG.debug("visit: joinSingleValuedPathExpression={}", joinSingleValuedPathExpression);
 		String identificationVariable = node.getIdentificationVariable();
-		LOG.debug("visit: joinAlias=" + identificationVariable);
+		LOG.debug("visit: joinAlias={}", identificationVariable);
 		String jpqlAlias = joinSingleValuedPathExpression.getIdentificationVariable();
 		String attributePath = joinSingleValuedPathExpression.getPath().isEmpty()
 				? joinSingleValuedPathExpression.getFieldName()
 				: joinSingleValuedPathExpression.getPath() + "." + joinSingleValuedPathExpression.getFieldName();
-		LOG.debug("visit: ASTJoin attributePath=" + attributePath);
+		LOG.debug("visit: ASTJoin attributePath={}", attributePath);
 
 		String sqlTableAlias = jpqlVisitorParameters.aliases.get(jpqlAlias);
 		Optional<MetaEntity> optional = findMetaEntityBySqlAlias(sqlTableAlias);
@@ -429,22 +432,22 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTStateValuedPathExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTStateValuedPathExpression node.jjtGetNumChildren()=" + node.jjtGetNumChildren());
-		LOG.debug("visit: ASTStateValuedPathExpression data=" + data);
+		LOG.debug("visit: ASTStateValuedPathExpression node.jjtGetNumChildren()={}", node.jjtGetNumChildren());
+		LOG.debug("visit: ASTStateValuedPathExpression data={}", data);
 		if (node.jjtGetNumChildren() == 0) {
 			return object;
 		}
 
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 		Node n0_0_0 = node.jjtGetChild(0);
-		LOG.debug("visit: ASTStateValuedPathExpression n0_0_0=" + n0_0_0);
+		LOG.debug("visit: ASTStateValuedPathExpression n0_0_0={}", n0_0_0);
 		if (n0_0_0 instanceof ASTStateFieldPathExpression) {
 			ASTStateFieldPathExpression stateFieldPathExpression = (ASTStateFieldPathExpression) n0_0_0;
 			ASTGeneralSubpath generalSubpath = (ASTGeneralSubpath) stateFieldPathExpression.jjtGetChild(0);
 			String stateField = stateFieldPathExpression.getStateField();
-			LOG.debug("visit: ASTStateValuedPathExpression stateField=" + stateField);
+			LOG.debug("visit: ASTStateValuedPathExpression stateField={}", stateField);
 			Node n0_0_0_0 = generalSubpath.jjtGetChild(0);
-			LOG.debug("visit: ASTStateValuedPathExpression n0_0_0_0=" + n0_0_0_0);
+			LOG.debug("visit: ASTStateValuedPathExpression n0_0_0_0={}", n0_0_0_0);
 			if (n0_0_0_0 instanceof ASTSimpleSubpath) {
 				ASTSimpleSubpath simpleSubpath = (ASTSimpleSubpath) n0_0_0_0;
 				ASTGeneralIdentificationVariable generalIdentificationVariable = (ASTGeneralIdentificationVariable) simpleSubpath
@@ -452,9 +455,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				if (generalIdentificationVariable.jjtGetNumChildren() == 0) {
 					String identificationVariable = generalIdentificationVariable.getIdentificationVariable();
 
-					LOG.debug("visit: ASTStateValuedPathExpression identificationVariable=" + identificationVariable);
+					LOG.debug("visit: ASTStateValuedPathExpression identificationVariable={}", identificationVariable);
 					String r = identificationVariable + "." + stateField;
-					LOG.debug("visit: ASTStateValuedPathExpression r=" + r);
+					LOG.debug("visit: ASTStateValuedPathExpression r={}", r);
 					node.setPath(r);
 				} else {
 					// map_field_identification_variable()
@@ -477,15 +480,15 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	@Override
 	public Object visit(ASTStringExpression node, Object data) {
-		LOG.debug("visit: ASTStringExpression node=" + node);
+		LOG.debug("visit: ASTStringExpression node={}", node);
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTStringExpression node.jjtGetNumChildren()=" + node.jjtGetNumChildren());
+		LOG.debug("visit: ASTStringExpression node.jjtGetNumChildren()={}", node.jjtGetNumChildren());
 		if (node.jjtGetNumChildren() == 0) {
 			return object;
 		}
 
 		Node n0_0 = node.jjtGetChild(0);
-		LOG.debug("visit: ASTStringExpression n0_0=" + n0_0);
+		LOG.debug("visit: ASTStringExpression n0_0={}", n0_0);
 		if (n0_0 instanceof ASTStateValuedPathExpression) {
 			ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0_0;
 			node.setPath(stateValuedPathExpression.getPath());
@@ -497,7 +500,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTStringExpressionComparison node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTStringExpressionComparison object=" + object);
+		LOG.debug("visit: ASTStringExpressionComparison object={}", object);
 		ASTStringExpression stringExpression0 = (ASTStringExpression) node.jjtGetChild(0);
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
@@ -522,7 +525,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		}
 
 		Node n0_0 = node.jjtGetChild(0);
-		LOG.debug("visit: ASTBooleanExpression n0_0=" + n0_0);
+		LOG.debug("visit: ASTBooleanExpression n0_0={}", n0_0);
 		if (n0_0 instanceof ASTStateValuedPathExpression) {
 			ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0_0;
 			node.setPath(stateValuedPathExpression.getPath());
@@ -581,7 +584,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		}
 
 		Node n0_0 = node.jjtGetChild(0);
-		LOG.debug("visit: ASTDatetimeExpression n0_0=" + n0_0);
+		LOG.debug("visit: ASTDatetimeExpression n0_0={}", n0_0);
 		if (n0_0 instanceof ASTStateValuedPathExpression) {
 			ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0_0;
 			node.setPath(stateValuedPathExpression.getPath());
@@ -818,13 +821,13 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	@Override
 	public Object visit(ASTComparisonExpression node, Object data) {
-		LOG.debug("visit: ASTComparisonExpression data=" + data);
-		LOG.debug("visit: ASTComparisonExpression node=" + node);
-		LOG.debug("visit: ASTComparisonExpression node.jjtGetNumChildren()=" + node.jjtGetNumChildren());
+		LOG.debug("visit: ASTComparisonExpression data={}", data);
+		LOG.debug("visit: ASTComparisonExpression node={}", node);
+		LOG.debug("visit: ASTComparisonExpression node.jjtGetNumChildren()={}", node.jjtGetNumChildren());
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTComparisonExpression object=" + object);
+		LOG.debug("visit: ASTComparisonExpression object={}", object);
 		Node n0 = node.jjtGetChild(0);
-		LOG.debug("visit: ASTComparisonExpression n0=" + n0);
+		LOG.debug("visit: ASTComparisonExpression n0={}", n0);
 		node.setCondition(((ConditionNode) n0).getCondition());
 		return object;
 	}
@@ -832,16 +835,16 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTSimpleCondExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTSimpleCondExpression object=" + object);
+		LOG.debug("visit: ASTSimpleCondExpression object={}", object);
 		node.setCondition(((ConditionNode) node.jjtGetChild(0)).getCondition());
 		return object;
 	}
 
 	@Override
 	public Object visit(ASTConditionalPrimary node, Object data) {
-		LOG.debug("visit: ASTConditionalPrimary data=" + data);
+		LOG.debug("visit: ASTConditionalPrimary data={}", data);
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTConditionalPrimary object=" + object);
+		LOG.debug("visit: ASTConditionalPrimary object={}", object);
 		Node n = node.jjtGetChild(0);
 		if (n instanceof ASTSimpleCondExpression) {
 			node.setCondition(((ASTSimpleCondExpression) n).getCondition());
@@ -855,9 +858,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	@Override
 	public Object visit(ASTConditionalFactor node, Object data) {
-		LOG.debug("visit: ASTConditionalFactor data=" + data);
+		LOG.debug("visit: ASTConditionalFactor data={}", data);
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTConditionalFactor object=" + object);
+		LOG.debug("visit: ASTConditionalFactor object={}", object);
 		ASTConditionalPrimary conditionalPrimary = (ASTConditionalPrimary) node.jjtGetChild(0);
 		if (node.isNot()) {
 			node.setCondition(new NotCondition(conditionalPrimary.getCondition()));
@@ -871,7 +874,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTConditionalTerm node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTConditionalTerm object=" + object);
+		LOG.debug("visit: ASTConditionalTerm object={}", object);
 		if (node.jjtGetNumChildren() == 1) {
 			node.setCondition(((ASTConditionalFactor) node.jjtGetChild(0)).getCondition());
 		} else {
@@ -890,7 +893,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTConditionalExpression node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTConditionalExpression object=" + object);
+		LOG.debug("visit: ASTConditionalExpression object={}", object);
 		if (node.jjtGetNumChildren() == 1) {
 			node.setCondition(((ASTConditionalTerm) node.jjtGetChild(0)).getCondition());
 		} else {
@@ -909,7 +912,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTWhereClause node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTWhereClause object=" + object);
+		LOG.debug("visit: ASTWhereClause object={}", object);
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 		jpqlVisitorParameters.conditions.add(((ASTConditionalExpression) node.jjtGetChild(0)).getCondition());
 		return object;
@@ -933,19 +936,19 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	@Override
 	public Object visit(ASTArithmeticPrimary node, Object data) {
 		Object object = node.childrenAccept(this, data);
-		LOG.debug("visit: ASTArithmeticPrimary node.getResult()=" + node.getResult());
+		LOG.debug("visit: ASTArithmeticPrimary node.getResult()={}", node.getResult());
 		if (node.jjtGetNumChildren() == 0) {
 			return object;
 		}
 
 		Node n0_0 = node.jjtGetChild(0);
-		LOG.debug("visit: ASTArithmeticPrimary n0_0=" + n0_0);
+		LOG.debug("visit: ASTArithmeticPrimary n0_0={}", n0_0);
 		if (n0_0 instanceof ASTStateValuedPathExpression) {
 			ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0_0;
 			node.setPath(stateValuedPathExpression.getPath());
 		} else if (n0_0 instanceof ASTSubquery) {
 			ASTSubquery subquery = (ASTSubquery) n0_0;
-			node.setResult(subquery.getSqlSelectData().getSqlSelect());
+			node.setResult(subquery.getSqlSelectData());
 		}
 
 		return object;
@@ -962,7 +965,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	private void processArithmeticTermResult(ASTArithmeticTerm node, List<Object> list) {
 		ASTArithmeticFactor n0_0 = (ASTArithmeticFactor) node.jjtGetChild(0);
-		LOG.debug("processArithmeticTermResult: n0_0.getResult()=" + n0_0.getResult());
+		LOG.debug("processArithmeticTermResult: n0_0.getResult()={}", n0_0.getResult());
 		list.add(n0_0.getSign());
 		list.add(n0_0.getResult());
 		for (int i = 1; i < node.jjtGetNumChildren(); ++i) {
@@ -975,7 +978,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
 	private void processArithmeticExpressionResult(ASTArithmeticExpression node, List<Object> list) {
 		ASTArithmeticTerm n0_0 = (ASTArithmeticTerm) node.jjtGetChild(0);
-		LOG.debug("processArithmeticExpressionResult: n0_0.getResult()=" + n0_0.getResult());
+		LOG.debug("processArithmeticExpressionResult: n0_0.getResult()={}", n0_0.getResult());
 		processArithmeticTermResult(n0_0, list);
 		for (int i = 1; i < node.jjtGetNumChildren(); ++i) {
 			ASTArithmeticTerm n_i = (ASTArithmeticTerm) node.jjtGetChild(i);
@@ -1016,7 +1019,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		} else if (node0 instanceof ASTDatetimeExpression) {
 			ASTDatetimeExpression datetimeExpression = (ASTDatetimeExpression) node0;
 			Value value = new SqlExpressionImpl(decodeExpression(datetimeExpression, jpqlVisitorParameters));
-			LOG.debug("visit: ASTSelectExpression value=" + value);
+			LOG.debug("visit: ASTSelectExpression value={}", value);
 			node.setValue(value);
 		} else if (node0 instanceof ASTStringExpression) {
 			ASTStringExpression expression = (ASTStringExpression) node0;
@@ -1036,19 +1039,19 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		Value value = scalarExpression.getValue();
 
 		if (node0 instanceof ASTArithmeticExpression) {
-			return new FetchParameter("arithmeticExpression", null, null);
+			return new BasicFetchParameter("arithmeticExpression", null, Optional.empty());
 		} else if (node0 instanceof ASTDatetimeExpression) {
 			SqlExpressionImpl sqlExpressionImpl = (SqlExpressionImpl) value;
 			if (sqlExpressionImpl.getExpression() instanceof Function) {
 				Function function = (Function) sqlExpressionImpl.getExpression();
 				if (function instanceof CurrentDate) {
-					return new FetchParameter("datetimeExpression", Types.DATE, null);
+					return new BasicFetchParameter("datetimeExpression", Types.DATE, Optional.empty());
 				}
 				if (function instanceof CurrentTime) {
-					return new FetchParameter("datetimeExpression", Types.TIME, null);
+					return new BasicFetchParameter("datetimeExpression", Types.TIME, Optional.empty());
 				}
 				if (function instanceof CurrentTimestamp) {
-					return new FetchParameter("datetimeExpression", Types.TIMESTAMP, null);
+					return new BasicFetchParameter("datetimeExpression", Types.TIMESTAMP, Optional.empty());
 				}
 				// switch (sqlFunction) {
 				// case CURRENT_DATE:
@@ -1062,13 +1065,13 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 				// java.sql.Timestamp.class, Types.TIMESTAMP, null, null, false);
 				// }
 			} else {
-				return new FetchParameter("datetimeExpression", -1, null);
+				return new BasicFetchParameter("datetimeExpression", -1, Optional.empty());
 			}
 		} else if (node0 instanceof ASTBooleanExpression) {
-			return new FetchParameter("booleanExpression", Types.BOOLEAN, null);
+			return new BasicFetchParameter("booleanExpression", Types.BOOLEAN, Optional.empty());
 		}
 
-		return new FetchParameter("scalarExpression", Types.VARCHAR, null);
+		return new BasicFetchParameter("scalarExpression", Types.VARCHAR, Optional.empty());
 	}
 
 	@Override
@@ -1130,7 +1133,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		if (n0 instanceof ASTStateValuedPathExpression) {
 			ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0;
 			String path = stateValuedPathExpression.getPath();
-			LOG.debug("ASTInExpression: ASTStateValuedPathExpression path=" + path);
+			LOG.debug("ASTInExpression: ASTStateValuedPathExpression path={}", path);
 			String[] sqlPath = splitJpqlPath(path, jpqlVisitorParameters);
 			tableColumn = new TableColumn(FromTable.of(sqlPath[1], sqlPath[0]), new Column(sqlPath[2]));
 		}
@@ -1147,7 +1150,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 			} else {
 				// subquery
 				ASTSubquery subquery = (ASTSubquery) node.jjtGetChild(1);
-				items.add(subquery.getSqlSelectData().getSqlSelect());
+				items.add(subquery.getSqlSelectData());
 			}
 
 			Condition condition = new InCondition(tableColumn, items, node.isNot());
@@ -1165,7 +1168,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 		JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
 		Node node0 = node.jjtGetChild(0);
-		LOG.debug("visit: ASTSingleValuedPathExpression node0=" + node0);
+		LOG.debug("visit: ASTSingleValuedPathExpression node0={}", node0);
 		if (node0 instanceof ASTStateFieldPathExpression) {
 			ASTStateFieldPathExpression stateFieldPathExpression = (ASTStateFieldPathExpression) node0;
 			node.setIdentificationVariable(stateFieldPathExpression.getIdentificationVariable());
@@ -1456,7 +1459,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 					jpqlVisitorParameters.conditions.add(condition);
 				}
 
-				LOG.debug("visit: ASTSubselectIdentificationVariableDeclaration metaAttribute=" + metaAttribute);
+				LOG.debug("visit: ASTSubselectIdentificationVariableDeclaration metaAttribute={}", metaAttribute);
 			}
 		} else if (n instanceof ASTDerivedCollectionMemberDeclaration) {
 
@@ -1522,15 +1525,15 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	private FetchParameter createAggregateExpressionFetchParameter(ASTAggregateExpression aggregateExpression) {
 		AggregateFunctionType aggregateFunctionType = aggregateExpression.getAggregateFunctionType();
 		if (aggregateFunctionType == AggregateFunctionType.AVG) {
-			return new FetchParameter("aggregateExpression", null, null);
+			return new BasicFetchParameter("aggregateExpression", null, Optional.empty());
 		}
 
 		if (aggregateFunctionType == AggregateFunctionType.COUNT) {
-			return new FetchParameter("aggregateExpression", null, null);
+			return new BasicFetchParameter("aggregateExpression", null, Optional.empty());
 		}
 
 		if (aggregateFunctionType == AggregateFunctionType.SUM) {
-			return new FetchParameter("aggregateExpression", null, null);
+			return new BasicFetchParameter("aggregateExpression", null, Optional.empty());
 		}
 
 		return null;
@@ -1584,7 +1587,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 	private Value createValueFrom(ASTStateValuedPathExpression stateValuedPathExpression,
 			JpqlVisitorParameters jpqlVisitorParameters) {
 		String path = stateValuedPathExpression.getPath();
-		LOG.debug("createValueFrom: ASTStateValuedPathExpression path=" + path);
+		LOG.debug("createValueFrom: ASTStateValuedPathExpression path={}", path);
 		String[] sqlPath = splitJpqlPath(path, jpqlVisitorParameters);
 		return new TableColumn(FromTable.of(sqlPath[1], sqlPath[0]), new Column(sqlPath[2]));
 	}

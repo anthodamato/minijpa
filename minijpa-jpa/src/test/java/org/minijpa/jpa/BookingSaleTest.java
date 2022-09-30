@@ -1,5 +1,6 @@
 package org.minijpa.jpa;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
@@ -27,7 +28,7 @@ public class BookingSaleTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws IOException {
 		emf = Persistence.createEntityManagerFactory("booking_sale", PersistenceUnitProperties.getProperties());
 	}
 

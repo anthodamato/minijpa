@@ -30,15 +30,15 @@ public class DefaultSqlStatementExporter implements SqlStatementExporter {
 	@Override
 	public String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
 		Optional<FromTable> optionalFromTable = tableColumn.getTable();
-		LOG.debug("exportTableColumn: optionalFromTable=" + optionalFromTable);
+		LOG.debug("exportTableColumn: optionalFromTable={}", optionalFromTable);
 		Column column = tableColumn.getColumn();
-		LOG.debug("exportTableColumn: column=" + column);
-		LOG.debug("exportTableColumn: nameTranslator=" + nameTranslator);
-		LOG.debug("exportTableColumn: column.getName()=" + column.getName());
+		LOG.debug("exportTableColumn: column={}", column);
+		LOG.debug("exportTableColumn: nameTranslator={}", nameTranslator);
+		LOG.debug("exportTableColumn: column.getName()={}", column.getName());
 		if (optionalFromTable.isPresent()) {
-			LOG.debug("exportTableColumn: optionalFromTable.get().getAlias()=" + optionalFromTable.get().getAlias());
+			LOG.debug("exportTableColumn: optionalFromTable.get().getAlias()={}", optionalFromTable.get().getAlias());
 			String tc = nameTranslator.toColumnName(optionalFromTable.get().getAlias(), column.getName());
-			LOG.debug("exportTableColumn: tc=" + tc);
+			LOG.debug("exportTableColumn: tc={}", tc);
 			return exportColumnAlias(tc, column.getAlias());
 		}
 

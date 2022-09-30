@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.sql.model.FromTable;
