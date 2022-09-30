@@ -21,7 +21,6 @@ import java.util.List;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
-import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.sql.model.SqlDDLStatement;
 
 public class MySQLJdbc extends BasicDbJdbc {
@@ -36,32 +35,8 @@ public class MySQLJdbc extends BasicDbJdbc {
 	}
 
 	@Override
-	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(PersistenceUnitContext persistenceUnitContext,
-			List<MetaEntity> sorted) {
+	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(List<MetaEntity> sorted) {
 		return Collections.EMPTY_LIST;
 	}
-
-//	@Override
-//	public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
-//		if (type == Timestamp.class || type == Calendar.class || type == LocalDateTime.class || type == Instant.class
-//				|| type == ZonedDateTime.class)
-//			return "datetime(6)";
-//
-//		return super.buildColumnDefinition(type, ddlData);
-//	}
-
-//	@Override
-//	public String getFunction(SqlFunction sqlFunction) {
-//		if (sqlFunction == SqlFunction.CURRENT_DATE)
-//			return "CURRENT_DATE()";
-//
-//		if (sqlFunction == SqlFunction.CURRENT_TIME)
-//			return "CURRENT_TIME()";
-//
-//		if (sqlFunction == SqlFunction.CURRENT_TIMESTAMP)
-//			return "CURRENT_TIMESTAMP()";
-//
-//		return super.getFunction(sqlFunction);
-//	}
 
 }

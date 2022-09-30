@@ -34,7 +34,7 @@ public class JpqlOrderTest {
 	private static String testDb;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception {
 		emf = Persistence.createEntityManagerFactory("simple_order", PersistenceUnitProperties.getProperties());
 		testDb = System.getProperty("minijpa.test");
 	}

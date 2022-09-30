@@ -74,13 +74,13 @@ public class MiniEntityManager extends AbstractEntityManager {
 		this.persistenceUnitContext = persistenceUnitContext;
 		this.entityManagerType = ((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType();
 		this.persistenceContext = new MiniPersistenceContext(persistenceUnitContext.getEntities());
-		this.dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
+		this.dbConfiguration = DbConfigurationList.getInstance()
+				.getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
 		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
 		this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, persistenceContext,
 				connectionHolder);
-		EntityDelegate.getInstance()
-				.addEntityManagerContext(new EntityContainerContext(persistenceUnitContext, persistenceContext,
-						jdbcEntityManager.getEntityLoader()));
+		EntityDelegate.getInstance().addEntityManagerContext(new EntityContainerContext(persistenceUnitContext,
+				persistenceContext, jdbcEntityManager.getEntityLoader()));
 	}
 
 	@Override
@@ -142,7 +142,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 		}
 
 		try {
-			MiniFlushMode miniFlushMode = flushModeType == FlushModeType.AUTO ? MiniFlushMode.AUTO : MiniFlushMode.COMMIT;
+			MiniFlushMode miniFlushMode = flushModeType == FlushModeType.AUTO ? MiniFlushMode.AUTO
+					: MiniFlushMode.COMMIT;
 			jdbcEntityManager.remove(entity, miniFlushMode);
 		} catch (Exception ex) {
 			LOG.error(ex.getClass().getName());
@@ -155,7 +156,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
-		LOG.debug("find: primaryKey=" + primaryKey);
+		LOG.debug("find: primaryKey={}", primaryKey);
 		try {
 			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
 			if (entityObject == null)
@@ -171,8 +172,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-		LOG.debug("find: this=" + this);
-		LOG.debug("find: primaryKey=" + primaryKey);
+		LOG.debug("find: this={}", this);
+		LOG.debug("find: primaryKey={}", primaryKey);
 		try {
 			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
 			if (entityObject == null)
@@ -187,8 +188,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
-		LOG.debug("find: this=" + this);
-		LOG.debug("find: primaryKey=" + primaryKey);
+		LOG.debug("find: this={}", this);
+		LOG.debug("find: primaryKey={}", primaryKey);
 		try {
 			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
 					LockTypeUtils.toLockType(lockMode));
@@ -204,8 +205,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
 	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
-		LOG.debug("find: this=" + this);
-		LOG.debug("find: primaryKey=" + primaryKey);
+		LOG.debug("find: this={}", this);
+		LOG.debug("find: primaryKey={}", primaryKey);
 		try {
 			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
 					LockTypeUtils.toLockType(lockMode));
@@ -224,7 +225,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 		try {
 			Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
 			if (entityObject == null)
-				throw new EntityNotFoundException("Entity with class '" + entityClass.getName() + "' not found: pk=" + primaryKey);
+				throw new EntityNotFoundException(
+						"Entity with class '" + entityClass.getName() + "' not found: pk=" + primaryKey);
 
 			return (T) entityObject;
 		} catch (Exception e) {

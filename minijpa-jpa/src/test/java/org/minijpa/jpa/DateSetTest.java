@@ -40,7 +40,7 @@ public class DateSetTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception {
 		emf = Persistence.createEntityManagerFactory("date_set", PersistenceUnitProperties.getProperties());
 	}
 

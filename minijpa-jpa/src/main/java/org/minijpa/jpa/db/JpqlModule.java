@@ -53,7 +53,7 @@ public class JpqlModule {
 
 		String sql = null;
 		if (sqlStatement instanceof SqlSelectData)
-			sql = dbConfiguration.getSqlStatementGenerator().export(((SqlSelectData) sqlStatement).getSqlSelect());
+			sql = dbConfiguration.getSqlStatementGenerator().export(((SqlSelectData) sqlStatement));
 		else
 			sql = dbConfiguration.getSqlStatementGenerator().export(sqlStatement);
 

@@ -96,13 +96,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	}
 
 	public Object findById(Class<?> entityClass, Object primaryKey, LockType lockType) throws Exception {
-		LOG.debug("findById: primaryKey=" + primaryKey);
+		LOG.debug("findById: primaryKey={}", primaryKey);
 
 		MetaEntity entity = persistenceUnitContext.getEntities().get(entityClass.getName());
 		if (entity == null)
 			throw new IllegalArgumentException("Class '" + entityClass.getName() + "' is not an entity");
 
-		LOG.debug("findById: entity=" + entity);
+		LOG.debug("findById: entity={}", entity);
 		return entityLoader.findById(entity, primaryKey, lockType);
 	}
 
@@ -213,14 +213,14 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 			ModelValueArray<MetaAttribute> modelValueArray) throws IllegalAccessException, InvocationTargetException {
 		for (JoinColumnMapping joinColumnMapping : entity.getJoinColumnMappings()) {
 			int index = modelValueArray.indexOfModel(joinColumnMapping.getAttribute());
-			LOG.debug("addInfoForPostponedUpdateEntities: index=" + index);
-			LOG.debug("addInfoForPostponedUpdateEntities: joinColumnMapping.getAttribute()="
-					+ joinColumnMapping.getAttribute());
+			LOG.debug("addInfoForPostponedUpdateEntities: index={}", index);
+			LOG.debug("addInfoForPostponedUpdateEntities: joinColumnMapping.getAttribute()={}",
+					joinColumnMapping.getAttribute());
 			if (index != -1) {
 				Object instance = modelValueArray.getValue(index);
-				LOG.debug("addInfoForPostponedUpdateEntities: instance=" + instance);
+				LOG.debug("addInfoForPostponedUpdateEntities: instance={}", instance);
 				MetaEntity e = persistenceUnitContext.getEntities().get(instance.getClass().getName());
-				LOG.debug("addInfoForPostponedUpdateEntities: e=" + e);
+				LOG.debug("addInfoForPostponedUpdateEntities: e={}", e);
 				List list = MetaEntityHelper.getJoinColumnPostponedUpdateAttributeList(e, instance);
 				list.add(new PostponedUpdateInfo(idValue, entity.getEntityClass(),
 						modelValueArray.getModel(index).getName()));
@@ -267,53 +267,53 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		for (Object entityInstance : managedEntityList) {
 			MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
 			EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
-			LOG.debug("flush: entityInstance=" + entityInstance + "; entityStatus=" + entityStatus);
+			LOG.debug("flush: entityInstance={}{}; entityStatus={}", entityInstance, entityStatus);
 			switch (entityStatus) {
 			case FLUSHED:
 			case FLUSHED_LOADED_FROM_DB:
 				// makes updates
-				LOG.debug("flush: FLUSHED_LOADED_FROM_DB entityInstance=" + entityInstance);
+				LOG.debug("flush: FLUSHED_LOADED_FROM_DB entityInstance={}", entityInstance);
 				ModelValueArray<MetaAttribute> modelValueArray = MetaEntityHelper.getModifications(me, entityInstance);
-				LOG.debug("flush: FLUSHED_LOADED_FROM_DB modelValueArray.size()=" + modelValueArray.size());
+				LOG.debug("flush: FLUSHED_LOADED_FROM_DB modelValueArray.size()={}", modelValueArray.size());
 				if (!modelValueArray.isEmpty()) {
 					entityWriter.persist(me, entityInstance, modelValueArray);
 					MetaEntityHelper.removeChanges(me, entityInstance);
 				}
 				break;
 			case PERSIST_NOT_FLUSHED:
-				LOG.debug("flush: PERSIST_NOT_FLUSHED entityInstance=" + entityInstance);
+				LOG.debug("flush: PERSIST_NOT_FLUSHED entityInstance={}", entityInstance);
 				modelValueArray = MetaEntityHelper.getModifications(me, entityInstance);
 				persistEarlyInsertEntityInstance(me, modelValueArray, managedEntityList);
 				entityWriter.persist(me, entityInstance, modelValueArray);
 				MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
 				MetaEntityHelper.removeChanges(me, entityInstance);
 				EntityStatus es = MetaEntityHelper.getEntityStatus(me, entityInstance);
-				LOG.debug("flush: es=" + es);
+				LOG.debug("flush: es={}", es);
 				break;
 			case REMOVED_NOT_FLUSHED:
-				LOG.debug("flush: 1 REMOVED_NOT_FLUSHED entityInstance=" + entityInstance);
+				LOG.debug("flush: 1 REMOVED_NOT_FLUSHED entityInstance={}", entityInstance);
 				persistEarlyDeleteEntityInstance(me, entityInstance, managedEntityList);
 				entityWriter.delete(entityInstance, me);
 				entityContainer.removeManaged(entityInstance);
-				LOG.debug("flush: 2 REMOVED_NOT_FLUSHED entityInstance=" + entityInstance);
+				LOG.debug("flush: 2 REMOVED_NOT_FLUSHED entityInstance={}", entityInstance);
 				MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.REMOVED);
 				break;
 			case EARLY_INSERT:
-				LOG.debug("flush: EARLY_INSERT entityInstance=" + entityInstance);
+				LOG.debug("flush: EARLY_INSERT entityInstance={}", entityInstance);
 				MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.FLUSHED);
 				break;
 			case EARLY_REMOVE:
-				LOG.debug("flush: EARLY_REMOVE entityInstance=" + entityInstance);
+				LOG.debug("flush: EARLY_REMOVE entityInstance={}", entityInstance);
 				MetaEntityHelper.setEntityStatus(me, entityInstance, EntityStatus.REMOVED);
 				break;
 			}
 		}
 
 		for (Object entityInstance : managedEntityList) {
-			LOG.debug("flush: persistJoinTableAttributes entityInstance=" + entityInstance);
+			LOG.debug("flush: persistJoinTableAttributes entityInstance={}", entityInstance);
 			MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
 			EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
-			LOG.debug("flush: persistJoinTableAttributes entityStatus=" + entityStatus);
+			LOG.debug("flush: persistJoinTableAttributes entityStatus={}", entityStatus);
 			if (entityStatus == EntityStatus.FLUSHED)
 				entityWriter.persistJoinTableAttributes(me, entityInstance);
 		}
@@ -332,13 +332,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 	private void persistEarlyInsertEntityInstance(MetaEntity me, ModelValueArray<MetaAttribute> modelValueArray,
 			List<Object> managedEntityList) throws Exception {
 		List<JoinColumnMapping> joinColumnMappings = me.getJoinColumnMappings();
-		LOG.debug("persistEarlyInsertEntityInstance: joinColumnMappings=" + joinColumnMappings);
+		LOG.debug("persistEarlyInsertEntityInstance: joinColumnMappings={}", joinColumnMappings);
 		if (joinColumnMappings.isEmpty())
 			return;
 
 		for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
 			int index = modelValueArray.indexOfModel(joinColumnMapping.getAttribute());
-			LOG.debug("persistEarlyInsertEntityInstance: index=" + index);
+			LOG.debug("persistEarlyInsertEntityInstance: index={}", index);
 			if (index != -1) {
 				Object instance = modelValueArray.getValue(index);
 				MetaEntity metaEntity = persistenceUnitContext.getEntities().get(instance.getClass().getName());
@@ -351,7 +351,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
 				ModelValueArray<MetaAttribute> mva = MetaEntityHelper.getModifications(metaEntity, instance);
 				entityWriter.persist(metaEntity, instance, mva);
-				LOG.debug("persistEarlyInsertEntityInstance: instance=" + instance);
+				LOG.debug("persistEarlyInsertEntityInstance: instance={}", instance);
 				MetaEntityHelper.setEntityStatus(metaEntity, instance, EntityStatus.EARLY_INSERT);
 				MetaEntityHelper.removeChanges(metaEntity, instance);
 			}
@@ -370,7 +370,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 			throws Exception {
 		List<MetaAttribute> relationshipAttributes = me.getRelationshipAttributes();
 		for (MetaAttribute relationshipAttribute : relationshipAttributes) {
-			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute=" + relationshipAttribute);
+			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute={}", relationshipAttribute);
 			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute.getRelationship()="
 					+ relationshipAttribute.getRelationship());
 			LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute.getRelationship().isOwner()="
@@ -378,7 +378,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 			if (!relationshipAttribute.getRelationship().isOwner() && relationshipAttribute.getRelationship().toOne()) {
 				LOG.debug("persistEarlyDeleteEntityInstance: 1");
 				Object instance = MetaEntityHelper.getAttributeValue(entityInstance, relationshipAttribute);
-				LOG.debug("persistEarlyDeleteEntityInstance: instance=" + instance);
+				LOG.debug("persistEarlyDeleteEntityInstance: instance={}", instance);
 				if (instance == null)
 					continue;
 
@@ -403,7 +403,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		if (entityContainer.isManaged(entity)) {
 			LOG.debug("Instance " + entity + " is in the persistence context");
 			entityContainer.markForRemoval(entity);
-			LOG.debug("remove: entity=" + entity);
+			LOG.debug("remove: entity={}", entity);
 			// cascades
 			List<MetaAttribute> cascadeAttributes = e.getCascadeAttributes(Cascade.ALL, Cascade.REMOVE);
 			for (MetaAttribute attribute : cascadeAttributes) {
@@ -458,16 +458,16 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		StatementParameters statementParameters = sqlStatementFactory.select(query,
 				persistenceUnitContext.getTableAliasGenerator());
 		SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
-		LOG.debug("select: sql=" + sql);
-		LOG.debug("select: sqlSelectData.getSqlSelect().getResult()=" + sqlSelectData.getSqlSelect().getResult());
-		if (sqlSelectData.getSqlSelect().getResult() != null) {
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+		LOG.debug("select: sql={}", sql);
+		LOG.debug("select: sqlSelectData.getSqlSelect().getResult()={}", sqlSelectData.getResult());
+		if (sqlSelectData.getResult() != null) {
 			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 					CollectionUtils.findCollectionImplementationClass(List.class));
-			LOG.debug("select: collectionResult=" + collectionResult);
-			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
-					sqlSelectData.getSqlSelect(), sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult,
-					entityLoader, statementParameters.getParameters());
+			LOG.debug("select: collectionResult={}", collectionResult);
+			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql, sqlSelectData,
+					sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult, entityLoader,
+					statementParameters.getParameters());
 			return (List<?>) collectionResult;
 		}
 
@@ -498,12 +498,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 		}
 
 		SqlSelectData sqlSelectData = (SqlSelectData) jpqlResult.getSqlStatement();
-		SqlSelect sqlSelect = sqlSelectData.getSqlSelect();
-		LOG.debug("selectJpql: sqlSelect.getResult()=" + sqlSelect.getResult());
+		SqlSelect sqlSelect = sqlSelectData;
+		LOG.debug("selectJpql: sqlSelect.getResult()={}", sqlSelect.getResult());
 		if (sqlSelect.getResult() != null) {
 			Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 					CollectionUtils.findCollectionImplementationClass(List.class));
-			LOG.debug("selectJpql: collectionResult=" + collectionResult);
+			LOG.debug("selectJpql: collectionResult={}", collectionResult);
 			dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), jpqlResult.getSql(),
 					sqlSelect, sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult, entityLoader,
 					new ArrayList<>());

@@ -29,7 +29,7 @@ public class OneToOneUniTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception {
 		emf = Persistence.createEntityManagerFactory("cities_uni", PersistenceUnitProperties.getProperties());
 	}
 

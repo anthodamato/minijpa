@@ -65,26 +65,26 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	public EntityManager createEntityManager() {
 		synchronized (persistenceUnitInfo) {
 			if (persistenceUnitContext == null)
-	    try {
-				persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-			} catch (Exception e) {
-				LOG.error("Unable to read entities: " + e.getMessage());
-				if (e instanceof InvocationTargetException) {
-					InvocationTargetException targetException = (InvocationTargetException) e;
-					if (targetException.getTargetException() != null)
-						LOG.error("Unable to read entities: " + targetException.getTargetException().getMessage());
-				}
-
-				if (e.getStackTrace() != null) {
-					LOG.error("stacktrace: ");
-					for (StackTraceElement element : e.getStackTrace()) {
-						LOG.error(element.getClassName() + "." + element.getMethodName() + " - "
-								+ element.getLineNumber());
+				try {
+					persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
+				} catch (Exception e) {
+					LOG.error("Unable to read entities: " + e.getMessage());
+					if (e instanceof InvocationTargetException) {
+						InvocationTargetException targetException = (InvocationTargetException) e;
+						if (targetException.getTargetException() != null)
+							LOG.error("Unable to read entities: " + targetException.getTargetException().getMessage());
 					}
-				}
 
-				throw new IllegalStateException(e.getMessage());
-			}
+					if (e.getStackTrace() != null) {
+						LOG.error("stacktrace: ");
+						for (StackTraceElement element : e.getStackTrace()) {
+							LOG.error(element.getClassName() + "." + element.getMethodName() + " - "
+									+ element.getLineNumber());
+						}
+					}
+
+					throw new IllegalStateException(e.getMessage());
+				}
 		}
 
 		return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext);
@@ -94,12 +94,12 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	public EntityManager createEntityManager(@SuppressWarnings("rawtypes") Map map) {
 		synchronized (persistenceUnitInfo) {
 			if (persistenceUnitContext == null)
-	    try {
-				persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-			} catch (Exception e) {
-				LOG.error("Unable to read entities: " + e.getMessage());
-				throw new IllegalStateException(e.getMessage());
-			}
+				try {
+					persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
+				} catch (Exception e) {
+					LOG.error("Unable to read entities: " + e.getMessage());
+					throw new IllegalStateException(e.getMessage());
+				}
 		}
 
 		return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext);
@@ -122,12 +122,12 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	public CriteriaBuilder getCriteriaBuilder() {
 		synchronized (persistenceUnitInfo) {
 			if (persistenceUnitContext == null)
-	        try {
-				persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-			} catch (Exception e) {
-				LOG.error("Unable to read entities: " + e.getMessage());
-				throw new IllegalStateException(e.getMessage());
-			}
+				try {
+					persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
+				} catch (Exception e) {
+					LOG.error("Unable to read entities: {}", e.getMessage());
+					throw new IllegalStateException(e.getMessage());
+				}
 		}
 
 		return new MiniCriteriaBuilder(getMetamodel(), persistenceUnitContext);
@@ -135,16 +135,16 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 
 	@Override
 	public Metamodel getMetamodel() {
-		LOG.debug("getMetamodel: metamodel=" + metamodel);
+		LOG.debug("getMetamodel: metamodel={}", metamodel);
 		if (metamodel == null) {
 			synchronized (persistenceUnitInfo) {
 				if (persistenceUnitContext == null)
-		try {
-					persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-				} catch (Exception e) {
-					LOG.error("Unable to read entities: " + e.getMessage());
-					throw new IllegalStateException(e.getMessage());
-				}
+					try {
+						persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
+					} catch (Exception e) {
+						LOG.error("Unable to read entities: {}", e.getMessage());
+						throw new IllegalStateException(e.getMessage());
+					}
 			}
 
 			try {

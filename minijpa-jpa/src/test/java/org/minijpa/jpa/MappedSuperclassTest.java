@@ -30,7 +30,7 @@ public class MappedSuperclassTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception {
 		emf = Persistence.createEntityManagerFactory("mapped_superclass", PersistenceUnitProperties.getProperties());
 	}
 

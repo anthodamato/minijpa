@@ -28,7 +28,7 @@ public class PurchaseStatsTest {
 	private static EntityManagerFactory emf;
 
 	@BeforeAll
-	public static void beforeAll() {
+	public static void beforeAll() throws Exception {
 		emf = Persistence.createEntityManagerFactory("purchase_stats", PersistenceUnitProperties.getProperties());
 	}
 

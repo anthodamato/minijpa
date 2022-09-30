@@ -134,7 +134,7 @@ public abstract class BasicDbJdbc implements DbJdbc {
 				foreignKeyDeclarations.add(new ForeignKeyDeclaration(jdbcJoinColumnMapping, toEntity.getTableName()));
 			}
 
-			LOG.debug("buildDDLStatementsCreateTables: v.getTableName()=" + v.getTableName());
+			LOG.debug("buildDDLStatementsCreateTables: v.getTableName()={}" , v.getTableName());
 			List<ColumnDeclaration> columnDeclarations = attributes.stream().map(c -> {
 				return toColumnDeclaration(c);
 			}).collect(Collectors.toList());
@@ -158,8 +158,7 @@ public abstract class BasicDbJdbc implements DbJdbc {
 	}
 
 	@Override
-	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(PersistenceUnitContext persistenceUnitContext,
-			List<MetaEntity> sorted) {
+	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(List<MetaEntity> sorted) {
 		List<PkSequenceGenerator> pkSequenceGenerators = sorted.stream()
 				.filter(c -> c.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE)
 				.map(c -> c.getId().getPkGeneration().getPkSequenceGenerator()).distinct().collect(Collectors.toList());
@@ -172,8 +171,7 @@ public abstract class BasicDbJdbc implements DbJdbc {
 	}
 
 	@Override
-	public List<SqlDDLStatement> buildDDLStatementsCreateJoinTables(PersistenceUnitContext persistenceUnitContext,
-			List<MetaEntity> sorted) {
+	public List<SqlDDLStatement> buildDDLStatementsCreateJoinTables(List<MetaEntity> sorted) {
 		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
 		sorted.forEach(v -> {
 			List<RelationshipJoinTable> relationshipJoinTables = v.expandRelationshipAttributes().stream()
@@ -207,22 +205,12 @@ public abstract class BasicDbJdbc implements DbJdbc {
 				sorted);
 		sqlStatements.addAll(ddlStatementsCreateTables);
 
-		List<SqlDDLStatement> ddlStatementsCreateSequences = buildDDLStatementsCreateSequences(persistenceUnitContext,
-				sorted);
+		List<SqlDDLStatement> ddlStatementsCreateSequences = buildDDLStatementsCreateSequences(sorted);
 		sqlStatements.addAll(ddlStatementsCreateSequences);
 
-		List<SqlDDLStatement> ddlStatementsCreateJoinTables = buildDDLStatementsCreateJoinTables(persistenceUnitContext,
-				sorted);
+		List<SqlDDLStatement> ddlStatementsCreateJoinTables = buildDDLStatementsCreateJoinTables(sorted);
 		sqlStatements.addAll(ddlStatementsCreateJoinTables);
 
-		LOG.debug("buildDDLStatements: sqlStatements=" + sqlStatements);
-		// sorted.forEach(v -> {
-		// if (v.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
-		// SqlCreateSequence sqlCreateSequence = new
-		// SqlCreateSequence(v.getId().getPkGeneration().getPkSequenceGenerator());
-		// sqlStatements.add(sqlCreateSequence);
-		// }
-		// });
 		return sqlStatements;
 	}
 

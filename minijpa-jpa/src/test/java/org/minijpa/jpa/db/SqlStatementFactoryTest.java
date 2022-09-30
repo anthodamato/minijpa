@@ -87,7 +87,7 @@ public class SqlStatementFactoryTest {
 		SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(employeeEntity,
 				foreignKeyAttribute, columns, optional.get().getTableAliasGenerator());
-		Optional<List<Condition>> opt = sqlSelectData.getSqlSelect().getConditions();
+		Optional<List<Condition>> opt = sqlSelectData.getConditions();
 		Assertions.assertTrue(opt.isPresent());
 		List<Condition> conditions = opt.get();
 		Assertions.assertEquals(1, conditions.size());
@@ -97,7 +97,7 @@ public class SqlStatementFactoryTest {
 		Assertions.assertEquals("department_id",
 				((TableColumn) equalColumnExprCondition.getLeft()).getColumn().getName());
 
-		String sql = sqlStatementGenerator.export(sqlSelectData.getSqlSelect());
+		String sql = sqlStatementGenerator.export(sqlSelectData);
 		Assertions.assertEquals(
 				"select employee0.id, employee0.salary, employee0.name, employee0.department_id from Employee AS employee0 where employee0.department_id = ?",
 				sql);
@@ -153,10 +153,10 @@ public class SqlStatementFactoryTest {
 		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
 				attributes, optional.get().getTableAliasGenerator());
 
-		Optional<List<Condition>> opt = sqlSelectData.getSqlSelect().getConditions();
+		Optional<List<Condition>> opt = sqlSelectData.getConditions();
 		Assertions.assertTrue(opt.isPresent());
 
-		String sql = sqlStatementGenerator.export(sqlSelectData.getSqlSelect());
+		String sql = sqlStatementGenerator.export(sqlSelectData);
 		Assertions.assertEquals(
 				"select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
 				sql);
@@ -192,10 +192,10 @@ public class SqlStatementFactoryTest {
 		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
 				attributes, optional.get().getTableAliasGenerator());
 
-		Optional<List<Condition>> opt = sqlSelectData.getSqlSelect().getConditions();
+		Optional<List<Condition>> opt = sqlSelectData.getConditions();
 		Assertions.assertTrue(opt.isPresent());
 
-		String sql = sqlStatementGenerator.export(sqlSelectData.getSqlSelect());
+		String sql = sqlStatementGenerator.export(sqlSelectData);
 		Assertions.assertEquals(
 				"select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
 				sql);
@@ -236,8 +236,8 @@ public class SqlStatementFactoryTest {
 		StatementParameters statementParameters = sqlStatementFactory.select(typedQuery,
 				optional.get().getTableAliasGenerator());
 		SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
-		Assertions.assertNotNull(sqlSelectData.getSqlSelect().getValues());
-		Optional<List<Condition>> opt = sqlSelectData.getSqlSelect().getConditions();
+		Assertions.assertNotNull(sqlSelectData.getValues());
+		Optional<List<Condition>> opt = sqlSelectData.getConditions();
 		Assertions.assertTrue(opt.isPresent());
 		List<Condition> conditions = opt.get();
 		Assertions.assertEquals(1, conditions.size());
@@ -247,7 +247,7 @@ public class SqlStatementFactoryTest {
 		UnaryCondition unaryCondition = (UnaryCondition) condition;
 		Assertions.assertNotNull(unaryCondition.getTableColumn());
 
-		String sql = sqlStatementGenerator.export(sqlSelectData.getSqlSelect());
+		String sql = sqlStatementGenerator.export(sqlSelectData);
 		Assertions.assertEquals(
 				"select address0.id, address0.name, address0.postcode, address0.tt from Address AS address0 where address0.postcode is null",
 				sql);

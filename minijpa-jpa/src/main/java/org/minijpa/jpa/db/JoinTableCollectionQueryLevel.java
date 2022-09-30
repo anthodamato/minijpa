@@ -70,11 +70,11 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
 		}
 
 		List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
 		Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 				metaAttribute.getCollectionImplementationClass());
 		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
-				sqlSelectData.getSqlSelect(), sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult,
+				sqlSelectData, sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult,
 				entityLoader, parameters);
 		return collectionResult;
 	}

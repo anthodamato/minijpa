@@ -53,6 +53,7 @@
 				<finalName>minijpa-${project.version}</finalName>
 					<artifactSet>
 						<includes>
+							<include>org.minijpa:minijpa-sql-model</include>
 							<include>org.minijpa:minijpa-jdbc</include>
 							<include>org.minijpa:minijpa-jpa</include>
 							<include>javax.persistence:javax.persistence-api</include>

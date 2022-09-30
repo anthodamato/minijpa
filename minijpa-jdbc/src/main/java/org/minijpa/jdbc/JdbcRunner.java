@@ -46,8 +46,8 @@ public class JdbcRunner {
 
 	private void setPreparedStatementQM(PreparedStatement preparedStatement, QueryParameter queryParameter, int index)
 			throws SQLException {
-		LOG.debug("setPreparedStatementQM: value=" + queryParameter.getValue() + "; index=" + index + "; sqlType="
-				+ queryParameter.getSqlType());
+		LOG.debug("setPreparedStatementQM: value={}; index={}; sqlType={}", queryParameter.getValue(), index,
+				queryParameter.getSqlType());
 		Object value = queryParameter.getValue();
 		if (queryParameter.getAttributeMapper().isPresent()) {
 			value = queryParameter.getAttributeMapper().get().attributeToDatabase(value);
@@ -101,15 +101,15 @@ public class JdbcRunner {
 
 		int index = 1;
 		for (QueryParameter queryParameter : queryParameters) {
-			LOG.debug("setPreparedStatementParameters: type=" + queryParameter.getType().getName() + "; value="
-					+ queryParameter.getValue());
+			LOG.debug("setPreparedStatementParameters: type={}; value={}", queryParameter.getType().getName(),
+					queryParameter.getValue());
 			setPreparedStatementQM(preparedStatement, queryParameter, index);
 			++index;
 		}
 	}
 
 	public int update(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
-		LOG.info("Running `" + sql + "`");
+		LOG.info("Running `{}`", sql);
 		try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			setPreparedStatementParameters(preparedStatement, parameters);
 			preparedStatement.execute();
@@ -118,7 +118,7 @@ public class JdbcRunner {
 	}
 
 	public int persist(Connection connection, String sql) throws SQLException {
-		LOG.info("Running `" + sql + "`");
+		LOG.info("Running `{}`", sql);
 		try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			preparedStatement.execute();
 			return preparedStatement.getUpdateCount();
@@ -129,7 +129,7 @@ public class JdbcRunner {
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 		try {
-			LOG.info("Running `" + sql + "`");
+			LOG.info("Running `{}`", sql);
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementParameters(preparedStatement, parameters);
 			preparedStatement.execute();
@@ -149,7 +149,7 @@ public class JdbcRunner {
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
 		try {
-			LOG.info("Running `" + sql + "`");
+			LOG.info("Running `{}`", sql);
 			preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 			setPreparedStatementParameters(preparedStatement, parameters);
 			preparedStatement.execute();
@@ -173,7 +173,7 @@ public class JdbcRunner {
 	}
 
 	public int delete(String sql, Connection connection, List<QueryParameter> parameters) throws SQLException {
-		LOG.info("Running `" + sql + "`");
+		LOG.info("Running `{}`", sql);
 		try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 			if (!parameters.isEmpty()) {
 				setPreparedStatementParameters(preparedStatement, parameters);
@@ -189,13 +189,13 @@ public class JdbcRunner {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
-			LOG.info("Running `" + sql + "`");
+			LOG.info("Running `{}`", sql);
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementParameters(preparedStatement, parameters);
 
 			rs = preparedStatement.executeQuery();
 			boolean next = rs.next();
-			LOG.debug("findById: next=" + next);
+			LOG.debug("findById: next={}", next);
 			if (!next) {
 				return null;
 			}
@@ -219,7 +219,7 @@ public class JdbcRunner {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
 		try {
-			LOG.info("Running `" + sql + "`");
+			LOG.info("Running `{}`", sql);
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementParameters(preparedStatement, parameters);
 			rs = preparedStatement.executeQuery();
@@ -334,10 +334,10 @@ public class JdbcRunner {
 
 	private Object getValueByAttributeMapper(ResultSet rs, int index, int sqlType,
 			Optional<AttributeMapper> attributeMapper) throws SQLException {
-		LOG.debug("getValueByAttributeMapper: sqlType=" + sqlType);
+		LOG.debug("getValueByAttributeMapper: sqlType={}", sqlType);
 		Object value = getValue(rs, index, sqlType);
-		LOG.debug("getValueByAttributeMapper: value=" + value);
-		LOG.debug("getValueByAttributeMapper: attributeMapper=" + attributeMapper);
+		LOG.debug("getValueByAttributeMapper: value={}", value);
+		LOG.debug("getValueByAttributeMapper: attributeMapper={}", attributeMapper);
 		if (attributeMapper.isPresent()) {
 			return attributeMapper.get().databaseToAttribute(value);
 		}
@@ -354,8 +354,8 @@ public class JdbcRunner {
 			if (sqlType == null)
 				sqlType = metaData.getColumnType(i);
 
-			Object v = getValueByAttributeMapper(rs, i, sqlType, fetchParameter.getAttribute().attributeMapper);
-			LOG.debug("createModelValueArrayFromResultSetAM: v=" + v);
+			Object v = getValueByAttributeMapper(rs, i, sqlType, fetchParameter.getAttributeMapper());
+			LOG.debug("createModelValueArrayFromResultSetAM: v={}", v);
 			modelValueArray.add(fetchParameter, v);
 			++i;
 		}
@@ -378,25 +378,23 @@ public class JdbcRunner {
 			List<FetchParameter> fetchParameters) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		LOG.info("Running `" + sql + "`");
+		LOG.info("Running `{}`", sql);
 		try {
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementParameters(preparedStatement, parameters);
 
 			List<Object> objects = new ArrayList<>();
 			rs = preparedStatement.executeQuery();
-			LOG.debug("runQuery: fetchParameters=" + fetchParameters);
+			LOG.debug("runQuery: fetchParameters={}", fetchParameters);
 			int nc = fetchParameters.size();
+			LOG.debug("runQuery: nc={}", nc);
 
 			ResultSetMetaData metaData = rs.getMetaData();
 			if (nc == 1) {
-//				LOG.debug("runQuery: nc=" + nc);
 				while (rs.next()) {
 					FetchParameter fetchParameter = fetchParameters.get(0);
 					Integer sqlType = fetchParameter.getSqlType();
-					Optional<AttributeMapper> optional = fetchParameter.getAttribute() != null
-							? fetchParameter.getAttribute().attributeMapper
-							: Optional.empty();
+					Optional<AttributeMapper> optional = fetchParameter.getAttributeMapper();
 					if (sqlType == null)
 						sqlType = metaData.getColumnType(1);
 
@@ -407,15 +405,16 @@ public class JdbcRunner {
 				while (rs.next()) {
 					Object[] values = new Object[nc];
 					for (int i = 0; i < nc; ++i) {
-						Optional<AttributeMapper> optional = fetchParameters.get(i).getAttribute() != null
-								? fetchParameters.get(i).getAttribute().attributeMapper
-								: Optional.empty();
 						FetchParameter fetchParameter = fetchParameters.get(i);
+						LOG.debug("runQuery: fetchParameter={}", fetchParameter);
+						Optional<AttributeMapper> optional = fetchParameter.getAttributeMapper();
+						LOG.debug("runQuery: optional={}", optional);
 						Integer sqlType = fetchParameter.getSqlType();
 						if (sqlType == null)
 							sqlType = metaData.getColumnType(i + 1);
 
 						Object v = getValueByAttributeMapper(rs, i + 1, sqlType, optional);
+						LOG.debug("runQuery: v={}", v);
 						values[i] = v;
 					}
 
@@ -438,7 +437,7 @@ public class JdbcRunner {
 	public List<Object> runQuery(Connection connection, String sql, List<QueryParameter> parameters) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		LOG.info("Running `" + sql + "`");
+		LOG.info("Running `{}`", sql);
 		try {
 			preparedStatement = connection.prepareStatement(sql);
 			setPreparedStatementParameters(preparedStatement, parameters);
@@ -467,7 +466,7 @@ public class JdbcRunner {
 			throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		LOG.info("Running `" + sql + "`");
+		LOG.info("Running `{}`", sql);
 		try {
 			preparedStatement = connection.prepareStatement(sql);
 			for (int i = 0; i < parameterValues.size(); ++i) {
@@ -516,8 +515,8 @@ public class JdbcRunner {
 			String columnAlias = metaData.getColumnLabel(i + 1);
 			Optional<FetchParameter> optional = findFetchParameter(columnName, columnAlias, queryResultMapping);
 			if (optional.isPresent()) {
-				Optional<AttributeMapper> optionalAM = optional.get().getAttribute() != null
-						? optional.get().getAttribute().attributeMapper
+				Optional<AttributeMapper> optionalAM = ((AttributeFetchParameter) optional.get()).getAttribute() != null
+						? ((AttributeFetchParameter) optional.get()).getAttribute().attributeMapper
 						: Optional.empty();
 				Integer sqlType = optional.get().getSqlType();
 				if (sqlType == null)
@@ -548,7 +547,7 @@ public class JdbcRunner {
 			QueryResultMapping queryResultMapping, EntityLoader entityLoader) throws Exception {
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		LOG.info("Running `" + sql + "`");
+		LOG.info("Running `{}`", sql);
 		try {
 			preparedStatement = connection.prepareStatement(sql);
 			for (int i = 0; i < parameterValues.size(); ++i) {
@@ -592,15 +591,15 @@ public class JdbcRunner {
 		Optional<MetaAttribute> optional = entityMapping.getAttribute(columnAlias);
 		if (optional.isPresent()) {
 			MetaAttribute metaAttribute = optional.get();
-			FetchParameter fetchParameter = new FetchParameter(metaAttribute.getColumnName(), metaAttribute.sqlType,
-					metaAttribute);
+			FetchParameter fetchParameter = new AttributeFetchParameterImpl(metaAttribute.getColumnName(),
+					metaAttribute.sqlType, metaAttribute);
 			return Optional.of(fetchParameter);
 		}
 
 		Optional<JoinColumnAttribute> optionalJoinColumn = entityMapping.getJoinColumnAttribute(columnName);
 		if (optionalJoinColumn.isPresent()) {
 			JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
-			FetchParameter fetchParameter = new FetchParameter(joinColumnAttribute.getColumnName(),
+			FetchParameter fetchParameter = new AttributeFetchParameterImpl(joinColumnAttribute.getColumnName(),
 					joinColumnAttribute.sqlType, joinColumnAttribute.getAttribute());
 			return Optional.of(fetchParameter);
 		}
@@ -609,7 +608,7 @@ public class JdbcRunner {
 	}
 
 	public Long generateNextSequenceValue(Connection connection, String sql) throws SQLException {
-		LOG.info("Running `" + sql + "`");
+		LOG.info("Running `{}`", sql);
 		Long value = null;
 		ResultSet rs = null;
 		PreparedStatement preparedStatement = null;

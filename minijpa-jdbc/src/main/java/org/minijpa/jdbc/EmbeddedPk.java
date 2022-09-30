@@ -24,56 +24,56 @@ import java.util.List;
  */
 public class EmbeddedPk implements Pk {
 
-    private final MetaEntity entity;
-    private final PkGeneration pkGeneration = new PkGeneration();
+	private final MetaEntity entity;
+	private final PkGeneration pkGeneration = new PkGeneration();
 
-    public EmbeddedPk(MetaEntity entity) {
-	this.entity = entity;
-    }
+	public EmbeddedPk(MetaEntity entity) {
+		this.entity = entity;
+	}
 
-    @Override
-    public PkGeneration getPkGeneration() {
-	return pkGeneration;
-    }
+	@Override
+	public PkGeneration getPkGeneration() {
+		return pkGeneration;
+	}
 
-    @Override
-    public boolean isEmbedded() {
-	return true;
-    }
+	@Override
+	public boolean isEmbedded() {
+		return true;
+	}
 
-    @Override
-    public boolean isComposite() {
-	return entity.getAttributes().size() > 1;
-    }
+	@Override
+	public boolean isComposite() {
+		return entity.getAttributes().size() > 1;
+	}
 
-    @Override
-    public MetaAttribute getAttribute() {
-	return null;
-    }
+	@Override
+	public MetaAttribute getAttribute() {
+		return null;
+	}
 
-    @Override
-    public List<MetaAttribute> getAttributes() {
-	return entity.getAttributes();
-    }
+	@Override
+	public List<MetaAttribute> getAttributes() {
+		return entity.getAttributes();
+	}
 
-    @Override
-    public Class<?> getType() {
-	return entity.getEntityClass();
-    }
+	@Override
+	public Class<?> getType() {
+		return entity.getEntityClass();
+	}
 
-    @Override
-    public String getName() {
-	return entity.getName();
-    }
+	@Override
+	public String getName() {
+		return entity.getName();
+	}
 
-    @Override
-    public Method getReadMethod() {
-	return entity.getReadMethod();
-    }
+	@Override
+	public Method getReadMethod() {
+		return entity.getReadMethod();
+	}
 
-    @Override
-    public Method getWriteMethod() {
-	return entity.getWriteMethod();
-    }
+	@Override
+	public Method getWriteMethod() {
+		return entity.getWriteMethod();
+	}
 
 }

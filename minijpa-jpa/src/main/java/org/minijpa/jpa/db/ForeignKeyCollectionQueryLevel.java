@@ -64,11 +64,11 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 		List<String> columns = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute,
 				columns, tableAliasGenerator);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData.getSqlSelect());
+		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
 		Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
 				CollectionUtils.findCollectionImplementationClass(List.class));
 		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
-				sqlSelectData.getSqlSelect(), sqlSelectData.getFetchParameters(), lockType, collectionResult,
+				sqlSelectData, sqlSelectData.getFetchParameters(), lockType, collectionResult,
 				entityLoader, parameters);
 		return (List<Object>) collectionResult;
 	}

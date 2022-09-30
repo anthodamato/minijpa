@@ -15,51 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-import java.sql.Time;
-import java.util.Optional;
-
-import org.minijpa.jdbc.DDLData;
-
 public class OracleJdbc extends BasicDbJdbc {
-
-//	private final NameTranslator nameTranslator = new OracleNameTranslator();
-//
-//	@Override
-//	public NameTranslator getNameTranslator() {
-//		return nameTranslator;
-//	}
-
-//	@Override
-//	public String buildColumnDefinition(Class<?> type, Optional<DDLData> ddlData) {
-//		if (type == Long.class || (type.isPrimitive() && type.getName().equals("long")))
-//			return "number(19)";
-//
-//		if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int")))
-//			return "number(10)";
-//
-//		if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
-//			return "double precision";
-//
-//		if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
-//			return "number(19,4)";
-//
-//		if (type == Boolean.class || (type.isPrimitive() && type.getName().equals("boolean")))
-//			return "number(1)";
-//
-//		if (type == Time.class)
-//			return "date";
-//
-//		return super.buildColumnDefinition(type, ddlData);
-//	}
-
-//	@Override
-//	public String trueValue() {
-//		return "1";
-//	}
-//
-//	@Override
-//	public String falseValue() {
-//		return "0";
-//	}
 
 }
