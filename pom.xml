@@ -18,8 +18,8 @@
 	<modules>
 		<module>minijpa-sql-model</module>
 		<module>minijpa-jdbc</module>
-		<module>minijpa-jpa</module>
-		<module>minijpa-assembly</module>
+		<module>minijpa-core</module>
+<!--		<module>minijpa-assembly</module>-->
 	</modules>
 
 	<dependencyManagement>
@@ -193,5 +193,6 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+
 
 </project>
