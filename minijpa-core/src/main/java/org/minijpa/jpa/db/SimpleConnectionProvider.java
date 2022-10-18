@@ -20,33 +20,24 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.sql.DataSource;
-
 import org.minijpa.jdbc.ConnectionProvider;
-import org.minijpa.jpa.db.datasource.C3P0Datasource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ConnectionProviderImpl implements ConnectionProvider {
+public class SimpleConnectionProvider implements ConnectionProvider {
 
-	private final Logger LOG = LoggerFactory.getLogger(ConnectionProviderImpl.class);
+	private final Logger LOG = LoggerFactory.getLogger(SimpleConnectionProvider.class);
 
-	private final PersistenceUnitInfo persistenceUnitInfo;
-	private DataSource dataSource;
+	private final Properties properties;
 	private Properties connectionProps = new Properties();
 
-	public ConnectionProviderImpl(PersistenceUnitInfo persistenceUnitInfo) {
+	public SimpleConnectionProvider(Properties properties) {
 		super();
-		this.persistenceUnitInfo = persistenceUnitInfo;
+		this.properties = properties;
 	}
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		if (dataSource != null)
-			return dataSource.getConnection();
-
-		Properties properties = persistenceUnitInfo.getProperties();
 		String url = (String) properties.get("javax.persistence.jdbc.url");
 		Connection connection = DriverManager.getConnection(url, connectionProps);
 		connection.setAutoCommit(false);
@@ -59,25 +50,6 @@ public class ConnectionProviderImpl implements ConnectionProvider {
 	 */
 	@Override
 	public void init() throws Exception {
-		DataSource dataSource = persistenceUnitInfo.getNonJtaDataSource();
-		if (dataSource != null) {
-			this.dataSource = dataSource;
-			return;
-		}
-
-		dataSource = persistenceUnitInfo.getJtaDataSource();
-		if (dataSource != null) {
-			this.dataSource = dataSource;
-			return;
-		}
-
-		Properties properties = persistenceUnitInfo.getProperties();
-		String c3p0Datasource = (String) properties.get("c3p0.datasource");
-		if (c3p0Datasource != null && !c3p0Datasource.isEmpty()) {
-			this.dataSource = new C3P0Datasource().init(properties);
-			return;
-		}
-
 		String driverClass = (String) properties.get("javax.persistence.jdbc.driver");
 		if (driverClass != null)
 			Class.forName(driverClass).getDeclaredConstructor().newInstance();

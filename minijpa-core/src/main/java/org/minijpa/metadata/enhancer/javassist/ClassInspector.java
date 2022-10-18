@@ -581,12 +581,12 @@ public class ClassInspector {
 
 	private CtMethod findIsGetMethod(CtClass ctClass, CtField ctField) throws NotFoundException {
 		try {
-			String methodName = "get" + BeanUtil.capitalize(ctField.getName());
+			String methodName = BeanUtil.getGetterMethodName(ctField.getName());
 			return ctClass.getDeclaredMethod(methodName);
 		} catch (NotFoundException e) {
 			if (ctField.getType().getName().equals("java.lang.Boolean")
 					|| ctField.getType().getName().equals("boolean"))
-				return ctClass.getDeclaredMethod("is" + BeanUtil.capitalize(ctField.getName()));
+				return ctClass.getDeclaredMethod(BeanUtil.getIsMethodName(ctField.getName()));
 		}
 
 		return null;
@@ -616,7 +616,7 @@ public class ClassInspector {
 	private PropertyMethod findSetMethod(CtClass ctClass, CtField ctField) throws Exception {
 		CtMethod setMethod = null;
 		try {
-			setMethod = ctClass.getDeclaredMethod("set" + BeanUtil.capitalize(ctField.getName()));
+			setMethod = ctClass.getDeclaredMethod(BeanUtil.getSetterMethodName(ctField.getName()));
 		} catch (NotFoundException e) {
 			return new PropertyMethod();
 		}

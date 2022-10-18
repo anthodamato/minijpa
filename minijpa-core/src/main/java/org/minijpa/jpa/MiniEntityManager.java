@@ -40,11 +40,11 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.minijpa.jdbc.ConnectionHolderImpl;
+import org.minijpa.jdbc.ConnectionProvider;
 import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
-import org.minijpa.jpa.db.ConnectionProviderImpl;
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.JdbcEntityManagerImpl;
@@ -67,7 +67,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 	private boolean open = true;
 
 	public MiniEntityManager(EntityManagerFactory entityManagerFactory, PersistenceUnitInfo persistenceUnitInfo,
-			PersistenceUnitContext persistenceUnitContext) {
+			PersistenceUnitContext persistenceUnitContext, ConnectionProvider connectionProvider) {
 		super();
 		this.entityManagerFactory = entityManagerFactory;
 		this.persistenceUnitInfo = persistenceUnitInfo;
@@ -76,7 +76,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 		this.persistenceContext = new MiniPersistenceContext(persistenceUnitContext.getEntities());
 		this.dbConfiguration = DbConfigurationList.getInstance()
 				.getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
-		this.connectionHolder = new ConnectionHolderImpl(new ConnectionProviderImpl(persistenceUnitInfo));
+		this.connectionHolder = new ConnectionHolderImpl(connectionProvider);
 		this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, persistenceContext,
 				connectionHolder);
 		EntityDelegate.getInstance().addEntityManagerContext(new EntityContainerContext(persistenceUnitContext,
@@ -89,9 +89,9 @@ public class MiniEntityManager extends AbstractEntityManager {
 		if (e == null)
 			throw new IllegalArgumentException("Class '" + entity.getClass().getName() + "' is not an entity");
 
-		MiniFlushMode tinyFlushMode = flushModeType == FlushModeType.AUTO ? MiniFlushMode.AUTO : MiniFlushMode.COMMIT;
+		MiniFlushMode miniFlushMode = flushModeType == FlushModeType.AUTO ? MiniFlushMode.AUTO : MiniFlushMode.COMMIT;
 		try {
-			jdbcEntityManager.persist(e, entity, tinyFlushMode);
+			jdbcEntityManager.persist(e, entity, miniFlushMode);
 		} catch (Exception ex) {
 			entityTransaction.setRollbackOnly();
 			if (ex instanceof OptimisticLockException)

@@ -496,21 +496,38 @@
                       value="jdbc:derby:memory:longrunning;create=true" />
             <property name="javax.persistence.jdbc.driver"
                       value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <!--            <property 
-            name="javax.persistence.schema-generation.database.action" 
-            value="create" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-source" 
-            value="script" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-script-source" 
-            value="META-INF/create_long_running_db.sql" />-->
             <property
                 name="javax.persistence.schema-generation.database.action" 
                 value="create" /> 
             <property 
                 name="javax.persistence.schema-generation.create-source" 
                 value="metadata" /> 
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="long_running_with_datasource">
+        <description>Properties</description>
+        <class>org.minijpa.jpa.model.RandomData</class>
+        <class>org.minijpa.jpa.model.RandomGroup</class>
+        <properties>
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:derby:memory:longrunning;create=true" />
+            <property name="javax.persistence.jdbc.driver"
+                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+            <property
+                name="javax.persistence.schema-generation.database.action" 
+                value="create" /> 
+            <property 
+                name="javax.persistence.schema-generation.create-source" 
+                value="metadata" /> 
+            <property name="c3p0.datasource" value="com.mchange.v2.c3p0.ComboPooledDataSource"></property>
+            <property name="c3p0.initialPoolSize" value="5"></property>
+            <property name="c3p0.minPoolSize" value="5"></property>
+            <property name="c3p0.maxPoolSize" value="20"></property>
+            <property name="c3p0.acquireIncrement" value="2"></property>
+            <property name="c3p0.maxIdleTime" value="40"></property>
+            <property name="c3p0.maxStatements" value="2"></property>
+            <property name="c3p0.maxStatementsPerConnection" value="3"></property>
         </properties>
     </persistence-unit>
 
