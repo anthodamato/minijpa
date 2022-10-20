@@ -11,11 +11,22 @@ public class DataSourceFactory {
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, NoSuchMethodException, SecurityException, PropertyVetoException {
 		String c3p0Datasource = (String) properties.get("c3p0.datasource");
+		String dbcpDatasource = (String) properties.get("dbcp.datasource");
+
+		int count = 0;
+		if (c3p0Datasource != null && c3p0Datasource.equalsIgnoreCase("true"))
+			++count;
+
+		if (dbcpDatasource != null && dbcpDatasource.equalsIgnoreCase("true"))
+			++count;
+
+		if (count > 1)
+			throw new IllegalArgumentException("More than one DataSource enabled");
+
 		if (c3p0Datasource != null && c3p0Datasource.equalsIgnoreCase("true")) {
 			return new C3B0DataSource().getDataSource(properties);
 		}
 
-		String dbcpDatasource = (String) properties.get("dbcp.datasource");
 		if (dbcpDatasource != null && dbcpDatasource.equalsIgnoreCase("true")) {
 			return new DBCPDataSource().getDataSource(properties);
 		}

@@ -460,7 +460,7 @@
 			<property name="c3p0.maxStatements" value="2"></property>
 			<property name="c3p0.maxStatementsPerConnection" value="3"></property>
 			<property name="dbcp.datasource" value="false"></property>
-			<property name="dbcp.initialSize" value="2"></property>
+			<property name="dbcp.initialSize" value="5"></property>
 			<property name="dbcp.maxTotal" value="8"></property>
 			<property name="dbcp.maxIdle" value="3"></property>
 			<property name="dbcp.minIdle" value="0"></property>

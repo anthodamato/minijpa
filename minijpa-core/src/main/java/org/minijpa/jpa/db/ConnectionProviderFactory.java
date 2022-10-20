@@ -32,8 +32,10 @@ public class ConnectionProviderFactory {
 
 		Properties properties = persistenceUnitInfo.getProperties();
 		dataSource = DataSourceFactory.getDataSource(properties);
-		if (dataSource != null)
+		if (dataSource != null) {
+			LOG.info("DataSource detected: " + dataSource);
 			return new DataSourceConnectionProvider(dataSource);
+		}
 
 		return new SimpleConnectionProvider(persistenceUnitInfo.getProperties());
 	}
