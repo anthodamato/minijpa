@@ -1,677 +1,621 @@
 <persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
              http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
-             version="2.2">
+	version="2.2">
 
-    <persistence-unit name="citizens">
-        <description>Citizen Registry</description>
-        <class>org.minijpa.jpa.model.Citizen</class>
-        <class>org.minijpa.jpa.model.Address</class>
+	<persistence-unit name="citizens">
+		<description>Citizen Registry</description>
+		<class>org.minijpa.jpa.model.Citizen</class>
+		<class>org.minijpa.jpa.model.Address</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:citizens;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:citizens;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="citizens_only">
-        <description>Citizen Entity Only</description>
-        <class>org.minijpa.jpa.model.Citizen</class>
+	<persistence-unit name="citizens_only">
+		<description>Citizen Entity Only</description>
+		<class>org.minijpa.jpa.model.Citizen</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:citizens_only;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:citizens_only;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="drop-and-create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_citizens_db.sql" />
-        <property
-            name="javax.persistence.schema-generation.drop-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.drop-script-source"
-            value="META-INF/drop_citizens_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="drop-and-create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_citizens_db.sql" /> <property name="javax.persistence.schema-generation.drop-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.drop-script-source" 
+				value="META-INF/drop_citizens_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="generic_list">
-        <description>Generic List</description>
-        <class>org.minijpa.jpa.model.GenericList</class>
+	<persistence-unit name="generic_list">
+		<description>Generic List</description>
+		<class>org.minijpa.jpa.model.GenericList</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:genericlist;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:genericlist;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="mapped_superclass">
-        <description>MappedSuperclass Test</description>
-        <class>org.minijpa.jpa.model.Triangle</class>
-        <class>org.minijpa.jpa.model.Square</class>
+	<persistence-unit name="mapped_superclass">
+		<description>MappedSuperclass Test</description>
+		<class>org.minijpa.jpa.model.Triangle</class>
+		<class>org.minijpa.jpa.model.Square</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_mapped_superclass_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_mapped_superclass_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="emb_books">
-        <description>Books</description>
-        <class>org.minijpa.jpa.model.Book</class>
+	<persistence-unit name="emb_books">
+		<description>Books</description>
+		<class>org.minijpa.jpa.model.Book</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:emb_books;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:emb_books;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_emb_books_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_emb_books_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="emb_booking">
-        <description>Books</description>
-        <class>org.minijpa.jpa.model.HotelBooking</class>
+	<persistence-unit name="emb_booking">
+		<description>Books</description>
+		<class>org.minijpa.jpa.model.HotelBooking</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:emb_booking;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:emb_booking;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_emb_booking_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_emb_booking_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="cities_uni">
-        <description>Cities</description>
-        <class>org.minijpa.jpa.model.City</class>
-        <class>org.minijpa.jpa.model.Region</class>
+	<persistence-unit name="cities_uni">
+		<description>Cities</description>
+		<class>org.minijpa.jpa.model.City</class>
+		<class>org.minijpa.jpa.model.Region</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:cities_uni;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:cities_uni;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_city_onetoone_uni_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_city_onetoone_uni_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="onetoone_bid">
-        <description>Cities</description>
-        <class>org.minijpa.jpa.model.Person</class>
-        <class>org.minijpa.jpa.model.Fingerprint</class>
+	<persistence-unit name="onetoone_bid">
+		<description>Cities</description>
+		<class>org.minijpa.jpa.model.Person</class>
+		<class>org.minijpa.jpa.model.Fingerprint</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:onetoone_bid;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:onetoone_bid;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_onetoone_bid_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_onetoone_bid_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="onetoone_bid_lazy">
-        <description>Cities</description>
-        <class>org.minijpa.jpa.model.State</class>
-        <class>org.minijpa.jpa.model.Capital</class>
+	<persistence-unit name="onetoone_bid_lazy">
+		<description>Cities</description>
+		<class>org.minijpa.jpa.model.State</class>
+		<class>org.minijpa.jpa.model.Capital</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:onetoone_bid_lazy;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:onetoone_bid_lazy;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_onetoone_bid_lazy_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_onetoone_bid_lazy_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="onetomany_uni">
-        <description>Unidirectional One to Many</description>
-        <class>org.minijpa.jpa.model.Store</class>
-        <class>org.minijpa.jpa.model.Item</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:onetomany_uni;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_onetomany_uni_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="onetomany_uni">
+		<description>Unidirectional One to Many</description>
+		<class>org.minijpa.jpa.model.Store</class>
+		<class>org.minijpa.jpa.model.Item</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:onetomany_uni;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_onetomany_uni_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="otm_emb_booking">
-        <description>Unidirectional One to Many</description>
-        <class>org.minijpa.jpa.model.HotelBookingDetail</class>
-        <class>org.minijpa.jpa.model.HotelCustomer</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:otm_emb_booking;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="otm_emb_booking">
+		<description>Unidirectional One to Many</description>
+		<class>org.minijpa.jpa.model.HotelBookingDetail</class>
+		<class>org.minijpa.jpa.model.HotelCustomer</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:otm_emb_booking;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="onetoone_bid_lazy">
-        <description>Cities</description>
-        <class>org.minijpa.jpa.model.State</class>
-        <class>org.minijpa.jpa.model.Capital</class>
+	<persistence-unit name="onetoone_bid_lazy">
+		<description>Cities</description>
+		<class>org.minijpa.jpa.model.State</class>
+		<class>org.minijpa.jpa.model.Capital</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:onetoone_bid_lazy;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:onetoone_bid_lazy;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_onetoone_bid_lazy_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_onetoone_bid_lazy_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="manytoone_bid">
-        <description>Cities</description>
-        <class>org.minijpa.jpa.model.Employee</class>
-        <class>org.minijpa.jpa.model.Department</class>
+	<persistence-unit name="manytoone_bid">
+		<description>Cities</description>
+		<class>org.minijpa.jpa.model.Employee</class>
+		<class>org.minijpa.jpa.model.Department</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:manytoone_bid;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:manytoone_bid;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="stoves">
-        <description>Stoves</description>
-        <class>org.minijpa.jpa.model.Stove</class>
+	<persistence-unit name="stoves">
+		<description>Stoves</description>
+		<class>org.minijpa.jpa.model.Stove</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:stoves;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:stoves;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_stove_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_stove_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="holidays">
-        <description>Holidays</description>
-        <class>org.minijpa.jpa.model.Holiday</class>
+	<persistence-unit name="holidays">
+		<description>Holidays</description>
+		<class>org.minijpa.jpa.model.Holiday</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:holidays;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:holidays;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
 
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action"
-            value="create" />
-        <property
-            name="javax.persistence.schema-generation.create-source"
-            value="script" />
-        <property
-            name="javax.persistence.schema-generation.create-script-source"
-            value="META-INF/create_holiday_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_holiday_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="purchase_stats">
-        <description>Purchase Stats</description>
-        <class>org.minijpa.jpa.model.PurchaseStats</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:purchase_stats;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="purchase_stats">
+		<description>Purchase Stats</description>
+		<class>org.minijpa.jpa.model.PurchaseStats</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:purchase_stats;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="order_many_to_many">
-        <description>Orders</description>
-        <class>org.minijpa.jpa.model.Customer</class>
-        <class>org.minijpa.jpa.model.Order</class>
-        <class>org.minijpa.jpa.model.Product</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:orders;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <!--            <property 
-            name="javax.persistence.schema-generation.database.action" 
-            value="create" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-source" 
-            value="script" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-script-source" 
-            value="META-INF/create_orders_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="order_many_to_many">
+		<description>Orders</description>
+		<class>org.minijpa.jpa.model.Customer</class>
+		<class>org.minijpa.jpa.model.Order</class>
+		<class>org.minijpa.jpa.model.Product</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:orders;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_orders_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="property_many_to_many_uni">
-        <description>Properties</description>
-        <class>org.minijpa.jpa.model.Property</class>
-        <class>org.minijpa.jpa.model.PropertyOwner</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:property_many_to_many_uni;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <!--            <property 
-            name="javax.persistence.schema-generation.database.action" 
-            value="create" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-source" 
-            value="script" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-script-source" 
-            value="META-INF/create_property_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="property_many_to_many_uni">
+		<description>Properties</description>
+		<class>org.minijpa.jpa.model.Property</class>
+		<class>org.minijpa.jpa.model.PropertyOwner</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:property_many_to_many_uni;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_property_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="embed_many_to_one">
-        <description>Properties</description>
-        <class>org.minijpa.jpa.model.JobEmployee</class>
-        <class>org.minijpa.jpa.model.ProgramManager</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:embed_many_to_one;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="embed_many_to_one">
+		<description>Properties</description>
+		<class>org.minijpa.jpa.model.JobEmployee</class>
+		<class>org.minijpa.jpa.model.ProgramManager</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:embed_many_to_one;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="long_running">
-        <description>Properties</description>
-        <class>org.minijpa.jpa.model.RandomData</class>
-        <class>org.minijpa.jpa.model.RandomGroup</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:longrunning;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="long_running">
+		<description>Properties</description>
+		<class>org.minijpa.jpa.model.RandomData</class>
+		<class>org.minijpa.jpa.model.RandomGroup</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:longrunning;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="long_running_with_datasource">
-        <description>Properties</description>
-        <class>org.minijpa.jpa.model.RandomData</class>
-        <class>org.minijpa.jpa.model.RandomGroup</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:longrunning;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-            <property name="c3p0.datasource" value="com.mchange.v2.c3p0.ComboPooledDataSource"></property>
-            <property name="c3p0.initialPoolSize" value="5"></property>
-            <property name="c3p0.minPoolSize" value="5"></property>
-            <property name="c3p0.maxPoolSize" value="20"></property>
-            <property name="c3p0.acquireIncrement" value="2"></property>
-            <property name="c3p0.maxIdleTime" value="40"></property>
-            <property name="c3p0.maxStatements" value="2"></property>
-            <property name="c3p0.maxStatementsPerConnection" value="3"></property>
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="long_running_with_datasource">
+		<description>Properties</description>
+		<class>org.minijpa.jpa.model.RandomData</class>
+		<class>org.minijpa.jpa.model.RandomGroup</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:longrunning;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+			<property name="c3p0.datasource" value="true"></property>
+			<property name="c3p0.initialPoolSize" value="5"></property>
+			<property name="c3p0.minPoolSize" value="5"></property>
+			<property name="c3p0.maxPoolSize" value="20"></property>
+			<property name="c3p0.acquireIncrement" value="2"></property>
+			<property name="c3p0.maxIdleTime" value="40"></property>
+			<property name="c3p0.maxStatements" value="2"></property>
+			<property name="c3p0.maxStatementsPerConnection" value="3"></property>
+			<property name="dbcp.datasource" value="false"></property>
+			<property name="dbcp.initialSize" value="2"></property>
+			<property name="dbcp.maxTotal" value="8"></property>
+			<property name="dbcp.maxIdle" value="3"></property>
+			<property name="dbcp.minIdle" value="0"></property>
+			<property name="dbcp.maxWaitMillis" value="2000"></property>
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="items">
-        <description>Items</description>
-        <class>org.minijpa.jpa.model.StoreItem</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:store_items;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <!--            <property
-            name="javax.persistence.schema-generation.database.action" 
-            value="create" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-source" 
-            value="script" /> 
-        <property 
-            name="javax.persistence.schema-generation.create-script-source" 
-            value="META-INF/create_store_item_db.sql" />-->
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="items">
+		<description>Items</description>
+		<class>org.minijpa.jpa.model.StoreItem</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:store_items;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<!-- <property name="javax.persistence.schema-generation.database.action" 
+				value="create" /> <property name="javax.persistence.schema-generation.create-source" 
+				value="script" /> <property name="javax.persistence.schema-generation.create-script-source" 
+				value="META-INF/create_store_item_db.sql" /> -->
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="booking_sale">
-        <description>Booking Sale</description>
-        <class>org.minijpa.jpa.model.Booking</class>
-        <class>org.minijpa.jpa.model.BookingSale</class>
-        <properties>
-            <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:booking_sale;create=true" />
-            <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver" />
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+	<persistence-unit name="booking_sale">
+		<description>Booking Sale</description>
+		<class>org.minijpa.jpa.model.Booking</class>
+		<class>org.minijpa.jpa.model.BookingSale</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:booking_sale;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="cascade_persist">
-        <description>Citizen registry</description>
-        <class>org.minijpa.jpa.model.JobCandidate</class>
-        <class>org.minijpa.jpa.model.SkillSet</class>
+	<persistence-unit name="cascade_persist">
+		<description>Citizen registry</description>
+		<class>org.minijpa.jpa.model.JobCandidate</class>
+		<class>org.minijpa.jpa.model.SkillSet</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:cascade_persist;create=true" />
-            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:cascade_persist;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="date_set">
-        <description>Date test</description>
-        <class>org.minijpa.jpa.model.DateSet</class>
+	<persistence-unit name="date_set">
+		<description>Date test</description>
+		<class>org.minijpa.jpa.model.DateSet</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:date_set;create=true" />
-            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:date_set;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="temporal_dates">
-        <description>Temporal Date test</description>
-        <class>org.minijpa.jpa.model.TemporalDateSet</class>
+	<persistence-unit name="temporal_dates">
+		<description>Temporal Date test</description>
+		<class>org.minijpa.jpa.model.TemporalDateSet</class>
 
-        <properties>
-            <!--<property name="hibernate.jdbc.time_zone" value="UTC" />--> 
-            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:temporal_dates;create=true" />
-            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+		<properties>
+			<!--<property name="hibernate.jdbc.time_zone" value="UTC" /> -->
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:temporal_dates;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="simple_order">
-        <description>Simple Order for Jpql</description>
-        <class>org.minijpa.jpa.model.SimpleOrder</class>
-        <class>org.minijpa.jpa.model.LineItem</class>
-        <class>org.minijpa.jpa.model.SimpleProduct</class>
+	<persistence-unit name="simple_order">
+		<description>Simple Order for Jpql</description>
+		<class>org.minijpa.jpa.model.SimpleOrder</class>
+		<class>org.minijpa.jpa.model.LineItem</class>
+		<class>org.minijpa.jpa.model.SimpleProduct</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:simple_order;create=true" />
-            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:simple_order;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="item_sale_stats">
-        <description>Item sales</description>
-        <class>org.minijpa.jpa.model.ItemSaleStats</class>
+	<persistence-unit name="item_sale_stats">
+		<description>Item sales</description>
+		<class>org.minijpa.jpa.model.ItemSaleStats</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:item_sale_stats;create=true" />
-            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:item_sale_stats;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 
-    <persistence-unit name="numeric_set">
-        <description>Numeric Set</description>
-        <class>org.minijpa.jpa.model.NumericSet</class>
+	<persistence-unit name="numeric_set">
+		<description>Numeric Set</description>
+		<class>org.minijpa.jpa.model.NumericSet</class>
 
-        <properties>
-            <property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:numeric_set;create=true" />
-            <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />            
-            <property
-                name="javax.persistence.schema-generation.database.action" 
-                value="create" /> 
-            <property 
-                name="javax.persistence.schema-generation.create-source" 
-                value="metadata" /> 
-        </properties>
-    </persistence-unit>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:numeric_set;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
+		</properties>
+	</persistence-unit>
 </persistence>

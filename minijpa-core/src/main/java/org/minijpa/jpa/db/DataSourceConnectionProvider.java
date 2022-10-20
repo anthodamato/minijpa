@@ -24,13 +24,13 @@ import org.minijpa.jdbc.ConnectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class C3P0DatasourceConnectionProvider implements ConnectionProvider {
+public class DataSourceConnectionProvider implements ConnectionProvider {
 
-	private final Logger LOG = LoggerFactory.getLogger(C3P0DatasourceConnectionProvider.class);
+	private final Logger LOG = LoggerFactory.getLogger(DataSourceConnectionProvider.class);
 
 	private final DataSource dataSource;
 
-	public C3P0DatasourceConnectionProvider(DataSource dataSource) {
+	public DataSourceConnectionProvider(DataSource dataSource) {
 		super();
 		this.dataSource = dataSource;
 	}

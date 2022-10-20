@@ -25,12 +25,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Should be tested with more than one Entitymanager...
+ * 
  * @author adamato
  */
-public class LongRunningDatasourceTest {
+public class LongRunningDataSourceTest {
 
-	private Logger LOG = LoggerFactory.getLogger(LongRunningDatasourceTest.class);
+	private Logger LOG = LoggerFactory.getLogger(LongRunningDataSourceTest.class);
 	private static EntityManagerFactory emf;
 	private final int ngroups = 100;
 

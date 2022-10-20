@@ -11,14 +11,13 @@ import org.minijpa.metadata.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class C3P0Datasource {
-	private Logger LOG = LoggerFactory.getLogger(C3P0Datasource.class);
+public class C3B0DataSource {
+	private Logger LOG = LoggerFactory.getLogger(C3B0DataSource.class);
 
-	public DataSource init(Properties properties)
+	public DataSource getDataSource(Properties properties)
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
 			InvocationTargetException, NoSuchMethodException, SecurityException, PropertyVetoException {
-		String c3p0Datasource = (String) properties.get("c3p0.datasource");
-		Class<?> cs = Class.forName(c3p0Datasource);
+		Class<?> cs = Class.forName("com.mchange.v2.c3p0.ComboPooledDataSource");
 		Object instance = cs.getDeclaredConstructor().newInstance();
 
 		String driverClass = (String) properties.get("javax.persistence.jdbc.driver");

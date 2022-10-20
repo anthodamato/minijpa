@@ -91,6 +91,12 @@
 					<version>0.9.5.5</version>
 					<scope>test</scope>
 				</dependency>
+				<dependency>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-dbcp2</artifactId>
+					<version>2.9.0</version>
+					<scope>test</scope>
+				</dependency>
 			</dependencies>
 		</profile>
 		<profile>
@@ -113,6 +119,12 @@
 					<groupId>com.mchange</groupId>
 					<artifactId>c3p0</artifactId>
 					<version>0.9.5.5</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-dbcp2</artifactId>
+					<version>2.9.0</version>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
@@ -139,6 +151,12 @@
 					<version>0.9.5.5</version>
 					<scope>test</scope>
 				</dependency>
+				<dependency>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-dbcp2</artifactId>
+					<version>2.9.0</version>
+					<scope>test</scope>
+				</dependency>
 			</dependencies>
 		</profile>
 		<profile>
@@ -161,6 +179,12 @@
 					<groupId>com.mchange</groupId>
 					<artifactId>c3p0</artifactId>
 					<version>0.9.5.5</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-dbcp2</artifactId>
+					<version>2.9.0</version>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
@@ -186,6 +210,12 @@
 					<version>0.9.5.5</version>
 					<scope>test</scope>
 				</dependency>
+				<dependency>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-dbcp2</artifactId>
+					<version>2.9.0</version>
+					<scope>test</scope>
+				</dependency>
 			</dependencies>
 		</profile>
 		<profile>
@@ -208,6 +238,12 @@
 					<groupId>com.mchange</groupId>
 					<artifactId>c3p0</artifactId>
 					<version>0.9.5.5</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-dbcp2</artifactId>
+					<version>2.9.0</version>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
