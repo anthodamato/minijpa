@@ -26,6 +26,7 @@ import java.util.Properties;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
+import org.minijpa.jdbc.ConnectionProvider;
 import org.minijpa.jdbc.ScriptRunner;
 import org.minijpa.jpa.PersistenceUnitContextManager;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -37,8 +38,8 @@ public class PersistenceUnitPropertyActions {
 
 	private Logger LOG = LoggerFactory.getLogger(PersistenceUnitPropertyActions.class);
 
-	private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo)
-			throws IOException, SQLException, URISyntaxException {
+	private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo,
+			ConnectionProvider connectionProvider) throws IOException, SQLException, URISyntaxException {
 		String filePath = scriptPath;
 		if (!scriptPath.startsWith("/"))
 			filePath = "/" + filePath;
@@ -46,13 +47,14 @@ public class PersistenceUnitPropertyActions {
 		File file = Paths.get(getClass().getResource(filePath).toURI()).toFile();
 		ScriptRunner scriptRunner = new ScriptRunner();
 		List<String> statements = scriptRunner.readStatements(file);
-		runScript(statements, persistenceUnitInfo);
+		runScript(statements, persistenceUnitInfo, connectionProvider);
 	}
 
-	public void runScript(List<String> statements, PersistenceUnitInfo persistenceUnitInfo) throws SQLException {
+	public void runScript(List<String> statements, PersistenceUnitInfo persistenceUnitInfo,
+			ConnectionProvider connectionProvider) throws SQLException {
 		Connection connection = null;
 		try {
-			connection = new ConnectionProviderImpl(persistenceUnitInfo).getConnection();
+			connection = connectionProvider.getConnection();
 			ScriptRunner scriptRunner = new ScriptRunner();
 			scriptRunner.runDDLStatements(statements, connection);
 		} finally {
@@ -71,8 +73,6 @@ public class PersistenceUnitPropertyActions {
 					.get(persistenceUnitInfo);
 			DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
 					.getDbConfiguration(persistenceUnitContext.getPersistenceUnitName());
-//			SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-//			List<SqlDDLStatement> sqlStatements = sqlStatementFactory.buildDDLStatements(persistenceUnitContext);
 			List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc()
 					.buildDDLStatements(persistenceUnitContext);
 			return dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
@@ -81,7 +81,7 @@ public class PersistenceUnitPropertyActions {
 		}
 	}
 
-	public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo)
+	public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo, ConnectionProvider connectionProvider)
 			throws IOException, SQLException, URISyntaxException {
 		Properties properties = persistenceUnitInfo.getProperties();
 		LOG.debug("properties={}", properties);
@@ -98,23 +98,23 @@ public class PersistenceUnitPropertyActions {
 			if (createSource != null) {
 				if (createSource.equals("script")) {
 					if (createScriptSource != null)
-						runScript(createScriptSource, persistenceUnitInfo);
+						runScript(createScriptSource, persistenceUnitInfo, connectionProvider);
 				} else if (createSource.equals("metadata")) {
 					List<String> script = generateScriptFromMetadata(persistenceUnitInfo);
 					LOG.debug("script={}", script);
-					runScript(script, persistenceUnitInfo);
+					runScript(script, persistenceUnitInfo, connectionProvider);
 				}
 			}
 		} else if (action.equals("drop-and-create")) {
 			if (dropSource != null && dropSource.equals("script")) {
 				if (dropScriptSource != null) {
-					runScript(dropScriptSource, persistenceUnitInfo);
+					runScript(dropScriptSource, persistenceUnitInfo, connectionProvider);
 				}
 			}
 
 			if (createSource != null && createSource.equals("script")) {
 				if (createScriptSource != null) {
-					runScript(createScriptSource, persistenceUnitInfo);
+					runScript(createScriptSource, persistenceUnitInfo, connectionProvider);
 				}
 			}
 		}

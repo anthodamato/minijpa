@@ -80,9 +80,9 @@ In case the attribute type is simple like Integer, String, etc. the building of 
 the sql type returned by ResultSet is used  
 
 ##### Jpql  
-Obtained from official JPA documentation the Jpql grammar is here '/minijpa-jpa/jpql/BNF2.txt'.  
+Obtained from official JPA documentation the Jpql grammar is here '/minijpa-core/jpql/BNF2.txt'.  
 The Jpql parser (not completed) is generated using [JavaCC v7.0.10](https://javacc.github.io/javacc/).  
-The JJTree grammar file is '/minijpa-jpa/jpql/JpqlParser.jjt'.  
+The JJTree grammar file is '/minijpa-core/jpql/JpqlParser.jjt'.  
 Class generation is done using jjtree and javacc commands:  
 - jjtree JpqlParser.jjt  
 - javacc JpqlParser.jj  
@@ -91,6 +91,32 @@ Class generation is done using jjtree and javacc commands:
 Entity class enhancement is made using a Java agent (EntityAgent) and [Javassist](https://www.javassist.org/).  
 After entity enhancement the minijpa metamodel is generated. It's a set of classes like MetaEntity, MetaAttribute, etc.  
 
+## Extra Configuration  
+##### Connection Pool support  
+Currently, [c3p0](https://www.mchange.com/projects/c3p0/) and [DBCP](https://commons.apache.org/proper/commons-dbcp/) are supported in an application-managed entity manager. Here is a persistence.xml configuration example for c3p0:  
+
+			<property name="c3p0.datasource" value="true"></property>
+			<property name="c3p0.initialPoolSize" value="5"></property>
+			<property name="c3p0.minPoolSize" value="5"></property>
+			<property name="c3p0.maxPoolSize" value="20"></property>
+			<property name="c3p0.acquireIncrement" value="2"></property>
+			<property name="c3p0.maxIdleTime" value="40"></property>
+			<property name="c3p0.maxStatements" value="2"></property>
+			<property name="c3p0.maxStatementsPerConnection" value="3"></property>
+
+and for DBCP:  
+
+			<property name="dbcp.datasource" value="true"></property>
+			<property name="dbcp.initialSize" value="5"></property>
+			<property name="dbcp.maxTotal" value="8"></property>
+			<property name="dbcp.maxIdle" value="3"></property>
+			<property name="dbcp.minIdle" value="0"></property>
+			<property name="dbcp.maxWaitMillis" value="2000"></property>
+
+The library must be in the classpath.  
+The property "c3p0.datasource" with the value "true" enables the connection pool.
+
+			<property name="c3p0.datasource" value="true"></property>
 
 
 

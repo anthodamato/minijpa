@@ -37,11 +37,15 @@ public class PersistenceUnitProperties {
 
 	public static Map<String, String> getProperties() throws IOException {
 		String minijpaTest = System.getProperty("minijpa.test");
+
 		LOG.debug("getProperties: minijpaTest=" + minijpaTest);
 		Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
 		Map<String, String> map = new HashMap<>();
-		map.put("javax.persistence.jdbc.url", properties.get("url"));
-		map.put("javax.persistence.jdbc.driver", properties.get("driver"));
+		if (minijpaTest != null && !minijpaTest.isEmpty()) {
+			map.put("javax.persistence.jdbc.url", properties.get("url"));
+			map.put("javax.persistence.jdbc.driver", properties.get("driver"));
+		}
+
 		map.put("javax.persistence.jdbc.user", properties.get("user"));
 		map.put("javax.persistence.jdbc.password", properties.get("password"));
 		return map;

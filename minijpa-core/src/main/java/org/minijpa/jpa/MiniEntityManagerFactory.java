@@ -30,6 +30,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitInfo;
 
+import org.minijpa.jdbc.ConnectionProvider;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.metamodel.MetamodelFactory;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -43,6 +44,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	private final PersistenceUnitInfo persistenceUnitInfo;
 	private final Map<String, Object> properties = new HashMap<>();
 	private final Map map;
+	private ConnectionProvider connectionProvider;
 	/**
 	 * The key used is the full class name.
 	 */
@@ -50,11 +52,12 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 	private Metamodel metamodel;
 
 	public MiniEntityManagerFactory(EntityManagerType entityManagerType, PersistenceUnitInfo persistenceUnitInfo,
-			@SuppressWarnings("rawtypes") Map map) {
+			@SuppressWarnings("rawtypes") Map map, ConnectionProvider connectionProvider) {
 		super();
 		this.entityManagerType = entityManagerType;
 		this.persistenceUnitInfo = persistenceUnitInfo;
 		this.map = map;
+		this.connectionProvider = connectionProvider;
 	}
 
 	public EntityManagerType getEntityManagerType() {
@@ -87,7 +90,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 				}
 		}
 
-		return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext);
+		return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext, connectionProvider);
 	}
 
 	@Override
@@ -102,7 +105,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 				}
 		}
 
-		return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext);
+		return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext, connectionProvider);
 	}
 
 	@Override
