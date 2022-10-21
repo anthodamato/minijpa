@@ -24,7 +24,7 @@ public class DataSourceFactory {
 			throw new IllegalArgumentException("More than one DataSource enabled");
 
 		if (c3p0Datasource != null && c3p0Datasource.equalsIgnoreCase("true")) {
-			return new C3B0DataSource().getDataSource(properties);
+			return new C3P0DataSource().getDataSource(properties);
 		}
 
 		if (dbcpDatasource != null && dbcpDatasource.equalsIgnoreCase("true")) {

@@ -11,8 +11,8 @@ import org.minijpa.metadata.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class C3B0DataSource {
-	private Logger LOG = LoggerFactory.getLogger(C3B0DataSource.class);
+public class C3P0DataSource {
+	private Logger LOG = LoggerFactory.getLogger(C3P0DataSource.class);
 
 	public DataSource getDataSource(Properties properties)
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
