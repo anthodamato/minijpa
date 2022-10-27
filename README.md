@@ -93,7 +93,7 @@ After entity enhancement the minijpa metamodel is generated. It's a set of class
 
 ## Extra Configuration  
 ##### Connection Pool support  
-Currently, [c3p0](https://www.mchange.com/projects/c3p0/) and [DBCP](https://commons.apache.org/proper/commons-dbcp/) are supported in an application-managed entity manager. Here is a persistence.xml configuration example for c3p0:  
+Currently, [c3p0](https://www.mchange.com/projects/c3p0/) and [DBCP](https://commons.apache.org/proper/commons-dbcp/) are supported as connection pools. Here is a persistence.xml configuration example for c3p0:  
 
 			<property name="c3p0.datasource" value="true"></property>
 			<property name="c3p0.initialPoolSize" value="5"></property>
