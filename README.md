@@ -41,7 +41,7 @@ Built using Java SE 11
 2. Install Maven 3.6.3 or higher  
 3. git clone https://github.com/adamatolondon/minijpa.git
 4. cd minijpa  
-5. mvn clean package -Dmaven.test.skip  
+5. mvn clean install -Dmaven.test.skip  
 6. mvn test  
 
 ## Running the unit tests  
