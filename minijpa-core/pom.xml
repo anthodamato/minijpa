@@ -71,9 +71,9 @@
                 <version>3.0.0-M7</version>
                 <configuration>
                     <argLine>
-                        -javaagent:"${settings.localRepository}"/org/minijpa/${project.version}/minijpa-core-${project.version}.jar
+                        @{argLine} -javaagent:"${settings.localRepository}"/org/minijpa/${project.version}/minijpa-core-${project.version}.jar
                     </argLine>
-                    <argLine>-javaagent:${project.build.directory}/minijpa-core-0.0.1-SNAPSHOT.jar</argLine>
+                    <argLine>@{argLine} -javaagent:${project.build.directory}/minijpa-core-0.0.1-SNAPSHOT.jar</argLine>
                 </configuration>
             </plugin>
             <plugin>
