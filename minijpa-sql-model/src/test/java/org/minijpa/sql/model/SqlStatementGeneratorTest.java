@@ -1,15 +1,25 @@
 package org.minijpa.sql.model;
 
+import java.math.BigDecimal;
+import java.sql.Time;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.minijpa.sql.model.aggregate.GroupBy;
+import org.minijpa.sql.model.condition.BetweenCondition;
 import org.minijpa.sql.model.condition.BinaryCondition;
+import org.minijpa.sql.model.condition.BinaryLogicCondition;
+import org.minijpa.sql.model.condition.BinaryLogicConditionImpl;
 import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
+import org.minijpa.sql.model.condition.InCondition;
+import org.minijpa.sql.model.condition.UnaryCondition;
+import org.minijpa.sql.model.condition.UnaryLogicCondition;
+import org.minijpa.sql.model.condition.UnaryLogicConditionImpl;
 import org.minijpa.sql.model.function.Count;
 import org.minijpa.sql.model.function.Sum;
 import org.minijpa.sql.model.join.FromJoin;
@@ -18,103 +28,305 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SqlStatementGeneratorTest {
-	private final Logger LOG = LoggerFactory.getLogger(SqlStatementGeneratorTest.class);
+    private final Logger LOG = LoggerFactory.getLogger(SqlStatementGeneratorTest.class);
 
-	private final SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
+    private final SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
 
-	@BeforeEach
-	void init() {
-		sqlStatementGenerator.init();
-	}
+    @BeforeEach
+    void init() {
+        sqlStatementGenerator.init();
+    }
 
-	@Test
-	public void simpleCondition() {
-		FromTable fromTable = new FromTableImpl("citizen", "c");
-		Column idColumn = new Column("id");
-		Column nameColumn = new Column("first_name");
+    @Test
+    public void simpleCondition() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column idColumn = new Column("id");
+        Column nameColumn = new Column("first_name");
 
-		List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
-		BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-				.withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
-		List<Condition> conditions = Arrays.asList(binaryCondition);
-		SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-		SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
-				.build();
-		Assertions.assertEquals("select c.id from citizen AS c where c.first_name = 'Sam'",
-				sqlStatementGenerator.export(sqlSelect));
-	}
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
+                .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
+        List<Condition> conditions = Arrays.asList(binaryCondition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select c.id from citizen AS c where c.first_name = 'Sam'",
+                sqlStatementGenerator.export(sqlSelect));
+    }
 
-	@Test
-	public void distinct() {
-		FromTable fromTable = new FromTableImpl("citizen", "c");
-		Column nameColumn = new Column("first_name");
+    @Test
+    public void binaryLogicCondition() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column idColumn = new Column("id");
+        Column nameColumn = new Column("first_name");
+        Column surnameColumn = new Column("last_name");
 
-		List<Value> values = Arrays.asList(new TableColumn(fromTable, nameColumn));
-		SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-		SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).distinct().build();
-		Assertions.assertEquals("select distinct c.first_name from citizen AS c",
-				sqlStatementGenerator.export(sqlSelect));
-	}
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        BinaryCondition binaryCondition1 = new BinaryCondition.Builder(ConditionType.EQUAL)
+                .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
+        BinaryCondition binaryCondition2 = new BinaryCondition.Builder(ConditionType.NOT_EQUAL)
+                .withLeft(new TableColumn(fromTable, surnameColumn)).withRight("'Smith'").build();
+        BinaryLogicCondition binaryLogicCondition1 = new BinaryLogicConditionImpl(ConditionType.AND,
+                Arrays.asList(binaryCondition1, binaryCondition2), true);
 
-	@Test
-	public void sum() {
-		FromTable fromTable = new FromTableImpl("region", "r");
-		Column populationColumn = new Column("population");
+        BinaryCondition binaryCondition3 = new BinaryCondition.Builder(ConditionType.LIKE)
+                .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Ed%'").build();
+        BinaryCondition binaryCondition4 = new BinaryCondition.Builder(ConditionType.EQUAL)
+                .withLeft(new TableColumn(fromTable, surnameColumn)).withRight("'Smith'").build();
+        BinaryLogicCondition binaryLogicCondition2 = new BinaryLogicConditionImpl(ConditionType.AND,
+                Arrays.asList(binaryCondition3, binaryCondition4), true);
 
-		List<Value> values = Arrays.asList(new Sum(new TableColumn(fromTable, populationColumn)));
-		SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-		SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
-		Assertions.assertEquals("select SUM(r.population) from region AS r", sqlStatementGenerator.export(sqlSelect));
-	}
+        BinaryLogicCondition binaryLogicCondition = new BinaryLogicConditionImpl(ConditionType.OR,
+                Arrays.asList(binaryLogicCondition1, binaryLogicCondition2));
 
-	@Test
-	public void count() {
-		FromTable fromTable = new FromTableImpl("product", "p");
-		List<Value> values = Arrays.asList(new Count("*"));
-		SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-		SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
-		LOG.debug("SqlStatementGeneratorTest: count sqlStatementGenerator=" + sqlStatementGenerator);
+        List<Condition> conditions = Arrays.asList(binaryLogicCondition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals(
+                "select c.id from citizen AS c where (c.first_name = 'Sam' and c.last_name <> 'Smith') or (c.first_name like 'Ed%' and c.last_name = 'Smith')",
+                sqlStatementGenerator.export(sqlSelect));
+    }
 
-		Assertions.assertEquals("select COUNT(*) from product AS p", sqlStatementGenerator.export(sqlSelect));
-	}
+    @Test
+    public void unaryLogicCondition() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column idColumn = new Column("id");
+        Column nameColumn = new Column("first_name");
+        Column surnameColumn = new Column("last_name");
 
-	@Test
-	public void groupBy() {
-		FromTable fromTable = new FromTableImpl("product", "p");
-		Column categoryColumn = new Column("category");
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        BinaryCondition binaryCondition1 = new BinaryCondition.Builder(ConditionType.EQUAL)
+                .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
+        BinaryCondition binaryCondition2 = new BinaryCondition.Builder(ConditionType.NOT_EQUAL)
+                .withLeft(new TableColumn(fromTable, surnameColumn)).withRight("'Smith'").build();
+        BinaryLogicCondition binaryLogicCondition1 = new BinaryLogicConditionImpl(ConditionType.AND,
+                Arrays.asList(binaryCondition1, binaryCondition2));
 
-		List<Value> values = Arrays.asList(new TableColumn(fromTable, categoryColumn), new Count("*"));
-		GroupBy groupBy = new GroupBy(new TableColumn(fromTable, categoryColumn));
-		SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-		SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withGroupBy(groupBy).build();
-		Assertions.assertEquals("select p.category, COUNT(*) from product AS p group by p.category",
-				sqlStatementGenerator.export(sqlSelect));
-	}
+        UnaryLogicCondition unaryLogicCondition = new UnaryLogicConditionImpl(ConditionType.NOT, binaryLogicCondition1);
 
-	@Test
-	public void innerJoin() {
-		Column regionIdColumn = new Column("id");
+        List<Condition> conditions = Arrays.asList(unaryLogicCondition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals(
+                "select c.id from citizen AS c where not (c.first_name = 'Sam' and c.last_name <> 'Smith')",
+                sqlStatementGenerator.export(sqlSelect));
+    }
 
-		Column nameColumn = new Column("name");
-		Column regionColumn = new Column("region_id");
-		FromTable cityTable = new FromTableImpl("city", "c");
-		FromTable regionTable = new FromTableImpl("region", "r");
-		FromJoin fromJoin = new FromJoinImpl(cityTable, regionTable.getAlias().get(), Arrays.asList(regionIdColumn),
-				Arrays.asList(regionColumn));
+    @Test
+    public void unaryConditionEqualsTrue() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column idColumn = new Column("id");
+        Column genderColumn = new Column("gender");
 
-		Column regionNameColumn = new Column("name");
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        Condition condition = new UnaryCondition(ConditionType.EQUALS_TRUE, new TableColumn(fromTable, genderColumn));
 
-		List<Value> values = Arrays.asList(new TableColumn(regionTable, regionNameColumn));
-		BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-				.withLeft(new TableColumn(cityTable, nameColumn)).withRight("'Nottingham'").build();
-		List<Condition> conditions = Arrays.asList(binaryCondition);
-		SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-		SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(regionTable).withJoin(fromJoin).withValues(values)
-				.withConditions(conditions).build();
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select c.id from citizen AS c where c.gender = TRUE",
+                sqlStatementGenerator.export(sqlSelect));
+    }
 
-		Assertions.assertEquals(
-				"select r.name from region AS r INNER JOIN city AS c ON r.id = c.region_id where c.name = 'Nottingham'",
-				sqlStatementGenerator.export(sqlSelect));
-	}
+    @Test
+    public void unaryConditionEqualsFalse() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column idColumn = new Column("id");
+        Column genderColumn = new Column("gender");
 
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        Condition condition = new UnaryCondition(ConditionType.EQUALS_FALSE, new TableColumn(fromTable, genderColumn));
+
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select c.id from citizen AS c where c.gender = FALSE",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void unaryConditionIsNull() {
+        FromTable fromTable = new FromTableImpl("account", "a");
+        Column idColumn = new Column("id");
+        Column expiryDateColumn = new Column("expiry_date");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        Condition condition = new UnaryCondition(ConditionType.IS_NULL, new TableColumn(fromTable, expiryDateColumn));
+
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select a.id from account AS a where a.expiry_date is null",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void unaryConditionIsNotNull() {
+        FromTable fromTable = new FromTableImpl("account", "a");
+        Column idColumn = new Column("id");
+        Column expiryDateColumn = new Column("expiry_date");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        Condition condition = new UnaryCondition(ConditionType.IS_NOT_NULL,
+                new TableColumn(fromTable, expiryDateColumn));
+
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select a.id from account AS a where a.expiry_date is not null",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void betweenCondition() {
+        FromTable fromTable = new FromTableImpl("account", "a");
+        Column idColumn = new Column("id");
+        Column expiryDateColumn = new Column("expiry_date");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        Condition condition = new BetweenCondition(new TableColumn(fromTable, expiryDateColumn), "'01-01-2000'",
+                "'01-01-2020'", true);
+
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals(
+                "select a.id from account AS a where a.expiry_date not between '01-01-2000' and '01-01-2020'",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void unaryConditionInOperator() {
+        FromTable fromTable = new FromTableImpl("account", "a");
+        Column idColumn = new Column("id");
+        Column statusColumn = new Column("status");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        List<Object> params = Arrays.asList("'CLOSED'", "'SUSPENDED'");
+        Condition condition = new InCondition(new TableColumn(fromTable, statusColumn), params, true);
+
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select a.id from account AS a where a.status not in ('CLOSED', 'SUSPENDED')",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void distinct() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, nameColumn));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).distinct().build();
+        Assertions.assertEquals("select distinct c.first_name from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void sum() {
+        FromTable fromTable = new FromTableImpl("region", "r");
+        Column populationColumn = new Column("population");
+
+        List<Value> values = Arrays.asList(new Sum(new TableColumn(fromTable, populationColumn)));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select SUM(r.population) from region AS r", sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void count() {
+        FromTable fromTable = new FromTableImpl("product", "p");
+        List<Value> values = Arrays.asList(new Count("*"));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select COUNT(*) from product AS p", sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void groupBy() {
+        FromTable fromTable = new FromTableImpl("product", "p");
+        Column categoryColumn = new Column("category");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, categoryColumn), new Count("*"));
+        GroupBy groupBy = new GroupBy(new TableColumn(fromTable, categoryColumn));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withGroupBy(groupBy).build();
+        Assertions.assertEquals("select p.category, COUNT(*) from product AS p group by p.category",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void innerJoin() {
+        Column regionIdColumn = new Column("id");
+
+        Column nameColumn = new Column("name");
+        Column regionColumn = new Column("region_id");
+        FromTable cityTable = new FromTableImpl("city", "c");
+        FromTable regionTable = new FromTableImpl("region", "r");
+        FromJoin fromJoin = new FromJoinImpl(cityTable, regionTable.getAlias().get(), Arrays.asList(regionIdColumn),
+                Arrays.asList(regionColumn));
+
+        Column regionNameColumn = new Column("name");
+
+        List<Value> values = Arrays.asList(new TableColumn(regionTable, regionNameColumn));
+        BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
+                .withLeft(new TableColumn(cityTable, nameColumn)).withRight("'Nottingham'").build();
+        List<Condition> conditions = Arrays.asList(binaryCondition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(regionTable).withJoin(fromJoin).withValues(values)
+                .withConditions(conditions).build();
+
+        Assertions.assertEquals(
+                "select r.name from region AS r INNER JOIN city AS c ON r.id = c.region_id where c.name = 'Nottingham'",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void createTable() {
+        JdbcJoinColumnMapping jdbcJoinColumnMapping = new SingleJdbcJoinColumnMapping(
+                new ColumnDeclaration("address_id", Long.class),
+                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)));
+        ForeignKeyDeclaration foreignKeyDeclaration = new ForeignKeyDeclaration(jdbcJoinColumnMapping, "address");
+
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(), Optional.empty(),
+                Optional.empty());
+        SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
+                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)),
+                Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
+                        new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData)),
+                        new ColumnDeclaration("dob", java.sql.Date.class),
+                        new ColumnDeclaration("citizenship", Boolean.class)),
+                Arrays.asList(foreignKeyDeclaration));
+        Assertions.assertEquals(
+                "create table citizen (id bigint, first_name varchar(50), last_name varchar(50), dob date, citizenship boolean, address_id bigint, primary key (id), foreign key (address_id) references address)",
+                sqlStatementGenerator.export(sqlCreateTable));
+    }
+
+    @Test
+    public void createDataTypeTable() {
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.of(16), Optional.of(2),
+                Optional.empty());
+        SqlCreateTable sqlCreateTable = new SqlCreateTable("datatype",
+                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)),
+                Arrays.asList(new ColumnDeclaration("counter", Integer.class),
+                        new ColumnDeclaration("percentage", Float.class),
+                        new ColumnDeclaration("division", Double.class),
+                        new ColumnDeclaration("big_number", BigDecimal.class, Optional.of(jdbcDDLData)),
+                        new ColumnDeclaration("dob", java.sql.Timestamp.class),
+                        new ColumnDeclaration("timehh", Time.class)),
+                Arrays.asList());
+        Assertions.assertEquals(
+                "create table datatype (id bigint, counter integer, percentage real, division double precision, big_number decimal(16,2), dob timestamp, timehh time, primary key (id))",
+                sqlStatementGenerator.export(sqlCreateTable));
+    }
 }
