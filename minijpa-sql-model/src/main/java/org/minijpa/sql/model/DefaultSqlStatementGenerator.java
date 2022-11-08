@@ -639,7 +639,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             sb.append("distinct ");
 
 //		LOG.debug("export: SqlSelect sqlSelect.getValues()={}", sqlSelect.getValues());
-        LOG.debug("export: 2 sqlSelect.getValues()={}", sqlSelect.getValues());
+//        LOG.debug("export: 2 sqlSelect.getValues()={}", sqlSelect.getValues());
 
         String cc = sqlSelect.getValues().stream().map(c -> {
             LOG.debug("export: SqlSelect c={}", c);

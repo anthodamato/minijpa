@@ -27,11 +27,11 @@ public class Column {
 		this.name = name;
 	}
 
-	public Column(String name, String alias) {
-		this(name);
-		if (alias != null)
-			this.alias = Optional.of(alias);
-	}
+//	public Column(String name, String alias) {
+//		this(name);
+//		if (alias != null)
+//			this.alias = Optional.of(alias);
+//	}
 
 	public String getName() {
 		return name;

@@ -20,7 +20,12 @@ import org.minijpa.sql.model.condition.InCondition;
 import org.minijpa.sql.model.condition.UnaryCondition;
 import org.minijpa.sql.model.condition.UnaryLogicCondition;
 import org.minijpa.sql.model.condition.UnaryLogicConditionImpl;
+import org.minijpa.sql.model.function.Abs;
+import org.minijpa.sql.model.function.Avg;
+import org.minijpa.sql.model.function.Concat;
 import org.minijpa.sql.model.function.Count;
+import org.minijpa.sql.model.function.Length;
+import org.minijpa.sql.model.function.Locate;
 import org.minijpa.sql.model.function.Sum;
 import org.minijpa.sql.model.join.FromJoin;
 import org.minijpa.sql.model.join.FromJoinImpl;
@@ -328,5 +333,65 @@ public class SqlStatementGeneratorTest {
         Assertions.assertEquals(
                 "create table datatype (id bigint, counter integer, percentage real, division double precision, big_number decimal(16,2), dob timestamp, timehh time, primary key (id))",
                 sqlStatementGenerator.export(sqlCreateTable));
+    }
+
+    @Test
+    public void abs() {
+        FromTable fromTable = new FromTableImpl("temperature", "t");
+        Column minColumn = new Column("min_temp");
+        List<Value> values = Arrays.asList(new Abs(new TableColumn(fromTable, minColumn)));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select ABS(t.min_temp) from temperature AS t",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void avg() {
+        FromTable fromTable = new FromTableImpl("temperature", "t");
+        Column minColumn = new Column("min_temp");
+        List<Value> values = Arrays.asList(new Avg(new TableColumn(fromTable, minColumn)));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select AVG(t.min_temp) from temperature AS t",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void concat() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+        Column surnameColumn = new Column("last_name");
+
+        List<Value> values = Arrays.asList(
+                new Concat(new TableColumn(fromTable, nameColumn), "' '", new TableColumn(fromTable, surnameColumn)));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select c.first_name||' '||c.last_name from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void length() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        List<Value> values = Arrays.asList(new Length(new TableColumn(fromTable, nameColumn)));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select LENGTH(c.first_name) from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void locate() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        List<Value> values = Arrays.asList(new Locate("'a'", new TableColumn(fromTable, nameColumn)));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select LOCATE('a',c.first_name) as position from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
     }
 }
