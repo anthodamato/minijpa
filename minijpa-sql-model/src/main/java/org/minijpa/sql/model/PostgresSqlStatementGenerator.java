@@ -26,75 +26,75 @@ import org.minijpa.sql.model.function.Locate;
  */
 public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-	public PostgresSqlStatementGenerator() {
-		super();
-	}
+    public PostgresSqlStatementGenerator() {
+        super();
+    }
 
-	@Override
-	public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-		if (optionalSchema.isEmpty())
-			return "select nextval('" + sequenceName + "')";
+    @Override
+    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+        if (optionalSchema.isEmpty())
+            return "select nextval('" + sequenceName + "')";
 
-		return "select nextval(" + optionalSchema.get() + "." + sequenceName + "')";
-	}
+        return "select nextval(" + optionalSchema.get() + "." + sequenceName + "')";
+    }
 
-	@Override
-	public String forUpdateClause(ForUpdate forUpdate) {
-		return "for update";
-	}
+    @Override
+    public String forUpdateClause(ForUpdate forUpdate) {
+        return "for update";
+    }
 
-	@Override
-	public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
-		if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
-			return "double precision";
+    @Override
+    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+        if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
+            return "double precision";
 
-		if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
-			return "real";
+        if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
+            return "real";
 
-		return super.buildColumnDefinition(type, ddlData);
-	}
+        return super.buildColumnDefinition(type, ddlData);
+    }
 
-	@Override
-	protected String export(SqlUpdate sqlUpdate, SqlStatementExporter sqlStatementExporter) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("update ");
-		sb.append(nameTranslator.toTableName(sqlUpdate.getFromTable().getAlias(), sqlUpdate.getFromTable().getName()));
-		sb.append(" set ");
+    @Override
+    protected String export(SqlUpdate sqlUpdate, NameTranslator nameTranslator) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("update ");
+        sb.append(nameTranslator.toTableName(sqlUpdate.getFromTable().getAlias(), sqlUpdate.getFromTable().getName()));
+        sb.append(" set ");
 
-		String sv = sqlUpdate.getTableColumns().stream().map(c -> {
-			return exportTableColumnForUpdate(c) + " = ?";
-		}).collect(Collectors.joining(", "));
-		sb.append(sv);
+        String sv = sqlUpdate.getTableColumns().stream().map(c -> {
+            return exportTableColumnForUpdate(c) + " = ?";
+        }).collect(Collectors.joining(", "));
+        sb.append(sv);
 
-		if (sqlUpdate.getCondition().isPresent()) {
-			sb.append(" where ");
-			sb.append(exportCondition(sqlUpdate.getCondition().get(), sqlStatementExporter));
-		}
+        if (sqlUpdate.getCondition().isPresent()) {
+            sb.append(" where ");
+            sb.append(exportCondition(sqlUpdate.getCondition().get(), nameTranslator));
+        }
 
-		return sb.toString();
-	}
+        return sb.toString();
+    }
 
-	private String exportTableColumnForUpdate(TableColumn tableColumn) {
-		Column column = tableColumn.getColumn();
+    private String exportTableColumnForUpdate(TableColumn tableColumn) {
+        Column column = tableColumn.getColumn();
 
-		String c = nameTranslator.toColumnName(Optional.empty(), column.getName());
-		return c;
-	}
+        String c = nameTranslator.toColumnName(Optional.empty(), column.getName(), Optional.empty());
+        return c;
+    }
 
-	@Override
-	protected String exportFunction(Locate locate) {
-		StringBuilder sb = new StringBuilder("POSITION(");
+    @Override
+    protected String exportFunction(Locate locate) {
+        StringBuilder sb = new StringBuilder("POSITION(");
 
-		sb.append(exportExpression(locate.getSearchString(), sqlStatementExporter));
-		sb.append(" IN ");
-		sb.append(exportExpression(locate.getInputString(), sqlStatementExporter));
-		if (locate.getPosition().isPresent()) {
-			sb.append(", ");
-			sb.append(exportExpression(locate.getPosition().get(), sqlStatementExporter));
-		}
+        sb.append(exportExpression(locate.getSearchString(), nameTranslator));
+        sb.append(" IN ");
+        sb.append(exportExpression(locate.getInputString(), nameTranslator));
+        if (locate.getPosition().isPresent()) {
+            sb.append(", ");
+            sb.append(exportExpression(locate.getPosition().get(), nameTranslator));
+        }
 
-		sb.append(")");
-		return sb.toString();
-	}
+        sb.append(")");
+        return sb.toString();
+    }
 
 }

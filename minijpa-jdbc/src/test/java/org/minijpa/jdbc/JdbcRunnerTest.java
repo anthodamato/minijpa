@@ -60,6 +60,7 @@ public class JdbcRunnerTest {
         Assertions.assertEquals("Shakespeare", modelValueArray.getValue(2));
 
         jdbcRunner.delete("delete from citizen where id=?", connection, Arrays.asList(qp1));
+        connection.commit();
 
         modelValueArray = jdbcRunner.findById("select id,first_name,last_name from citizen where id=?", connection,
                 fetchParameters, Arrays.asList(qp1));
@@ -104,6 +105,7 @@ public class JdbcRunnerTest {
         Assertions.assertEquals("William Shakespeare", list.get(0));
 
         jdbcRunner.delete("delete from citizen where id=?", connection, Arrays.asList(qp1));
+        connection.commit();
 
         ModelValueArray<FetchParameter> modelValueArray = jdbcRunner.findById(
                 "select id,first_name,last_name from citizen where id=?", connection, fetchParameters,

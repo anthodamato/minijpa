@@ -16,16 +16,8 @@ public class SelectItem implements Value {
         return item;
     }
 
-    public void setItem(Object item) {
-        this.item = item;
-    }
-
     public Optional<String> getAlias() {
         return alias;
-    }
-
-    public void setAlias(Optional<String> alias) {
-        this.alias = alias;
     }
 
 }

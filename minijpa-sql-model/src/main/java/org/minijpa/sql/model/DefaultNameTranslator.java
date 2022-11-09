@@ -19,20 +19,27 @@ import java.util.Optional;
 
 public class DefaultNameTranslator implements NameTranslator {
 
-	@Override
-	public String toColumnName(Optional<String> tableAlias, String columnName) {
-		if (tableAlias.isPresent())
-			return tableAlias.get() + "." + columnName;
+    @Override
+    public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias) {
+        if (tableAlias.isPresent()) {
+            if (columnAlias.isPresent())
+                return tableAlias.get() + "." + columnName + " AS " + columnAlias.get();
+            else
+                return tableAlias.get() + "." + columnName;
+        }
 
-		return columnName;
-	}
+        if (columnAlias.isPresent())
+            return columnName + " AS " + columnAlias.get();
 
-	@Override
-	public String toTableName(Optional<String> tableAlias, String tableName) {
-		if (tableAlias.isPresent())
-			return tableName + " AS " + tableAlias.get();
+        return columnName;
+    }
 
-		return tableName;
-	}
+    @Override
+    public String toTableName(Optional<String> tableAlias, String tableName) {
+        if (tableAlias.isPresent())
+            return tableName + " AS " + tableAlias.get();
+
+        return tableName;
+    }
 
 }

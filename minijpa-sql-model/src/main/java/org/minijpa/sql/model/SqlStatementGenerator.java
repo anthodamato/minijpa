@@ -31,7 +31,6 @@ public interface SqlStatementGenerator {
     public default NameTranslator createNameTranslator() {
         return new DefaultNameTranslator();
     }
-//    public SqlStatementExporter createSqlStatementExporter();
 
     public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData);
 

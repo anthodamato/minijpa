@@ -32,198 +32,192 @@ import org.minijpa.sql.model.function.CurrentTimestamp;
  */
 public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-	private final SqlStatementExporter sqlDeleteExporter = new SqlDeleteExporter();
+    private final NameTranslator deleteNameTranslator = new DeleteNameTranslator();
 
-	public MariaDBSqlStatementGenerator() {
-		super();
-	}
+    public MariaDBSqlStatementGenerator() {
+        super();
+    }
 
-	@Override
-	public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-		if (optionalSchema.isEmpty())
-			return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
+    @Override
+    public NameTranslator createNameTranslator() {
+        return new DefaultNameTranslator();
+    }
 
-		return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
-	}
+    @Override
+    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+        if (optionalSchema.isEmpty())
+            return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
 
-	@Override
-	public String forUpdateClause(ForUpdate forUpdate) {
-		return "for update";
-	}
+        return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
+    }
 
-	private String buildPkDeclaration(JdbcPk pk) {
-		if (pk.isIdentityColumn()) {
-			return buildAttributeDeclaration(pk.getColumn()) + " AUTO_INCREMENT";
-		}
+    @Override
+    public String forUpdateClause(ForUpdate forUpdate) {
+        return "for update";
+    }
 
-		if (pk.isComposite())
-			return pk.getColumns().stream().map(a -> buildAttributeDeclaration(a)).collect(Collectors.joining(", "));
+    private String buildPkDeclaration(JdbcPk pk) {
+        if (pk.isIdentityColumn()) {
+            return buildAttributeDeclaration(pk.getColumn()) + " AUTO_INCREMENT";
+        }
 
-		return buildAttributeDeclaration(pk.getColumn());
-	}
+        if (pk.isComposite())
+            return pk.getColumns().stream().map(a -> buildAttributeDeclaration(a)).collect(Collectors.joining(", "));
 
-	@Override
-	public String export(SqlCreateTable sqlCreateTable) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("create table ");
-		sb.append(nameTranslator.adjustName(sqlCreateTable.getTableName()));
-		sb.append(" (");
-		String cols = buildPkDeclaration(sqlCreateTable.getJdbcPk());
-		sb.append(cols);
+        return buildAttributeDeclaration(pk.getColumn());
+    }
 
-		if (!sqlCreateTable.getColumnDeclarations().isEmpty()) {
-			sb.append(", ");
-			cols = sqlCreateTable.getColumnDeclarations().stream().map(a -> buildAttributeDeclaration(a))
-					.collect(Collectors.joining(", "));
-			sb.append(cols);
-		}
+    @Override
+    public String export(SqlCreateTable sqlCreateTable) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("create table ");
+        sb.append(nameTranslator.adjustName(sqlCreateTable.getTableName()));
+        sb.append(" (");
+        String cols = buildPkDeclaration(sqlCreateTable.getJdbcPk());
+        sb.append(cols);
 
-		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
-			sb.append(", ");
-			cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
-					.map(a -> buildDeclaration(a)).collect(Collectors.joining(", "));
-			sb.append(cols);
-		}
+        if (!sqlCreateTable.getColumnDeclarations().isEmpty()) {
+            sb.append(", ");
+            cols = sqlCreateTable.getColumnDeclarations().stream().map(a -> buildAttributeDeclaration(a))
+                    .collect(Collectors.joining(", "));
+            sb.append(cols);
+        }
 
-		sb.append(", primary key ");
-		appendPrimaryKey(sqlCreateTable.getJdbcPk(), sb);
+        for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
+            sb.append(", ");
+            cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
+                    .map(a -> buildDeclaration(a)).collect(Collectors.joining(", "));
+            sb.append(cols);
+        }
 
-		// foreign keys
-		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
-			sb.append(", foreign key (");
-			cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
-					.map(a -> nameTranslator.adjustName(a.getName())).collect(Collectors.joining(", "));
-			sb.append(cols);
-			sb.append(") references ");
-			sb.append(foreignKeyDeclaration.getReferenceTable());
-			appendPrimaryKey(foreignKeyDeclaration.getJdbcJoinColumnMapping().getForeignKey(), sb);
-		}
+        sb.append(", primary key ");
+        appendPrimaryKey(sqlCreateTable.getJdbcPk(), sb);
 
-		sb.append(")");
-		return sb.toString();
-	}
+        // foreign keys
+        for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
+            sb.append(", foreign key (");
+            cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
+                    .map(a -> nameTranslator.adjustName(a.getName())).collect(Collectors.joining(", "));
+            sb.append(cols);
+            sb.append(") references ");
+            sb.append(foreignKeyDeclaration.getReferenceTable());
+            appendPrimaryKey(foreignKeyDeclaration.getJdbcJoinColumnMapping().getForeignKey(), sb);
+        }
 
-	private void appendPrimaryKey(JdbcPk pk, StringBuilder sb) {
-		if (pk.isComposite()) {
-			sb.append("(");
-			String cols = pk.getColumns().stream().map(a -> nameTranslator.adjustName(a.getName()))
-					.collect(Collectors.joining(", "));
-			sb.append(cols);
-			sb.append(")");
-		} else {
-			sb.append("(");
-			sb.append(nameTranslator.adjustName(pk.getColumn().getName()));
-			sb.append(")");
-		}
-	}
+        sb.append(")");
+        return sb.toString();
+    }
 
-	@Override
-	public String export(SqlDelete sqlDelete) {
-		return export(sqlDelete, sqlDeleteExporter);
-	}
+    private void appendPrimaryKey(JdbcPk pk, StringBuilder sb) {
+        if (pk.isComposite()) {
+            sb.append("(");
+            String cols = pk.getColumns().stream().map(a -> nameTranslator.adjustName(a.getName()))
+                    .collect(Collectors.joining(", "));
+            sb.append(cols);
+            sb.append(")");
+        } else {
+            sb.append("(");
+            sb.append(nameTranslator.adjustName(pk.getColumn().getName()));
+            sb.append(")");
+        }
+    }
 
-	@Override
-	protected String export(SqlDelete sqlDelete, SqlStatementExporter sqlStatementExporter) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("delete from ");
-		sb.append(nameTranslator.toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
+    @Override
+    public String export(SqlDelete sqlDelete) {
+        return export(sqlDelete, deleteNameTranslator);
+    }
 
-		if (sqlDelete.getCondition().isPresent()) {
-			sb.append(" where ");
-			sb.append(exportCondition(sqlDelete.getCondition().get(), sqlStatementExporter));
-		}
+    @Override
+    protected String export(SqlDelete sqlDelete, NameTranslator nameTranslator) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("delete from ");
+        sb.append(nameTranslator.toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
 
-		return sb.toString();
-	}
+        if (sqlDelete.getCondition().isPresent()) {
+            sb.append(" where ");
+            sb.append(exportCondition(sqlDelete.getCondition().get(), nameTranslator));
+        }
 
-	@Override
-	public String export(SqlCreateJoinTable sqlCreateJoinTable) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("create table ");
-		sb.append(nameTranslator.adjustName(sqlCreateJoinTable.getTableName()));
-		sb.append(" (");
-		List<ColumnDeclaration> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations().stream()
-				.map(d -> d.getJdbcJoinColumnMapping().getJoinColumns()).flatMap(List::stream)
-				.collect(Collectors.toList());
-		String cols = joinColumnAttributes.stream().map(a -> buildJoinTableColumnDeclaration(a))
-				.collect(Collectors.joining(", "));
-		sb.append(cols);
+        return sb.toString();
+    }
 
-		// foreign keys
-		for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateJoinTable.getForeignKeyDeclarations()) {
-			sb.append(", foreign key (");
-			cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
-					.map(a -> nameTranslator.adjustName(a.getName())).collect(Collectors.joining(", "));
-			sb.append(cols);
-			sb.append(") references ");
-			sb.append(foreignKeyDeclaration.getReferenceTable());
-			appendPrimaryKey(foreignKeyDeclaration.getJdbcJoinColumnMapping().getForeignKey(), sb);
-		}
+    @Override
+    public String export(SqlCreateJoinTable sqlCreateJoinTable) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("create table ");
+        sb.append(nameTranslator.adjustName(sqlCreateJoinTable.getTableName()));
+        sb.append(" (");
+        List<ColumnDeclaration> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations().stream()
+                .map(d -> d.getJdbcJoinColumnMapping().getJoinColumns()).flatMap(List::stream)
+                .collect(Collectors.toList());
+        String cols = joinColumnAttributes.stream().map(a -> buildJoinTableColumnDeclaration(a))
+                .collect(Collectors.joining(", "));
+        sb.append(cols);
 
-		sb.append(")");
-		return sb.toString();
-	}
+        // foreign keys
+        for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateJoinTable.getForeignKeyDeclarations()) {
+            sb.append(", foreign key (");
+            cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
+                    .map(a -> nameTranslator.adjustName(a.getName())).collect(Collectors.joining(", "));
+            sb.append(cols);
+            sb.append(") references ");
+            sb.append(foreignKeyDeclaration.getReferenceTable());
+            appendPrimaryKey(foreignKeyDeclaration.getJdbcJoinColumnMapping().getForeignKey(), sb);
+        }
 
-	@Override
-	public List<String> export(List<SqlDDLStatement> sqlDDLStatement) {
-		List<String> result = new ArrayList<>();
-		List<SqlCreateTable> createTables = sqlDDLStatement.stream().filter(c -> c instanceof SqlCreateTable)
-				.map(c -> (SqlCreateTable) c).collect(Collectors.toList());
+        sb.append(")");
+        return sb.toString();
+    }
 
-		List<String> createTableStrs = createTables.stream().map(c -> export(c)).collect(Collectors.toList());
-		result.addAll(createTableStrs);
+    @Override
+    public List<String> export(List<SqlDDLStatement> sqlDDLStatement) {
+        List<String> result = new ArrayList<>();
+        List<SqlCreateTable> createTables = sqlDDLStatement.stream().filter(c -> c instanceof SqlCreateTable)
+                .map(c -> (SqlCreateTable) c).collect(Collectors.toList());
 
-		List<SqlCreateJoinTable> createJoinTables = sqlDDLStatement.stream()
-				.filter(c -> c instanceof SqlCreateJoinTable).map(c -> (SqlCreateJoinTable) c)
-				.collect(Collectors.toList());
+        List<String> createTableStrs = createTables.stream().map(c -> export(c)).collect(Collectors.toList());
+        result.addAll(createTableStrs);
 
-		List<String> createJoinTableStrs = createJoinTables.stream().map(c -> export(c)).collect(Collectors.toList());
-		result.addAll(createJoinTableStrs);
+        List<SqlCreateJoinTable> createJoinTables = sqlDDLStatement.stream()
+                .filter(c -> c instanceof SqlCreateJoinTable).map(c -> (SqlCreateJoinTable) c)
+                .collect(Collectors.toList());
 
-		return result;
-	}
+        List<String> createJoinTableStrs = createJoinTables.stream().map(c -> export(c)).collect(Collectors.toList());
+        result.addAll(createJoinTableStrs);
 
-	@Override
-	protected String exportFunction(Concat concat) {
-		StringBuilder sb = new StringBuilder("CONCAT(");
-		sb.append(Arrays.stream(concat.getParams()).map(p -> exportExpression(p, sqlStatementExporter))
-				.collect(Collectors.joining(",")));
-		sb.append(")");
-		return sb.toString();
-	}
+        return result;
+    }
 
-	private class SqlDeleteExporter extends DefaultSqlStatementExporter {
+    @Override
+    protected String exportFunction(Concat concat) {
+        StringBuilder sb = new StringBuilder("CONCAT(");
+        sb.append(Arrays.stream(concat.getParams()).map(p -> exportExpression(p, nameTranslator))
+                .collect(Collectors.joining(",")));
+        sb.append(")");
+        return sb.toString();
+    }
 
-		@Override
-		public String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
-			Optional<FromTable> optionalFromTable = tableColumn.getTable();
-			Column column = tableColumn.getColumn();
-			if (optionalFromTable.isPresent()) {
-				String tc = nameTranslator.toColumnName(Optional.empty(), column.getName());
-				return exportColumnAlias(tc, Optional.empty());
-			}
+    private class DeleteNameTranslator extends DefaultNameTranslator {
 
-			if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
-				return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
+        @Override
+        public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias) {
+            return columnName;
+        }
+    }
 
-			String c = nameTranslator.toColumnName(Optional.empty(), column.getName());
-			return exportColumnAlias(c, Optional.empty());
-		}
-	}
+    @Override
+    protected String exportFunction(CurrentDate currentDate) {
+        return "CURRENT_DATE()";
+    }
 
-	@Override
-	protected String exportFunction(CurrentDate currentDate) {
-		return "CURRENT_DATE()";
-	}
+    @Override
+    protected String exportFunction(CurrentTime currentTime) {
+        return "CURRENT_TIME()";
+    }
 
-	@Override
-	protected String exportFunction(CurrentTime currentTime) {
-		return "CURRENT_TIME()";
-	}
-
-	@Override
-	protected String exportFunction(CurrentTimestamp currentTimestamp) {
-		return "CURRENT_TIMESTAMP()";
-	}
+    @Override
+    protected String exportFunction(CurrentTimestamp currentTimestamp) {
+        return "CURRENT_TIMESTAMP()";
+    }
 
 }

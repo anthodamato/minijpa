@@ -32,8 +32,8 @@ import org.minijpa.sql.model.join.FromJoinImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SqlStatementGeneratorTest {
-    private final Logger LOG = LoggerFactory.getLogger(SqlStatementGeneratorTest.class);
+public class ApacheDerbySqlStatementGeneratorTest {
+    private final Logger LOG = LoggerFactory.getLogger(ApacheDerbySqlStatementGeneratorTest.class);
 
     private final SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
 
@@ -43,7 +43,7 @@ public class SqlStatementGeneratorTest {
     }
 
     @Test
-    public void simpleCondition() {
+    public void simpleSelect() {
         FromTable fromTable = new FromTableImpl("citizen", "c");
         Column idColumn = new Column("id");
         Column nameColumn = new Column("first_name");
@@ -57,6 +57,17 @@ public class SqlStatementGeneratorTest {
                 .build();
         Assertions.assertEquals("select c.id from citizen AS c where c.first_name = 'Sam'",
                 sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void delete() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+        BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
+                .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
+        SqlDelete sqlDelete = new SqlDelete(fromTable, Optional.of(binaryCondition));
+        Assertions.assertEquals("delete from citizen AS c where c.first_name = 'Sam'",
+                sqlStatementGenerator.export(sqlDelete));
     }
 
     @Test
@@ -388,10 +399,12 @@ public class SqlStatementGeneratorTest {
         FromTable fromTable = new FromTableImpl("citizen", "c");
         Column nameColumn = new Column("first_name");
 
-        List<Value> values = Arrays.asList(new Locate("'a'", new TableColumn(fromTable, nameColumn)));
+//        List<Value> values = Arrays.asList(new Locate("'a'", new TableColumn(fromTable, nameColumn)));
+        SelectItem selectItem = new SelectItem(new Locate("'a'", new TableColumn(fromTable, nameColumn)),
+                Optional.of("position"));
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
-        Assertions.assertEquals("select LOCATE('a',c.first_name) as position from citizen AS c",
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        Assertions.assertEquals("select LOCATE('a', c.first_name) AS position from citizen AS c",
                 sqlStatementGenerator.export(sqlSelect));
     }
 }
