@@ -437,6 +437,9 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         if (expression instanceof Function)
             return exportFunction((Function) expression, nameTranslator);
 
+        if (expression instanceof Integer)
+            return ((Integer) expression).toString();
+
         return "";
     }
 
@@ -904,11 +907,11 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     public String export(SqlCreateSequence sqlCreateSequence) {
         StringBuilder sb = new StringBuilder();
         sb.append("create sequence ");
-        sb.append(nameTranslator.adjustName(sqlCreateSequence.getJdbcSequenceParams().getSequenceName()));
+        sb.append(nameTranslator.adjustName(sqlCreateSequence.getSequenceName()));
         sb.append(" start with ");
-        sb.append(sqlCreateSequence.getJdbcSequenceParams().getInitialValue());
+        sb.append(sqlCreateSequence.getInitialValue());
         sb.append(" increment by ");
-        sb.append(sqlCreateSequence.getJdbcSequenceParams().getAllocationSize());
+        sb.append(sqlCreateSequence.getAllocationSize());
         return sb.toString();
     }
 

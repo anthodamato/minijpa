@@ -24,9 +24,18 @@ import org.minijpa.sql.model.function.Abs;
 import org.minijpa.sql.model.function.Avg;
 import org.minijpa.sql.model.function.Concat;
 import org.minijpa.sql.model.function.Count;
+import org.minijpa.sql.model.function.CurrentDate;
+import org.minijpa.sql.model.function.CurrentTime;
+import org.minijpa.sql.model.function.CurrentTimestamp;
 import org.minijpa.sql.model.function.Length;
 import org.minijpa.sql.model.function.Locate;
+import org.minijpa.sql.model.function.Lower;
+import org.minijpa.sql.model.function.Max;
+import org.minijpa.sql.model.function.Min;
+import org.minijpa.sql.model.function.Substring;
 import org.minijpa.sql.model.function.Sum;
+import org.minijpa.sql.model.function.Trim;
+import org.minijpa.sql.model.function.Upper;
 import org.minijpa.sql.model.join.FromJoin;
 import org.minijpa.sql.model.join.FromJoinImpl;
 import org.slf4j.Logger;
@@ -308,6 +317,18 @@ public class ApacheDerbySqlStatementGeneratorTest {
     }
 
     @Test
+    public void insert() {
+        Column idColumn = new Column("id");
+        Column nameColumn = new Column("first_name");
+        Column surnameColumn = new Column("last_name");
+
+        SqlInsert sqlInsert = new SqlInsert(FromTable.of("citizen"), Arrays.asList(idColumn, nameColumn, surnameColumn),
+                false, false, Optional.empty());
+        Assertions.assertEquals("insert into citizen (id,first_name,last_name) values (?,?,?)",
+                sqlStatementGenerator.export(sqlInsert));
+    }
+
+    @Test
     public void createTable() {
         JdbcJoinColumnMapping jdbcJoinColumnMapping = new SingleJdbcJoinColumnMapping(
                 new ColumnDeclaration("address_id", Long.class),
@@ -329,6 +350,25 @@ public class ApacheDerbySqlStatementGeneratorTest {
     }
 
     @Test
+    public void createJoinTable() {
+        JdbcJoinColumnMapping jdbcJoinColumnMapping1 = new SingleJdbcJoinColumnMapping(
+                new ColumnDeclaration("citizen_id", Long.class),
+                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)));
+        ForeignKeyDeclaration foreignKeyDeclaration1 = new ForeignKeyDeclaration(jdbcJoinColumnMapping1, "citizen");
+
+        JdbcJoinColumnMapping jdbcJoinColumnMapping2 = new SingleJdbcJoinColumnMapping(
+                new ColumnDeclaration("address_id", Long.class),
+                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)));
+        ForeignKeyDeclaration foreignKeyDeclaration2 = new ForeignKeyDeclaration(jdbcJoinColumnMapping2, "address");
+
+        SqlCreateJoinTable sqlCreateJoinTable = new SqlCreateJoinTable("citizen_address",
+                Arrays.asList(foreignKeyDeclaration1, foreignKeyDeclaration2));
+        Assertions.assertEquals(
+                "create table citizen_address (citizen_id bigint not null, address_id bigint not null, foreign key (citizen_id) references citizen, foreign key (address_id) references address)",
+                sqlStatementGenerator.export(sqlCreateJoinTable));
+    }
+
+    @Test
     public void createDataTypeTable() {
         JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.of(16), Optional.of(2),
                 Optional.empty());
@@ -344,6 +384,17 @@ public class ApacheDerbySqlStatementGeneratorTest {
         Assertions.assertEquals(
                 "create table datatype (id bigint, counter integer, percentage real, division double precision, big_number decimal(16,2), dob timestamp, timehh time, primary key (id))",
                 sqlStatementGenerator.export(sqlCreateTable));
+    }
+
+    @Test
+    public void createSequence() {
+        SqlCreateSequence sqlCreateSequence = new SqlCreateSequence();
+        sqlCreateSequence.setSequenceName("address_seq");
+        sqlCreateSequence.setInitialValue(1);
+        sqlCreateSequence.setAllocationSize(1);
+
+        Assertions.assertEquals("create sequence address_seq start with 1 increment by 1",
+                sqlStatementGenerator.export(sqlCreateSequence));
     }
 
     @Test
@@ -399,12 +450,139 @@ public class ApacheDerbySqlStatementGeneratorTest {
         FromTable fromTable = new FromTableImpl("citizen", "c");
         Column nameColumn = new Column("first_name");
 
-//        List<Value> values = Arrays.asList(new Locate("'a'", new TableColumn(fromTable, nameColumn)));
         SelectItem selectItem = new SelectItem(new Locate("'a'", new TableColumn(fromTable, nameColumn)),
                 Optional.of("position"));
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
         Assertions.assertEquals("select LOCATE('a', c.first_name) AS position from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void lower() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        SelectItem selectItem = new SelectItem(new Lower(new TableColumn(fromTable, nameColumn)), Optional.of("lw"));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        Assertions.assertEquals("select LOWER(c.first_name) AS lw from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void upper() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        SelectItem selectItem = new SelectItem(new Upper(new TableColumn(fromTable, nameColumn)), Optional.of("uw"));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        Assertions.assertEquals("select UPPER(c.first_name) AS uw from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void trim() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        SelectItem selectItem = new SelectItem(new Trim(new TableColumn(fromTable, nameColumn)), Optional.of("name"));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        Assertions.assertEquals("select TRIM(c.first_name) AS name from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void min() {
+        FromTable fromTable = new FromTableImpl("temperature", "t");
+        Column minColumn = new Column("min_temp");
+        List<Value> values = Arrays.asList(new Min(new TableColumn(fromTable, minColumn)));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select MIN(t.min_temp) from temperature AS t",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void max() {
+        FromTable fromTable = new FromTableImpl("temperature", "t");
+        Column minColumn = new Column("min_temp");
+        List<Value> values = Arrays.asList(new Max(new TableColumn(fromTable, minColumn)));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select MAX(t.min_temp) from temperature AS t",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void substring() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        SelectItem selectItem = new SelectItem(new Substring(new TableColumn(fromTable, nameColumn), 2),
+                Optional.of("name"));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        Assertions.assertEquals("select SUBSTR(c.first_name, 2) AS name from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void currentDate() {
+        FromTable fromTable = new FromTableImpl("flights", "f");
+        Column idColumn = new Column("id");
+        Column availDateColumn = new Column("avail_date");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+
+        Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN)
+                .withLeft(new TableColumn(fromTable, availDateColumn)).withRight(new CurrentDate()).build();
+
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select f.id from flights AS f where f.avail_date > CURRENT_DATE",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void currentTimestamp() {
+        FromTable fromTable = new FromTableImpl("flights", "f");
+        Column idColumn = new Column("id");
+        Column availDateColumn = new Column("avail_date");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+
+        Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN)
+                .withLeft(new TableColumn(fromTable, availDateColumn)).withRight(new CurrentTimestamp()).build();
+
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select f.id from flights AS f where f.avail_date > CURRENT_TIMESTAMP",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void currentTime() {
+        FromTable fromTable = new FromTableImpl("flights", "f");
+        Column idColumn = new Column("id");
+        Column availDateColumn = new Column("start_time");
+
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+
+        Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN)
+                .withLeft(new TableColumn(fromTable, availDateColumn)).withRight(new CurrentTime()).build();
+
+        List<Condition> conditions = Arrays.asList(condition);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
+                .build();
+        Assertions.assertEquals("select f.id from flights AS f where f.start_time > CURRENT_TIME",
                 sqlStatementGenerator.export(sqlSelect));
     }
 }

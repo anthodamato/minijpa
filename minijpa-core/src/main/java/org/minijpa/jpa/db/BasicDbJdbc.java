@@ -37,7 +37,6 @@ import org.minijpa.sql.model.ForeignKeyDeclaration;
 import org.minijpa.sql.model.JdbcDDLData;
 import org.minijpa.sql.model.JdbcJoinColumnMapping;
 import org.minijpa.sql.model.JdbcPk;
-import org.minijpa.sql.model.JdbcSequenceParams;
 import org.minijpa.sql.model.SimpleJdbcPk;
 import org.minijpa.sql.model.SqlCreateJoinTable;
 import org.minijpa.sql.model.SqlCreateSequence;
@@ -47,171 +46,171 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class BasicDbJdbc implements DbJdbc {
-	private final Logger LOG = LoggerFactory.getLogger(BasicDbJdbc.class);
+    private final Logger LOG = LoggerFactory.getLogger(BasicDbJdbc.class);
 
-	@Override
-	public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {
-		if (pkGenerationType == null)
-			return PkStrategy.PLAIN;
+    @Override
+    public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {
+        if (pkGenerationType == null)
+            return PkStrategy.PLAIN;
 
-		if (pkGenerationType == PkGenerationType.IDENTITY)
-			return PkStrategy.IDENTITY;
+        if (pkGenerationType == PkGenerationType.IDENTITY)
+            return PkStrategy.IDENTITY;
 
-		if (pkGenerationType == PkGenerationType.SEQUENCE || pkGenerationType == PkGenerationType.AUTO)
-			return PkStrategy.SEQUENCE;
+        if (pkGenerationType == PkGenerationType.SEQUENCE || pkGenerationType == PkGenerationType.AUTO)
+            return PkStrategy.SEQUENCE;
 
-		return PkStrategy.PLAIN;
-	}
+        return PkStrategy.PLAIN;
+    }
 
-	private int indexOfFirstEntity(List<MetaEntity> entities) {
-		for (int i = 0; i < entities.size(); ++i) {
-			MetaEntity metaEntity = entities.get(i);
-			List<MetaAttribute> relationshipAttributes = metaEntity.expandRelationshipAttributes();
-			if (relationshipAttributes.isEmpty())
-				return i;
+    private int indexOfFirstEntity(List<MetaEntity> entities) {
+        for (int i = 0; i < entities.size(); ++i) {
+            MetaEntity metaEntity = entities.get(i);
+            List<MetaAttribute> relationshipAttributes = metaEntity.expandRelationshipAttributes();
+            if (relationshipAttributes.isEmpty())
+                return i;
 
-			long rc = relationshipAttributes.stream().filter(a -> a.getRelationship().isOwner()).count();
-			if (rc == 0)
-				return i;
-		}
+            long rc = relationshipAttributes.stream().filter(a -> a.getRelationship().isOwner()).count();
+            if (rc == 0)
+                return i;
+        }
 
-		return 0;
-	}
+        return 0;
+    }
 
-	private List<MetaEntity> sortForDDL(List<MetaEntity> entities) {
-		List<MetaEntity> sorted = new ArrayList<>();
-		List<MetaEntity> toSort = new ArrayList<>(entities);
-		for (int i = 0; i < entities.size(); ++i) {
-			int index = indexOfFirstEntity(toSort);
-			sorted.add(toSort.get(index));
-			toSort.remove(index);
-		}
+    private List<MetaEntity> sortForDDL(List<MetaEntity> entities) {
+        List<MetaEntity> sorted = new ArrayList<>();
+        List<MetaEntity> toSort = new ArrayList<>(entities);
+        for (int i = 0; i < entities.size(); ++i) {
+            int index = indexOfFirstEntity(toSort);
+            sorted.add(toSort.get(index));
+            toSort.remove(index);
+        }
 
-		return sorted;
-	}
+        return sorted;
+    }
 
-	private ColumnDeclaration toColumnDeclaration(MetaAttribute a) {
-		Optional<JdbcDDLData> optional = Optional.empty();
-		if (a.getDdlData().isPresent()) {
-			DDLData ddlData = a.getDdlData().get();
-			JdbcDDLData jdbcDDLData = new JdbcDDLData(ddlData.getColumnDefinition(), ddlData.getLength(),
-					ddlData.getPrecision(), ddlData.getScale(), ddlData.getNullable());
-			optional = Optional.of(jdbcDDLData);
-		}
+    private ColumnDeclaration toColumnDeclaration(MetaAttribute a) {
+        Optional<JdbcDDLData> optional = Optional.empty();
+        if (a.getDdlData().isPresent()) {
+            DDLData ddlData = a.getDdlData().get();
+            JdbcDDLData jdbcDDLData = new JdbcDDLData(ddlData.getColumnDefinition(), ddlData.getLength(),
+                    ddlData.getPrecision(), ddlData.getScale(), ddlData.getNullable());
+            optional = Optional.of(jdbcDDLData);
+        }
 
-		return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
-	}
+        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
+    }
 
-	private JdbcPk buildJdbcPk(Pk pk) {
-		if (pk.isComposite()) {
-			List<ColumnDeclaration> columnDeclarations = pk.getAttributes().stream().map(c -> {
-				return toColumnDeclaration(c);
-			}).collect(Collectors.toList());
+    private JdbcPk buildJdbcPk(Pk pk) {
+        if (pk.isComposite()) {
+            List<ColumnDeclaration> columnDeclarations = pk.getAttributes().stream().map(c -> {
+                return toColumnDeclaration(c);
+            }).collect(Collectors.toList());
 
-			return new CompositeJdbcPk(columnDeclarations);
-		}
+            return new CompositeJdbcPk(columnDeclarations);
+        }
 
-		return new SimpleJdbcPk(toColumnDeclaration(pk.getAttribute()),
-				pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY);
-	}
+        return new SimpleJdbcPk(toColumnDeclaration(pk.getAttribute()),
+                pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY);
+    }
 
-	@Override
-	public List<SqlDDLStatement> buildDDLStatementsCreateTables(PersistenceUnitContext persistenceUnitContext,
-			List<MetaEntity> sorted) {
-		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-		Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
-		sorted.forEach(v -> {
-			List<MetaAttribute> attributes = new ArrayList<>(v.getBasicAttributes());
-			attributes.addAll(v.expandEmbeddables());
+    @Override
+    public List<SqlDDLStatement> buildDDLStatementsCreateTables(PersistenceUnitContext persistenceUnitContext,
+            List<MetaEntity> sorted) {
+        List<SqlDDLStatement> sqlStatements = new ArrayList<>();
+        Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
+        sorted.forEach(v -> {
+            List<MetaAttribute> attributes = new ArrayList<>(v.getBasicAttributes());
+            attributes.addAll(v.expandEmbeddables());
 
-			// foreign keys
-			List<JoinColumnMapping> joinColumnMappings = v.expandJoinColumnMappings();
-			List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
-			for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
-				MetaEntity toEntity = entities.get(joinColumnMapping.getAttribute().getType().getName());
-				JdbcJoinColumnMapping jdbcJoinColumnMapping = SqlStatementFactory
-						.toJdbcJoinColumnMapping(joinColumnMapping);
-				foreignKeyDeclarations.add(new ForeignKeyDeclaration(jdbcJoinColumnMapping, toEntity.getTableName()));
-			}
+            // foreign keys
+            List<JoinColumnMapping> joinColumnMappings = v.expandJoinColumnMappings();
+            List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
+            for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
+                MetaEntity toEntity = entities.get(joinColumnMapping.getAttribute().getType().getName());
+                JdbcJoinColumnMapping jdbcJoinColumnMapping = SqlStatementFactory
+                        .toJdbcJoinColumnMapping(joinColumnMapping);
+                foreignKeyDeclarations.add(new ForeignKeyDeclaration(jdbcJoinColumnMapping, toEntity.getTableName()));
+            }
 
-			LOG.debug("buildDDLStatementsCreateTables: v.getTableName()={}" , v.getTableName());
-			List<ColumnDeclaration> columnDeclarations = attributes.stream().map(c -> {
-				return toColumnDeclaration(c);
-			}).collect(Collectors.toList());
+            LOG.debug("buildDDLStatementsCreateTables: v.getTableName()={}", v.getTableName());
+            List<ColumnDeclaration> columnDeclarations = attributes.stream().map(c -> {
+                return toColumnDeclaration(c);
+            }).collect(Collectors.toList());
 
-			SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(), buildJdbcPk(v.getId()),
-					columnDeclarations, foreignKeyDeclarations);
-			sqlStatements.add(sqlCreateTable);
-		});
-		return sqlStatements;
-	}
+            SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(), buildJdbcPk(v.getId()),
+                    columnDeclarations, foreignKeyDeclarations);
+            sqlStatements.add(sqlCreateTable);
+        });
+        return sqlStatements;
+    }
 
-	protected JdbcSequenceParams toJdbcSequenceParams(PkSequenceGenerator pkSequenceGenerator) {
-		JdbcSequenceParams jdbcSequenceParams = new JdbcSequenceParams();
-		jdbcSequenceParams.setAllocationSize(pkSequenceGenerator.getAllocationSize());
-		jdbcSequenceParams.setCatalog(pkSequenceGenerator.getCatalog());
-		jdbcSequenceParams.setInitialValue(pkSequenceGenerator.getInitialValue());
-		jdbcSequenceParams.setName(pkSequenceGenerator.getName());
-		jdbcSequenceParams.setSchema(pkSequenceGenerator.getSchema());
-		jdbcSequenceParams.setSequenceName(pkSequenceGenerator.getSequenceName());
-		return jdbcSequenceParams;
-	}
+    protected SqlCreateSequence toJdbcSequenceParams(PkSequenceGenerator pkSequenceGenerator) {
+        SqlCreateSequence sqlCreateSequence = new SqlCreateSequence();
+        sqlCreateSequence.setAllocationSize(pkSequenceGenerator.getAllocationSize());
+        sqlCreateSequence.setCatalog(pkSequenceGenerator.getCatalog());
+        sqlCreateSequence.setInitialValue(pkSequenceGenerator.getInitialValue());
+        sqlCreateSequence.setName(pkSequenceGenerator.getName());
+        sqlCreateSequence.setSchema(pkSequenceGenerator.getSchema());
+        sqlCreateSequence.setSequenceName(pkSequenceGenerator.getSequenceName());
+        return sqlCreateSequence;
+    }
 
-	@Override
-	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(List<MetaEntity> sorted) {
-		List<PkSequenceGenerator> pkSequenceGenerators = sorted.stream()
-				.filter(c -> c.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE)
-				.map(c -> c.getId().getPkGeneration().getPkSequenceGenerator()).distinct().collect(Collectors.toList());
+    @Override
+    public List<SqlDDLStatement> buildDDLStatementsCreateSequences(List<MetaEntity> sorted) {
+        List<PkSequenceGenerator> pkSequenceGenerators = sorted.stream()
+                .filter(c -> c.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE)
+                .map(c -> c.getId().getPkGeneration().getPkSequenceGenerator()).distinct().collect(Collectors.toList());
 
-		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-		List<SqlCreateSequence> createSequenceStrs = pkSequenceGenerators.stream()
-				.map(c -> new SqlCreateSequence(toJdbcSequenceParams(c))).collect(Collectors.toList());
-		sqlStatements.addAll(createSequenceStrs);
-		return sqlStatements;
-	}
+        List<SqlDDLStatement> sqlStatements = new ArrayList<>();
+        List<SqlCreateSequence> createSequenceStrs = pkSequenceGenerators.stream().map(c -> toJdbcSequenceParams(c))
+                .collect(Collectors.toList());
+        sqlStatements.addAll(createSequenceStrs);
+        return sqlStatements;
+    }
 
-	@Override
-	public List<SqlDDLStatement> buildDDLStatementsCreateJoinTables(List<MetaEntity> sorted) {
-		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-		sorted.forEach(v -> {
-			List<RelationshipJoinTable> relationshipJoinTables = v.expandRelationshipAttributes().stream()
-					.filter(a -> a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner())
-					.map(a -> a.getRelationship().getJoinTable()).collect(Collectors.toList());
-			for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
-				List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
-				JdbcJoinColumnMapping owningJdbcJoinColumnMapping = SqlStatementFactory
-						.toJdbcJoinColumnMapping(relationshipJoinTable.getOwningJoinColumnMapping());
-				foreignKeyDeclarations.add(new ForeignKeyDeclaration(owningJdbcJoinColumnMapping,
-						relationshipJoinTable.getOwningEntity().getTableName()));
-				JdbcJoinColumnMapping targetJdbcJoinColumnMapping = SqlStatementFactory
-						.toJdbcJoinColumnMapping(relationshipJoinTable.getTargetJoinColumnMapping());
-				foreignKeyDeclarations.add(new ForeignKeyDeclaration(targetJdbcJoinColumnMapping,
-						relationshipJoinTable.getTargetEntity().getTableName()));
-				SqlCreateJoinTable sqlCreateJoinTable = new SqlCreateJoinTable(relationshipJoinTable.getTableName(),
-						foreignKeyDeclarations);
-				sqlStatements.add(sqlCreateJoinTable);
-			}
-		});
+    @Override
+    public List<SqlDDLStatement> buildDDLStatementsCreateJoinTables(List<MetaEntity> sorted) {
+        List<SqlDDLStatement> sqlStatements = new ArrayList<>();
+        sorted.forEach(v -> {
+            List<RelationshipJoinTable> relationshipJoinTables = v.expandRelationshipAttributes().stream()
+                    .filter(a -> a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner())
+                    .map(a -> a.getRelationship().getJoinTable()).collect(Collectors.toList());
+            for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
+                List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
+                JdbcJoinColumnMapping owningJdbcJoinColumnMapping = SqlStatementFactory
+                        .toJdbcJoinColumnMapping(relationshipJoinTable.getOwningJoinColumnMapping());
+                foreignKeyDeclarations.add(new ForeignKeyDeclaration(owningJdbcJoinColumnMapping,
+                        relationshipJoinTable.getOwningEntity().getTableName()));
+                JdbcJoinColumnMapping targetJdbcJoinColumnMapping = SqlStatementFactory
+                        .toJdbcJoinColumnMapping(relationshipJoinTable.getTargetJoinColumnMapping());
+                foreignKeyDeclarations.add(new ForeignKeyDeclaration(targetJdbcJoinColumnMapping,
+                        relationshipJoinTable.getTargetEntity().getTableName()));
+                SqlCreateJoinTable sqlCreateJoinTable = new SqlCreateJoinTable(relationshipJoinTable.getTableName(),
+                        foreignKeyDeclarations);
+                sqlStatements.add(sqlCreateJoinTable);
+            }
+        });
 
-		return sqlStatements;
-	}
+        return sqlStatements;
+    }
 
-	@Override
-	public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext) {
-		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-		Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
-		List<MetaEntity> sorted = sortForDDL(new ArrayList<>(entities.values()));
-		List<SqlDDLStatement> ddlStatementsCreateTables = buildDDLStatementsCreateTables(persistenceUnitContext,
-				sorted);
-		sqlStatements.addAll(ddlStatementsCreateTables);
+    @Override
+    public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext) {
+        List<SqlDDLStatement> sqlStatements = new ArrayList<>();
+        Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
+        List<MetaEntity> sorted = sortForDDL(new ArrayList<>(entities.values()));
+        List<SqlDDLStatement> ddlStatementsCreateTables = buildDDLStatementsCreateTables(persistenceUnitContext,
+                sorted);
+        sqlStatements.addAll(ddlStatementsCreateTables);
 
-		List<SqlDDLStatement> ddlStatementsCreateSequences = buildDDLStatementsCreateSequences(sorted);
-		sqlStatements.addAll(ddlStatementsCreateSequences);
+        List<SqlDDLStatement> ddlStatementsCreateSequences = buildDDLStatementsCreateSequences(sorted);
+        sqlStatements.addAll(ddlStatementsCreateSequences);
 
-		List<SqlDDLStatement> ddlStatementsCreateJoinTables = buildDDLStatementsCreateJoinTables(sorted);
-		sqlStatements.addAll(ddlStatementsCreateJoinTables);
+        List<SqlDDLStatement> ddlStatementsCreateJoinTables = buildDDLStatementsCreateJoinTables(sorted);
+        sqlStatements.addAll(ddlStatementsCreateJoinTables);
 
-		return sqlStatements;
-	}
+        return sqlStatements;
+    }
 
 }
