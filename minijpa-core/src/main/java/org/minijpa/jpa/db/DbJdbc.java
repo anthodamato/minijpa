@@ -16,24 +16,24 @@
 package org.minijpa.jpa.db;
 
 import java.util.List;
+import java.util.Map;
 
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
-import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.sql.model.SqlDDLStatement;
 
 public interface DbJdbc {
 
-	public PkStrategy findPkStrategy(PkGenerationType pkGenerationType);
+    public PkStrategy findPkStrategy(PkGenerationType pkGenerationType);
 
-	public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext);
+    public List<SqlDDLStatement> buildDDLStatements(Map<String, MetaEntity> entities);
 
-	public List<SqlDDLStatement> buildDDLStatementsCreateTables(PersistenceUnitContext persistenceUnitContext,
-			List<MetaEntity> sorted);
+    public List<SqlDDLStatement> buildDDLStatementsCreateTables(Map<String, MetaEntity> entities,
+            List<MetaEntity> sorted);
 
-	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(List<MetaEntity> sorted);
+    public List<SqlDDLStatement> buildDDLStatementsCreateSequences(List<MetaEntity> sorted);
 
-	public List<SqlDDLStatement> buildDDLStatementsCreateJoinTables(List<MetaEntity> sorted);
+    public List<SqlDDLStatement> buildDDLStatementsCreateJoinTables(List<MetaEntity> sorted);
 
 }

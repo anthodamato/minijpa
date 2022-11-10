@@ -3,6 +3,7 @@ package org.minijpa.sql.model;
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,9 @@ import org.minijpa.sql.model.condition.InCondition;
 import org.minijpa.sql.model.condition.UnaryCondition;
 import org.minijpa.sql.model.condition.UnaryLogicCondition;
 import org.minijpa.sql.model.condition.UnaryLogicConditionImpl;
+import org.minijpa.sql.model.expression.SqlBinaryExpression;
+import org.minijpa.sql.model.expression.SqlBinaryExpressionImpl;
+import org.minijpa.sql.model.expression.SqlExpressionOperator;
 import org.minijpa.sql.model.function.Abs;
 import org.minijpa.sql.model.function.Avg;
 import org.minijpa.sql.model.function.Concat;
@@ -329,6 +333,20 @@ public class ApacheDerbySqlStatementGeneratorTest {
     }
 
     @Test
+    public void update() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column idColumn = new Column("id");
+        Column surnameColumn = new Column("last_name");
+        BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
+                .withLeft(new TableColumn(fromTable, idColumn)).withRight(456).build();
+
+        SqlUpdate sqlUpdate = new SqlUpdate(fromTable, Arrays.asList(new TableColumn(fromTable, surnameColumn)),
+                Optional.of(binaryCondition));
+        Assertions.assertEquals("update citizen AS c set c.last_name = ? where c.id = 456",
+                sqlStatementGenerator.export(sqlUpdate));
+    }
+
+    @Test
     public void createTable() {
         JdbcJoinColumnMapping jdbcJoinColumnMapping = new SingleJdbcJoinColumnMapping(
                 new ColumnDeclaration("address_id", Long.class),
@@ -395,6 +413,30 @@ public class ApacheDerbySqlStatementGeneratorTest {
 
         Assertions.assertEquals("create sequence address_seq start with 1 increment by 1",
                 sqlStatementGenerator.export(sqlCreateSequence));
+    }
+
+    @Test
+    public void exportDddlList() {
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(), Optional.empty(),
+                Optional.empty());
+        SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
+                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)),
+                Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
+                        new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData)),
+                        new ColumnDeclaration("dob", java.sql.Date.class),
+                        new ColumnDeclaration("citizenship", Boolean.class)),
+                Collections.emptyList());
+
+        SqlCreateSequence sqlCreateSequence = new SqlCreateSequence();
+        sqlCreateSequence.setSequenceName("citizen_seq");
+        sqlCreateSequence.setInitialValue(1);
+        sqlCreateSequence.setAllocationSize(1);
+        List<String> ddls = sqlStatementGenerator.export(Arrays.asList(sqlCreateTable, sqlCreateSequence));
+        Assertions.assertEquals(2, ddls.size());
+        Assertions.assertEquals(
+                "create table citizen (id bigint, first_name varchar(50), last_name varchar(50), dob date, citizenship boolean, primary key (id))",
+                ddls.get(0));
+        Assertions.assertEquals("create sequence citizen_seq start with 1 increment by 1", ddls.get(1));
     }
 
     @Test
@@ -585,4 +627,20 @@ public class ApacheDerbySqlStatementGeneratorTest {
         Assertions.assertEquals("select f.id from flights AS f where f.start_time > CURRENT_TIME",
                 sqlStatementGenerator.export(sqlSelect));
     }
+
+    @Test
+    public void binaryExpression() {
+        FromTable fromTable = new FromTableImpl("temperature", "t");
+        Column minColumn = new Column("min_temp");
+        Column maxColumn = new Column("max_temp");
+        SqlBinaryExpression sqlBinaryExpression = new SqlBinaryExpressionImpl(SqlExpressionOperator.DIFF,
+                new TableColumn(fromTable, maxColumn), new TableColumn(fromTable, minColumn));
+        SelectItem selectItem = new SelectItem(sqlBinaryExpression, Optional.of("difference"));
+        List<Value> values = Arrays.asList(selectItem);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select t.max_temp-t.min_temp AS difference from temperature AS t",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
 }

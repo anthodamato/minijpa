@@ -95,7 +95,7 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
     protected String export(SqlDelete sqlDelete, NameTranslator nameTranslator) {
         StringBuilder sb = new StringBuilder();
         sb.append("delete from ");
-        sb.append(nameTranslator.toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
+        sb.append(nameTranslator.toTableName(sqlDelete.getFromTable().getAlias(), sqlDelete.getFromTable().getName()));
 
         if (sqlDelete.getCondition().isPresent()) {
             sb.append(" where ");
@@ -157,19 +157,13 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
     private class LocalNameTranslator extends DefaultNameTranslator {
 
         @Override
-        public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias) {
-            if (tableAlias.isPresent()) {
-                if (columnAlias.isPresent())
-                    return tableAlias.get() + "." + columnName + " AS " + columnAlias.get();
-                else
-                    return tableAlias.get() + "." + columnName;
-            }
+        public String toTableName(Optional<String> tableAlias, String tableName) {
+            if (tableAlias.isPresent())
+                return tableName + " " + tableAlias.get();
 
-            if (columnAlias.isPresent())
-                return columnName + " AS " + columnAlias.get();
-
-            return columnName;
+            return tableName;
         }
+
     }
 
 }

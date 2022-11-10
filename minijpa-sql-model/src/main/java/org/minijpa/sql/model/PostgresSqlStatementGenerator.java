@@ -16,7 +16,6 @@
 package org.minijpa.sql.model;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.minijpa.sql.model.function.Locate;
 
@@ -25,6 +24,7 @@ import org.minijpa.sql.model.function.Locate;
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator {
+    private NameTranslator updateNameTranslator = new UpdateNameTranslator();
 
     public PostgresSqlStatementGenerator() {
         super();
@@ -55,30 +55,8 @@ public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator 
     }
 
     @Override
-    protected String export(SqlUpdate sqlUpdate, NameTranslator nameTranslator) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("update ");
-        sb.append(nameTranslator.toTableName(sqlUpdate.getFromTable().getAlias(), sqlUpdate.getFromTable().getName()));
-        sb.append(" set ");
-
-        String sv = sqlUpdate.getTableColumns().stream().map(c -> {
-            return exportTableColumnForUpdate(c) + " = ?";
-        }).collect(Collectors.joining(", "));
-        sb.append(sv);
-
-        if (sqlUpdate.getCondition().isPresent()) {
-            sb.append(" where ");
-            sb.append(exportCondition(sqlUpdate.getCondition().get(), nameTranslator));
-        }
-
-        return sb.toString();
-    }
-
-    private String exportTableColumnForUpdate(TableColumn tableColumn) {
-        Column column = tableColumn.getColumn();
-
-        String c = nameTranslator.toColumnName(Optional.empty(), column.getName(), Optional.empty());
-        return c;
+    public String export(SqlUpdate sqlUpdate) {
+        return export(sqlUpdate, updateNameTranslator);
     }
 
     @Override
@@ -95,6 +73,19 @@ public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator 
 
         sb.append(")");
         return sb.toString();
+    }
+
+    private class UpdateNameTranslator extends DefaultNameTranslator {
+
+        @Override
+        public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias) {
+            return columnName;
+        }
+
+        @Override
+        public String toTableName(Optional<String> tableAlias, String tableName) {
+            return tableName;
+        }
     }
 
 }

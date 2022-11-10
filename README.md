@@ -22,6 +22,7 @@ List of implemented (or partially implemented) annotations:
 @SqlResultSetMapping  
 @Table  
 @Temporal  
+@Transient  
 @Version  
 
 

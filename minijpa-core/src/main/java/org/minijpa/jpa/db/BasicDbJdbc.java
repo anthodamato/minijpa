@@ -30,7 +30,6 @@ import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
-import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.sql.model.ColumnDeclaration;
 import org.minijpa.sql.model.CompositeJdbcPk;
 import org.minijpa.sql.model.ForeignKeyDeclaration;
@@ -115,10 +114,9 @@ public abstract class BasicDbJdbc implements DbJdbc {
     }
 
     @Override
-    public List<SqlDDLStatement> buildDDLStatementsCreateTables(PersistenceUnitContext persistenceUnitContext,
+    public List<SqlDDLStatement> buildDDLStatementsCreateTables(Map<String, MetaEntity> entities,
             List<MetaEntity> sorted) {
         List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-        Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
         sorted.forEach(v -> {
             List<MetaAttribute> attributes = new ArrayList<>(v.getBasicAttributes());
             attributes.addAll(v.expandEmbeddables());
@@ -196,12 +194,10 @@ public abstract class BasicDbJdbc implements DbJdbc {
     }
 
     @Override
-    public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext) {
+    public List<SqlDDLStatement> buildDDLStatements(Map<String, MetaEntity> entities) {
         List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-        Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
         List<MetaEntity> sorted = sortForDDL(new ArrayList<>(entities.values()));
-        List<SqlDDLStatement> ddlStatementsCreateTables = buildDDLStatementsCreateTables(persistenceUnitContext,
-                sorted);
+        List<SqlDDLStatement> ddlStatementsCreateTables = buildDDLStatementsCreateTables(entities, sorted);
         sqlStatements.addAll(ddlStatementsCreateTables);
 
         List<SqlDDLStatement> ddlStatementsCreateSequences = buildDDLStatementsCreateSequences(sorted);

@@ -12,8 +12,8 @@ import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.function.Locate;
 
-public class OracleSqlStatementGeneratorTest {
-    private final SqlStatementGenerator sqlStatementGenerator = new OracleSqlStatementGenerator();
+public class PostgresSqlStatementGeneratorTest {
+    private final SqlStatementGenerator sqlStatementGenerator = new PostgresSqlStatementGenerator();
 
     @BeforeEach
     void init() {
@@ -33,7 +33,7 @@ public class OracleSqlStatementGeneratorTest {
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
                 .build();
-        Assertions.assertEquals("select c.id from citizen c where c.first_name = 'Sam'",
+        Assertions.assertEquals("select c.id from citizen AS c where c.first_name = 'Sam'",
                 sqlStatementGenerator.export(sqlSelect));
     }
 
@@ -50,13 +50,27 @@ public class OracleSqlStatementGeneratorTest {
     }
 
     @Test
+    public void update() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column idColumn = new Column("id");
+        Column surnameColumn = new Column("last_name");
+        BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
+                .withLeft(new TableColumn(fromTable, idColumn)).withRight(456).build();
+
+        SqlUpdate sqlUpdate = new SqlUpdate(fromTable, Arrays.asList(new TableColumn(fromTable, surnameColumn)),
+                Optional.of(binaryCondition));
+        Assertions.assertEquals("update citizen set last_name = ? where id = 456",
+                sqlStatementGenerator.export(sqlUpdate));
+    }
+
+    @Test
     public void delete() {
         FromTable fromTable = new FromTableImpl("citizen", "c");
         Column nameColumn = new Column("first_name");
         BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
         SqlDelete sqlDelete = new SqlDelete(fromTable, Optional.of(binaryCondition));
-        Assertions.assertEquals("delete from citizen c where c.first_name = 'Sam'",
+        Assertions.assertEquals("delete from citizen AS c where c.first_name = 'Sam'",
                 sqlStatementGenerator.export(sqlDelete));
     }
 
@@ -69,7 +83,7 @@ public class OracleSqlStatementGeneratorTest {
                 Optional.of("position"));
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
-        Assertions.assertEquals("select INSTR(c.first_name, 'a') AS position from citizen c",
+        Assertions.assertEquals("select POSITION('a' IN c.first_name) AS position from citizen AS c",
                 sqlStatementGenerator.export(sqlSelect));
     }
 
