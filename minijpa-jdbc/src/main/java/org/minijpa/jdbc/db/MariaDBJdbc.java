@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jdbc.db;
 
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;

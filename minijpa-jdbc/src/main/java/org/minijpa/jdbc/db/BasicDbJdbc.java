@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jdbc.db;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +126,7 @@ public abstract class BasicDbJdbc implements DbJdbc {
             List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
             for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
                 MetaEntity toEntity = entities.get(joinColumnMapping.getAttribute().getType().getName());
-                JdbcJoinColumnMapping jdbcJoinColumnMapping = SqlStatementFactory
+                JdbcJoinColumnMapping jdbcJoinColumnMapping = JdbcSqlStatementFactory
                         .toJdbcJoinColumnMapping(joinColumnMapping);
                 foreignKeyDeclarations.add(new ForeignKeyDeclaration(jdbcJoinColumnMapping, toEntity.getTableName()));
             }
@@ -176,11 +176,11 @@ public abstract class BasicDbJdbc implements DbJdbc {
                     .map(a -> a.getRelationship().getJoinTable()).collect(Collectors.toList());
             for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
                 List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
-                JdbcJoinColumnMapping owningJdbcJoinColumnMapping = SqlStatementFactory
+                JdbcJoinColumnMapping owningJdbcJoinColumnMapping = JdbcSqlStatementFactory
                         .toJdbcJoinColumnMapping(relationshipJoinTable.getOwningJoinColumnMapping());
                 foreignKeyDeclarations.add(new ForeignKeyDeclaration(owningJdbcJoinColumnMapping,
                         relationshipJoinTable.getOwningEntity().getTableName()));
-                JdbcJoinColumnMapping targetJdbcJoinColumnMapping = SqlStatementFactory
+                JdbcJoinColumnMapping targetJdbcJoinColumnMapping = JdbcSqlStatementFactory
                         .toJdbcJoinColumnMapping(relationshipJoinTable.getTargetJoinColumnMapping());
                 foreignKeyDeclarations.add(new ForeignKeyDeclaration(targetJdbcJoinColumnMapping,
                         relationshipJoinTable.getTargetEntity().getTableName()));

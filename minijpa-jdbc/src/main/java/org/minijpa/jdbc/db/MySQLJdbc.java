@@ -13,27 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jdbc.db;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.PkGenerationType;
 import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.sql.model.SqlDDLStatement;
 
-public interface DbJdbc {
+public class MySQLJdbc extends BasicDbJdbc {
 
-    public PkStrategy findPkStrategy(PkGenerationType pkGenerationType);
+	@Override
+	public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {
+		PkStrategy pkStrategy = super.findPkStrategy(pkGenerationType);
+		if (pkStrategy == PkStrategy.SEQUENCE)
+			return PkStrategy.IDENTITY;
 
-    public List<SqlDDLStatement> buildDDLStatements(Map<String, MetaEntity> entities);
+		return pkStrategy;
+	}
 
-    public List<SqlDDLStatement> buildDDLStatementsCreateTables(Map<String, MetaEntity> entities,
-            List<MetaEntity> sorted);
-
-    public List<SqlDDLStatement> buildDDLStatementsCreateSequences(List<MetaEntity> sorted);
-
-    public List<SqlDDLStatement> buildDDLStatementsCreateJoinTables(List<MetaEntity> sorted);
+	@Override
+	public List<SqlDDLStatement> buildDDLStatementsCreateSequences(List<MetaEntity> sorted) {
+		return Collections.EMPTY_LIST;
+	}
 
 }

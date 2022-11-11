@@ -11,7 +11,6 @@ import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.mapper.ToLongAttributeMapper;
-import org.minijpa.sql.model.ApacheDerbySqlStatementGenerator;
 import org.minijpa.sql.model.Column;
 import org.minijpa.sql.model.FromTable;
 import org.minijpa.sql.model.FromTableImpl;
@@ -94,7 +93,8 @@ public class JdbcRunnerTest {
                 new Concat(new TableColumn(fromTable, nameColumn), "' '", new TableColumn(fromTable, surnameColumn)));
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
-        SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
+        SqlStatementGenerator sqlStatementGenerator = SqlStatementGeneratorFactory
+                .getSqlStatementGenerator(connectionProperties.getDatabase(System.getProperty("minijpa.test")));
         sqlStatementGenerator.init();
         String sql = sqlStatementGenerator.export(sqlSelect);
 

@@ -17,6 +17,8 @@ package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
+import org.minijpa.jdbc.db.DbJdbc;
+import org.minijpa.jdbc.db.MySQLJdbc;
 import org.minijpa.jdbc.mapper.MySQLDbTypeMapper;
 import org.minijpa.sql.model.MySQLSqlStatementGenerator;
 import org.minijpa.sql.model.SqlStatementGenerator;

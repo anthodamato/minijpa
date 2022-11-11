@@ -42,7 +42,6 @@ import org.minijpa.jdbc.AttributeFetchParameter;
 import org.minijpa.jdbc.AttributeFetchParameterImpl;
 import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.BasicFetchParameter;
-import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.JoinColumnAttribute;
 import org.minijpa.jdbc.LockType;
@@ -50,12 +49,11 @@ import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.Pk;
-import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jdbc.db.JdbcSqlStatementFactory;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jdbc.db.StatementParameters;
-import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jdbc.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.DeleteQuery;
@@ -84,19 +82,11 @@ import org.minijpa.jpa.jpql.AggregateFunctionType;
 import org.minijpa.jpa.jpql.FunctionUtils;
 import org.minijpa.metadata.AliasGenerator;
 import org.minijpa.sql.model.Column;
-import org.minijpa.sql.model.ColumnDeclaration;
-import org.minijpa.sql.model.CompositeJdbcJoinColumnMapping;
-import org.minijpa.sql.model.CompositeJdbcPk;
 import org.minijpa.sql.model.ForUpdate;
 import org.minijpa.sql.model.FromTable;
 import org.minijpa.sql.model.FromTableImpl;
-import org.minijpa.sql.model.JdbcDDLData;
-import org.minijpa.sql.model.JdbcJoinColumnMapping;
-import org.minijpa.sql.model.JdbcPk;
 import org.minijpa.sql.model.OrderBy;
 import org.minijpa.sql.model.OrderByType;
-import org.minijpa.sql.model.SimpleJdbcPk;
-import org.minijpa.sql.model.SingleJdbcJoinColumnMapping;
 import org.minijpa.sql.model.SqlDelete;
 import org.minijpa.sql.model.SqlInsert;
 import org.minijpa.sql.model.SqlSelect;
@@ -121,7 +111,7 @@ import org.minijpa.sql.model.join.FromJoinImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SqlStatementFactory {
+public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
     public static final String QM = "?";
 
@@ -1331,47 +1321,47 @@ public class SqlStatementFactory {
 //		return sorted;
 //	}
 
-    private static ColumnDeclaration toColumnDeclaration(MetaAttribute a) {
-        Optional<JdbcDDLData> optional = Optional.empty();
-        if (a.getDdlData().isPresent()) {
-            DDLData ddlData = a.getDdlData().get();
-            JdbcDDLData jdbcDDLData = new JdbcDDLData(ddlData.getColumnDefinition(), ddlData.getLength(),
-                    ddlData.getPrecision(), ddlData.getScale(), ddlData.getNullable());
-            optional = Optional.of(jdbcDDLData);
-        }
+//    private static ColumnDeclaration toColumnDeclaration(MetaAttribute a) {
+//        Optional<JdbcDDLData> optional = Optional.empty();
+//        if (a.getDdlData().isPresent()) {
+//            DDLData ddlData = a.getDdlData().get();
+//            JdbcDDLData jdbcDDLData = new JdbcDDLData(ddlData.getColumnDefinition(), ddlData.getLength(),
+//                    ddlData.getPrecision(), ddlData.getScale(), ddlData.getNullable());
+//            optional = Optional.of(jdbcDDLData);
+//        }
+//
+//        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
+//    }
 
-        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
-    }
-
-    private static JdbcPk buildJdbcPk(Pk pk) {
-        if (pk.isComposite()) {
-            List<ColumnDeclaration> columnDeclarations = pk.getAttributes().stream().map(c -> {
-                return toColumnDeclaration(c);
-            }).collect(Collectors.toList());
-
-            return new CompositeJdbcPk(columnDeclarations);
-        }
-
-        return new SimpleJdbcPk(toColumnDeclaration(pk.getAttribute()),
-                pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY);
-    }
-
-    private static ColumnDeclaration toColumnDeclaration(JoinColumnAttribute a) {
-        Optional<JdbcDDLData> optional = Optional.empty();
-        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
-    }
-
-    public static JdbcJoinColumnMapping toJdbcJoinColumnMapping(JoinColumnMapping joinColumnMapping) {
-        if (joinColumnMapping.isComposite()) {
-            List<ColumnDeclaration> columnDeclarations = joinColumnMapping.getJoinColumnAttributes().stream()
-                    .map(j -> toColumnDeclaration(j)).collect(Collectors.toList());
-            return new CompositeJdbcJoinColumnMapping(columnDeclarations,
-                    buildJdbcPk(joinColumnMapping.getForeignKey()));
-        }
-
-        return new SingleJdbcJoinColumnMapping(toColumnDeclaration(joinColumnMapping.get()),
-                buildJdbcPk(joinColumnMapping.getForeignKey()));
-    }
+//    private static JdbcPk buildJdbcPk(Pk pk) {
+//        if (pk.isComposite()) {
+//            List<ColumnDeclaration> columnDeclarations = pk.getAttributes().stream().map(c -> {
+//                return toColumnDeclaration(c);
+//            }).collect(Collectors.toList());
+//
+//            return new CompositeJdbcPk(columnDeclarations);
+//        }
+//
+//        return new SimpleJdbcPk(toColumnDeclaration(pk.getAttribute()),
+//                pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY);
+//    }
+//
+//    private static ColumnDeclaration toColumnDeclaration(JoinColumnAttribute a) {
+//        Optional<JdbcDDLData> optional = Optional.empty();
+//        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
+//    }
+//
+//    public static JdbcJoinColumnMapping toJdbcJoinColumnMapping(JoinColumnMapping joinColumnMapping) {
+//        if (joinColumnMapping.isComposite()) {
+//            List<ColumnDeclaration> columnDeclarations = joinColumnMapping.getJoinColumnAttributes().stream()
+//                    .map(j -> toColumnDeclaration(j)).collect(Collectors.toList());
+//            return new CompositeJdbcJoinColumnMapping(columnDeclarations,
+//                    buildJdbcPk(joinColumnMapping.getForeignKey()));
+//        }
+//
+//        return new SingleJdbcJoinColumnMapping(toColumnDeclaration(joinColumnMapping.get()),
+//                buildJdbcPk(joinColumnMapping.getForeignKey()));
+//    }
 
 //	public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext) {
 //		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
