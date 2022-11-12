@@ -21,16 +21,6 @@ package org.minijpa.sql.model;
  */
 public class SqlCreateSequence implements SqlDDLStatement {
 
-//	private final JdbcSequenceParams jdbcSequenceParams;
-//
-//	public SqlCreateSequence(JdbcSequenceParams jdbcSequenceParams) {
-//		this.jdbcSequenceParams = jdbcSequenceParams;
-//	}
-//
-//	public JdbcSequenceParams getJdbcSequenceParams() {
-//		return jdbcSequenceParams;
-//	}
-
     private String name;
     private String sequenceName;
     private String schema;

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.minijpa.sql.model.condition.BinaryCondition;
 import org.minijpa.sql.model.condition.Condition;
@@ -15,12 +15,14 @@ import org.minijpa.sql.model.function.Concat;
 import org.minijpa.sql.model.function.CurrentDate;
 import org.minijpa.sql.model.function.CurrentTime;
 import org.minijpa.sql.model.function.CurrentTimestamp;
+import org.minijpa.sql.model.function.Trim;
+import org.minijpa.sql.model.function.TrimType;
 
 public class MariaDBSqlStatementGeneratorTest {
-    private final SqlStatementGenerator sqlStatementGenerator = new MariaDBSqlStatementGenerator();
+    private static final SqlStatementGenerator sqlStatementGenerator = new MariaDBSqlStatementGenerator();
 
-    @BeforeEach
-    void init() {
+    @BeforeAll
+    static void init() {
         sqlStatementGenerator.init();
     }
 
@@ -162,6 +164,20 @@ public class MariaDBSqlStatementGeneratorTest {
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
                 .build();
         Assertions.assertEquals("select f.id from flights AS f where f.start_time > CURRENT_TIME()",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void trim() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        SelectItem selectItem = new SelectItem(
+                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "\""),
+                Optional.of("name"));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        Assertions.assertEquals("select TRIM(BOTH '\"' FROM c.first_name) AS name from citizen AS c",
                 sqlStatementGenerator.export(sqlSelect));
     }
 

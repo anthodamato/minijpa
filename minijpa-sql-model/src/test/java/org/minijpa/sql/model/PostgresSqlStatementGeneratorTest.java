@@ -5,18 +5,20 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.minijpa.sql.model.condition.BinaryCondition;
 import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.function.Locate;
+import org.minijpa.sql.model.function.Trim;
+import org.minijpa.sql.model.function.TrimType;
 
 public class PostgresSqlStatementGeneratorTest {
-    private final SqlStatementGenerator sqlStatementGenerator = new PostgresSqlStatementGenerator();
+    private static final SqlStatementGenerator sqlStatementGenerator = new PostgresSqlStatementGenerator();
 
-    @BeforeEach
-    void init() {
+    @BeforeAll
+    static void init() {
         sqlStatementGenerator.init();
     }
 
@@ -84,6 +86,20 @@ public class PostgresSqlStatementGeneratorTest {
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
         Assertions.assertEquals("select POSITION('a' IN c.first_name) AS position from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void trim() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        SelectItem selectItem = new SelectItem(
+                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "\""),
+                Optional.of("name"));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        Assertions.assertEquals("select TRIM(BOTH '\"' FROM c.first_name) AS name from citizen AS c",
                 sqlStatementGenerator.export(sqlSelect));
     }
 

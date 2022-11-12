@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.minijpa.sql.model.aggregate.GroupBy;
 import org.minijpa.sql.model.condition.BetweenCondition;
@@ -36,9 +36,12 @@ import org.minijpa.sql.model.function.Locate;
 import org.minijpa.sql.model.function.Lower;
 import org.minijpa.sql.model.function.Max;
 import org.minijpa.sql.model.function.Min;
+import org.minijpa.sql.model.function.Mod;
+import org.minijpa.sql.model.function.Sqrt;
 import org.minijpa.sql.model.function.Substring;
 import org.minijpa.sql.model.function.Sum;
 import org.minijpa.sql.model.function.Trim;
+import org.minijpa.sql.model.function.TrimType;
 import org.minijpa.sql.model.function.Upper;
 import org.minijpa.sql.model.join.FromJoin;
 import org.minijpa.sql.model.join.FromJoinImpl;
@@ -48,10 +51,10 @@ import org.slf4j.LoggerFactory;
 public class ApacheDerbySqlStatementGeneratorTest {
     private final Logger LOG = LoggerFactory.getLogger(ApacheDerbySqlStatementGeneratorTest.class);
 
-    private final SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
+    private static final SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
 
-    @BeforeEach
-    void init() {
+    @BeforeAll
+    static void init() {
         sqlStatementGenerator.init();
     }
 
@@ -69,6 +72,20 @@ public class ApacheDerbySqlStatementGeneratorTest {
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).withConditions(conditions)
                 .build();
         Assertions.assertEquals("select c.id from citizen AS c where c.first_name = 'Sam'",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void orderBy() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column dobColumn = new Column("dob");
+        Column allColumn = new Column("*");
+        List<Value> values = Arrays.asList(new TableColumn(fromTable, allColumn));
+        OrderBy orderBy = new OrderBy(new TableColumn(fromTable, dobColumn), OrderByType.DESC);
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
+                .withOrderBy(Arrays.asList(orderBy)).build();
+        Assertions.assertEquals("select c.* from citizen AS c order by c.dob DESC",
                 sqlStatementGenerator.export(sqlSelect));
     }
 
@@ -347,6 +364,20 @@ public class ApacheDerbySqlStatementGeneratorTest {
     }
 
     @Test
+    public void updateNotEqual() {
+        FromTable fromTable = new FromTableImpl("product");
+        Column categoryColumn = new Column("category");
+        TableColumn tableColumn = new TableColumn(fromTable, categoryColumn);
+        Column idColumn = new Column("id");
+        BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.NOT_EQUAL)
+                .withLeft(new TableColumn(fromTable, idColumn)).withRight("1").build();
+
+        SqlUpdate sqlUpdate = new SqlUpdate(fromTable, Arrays.asList(tableColumn), Optional.of(binaryCondition));
+        Assertions.assertEquals("update product set category = ? where id <> 1",
+                sqlStatementGenerator.export(sqlUpdate));
+    }
+
+    @Test
     public void createTable() {
         JdbcJoinColumnMapping jdbcJoinColumnMapping = new SingleJdbcJoinColumnMapping(
                 new ColumnDeclaration("address_id", Long.class),
@@ -451,6 +482,30 @@ public class ApacheDerbySqlStatementGeneratorTest {
     }
 
     @Test
+    public void mod() {
+        FromTable fromTable = new FromTableImpl("statistic", "s");
+        Column occColumn = new Column("occurrences");
+        List<Value> values = Arrays
+                .asList(new SelectItem(new Mod(new TableColumn(fromTable, occColumn), 2), Optional.of("modulus")));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select MOD(s.occurrences, 2) AS modulus from statistic AS s",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void sqrt() {
+        FromTable fromTable = new FromTableImpl("statistic", "s");
+        Column occColumn = new Column("occurrences");
+        List<Value> values = Arrays
+                .asList(new SelectItem(new Sqrt(new TableColumn(fromTable, occColumn)), Optional.of("square_root")));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
+        Assertions.assertEquals("select SQRT(s.occurrences) AS square_root from statistic AS s",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
     public void avg() {
         FromTable fromTable = new FromTableImpl("temperature", "t");
         Column minColumn = new Column("min_temp");
@@ -529,10 +584,12 @@ public class ApacheDerbySqlStatementGeneratorTest {
         FromTable fromTable = new FromTableImpl("citizen", "c");
         Column nameColumn = new Column("first_name");
 
-        SelectItem selectItem = new SelectItem(new Trim(new TableColumn(fromTable, nameColumn)), Optional.of("name"));
+        SelectItem selectItem = new SelectItem(
+                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "\""),
+                Optional.of("name"));
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
-        Assertions.assertEquals("select TRIM(c.first_name) AS name from citizen AS c",
+        Assertions.assertEquals("select TRIM(BOTH '\"' FROM c.first_name) AS name from citizen AS c",
                 sqlStatementGenerator.export(sqlSelect));
     }
 

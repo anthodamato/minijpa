@@ -14,16 +14,16 @@ public class NotCondition implements Condition {
     private final Condition condition;
 
     public NotCondition(Condition condition) {
-	this.condition = condition;
+        this.condition = condition;
     }
 
     @Override
     public ConditionType getConditionType() {
-	return ConditionType.NOT;
+        return ConditionType.NOT;
     }
 
     public Condition getCondition() {
-	return condition;
+        return condition;
     }
 
 }

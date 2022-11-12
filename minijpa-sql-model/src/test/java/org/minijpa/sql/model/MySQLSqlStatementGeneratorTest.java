@@ -6,15 +6,17 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.minijpa.sql.model.function.Concat;
+import org.minijpa.sql.model.function.Trim;
+import org.minijpa.sql.model.function.TrimType;
 
 public class MySQLSqlStatementGeneratorTest {
-    private final SqlStatementGenerator sqlStatementGenerator = new MySQLSqlStatementGenerator();
+    private static final SqlStatementGenerator sqlStatementGenerator = new MySQLSqlStatementGenerator();
 
-    @BeforeEach
-    void init() {
+    @BeforeAll
+    static void init() {
         sqlStatementGenerator.init();
     }
 
@@ -100,6 +102,20 @@ public class MySQLSqlStatementGeneratorTest {
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
         Assertions.assertEquals("select CONCAT(c.first_name,' ',c.last_name) from citizen AS c",
+                sqlStatementGenerator.export(sqlSelect));
+    }
+
+    @Test
+    public void trim() {
+        FromTable fromTable = new FromTableImpl("citizen", "c");
+        Column nameColumn = new Column("first_name");
+
+        SelectItem selectItem = new SelectItem(
+                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "\""),
+                Optional.of("name"));
+        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        Assertions.assertEquals("select TRIM(BOTH '\"' FROM c.first_name) AS name from citizen AS c",
                 sqlStatementGenerator.export(sqlSelect));
     }
 
