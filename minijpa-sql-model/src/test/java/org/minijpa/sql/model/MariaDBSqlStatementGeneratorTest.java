@@ -41,13 +41,13 @@ public class MariaDBSqlStatementGeneratorTest {
     public void createTable() {
         JdbcJoinColumnMapping jdbcJoinColumnMapping = new SingleJdbcJoinColumnMapping(
                 new ColumnDeclaration("address_id", Long.class),
-                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)));
+                new SimpleSqlPk(new ColumnDeclaration("id", Long.class)));
         ForeignKeyDeclaration foreignKeyDeclaration = new ForeignKeyDeclaration(jdbcJoinColumnMapping, "address");
 
         JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(), Optional.empty(),
                 Optional.empty());
         SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
-                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)),
+                new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
                 Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
                         new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData)),
                         new ColumnDeclaration("dob", java.sql.Date.class),
@@ -62,12 +62,12 @@ public class MariaDBSqlStatementGeneratorTest {
     public void createJoinTable() {
         JdbcJoinColumnMapping jdbcJoinColumnMapping1 = new SingleJdbcJoinColumnMapping(
                 new ColumnDeclaration("citizen_id", Long.class),
-                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)));
+                new SimpleSqlPk(new ColumnDeclaration("id", Long.class)));
         ForeignKeyDeclaration foreignKeyDeclaration1 = new ForeignKeyDeclaration(jdbcJoinColumnMapping1, "citizen");
 
         JdbcJoinColumnMapping jdbcJoinColumnMapping2 = new SingleJdbcJoinColumnMapping(
                 new ColumnDeclaration("address_id", Long.class),
-                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class)));
+                new SimpleSqlPk(new ColumnDeclaration("id", Long.class)));
         ForeignKeyDeclaration foreignKeyDeclaration2 = new ForeignKeyDeclaration(jdbcJoinColumnMapping2, "address");
 
         SqlCreateJoinTable sqlCreateJoinTable = new SqlCreateJoinTable("citizen_address",
@@ -82,7 +82,7 @@ public class MariaDBSqlStatementGeneratorTest {
         JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(), Optional.empty(),
                 Optional.empty());
         SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
-                new SimpleJdbcPk(new ColumnDeclaration("id", Long.class), true),
+                new SimpleSqlPk(new ColumnDeclaration("id", Long.class), true),
                 Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
                         new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData)),
                         new ColumnDeclaration("dob", java.sql.Date.class),

@@ -21,7 +21,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,38 +31,38 @@ import org.slf4j.LoggerFactory;
  */
 public class OracleJdbcRunner extends JpaJdbcRunner {
 
-	private final Logger LOG = LoggerFactory.getLogger(OracleJdbcRunner.class);
+    private final Logger LOG = LoggerFactory.getLogger(OracleJdbcRunner.class);
 
-	public OracleJdbcRunner() {
-		super();
-	}
+    public OracleJdbcRunner() {
+        super();
+    }
 
-	@Override
-	public Object insertReturnGeneratedKeys(Connection connection, String sql, List<QueryParameter> parameters, Pk pk)
-			throws SQLException {
-		PreparedStatement preparedStatement = null;
-		ResultSet resultSet = null;
-		try {
-			LOG.info("Running `{}`", sql);
-			String[] generatedKeyColumns = {pk.getAttribute().getColumnName()};
-			preparedStatement = connection.prepareStatement(sql, generatedKeyColumns);
-			setPreparedStatementParameters(preparedStatement, parameters);
-			preparedStatement.execute();
+    @Override
+    public Object insertReturnGeneratedKeys(Connection connection, String sql, List<QueryParameter> parameters,
+            String identityColumnName) throws SQLException {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            LOG.info("Running `{}`", sql);
+            String[] generatedKeyColumns = { identityColumnName };
+            preparedStatement = connection.prepareStatement(sql, generatedKeyColumns);
+            setPreparedStatementParameters(preparedStatement, parameters);
+            preparedStatement.execute();
 
-			Object id = null;
-			resultSet = preparedStatement.getGeneratedKeys();
-			if (resultSet.next()) {
-				id = resultSet.getObject(1);
-			}
+            Object id = null;
+            resultSet = preparedStatement.getGeneratedKeys();
+            if (resultSet.next()) {
+                id = resultSet.getObject(1);
+            }
 
-			return id;
-		} finally {
-			if (resultSet != null)
-				resultSet.close();
+            return id;
+        } finally {
+            if (resultSet != null)
+                resultSet.close();
 
-			if (preparedStatement != null)
-				preparedStatement.close();
-		}
-	}
+            if (preparedStatement != null)
+                preparedStatement.close();
+        }
+    }
 
 }

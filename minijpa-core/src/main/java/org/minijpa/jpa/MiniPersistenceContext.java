@@ -26,10 +26,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.minijpa.jdbc.AttributeUtil;
-import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jpa.db.EntityContainer;
 import org.minijpa.jpa.db.EntityStatus;
+import org.minijpa.jpa.db.LockType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

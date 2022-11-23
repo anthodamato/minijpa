@@ -44,7 +44,6 @@ import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.BasicFetchParameter;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.JoinColumnAttribute;
-import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;

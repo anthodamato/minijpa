@@ -29,30 +29,29 @@ public class QueryResultMapping {
     private final List<SingleColumnMapping> singleColumnMappings;
 
     public QueryResultMapping(String name, List<EntityMapping> entityMappings,
-	    List<ConstructorMapping> constructorMappings,
-	    List<SingleColumnMapping> singleColumnMappings) {
-	this.entityMappings = entityMappings;
-	this.constructorMappings = constructorMappings;
-	this.singleColumnMappings = singleColumnMappings;
+            List<ConstructorMapping> constructorMappings, List<SingleColumnMapping> singleColumnMappings) {
+        this.entityMappings = entityMappings;
+        this.constructorMappings = constructorMappings;
+        this.singleColumnMappings = singleColumnMappings;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public List<EntityMapping> getEntityMappings() {
-	return entityMappings;
+        return entityMappings;
     }
 
     public List<ConstructorMapping> getConstructorMappings() {
-	return constructorMappings;
+        return constructorMappings;
     }
 
     public List<SingleColumnMapping> getSingleColumnMappings() {
-	return singleColumnMappings;
+        return singleColumnMappings;
     }
 
     public int size() {
-	return entityMappings.size() + constructorMappings.size() + singleColumnMappings.size();
+        return entityMappings.size() + constructorMappings.size() + singleColumnMappings.size();
     }
 }

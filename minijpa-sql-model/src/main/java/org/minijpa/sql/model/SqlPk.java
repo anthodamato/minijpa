@@ -2,7 +2,7 @@ package org.minijpa.sql.model;
 
 import java.util.List;
 
-public interface JdbcPk {
+public interface SqlPk {
 	public default boolean isComposite() {
 		return false;
 	}

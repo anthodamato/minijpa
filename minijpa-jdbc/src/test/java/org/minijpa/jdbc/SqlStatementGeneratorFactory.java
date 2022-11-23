@@ -10,19 +10,32 @@ import org.minijpa.sql.model.SqlStatementGenerator;
 
 public class SqlStatementGeneratorFactory {
     public static SqlStatementGenerator getSqlStatementGenerator(Database database) {
+        SqlStatementGenerator sqlStatementGenerator = null;
         switch (database) {
         case APACHE_DERBY:
-            return new ApacheDerbySqlStatementGenerator();
+            sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
+            sqlStatementGenerator.init();
+            return sqlStatementGenerator;
         case H2:
-            return new H2SqlStatementGenerator();
+            sqlStatementGenerator = new H2SqlStatementGenerator();
+            sqlStatementGenerator.init();
+            return sqlStatementGenerator;
         case MARIADB:
-            return new MariaDBSqlStatementGenerator();
+            sqlStatementGenerator = new MariaDBSqlStatementGenerator();
+            sqlStatementGenerator.init();
+            return sqlStatementGenerator;
         case MYSQL:
-            return new MySQLSqlStatementGenerator();
+            sqlStatementGenerator = new MySQLSqlStatementGenerator();
+            sqlStatementGenerator.init();
+            return sqlStatementGenerator;
         case ORACLE:
-            return new OracleSqlStatementGenerator();
+            sqlStatementGenerator = new OracleSqlStatementGenerator();
+            sqlStatementGenerator.init();
+            return sqlStatementGenerator;
         case POSTGRES:
-            return new PostgresSqlStatementGenerator();
+            sqlStatementGenerator = new PostgresSqlStatementGenerator();
+            sqlStatementGenerator.init();
+            return sqlStatementGenerator;
 
         default:
             break;

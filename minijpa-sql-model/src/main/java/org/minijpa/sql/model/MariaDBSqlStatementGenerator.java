@@ -56,7 +56,7 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
         return "for update";
     }
 
-    private String buildPkDeclaration(JdbcPk pk) {
+    private String buildPkDeclaration(SqlPk pk) {
         if (pk.isIdentityColumn()) {
             return buildAttributeDeclaration(pk.getColumn()) + " AUTO_INCREMENT";
         }
@@ -108,7 +108,7 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
         return sb.toString();
     }
 
-    private void appendPrimaryKey(JdbcPk pk, StringBuilder sb) {
+    private void appendPrimaryKey(SqlPk pk, StringBuilder sb) {
         if (pk.isComposite()) {
             sb.append("(");
             String cols = pk.getColumns().stream().map(a -> nameTranslator.adjustName(a.getName()))

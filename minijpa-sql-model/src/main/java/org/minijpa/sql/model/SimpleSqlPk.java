@@ -1,15 +1,15 @@
 package org.minijpa.sql.model;
 
-public class SimpleJdbcPk implements JdbcPk {
+public class SimpleSqlPk implements SqlPk {
 	private ColumnDeclaration columnDeclaration;
 	private boolean identityColumn;
 
-	public SimpleJdbcPk(ColumnDeclaration columnDeclaration) {
+	public SimpleSqlPk(ColumnDeclaration columnDeclaration) {
 		super();
 		this.columnDeclaration = columnDeclaration;
 	}
 
-	public SimpleJdbcPk(ColumnDeclaration columnDeclaration, boolean identityColumn) {
+	public SimpleSqlPk(ColumnDeclaration columnDeclaration, boolean identityColumn) {
 		super();
 		this.columnDeclaration = columnDeclaration;
 		this.identityColumn = identityColumn;

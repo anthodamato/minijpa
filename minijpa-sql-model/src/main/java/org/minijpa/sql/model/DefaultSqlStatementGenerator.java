@@ -793,7 +793,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         return nameTranslator.adjustName(columnDeclaration.getName()) + " " + buildColumnDefinition(columnDeclaration);
     }
 
-    private String buildPkDeclaration(JdbcPk jdbcPk) {
+    private String buildPkDeclaration(SqlPk jdbcPk) {
         if (jdbcPk.isIdentityColumn()) {
             return nameTranslator.adjustName(jdbcPk.getColumn().getName()) + " " + buildIdentityColumnDefinition(
                     jdbcPk.getColumn().getDatabaseType(), jdbcPk.getColumn().getOptionalJdbcDDLData());

@@ -12,11 +12,11 @@ import org.minijpa.jdbc.PkStrategy;
 import org.minijpa.jdbc.relationship.JoinColumnMapping;
 import org.minijpa.sql.model.ColumnDeclaration;
 import org.minijpa.sql.model.CompositeJdbcJoinColumnMapping;
-import org.minijpa.sql.model.CompositeJdbcPk;
+import org.minijpa.sql.model.CompositeSqlPk;
 import org.minijpa.sql.model.JdbcDDLData;
 import org.minijpa.sql.model.JdbcJoinColumnMapping;
-import org.minijpa.sql.model.JdbcPk;
-import org.minijpa.sql.model.SimpleJdbcPk;
+import org.minijpa.sql.model.SqlPk;
+import org.minijpa.sql.model.SimpleSqlPk;
 import org.minijpa.sql.model.SingleJdbcJoinColumnMapping;
 
 public class JdbcSqlStatementFactory {
@@ -32,16 +32,16 @@ public class JdbcSqlStatementFactory {
         return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
     }
 
-    private static JdbcPk buildJdbcPk(Pk pk) {
+    private static SqlPk buildJdbcPk(Pk pk) {
         if (pk.isComposite()) {
             List<ColumnDeclaration> columnDeclarations = pk.getAttributes().stream().map(c -> {
                 return toColumnDeclaration(c);
             }).collect(Collectors.toList());
 
-            return new CompositeJdbcPk(columnDeclarations);
+            return new CompositeSqlPk(columnDeclarations);
         }
 
-        return new SimpleJdbcPk(toColumnDeclaration(pk.getAttribute()),
+        return new SimpleSqlPk(toColumnDeclaration(pk.getAttribute()),
                 pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY);
     }
 

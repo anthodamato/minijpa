@@ -2,10 +2,10 @@ package org.minijpa.sql.model;
 
 import java.util.List;
 
-public class CompositeJdbcPk implements JdbcPk {
+public class CompositeSqlPk implements SqlPk {
 	private List<ColumnDeclaration> columnDeclarations;
 
-	public CompositeJdbcPk(List<ColumnDeclaration> columnDeclarations) {
+	public CompositeSqlPk(List<ColumnDeclaration> columnDeclarations) {
 		super();
 		this.columnDeclarations = columnDeclarations;
 	}

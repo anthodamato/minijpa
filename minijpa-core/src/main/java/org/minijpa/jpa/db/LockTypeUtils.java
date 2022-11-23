@@ -16,7 +16,6 @@
 package org.minijpa.jpa.db;
 
 import javax.persistence.LockModeType;
-import org.minijpa.jdbc.LockType;
 
 /**
  *

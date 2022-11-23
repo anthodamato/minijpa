@@ -21,8 +21,6 @@ import java.util.stream.Collectors;
 
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
-import org.minijpa.jdbc.EntityLoader;
-import org.minijpa.jdbc.LockType;
 import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.QueryParameter;
@@ -45,32 +43,40 @@ import org.minijpa.metadata.AliasGenerator;
  */
 public class ForeignKeyCollectionQueryLevel implements QueryLevel {
 
-	private final SqlStatementFactory sqlStatementFactory;
-	private final DbConfiguration dbConfiguration;
-	private final ConnectionHolder connectionHolder;
-	private final AliasGenerator tableAliasGenerator;
+    private final SqlStatementFactory sqlStatementFactory;
+    private final DbConfiguration dbConfiguration;
+    private final ConnectionHolder connectionHolder;
+    private final AliasGenerator tableAliasGenerator;
+//    private final EntityRecordCollector recordCollector = new EntityRecordCollector();
+    private JpaJdbcRunner.JdbcFPRecordBuilder jdbcFPRecordBuilder = new JpaJdbcRunner.JdbcFPRecordBuilder();
 
-	public ForeignKeyCollectionQueryLevel(SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration,
-			ConnectionHolder connectionHolder, AliasGenerator tableAliasGenerator) {
-		this.sqlStatementFactory = sqlStatementFactory;
-		this.dbConfiguration = dbConfiguration;
-		this.connectionHolder = connectionHolder;
-		this.tableAliasGenerator = tableAliasGenerator;
-	}
+    public ForeignKeyCollectionQueryLevel(SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration,
+            ConnectionHolder connectionHolder, AliasGenerator tableAliasGenerator) {
+        this.sqlStatementFactory = sqlStatementFactory;
+        this.dbConfiguration = dbConfiguration;
+        this.connectionHolder = connectionHolder;
+        this.tableAliasGenerator = tableAliasGenerator;
+    }
 
-	public Object run(MetaEntity entity, MetaAttribute foreignKeyAttribute, Object foreignKey, LockType lockType,
-			EntityLoader entityLoader) throws Exception {
-		List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
-		List<String> columns = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
-		SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute,
-				columns, tableAliasGenerator);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-		Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
-				CollectionUtils.findCollectionImplementationClass(List.class));
-		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
-				sqlSelectData, sqlSelectData.getFetchParameters(), lockType, collectionResult,
-				entityLoader, parameters);
-		return (List<Object>) collectionResult;
-	}
+    public Object run(MetaEntity entity, MetaAttribute foreignKeyAttribute, Object foreignKey, LockType lockType,
+            JpaEntityLoader entityLoader) throws Exception {
+        List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
+        List<String> columns = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+        SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute,
+                columns, tableAliasGenerator);
+        String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+        Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
+                CollectionUtils.findCollectionImplementationClass(List.class));
+        entityLoader.setLockType(lockType);
+
+        jdbcFPRecordBuilder.setCollectionResult(collectionResult);
+        jdbcFPRecordBuilder.setEntityLoader(entityLoader);
+        jdbcFPRecordBuilder.setMetaEntity(entity);
+        jdbcFPRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
+        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql, parameters, jdbcFPRecordBuilder);
+//        dbConfiguration.getJdbcRunner().select(connectionHolder.getConnection(), sql,
+//                sqlSelectData.getFetchParameters(), parameters, recordCollector);
+        return (List<Object>) collectionResult;
+    }
 
 }

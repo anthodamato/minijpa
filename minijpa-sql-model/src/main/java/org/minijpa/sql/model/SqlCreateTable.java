@@ -15,6 +15,7 @@
  */
 package org.minijpa.sql.model;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,33 +24,39 @@ import java.util.List;
  */
 public class SqlCreateTable implements SqlDDLStatement {
 
-	private final String tableName;
-	private final JdbcPk jdbcPk;
-	private final List<ColumnDeclaration> columnDeclarations;
-	private final List<ForeignKeyDeclaration> foreignKeyDeclarations;
+    private final String tableName;
+    private final SqlPk jdbcPk;
+    private final List<ColumnDeclaration> columnDeclarations;
+    private List<ForeignKeyDeclaration> foreignKeyDeclarations = Collections.emptyList();
 
-	public SqlCreateTable(String tableName, JdbcPk jdbcPk, List<ColumnDeclaration> columnDeclarations,
-			List<ForeignKeyDeclaration> foreignKeyDeclarations) {
-		this.tableName = tableName;
-		this.jdbcPk = jdbcPk;
-		this.columnDeclarations = columnDeclarations;
-		this.foreignKeyDeclarations = foreignKeyDeclarations;
-	}
+    public SqlCreateTable(String tableName, SqlPk jdbcPk, List<ColumnDeclaration> columnDeclarations) {
+        this.tableName = tableName;
+        this.jdbcPk = jdbcPk;
+        this.columnDeclarations = columnDeclarations;
+    }
 
-	public String getTableName() {
-		return tableName;
-	}
+    public SqlCreateTable(String tableName, SqlPk jdbcPk, List<ColumnDeclaration> columnDeclarations,
+            List<ForeignKeyDeclaration> foreignKeyDeclarations) {
+        this.tableName = tableName;
+        this.jdbcPk = jdbcPk;
+        this.columnDeclarations = columnDeclarations;
+        this.foreignKeyDeclarations = foreignKeyDeclarations;
+    }
 
-	public JdbcPk getJdbcPk() {
-		return jdbcPk;
-	}
+    public String getTableName() {
+        return tableName;
+    }
 
-	public List<ColumnDeclaration> getColumnDeclarations() {
-		return columnDeclarations;
-	}
+    public SqlPk getJdbcPk() {
+        return jdbcPk;
+    }
 
-	public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
-		return foreignKeyDeclarations;
-	}
+    public List<ColumnDeclaration> getColumnDeclarations() {
+        return columnDeclarations;
+    }
+
+    public List<ForeignKeyDeclaration> getForeignKeyDeclarations() {
+        return foreignKeyDeclarations;
+    }
 
 }

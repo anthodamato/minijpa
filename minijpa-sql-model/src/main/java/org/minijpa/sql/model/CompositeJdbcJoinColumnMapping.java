@@ -4,9 +4,9 @@ import java.util.List;
 
 public class CompositeJdbcJoinColumnMapping implements JdbcJoinColumnMapping {
 	private List<ColumnDeclaration> joinColumns;
-	private JdbcPk jdbcPk;
+	private SqlPk jdbcPk;
 
-	public CompositeJdbcJoinColumnMapping(List<ColumnDeclaration> joinColumns, JdbcPk jdbcPk) {
+	public CompositeJdbcJoinColumnMapping(List<ColumnDeclaration> joinColumns, SqlPk jdbcPk) {
 		super();
 		this.joinColumns = joinColumns;
 		this.jdbcPk = jdbcPk;
@@ -18,7 +18,7 @@ public class CompositeJdbcJoinColumnMapping implements JdbcJoinColumnMapping {
 	}
 
 	@Override
-	public JdbcPk getForeignKey() {
+	public SqlPk getForeignKey() {
 		return jdbcPk;
 	}
 
