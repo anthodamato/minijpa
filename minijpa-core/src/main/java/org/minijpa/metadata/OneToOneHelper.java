@@ -18,12 +18,13 @@ package org.minijpa.metadata;
 import java.util.Optional;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
+
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
-import org.minijpa.jdbc.relationship.JoinColumnMapping;
-import org.minijpa.jdbc.relationship.OneToOneRelationship;
 import org.minijpa.jpa.db.DbConfiguration;
+import org.minijpa.jpa.db.relationship.JoinColumnMapping;
+import org.minijpa.jpa.db.relationship.OneToOneRelationship;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
 
 /**
  *
@@ -44,9 +45,9 @@ public class OneToOneHelper extends RelationshipHelper {
 
 		if (oneToOne.fetch() != null)
 			if (oneToOne.fetch() == FetchType.EAGER)
-				builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.EAGER);
+				builder.withFetchType(org.minijpa.jpa.db.relationship.FetchType.EAGER);
 			else if (oneToOne.fetch() == FetchType.LAZY)
-				builder.withFetchType(org.minijpa.jdbc.relationship.FetchType.LAZY);
+				builder.withFetchType(org.minijpa.jpa.db.relationship.FetchType.LAZY);
 
 		return builder.build();
 	}

@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.db.JpaEntityLoader;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

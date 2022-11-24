@@ -26,14 +26,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniEntityManager;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.JobEmployee;
 import org.minijpa.jpa.model.JobInfo;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.ProgramManager;
 
 /**

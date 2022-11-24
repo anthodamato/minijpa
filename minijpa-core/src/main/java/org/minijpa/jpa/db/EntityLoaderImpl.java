@@ -20,14 +20,13 @@ import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.minijpa.jdbc.AttributeUtil;
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
-import org.minijpa.jdbc.relationship.JoinColumnMapping;
-import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.db.relationship.JoinColumnMapping;
+import org.minijpa.jpa.db.relationship.Relationship;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -16,8 +16,8 @@
 package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jpa.model.MetaEntity;
 
 /**
  *

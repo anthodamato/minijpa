@@ -21,13 +21,13 @@ import java.util.List;
 import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
-import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.ModelValueArray;
-import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
-import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.db.relationship.Relationship;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.Pk;
 import org.minijpa.metadata.AliasGenerator;
 
 /**

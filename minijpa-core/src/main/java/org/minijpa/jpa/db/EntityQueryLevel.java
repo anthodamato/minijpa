@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.minijpa.jdbc.ConnectionHolder;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.metadata.AliasGenerator;
 
 /**

@@ -16,6 +16,7 @@
 package org.minijpa.jpa.criteria;
 
 import org.minijpa.jpa.criteria.predicate.PredicateUtils;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.criteria.predicate.PredicateType;
 import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
 import java.util.ArrayList;
@@ -36,7 +37,6 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.metadata.PersistenceUnitContext;
 
 public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {

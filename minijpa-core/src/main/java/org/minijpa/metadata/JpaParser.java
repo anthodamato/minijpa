@@ -27,11 +27,11 @@ import javax.persistence.EntityResult;
 import javax.persistence.FieldResult;
 import javax.persistence.SqlResultSetMapping;
 import org.minijpa.jdbc.AttributeNameMapping;
-import org.minijpa.jdbc.ConstructorMapping;
-import org.minijpa.jdbc.EntityMapping;
-import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.QueryResultMapping;
-import org.minijpa.jdbc.SingleColumnMapping;
+import org.minijpa.jpa.db.ConstructorMapping;
+import org.minijpa.jpa.db.EntityMapping;
+import org.minijpa.jpa.db.QueryResultMapping;
+import org.minijpa.jpa.db.SingleColumnMapping;
+import org.minijpa.jpa.model.MetaEntity;
 
 /**
  *

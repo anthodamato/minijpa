@@ -12,13 +12,12 @@ import javax.persistence.Persistence;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Capital;
 import org.minijpa.jpa.model.Fingerprint;
 import org.minijpa.jpa.model.JobEmployee;
 import org.minijpa.jpa.model.JobInfo;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Person;
 import org.minijpa.jpa.model.ProgramManager;
 import org.minijpa.jpa.model.State;

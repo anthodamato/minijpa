@@ -32,40 +32,39 @@ import org.minijpa.jdbc.relationship.JoinColumnDataList;
 public class RelationshipUtils {
 
     private static JoinColumnData buildJoinColumnData(JoinColumn joinColumn) {
-	return new JoinColumnData(Optional.ofNullable(joinColumn.name()),
-		Optional.ofNullable(joinColumn.referencedColumnName()));
+        return new JoinColumnData(Optional.ofNullable(joinColumn.name()),
+                Optional.ofNullable(joinColumn.referencedColumnName()));
     }
 
     private static Optional<JoinColumnDataList> buildJoinColumnDataList(JoinColumn joinColumn) {
-	if (joinColumn == null)
-	    return Optional.empty();
+        if (joinColumn == null)
+            return Optional.empty();
 
-	JoinColumnData joinColumnData = buildJoinColumnData(joinColumn);
-	JoinColumnDataList joinColumnDataList = new JoinColumnDataList(Arrays.asList(joinColumnData));
-	return Optional.of(joinColumnDataList);
+        JoinColumnData joinColumnData = buildJoinColumnData(joinColumn);
+        JoinColumnDataList joinColumnDataList = new JoinColumnDataList(Arrays.asList(joinColumnData));
+        return Optional.of(joinColumnDataList);
     }
 
     private static Optional<JoinColumnDataList> buildJoinColumnDataList(JoinColumns joinColumns) {
-	if (joinColumns == null)
-	    return Optional.empty();
+        if (joinColumns == null)
+            return Optional.empty();
 
-	List<JoinColumnData> joinColumnDatas = new ArrayList<>();
-	for (JoinColumn joinColumn : joinColumns.value()) {
-	    joinColumnDatas.add(buildJoinColumnData(joinColumn));
-	}
+        List<JoinColumnData> joinColumnDatas = new ArrayList<>();
+        for (JoinColumn joinColumn : joinColumns.value()) {
+            joinColumnDatas.add(buildJoinColumnData(joinColumn));
+        }
 
-	return Optional.of(new JoinColumnDataList((List<JoinColumnData>) Collections.unmodifiableList(joinColumnDatas)));
+        return Optional
+                .of(new JoinColumnDataList((List<JoinColumnData>) Collections.unmodifiableList(joinColumnDatas)));
     }
 
-    public static Optional<JoinColumnDataList> buildJoinColumnDataList(
-	    JoinColumn joinColumn,
-	    JoinColumns joinColumns) {
-	if (joinColumn != null && joinColumns != null)
-	    throw new IllegalArgumentException("@JoinColumn and @JoinColumns both declared");
+    public static Optional<JoinColumnDataList> buildJoinColumnDataList(JoinColumn joinColumn, JoinColumns joinColumns) {
+        if (joinColumn != null && joinColumns != null)
+            throw new IllegalArgumentException("@JoinColumn and @JoinColumns both declared");
 
-	if (joinColumn != null)
-	    return buildJoinColumnDataList(joinColumn);
+        if (joinColumn != null)
+            return buildJoinColumnDataList(joinColumn);
 
-	return buildJoinColumnDataList(joinColumns);
+        return buildJoinColumnDataList(joinColumns);
     }
 }

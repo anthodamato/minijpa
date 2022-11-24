@@ -25,16 +25,16 @@ public class JoinTableAttributes {
     private String name;
 
     public JoinTableAttributes(String schema, String name) {
-	this.schema = schema;
-	this.name = name;
+        this.schema = schema;
+        this.name = name;
     }
 
     public String getSchema() {
-	return schema;
+        return schema;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
 }

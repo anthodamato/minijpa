@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.minijpa.jdbc.MetaAttribute;
+import org.minijpa.jpa.model.MetaAttribute;
 
 /**
  *

@@ -15,8 +15,8 @@
  */
 package org.minijpa.jpa.db;
 
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
 
 /**
  *

@@ -41,14 +41,14 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.minijpa.jdbc.ConnectionHolderImpl;
 import org.minijpa.jdbc.ConnectionProvider;
-import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.JdbcEntityManagerImpl;
 import org.minijpa.jpa.db.LockType;
 import org.minijpa.jpa.db.LockTypeUtils;
+import org.minijpa.jpa.db.MiniFlushMode;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.metadata.EntityContainerContext;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.PersistenceUnitContext;

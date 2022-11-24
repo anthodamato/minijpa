@@ -30,21 +30,18 @@ import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 
-import org.minijpa.jdbc.AttributeFetchParameterImpl;
-import org.minijpa.jdbc.EntityMapping;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.JdbcRecordBuilder;
 import org.minijpa.jdbc.JdbcRunner;
-import org.minijpa.jdbc.JoinColumnAttribute;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.QueryResultMapping;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
+import org.minijpa.jpa.db.relationship.JoinColumnAttribute;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

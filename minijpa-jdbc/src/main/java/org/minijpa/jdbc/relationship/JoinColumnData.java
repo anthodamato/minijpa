@@ -27,16 +27,16 @@ public class JoinColumnData {
     private final Optional<String> referencedColumnName;
 
     public JoinColumnData(Optional<String> name, Optional<String> referencedColumnName) {
-	this.name = name;
-	this.referencedColumnName = referencedColumnName;
+        this.name = name;
+        this.referencedColumnName = referencedColumnName;
     }
 
     public Optional<String> getName() {
-	return name;
+        return name;
     }
 
     public Optional<String> getReferencedColumnName() {
-	return referencedColumnName;
+        return referencedColumnName;
     }
 
 }

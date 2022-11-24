@@ -29,56 +29,56 @@ public class MetamodelImpl implements Metamodel {
     private Set<EmbeddableType<?>> embeddableTypes;
 
     public MetamodelImpl(Set<ManagedType<?>> managedTypes, Set<EntityType<?>> entityTypes,
-	    Set<EmbeddableType<?>> embeddableTypes) {
-	super();
-	this.managedTypes = managedTypes;
-	this.entityTypes = entityTypes;
-	this.embeddableTypes = embeddableTypes;
+            Set<EmbeddableType<?>> embeddableTypes) {
+        super();
+        this.managedTypes = managedTypes;
+        this.entityTypes = entityTypes;
+        this.embeddableTypes = embeddableTypes;
     }
 
     @Override
     public <X> EntityType<X> entity(Class<X> cls) {
-	for (EntityType entityType : entityTypes) {
-	    if (entityType.getJavaType() == cls)
-		return entityType;
-	}
+        for (EntityType entityType : entityTypes) {
+            if (entityType.getJavaType() == cls)
+                return entityType;
+        }
 
-	throw new IllegalArgumentException("Type '" + cls.getName() + "' is not an entity");
+        throw new IllegalArgumentException("Type '" + cls.getName() + "' is not an entity");
     }
 
     @Override
     public <X> ManagedType<X> managedType(Class<X> cls) {
-	for (ManagedType managedType : managedTypes) {
-	    if (managedType.getJavaType() == cls)
-		return managedType;
-	}
+        for (ManagedType managedType : managedTypes) {
+            if (managedType.getJavaType() == cls)
+                return managedType;
+        }
 
-	throw new IllegalArgumentException("Type '" + cls.getName() + "' is not a managed type");
+        throw new IllegalArgumentException("Type '" + cls.getName() + "' is not a managed type");
     }
 
     @Override
     public <X> EmbeddableType<X> embeddable(Class<X> cls) {
-	for (EmbeddableType embeddableType : embeddableTypes) {
-	    if (embeddableType.getJavaType() == cls)
-		return embeddableType;
-	}
+        for (EmbeddableType embeddableType : embeddableTypes) {
+            if (embeddableType.getJavaType() == cls)
+                return embeddableType;
+        }
 
-	throw new IllegalArgumentException("Type '" + cls.getName() + "' is not an embeddable type");
+        throw new IllegalArgumentException("Type '" + cls.getName() + "' is not an embeddable type");
     }
 
     @Override
     public Set<ManagedType<?>> getManagedTypes() {
-	return managedTypes;
+        return managedTypes;
     }
 
     @Override
     public Set<EntityType<?>> getEntities() {
-	return entityTypes;
+        return entityTypes;
     }
 
     @Override
     public Set<EmbeddableType<?>> getEmbeddables() {
-	return embeddableTypes;
+        return embeddableTypes;
     }
 
 }
