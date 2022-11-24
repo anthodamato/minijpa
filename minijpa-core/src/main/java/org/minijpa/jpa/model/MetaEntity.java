@@ -24,10 +24,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.minijpa.jdbc.Cascade;
-import org.minijpa.jpa.db.relationship.JoinColumnAttribute;
-import org.minijpa.jpa.db.relationship.JoinColumnMapping;
-import org.minijpa.jpa.db.relationship.Relationship;
+import org.minijpa.jpa.model.relationship.Cascade;
+import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
+import org.minijpa.jpa.model.relationship.JoinColumnMapping;
+import org.minijpa.jpa.model.relationship.Relationship;
 
 public class MetaEntity {
 

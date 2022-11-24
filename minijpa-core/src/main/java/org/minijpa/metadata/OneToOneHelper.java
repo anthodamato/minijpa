@@ -21,10 +21,10 @@ import javax.persistence.OneToOne;
 
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jpa.db.DbConfiguration;
-import org.minijpa.jpa.db.relationship.JoinColumnMapping;
-import org.minijpa.jpa.db.relationship.OneToOneRelationship;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.relationship.JoinColumnMapping;
+import org.minijpa.jpa.model.relationship.OneToOneRelationship;
 
 /**
  *
@@ -45,9 +45,9 @@ public class OneToOneHelper extends RelationshipHelper {
 
 		if (oneToOne.fetch() != null)
 			if (oneToOne.fetch() == FetchType.EAGER)
-				builder.withFetchType(org.minijpa.jpa.db.relationship.FetchType.EAGER);
+				builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.EAGER);
 			else if (oneToOne.fetch() == FetchType.LAZY)
-				builder.withFetchType(org.minijpa.jpa.db.relationship.FetchType.LAZY);
+				builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.LAZY);
 
 		return builder.build();
 	}

@@ -23,11 +23,11 @@ import java.util.stream.Collectors;
 
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.PkSequenceGenerator;
-import org.minijpa.jpa.db.relationship.JoinColumnMapping;
-import org.minijpa.jpa.db.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.relationship.JoinColumnMapping;
+import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
 import org.minijpa.sql.model.ColumnDeclaration;
 import org.minijpa.sql.model.CompositeSqlPk;
 import org.minijpa.sql.model.ForeignKeyDeclaration;

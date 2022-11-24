@@ -25,12 +25,12 @@ import javax.persistence.ManyToMany;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
 import org.minijpa.jpa.db.DbConfiguration;
-import org.minijpa.jpa.db.relationship.JoinColumnMapping;
-import org.minijpa.jpa.db.relationship.ManyToManyRelationship;
-import org.minijpa.jpa.db.relationship.Relationship;
-import org.minijpa.jpa.db.relationship.RelationshipJoinTable;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.relationship.JoinColumnMapping;
+import org.minijpa.jpa.model.relationship.ManyToManyRelationship;
+import org.minijpa.jpa.model.relationship.Relationship;
+import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
 
 /**
  *
@@ -56,9 +56,9 @@ public class ManyToManyHelper extends RelationshipHelper {
 
 		if (manyToMany.fetch() != null)
 			if (manyToMany.fetch() == FetchType.EAGER)
-				builder = builder.withFetchType(org.minijpa.jpa.db.relationship.FetchType.EAGER);
+				builder = builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.EAGER);
 			else if (manyToMany.fetch() == FetchType.LAZY)
-				builder = builder.withFetchType(org.minijpa.jpa.db.relationship.FetchType.LAZY);
+				builder = builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.LAZY);
 
 		if (joinTable != null) {
 			JoinTableAttributes joinTableAttributes = new JoinTableAttributes(joinTable.schema(), joinTable.name());

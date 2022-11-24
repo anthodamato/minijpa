@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db.relationship;
+package org.minijpa.jpa.model.relationship;
 
 public enum FetchType {
     EAGER, LAZY;

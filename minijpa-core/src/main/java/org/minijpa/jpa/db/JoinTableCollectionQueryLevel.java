@@ -25,9 +25,9 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.MetaEntityHelper;
-import org.minijpa.jpa.db.relationship.Relationship;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.relationship.Relationship;
 import org.minijpa.metadata.AliasGenerator;
 
 /**

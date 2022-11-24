@@ -13,32 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db.relationship;
-
-import java.util.List;
-
-import org.minijpa.jpa.model.MetaAttribute;
-import org.minijpa.jpa.model.Pk;
+package org.minijpa.jpa.model.relationship;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface JoinColumnMapping {
-
-	public MetaAttribute getAttribute();
-
-	public boolean isComposite();
-
-	public int size();
-
-	public JoinColumnAttribute get(int index);
-
-	public JoinColumnAttribute get();
-
-	public List<JoinColumnAttribute> getJoinColumnAttributes();
-
-	public Pk getForeignKey();
-
-	public boolean isLazy();
+public enum Cascade {
+    ALL, PERSIST, MERGE, REMOVE, REFRESH, DETACH;
 }

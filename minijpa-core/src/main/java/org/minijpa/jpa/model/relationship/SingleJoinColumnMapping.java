@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db.relationship;
+package org.minijpa.jpa.model.relationship;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.minijpa.jpa.model.MetaAttribute;
@@ -24,14 +25,14 @@ import org.minijpa.jpa.model.Pk;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class CompositeJoinColumnMapping implements JoinColumnMapping {
+public class SingleJoinColumnMapping implements JoinColumnMapping {
 
-	private final List<JoinColumnAttribute> joinColumnAttributes;
+	private final JoinColumnAttribute joinColumnAttribute;
 	private final MetaAttribute attribute;
 	private final Pk pk;
 
-	public CompositeJoinColumnMapping(List<JoinColumnAttribute> joinColumnAttributes, MetaAttribute attribute, Pk pk) {
-		this.joinColumnAttributes = joinColumnAttributes;
+	public SingleJoinColumnMapping(JoinColumnAttribute joinColumnAttribute, MetaAttribute attribute, Pk pk) {
+		this.joinColumnAttribute = joinColumnAttribute;
 		this.attribute = attribute;
 		this.pk = pk;
 	}
@@ -43,22 +44,25 @@ public class CompositeJoinColumnMapping implements JoinColumnMapping {
 
 	@Override
 	public boolean isComposite() {
-		return true;
+		return false;
 	}
 
 	@Override
 	public int size() {
-		return joinColumnAttributes.size();
+		return 1;
 	}
 
 	@Override
 	public JoinColumnAttribute get(int index) {
-		return joinColumnAttributes.get(index);
+		if (index == 0)
+			return joinColumnAttribute;
+
+		throw new IndexOutOfBoundsException("Index '" + index + "' out of bounds");
 	}
 
 	@Override
 	public JoinColumnAttribute get() {
-		return null;
+		return joinColumnAttribute;
 	}
 
 	@Override
@@ -68,12 +72,12 @@ public class CompositeJoinColumnMapping implements JoinColumnMapping {
 
 	@Override
 	public boolean isLazy() {
-		return joinColumnAttributes.get(0).getAttribute().isLazy();
+		return joinColumnAttribute.getAttribute().isLazy();
 	}
 
 	@Override
 	public List<JoinColumnAttribute> getJoinColumnAttributes() {
-		return joinColumnAttributes;
+		return Arrays.asList(joinColumnAttribute);
 	}
 
 }

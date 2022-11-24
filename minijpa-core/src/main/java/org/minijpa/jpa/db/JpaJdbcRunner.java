@@ -39,9 +39,9 @@ import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
-import org.minijpa.jpa.db.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

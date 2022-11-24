@@ -25,8 +25,8 @@ import java.util.Optional;
 import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jpa.db.relationship.FetchType;
-import org.minijpa.jpa.db.relationship.Relationship;
+import org.minijpa.jpa.model.relationship.FetchType;
+import org.minijpa.jpa.model.relationship.Relationship;
 
 public class MetaAttribute extends AbstractAttribute {
 

@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db.relationship;
+package org.minijpa.jpa.model.relationship;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.minijpa.jpa.model.MetaAttribute;
@@ -25,14 +24,14 @@ import org.minijpa.jpa.model.Pk;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class SingleJoinColumnMapping implements JoinColumnMapping {
+public class CompositeJoinColumnMapping implements JoinColumnMapping {
 
-	private final JoinColumnAttribute joinColumnAttribute;
+	private final List<JoinColumnAttribute> joinColumnAttributes;
 	private final MetaAttribute attribute;
 	private final Pk pk;
 
-	public SingleJoinColumnMapping(JoinColumnAttribute joinColumnAttribute, MetaAttribute attribute, Pk pk) {
-		this.joinColumnAttribute = joinColumnAttribute;
+	public CompositeJoinColumnMapping(List<JoinColumnAttribute> joinColumnAttributes, MetaAttribute attribute, Pk pk) {
+		this.joinColumnAttributes = joinColumnAttributes;
 		this.attribute = attribute;
 		this.pk = pk;
 	}
@@ -44,25 +43,22 @@ public class SingleJoinColumnMapping implements JoinColumnMapping {
 
 	@Override
 	public boolean isComposite() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public int size() {
-		return 1;
+		return joinColumnAttributes.size();
 	}
 
 	@Override
 	public JoinColumnAttribute get(int index) {
-		if (index == 0)
-			return joinColumnAttribute;
-
-		throw new IndexOutOfBoundsException("Index '" + index + "' out of bounds");
+		return joinColumnAttributes.get(index);
 	}
 
 	@Override
 	public JoinColumnAttribute get() {
-		return joinColumnAttribute;
+		return null;
 	}
 
 	@Override
@@ -72,12 +68,12 @@ public class SingleJoinColumnMapping implements JoinColumnMapping {
 
 	@Override
 	public boolean isLazy() {
-		return joinColumnAttribute.getAttribute().isLazy();
+		return joinColumnAttributes.get(0).getAttribute().isLazy();
 	}
 
 	@Override
 	public List<JoinColumnAttribute> getJoinColumnAttributes() {
-		return Arrays.asList(joinColumnAttribute);
+		return joinColumnAttributes;
 	}
 
 }

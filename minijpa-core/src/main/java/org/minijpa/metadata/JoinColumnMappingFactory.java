@@ -19,9 +19,9 @@ import java.util.Optional;
 
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jpa.db.DbConfiguration;
-import org.minijpa.jpa.db.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 
 /**
  *

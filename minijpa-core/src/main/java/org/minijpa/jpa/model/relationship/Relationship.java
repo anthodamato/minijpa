@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db.relationship;
+package org.minijpa.jpa.model.relationship;
 
 import java.util.Optional;
 import java.util.Set;
-import org.minijpa.jdbc.Cascade;
+
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
 import org.minijpa.jpa.model.MetaAttribute;

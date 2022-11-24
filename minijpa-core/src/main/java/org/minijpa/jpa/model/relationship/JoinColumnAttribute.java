@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db.relationship;
+package org.minijpa.jpa.model.relationship;
 
 import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jpa.model.MetaAttribute;

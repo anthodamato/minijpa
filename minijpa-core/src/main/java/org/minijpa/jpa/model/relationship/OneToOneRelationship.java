@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db.relationship;
+package org.minijpa.jpa.model.relationship;
 
 import java.util.Optional;
 import java.util.Set;
-import org.minijpa.jdbc.Cascade;
+
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 
-public final class ManyToOneRelationship extends Relationship {
+public final class OneToOneRelationship extends Relationship {
 
-	public ManyToOneRelationship() {
+	public OneToOneRelationship() {
 		super();
-	}
-
-	@Override
-	public boolean isOwner() {
-		return true;
 	}
 
 	@Override
@@ -39,16 +34,25 @@ public final class ManyToOneRelationship extends Relationship {
 	}
 
 	@Override
+	public boolean fromOne() {
+		return true;
+	}
+
+	@Override
 	public String toString() {
-		return ManyToOneRelationship.class.getName() + ": fetchType=" + getFetchType();
+		return OneToOneRelationship.class.getName()
+				+ ": joinColumnTable=" + joinColumnTable + "; mappedBy=" + mappedBy + "; fetchType="
+				+ fetchType;
 	}
 
 	public static class Builder {
 
 		private String joinColumnTable;
+		private Optional<String> mappedBy = Optional.empty();
 		private FetchType fetchType = FetchType.EAGER;
 		private Set<Cascade> cascades;
 		private MetaEntity owningEntity;
+		private MetaAttribute targetAttribute;
 		private MetaAttribute owningAttribute;
 		private MetaEntity attributeType;
 		private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
@@ -59,6 +63,11 @@ public final class ManyToOneRelationship extends Relationship {
 
 		public Builder withJoinColumnTable(String joinColumnTable) {
 			this.joinColumnTable = joinColumnTable;
+			return this;
+		}
+
+		public Builder withMappedBy(Optional<String> mappedBy) {
+			this.mappedBy = mappedBy;
 			return this;
 		}
 
@@ -77,6 +86,11 @@ public final class ManyToOneRelationship extends Relationship {
 			return this;
 		}
 
+		public Builder withTargetAttribute(MetaAttribute targetAttribute) {
+			this.targetAttribute = targetAttribute;
+			return this;
+		}
+
 		public Builder withOwningAttribute(MetaAttribute attribute) {
 			this.owningAttribute = attribute;
 			return this;
@@ -87,34 +101,38 @@ public final class ManyToOneRelationship extends Relationship {
 			return this;
 		}
 
-		public ManyToOneRelationship.Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
+		public Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
 			this.joinColumnDataList = joinColumnDataList;
 			return this;
 		}
 
-		public ManyToOneRelationship.Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
+		public Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
 			this.joinColumnMapping = joinColumnMapping;
 			return this;
 		}
 
-		public Builder with(ManyToOneRelationship manyToOne) {
-			this.joinColumnTable = manyToOne.joinColumnTable;
-			this.fetchType = manyToOne.fetchType;
-			this.cascades = manyToOne.cascades;
-			this.owningEntity = manyToOne.owningEntity;
-			this.owningAttribute = manyToOne.owningAttribute;
-			this.attributeType = manyToOne.attributeType;
-			this.joinColumnDataList = manyToOne.joinColumnDataList;
-			this.joinColumnMapping = manyToOne.joinColumnMapping;
+		public Builder with(OneToOneRelationship oneToOne) {
+			this.joinColumnTable = oneToOne.joinColumnTable;
+			this.mappedBy = oneToOne.mappedBy;
+			this.fetchType = oneToOne.fetchType;
+			this.cascades = oneToOne.cascades;
+			this.owningEntity = oneToOne.owningEntity;
+			this.owningAttribute = oneToOne.owningAttribute;
+			this.targetAttribute = oneToOne.targetAttribute;
+			this.attributeType = oneToOne.attributeType;
+			this.joinColumnDataList = oneToOne.joinColumnDataList;
+			this.joinColumnMapping = oneToOne.getJoinColumnMapping();
 			return this;
 		}
 
-		public ManyToOneRelationship build() {
-			ManyToOneRelationship r = new ManyToOneRelationship();
+		public OneToOneRelationship build() {
+			OneToOneRelationship r = new OneToOneRelationship();
 			r.joinColumnTable = joinColumnTable;
+			r.mappedBy = mappedBy;
 			r.fetchType = fetchType;
 			r.cascades = cascades;
 			r.owningEntity = owningEntity;
+			r.targetAttribute = targetAttribute;
 			r.owningAttribute = owningAttribute;
 			r.attributeType = attributeType;
 			r.joinColumnDataList = joinColumnDataList;

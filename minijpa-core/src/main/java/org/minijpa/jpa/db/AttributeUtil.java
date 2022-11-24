@@ -35,10 +35,10 @@ import java.util.function.Function;
 
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.ModelValueArray;
-import org.minijpa.jpa.db.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
