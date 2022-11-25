@@ -55,6 +55,18 @@ public class JpaJdbcRunner extends JdbcRunner {
         super();
     }
 
+    protected Object[] createRecord(int nc, List<FetchParameter> fetchParameters, ResultSet rs,
+            ResultSetMetaData metaData) throws Exception {
+        Object[] values = new Object[nc];
+        for (int i = 0; i < nc; ++i) {
+            int columnType = metaData.getColumnType(i + 1);
+            Object v = getValue(rs, i + 1, columnType);
+            values[i] = v;
+        }
+
+        return values;
+    }
+
     public List<Tuple> runTupleQuery(Connection connection, String sql, SqlSelectData sqlSelectData,
             CompoundSelection<?> compoundSelection, List<QueryParameter> parameters) throws Exception {
         PreparedStatement preparedStatement = null;

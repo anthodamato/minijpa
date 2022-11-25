@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
@@ -33,6 +32,7 @@ import org.minijpa.jpa.db.AttributeFetchParameterImpl;
 import org.minijpa.jpa.db.AttributeUtil;
 import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.db.LockType;
+import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;

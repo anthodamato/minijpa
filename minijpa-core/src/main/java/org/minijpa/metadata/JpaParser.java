@@ -26,7 +26,8 @@ import javax.persistence.ConstructorResult;
 import javax.persistence.EntityResult;
 import javax.persistence.FieldResult;
 import javax.persistence.SqlResultSetMapping;
-import org.minijpa.jdbc.AttributeNameMapping;
+
+import org.minijpa.jpa.db.AttributeNameMapping;
 import org.minijpa.jpa.db.ConstructorMapping;
 import org.minijpa.jpa.db.EntityMapping;
 import org.minijpa.jpa.db.QueryResultMapping;

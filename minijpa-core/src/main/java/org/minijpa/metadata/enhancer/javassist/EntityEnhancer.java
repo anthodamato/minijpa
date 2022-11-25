@@ -22,7 +22,7 @@ import java.util.Set;
 
 import javax.persistence.Entity;
 
-import org.minijpa.jdbc.CollectionUtils;
+import org.minijpa.jpa.db.CollectionUtils;
 import org.minijpa.metadata.BeanUtil;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.enhancer.EnhAttribute;

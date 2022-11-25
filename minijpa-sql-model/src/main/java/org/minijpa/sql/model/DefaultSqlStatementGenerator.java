@@ -908,10 +908,16 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         StringBuilder sb = new StringBuilder();
         sb.append("create sequence ");
         sb.append(nameTranslator.adjustName(sqlCreateSequence.getSequenceName()));
-        sb.append(" start with ");
-        sb.append(sqlCreateSequence.getInitialValue());
-        sb.append(" increment by ");
-        sb.append(sqlCreateSequence.getAllocationSize());
+        if (sqlCreateSequence.getInitialValue() != null) {
+            sb.append(" start with ");
+            sb.append(sqlCreateSequence.getInitialValue());
+        }
+
+        if (sqlCreateSequence.getAllocationSize() != null) {
+            sb.append(" increment by ");
+            sb.append(sqlCreateSequence.getAllocationSize());
+        }
+
         return sb.toString();
     }
 

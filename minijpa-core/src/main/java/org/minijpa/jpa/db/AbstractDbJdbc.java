@@ -146,7 +146,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
         sqlCreateSequence.setAllocationSize(pkSequenceGenerator.getAllocationSize());
         sqlCreateSequence.setCatalog(pkSequenceGenerator.getCatalog());
         sqlCreateSequence.setInitialValue(pkSequenceGenerator.getInitialValue());
-        sqlCreateSequence.setName(pkSequenceGenerator.getName());
+//        sqlCreateSequence.setName(pkSequenceGenerator.getName());
         sqlCreateSequence.setSchema(pkSequenceGenerator.getSchema());
         sqlCreateSequence.setSequenceName(pkSequenceGenerator.getSequenceName());
         return sqlCreateSequence;

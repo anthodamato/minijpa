@@ -114,14 +114,6 @@ public class JdbcRunner {
         }
     }
 
-    public int persist(Connection connection, String sql) throws SQLException {
-        LOG.info("Running `{}`", sql);
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.execute();
-            return preparedStatement.getUpdateCount();
-        }
-    }
-
     public void insert(Connection connection, String sql, List<QueryParameter> parameters) throws SQLException {
         PreparedStatement preparedStatement = null;
         try {
@@ -344,18 +336,6 @@ public class JdbcRunner {
         }
     }
 
-    protected Object[] createRecord(int nc, List<FetchParameter> fetchParameters, ResultSet rs,
-            ResultSetMetaData metaData) throws Exception {
-        Object[] values = new Object[nc];
-        for (int i = 0; i < nc; ++i) {
-            int columnType = metaData.getColumnType(i + 1);
-            Object v = getValue(rs, i + 1, columnType);
-            values[i] = v;
-        }
-
-        return values;
-    }
-
     public void runNativeQuery(Connection connection, String sql, List<Object> parameterValues,
             JdbcRecordBuilder recordBuilder) throws Exception {
         PreparedStatement preparedStatement = null;
@@ -380,27 +360,23 @@ public class JdbcRunner {
 
     public Long generateNextSequenceValue(Connection connection, String sql) throws SQLException {
         LOG.info("Running `{}`", sql);
-        Long value = null;
         ResultSet rs = null;
         PreparedStatement preparedStatement = null;
         try {
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.execute();
             rs = preparedStatement.getResultSet();
-            if (rs.next()) {
-                value = rs.getLong(1);
-            }
+            if (rs.next())
+                return rs.getLong(1);
         } finally {
-            if (rs != null) {
+            if (rs != null)
                 rs.close();
-            }
 
-            if (preparedStatement != null) {
+            if (preparedStatement != null)
                 preparedStatement.close();
-            }
         }
 
-        return value;
+        return null;
     }
 
     public static class JdbcRecordBuilderValue implements JdbcRecordBuilder {

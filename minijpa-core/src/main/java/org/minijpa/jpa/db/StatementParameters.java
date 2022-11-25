@@ -13,28 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc;
+package org.minijpa.jpa.db;
+
+import java.util.List;
+import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.sql.model.SqlStatement;
 
 /**
  *
- * @author Antonio Damato <anto.damato@gmail.com>
+ * @author adamato
  */
-public class AttributeNameMapping {
+public class StatementParameters {
 
-	private final String name;
-	private final String alias;
+	private final SqlStatement sqlStatement;
+	private final List<QueryParameter> parameters;
 
-	public AttributeNameMapping(String name, String alias) {
-		this.name = name;
-		this.alias = alias;
+	public StatementParameters(SqlStatement sqlStatement, List<QueryParameter> parameters) {
+		this.sqlStatement = sqlStatement;
+		this.parameters = parameters;
 	}
 
-	public String getName() {
-		return name;
+	public SqlStatement getSqlStatement() {
+		return sqlStatement;
 	}
 
-	public String getAlias() {
-		return alias;
+	public List<QueryParameter> getParameters() {
+		return parameters;
 	}
 
 }

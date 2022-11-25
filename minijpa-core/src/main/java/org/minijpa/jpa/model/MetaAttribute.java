@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.minijpa.jdbc.AbstractAttribute;
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jpa.model.relationship.FetchType;

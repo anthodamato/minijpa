@@ -23,12 +23,11 @@ import java.util.stream.Collectors;
 
 import javax.persistence.OptimisticLockException;
 
-import org.minijpa.jdbc.AbstractAttribute;
-import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;

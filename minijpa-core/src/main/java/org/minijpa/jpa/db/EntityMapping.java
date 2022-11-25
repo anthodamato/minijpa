@@ -18,7 +18,6 @@ package org.minijpa.jpa.db;
 import java.util.List;
 import java.util.Optional;
 
-import org.minijpa.jdbc.AttributeNameMapping;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;

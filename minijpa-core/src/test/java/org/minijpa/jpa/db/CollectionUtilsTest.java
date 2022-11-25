@@ -13,32 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc.db;
+package org.minijpa.jpa.db;
 
+import java.util.Arrays;
 import java.util.List;
-import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.sql.model.SqlStatement;
 
-/**
- *
- * @author adamato
- */
-public class StatementParameters {
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-	private final SqlStatement sqlStatement;
-	private final List<QueryParameter> parameters;
+public class CollectionUtilsTest {
 
-	public StatementParameters(SqlStatement sqlStatement, List<QueryParameter> parameters) {
-		this.sqlStatement = sqlStatement;
-		this.parameters = parameters;
+	@Test
+	public void isCollectionClass() {
+		List<String> list = Arrays.asList("test1", "test2");
+		boolean isCollection = CollectionUtils.isCollectionClass(list.getClass());
+		Assertions.assertTrue(isCollection);
 	}
-
-	public SqlStatement getSqlStatement() {
-		return sqlStatement;
-	}
-
-	public List<QueryParameter> getParameters() {
-		return parameters;
-	}
-
 }

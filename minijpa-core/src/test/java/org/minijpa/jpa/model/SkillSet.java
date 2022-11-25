@@ -26,19 +26,19 @@ public class SkillSet {
     private String skills;
 
     public Long getId() {
-	return id;
+        return id;
     }
 
     public void setId(Long id) {
-	this.id = id;
+        this.id = id;
     }
 
     public String getSkills() {
-	return skills;
+        return skills;
     }
 
     public void setSkills(String skills) {
-	this.skills = skills;
+        this.skills = skills;
     }
 
 }

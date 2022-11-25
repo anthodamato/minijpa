@@ -28,13 +28,13 @@ public class PkSequenceGenerator {
 	private int initialValue;
 	private String catalog;
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
+//	public String getName() {
+//		return name;
+//	}
+//
+//	public void setName(String name) {
+//		this.name = name;
+//	}
 
 	public String getSequenceName() {
 		return sequenceName;

@@ -15,7 +15,7 @@
  */
 package org.minijpa.jpa.model.relationship;
 
-import org.minijpa.jdbc.AbstractAttribute;
+import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 
 public class JoinColumnAttribute extends AbstractAttribute {

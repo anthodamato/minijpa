@@ -29,13 +29,11 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.CriteriaQuery;
 
-import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
-import org.minijpa.jdbc.db.StatementParameters;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniNativeQuery;
@@ -542,8 +540,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         jdbcJpqlRecordBuilder.setCollectionResult(collectionResult);
 //        return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), jpqlResult.getSql(),
 //                new ArrayList<>(), sqlSelectData.getFetchParameters());
-        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), jpqlResult.getSql(), new ArrayList<>(),
-                jdbcJpqlRecordBuilder);
+        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), jpqlResult.getSql(),
+                new ArrayList<>(), jdbcJpqlRecordBuilder);
         return collectionResult;
     }
 
@@ -578,7 +576,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     @Override
     public int update(String sqlString, Query query) throws Exception {
-        return dbConfiguration.getJdbcRunner().persist(connectionHolder.getConnection(), sqlString);
+        return dbConfiguration.getJdbcRunner().update(connectionHolder.getConnection(), sqlString,
+                Collections.emptyList());
     }
 
     @Override

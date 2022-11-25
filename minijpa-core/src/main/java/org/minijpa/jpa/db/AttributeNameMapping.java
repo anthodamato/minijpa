@@ -13,20 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jdbc;
+package org.minijpa.jpa.db;
 
-import java.util.Arrays;
-import java.util.List;
+/**
+ *
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
+public class AttributeNameMapping {
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+	private final String name;
+	private final String alias;
 
-public class CollectionUtilsTest {
-
-	@Test
-	public void isCollectionClass() {
-		List<String> list = Arrays.asList("test1", "test2");
-		boolean isCollection = CollectionUtils.isCollectionClass(list.getClass());
-		Assertions.assertTrue(isCollection);
+	public AttributeNameMapping(String name, String alias) {
+		this.name = name;
+		this.alias = alias;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getAlias() {
+		return alias;
+	}
+
 }

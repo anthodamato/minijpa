@@ -52,13 +52,13 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
 
-import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jpa.db.AttributeUtil;
+import org.minijpa.jpa.db.CollectionUtils;
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.db.LockType;
