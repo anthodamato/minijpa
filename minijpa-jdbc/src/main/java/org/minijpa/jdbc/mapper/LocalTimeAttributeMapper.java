@@ -26,12 +26,12 @@ public class LocalTimeAttributeMapper implements AttributeMapper<LocalTime, Time
 
     @Override
     public Time attributeToDatabase(LocalTime k) {
-	return Time.valueOf(k);
+        return Time.valueOf(k);
     }
 
     @Override
     public LocalTime databaseToAttribute(Time v) {
-	return v.toLocalTime();
+        return v.toLocalTime();
     }
 
 }

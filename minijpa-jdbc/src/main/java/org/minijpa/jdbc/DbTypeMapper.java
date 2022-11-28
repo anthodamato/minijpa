@@ -30,7 +30,7 @@ public interface DbTypeMapper {
 	 * @param databaseType
 	 * @return
 	 */
-	public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType);
+	public AttributeMapper<?, ?> attributeMapper(Class<?> attributeType, Class<?> databaseType);
 
 	/**
 	 * Maps the attribute type to the db type. For example, on Apache Derby if a

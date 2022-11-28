@@ -85,7 +85,6 @@ public class Parser {
 
 	private final Logger LOG = LoggerFactory.getLogger(Parser.class);
 	private final DbConfiguration dbConfiguration;
-//	private final AliasGeneratorClass aliasGenerator = new AliasGeneratorClass();
 	private final OneToOneHelper oneToOneHelper = new OneToOneHelper();
 	private final ManyToOneHelper manyToOneHelper = new ManyToOneHelper();
 	private final OneToManyHelper oneToManyHelper = new OneToManyHelper();
