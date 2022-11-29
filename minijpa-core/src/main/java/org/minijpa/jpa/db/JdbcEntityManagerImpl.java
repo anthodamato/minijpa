@@ -260,7 +260,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         for (Object entityInstance : managedEntityList) {
             MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
             EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
-            LOG.debug("flush: entityInstance={}{}; entityStatus={}", entityInstance, entityStatus);
+            LOG.debug("flush: entityInstance={}; entityStatus={}", entityInstance, entityStatus);
             switch (entityStatus) {
             case FLUSHED:
             case FLUSHED_LOADED_FROM_DB:

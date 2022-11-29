@@ -663,7 +663,7 @@ public class Parser {
 		PkSequenceGenerator pkSequenceGenerator = new PkSequenceGenerator();
 		pkSequenceGenerator.setSequenceName(tableName.toUpperCase() + "_PK_SEQ");
 //		pkSequenceGenerator.setSchema(sequenceGenerator.schema());
-		pkSequenceGenerator.setAllocationSize(1);
+		pkSequenceGenerator.setAllocationSize(Integer.valueOf(1));
 //		pkSequenceGenerator.setCatalog(sequenceGenerator.schema());
 		pkSequenceGenerator.setInitialValue(1);
 		return pkSequenceGenerator;

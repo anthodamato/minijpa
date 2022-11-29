@@ -3,10 +3,15 @@ package org.minijpa.jdbc.mapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
 import java.util.Optional;
+import java.util.TimeZone;
 
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +76,48 @@ public class ApacheDerbyDbTypeMapperTest {
         LocalTime lt = attributeMapper.databaseToAttribute(time);
         assertNotNull(lt);
         assertEquals(localTime, lt);
+    }
+
+    @Test
+    public void calendarToSqlDateMapper() {
+        AttributeMapper<java.util.Calendar, java.sql.Date> attributeMapper = apacheDerbyDbTypeMapper
+                .attributeMapper(java.util.Calendar.class, java.sql.Date.class);
+        assertNotNull(attributeMapper);
+        java.util.Calendar calendar = Calendar.getInstance();
+        LocalDate localDate = LocalDate.of(2022, 10, 10);
+        java.util.Date utilDate = java.util.Date
+                .from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+        calendar.setTime(utilDate);
+
+        java.sql.Date sqlDate = attributeMapper.attributeToDatabase(calendar);
+        assertNotNull(sqlDate);
+        assertEquals(utilDate, sqlDate);
+
+        java.util.Calendar calendarConv = attributeMapper.databaseToAttribute(sqlDate);
+        assertNotNull(calendarConv);
+        assertEquals(calendar, calendarConv);
+    }
+
+    @Test
+    public void calendarToTimestampMapper() {
+        AttributeMapper<java.util.Calendar, java.sql.Timestamp> attributeMapper = apacheDerbyDbTypeMapper
+                .attributeMapper(java.util.Calendar.class, java.sql.Timestamp.class);
+        assertNotNull(attributeMapper);
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+        LocalDateTime localDateTime = LocalDateTime.of(2022, 10, 10, 20, 32, 10);
+
+        ZonedDateTime zdt = localDateTime.atZone(ZoneId.systemDefault());
+        java.util.Date utilDate = java.util.Date.from(zdt.toInstant());
+
+        calendar.setTime(utilDate);
+
+        java.sql.Timestamp timestamp = attributeMapper.attributeToDatabase(calendar);
+        assertNotNull(timestamp);
+        assertEquals(Timestamp.valueOf(localDateTime), timestamp);
+
+        java.util.Calendar calendarConv = attributeMapper.databaseToAttribute(timestamp);
+        assertNotNull(calendarConv);
+        assertEquals(calendar, calendarConv);
     }
 
     @Test

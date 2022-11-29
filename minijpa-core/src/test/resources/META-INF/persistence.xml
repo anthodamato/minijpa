@@ -618,4 +618,27 @@
 				value="metadata" />
 		</properties>
 	</persistence-unit>
+
+	<persistence-unit name="data_types">
+		<description>Data Types</description>
+		<class>org.minijpa.jpa.model.DataTypes</class>
+
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:data_types;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="script" />
+			<property
+				name="javax.persistence.schema-generation.create-script-source"
+				value="META-INF/create_data_types_db.sql" />
+		</properties>
+	</persistence-unit>
+
 </persistence>

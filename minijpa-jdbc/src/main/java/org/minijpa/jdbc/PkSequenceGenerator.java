@@ -21,20 +21,11 @@ package org.minijpa.jdbc;
  */
 public class PkSequenceGenerator {
 
-    private String name;
     private String sequenceName;
     private String schema;
     private Integer allocationSize;
     private Integer initialValue;
     private String catalog;
-
-//	public String getName() {
-//		return name;
-//	}
-//
-//	public void setName(String name) {
-//		this.name = name;
-//	}
 
     public String getSequenceName() {
         return sequenceName;
