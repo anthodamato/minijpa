@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.minijpa.jdbc.ConnectionHolder;
+import org.minijpa.jdbc.FetchParameter;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.MetaEntityHelper;
@@ -45,23 +47,21 @@ public class EntityQueryLevel implements QueryLevel {
         this.tableAliasGenerator = tableAliasGenerator;
     }
 
-    public Optional<?> run(MetaEntity entity, Object primaryKey, LockType lockType) throws Exception {
+    public Optional<ModelValueArray<FetchParameter>> run(MetaEntity entity, Object primaryKey, LockType lockType)
+            throws Exception {
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectById(entity, lockType, tableAliasGenerator);
         List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-//        return dbConfiguration.getJdbcRunner().findById(sql, connectionHolder.getConnection(),
-//                sqlSelectData.getFetchParameters(), parameters);
         jdbcValueBuilderById.setFetchParameters(sqlSelectData.getFetchParameters());
         return dbConfiguration.getJdbcRunner().findById(sql, connectionHolder.getConnection(), parameters,
                 jdbcValueBuilderById);
     }
 
-    public Optional<?> runVersionQuery(MetaEntity entity, Object primaryKey, LockType lockType) throws Exception {
+    public Optional<ModelValueArray<FetchParameter>> runVersionQuery(MetaEntity entity, Object primaryKey,
+            LockType lockType) throws Exception {
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectVersion(entity, lockType, tableAliasGenerator);
         List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-//        return dbConfiguration.getJdbcRunner().findById(sql, connectionHolder.getConnection(),
-//                sqlSelectData.getFetchParameters(), parameters);
         jdbcValueBuilderById.setFetchParameters(sqlSelectData.getFetchParameters());
         return dbConfiguration.getJdbcRunner().findById(sql, connectionHolder.getConnection(), parameters,
                 jdbcValueBuilderById);

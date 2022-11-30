@@ -168,8 +168,9 @@ public class JdbcRunner {
         }
     }
 
-    public Optional<?> findById(String sql, Connection connection, List<QueryParameter> parameters,
-            JdbcValueBuilder jdbcValueBuilder) throws Exception {
+    public Optional<ModelValueArray<FetchParameter>> findById(String sql, Connection connection,
+            List<QueryParameter> parameters, JdbcValueBuilder<ModelValueArray<FetchParameter>> jdbcValueBuilder)
+            throws Exception {
         PreparedStatement preparedStatement = null;
         ResultSet rs = null;
         try {
@@ -420,7 +421,7 @@ public class JdbcRunner {
         }
     }
 
-    public static class JdbcValueBuilderById implements JdbcValueBuilder {
+    public static class JdbcValueBuilderById implements JdbcValueBuilder<ModelValueArray<FetchParameter>> {
         private List<FetchParameter> fetchParameters;
 
         public void setFetchParameters(List<FetchParameter> fetchParameters) {
@@ -428,7 +429,8 @@ public class JdbcRunner {
         }
 
         @Override
-        public Optional<?> build(ResultSet rs, ResultSetMetaData metaData) throws Exception {
+        public Optional<ModelValueArray<FetchParameter>> build(ResultSet rs, ResultSetMetaData metaData)
+                throws Exception {
             return createModelValueArrayFromResultSetAM(fetchParameters, rs, metaData);
         }
     }

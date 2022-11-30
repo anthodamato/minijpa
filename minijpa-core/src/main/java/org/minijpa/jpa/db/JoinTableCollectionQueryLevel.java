@@ -39,7 +39,6 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
     private final DbConfiguration dbConfiguration;
     private final ConnectionHolder connectionHolder;
     private final AliasGenerator tableAliasGenerator;
-//    private final EntityRecordCollector recordCollector = new EntityRecordCollector();
     private JpaJdbcRunner.JdbcFPRecordBuilder jdbcFPRecordBuilder = new JpaJdbcRunner.JdbcFPRecordBuilder();
 
     public JoinTableCollectionQueryLevel(SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration,
@@ -51,7 +50,7 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
     }
 
     public Object run(Object primaryKey, Pk id, Relationship relationship, MetaAttribute metaAttribute,
-            JpaEntityLoader entityLoader) throws Exception {
+            EntityHandler entityLoader) throws Exception {
         ModelValueArray<AbstractAttribute> modelValueArray = null;
         SqlSelectData sqlSelectData = null;
         if (relationship.isOwner()) {
@@ -73,16 +72,12 @@ public class JoinTableCollectionQueryLevel implements QueryLevel {
         Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
                 metaAttribute.getCollectionImplementationClass());
         entityLoader.setLockType(LockType.NONE);
-//        recordCollector.setCollectionResult(collectionResult);
-//        recordCollector.setEntityLoader(entityLoader);
-//        recordCollector.setMetaEntity(relationship.getAttributeType());
         jdbcFPRecordBuilder.setCollectionResult(collectionResult);
         jdbcFPRecordBuilder.setEntityLoader(entityLoader);
         jdbcFPRecordBuilder.setMetaEntity(relationship.getAttributeType());
         jdbcFPRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
-//        dbConfiguration.getJdbcRunner().select(connectionHolder.getConnection(), sql,
-//                sqlSelectData.getFetchParameters(), parameters, recordCollector);
-        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql, parameters, jdbcFPRecordBuilder);
+        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql, parameters,
+                jdbcFPRecordBuilder);
         return collectionResult;
     }
 

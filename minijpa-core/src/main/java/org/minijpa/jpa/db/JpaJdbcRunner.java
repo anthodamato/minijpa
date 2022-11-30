@@ -97,7 +97,7 @@ public class JpaJdbcRunner extends JdbcRunner {
     }
 
     public List<Object> runNativeQuery(Connection connection, String sqlString, Query query,
-            Optional<QueryResultMapping> queryResultMapping, JpaEntityLoader entityLoader) throws Exception {
+            Optional<QueryResultMapping> queryResultMapping, EntityHandler entityLoader) throws Exception {
         if (queryResultMapping.isEmpty()) {
             List<Object> parameterValues = new ArrayList<>();
             Set<Parameter<?>> parameters = query.getParameters();

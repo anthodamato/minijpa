@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.EntityStatus;
-import org.minijpa.jpa.db.JpaEntityLoader;
+import org.minijpa.jpa.db.EntityHandler;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
@@ -60,7 +60,7 @@ public final class EntityDelegate implements EntityListener {
             MetaAttribute a = entity.getAttribute(attributeName);
 //	    LOG.info("get: a={}", a + "; a.isLazy()=" + a.isLazy() + "; lazyAttributeLoaded(entity, a, entityInstance)=" + lazyAttributeLoaded(entity, a, entityInstance));
             if (a.isLazy() && !MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)) {
-                JpaEntityLoader entityLoader = entityContainerContextManager.findByEntityContainer(entityInstance);
+                EntityHandler entityLoader = entityContainerContextManager.findByEntityContainer(entityInstance);
                 value = entityLoader.loadAttribute(entityInstance, a, value);
                 MetaEntityHelper.lazyAttributeLoaded(entity, a, entityInstance, true);
             }
@@ -147,7 +147,7 @@ public final class EntityDelegate implements EntityListener {
 //
 //	    return null;
 //	}
-        public JpaEntityLoader findByEntityContainer(Object entityInstance) throws Exception {
+        public EntityHandler findByEntityContainer(Object entityInstance) throws Exception {
             for (EntityContainerContext entityContainerContext : entityContainerContexts) {
                 if (entityContainerContext.isManaged(entityInstance))
                     return entityContainerContext.getEntityLoader();

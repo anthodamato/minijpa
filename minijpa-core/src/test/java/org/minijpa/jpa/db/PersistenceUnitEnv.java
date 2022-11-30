@@ -32,7 +32,7 @@ public class PersistenceUnitEnv {
     private static Logger LOG = LoggerFactory.getLogger(PersistenceUnitEnv.class);
     private PersistenceUnitContext persistenceUnitContext;
     private JdbcEntityManager jdbcEntityManager;
-    private JpaEntityLoader entityLoader;
+    private EntityHandler entityLoader;
     private EntityContainer entityContainer;
     private ConnectionHolder connectionHolder;
 
@@ -55,11 +55,11 @@ public class PersistenceUnitEnv {
         this.jdbcEntityManager = jdbcEntityManager;
     }
 
-    public JpaEntityLoader getEntityLoader() {
+    public EntityHandler getEntityLoader() {
         return entityLoader;
     }
 
-    public void setEntityLoader(JpaEntityLoader entityLoader) {
+    public void setEntityLoader(EntityHandler entityLoader) {
         this.entityLoader = entityLoader;
     }
 
@@ -127,8 +127,10 @@ public class PersistenceUnitEnv {
         ForeignKeyCollectionQueryLevel foreignKeyCollectionQueryLevel = new ForeignKeyCollectionQueryLevel(
                 sqlStatementFactory, dbConfiguration, connectionHolder,
                 persistenceUnitContext.getTableAliasGenerator());
-        EntityLoaderImpl entityLoader = new EntityLoaderImpl(persistenceUnitContext, miniPersistenceContext,
-                entityQueryLevel, foreignKeyCollectionQueryLevel, joinTableCollectionQueryLevel);
+        JdbcQueryRunner jdbcQueryRunner = new JdbcQueryRunner(connectionHolder, dbConfiguration, sqlStatementFactory,
+                persistenceUnitContext.getTableAliasGenerator());
+        EntityHandlerImpl entityLoader = new EntityHandlerImpl(persistenceUnitContext, miniPersistenceContext,
+                jdbcQueryRunner);
 
         EntityDelegate.getInstance().addEntityManagerContext(
                 new EntityContainerContext(persistenceUnitContext, miniPersistenceContext, entityLoader));

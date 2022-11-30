@@ -46,7 +46,6 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
     private final DbConfiguration dbConfiguration;
     private final ConnectionHolder connectionHolder;
     private final AliasGenerator tableAliasGenerator;
-//    private final EntityRecordCollector recordCollector = new EntityRecordCollector();
     private JpaJdbcRunner.JdbcFPRecordBuilder jdbcFPRecordBuilder = new JpaJdbcRunner.JdbcFPRecordBuilder();
 
     public ForeignKeyCollectionQueryLevel(SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration,
@@ -58,7 +57,7 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
     }
 
     public Object run(MetaEntity entity, MetaAttribute foreignKeyAttribute, Object foreignKey, LockType lockType,
-            JpaEntityLoader entityLoader) throws Exception {
+            EntityHandler entityLoader) throws Exception {
         List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
         List<String> columns = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(entity, foreignKeyAttribute,
@@ -72,9 +71,8 @@ public class ForeignKeyCollectionQueryLevel implements QueryLevel {
         jdbcFPRecordBuilder.setEntityLoader(entityLoader);
         jdbcFPRecordBuilder.setMetaEntity(entity);
         jdbcFPRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
-        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql, parameters, jdbcFPRecordBuilder);
-//        dbConfiguration.getJdbcRunner().select(connectionHolder.getConnection(), sql,
-//                sqlSelectData.getFetchParameters(), parameters, recordCollector);
+        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql, parameters,
+                jdbcFPRecordBuilder);
         return (List<Object>) collectionResult;
     }
 
