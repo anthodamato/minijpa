@@ -119,14 +119,6 @@ public class PersistenceUnitEnv {
         new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo, connectionProvider);
         EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
 
-        EntityQueryLevel entityQueryLevel = new EntityQueryLevel(sqlStatementFactory, dbConfiguration, connectionHolder,
-                persistenceUnitContext.getTableAliasGenerator());
-        JoinTableCollectionQueryLevel joinTableCollectionQueryLevel = new JoinTableCollectionQueryLevel(
-                sqlStatementFactory, dbConfiguration, connectionHolder,
-                persistenceUnitContext.getTableAliasGenerator());
-        ForeignKeyCollectionQueryLevel foreignKeyCollectionQueryLevel = new ForeignKeyCollectionQueryLevel(
-                sqlStatementFactory, dbConfiguration, connectionHolder,
-                persistenceUnitContext.getTableAliasGenerator());
         JdbcQueryRunner jdbcQueryRunner = new JdbcQueryRunner(connectionHolder, dbConfiguration, sqlStatementFactory,
                 persistenceUnitContext.getTableAliasGenerator());
         EntityHandlerImpl entityLoader = new EntityHandlerImpl(persistenceUnitContext, miniPersistenceContext,

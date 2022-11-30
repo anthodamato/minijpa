@@ -63,6 +63,19 @@ public class JdbcQueryRunner {
                 jdbcValueBuilderById);
     }
 
+    /**
+     *
+     * Executes a query like: 'select (Entity fields) from table where
+     * pk=foreignkey' <br>
+     * The attribute 'foreignKeyAttribute' type can be one of
+     * 'java.util.Collection', 'java.util.List' or 'java.util.Map', etc. <br>
+     * For example, in order to load the list of Employee for a given Department
+     * (foreign key) we have to pass:
+     *
+     * - the department instance, so we can get the foreign key - the Employee class
+     *
+     * @author adamato
+     */
     public Object selectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute, Object foreignKey,
             LockType lockType, EntityHandler entityLoader) throws Exception {
         List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, foreignKey);
