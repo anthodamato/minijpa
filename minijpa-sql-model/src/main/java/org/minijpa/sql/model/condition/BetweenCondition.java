@@ -17,69 +17,76 @@ package org.minijpa.sql.model.condition;
 
 public class BetweenCondition implements Condition {
 
-	private final Object operand;
-	private Object leftExpression;
-	private Object rightExpression;
-	private boolean not = false;
+    private final Object operand;
+    private Object leftExpression;
+    private Object rightExpression;
+    private boolean not = false;
 
-	private BetweenCondition(Object operand) {
-		super();
-		this.operand = operand;
-	}
+    public BetweenCondition(Object operand, Object leftExpression, Object rightExpression) {
+        super();
+        this.operand = operand;
+        this.leftExpression = leftExpression;
+        this.rightExpression = rightExpression;
+    }
 
-	@Override
-	public ConditionType getConditionType() {
-		return ConditionType.BETWEEN;
-	}
+    public BetweenCondition(Object operand, Object leftExpression, Object rightExpression, boolean not) {
+        super();
+        this.operand = operand;
+        this.leftExpression = leftExpression;
+        this.rightExpression = rightExpression;
+        this.not = not;
+    }
 
-	public Object getOperand() {
-		return operand;
-	}
+    @Override
+    public ConditionType getConditionType() {
+        return ConditionType.BETWEEN;
+    }
 
-	public Object getLeftExpression() {
-		return leftExpression;
-	}
+    public Object getOperand() {
+        return operand;
+    }
 
-	public Object getRightExpression() {
-		return rightExpression;
-	}
+    public Object getLeftExpression() {
+        return leftExpression;
+    }
 
-	public boolean isNot() {
-		return not;
-	}
+    public Object getRightExpression() {
+        return rightExpression;
+    }
 
-	public static class Builder {
+    public boolean isNot() {
+        return not;
+    }
 
-		private final Object operand;
-		private Object leftExpression;
-		private Object rightExpression;
-		private boolean not = false;
+    public static class Builder {
 
-		public Builder(Object operand) {
-			this.operand = operand;
-		}
+        private final Object operand;
+        private Object leftExpression;
+        private Object rightExpression;
+        private boolean not = false;
 
-		public Builder withLeftExpression(Object expr) {
-			this.leftExpression = expr;
-			return this;
-		}
+        public Builder(Object operand) {
+            this.operand = operand;
+        }
 
-		public Builder withRightExpression(Object expr) {
-			this.rightExpression = expr;
-			return this;
-		}
+        public Builder withLeftExpression(Object expr) {
+            this.leftExpression = expr;
+            return this;
+        }
 
-		public Builder withNot(boolean not) {
-			this.not = not;
-			return this;
-		}
+        public Builder withRightExpression(Object expr) {
+            this.rightExpression = expr;
+            return this;
+        }
 
-		public BetweenCondition build() {
-			BetweenCondition betweenCondition = new BetweenCondition(operand);
-			betweenCondition.leftExpression = leftExpression;
-			betweenCondition.rightExpression = rightExpression;
-			betweenCondition.not = not;
-			return betweenCondition;
-		}
-	}
+        public Builder withNot(boolean not) {
+            this.not = not;
+            return this;
+        }
+
+        public BetweenCondition build() {
+            return new BetweenCondition(operand, leftExpression, rightExpression, not);
+        }
+    }
+
 }

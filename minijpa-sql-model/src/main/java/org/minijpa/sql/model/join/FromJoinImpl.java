@@ -28,52 +28,37 @@ public class FromJoinImpl implements FromJoin {
     private List<Column> toColumns;
     private JoinType joinType = JoinType.InnerJoin;
 
-//    public FromJoinImpl(FromTable toTable, List<Column> fromColumns, List<String> columnAlias, List<Column> toColumns,
-//	    List<String> joinColumnAlias) {
-//	super();
-//	this.toTable = toTable;
-//	this.fromColumns = fromColumns;
-//	this.toColumns = toColumns;
-//    }
     public FromJoinImpl(FromTable toTable, String fromAlias, List<Column> fromColumns, List<Column> toColumns) {
-	super();
-	this.toTable = toTable;
-	this.fromAlias = fromAlias;
-	this.fromColumns = fromColumns;
-	this.toColumns = toColumns;
+        super();
+        this.toTable = toTable;
+        this.fromAlias = fromAlias;
+        this.fromColumns = fromColumns;
+        this.toColumns = toColumns;
     }
 
-//    public FromJoinImpl(FromTable toTable, List<Column> columns, List<String> columnAlias, List<Column> toColumns,
-//	    List<String> joinColumnAlias, JoinType joinType) {
-//	super();
-//	this.toTable = toTable;
-//	this.fromColumns = columns;
-//	this.toColumns = toColumns;
-//	this.joinType = joinType;
-//    }
     @Override
     public FromTable getToTable() {
-	return toTable;
+        return toTable;
     }
 
     @Override
     public String getFromAlias() {
-	return fromAlias;
+        return fromAlias;
     }
 
     @Override
     public List<Column> getFromColumns() {
-	return fromColumns;
+        return fromColumns;
     }
 
     @Override
     public List<Column> getToColumns() {
-	return toColumns;
+        return toColumns;
     }
 
     @Override
     public JoinType getType() {
-	return joinType;
+        return joinType;
     }
 
 }

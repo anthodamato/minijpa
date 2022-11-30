@@ -15,27 +15,24 @@
  */
 package org.minijpa.sql.model.condition;
 
-
-import org.minijpa.sql.model.TableColumn;
-
 public class UnaryCondition implements Condition {
 
-	private final ConditionType conditionType;
-	private final TableColumn tableColumn;
+    private final ConditionType conditionType;
+    private final Object operand;
 
-	public UnaryCondition(ConditionType conditionType, TableColumn tableColumn) {
-		super();
-		this.conditionType = conditionType;
-		this.tableColumn = tableColumn;
-	}
+    public UnaryCondition(ConditionType conditionType, Object operand) {
+        super();
+        this.conditionType = conditionType;
+        this.operand = operand;
+    }
 
-	@Override
-	public ConditionType getConditionType() {
-		return conditionType;
-	}
+    @Override
+    public ConditionType getConditionType() {
+        return conditionType;
+    }
 
-	public TableColumn getTableColumn() {
-		return tableColumn;
-	}
+    public Object getOperand() {
+        return operand;
+    }
 
 }

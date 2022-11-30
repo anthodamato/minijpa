@@ -19,11 +19,11 @@ import java.util.Optional;
 
 public interface NameTranslator {
 
-	public String toColumnName(Optional<String> tableAlias, String columnName);
+    public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias);
 
-	public String toTableName(Optional<String> tableAlias, String tableName);
+    public String toTableName(Optional<String> tableAlias, String tableName);
 
-	public default String adjustName(String name) {
-		return name;
-	}
+    public default String adjustName(String name) {
+        return name;
+    }
 }

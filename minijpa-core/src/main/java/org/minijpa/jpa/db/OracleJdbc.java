@@ -15,6 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-public class OracleJdbc extends BasicDbJdbc {
+public class OracleJdbc extends AbstractDbJdbc {
 
 }

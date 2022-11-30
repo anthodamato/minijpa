@@ -21,19 +21,19 @@ public class UnaryLogicConditionImpl implements UnaryLogicCondition {
     private Condition condition;
 
     public UnaryLogicConditionImpl(ConditionType conditionType, Condition condition) {
-	super();
-	this.conditionType = conditionType;
-	this.condition = condition;
+        super();
+        this.conditionType = conditionType;
+        this.condition = condition;
     }
 
     @Override
     public ConditionType getConditionType() {
-	return conditionType;
+        return conditionType;
     }
 
     @Override
     public Condition getCondition() {
-	return condition;
+        return condition;
     }
 
 }

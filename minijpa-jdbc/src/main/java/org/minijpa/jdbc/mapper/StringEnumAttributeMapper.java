@@ -24,17 +24,17 @@ public class StringEnumAttributeMapper implements AttributeMapper<Enum, String> 
     private final Class<?> attributeType;
 
     public StringEnumAttributeMapper(Class<?> attributeType) {
-	this.attributeType = attributeType;
+        this.attributeType = attributeType;
     }
 
     @Override
     public String attributeToDatabase(Enum k) {
-	return k.name();
+        return k.name();
     }
 
     @Override
     public Enum databaseToAttribute(String v) {
-	return Enum.valueOf((Class<Enum>) attributeType, v);
+        return Enum.valueOf((Class<Enum>) attributeType, v);
     }
 
 }

@@ -15,6 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-public class ApacheDerbyJdbc extends BasicDbJdbc {
+public class ApacheDerbyJdbc extends AbstractDbJdbc {
 
 }

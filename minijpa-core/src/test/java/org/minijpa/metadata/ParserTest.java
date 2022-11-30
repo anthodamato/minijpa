@@ -6,14 +6,14 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
 import org.minijpa.jpa.db.ApacheDerbyConfiguration;
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.PersistenceUnitEnv;
 import org.minijpa.jpa.model.Book;
 import org.minijpa.jpa.model.Citizen;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

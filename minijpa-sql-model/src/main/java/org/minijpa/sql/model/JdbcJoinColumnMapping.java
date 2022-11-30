@@ -3,7 +3,7 @@ package org.minijpa.sql.model;
 import java.util.List;
 
 public interface JdbcJoinColumnMapping {
-	public JdbcPk getForeignKey();
+	public SqlPk getForeignKey();
 
 	public List<ColumnDeclaration> getJoinColumns();
 

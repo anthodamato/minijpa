@@ -14,16 +14,16 @@ public class NestedCondition implements Condition {
     private final Condition condition;
 
     public NestedCondition(Condition condition) {
-	this.condition = condition;
+        this.condition = condition;
     }
 
     @Override
     public ConditionType getConditionType() {
-	return condition.getConditionType();
+        return condition.getConditionType();
     }
 
     public Condition getCondition() {
-	return condition;
+        return condition;
     }
 
 }

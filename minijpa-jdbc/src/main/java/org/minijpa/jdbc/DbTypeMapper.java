@@ -20,27 +20,27 @@ import org.minijpa.jdbc.mapper.AttributeMapper;
 
 public interface DbTypeMapper {
 
-	/**
-	 * Finds a mapper that converts an attribute value of type
-	 * <code>attributeType</code> to a value of type <code>databaseType</code>
-	 * and vice-versa.
-	 *
-	 *
-	 * @param attributeType
-	 * @param databaseType
-	 * @return
-	 */
-	public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType);
+    /**
+     * Finds a mapper that converts an attribute value of type
+     * <code>attributeType</code> to a value of type <code>databaseType</code> and
+     * vice-versa.
+     *
+     *
+     * @param attributeType
+     * @param databaseType
+     * @return
+     */
+    public AttributeMapper<?, ?> attributeMapper(Class<?> attributeType, Class<?> databaseType);
 
-	/**
-	 * Maps the attribute type to the db type. For example, on Apache Derby if a
-	 * column has the 'DATE' data type a LocalDate attribute type can be mapped
-	 * as java.sql.Date.
-	 *
-	 * @param attributeType
-	 * @param enumerationType
-	 * @return
-	 */
-	public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType);
+    /**
+     * Maps the attribute type to the db type. For example, on Apache Derby if a
+     * column has the 'DATE' data type a LocalDate attribute type can be mapped as
+     * java.sql.Date.
+     *
+     * @param attributeType
+     * @param enumerationType
+     * @return
+     */
+    public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType);
 
 }

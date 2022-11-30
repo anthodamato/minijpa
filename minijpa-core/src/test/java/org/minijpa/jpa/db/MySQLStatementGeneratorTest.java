@@ -31,28 +31,29 @@ import org.minijpa.sql.model.SqlDDLStatement;
  */
 public class MySQLStatementGeneratorTest {
 
-	private final DbConfiguration dbConfiguration = new MySQLConfiguration();
+    private final DbConfiguration dbConfiguration = new MySQLConfiguration();
 
-	@Test
-	public void ddlCitizens() throws Exception {
-		DbConfigurationList.getInstance().setDbConfiguration("citizens", dbConfiguration);
-		PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("citizens");
-		List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc().buildDDLStatements(persistenceUnitContext);
-		Assertions.assertEquals(2, sqlStatements.size());
+    @Test
+    public void ddlCitizens() throws Exception {
+        DbConfigurationList.getInstance().setDbConfiguration("citizens", dbConfiguration);
+        PersistenceUnitContext persistenceUnitContext = PersistenceUnitEnv.build("citizens");
+        List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc()
+                .buildDDLStatements(persistenceUnitContext.getEntities());
+        Assertions.assertEquals(2, sqlStatements.size());
 //	List<String> ddlStatements = sqlStatements.stream()
 //		.map(d -> dbConfiguration.getSqlStatementGenerator().export(d))
 //		.flatMap(List::stream).collect(Collectors.toList());
-		List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
-		Assertions.assertFalse(ddlStatements.isEmpty());
-		Assertions.assertEquals(2, ddlStatements.size());
-		String ddl = ddlStatements.get(0);
-		Assertions.assertEquals(
-				"create table citizen (id bigint not null AUTO_INCREMENT, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))",
-				ddl);
-		ddl = ddlStatements.get(1);
-		Assertions.assertEquals(
-				"create table Address (id bigint not null AUTO_INCREMENT, name varchar(255), postcode varchar(255), tt boolean not null, primary key (id))",
-				ddl);
-	}
+        List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
+        Assertions.assertFalse(ddlStatements.isEmpty());
+        Assertions.assertEquals(2, ddlStatements.size());
+        String ddl = ddlStatements.get(0);
+        Assertions.assertEquals(
+                "create table citizen (id bigint not null AUTO_INCREMENT, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))",
+                ddl);
+        ddl = ddlStatements.get(1);
+        Assertions.assertEquals(
+                "create table Address (id bigint not null AUTO_INCREMENT, name varchar(255), postcode varchar(255), tt boolean not null, primary key (id))",
+                ddl);
+    }
 
 }

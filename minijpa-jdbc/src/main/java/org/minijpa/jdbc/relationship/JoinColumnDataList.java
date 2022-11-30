@@ -27,16 +27,16 @@ public class JoinColumnDataList {
     private final List<JoinColumnData> joinColumnDataList;
 
     public JoinColumnDataList(List<JoinColumnData> joinColumnDataList) {
-	this.joinColumnDataList = joinColumnDataList;
+        this.joinColumnDataList = joinColumnDataList;
     }
 
     public List<JoinColumnData> getJoinColumnDataList() {
-	return joinColumnDataList;
+        return joinColumnDataList;
     }
 
     public Optional<String> getNameByReferenced(String referencedName) {
-	Optional<JoinColumnData> o = joinColumnDataList.stream().
-		filter(j -> j.getReferencedColumnName().isPresent() && j.getReferencedColumnName().get().equalsIgnoreCase(referencedName)).findFirst();
-	return o.isPresent() ? o.get().getName() : Optional.empty();
+        Optional<JoinColumnData> o = joinColumnDataList.stream().filter(j -> j.getReferencedColumnName().isPresent()
+                && j.getReferencedColumnName().get().equalsIgnoreCase(referencedName)).findFirst();
+        return o.isPresent() ? o.get().getName() : Optional.empty();
     }
 }

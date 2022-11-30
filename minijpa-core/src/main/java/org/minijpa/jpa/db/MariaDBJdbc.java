@@ -15,10 +15,7 @@
  */
 package org.minijpa.jpa.db;
 
-import org.minijpa.jdbc.PkGenerationType;
-import org.minijpa.jdbc.PkStrategy;
-
-public class MariaDBJdbc extends BasicDbJdbc {
+public class MariaDBJdbc extends AbstractDbJdbc {
 
 	@Override
 	public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {

@@ -4,16 +4,16 @@ import java.util.List;
 
 public class SingleJdbcJoinColumnMapping implements JdbcJoinColumnMapping {
 	private ColumnDeclaration joinColumn;
-	private JdbcPk jdbcPk;
+	private SqlPk jdbcPk;
 
-	public SingleJdbcJoinColumnMapping(ColumnDeclaration joinColumn, JdbcPk jdbcPk) {
+	public SingleJdbcJoinColumnMapping(ColumnDeclaration joinColumn, SqlPk jdbcPk) {
 		super();
 		this.joinColumn = joinColumn;
 		this.jdbcPk = jdbcPk;
 	}
 
 	@Override
-	public JdbcPk getForeignKey() {
+	public SqlPk getForeignKey() {
 		return jdbcPk;
 	}
 

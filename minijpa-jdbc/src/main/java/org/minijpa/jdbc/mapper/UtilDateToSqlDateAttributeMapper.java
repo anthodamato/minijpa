@@ -23,12 +23,12 @@ public class UtilDateToSqlDateAttributeMapper implements AttributeMapper<java.ut
 
     @Override
     public java.sql.Date attributeToDatabase(java.util.Date k) {
-	return new java.sql.Date(k.getTime());
+        return new java.sql.Date(k.getTime());
     }
 
     @Override
     public java.util.Date databaseToAttribute(java.sql.Date v) {
-	return v;
+        return v;
     }
 
 }

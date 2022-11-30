@@ -15,6 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-public class H2Jdbc extends BasicDbJdbc {
+public class H2Jdbc extends AbstractDbJdbc {
 
 }

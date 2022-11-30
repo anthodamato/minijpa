@@ -18,12 +18,10 @@ package org.minijpa.jpa.db;
 import java.util.Collections;
 import java.util.List;
 
-import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.PkGenerationType;
-import org.minijpa.jdbc.PkStrategy;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.sql.model.SqlDDLStatement;
 
-public class MySQLJdbc extends BasicDbJdbc {
+public class MySQLJdbc extends AbstractDbJdbc {
 
 	@Override
 	public PkStrategy findPkStrategy(PkGenerationType pkGenerationType) {

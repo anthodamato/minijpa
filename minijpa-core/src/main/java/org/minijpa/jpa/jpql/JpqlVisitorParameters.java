@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.MetaEntity;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.sql.model.FromTable;
 import org.minijpa.sql.model.OrderBy;
 import org.minijpa.sql.model.Value;

@@ -19,11 +19,10 @@ import java.util.List;
 
 import javax.persistence.Query;
 
-import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.db.MiniFlushMode;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniNativeQuery;
 import org.minijpa.jpa.UpdateQuery;
+import org.minijpa.jpa.model.MetaEntity;
 
 public interface JdbcEntityManager {
 

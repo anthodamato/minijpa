@@ -22,7 +22,7 @@ import java.util.Set;
 
 import javax.persistence.Entity;
 
-import org.minijpa.jdbc.CollectionUtils;
+import org.minijpa.jpa.db.CollectionUtils;
 import org.minijpa.metadata.BeanUtil;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.enhancer.EnhAttribute;
@@ -118,10 +118,10 @@ public class EntityEnhancer {
 		if (managedData.getLockTypeAttribute().isPresent()) {
 			addLockTypeField(ct, managedData.getLockTypeAttribute().get());
 			// get method
-			ctMethod = createGetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
+			ctMethod = createGetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jpa.db.LockType");
 			enhEntity.setLockTypeAttributeGetMethod(Optional.of(ctMethod.getName()));
 			// set method
-			ctMethod = createSetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jdbc.LockType");
+			ctMethod = createSetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jpa.db.LockType");
 			enhEntity.setLockTypeAttributeSetMethod(Optional.of(ctMethod.getName()));
 		}
 		// entity status field
@@ -319,7 +319,7 @@ public class EntityEnhancer {
 		if (!canModify(ct))
 			return;
 
-		String f = "private org.minijpa.jdbc.LockType " + fieldName + " = org.minijpa.jdbc.LockType.NONE;";
+		String f = "private org.minijpa.jpa.db.LockType " + fieldName + " = org.minijpa.jpa.db.LockType.NONE;";
 		CtField ctField = CtField.make(f, ct);
 		ct.addField(ctField);
 		LOG.debug("Created '{}' Field: {}", ct.getName(), f);

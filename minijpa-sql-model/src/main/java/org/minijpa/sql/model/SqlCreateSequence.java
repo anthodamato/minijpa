@@ -21,14 +21,59 @@ package org.minijpa.sql.model;
  */
 public class SqlCreateSequence implements SqlDDLStatement {
 
-	private final JdbcSequenceParams jdbcSequenceParams;
+//    private String name;
+    private String sequenceName;
+    private String schema;
+    private Integer allocationSize;
+    private Integer initialValue;
+    private String catalog;
 
-	public SqlCreateSequence(JdbcSequenceParams jdbcSequenceParams) {
-		this.jdbcSequenceParams = jdbcSequenceParams;
-	}
+//    public String getName() {
+//        return name;
+//    }
+//
+//    public void setName(String name) {
+//        this.name = name;
+//    }
 
-	public JdbcSequenceParams getJdbcSequenceParams() {
-		return jdbcSequenceParams;
-	}
+    public String getSequenceName() {
+        return sequenceName;
+    }
+
+    public void setSequenceName(String sequenceName) {
+        this.sequenceName = sequenceName;
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
+    public Integer getAllocationSize() {
+        return allocationSize;
+    }
+
+    public void setAllocationSize(Integer allocationSize) {
+        this.allocationSize = allocationSize;
+    }
+
+    public Integer getInitialValue() {
+        return initialValue;
+    }
+
+    public void setInitialValue(Integer initialValue) {
+        this.initialValue = initialValue;
+    }
+
+    public String getCatalog() {
+        return catalog;
+    }
+
+    public void setCatalog(String catalog) {
+        this.catalog = catalog;
+    }
 
 }

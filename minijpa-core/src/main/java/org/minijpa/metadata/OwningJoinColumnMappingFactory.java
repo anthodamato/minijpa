@@ -19,14 +19,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.minijpa.jdbc.JoinColumnAttribute;
-import org.minijpa.jdbc.MetaAttribute;
-import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.relationship.CompositeJoinColumnMapping;
+
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
-import org.minijpa.jdbc.relationship.JoinColumnMapping;
-import org.minijpa.jdbc.relationship.SingleJoinColumnMapping;
 import org.minijpa.jpa.db.DbConfiguration;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.relationship.CompositeJoinColumnMapping;
+import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
+import org.minijpa.jpa.model.relationship.JoinColumnMapping;
+import org.minijpa.jpa.model.relationship.SingleJoinColumnMapping;
 
 /**
  *

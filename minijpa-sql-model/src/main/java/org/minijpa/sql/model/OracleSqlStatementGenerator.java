@@ -28,150 +28,142 @@ import org.slf4j.LoggerFactory;
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
-	private Logger LOG = LoggerFactory.getLogger(OracleSqlStatementGenerator.class);
-	private final SqlStatementExporter sqlDeleteExporter = new SqlDeleteExporter();
+    private Logger LOG = LoggerFactory.getLogger(OracleSqlStatementGenerator.class);
+    private final NameTranslator localNameTranslator = new LocalNameTranslator();
 
-	public OracleSqlStatementGenerator() {
-		super();
-	}
+    public OracleSqlStatementGenerator() {
+        super();
+    }
 
-	@Override
-	public NameTranslator createNameTranslator() {
-		return new OracleNameTranslator();
-	}
+    @Override
+    public NameTranslator createNameTranslator() {
+        return new OracleNameTranslator();
+    }
 
-	@Override
-	public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-		if (optionalSchema.isEmpty())
-			return "select " + sequenceName + ".nextval from dual";
+    @Override
+    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+        if (optionalSchema.isEmpty())
+            return "select " + sequenceName + ".nextval from dual";
 
-		return "select " + optionalSchema.get() + "." + sequenceName + ".nextval from dual";
-	}
+        return "select " + optionalSchema.get() + "." + sequenceName + ".nextval from dual";
+    }
 
-	@Override
-	public String forUpdateClause(ForUpdate forUpdate) {
-		return "for update";
-	}
+    @Override
+    public String forUpdateClause(ForUpdate forUpdate) {
+        return "for update";
+    }
 
-	@Override
-	public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
-		if (type == Long.class || (type.isPrimitive() && type.getName().equals("long")))
-			return "number(19)";
+    @Override
+    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+        if (type == Long.class || (type.isPrimitive() && type.getName().equals("long")))
+            return "number(19)";
 
-		if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int")))
-			return "number(10)";
+        if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int")))
+            return "number(10)";
 
-		if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
-			return "double precision";
+        if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
+            return "double precision";
 
-		if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
-			return "number(19,4)";
+        if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
+            return "number(19,4)";
 
-		if (type == Boolean.class || (type.isPrimitive() && type.getName().equals("boolean")))
-			return "number(1)";
+        if (type == Boolean.class || (type.isPrimitive() && type.getName().equals("boolean")))
+            return "number(1)";
 
-		if (type == Time.class)
-			return "date";
+        if (type == Time.class)
+            return "date";
 
-		return super.buildColumnDefinition(type, ddlData);
-	}
+        return super.buildColumnDefinition(type, ddlData);
+    }
 
-	@Override
-	public String trueValue() {
-		return "1";
-	}
+    @Override
+    public String trueValue() {
+        return "1";
+    }
 
-	@Override
-	public String falseValue() {
-		return "0";
-	}
+    @Override
+    public String falseValue() {
+        return "0";
+    }
 
-	@Override
-	public String export(SqlDelete sqlDelete) {
-		return export(sqlDelete, sqlDeleteExporter);
-	}
+    @Override
+    public String export(SqlDelete sqlDelete) {
+        return export(sqlDelete, localNameTranslator);
+    }
 
-	@Override
-	protected String export(SqlDelete sqlDelete, SqlStatementExporter sqlStatementExporter) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("delete from ");
-		sb.append(nameTranslator.toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
+    @Override
+    protected String export(SqlDelete sqlDelete, NameTranslator nameTranslator) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("delete from ");
+        sb.append(nameTranslator.toTableName(sqlDelete.getFromTable().getAlias(), sqlDelete.getFromTable().getName()));
 
-		if (sqlDelete.getCondition().isPresent()) {
-			sb.append(" where ");
-			sb.append(exportCondition(sqlDelete.getCondition().get(), sqlStatementExporter));
-		}
+        if (sqlDelete.getCondition().isPresent()) {
+            sb.append(" where ");
+            sb.append(exportCondition(sqlDelete.getCondition().get(), nameTranslator));
+        }
 
-		return sb.toString();
-	}
+        return sb.toString();
+    }
 
-	@Override
-	public String export(SqlInsert sqlInsert) {
-		String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
-		StringBuilder sb = new StringBuilder();
-		sb.append("insert into ");
-		sb.append(sqlInsert.getFromTable().getName());
-		sb.append(" (");
-		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-			sb.append(sqlInsert.getIdentityColumn().get());
-			if (!cols.isEmpty())
-				sb.append(",");
-		}
+    @Override
+    public String export(SqlInsert sqlInsert) {
+        String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
+        StringBuilder sb = new StringBuilder();
+        sb.append("insert into ");
+        sb.append(sqlInsert.getFromTable().getName());
+        sb.append(" (");
+        if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
+            sb.append(sqlInsert.getIdentityColumn().get());
+            if (!cols.isEmpty())
+                sb.append(",");
+        }
 
-		sb.append(cols);
-		sb.append(") values (");
-		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-			sb.append("default");
+        sb.append(cols);
+        sb.append(") values (");
+        if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
+            sb.append("default");
 
-			if (!cols.isEmpty())
-				sb.append(",");
-		}
+            if (!cols.isEmpty())
+                sb.append(",");
+        }
 
-		for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
-			if (i > 0)
-				sb.append(",");
+        for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
+            if (i > 0)
+                sb.append(",");
 
-			sb.append("?");
-		}
+            sb.append("?");
+        }
 
-		sb.append(")");
-		return sb.toString();
-	}
+        sb.append(")");
+        return sb.toString();
+    }
 
-	@Override
-	protected String exportFunction(Locate locate) {
-		StringBuilder sb = new StringBuilder("INSTR(");
+    @Override
+    protected String exportFunction(Locate locate) {
+        StringBuilder sb = new StringBuilder("INSTR(");
 
-		sb.append(exportExpression(locate.getInputString(), sqlStatementExporter));
-		sb.append(", ");
-		sb.append(exportExpression(locate.getSearchString(), sqlStatementExporter));
-		if (locate.getPosition().isPresent()) {
-			sb.append(", ");
-			sb.append(exportExpression(locate.getPosition().get(), sqlStatementExporter));
-		}
+        sb.append(exportExpression(locate.getInputString(), nameTranslator));
+        sb.append(", ");
+        sb.append(exportExpression(locate.getSearchString(), nameTranslator));
+        if (locate.getPosition().isPresent()) {
+            sb.append(", ");
+            sb.append(exportExpression(locate.getPosition().get(), nameTranslator));
+        }
 
-		sb.append(")");
-		return sb.toString();
-	}
+        sb.append(")");
+        return sb.toString();
+    }
 
-	private class SqlDeleteExporter extends DefaultSqlStatementExporter {
+    private class LocalNameTranslator extends DefaultNameTranslator {
 
-		@Override
-		public String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
-			Optional<FromTable> optionalFromTable = tableColumn.getTable();
-			Column column = tableColumn.getColumn();
-			if (optionalFromTable.isPresent()) {
-				String tc = nameTranslator.toColumnName(Optional.empty(), column.getName());
-				return exportColumnAlias(tc, Optional.empty());
-			}
+        @Override
+        public String toTableName(Optional<String> tableAlias, String tableName) {
+            if (tableAlias.isPresent())
+                return tableName + " " + tableAlias.get();
 
-			if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias().isPresent())
-				return tableColumn.getSubQuery().get().getAlias().get() + "." + exportColumn(column);
+            return tableName;
+        }
 
-			String c = nameTranslator.toColumnName(Optional.empty(), column.getName());
-			return exportColumnAlias(c, Optional.empty());
-		}
-
-	}
+    }
 
 }

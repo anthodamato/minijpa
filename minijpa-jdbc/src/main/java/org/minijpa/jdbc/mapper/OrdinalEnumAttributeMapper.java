@@ -24,23 +24,23 @@ public class OrdinalEnumAttributeMapper implements AttributeMapper<Enum, Integer
     private final Class<?> attributeType;
 
     public OrdinalEnumAttributeMapper(Class<?> attributeType) {
-	this.attributeType = attributeType;
+        this.attributeType = attributeType;
     }
 
     @Override
     public Integer attributeToDatabase(Enum k) {
-	return k.ordinal();
+        return k.ordinal();
     }
 
     @Override
     public Enum databaseToAttribute(Integer v) {
-	Object[] enums = attributeType.getEnumConstants();
-	for (Object o : enums) {
-	    if (((Enum) o).ordinal() == v)
-		return (Enum) o;
-	}
+        Object[] enums = attributeType.getEnumConstants();
+        for (Object o : enums) {
+            if (((Enum) o).ordinal() == v)
+                return (Enum) o;
+        }
 
-	return null;
+        return null;
     }
 
 }

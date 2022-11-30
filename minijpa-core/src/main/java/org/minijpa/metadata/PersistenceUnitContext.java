@@ -18,8 +18,8 @@ package org.minijpa.metadata;
 import java.util.Map;
 import java.util.Optional;
 
-import org.minijpa.jdbc.MetaEntity;
-import org.minijpa.jdbc.QueryResultMapping;
+import org.minijpa.jpa.db.QueryResultMapping;
+import org.minijpa.jpa.model.MetaEntity;
 
 public class PersistenceUnitContext {
 

@@ -15,6 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-public class PostgresJdbc extends BasicDbJdbc {
+public class PostgresJdbc extends AbstractDbJdbc {
 
 }

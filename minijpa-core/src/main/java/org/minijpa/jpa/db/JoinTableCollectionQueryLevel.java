@@ -18,18 +18,15 @@ package org.minijpa.jpa.db;
 import java.util.Collection;
 import java.util.List;
 
-import org.minijpa.jdbc.AbstractAttribute;
-import org.minijpa.jdbc.CollectionUtils;
 import org.minijpa.jdbc.ConnectionHolder;
-import org.minijpa.jdbc.EntityLoader;
-import org.minijpa.jdbc.LockType;
-import org.minijpa.jdbc.MetaAttribute;
 import org.minijpa.jdbc.ModelValueArray;
-import org.minijpa.jdbc.Pk;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
-import org.minijpa.jdbc.relationship.Relationship;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.model.AbstractAttribute;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.relationship.Relationship;
 import org.minijpa.metadata.AliasGenerator;
 
 /**
@@ -38,45 +35,55 @@ import org.minijpa.metadata.AliasGenerator;
  */
 public class JoinTableCollectionQueryLevel implements QueryLevel {
 
-	private final SqlStatementFactory sqlStatementFactory;
-	private final DbConfiguration dbConfiguration;
-	private final ConnectionHolder connectionHolder;
-	private final AliasGenerator tableAliasGenerator;
+    private final SqlStatementFactory sqlStatementFactory;
+    private final DbConfiguration dbConfiguration;
+    private final ConnectionHolder connectionHolder;
+    private final AliasGenerator tableAliasGenerator;
+//    private final EntityRecordCollector recordCollector = new EntityRecordCollector();
+    private JpaJdbcRunner.JdbcFPRecordBuilder jdbcFPRecordBuilder = new JpaJdbcRunner.JdbcFPRecordBuilder();
 
-	public JoinTableCollectionQueryLevel(SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration,
-			ConnectionHolder connectionHolder, AliasGenerator tableAliasGenerator) {
-		this.sqlStatementFactory = sqlStatementFactory;
-		this.dbConfiguration = dbConfiguration;
-		this.connectionHolder = connectionHolder;
-		this.tableAliasGenerator = tableAliasGenerator;
-	}
+    public JoinTableCollectionQueryLevel(SqlStatementFactory sqlStatementFactory, DbConfiguration dbConfiguration,
+            ConnectionHolder connectionHolder, AliasGenerator tableAliasGenerator) {
+        this.sqlStatementFactory = sqlStatementFactory;
+        this.dbConfiguration = dbConfiguration;
+        this.connectionHolder = connectionHolder;
+        this.tableAliasGenerator = tableAliasGenerator;
+    }
 
-	public Object run(Object primaryKey, Pk id, Relationship relationship, MetaAttribute metaAttribute,
-			EntityLoader entityLoader) throws Exception {
-		ModelValueArray<AbstractAttribute> modelValueArray = null;
-		SqlSelectData sqlSelectData = null;
-		if (relationship.isOwner()) {
-			modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
-					relationship.getJoinTable().getOwningJoinColumnMapping().getJoinColumnAttributes());
-			List<AbstractAttribute> attributes = modelValueArray.getModels();
-			sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(relationship.getAttributeType(),
-					relationship.getJoinTable(), attributes, tableAliasGenerator);
-		} else {
-			modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
-					relationship.getJoinTable().getTargetJoinColumnMapping().getJoinColumnAttributes());
-			List<AbstractAttribute> attributes = modelValueArray.getModels();
-			sqlSelectData = sqlStatementFactory.generateSelectByJoinTableFromTarget(relationship.getAttributeType(),
-					relationship.getJoinTable(), attributes, tableAliasGenerator);
-		}
+    public Object run(Object primaryKey, Pk id, Relationship relationship, MetaAttribute metaAttribute,
+            JpaEntityLoader entityLoader) throws Exception {
+        ModelValueArray<AbstractAttribute> modelValueArray = null;
+        SqlSelectData sqlSelectData = null;
+        if (relationship.isOwner()) {
+            modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
+                    relationship.getJoinTable().getOwningJoinColumnMapping().getJoinColumnAttributes());
+            List<AbstractAttribute> attributes = modelValueArray.getModels();
+            sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(relationship.getAttributeType(),
+                    relationship.getJoinTable(), attributes, tableAliasGenerator);
+        } else {
+            modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(id, primaryKey,
+                    relationship.getJoinTable().getTargetJoinColumnMapping().getJoinColumnAttributes());
+            List<AbstractAttribute> attributes = modelValueArray.getModels();
+            sqlSelectData = sqlStatementFactory.generateSelectByJoinTableFromTarget(relationship.getAttributeType(),
+                    relationship.getJoinTable(), attributes, tableAliasGenerator);
+        }
 
-		List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
-		String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-		Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
-				metaAttribute.getCollectionImplementationClass());
-		dbConfiguration.getJdbcRunner().findCollection(connectionHolder.getConnection(), sql,
-				sqlSelectData, sqlSelectData.getFetchParameters(), LockType.NONE, collectionResult,
-				entityLoader, parameters);
-		return collectionResult;
-	}
+        List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
+        String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+        Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
+                metaAttribute.getCollectionImplementationClass());
+        entityLoader.setLockType(LockType.NONE);
+//        recordCollector.setCollectionResult(collectionResult);
+//        recordCollector.setEntityLoader(entityLoader);
+//        recordCollector.setMetaEntity(relationship.getAttributeType());
+        jdbcFPRecordBuilder.setCollectionResult(collectionResult);
+        jdbcFPRecordBuilder.setEntityLoader(entityLoader);
+        jdbcFPRecordBuilder.setMetaEntity(relationship.getAttributeType());
+        jdbcFPRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
+//        dbConfiguration.getJdbcRunner().select(connectionHolder.getConnection(), sql,
+//                sqlSelectData.getFetchParameters(), parameters, recordCollector);
+        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql, parameters, jdbcFPRecordBuilder);
+        return collectionResult;
+    }
 
 }
