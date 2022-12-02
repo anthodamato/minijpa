@@ -98,12 +98,12 @@ public class HolidayTest {
 		em.persist(h4);
 		em.persist(h5);
 
-//	Holiday h1r = em.find(Holiday.class, h1.getId());
-//	Assertions.assertTrue(h1 == h1r);
-//	em.detach(h1);
-//	Assertions.assertNotNull(h1.getId());
-//	h1r = em.find(Holiday.class, h1.getId());
-//	Assertions.assertNull(h1r);
+		// Holiday h1r = em.find(Holiday.class, h1.getId());
+		// Assertions.assertTrue(h1 == h1r);
+		// em.detach(h1);
+		// Assertions.assertNotNull(h1.getId());
+		// h1r = em.find(Holiday.class, h1.getId());
+		// Assertions.assertNull(h1r);
 		CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Holiday> cq = cb.createQuery(Holiday.class);
 		Root<Holiday> root = cq.from(Holiday.class);
@@ -269,4 +269,39 @@ public class HolidayTest {
 		tx.commit();
 		em.close();
 	}
+
+	@Test
+	public void betweenDates() {
+		final EntityManager em = emf.createEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		tx.begin();
+
+		Holiday h1 = holiday1();
+		Holiday h2 = holiday2();
+
+		em.persist(h1);
+		em.persist(h2);
+		tx.commit();
+
+		tx.begin();
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Holiday> cq = cb.createQuery(Holiday.class);
+		Root<Holiday> root = cq.from(Holiday.class);
+
+		Predicate predicate = cb.between(root.get("checkIn"), LocalDate.of(2020, 1, 9), LocalDate.of(2020, 1, 11));
+
+		cq.where(predicate);
+		cq.select(root);
+
+		TypedQuery<Holiday> typedQuery = em.createQuery(cq);
+		List<Holiday> holidays = typedQuery.getResultList();
+		Assertions.assertEquals(1, holidays.size());
+
+		em.remove(h1);
+		em.remove(h2);
+		tx.commit();
+
+		em.close();
+	}
+
 }

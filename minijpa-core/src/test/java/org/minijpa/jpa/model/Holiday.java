@@ -2,6 +2,7 @@ package org.minijpa.jpa.model;
 
 import java.time.LocalDate;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -14,6 +15,7 @@ public class Holiday {
 	private Long id;
 
 	private Integer travellers;
+	@Column(name = "check_in")
 	private LocalDate checkIn;
 	private Integer nights;
 	private String referenceName;

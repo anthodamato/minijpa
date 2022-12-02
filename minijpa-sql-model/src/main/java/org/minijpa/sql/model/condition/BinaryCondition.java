@@ -22,6 +22,21 @@ public class BinaryCondition implements Condition {
     private Object right;
     private boolean not = false;
 
+    public BinaryCondition(ConditionType conditionType, Object left, Object right) {
+        super();
+        this.conditionType = conditionType;
+        this.left = left;
+        this.right = right;
+    }
+
+    public BinaryCondition(ConditionType conditionType, Object left, Object right, boolean not) {
+        super();
+        this.conditionType = conditionType;
+        this.left = left;
+        this.right = right;
+        this.not = not;
+    }
+
     @Override
     public ConditionType getConditionType() {
         return conditionType;
@@ -40,7 +55,6 @@ public class BinaryCondition implements Condition {
     }
 
     public static class Builder {
-
         private final ConditionType conditionType;
         private Object left;
         private Object right;
@@ -67,7 +81,7 @@ public class BinaryCondition implements Condition {
         }
 
         public BinaryCondition build() {
-            BinaryCondition condition = new BinaryCondition();
+            BinaryCondition condition = new BinaryCondition(conditionType, left, right, not);
             condition.conditionType = conditionType;
             condition.left = left;
             condition.right = right;

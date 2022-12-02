@@ -31,6 +31,7 @@ import org.minijpa.sql.model.condition.BinaryLogicCondition;
 import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.condition.InCondition;
+import org.minijpa.sql.model.condition.LikeCondition;
 import org.minijpa.sql.model.condition.UnaryCondition;
 import org.minijpa.sql.model.condition.UnaryLogicCondition;
 import org.minijpa.sql.model.expression.SqlBinaryExpression;
@@ -516,11 +517,32 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             return sb.toString();
         }
 
-//		if (condition instanceof LikeCondition) {
-//			LikeCondition likeCondition = (LikeCondition) condition;
-//			return exportColumn(likeCondition.getColumn()) + getOperator(condition.getConditionType()) + " '"
-//					+ likeCondition.getExpression() + "'";
-//		}
+        if (condition instanceof LikeCondition) {
+            LikeCondition likeCondition = (LikeCondition) condition;
+            StringBuilder sb = new StringBuilder();
+            if (likeCondition.isNot())
+                sb.append("not ");
+
+            Object left = likeCondition.getLeft();
+            LOG.debug("exportCondition: left={}", left);
+            sb.append(exportExpression(left, nameTranslator));
+
+            sb.append(" ");
+            sb.append(getOperator(condition.getConditionType()));
+            sb.append(" ");
+            Object right = likeCondition.getRight();
+            LOG.debug("exportCondition: right={}", right);
+            LOG.debug("exportCondition: likeCondition.getEscapeChar()={}", likeCondition.getEscapeChar());
+            sb.append(exportExpression(right, nameTranslator));
+            if (likeCondition.getEscapeChar() != null) {
+                sb.append(" escape '");
+                sb.append(likeCondition.getEscapeChar());
+                sb.append("'");
+            }
+
+            return sb.toString();
+        }
+
         if (condition instanceof BinaryCondition) {
             BinaryCondition binaryCondition = (BinaryCondition) condition;
 

@@ -187,7 +187,6 @@ public class EntityHandlerImpl implements EntityHandler {
                 loadJoinTableRelationships(parentInstance, metaEntity, attribute, lockType);
             } else {
                 int index = AttributeUtil.indexOfAttribute(modelValueArray, attribute);
-//		LOG.debug("buildAttributeValuesLoadFK: index={}", index);
                 if (index == -1)
                     throw new IllegalArgumentException("Column '" + attribute.getColumnName() + "' is missing");
 

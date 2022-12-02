@@ -31,53 +31,53 @@ public class LikePatternPredicate extends AbstractPredicate implements Predicate
     private final List<Expression<Boolean>> expressions = new ArrayList<>();
 
     public LikePatternPredicate(Expression<?> x, String pattern, Character escapeChar,
-	    Expression<Character> escapeCharEx, boolean not, boolean negated) {
-	super(not, negated);
-	this.x = x;
-	this.pattern = pattern;
-	this.escapeChar = escapeChar;
-	this.escapeCharEx = escapeCharEx;
+            Expression<Character> escapeCharEx, boolean not, boolean negated) {
+        super(not, negated);
+        this.x = x;
+        this.pattern = pattern;
+        this.escapeChar = escapeChar;
+        this.escapeCharEx = escapeCharEx;
     }
 
     @Override
     public PredicateType getPredicateType() {
-	return PredicateType.LIKE_PATTERN;
+        return PredicateType.LIKE_PATTERN;
     }
 
     @Override
     public BooleanOperator getOperator() {
-	return BooleanOperator.AND;
+        return BooleanOperator.AND;
     }
 
     @Override
     public List<Expression<?>> getSimpleExpressions() {
-	return Arrays.asList(x);
+        return Arrays.asList(x);
     }
 
     @Override
     public List<Expression<Boolean>> getExpressions() {
-	return new ArrayList<>(expressions);
+        return new ArrayList<>(expressions);
     }
 
     @Override
     public Predicate not() {
-	return new LikePatternPredicate(x, pattern, escapeChar, escapeCharEx, !isNot(), true);
+        return new LikePatternPredicate(x, pattern, escapeChar, escapeCharEx, !isNot(), true);
     }
 
     public Expression<?> getX() {
-	return x;
+        return x;
     }
 
     public String getPattern() {
-	return pattern;
+        return pattern;
     }
 
     public Character getEscapeChar() {
-	return escapeChar;
+        return escapeChar;
     }
 
     public Expression<java.lang.Character> getEscapeCharEx() {
-	return escapeCharEx;
+        return escapeCharEx;
     }
 
 }

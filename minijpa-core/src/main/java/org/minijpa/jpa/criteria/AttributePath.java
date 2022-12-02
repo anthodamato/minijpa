@@ -39,150 +39,150 @@ public class AttributePath<X> implements Path<X> {
     private String alias;
 
     public AttributePath(MetaAttribute metaAttribute, MetaEntity metaEntity) {
-	super();
-	this.metaAttribute = metaAttribute;
-	this.metaEntity = metaEntity;
+        super();
+        this.metaAttribute = metaAttribute;
+        this.metaEntity = metaEntity;
     }
 
     public MetaAttribute getMetaAttribute() {
-	return metaAttribute;
+        return metaAttribute;
     }
 
     public MetaEntity getMetaEntity() {
-	return metaEntity;
+        return metaEntity;
     }
 
     @Override
     public Predicate isNull() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Predicate isNotNull() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Predicate in(Object... values) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Predicate in(Expression<?>... values) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Predicate in(Collection<?> values) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Predicate in(Expression<Collection<?>> values) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <X> Expression<X> as(Class<X> type) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Selection<X> alias(String name) {
-	if (this.alias != null)
-	    return this;
+        if (this.alias != null)
+            return this;
 
-	this.alias = name;
-	return this;
+        this.alias = name;
+        return this;
     }
 
     @Override
     public boolean isCompoundSelection() {
-	return false;
+        return false;
     }
 
     @Override
     public List<Selection<?>> getCompoundSelectionItems() {
-	throw new IllegalStateException("Not a compound selection");
+        throw new IllegalStateException("Not a compound selection");
     }
 
     @Override
     public Class<? extends X> getJavaType() {
-	return (Class<? extends X>) metaAttribute.getType();
+        return (Class<? extends X>) metaAttribute.getType();
     }
 
     @Override
     public String getAlias() {
-	return alias;
+        return alias;
     }
 
     @Override
     public Bindable<X> getModel() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Path<?> getParentPath() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <Y> Path<Y> get(SingularAttribute<? super X, Y> attribute) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <E, C extends Collection<E>> Expression<C> get(PluralAttribute<X, C, E> collection) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<X, K, V> map) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Expression<Class<? extends X>> type() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <Y> Path<Y> get(String attributeName) {
-	MetaAttribute attribute = this.metaEntity.getAttribute(attributeName);
-	if (attribute != null)
-	    return new AttributePath<>(attribute, metaEntity);
+        MetaAttribute attribute = this.metaEntity.getAttribute(attributeName);
+        if (attribute != null)
+            return new AttributePath<>(attribute, metaEntity);
 
-	throw new IllegalArgumentException("Attribute '" + attributeName + "' not found");
+        throw new IllegalArgumentException("Attribute '" + attributeName + "' not found");
     }
 
     @Override
     public int hashCode() {
-	return Objects.hash(metaEntity.getName(), metaAttribute.getName());
+        return Objects.hash(metaEntity.getName(), metaAttribute.getName());
     }
 
     @Override
     public boolean equals(Object obj) {
-	if (obj == null || !(obj instanceof AttributePath<?>))
-	    return false;
+        if (obj == null || !(obj instanceof AttributePath<?>))
+            return false;
 
-	AttributePath<?> miniPath = (AttributePath<?>) obj;
-	if (miniPath.metaEntity != metaEntity || miniPath.metaAttribute != metaAttribute)
-	    return false;
+        AttributePath<?> miniPath = (AttributePath<?>) obj;
+        if (miniPath.metaEntity != metaEntity || miniPath.metaAttribute != metaAttribute)
+            return false;
 
-	return true;
+        return true;
     }
 
 }

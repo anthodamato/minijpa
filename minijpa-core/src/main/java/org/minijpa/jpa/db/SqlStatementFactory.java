@@ -94,6 +94,7 @@ import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.condition.EmptyCondition;
 import org.minijpa.sql.model.condition.InCondition;
+import org.minijpa.sql.model.condition.LikeCondition;
 import org.minijpa.sql.model.condition.UnaryCondition;
 import org.minijpa.sql.model.condition.UnaryLogicConditionImpl;
 import org.minijpa.sql.model.expression.SqlBinaryExpression;
@@ -975,13 +976,13 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     }
 
     private Optional<Condition> translateExprPredicate(ExprPredicate exprPredicate, List<QueryParameter> parameters,
-            Query query, AliasGenerator tableAliasGenerator) {
+            Query query, AliasGenerator aliasGenerator) {
         Expression<?> x = exprPredicate.getX();
 
         if (x instanceof AttributePath<?>) {
             AttributePath<?> miniPath = (AttributePath<?>) x;
             return Optional.of(new UnaryCondition(getOperator(exprPredicate.getPredicateType()),
-                    createTableColumnFromPath(miniPath, tableAliasGenerator)));
+                    createTableColumnFromPath(miniPath, aliasGenerator)));
         }
 
         return Optional.empty();
@@ -1034,15 +1035,16 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     }
 
     private Optional<Condition> translateLikePatternPredicate(LikePatternPredicate likePatternPredicate, Query query,
-            AliasGenerator tableAliasGenerator) {
+            AliasGenerator aliasGenerator) {
         String pattern = likePatternPredicate.getPattern();
         AttributePath<?> miniPath = (AttributePath<?>) likePatternPredicate.getX();
-        BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
-                .withLeft(createTableColumnFromPath(miniPath, tableAliasGenerator)).withRight(buildValue(pattern));
-        if (likePatternPredicate.isNot())
-            builder.not();
+        String escapeChar = null;
+        if (likePatternPredicate.getEscapeChar() != null)
+            escapeChar = "" + likePatternPredicate.getEscapeChar();
 
-        return Optional.of(builder.build());
+        LikeCondition likeCondition = new LikeCondition(createTableColumnFromPath(miniPath, aliasGenerator),
+                buildValue(pattern), escapeChar, likePatternPredicate.isNot());
+        return Optional.of(likeCondition);
     }
 
     private Optional<Condition> translateInPredicate(InPredicate<?> inPredicate, List<QueryParameter> parameters,
@@ -1072,21 +1074,28 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     }
 
     private Optional<Condition> translateLikePatternExprPredicate(LikePatternExprPredicate likePatternExprPredicate,
-            List<QueryParameter> parameters, Query query, AliasGenerator tableAliasGenerator) {
+            List<QueryParameter> parameters, Query query, AliasGenerator aliasGenerator) {
         Expression<String> pattern = likePatternExprPredicate.getPatternEx();
         AttributePath<?> miniPath = (AttributePath<?>) likePatternExprPredicate.getX();
         MetaAttribute attribute = miniPath.getMetaAttribute();
+        Object right = null;
         if (pattern instanceof ParameterExpression<?>) {
             ParameterExpression<?> parameterExpression = (ParameterExpression<?>) pattern;
             addParameter(parameterExpression, attribute, parameters, query);
+            right = QM;
+        } else if (pattern instanceof AttributePath<?>) {
+            AttributePath<?> attributePath = (AttributePath<?>) pattern;
+            right = createTableColumnFromPath(attributePath, aliasGenerator);
         }
 
-        BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
-                .withLeft(createTableColumnFromPath(miniPath, tableAliasGenerator)).withRight(buildValue(QM));
-        if (likePatternExprPredicate.isNot())
-            builder.not();
+        String escapeChar = null;
+        if (likePatternExprPredicate.getEscapeChar() != null)
+            escapeChar = "" + likePatternExprPredicate.getEscapeChar();
 
-        return Optional.of(builder.build());
+        LikeCondition likeCondition = new LikeCondition(createTableColumnFromPath(miniPath, aliasGenerator), right,
+                escapeChar, likePatternExprPredicate.isNot());
+
+        return Optional.of(likeCondition);
     }
 
     private Optional<Condition> createConditions(Predicate predicate, List<QueryParameter> parameters, Query query,
@@ -1164,7 +1173,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         return Optional.of(result);
     }
 
-    public StatementParameters select(Query query, AliasGenerator tableAliasGenerator) {
+    public StatementParameters select(Query query, AliasGenerator aliasGenerator) {
         CriteriaQuery<?> criteriaQuery = null;
         if (query instanceof MiniTypedQuery<?>)
             criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
@@ -1177,13 +1186,27 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         List<QueryParameter> parameters = new ArrayList<>();
         Optional<Condition> optionalCondition = Optional.empty();
         if (restriction != null)
-            optionalCondition = createConditions(restriction, parameters, query, tableAliasGenerator);
+            optionalCondition = createConditions(restriction, parameters, query, aliasGenerator);
 
         List<Condition> conditions = null;
         if (optionalCondition.isPresent())
             conditions = Arrays.asList(optionalCondition.get());
 
+        SqlSelectDataBuilder builder = new SqlSelectDataBuilder();
+        FromTable fromTable = FromTable.of(entity.getTableName(), aliasGenerator.getDefault(entity.getTableName()));
+        builder.withFromTable(fromTable);
+
         LockType lockType = LockTypeUtils.toLockType(query.getLockMode());
+        if (lockType != null)
+            builder.withForUpdate(calcForUpdate(lockType));
+
+        Optional<List<OrderBy>> optionalOrderBy = createOrderByList(criteriaQuery, aliasGenerator);
+        if (optionalOrderBy.isPresent())
+            builder.withOrderBy(optionalOrderBy.get());
+
+        if (criteriaQuery.isDistinct())
+            builder.distinct();
+
         Selection<?> selection = criteriaQuery.getSelection();
         if (selection instanceof MiniRoot<?>) {
             List<FetchParameter> fetchParameters = MetaEntityHelper.convertAllAttributes(entity);
@@ -1192,39 +1215,17 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             fetchParameters.forEach(
                     f -> LOG.debug("select: f.getAttribute()={}", ((AttributeFetchParameter) f).getAttribute()));
 
-            FromTable fromTable = FromTable.of(entity.getTableName(),
-                    tableAliasGenerator.getDefault(entity.getTableName()));
-            SqlSelectDataBuilder sqlSelectBuilder = new SqlSelectDataBuilder();
-            sqlSelectBuilder.withFromTable(fromTable);
-            if (lockType != null)
-                sqlSelectBuilder.withForUpdate(calcForUpdate(lockType));
-
-            sqlSelectBuilder.withValues(MetaEntityHelper.toValues(entity, fromTable)).withConditions(conditions)
+            builder.withValues(MetaEntityHelper.toValues(entity, fromTable)).withConditions(conditions)
                     .withResult(fromTable);
-            sqlSelectBuilder.withFetchParameters(fetchParameters);
-            SqlSelectData sqlSelectData = (SqlSelectData) sqlSelectBuilder.build();
+            builder.withFetchParameters(fetchParameters);
+            SqlSelectData sqlSelectData = (SqlSelectData) builder.build();
             return new StatementParameters(sqlSelectData, parameters);
         }
 
-        FromTable fromTable = FromTable.of(entity.getTableName(),
-                tableAliasGenerator.getDefault(entity.getTableName()));
-        List<Value> values = createSelectionValues(fromTable, selection, tableAliasGenerator);
+        List<Value> values = createSelectionValues(fromTable, selection, aliasGenerator);
         List<FetchParameter> fetchParameters = createFetchParameters(selection);
-        Optional<List<OrderBy>> optionalOrderBy = createOrderByList(criteriaQuery, tableAliasGenerator);
 
-        SqlSelectDataBuilder builder = new SqlSelectDataBuilder();
-        builder.withFromTable(fromTable);
         builder.withValues(values).withConditions(conditions);
-
-        if (optionalOrderBy.isPresent())
-            builder.withOrderBy(optionalOrderBy.get());
-
-        if (criteriaQuery.isDistinct())
-            builder.distinct();
-
-        if (lockType != null)
-            builder.withForUpdate(calcForUpdate(lockType));
-
         builder.withFetchParameters(fetchParameters);
         SqlSelect sqlSelect = builder.build();
         return new StatementParameters(sqlSelect, parameters);
@@ -1288,129 +1289,4 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         return new StatementParameters(sqlDelete, parameters);
     }
 
-//	private int indexOfFirstEntity(List<MetaEntity> entities) {
-//		for (int i = 0; i < entities.size(); ++i) {
-//			MetaEntity metaEntity = entities.get(i);
-//			List<MetaAttribute> relationshipAttributes = metaEntity.expandRelationshipAttributes();
-//			if (relationshipAttributes.isEmpty())
-//				return i;
-//
-//			long rc = relationshipAttributes.stream().filter(a -> a.getRelationship().isOwner()).count();
-//			if (rc == 0)
-//				return i;
-//		}
-//
-//		return 0;
-//	}
-
-//	private List<MetaEntity> sortForDDL(List<MetaEntity> entities) {
-//		List<MetaEntity> sorted = new ArrayList<>();
-//		List<MetaEntity> toSort = new ArrayList<>(entities);
-//		for (int i = 0; i < entities.size(); ++i) {
-//			int index = indexOfFirstEntity(toSort);
-//			sorted.add(toSort.get(index));
-//			toSort.remove(index);
-//		}
-//
-//		return sorted;
-//	}
-
-//    private static ColumnDeclaration toColumnDeclaration(MetaAttribute a) {
-//        Optional<JdbcDDLData> optional = Optional.empty();
-//        if (a.getDdlData().isPresent()) {
-//            DDLData ddlData = a.getDdlData().get();
-//            JdbcDDLData jdbcDDLData = new JdbcDDLData(ddlData.getColumnDefinition(), ddlData.getLength(),
-//                    ddlData.getPrecision(), ddlData.getScale(), ddlData.getNullable());
-//            optional = Optional.of(jdbcDDLData);
-//        }
-//
-//        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
-//    }
-
-//    private static JdbcPk buildJdbcPk(Pk pk) {
-//        if (pk.isComposite()) {
-//            List<ColumnDeclaration> columnDeclarations = pk.getAttributes().stream().map(c -> {
-//                return toColumnDeclaration(c);
-//            }).collect(Collectors.toList());
-//
-//            return new CompositeJdbcPk(columnDeclarations);
-//        }
-//
-//        return new SimpleJdbcPk(toColumnDeclaration(pk.getAttribute()),
-//                pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY);
-//    }
-//
-//    private static ColumnDeclaration toColumnDeclaration(JoinColumnAttribute a) {
-//        Optional<JdbcDDLData> optional = Optional.empty();
-//        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
-//    }
-//
-//    public static JdbcJoinColumnMapping toJdbcJoinColumnMapping(JoinColumnMapping joinColumnMapping) {
-//        if (joinColumnMapping.isComposite()) {
-//            List<ColumnDeclaration> columnDeclarations = joinColumnMapping.getJoinColumnAttributes().stream()
-//                    .map(j -> toColumnDeclaration(j)).collect(Collectors.toList());
-//            return new CompositeJdbcJoinColumnMapping(columnDeclarations,
-//                    buildJdbcPk(joinColumnMapping.getForeignKey()));
-//        }
-//
-//        return new SingleJdbcJoinColumnMapping(toColumnDeclaration(joinColumnMapping.get()),
-//                buildJdbcPk(joinColumnMapping.getForeignKey()));
-//    }
-
-//	public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext) {
-//		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-//		Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
-//		List<MetaEntity> sorted = sortForDDL(new ArrayList<>(entities.values()));
-//		sorted.forEach(v -> {
-//			List<MetaAttribute> attributes = new ArrayList<>(v.getBasicAttributes());
-//			attributes.addAll(v.expandEmbeddables());
-//
-//			// foreign keys
-//			List<JoinColumnMapping> joinColumnMappings = v.expandJoinColumnMappings();
-//			List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
-//			for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
-//				MetaEntity toEntity = entities.get(joinColumnMapping.getAttribute().getType().getName());
-//				JdbcJoinColumnMapping jdbcJoinColumnMapping = toJdbcJoinColumnMapping(joinColumnMapping);
-//				foreignKeyDeclarations.add(new ForeignKeyDeclaration(jdbcJoinColumnMapping, toEntity.getTableName()));
-//			}
-//
-//			LOG.debug("buildDDLStatements: v.getTableName()=" + v.getTableName());
-//			List<ColumnDeclaration> columnDeclarations = attributes.stream().map(c -> {
-//				return toColumnDeclaration(c);
-//			}).collect(Collectors.toList());
-//
-//			SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(), buildJdbcPk(v.getId()),
-//					columnDeclarations, foreignKeyDeclarations);
-//			sqlStatements.add(sqlCreateTable);
-//		});
-//
-//		sorted.forEach(v -> {
-//			List<RelationshipJoinTable> relationshipJoinTables = v.expandRelationshipAttributes().stream()
-//					.filter(a -> a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner())
-//					.map(a -> a.getRelationship().getJoinTable()).collect(Collectors.toList());
-//			for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
-//				List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
-//				JdbcJoinColumnMapping owningJdbcJoinColumnMapping = toJdbcJoinColumnMapping(
-//						relationshipJoinTable.getOwningJoinColumnMapping());
-//				foreignKeyDeclarations.add(new ForeignKeyDeclaration(owningJdbcJoinColumnMapping,
-//						relationshipJoinTable.getOwningEntity().getTableName()));
-//				JdbcJoinColumnMapping targetJdbcJoinColumnMapping = toJdbcJoinColumnMapping(
-//						relationshipJoinTable.getTargetJoinColumnMapping());
-//				foreignKeyDeclarations.add(new ForeignKeyDeclaration(targetJdbcJoinColumnMapping,
-//						relationshipJoinTable.getTargetEntity().getTableName()));
-//				SqlCreateJoinTable sqlCreateJoinTable = new SqlCreateJoinTable(relationshipJoinTable.getTableName(),
-//						foreignKeyDeclarations);
-//				sqlStatements.add(sqlCreateJoinTable);
-//			}
-//		});
-//
-//		// sorted.forEach(v -> {
-//		// if (v.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
-//		// SqlCreateSequence sqlCreateSequence = new
-//		// SqlCreateSequence(v.getId().getPkGeneration().getPkSequenceGenerator());
-//		// sqlStatements.add(sqlCreateSequence);
-//		// }
-//		// });
-//		return sqlStatements;
-//	}
 }
