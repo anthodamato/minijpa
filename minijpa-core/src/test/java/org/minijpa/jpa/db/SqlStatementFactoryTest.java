@@ -85,7 +85,7 @@ public class SqlStatementFactoryTest {
 
         SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(employeeEntity,
-                foreignKeyAttribute, columns, optional.get().getTableAliasGenerator());
+                foreignKeyAttribute, columns, optional.get().getAliasGenerator());
         Optional<List<Condition>> opt = sqlSelectData.getConditions();
         Assertions.assertTrue(opt.isPresent());
         List<Condition> conditions = opt.get();
@@ -150,7 +150,7 @@ public class SqlStatementFactoryTest {
         List<AbstractAttribute> attributes = modelValueArray.getModels();
         List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
-                attributes, optional.get().getTableAliasGenerator());
+                attributes, optional.get().getAliasGenerator());
 
         Optional<List<Condition>> opt = sqlSelectData.getConditions();
         Assertions.assertTrue(opt.isPresent());
@@ -189,7 +189,7 @@ public class SqlStatementFactoryTest {
         List<AbstractAttribute> attributes = modelValueArray.getModels();
         List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
-                attributes, optional.get().getTableAliasGenerator());
+                attributes, optional.get().getAliasGenerator());
 
         Optional<List<Condition>> opt = sqlSelectData.getConditions();
         Assertions.assertTrue(opt.isPresent());
@@ -233,7 +233,7 @@ public class SqlStatementFactoryTest {
 
         SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
         StatementParameters statementParameters = sqlStatementFactory.select(typedQuery,
-                optional.get().getTableAliasGenerator());
+                optional.get().getAliasGenerator());
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         Assertions.assertNotNull(sqlSelectData.getValues());
         Optional<List<Condition>> opt = sqlSelectData.getConditions();

@@ -9,10 +9,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.number.IsCloseTo;
@@ -21,9 +18,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jpa.model.SearchData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SearchDataTest {
-
+    private Logger LOG = LoggerFactory.getLogger(SearchDataTest.class);
     private static EntityManagerFactory emf;
 
     @BeforeAll
@@ -410,6 +409,10 @@ public class SearchDataTest {
         tx.commit();
 
         tx.begin();
+        testSum2(em);
+        tx.commit();
+
+        tx.begin();
         testProd1(em);
         tx.commit();
 
@@ -442,6 +445,20 @@ public class SearchDataTest {
         em.close();
     }
 
+    private void testSum2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Number> criteriaQuery = cb.createQuery(Number.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 4);
+        criteriaQuery.where(predicate).orderBy(cb.asc(root.get("name")));
+        criteriaQuery.select(cb.sum(4.1f, root.get("occurences")));
+        TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
+        List<Number> sumList = typedQuery.getResultList();
+        Assertions.assertEquals(2, sumList.size());
+        Assertions.assertEquals(7.1f, sumList.get(0));
+        Assertions.assertEquals(8.1f, sumList.get(1));
+    }
+
     private void testProd1(EntityManager em) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<BigDecimal> criteriaQuery = cb.createQuery(BigDecimal.class);
@@ -463,9 +480,9 @@ public class SearchDataTest {
         criteriaQuery.where(predicate).orderBy(cb.asc(root.get("name")));
         criteriaQuery.select(cb.prod(root.get("averageValue"), BigDecimal.valueOf(3)));
         TypedQuery<BigDecimal> typedQuery = em.createQuery(criteriaQuery);
-        List<BigDecimal> sumList = typedQuery.getResultList();
-        Assertions.assertEquals(1, sumList.size());
-        Assertions.assertEquals(BigDecimal.valueOf(15), sumList.get(0));
+        List<BigDecimal> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(BigDecimal.valueOf(15), resultList.get(0));
     }
 
     private void testProd3(EntityManager em) {
@@ -625,9 +642,9 @@ public class SearchDataTest {
         criteriaQuery.where(predicate).orderBy(cb.asc(root.get("name")));
         criteriaQuery.select(cb.sqrt(root.get("occurences")));
         TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
-        List<Number> sumList = typedQuery.getResultList();
-        Assertions.assertEquals(1, sumList.size());
-        MatcherAssert.assertThat((double) sumList.get(0), IsCloseTo.closeTo(4.8989797f, 0.000001f));
+        List<Number> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        MatcherAssert.assertThat((double) resultList.get(0), IsCloseTo.closeTo(4.8989797f, 0.000001f));
     }
 
     @Test
@@ -706,7 +723,8 @@ public class SearchDataTest {
         TypedQuery<BigDecimal> typedQuery = em.createQuery(criteriaQuery);
         List<BigDecimal> sumList = typedQuery.getResultList();
         Assertions.assertEquals(1, sumList.size());
-        Assertions.assertEquals(BigDecimal.valueOf(120d), sumList.get(0));
+        LOG.debug("testToBigDecimal: sumList.get(0).getClass()={}", sumList.get(0).getClass());
+        Assertions.assertEquals(BigDecimal.valueOf(120), sumList.get(0));
     }
 
     private void testToBigInteger(EntityManager em) {

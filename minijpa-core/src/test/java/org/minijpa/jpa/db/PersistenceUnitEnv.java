@@ -120,7 +120,7 @@ public class PersistenceUnitEnv {
         EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
 
         JdbcQueryRunner jdbcQueryRunner = new JdbcQueryRunner(connectionHolder, dbConfiguration, sqlStatementFactory,
-                persistenceUnitContext.getTableAliasGenerator());
+                persistenceUnitContext.getAliasGenerator());
         EntityHandlerImpl entityLoader = new EntityHandlerImpl(persistenceUnitContext, miniPersistenceContext,
                 jdbcQueryRunner);
 

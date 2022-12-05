@@ -288,11 +288,11 @@ public class JpqlTest {
 			JpqlResult jpqlResult = jpqlModule.parse(query);
 			if (testDb != null && testDb.equals("oracle"))
 				Assertions.assertEquals(
-						"select holiday0.id, holiday0.travellers, holiday0.checkIn, holiday0.nights, holiday0.referenceName from Holiday holiday0 where holiday0.nights between 7 and 10",
+						"select holiday0.id, holiday0.travellers, holiday0.check_in, holiday0.nights, holiday0.referenceName from Holiday holiday0 where holiday0.nights between 7 and 10",
 						jpqlResult.getSql());
 			else
 				Assertions.assertEquals(
-						"select holiday0.id, holiday0.travellers, holiday0.checkIn, holiday0.nights, holiday0.referenceName from Holiday AS holiday0 where holiday0.nights between 7 and 10",
+						"select holiday0.id, holiday0.travellers, holiday0.check_in, holiday0.nights, holiday0.referenceName from Holiday AS holiday0 where holiday0.nights between 7 and 10",
 						jpqlResult.getSql());
 		} catch (Exception ex) {
 			LOG.debug(ex.getMessage());

@@ -25,6 +25,7 @@ public class JdbcTypes {
 
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(JdbcTypes.class);
+    private static int typeOrder[] = {Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT, Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC};
 
     public static Integer sqlTypeFromClass(Class<?> c) {
         if (c == Boolean.class)
@@ -89,4 +90,23 @@ public class JdbcTypes {
         return Types.NULL;
     }
 
+    public static int compareNumericTypes(int sqlType1, int sqlType2) {
+        Integer index1 = -1;
+        for (int i = 0; i < typeOrder.length; ++i) {
+            if (typeOrder[i] == sqlType1) {
+                index1 = i;
+                break;
+            }
+        }
+
+        Integer index2 = -1;
+        for (int i = 0; i < typeOrder.length; ++i) {
+            if (typeOrder[i] == sqlType2) {
+                index2 = i;
+                break;
+            }
+        }
+
+        return index1.compareTo(index2);
+    }
 }

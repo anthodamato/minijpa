@@ -13,12 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.criteria;
+package org.minijpa.jdbc.mapper;
+
+import java.math.BigInteger;
 
 /**
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public enum ExpressionOperator {
-    SUM, PROD, DIFF, QUOT, MINUS, SQRT, TO_LONG, TO_INTEGER, TO_FLOAT, TO_DOUBLE, TO_BIGDECIMAL, TO_BIGINTEGER,
-    TO_STRING;
+public class NumberToBigIntegerAttributeMapper implements AttributeMapper<BigInteger, Number> {
+
+    @Override
+    public Number attributeToDatabase(BigInteger k) {
+        return k;
+    }
+
+    @Override
+    public BigInteger databaseToAttribute(Number v) {
+        return BigInteger.valueOf(v.longValue());
+    }
+
 }

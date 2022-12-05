@@ -287,7 +287,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x,
-            Expression<? extends Y> y) {
+                                                                   Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.GREATER_THAN, x, y, null);
     }
 
@@ -298,7 +298,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(Expression<? extends Y> x,
-            Expression<? extends Y> y) {
+                                                                            Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.GREATER_THAN_OR_EQUAL_TO, x, y, null);
     }
 
@@ -319,7 +319,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(Expression<? extends Y> x,
-            Expression<? extends Y> y) {
+                                                                         Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.LESS_THAN_OR_EQUAL_TO, x, y, null);
     }
 
@@ -330,7 +330,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate between(Expression<? extends Y> v, Expression<? extends Y> x,
-            Expression<? extends Y> y) {
+                                                               Expression<? extends Y> y) {
         return new BetweenExpressionsPredicate(v, x, y);
     }
 
@@ -471,50 +471,42 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<Double> sqrt(Expression<? extends Number> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new UnaryExpression<>(ExpressionOperator.SQRT, x);
     }
 
     @Override
     public Expression<Long> toLong(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_LONG, number);
     }
 
     @Override
     public Expression<Integer> toInteger(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_INTEGER, number);
     }
 
     @Override
     public Expression<Float> toFloat(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_FLOAT, number);
     }
 
     @Override
     public Expression<Double> toDouble(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_DOUBLE, number);
     }
 
     @Override
     public Expression<BigDecimal> toBigDecimal(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_BIGDECIMAL, number);
     }
 
     @Override
     public Expression<BigInteger> toBigInteger(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_BIGINTEGER, number);
     }
 
     @Override
     public Expression<String> toString(Expression<Character> character) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_STRING, character);
     }
 
     @Override

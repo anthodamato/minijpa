@@ -72,7 +72,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         this.sqlStatementFactory = new SqlStatementFactory();
         this.entityHandler = new EntityHandlerImpl(persistenceUnitContext, entityContainer,
                 new JdbcQueryRunner(connectionHolder, dbConfiguration, sqlStatementFactory,
-                        persistenceUnitContext.getTableAliasGenerator()));
+                        persistenceUnitContext.getAliasGenerator()));
         this.jpqlModule = new JpqlModule(dbConfiguration, sqlStatementFactory, persistenceUnitContext);
     }
 
@@ -441,7 +441,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             throw new IllegalStateException("Selection not defined or not inferable");
 
         StatementParameters statementParameters = sqlStatementFactory.select(query,
-                persistenceUnitContext.getTableAliasGenerator());
+                persistenceUnitContext.getAliasGenerator());
+        LOG.debug("select: statementParameters={}", statementParameters);
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
         LOG.debug("select: sql={}", sql);
@@ -579,7 +580,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
         List<QueryParameter> parameters = sqlStatementFactory.createUpdateParameters(updateQuery);
         SqlUpdate sqlUpdate = sqlStatementFactory.update(updateQuery, parameters,
-                persistenceUnitContext.getTableAliasGenerator());
+                persistenceUnitContext.getAliasGenerator());
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlUpdate);
         return dbConfiguration.getJdbcRunner().update(connectionHolder.getConnection(), sql, parameters);
     }
@@ -590,7 +591,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             throw new IllegalArgumentException("Criteria Delete Root not defined");
 
         StatementParameters statementParameters = sqlStatementFactory.delete(deleteQuery,
-                persistenceUnitContext.getTableAliasGenerator());
+                persistenceUnitContext.getAliasGenerator());
         SqlDelete sqlDelete = (SqlDelete) statementParameters.getSqlStatement();
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
         return dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(),
