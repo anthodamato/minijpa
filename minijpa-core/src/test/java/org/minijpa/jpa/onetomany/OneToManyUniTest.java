@@ -152,7 +152,7 @@ public class OneToManyUniTest {
     }
 
     @Test
-    public void criteriaLike() throws Exception {
+    public void likeCriteria() throws Exception {
         final EntityManager em = emf.createEntityManager();
         Store store = new Store();
         store.setName("Upton Store");
@@ -186,6 +186,37 @@ public class OneToManyUniTest {
         em.detach(store);
 
         tx.begin();
+        testLike1(em);
+        tx.commit();
+
+        tx.begin();
+        testLike2(em);
+        tx.commit();
+
+        tx.begin();
+        testLike3(em);
+        tx.commit();
+
+        tx.begin();
+        testLike4(em);
+        tx.commit();
+
+        tx.begin();
+        testLike5(em);
+        tx.commit();
+
+        tx.begin();
+        Store s = em.find(Store.class, store.getId());
+        em.remove(s);
+        em.remove(item1);
+        em.remove(item2);
+        em.remove(item3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testLike1(EntityManager em) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
         Root<Item> root = criteriaQuery.from(Item.class);
@@ -198,28 +229,67 @@ public class OneToManyUniTest {
         Item item = items.get(0);
         Assertions.assertEquals("Notepad", item.getName());
         Assertions.assertEquals("Free_Inch", item.getModel());
-        tx.commit();
+    }
 
-        tx.begin();
-        predicate = cb.like(root.get("model"), root.get("name"), '\\');
+    private void testLike2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
+        Root<Item> root = criteriaQuery.from(Item.class);
+        Predicate predicate = cb.like(root.get("model"), root.get("name"), '\\');
         criteriaQuery.where(predicate);
         criteriaQuery.select(root);
-        typedQuery = em.createQuery(criteriaQuery);
-        items = typedQuery.getResultList();
+        TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
+        List<Item> items = typedQuery.getResultList();
         Assertions.assertEquals(1, items.size());
         Assertions.assertEquals("Pen", items.get(0).getName());
         Assertions.assertEquals("Pen", items.get(0).getModel());
-        tx.commit();
+    }
 
-        tx.begin();
-        Store s = em.find(Store.class, store.getId());
-        em.remove(s);
-        em.remove(item1);
-        em.remove(item2);
-        em.remove(item3);
-        tx.commit();
+    private void testLike3(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
+        Root<Item> root = criteriaQuery.from(Item.class);
+        Predicate predicate = cb.like(root.get("model"), cb.parameter(String.class, "pattern"), '\\');
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(root);
+        TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("pattern", "Free\\_I%");
+        List<Item> items = typedQuery.getResultList();
+        Assertions.assertEquals(1, items.size());
+        Item item = items.get(0);
+        Assertions.assertEquals("Notepad", item.getName());
+        Assertions.assertEquals("Free_Inch", item.getModel());
+    }
 
-        em.close();
+    private void testLike4(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
+        Root<Item> root = criteriaQuery.from(Item.class);
+        Predicate predicate = cb.like(root.get("model"), root.get("name"), cb.parameter(Character.class, "escape"));
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(root);
+        TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("escape", '\\');
+        List<Item> items = typedQuery.getResultList();
+        Assertions.assertEquals(1, items.size());
+        Assertions.assertEquals("Pen", items.get(0).getName());
+        Assertions.assertEquals("Pen", items.get(0).getModel());
+    }
+
+    private void testLike5(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
+        Root<Item> root = criteriaQuery.from(Item.class);
+        Predicate predicate = cb.like(root.get("model"), "Free\\_I%", cb.parameter(Character.class, "escape"));
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(root);
+        TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("escape", '\\');
+        List<Item> items = typedQuery.getResultList();
+        Assertions.assertEquals(1, items.size());
+        Item item = items.get(0);
+        Assertions.assertEquals("Notepad", item.getName());
+        Assertions.assertEquals("Free_Inch", item.getModel());
     }
 
     @Test
@@ -257,6 +327,37 @@ public class OneToManyUniTest {
         em.detach(store);
 
         tx.begin();
+        testNotLike1(em);
+        tx.commit();
+
+        tx.begin();
+        testNotLike2(em);
+        tx.commit();
+
+        tx.begin();
+        testNotLike3(em);
+        tx.commit();
+
+        tx.begin();
+        testNotLike4(em);
+        tx.commit();
+
+        tx.begin();
+        testNotLike5(em);
+        tx.commit();
+
+        tx.begin();
+        Store s = em.find(Store.class, store.getId());
+        em.remove(s);
+        em.remove(item1);
+        em.remove(item2);
+        em.remove(item3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testNotLike1(EntityManager em) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
         Root<Item> root = criteriaQuery.from(Item.class);
@@ -270,29 +371,73 @@ public class OneToManyUniTest {
         Assertions.assertEquals("Pen", items.get(0).getModel());
         Assertions.assertEquals("Pencil", items.get(1).getName());
         Assertions.assertEquals("Staedtler%Walls", items.get(1).getModel());
-        tx.commit();
+    }
 
-        tx.begin();
-        predicate = cb.notLike(root.get("model"), root.get("name"), '\\');
+    private void testNotLike2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
+        Root<Item> root = criteriaQuery.from(Item.class);
+        Predicate predicate = cb.notLike(root.get("model"), root.get("name"), '\\');
         criteriaQuery.where(predicate);
         criteriaQuery.select(root);
-        typedQuery = em.createQuery(criteriaQuery);
-        items = typedQuery.getResultList();
+        TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
+        List<Item> items = typedQuery.getResultList();
         Assertions.assertEquals(2, items.size());
         Assertions.assertEquals("Notepad", items.get(0).getName());
         Assertions.assertEquals("Free_Inch", items.get(0).getModel());
         Assertions.assertEquals("Pencil", items.get(1).getName());
         Assertions.assertEquals("Staedtler%Walls", items.get(1).getModel());
-        tx.commit();
-
-        tx.begin();
-        Store s = em.find(Store.class, store.getId());
-        em.remove(s);
-        em.remove(item1);
-        em.remove(item2);
-        em.remove(item3);
-        tx.commit();
-
-        em.close();
     }
+
+    private void testNotLike3(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
+        Root<Item> root = criteriaQuery.from(Item.class);
+        Predicate predicate = cb.notLike(root.get("model"), cb.parameter(String.class, "pattern"), '\\');
+        criteriaQuery.where(predicate).orderBy(cb.asc(root.get("name")));
+        criteriaQuery.select(root);
+        TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("pattern", "Free\\_I%");
+        List<Item> items = typedQuery.getResultList();
+        Assertions.assertEquals(2, items.size());
+        Assertions.assertEquals("Pen", items.get(0).getName());
+        Assertions.assertEquals("Pen", items.get(0).getModel());
+        Assertions.assertEquals("Pencil", items.get(1).getName());
+        Assertions.assertEquals("Staedtler%Walls", items.get(1).getModel());
+    }
+
+    private void testNotLike4(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
+        Root<Item> root = criteriaQuery.from(Item.class);
+        Predicate predicate = cb.notLike(root.get("model"), root.get("name"), cb.parameter(Character.class, "escape"));
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(root);
+        TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("escape", '\\');
+        List<Item> items = typedQuery.getResultList();
+        Assertions.assertEquals(2, items.size());
+        Assertions.assertEquals("Notepad", items.get(0).getName());
+        Assertions.assertEquals("Free_Inch", items.get(0).getModel());
+        Assertions.assertEquals("Pencil", items.get(1).getName());
+        Assertions.assertEquals("Staedtler%Walls", items.get(1).getModel());
+    }
+
+    private void testNotLike5(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Item> criteriaQuery = cb.createQuery(Item.class);
+        Root<Item> root = criteriaQuery.from(Item.class);
+        Predicate predicate = cb.notLike(root.get("model"), "Free\\_I%", cb.parameter(Character.class, "escape"));
+        criteriaQuery.where(predicate).orderBy(cb.asc(root.get("name")));
+        criteriaQuery.select(root);
+        TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("escape", '\\');
+        List<Item> items = typedQuery.getResultList();
+        Assertions.assertEquals(2, items.size());
+        Assertions.assertEquals("Pen", items.get(0).getName());
+        Assertions.assertEquals("Pen", items.get(0).getModel());
+        Assertions.assertEquals("Pencil", items.get(1).getName());
+        Assertions.assertEquals("Staedtler%Walls", items.get(1).getModel());
+    }
+
 }

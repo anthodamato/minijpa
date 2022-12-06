@@ -20,6 +20,7 @@ public class SearchData {
     private Integer occurences;
     @Column(name = "average_value")
     private Integer averageValue;
+    private Float floatAverageValue;
 
     public Long getId() {
         return id;
@@ -63,6 +64,14 @@ public class SearchData {
 
     public void setAverageValue(Integer averageValue) {
         this.averageValue = averageValue;
+    }
+
+    public Float getFloatAverageValue() {
+        return floatAverageValue;
+    }
+
+    public void setFloatAverageValue(Float floatAverageValue) {
+        this.floatAverageValue = floatAverageValue;
     }
 
 }

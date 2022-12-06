@@ -9,7 +9,11 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaBuilder.Trimspec;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.number.IsCloseTo;
@@ -413,6 +417,10 @@ public class SearchDataTest {
         tx.commit();
 
         tx.begin();
+        testOr(em);
+        tx.commit();
+
+        tx.begin();
         testProd1(em);
         tx.commit();
 
@@ -457,6 +465,20 @@ public class SearchDataTest {
         Assertions.assertEquals(2, sumList.size());
         Assertions.assertEquals(7.1f, sumList.get(0));
         Assertions.assertEquals(8.1f, sumList.get(1));
+    }
+
+    private void testOr(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Number> criteriaQuery = cb.createQuery(Number.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.or(cb.equal(root.get("occurences"), 4), cb.equal(root.get("occurences"), 3));
+        criteriaQuery.where(predicate).orderBy(cb.desc(root.get("name")));
+        criteriaQuery.select(cb.sum(4.1f, root.get("occurences")));
+        TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
+        List<Number> sumList = typedQuery.getResultList();
+        Assertions.assertEquals(2, sumList.size());
+        Assertions.assertEquals(8.1f, sumList.get(0));
+        Assertions.assertEquals(7.1f, sumList.get(1));
     }
 
     private void testProd1(EntityManager em) {
@@ -791,4 +813,582 @@ public class SearchDataTest {
         Assertions.assertEquals(1, sumList.size());
         Assertions.assertEquals(Long.valueOf(120), sumList.get(0));
     }
+
+    @Test
+    public void notSum() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        SearchData searchData1 = new SearchData();
+        searchData1.setName("SearchName1");
+        searchData1.setModel("Free");
+        searchData1.setPattern("##");
+        searchData1.setOccurences(3);
+        searchData1.setAverageValue(4);
+        searchData1.setFloatAverageValue(-4.2f);
+
+        SearchData searchData2 = new SearchData();
+        searchData2.setName("SearchName2");
+        searchData2.setModel("Special");
+        searchData2.setPattern("##");
+        searchData2.setOccurences(4);
+        searchData2.setAverageValue(4);
+        searchData2.setFloatAverageValue(-5.2f);
+
+        SearchData searchData3 = new SearchData();
+        searchData3.setName("SearchName3");
+        searchData3.setModel("Usual");
+        searchData3.setPattern("##%");
+        searchData3.setOccurences(24);
+        searchData3.setAverageValue(5);
+        searchData3.setFloatAverageValue(-7.8f);
+
+        final EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        em.persist(searchData1);
+        em.persist(searchData2);
+        em.persist(searchData3);
+
+        tx.commit();
+
+        tx.begin();
+        testNotSumAsLong(em);
+        tx.commit();
+
+        tx.begin();
+        testNotSumAsDouble(em);
+        tx.commit();
+
+        tx.begin();
+        testAbs(em);
+        tx.commit();
+
+        tx.begin();
+        testMod1(em);
+        tx.commit();
+
+        tx.begin();
+        testMod2(em);
+        tx.commit();
+
+        tx.begin();
+        testMod3(em);
+        tx.commit();
+
+        tx.begin();
+        em.remove(searchData1);
+        em.remove(searchData2);
+        em.remove(searchData3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testNotSumAsLong(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Long> criteriaQuery = cb.createQuery(Long.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.not(cb.equal(root.get("averageValue"), 5));
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.sumAsLong(root.get("occurences")));
+        TypedQuery<Long> typedQuery = em.createQuery(criteriaQuery);
+        List<Long> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(7L, resultList.get(0));
+    }
+
+    private void testNotSumAsDouble(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Double> criteriaQuery = cb.createQuery(Double.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.not(cb.equal(root.get("averageValue"), 5));
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.sumAsDouble(root.get("occurences")));
+        TypedQuery<Double> typedQuery = em.createQuery(criteriaQuery);
+        List<Double> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(7d, resultList.get(0));
+    }
+
+    private void testAbs(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Number> criteriaQuery = cb.createQuery(Number.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.orderBy(cb.desc(root.get("name")));
+        criteriaQuery.select(cb.abs(root.get("floatAverageValue")));
+        TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
+        List<Number> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(3, resultList.size());
+        Assertions.assertEquals(7.8f, resultList.get(0));
+        Assertions.assertEquals(5.2f, resultList.get(1));
+        Assertions.assertEquals(4.2f, resultList.get(2));
+    }
+
+    private void testMod1(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Number> criteriaQuery = cb.createQuery(Number.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        criteriaQuery.orderBy(cb.desc(root.get("name")));
+        criteriaQuery.select(cb.mod(root.get("occurences"), root.get("averageValue")));
+        TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
+        List<Number> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(3, resultList.size());
+        Assertions.assertEquals(4, resultList.get(0));
+        Assertions.assertEquals(0, resultList.get(1));
+        Assertions.assertEquals(3, resultList.get(2));
+    }
+
+    private void testMod2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Number> criteriaQuery = cb.createQuery(Number.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        criteriaQuery.orderBy(cb.desc(root.get("name")));
+        criteriaQuery.select(cb.mod(50, root.get("occurences")));
+        TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
+        List<Number> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(3, resultList.size());
+        Assertions.assertEquals(2, resultList.get(0));
+        Assertions.assertEquals(2, resultList.get(1));
+        Assertions.assertEquals(2, resultList.get(2));
+    }
+
+    private void testMod3(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Number> criteriaQuery = cb.createQuery(Number.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        criteriaQuery.orderBy(cb.desc(root.get("name")));
+        criteriaQuery.select(cb.mod(root.get("occurences"), 2));
+        TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
+        List<Number> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(3, resultList.size());
+        Assertions.assertEquals(0, resultList.get(0));
+        Assertions.assertEquals(0, resultList.get(1));
+        Assertions.assertEquals(1, resultList.get(2));
+    }
+
+    @Test
+    public void concat() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        SearchData searchData1 = new SearchData();
+        searchData1.setName("SearchName1");
+        searchData1.setModel("Free");
+        searchData1.setPattern("##");
+        searchData1.setOccurences(3);
+        searchData1.setAverageValue(4);
+        searchData1.setFloatAverageValue(-4.2f);
+
+        SearchData searchData2 = new SearchData();
+        searchData2.setName("SearchName2");
+        searchData2.setModel("Special");
+        searchData2.setPattern("##");
+        searchData2.setOccurences(4);
+        searchData2.setAverageValue(4);
+        searchData2.setFloatAverageValue(-5.2f);
+
+        SearchData searchData3 = new SearchData();
+        searchData3.setName("SearchName3");
+        searchData3.setModel("Usual");
+        searchData3.setPattern("##%");
+        searchData3.setOccurences(24);
+        searchData3.setAverageValue(5);
+        searchData3.setFloatAverageValue(-7.8f);
+
+        final EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        em.persist(searchData1);
+        em.persist(searchData2);
+        em.persist(searchData3);
+
+        tx.commit();
+
+        tx.begin();
+        testConcat1(em);
+        tx.commit();
+
+        tx.begin();
+        testConcat2(em);
+        tx.commit();
+
+        tx.begin();
+        testConcat3(em);
+        tx.commit();
+
+        tx.begin();
+        em.remove(searchData1);
+        em.remove(searchData2);
+        em.remove(searchData3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testConcat1(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.concat(root.get("name"), root.get("model")));
+        TypedQuery<String> typedQuery = em.createQuery(criteriaQuery);
+        List<String> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("SearchName3Usual", resultList.get(0));
+    }
+
+    private void testConcat2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.upper(cb.concat("Nice ", root.get("model"))));
+        TypedQuery<String> typedQuery = em.createQuery(criteriaQuery);
+        List<String> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("NICE USUAL", resultList.get(0));
+    }
+
+    private void testConcat3(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.lower(cb.concat(root.get("model"), " N. 43")));
+        TypedQuery<String> typedQuery = em.createQuery(criteriaQuery);
+        List<String> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("usual n. 43", resultList.get(0));
+    }
+
+    @Test
+    public void locate() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        SearchData searchData1 = new SearchData();
+        searchData1.setName("SearchName1");
+        searchData1.setModel("Free");
+        searchData1.setPattern("##");
+        searchData1.setOccurences(3);
+        searchData1.setAverageValue(4);
+        searchData1.setFloatAverageValue(-4.2f);
+
+        SearchData searchData2 = new SearchData();
+        searchData2.setName("SearchName2Name");
+        searchData2.setModel("Special");
+        searchData2.setPattern("Na");
+        searchData2.setOccurences(4);
+        searchData2.setAverageValue(7);
+        searchData2.setFloatAverageValue(-5.2f);
+
+        SearchData searchData3 = new SearchData();
+        searchData3.setName("SearchName3");
+        searchData3.setModel("Usual");
+        searchData3.setPattern("##%");
+        searchData3.setOccurences(24);
+        searchData3.setAverageValue(5);
+        searchData3.setFloatAverageValue(-7.8f);
+
+        final EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        em.persist(searchData1);
+        em.persist(searchData2);
+        em.persist(searchData3);
+
+        tx.commit();
+
+        tx.begin();
+        testLocate1(em);
+        tx.commit();
+
+        tx.begin();
+        testLocate2(em);
+        tx.commit();
+
+        tx.begin();
+        testLocate3(em);
+        tx.commit();
+
+        tx.begin();
+        testLocate4(em);
+        tx.commit();
+
+        tx.begin();
+        em.remove(searchData1);
+        em.remove(searchData2);
+        em.remove(searchData3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testLocate1(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.locate(root.get("name"), "Name"));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(7, resultList.get(0));
+    }
+
+    private void testLocate2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.locate(root.get("name"), "Name", 8));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(12, resultList.get(0));
+    }
+
+    private void testLocate3(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.locate(root.get("name"), root.get("pattern")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(7, resultList.get(0));
+    }
+
+    private void testLocate4(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.locate(root.get("name"), root.get("pattern"), cb.parameter(Integer.class, "from")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("from", 8);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(12, resultList.get(0));
+    }
+
+    @Test
+    public void trim() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        SearchData searchData1 = new SearchData();
+        searchData1.setName("SearchName1");
+        searchData1.setModel("Free");
+        searchData1.setPattern(" ## ");
+        searchData1.setOccurences(3);
+        searchData1.setAverageValue(4);
+        searchData1.setFloatAverageValue(-4.2f);
+
+        SearchData searchData2 = new SearchData();
+        searchData2.setName("SearchName2Name");
+        searchData2.setModel("SpecialS");
+        searchData2.setPattern("Na");
+        searchData2.setOccurences(4);
+        searchData2.setAverageValue(7);
+        searchData2.setFloatAverageValue(-5.2f);
+
+        SearchData searchData3 = new SearchData();
+        searchData3.setName("SearchName3");
+        searchData3.setModel("Usual");
+        searchData3.setPattern("##%");
+        searchData3.setOccurences(24);
+        searchData3.setAverageValue(5);
+        searchData3.setFloatAverageValue(-7.8f);
+
+        final EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        em.persist(searchData1);
+        em.persist(searchData2);
+        em.persist(searchData3);
+
+        tx.commit();
+
+        tx.begin();
+        testTrim1(em);
+        tx.commit();
+
+        tx.begin();
+        testTrim2(em);
+        tx.commit();
+
+        tx.begin();
+        testTrim3(em);
+        tx.commit();
+
+        tx.begin();
+        testTrim4(em);
+        tx.commit();
+
+        tx.begin();
+        testTrim5(em);
+        tx.commit();
+
+        tx.begin();
+        testTrim6(em);
+        tx.commit();
+
+        tx.begin();
+        em.remove(searchData1);
+        em.remove(searchData2);
+        em.remove(searchData3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testTrim1(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.trim('3', root.get("name")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("SearchName", resultList.get(0));
+    }
+
+    private void testTrim2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.trim(Trimspec.LEADING, 'S', root.get("model")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("pecialS", resultList.get(0));
+    }
+
+    private void testTrim3(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.trim(Trimspec.LEADING, cb.parameter(Character.class, "t"), root.get("model")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("t", 'S');
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("pecialS", resultList.get(0));
+    }
+
+    private void testTrim4(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 4);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.trim(Trimspec.LEADING, root.get("pattern")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("## ", resultList.get(0));
+    }
+
+    private void testTrim5(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.trim(cb.parameter(Character.class, "t"), root.get("model")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("t", 'S');
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("pecial", resultList.get(0));
+    }
+
+    private void testTrim6(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 4);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.trim(root.get("pattern")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("##", resultList.get(0));
+    }
+
+    @Test
+    public void currentDate() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        SearchData searchData1 = new SearchData();
+        searchData1.setName("SearchName1");
+        searchData1.setModel("Free");
+        searchData1.setPattern("##");
+        searchData1.setOccurences(3);
+        searchData1.setAverageValue(4);
+        searchData1.setFloatAverageValue(-4.2f);
+
+        SearchData searchData2 = new SearchData();
+        searchData2.setName("SearchName2");
+        searchData2.setModel("Special");
+        searchData2.setPattern("##");
+        searchData2.setOccurences(4);
+        searchData2.setAverageValue(4);
+        searchData2.setFloatAverageValue(-5.2f);
+
+        SearchData searchData3 = new SearchData();
+        searchData3.setName("SearchName3");
+        searchData3.setModel("Usual");
+        searchData3.setPattern("##%");
+        searchData3.setOccurences(24);
+        searchData3.setAverageValue(5);
+        searchData3.setFloatAverageValue(-7.8f);
+
+        final EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        em.persist(searchData1);
+        em.persist(searchData2);
+        em.persist(searchData3);
+
+        tx.commit();
+
+        tx.begin();
+        testCurrentDate(em);
+        tx.commit();
+
+        tx.begin();
+        em.remove(searchData1);
+        em.remove(searchData2);
+        em.remove(searchData3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testCurrentDate(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<?> criteriaQuery = cb.createQuery();
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.multiselect(List.of(root.get("name"), cb.currentDate(), cb.currentTime(), cb.currentTimestamp()));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Object[] result = (Object[]) resultList.get(0);
+        Assertions.assertEquals("SearchName3", result[0]);
+        Assertions.assertTrue(result[1] instanceof java.sql.Date);
+        Assertions.assertTrue(result[2] instanceof java.sql.Time);
+        Assertions.assertTrue(result[3] instanceof java.sql.Timestamp);
+    }
+
 }
