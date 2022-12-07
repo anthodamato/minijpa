@@ -31,86 +31,90 @@ import javax.persistence.Query;
 public class ParameterUtils {
 
     public static Optional<Parameter<?>> findParameterByName(String name, Map<Parameter<?>, Object> parameterValues) {
-	return parameterValues.keySet().stream().filter(p -> p.getName() != null && p.getName().compareTo(name) == 0).findFirst();
+        return parameterValues.keySet().stream().filter(p -> p.getName() != null && p.getName().compareTo(name) == 0)
+                .findFirst();
     }
 
-    public static Optional<Parameter<?>> findParameterByPosition(int position, Map<Parameter<?>, Object> parameterValues) {
-	return parameterValues.keySet().stream().filter(p -> p.getPosition() != null && p.getPosition().compareTo(position) == 0).findFirst();
+    public static Optional<Parameter<?>> findParameterByPosition(int position,
+            Map<Parameter<?>, Object> parameterValues) {
+        return parameterValues.keySet().stream()
+                .filter(p -> p.getPosition() != null && p.getPosition().compareTo(position) == 0).findFirst();
     }
 
     private static List<IndexParameter> findIndexParameters(String sqlString, String ph, Parameter<?> p) {
-	int index = 0;
-	List<IndexParameter> indexParameters = new ArrayList<>();
-	while (index != -1) {
-	    index = sqlString.indexOf(ph, index);
-	    if (index != -1) {
-		IndexParameter indexParameter = new IndexParameter(index, p, ph);
-		indexParameters.add(indexParameter);
-		++index;
-	    }
-	}
+        int index = 0;
+        List<IndexParameter> indexParameters = new ArrayList<>();
+        while (index != -1) {
+            index = sqlString.indexOf(ph, index);
+            if (index != -1) {
+                IndexParameter indexParameter = new IndexParameter(index, p, ph);
+                indexParameters.add(indexParameter);
+                ++index;
+            }
+        }
 
-	return indexParameters;
+        return indexParameters;
     }
 
     public static List<IndexParameter> findIndexParameters(Query query, String sqlString) {
-	Set<Parameter<?>> parameters = query.getParameters();
-	List<IndexParameter> indexParameters = new ArrayList<>();
-	for (Parameter<?> p : parameters) {
-	    if (p.getName() != null) {
-		String s = ":" + p.getName();
-		List<IndexParameter> ips = findIndexParameters(sqlString, s, p);
-		if (ips.isEmpty())
-		    throw new IllegalArgumentException("Named parameter '" + p.getName() + "' not bound");
+        Set<Parameter<?>> parameters = query.getParameters();
+        List<IndexParameter> indexParameters = new ArrayList<>();
+        for (Parameter<?> p : parameters) {
+            if (p.getName() != null) {
+                String s = ":" + p.getName();
+                List<IndexParameter> ips = findIndexParameters(sqlString, s, p);
+                if (ips.isEmpty())
+                    throw new IllegalArgumentException("Named parameter '" + p.getName() + "' not bound");
 
-		indexParameters.addAll(ips);
-	    } else if (p.getPosition() != null) {
-		String s = "?" + p.getPosition();
-		List<IndexParameter> ips = findIndexParameters(sqlString, s, p);
-		if (ips.isEmpty())
-		    throw new IllegalArgumentException("Parameter at position '" + p.getPosition() + "' not bound");
+                indexParameters.addAll(ips);
+            } else if (p.getPosition() != null) {
+                String s = "?" + p.getPosition();
+                List<IndexParameter> ips = findIndexParameters(sqlString, s, p);
+                if (ips.isEmpty())
+                    throw new IllegalArgumentException("Parameter at position '" + p.getPosition() + "' not bound");
 
-		indexParameters.addAll(ips);
-	    }
-	}
+                indexParameters.addAll(ips);
+            }
+        }
 
-	indexParameters.sort(Comparator.comparing(IndexParameter::getIndex));
-	return indexParameters;
+        indexParameters.sort(Comparator.comparing(IndexParameter::getIndex));
+        return indexParameters;
     }
 
-    public static String replaceParameterPlaceholders(Query query, String sqlString, List<IndexParameter> indexParameters) {
-	String sql = sqlString;
-	for (IndexParameter ip : indexParameters) {
-	    sql = sql.replace(ip.placeholder, "?");
-	}
+    public static String replaceParameterPlaceholders(Query query, String sqlString,
+            List<IndexParameter> indexParameters) {
+        String sql = sqlString;
+        for (IndexParameter ip : indexParameters) {
+            sql = sql.replace(ip.placeholder, "?");
+        }
 
-	return sql;
+        return sql;
     }
 
     public static List<Object> sortParameterValues(Query query, List<IndexParameter> indexParameters) {
-	List<Object> values = new ArrayList<>();
-	for (IndexParameter ip : indexParameters) {
-	    values.add(query.getParameterValue(ip.parameter));
-	}
+        List<Object> values = new ArrayList<>();
+        for (IndexParameter ip : indexParameters) {
+            values.add(query.getParameterValue(ip.parameter));
+        }
 
-	return values;
+        return values;
     }
 
     public static class IndexParameter {
 
-	private final int index;
-	private Parameter<?> parameter;
-	private String placeholder;
+        private final int index;
+        private Parameter<?> parameter;
+        private String placeholder;
 
-	public IndexParameter(int index, Parameter<?> parameter, String placeholder) {
-	    this.index = index;
-	    this.parameter = parameter;
-	    this.placeholder = placeholder;
-	}
+        public IndexParameter(int index, Parameter<?> parameter, String placeholder) {
+            this.index = index;
+            this.parameter = parameter;
+            this.placeholder = placeholder;
+        }
 
-	public int getIndex() {
-	    return index;
-	}
+        public int getIndex() {
+            return index;
+        }
 
     }
 

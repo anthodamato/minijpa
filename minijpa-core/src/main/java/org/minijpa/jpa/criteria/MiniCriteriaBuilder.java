@@ -22,6 +22,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.Tuple;
@@ -54,8 +55,7 @@ import org.minijpa.jpa.criteria.predicate.ComparisonPredicate;
 import org.minijpa.jpa.criteria.predicate.EmptyPredicate;
 import org.minijpa.jpa.criteria.predicate.ExprPredicate;
 import org.minijpa.jpa.criteria.predicate.InPredicate;
-import org.minijpa.jpa.criteria.predicate.LikePatternExprPredicate;
-import org.minijpa.jpa.criteria.predicate.LikePatternPredicate;
+import org.minijpa.jpa.criteria.predicate.LikePredicate;
 import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
 import org.minijpa.jpa.criteria.predicate.PredicateType;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -287,7 +287,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x,
-                                                                   Expression<? extends Y> y) {
+            Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.GREATER_THAN, x, y, null);
     }
 
@@ -298,7 +298,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(Expression<? extends Y> x,
-                                                                            Expression<? extends Y> y) {
+            Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.GREATER_THAN_OR_EQUAL_TO, x, y, null);
     }
 
@@ -319,7 +319,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(Expression<? extends Y> x,
-                                                                         Expression<? extends Y> y) {
+            Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.LESS_THAN_OR_EQUAL_TO, x, y, null);
     }
 
@@ -330,7 +330,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate between(Expression<? extends Y> v, Expression<? extends Y> x,
-                                                               Expression<? extends Y> y) {
+            Expression<? extends Y> y) {
         return new BetweenExpressionsPredicate(v, x, y);
     }
 
@@ -593,62 +593,74 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern) {
-        return new LikePatternExprPredicate(x, pattern, null, null, false, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty(), false,
+                false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern) {
-        return new LikePatternPredicate(x, pattern, null, null, false, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty(), false,
+                false);
     }
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-        return new LikePatternExprPredicate(x, pattern, null, escapeChar, false, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(escapeChar),
+                false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern, char escapeChar) {
-        return new LikePatternExprPredicate(x, pattern, escapeChar, null, false, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.of(escapeChar), Optional.empty(),
+                false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-        return new LikePatternPredicate(x, pattern, null, escapeChar, false, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.of(escapeChar),
+                false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern, char escapeChar) {
-        return new LikePatternPredicate(x, pattern, escapeChar, null, false, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.of(escapeChar), Optional.empty(),
+                false, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern) {
-        return new LikePatternExprPredicate(x, pattern, null, null, true, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty(), true,
+                false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern) {
-        return new LikePatternPredicate(x, pattern, null, null, true, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty(), true,
+                false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-        return new LikePatternExprPredicate(x, pattern, null, escapeChar, true, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(escapeChar),
+                true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern, char escapeChar) {
-        return new LikePatternExprPredicate(x, pattern, escapeChar, null, true, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.of(escapeChar), Optional.empty(),
+                true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-        return new LikePatternPredicate(x, pattern, null, escapeChar, true, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.of(escapeChar),
+                true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern, char escapeChar) {
-        return new LikePatternPredicate(x, pattern, escapeChar, null, true, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.of(escapeChar), Optional.empty(),
+                true, false);
     }
 
     @Override

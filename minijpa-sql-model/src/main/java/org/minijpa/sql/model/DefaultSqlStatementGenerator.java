@@ -535,9 +535,8 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             LOG.debug("exportCondition: likeCondition.getEscapeChar()={}", likeCondition.getEscapeChar());
             sb.append(exportExpression(right, nameTranslator));
             if (likeCondition.getEscapeChar() != null) {
-                sb.append(" escape '");
+                sb.append(" escape ");
                 sb.append(likeCondition.getEscapeChar());
-                sb.append("'");
             }
 
             return sb.toString();

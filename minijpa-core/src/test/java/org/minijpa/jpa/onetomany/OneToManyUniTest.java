@@ -226,9 +226,8 @@ public class OneToManyUniTest {
         TypedQuery<Item> typedQuery = em.createQuery(criteriaQuery);
         List<Item> items = typedQuery.getResultList();
         Assertions.assertEquals(1, items.size());
-        Item item = items.get(0);
-        Assertions.assertEquals("Notepad", item.getName());
-        Assertions.assertEquals("Free_Inch", item.getModel());
+        Assertions.assertEquals("Notepad", items.get(0).getName());
+        Assertions.assertEquals("Free_Inch", items.get(0).getModel());
     }
 
     private void testLike2(EntityManager em) {
@@ -256,9 +255,8 @@ public class OneToManyUniTest {
         typedQuery.setParameter("pattern", "Free\\_I%");
         List<Item> items = typedQuery.getResultList();
         Assertions.assertEquals(1, items.size());
-        Item item = items.get(0);
-        Assertions.assertEquals("Notepad", item.getName());
-        Assertions.assertEquals("Free_Inch", item.getModel());
+        Assertions.assertEquals("Notepad", items.get(0).getName());
+        Assertions.assertEquals("Free_Inch", items.get(0).getModel());
     }
 
     private void testLike4(EntityManager em) {
@@ -287,9 +285,8 @@ public class OneToManyUniTest {
         typedQuery.setParameter("escape", '\\');
         List<Item> items = typedQuery.getResultList();
         Assertions.assertEquals(1, items.size());
-        Item item = items.get(0);
-        Assertions.assertEquals("Notepad", item.getName());
-        Assertions.assertEquals("Free_Inch", item.getModel());
+        Assertions.assertEquals("Notepad", items.get(0).getName());
+        Assertions.assertEquals("Free_Inch", items.get(0).getModel());
     }
 
     @Test

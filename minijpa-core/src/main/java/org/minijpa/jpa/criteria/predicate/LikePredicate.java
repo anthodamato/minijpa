@@ -18,23 +18,27 @@ package org.minijpa.jpa.criteria.predicate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
-public class LikePatternPredicate extends AbstractPredicate implements PredicateExpressionInfo, PredicateTypeInfo {
+public class LikePredicate extends AbstractPredicate implements PredicateExpressionInfo, PredicateTypeInfo {
 
     private Expression<?> x;
-    private String pattern;
-    private Character escapeChar;
-    private Expression<java.lang.Character> escapeCharEx;
+    private Optional<String> pattern;
+    private Optional<Expression<String>> patternExpression;
+    private Optional<Character> escapeChar;
+    private Optional<Expression<java.lang.Character>> escapeCharEx;
     private final List<Expression<Boolean>> expressions = new ArrayList<>();
 
-    public LikePatternPredicate(Expression<?> x, String pattern, Character escapeChar,
-            Expression<Character> escapeCharEx, boolean not, boolean negated) {
+    public LikePredicate(Expression<?> x, Optional<String> pattern, Optional<Expression<String>> patternExpression,
+            Optional<Character> escapeChar, Optional<Expression<java.lang.Character>> escapeCharEx, boolean not,
+            boolean negated) {
         super(not, negated);
         this.x = x;
         this.pattern = pattern;
+        this.patternExpression = patternExpression;
         this.escapeChar = escapeChar;
         this.escapeCharEx = escapeCharEx;
     }
@@ -61,22 +65,26 @@ public class LikePatternPredicate extends AbstractPredicate implements Predicate
 
     @Override
     public Predicate not() {
-        return new LikePatternPredicate(x, pattern, escapeChar, escapeCharEx, !isNot(), true);
+        return new LikePredicate(x, pattern, patternExpression, escapeChar, escapeCharEx, !isNot(), true);
     }
 
     public Expression<?> getX() {
         return x;
     }
 
-    public String getPattern() {
+    public Optional<String> getPattern() {
         return pattern;
     }
 
-    public Character getEscapeChar() {
+    public Optional<Expression<String>> getPatternExpression() {
+        return patternExpression;
+    }
+
+    public Optional<Character> getEscapeChar() {
         return escapeChar;
     }
 
-    public Expression<java.lang.Character> getEscapeCharEx() {
+    public Optional<Expression<java.lang.Character>> getEscapeCharEx() {
         return escapeCharEx;
     }
 

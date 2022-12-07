@@ -57,6 +57,7 @@ public class JdbcRunner {
         }
 
         Class<?> type = value.getClass();
+        LOG.debug("setPreparedStatementQM: type={}", type);
         if (type == String.class) {
             preparedStatement.setString(index, (String) value);
         } else if (type == Integer.class) {
@@ -81,14 +82,10 @@ public class JdbcRunner {
             preparedStatement.setTime(index, time, calendar);
         } else if (type == Boolean.class) {
             preparedStatement.setBoolean(index, (Boolean) value);
+        } else if (type == Character.class) {
+            Character c = (Character) value;
+            preparedStatement.setString(index, String.valueOf(c));
         }
-//	else if (type == Character.class) {
-//	    Character characters = (Character) value;
-//	    preparedStatement.setString(index, String.valueOf(characters));
-//	} else if (type == Character[].class) {
-//	    Character[] characters = (Character[]) value;
-//	    preparedStatement.setString(index, String.valueOf(characters));
-//	} 
     }
 
     protected void setPreparedStatementParameters(PreparedStatement preparedStatement,
