@@ -70,8 +70,17 @@ public class JdbcRunnerTest {
         connectionProvider.init();
         ConnectionHolder connectionHolder = new ConnectionHolderImpl(connectionProvider);
         Connection connection = connectionHolder.getConnection();
-        String statement1 = "create table citizen (id bigint not null, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))";
-        List<String> statements = Arrays.asList(statement1);
+
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(255), Optional.empty(),
+                Optional.empty(), Optional.empty());
+        SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
+                new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
+                Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
+                        new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
+        String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
+
+//        String statement1 = "create table citizen (id bigint not null, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))";
+        List<String> statements = Arrays.asList(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
         QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT, Optional.empty());
@@ -170,8 +179,16 @@ public class JdbcRunnerTest {
         connectionProvider.init();
         ConnectionHolder connectionHolder = new ConnectionHolderImpl(connectionProvider);
         Connection connection = connectionHolder.getConnection();
-        String statement1 = "create table citizen (id bigint not null, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))";
-        List<String> statements = Arrays.asList(statement1);
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(255), Optional.empty(),
+                Optional.empty(), Optional.empty());
+        SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
+                new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
+                Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
+                        new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
+        String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
+
+//        String statement1 = "create table citizen (id bigint not null, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))";
+        List<String> statements = Arrays.asList(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
         QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT, Optional.empty());
