@@ -85,6 +85,8 @@ public class JdbcRunner {
         } else if (type == Character.class) {
             Character c = (Character) value;
             preparedStatement.setString(index, String.valueOf(c));
+        } else {
+            preparedStatement.setObject(index, value);
         }
     }
 
@@ -95,8 +97,6 @@ public class JdbcRunner {
 
         int index = 1;
         for (QueryParameter queryParameter : queryParameters) {
-            LOG.debug("setPreparedStatementParameters: type={}; value={}", queryParameter.getType().getName(),
-                    queryParameter.getValue());
             setPreparedStatementQM(preparedStatement, queryParameter, index);
             ++index;
         }

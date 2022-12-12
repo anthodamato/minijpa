@@ -139,14 +139,14 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<Long> sumAsLong(Expression<Integer> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_LONG,
+                new AggregateFunctionExpression<>(AggregateFunctionType.SUM, x, false));
     }
 
     @Override
     public Expression<Double> sumAsDouble(Expression<Float> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_DOUBLE,
+                new AggregateFunctionExpression<>(AggregateFunctionType.SUM, x, false));
     }
 
     @Override
@@ -387,8 +387,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <N extends Number> Expression<N> abs(Expression<N> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new UnaryExpression<>(ExpressionOperator.ABS, x);
     }
 
     @Override
@@ -453,20 +452,17 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<Integer> mod(Expression<Integer> x, Expression<Integer> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new BinaryExpression<Integer>(ExpressionOperator.MOD, x, y);
     }
 
     @Override
     public Expression<Integer> mod(Expression<Integer> x, Integer y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new BinaryExpression<Integer>(ExpressionOperator.MOD, x, y);
     }
 
     @Override
     public Expression<Integer> mod(Integer x, Expression<Integer> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new BinaryExpression<Integer>(ExpressionOperator.MOD, x, y);
     }
 
     @Override
@@ -665,20 +661,17 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<String> concat(Expression<String> x, Expression<String> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new ConcatExpression(Optional.of(x), Optional.empty(), Optional.of(y), Optional.empty());
     }
 
     @Override
     public Expression<String> concat(Expression<String> x, String y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new ConcatExpression(Optional.of(x), Optional.empty(), Optional.empty(), Optional.of(y));
     }
 
     @Override
     public Expression<String> concat(String x, Expression<String> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new ConcatExpression(Optional.empty(), Optional.of(x), Optional.of(y), Optional.empty());
     }
 
     @Override
@@ -707,50 +700,42 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<String> trim(Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.empty(), Optional.empty(), Optional.of(ts));
     }
 
     @Override
     public Expression<String> trim(Expression<Character> t, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.of(t), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, Expression<Character> t, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.of(t), Optional.empty(), Optional.of(ts));
     }
 
     @Override
     public Expression<String> trim(char t, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.empty(), Optional.of(t), Optional.empty());
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, char t, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.empty(), Optional.of(t), Optional.of(ts));
     }
 
     @Override
     public Expression<String> lower(Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new UnaryExpression<>(ExpressionOperator.LOWER, x);
     }
 
     @Override
     public Expression<String> upper(Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new UnaryExpression<>(ExpressionOperator.UPPER, x);
     }
 
     @Override
@@ -761,44 +746,37 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<Integer> locate(Expression<String> x, Expression<String> pattern) {
-        // TODO Auto-generated method stub
-        return null;
+        return new LocateExpression(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, String pattern) {
-        // TODO Auto-generated method stub
-        return null;
+        return new LocateExpression(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, Expression<String> pattern, Expression<Integer> from) {
-        // TODO Auto-generated method stub
-        return null;
+        return new LocateExpression(x, Optional.of(pattern), Optional.empty(), Optional.of(from), Optional.empty());
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, String pattern, int from) {
-        // TODO Auto-generated method stub
-        return null;
+        return new LocateExpression(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(from));
     }
 
     @Override
     public Expression<Date> currentDate() {
-        // TODO Auto-generated method stub
-        return null;
+        return new CurrentDateExpression();
     }
 
     @Override
     public Expression<Timestamp> currentTimestamp() {
-        // TODO Auto-generated method stub
-        return null;
+        return new CurrentTimestampExpression();
     }
 
     @Override
     public Expression<Time> currentTime() {
-        // TODO Auto-generated method stub
-        return null;
+        return new CurrentTimeExpression();
     }
 
     @Override

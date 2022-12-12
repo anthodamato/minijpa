@@ -19,6 +19,6 @@ package org.minijpa.jpa.criteria;
  * @author adamato
  */
 public enum ExpressionOperator {
-    SUM, PROD, DIFF, QUOT, MINUS, SQRT, TO_LONG, TO_INTEGER, TO_FLOAT, TO_DOUBLE, TO_BIGDECIMAL, TO_BIGINTEGER,
-    TO_STRING;
+    ABS, SUM, PROD, DIFF, QUOT, MINUS, MOD, SQRT, TO_LONG, TO_INTEGER, TO_FLOAT, TO_DOUBLE, TO_BIGDECIMAL,
+    TO_BIGINTEGER, TO_STRING, UPPER, LOWER;
 }

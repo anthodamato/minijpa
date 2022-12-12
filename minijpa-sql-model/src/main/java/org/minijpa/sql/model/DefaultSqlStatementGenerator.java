@@ -349,15 +349,15 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             default:
                 break;
             }
-
-            if (trim.getTrimCharacter() != null) {
-                sb.append(" '");
-                sb.append(trim.getTrimCharacter());
-                sb.append("'");
-            }
-
-            sb.append(" FROM ");
         }
+
+        if (trim.getTrimCharacter() != null) {
+            sb.append(" ");
+            sb.append(trim.getTrimCharacter());
+        }
+
+        if (trim.getTrimType().isPresent() || trim.getTrimCharacter() != null)
+            sb.append(" FROM ");
 
         sb.append(exportExpression(trim.getArgument(), nameTranslator));
         sb.append(")");

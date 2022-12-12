@@ -15,6 +15,28 @@
  */
 package org.minijpa.jpa.criteria;
 
+import java.time.LocalDate;
+
 public class CriteriaUtils {
+    public static final String QM = "?";
+
+    public static String buildValue(Object value) {
+        StringBuilder sb = new StringBuilder();
+        if (value instanceof String) {
+            sb.append("'");
+            sb.append((String) value);
+            sb.append("'");
+        } else
+            sb.append(value.toString());
+
+        return sb.toString();
+    }
+
+    public static boolean requireQM(Object value) {
+        if (value instanceof LocalDate)
+            return true;
+
+        return false;
+    }
 
 }

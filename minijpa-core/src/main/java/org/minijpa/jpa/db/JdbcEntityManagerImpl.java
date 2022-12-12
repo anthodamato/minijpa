@@ -70,9 +70,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         this.entityContainer = entityContainer;
         this.connectionHolder = connectionHolder;
         this.sqlStatementFactory = new SqlStatementFactory();
-        this.entityHandler = new EntityHandlerImpl(persistenceUnitContext, entityContainer,
-                new JdbcQueryRunner(connectionHolder, dbConfiguration, sqlStatementFactory,
-                        persistenceUnitContext.getAliasGenerator()));
+        this.entityHandler = new EntityHandlerImpl(persistenceUnitContext, entityContainer, new JdbcQueryRunner(
+                connectionHolder, dbConfiguration, sqlStatementFactory, persistenceUnitContext.getAliasGenerator()));
         this.jpqlModule = new JpqlModule(dbConfiguration, sqlStatementFactory, persistenceUnitContext);
     }
 
@@ -445,6 +444,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         LOG.debug("select: statementParameters={}", statementParameters);
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+        sqlSelectData.getFetchParameters().forEach(f -> LOG.debug("select: f={}", f));
         LOG.debug("select: sql={}", sql);
         LOG.debug("select: sqlSelectData.getSqlSelect().getResult()={}", sqlSelectData.getResult());
         if (sqlSelectData.getResult() != null) {
@@ -485,8 +485,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         List<Object> collectionResult = new ArrayList<>();
         jdbcJpqlRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
         jdbcJpqlRecordBuilder.setCollectionResult(collectionResult);
-//        return dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
-//                statementParameters.getParameters(), sqlSelectData.getFetchParameters());
         dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
                 statementParameters.getParameters(), jdbcJpqlRecordBuilder);
         return collectionResult;
