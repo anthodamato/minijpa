@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -21,7 +21,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.minijpa.jdbc.QueryParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +28,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class OracleJdbcRunner extends JpaJdbcRunner {
+public class OracleJdbcRunner extends JdbcRunner {
 
     private final Logger LOG = LoggerFactory.getLogger(OracleJdbcRunner.class);
 

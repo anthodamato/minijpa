@@ -84,6 +84,7 @@ public class SqlStatementFactoryTest {
         List<String> columns = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
 
         SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+        sqlStatementFactory.init();
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(employeeEntity,
                 foreignKeyAttribute, columns, optional.get().getAliasGenerator());
         Optional<List<Condition>> opt = sqlSelectData.getConditions();
@@ -143,6 +144,7 @@ public class SqlStatementFactoryTest {
         Pk pk = storeEntity.getId();
 
         SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+        sqlStatementFactory.init();
         MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
         RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
         ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk,
@@ -159,6 +161,12 @@ public class SqlStatementFactoryTest {
         Assertions.assertEquals(
                 "select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
                 sql);
+
+        tx.begin();
+        em.remove(store);
+        em.remove(item1);
+        em.remove(item2);
+        tx.commit();
 
         em.close();
         emf.close();
@@ -182,6 +190,7 @@ public class SqlStatementFactoryTest {
         Pk pk = storeEntity.getId();
 
         SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+        sqlStatementFactory.init();
         MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
         RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
         ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, 1L,
@@ -232,6 +241,7 @@ public class SqlStatementFactoryTest {
         tx.commit();
 
         SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+        sqlStatementFactory.init();
         StatementParameters statementParameters = sqlStatementFactory.select(typedQuery,
                 optional.get().getAliasGenerator());
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();

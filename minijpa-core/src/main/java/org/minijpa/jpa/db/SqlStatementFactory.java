@@ -45,6 +45,7 @@ import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jdbc.mapper.AbstractDbTypeMapper;
+import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniTypedQuery;
@@ -114,9 +115,13 @@ import org.slf4j.LoggerFactory;
 public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
     private final Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
-    private CriteriaExpressionHelper criteriaExpressionHelper = new CriteriaExpressionHelper();
+    protected CriteriaExpressionHelper criteriaExpressionHelper;
 
     public SqlStatementFactory() {
+    }
+
+    public void init() {
+        this.criteriaExpressionHelper = new CriteriaExpressionHelper();
     }
 
     public SqlInsert generateInsert(MetaEntity entity, List<String> columns, boolean hasIdentityColumn,
@@ -582,7 +587,16 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             }
 
             sqlType = calculateSqlType(binaryExpression);
-            return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+            Optional<AttributeMapper> attributeMapper = Optional.empty();
+            if (sqlType == Types.FLOAT) {
+                // Postgres throws an exception: Persistence conversion to class java.lang.Float
+                // from numeric not supported
+                attributeMapper = Optional.of(AbstractDbTypeMapper.numberToFloatAttributeMapper);
+                sqlType = Types.OTHER;
+            }
+
+            LOG.debug("createFetchParameter: sqlType={}", sqlType);
+            return Optional.of(new BasicFetchParameter("result", sqlType, attributeMapper));
         } else if (selection instanceof UnaryExpression<?>) {
             UnaryExpression<?> unaryExpression = (UnaryExpression<?>) selection;
             if (unaryExpression.getExpressionOperator() == ExpressionOperator.SQRT) {
@@ -601,16 +615,19 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             if (expressionOperator == ExpressionOperator.TO_BIGDECIMAL)
                 return Optional.of(new BasicFetchParameter("result", Types.DECIMAL, Optional.empty()));
             else if (expressionOperator == ExpressionOperator.TO_BIGINTEGER)
-                return Optional.of(new BasicFetchParameter("result", Types.BIGINT,
+                return Optional.of(new BasicFetchParameter("result", Types.OTHER,
                         Optional.of(AbstractDbTypeMapper.numberToBigIntegerAttributeMapper)));
             else if (expressionOperator == ExpressionOperator.TO_DOUBLE)
-                return Optional.of(new BasicFetchParameter("result", Types.DOUBLE, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.OTHER,
+                        Optional.of(AbstractDbTypeMapper.numberToDoubleAttributeMapper)));
             else if (expressionOperator == ExpressionOperator.TO_FLOAT)
-                return Optional.of(new BasicFetchParameter("result", Types.FLOAT, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.OTHER,
+                        Optional.of(AbstractDbTypeMapper.numberToFloatAttributeMapper)));
             else if (expressionOperator == ExpressionOperator.TO_INTEGER)
                 return Optional.of(new BasicFetchParameter("result", Types.INTEGER, Optional.empty()));
             else if (expressionOperator == ExpressionOperator.TO_LONG)
-                return Optional.of(new BasicFetchParameter("result", Types.BIGINT, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.OTHER,
+                        Optional.of(AbstractDbTypeMapper.numberToLongAttributeMapper)));
         } else if (selection instanceof ConcatExpression) {
             return Optional.of(new BasicFetchParameter("result", Types.VARCHAR, Optional.empty()));
         } else if (selection instanceof TrimExpression) {
@@ -1136,8 +1153,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         List<Value> values = criteriaExpressionHelper.createSelectionValues(fromTable, aliasGenerator, selection, query,
                 parameters);
         List<FetchParameter> fetchParameters = createFetchParameters(selection, criteriaQuery.getResultType());
-        fetchParameters.forEach(
-                f -> LOG.debug("select: f={}", f));
+        fetchParameters.forEach(f -> LOG.debug("select: f={}", f));
 
         builder.withValues(values).withConditions(conditions);
         builder.withFetchParameters(fetchParameters);

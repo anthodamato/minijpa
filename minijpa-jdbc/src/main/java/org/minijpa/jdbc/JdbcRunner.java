@@ -135,13 +135,12 @@ public class JdbcRunner {
             setPreparedStatementParameters(preparedStatement, parameters);
             preparedStatement.execute();
 
-            Object id = null;
             resultSet = preparedStatement.getGeneratedKeys();
             if (resultSet.next()) {
-                id = resultSet.getObject(1);
+                return resultSet.getObject(1);
             }
 
-            return id;
+            return null;
         } finally {
             if (resultSet != null) {
                 resultSet.close();
@@ -192,7 +191,7 @@ public class JdbcRunner {
         }
     }
 
-    protected static Object getValue(ResultSet rs, int index, int columnType) throws SQLException {
+    public static Object getValue(ResultSet rs, int index, int columnType) throws SQLException {
         switch (columnType) {
         case Types.VARCHAR:
             return rs.getString(index);
@@ -257,7 +256,7 @@ public class JdbcRunner {
         case Types.NVARCHAR:
             break;
         case Types.OTHER:
-            break;
+            return rs.getObject(index);
         case Types.REF:
             break;
         case Types.REF_CURSOR:
@@ -277,7 +276,7 @@ public class JdbcRunner {
         return null;
     }
 
-    protected static Object getValueByAttributeMapper(ResultSet rs, int index, int sqlType,
+    public static Object getValueByAttributeMapper(ResultSet rs, int index, int sqlType,
             Optional<AttributeMapper> attributeMapper) throws SQLException {
         LOG.debug("getValueByAttributeMapper: sqlType={}", sqlType);
         Object value = getValue(rs, index, sqlType);
@@ -298,7 +297,7 @@ public class JdbcRunner {
         return getValueByAttributeMapper(rs, index, sqlType, fetchParameter.getAttributeMapper());
     }
 
-    protected static Optional<ModelValueArray<FetchParameter>> createModelValueArrayFromResultSetAM(
+    public static Optional<ModelValueArray<FetchParameter>> createModelValueArrayFromResultSetAM(
             List<FetchParameter> fetchParameters, ResultSet rs, ResultSetMetaData metaData) throws Exception {
         if (fetchParameters.isEmpty())
             return Optional.empty();

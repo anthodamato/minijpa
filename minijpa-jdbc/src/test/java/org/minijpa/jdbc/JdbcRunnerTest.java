@@ -1,6 +1,7 @@
 package org.minijpa.jdbc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -46,7 +47,7 @@ import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.function.Concat;
 
 public class JdbcRunnerTest {
-    private JdbcRunner jdbcRunner = new JdbcRunner();
+    private static JdbcRunner jdbcRunner;
     private ScriptRunner scriptRunner = new ScriptRunner();
     private static ConnectionProperties connectionProperties = new ConnectionProperties();
     private static SqlStatementGenerator sqlStatementGenerator;
@@ -59,6 +60,7 @@ public class JdbcRunnerTest {
         sqlStatementGenerator = SqlStatementGeneratorFactory
                 .getSqlStatementGenerator(connectionProperties.getDatabase(System.getProperty("minijpa.test")));
         sqlStatementGenerator.init();
+        jdbcRunner = connectionProperties.getJdbcRunner(System.getProperty("minijpa.test"));
     }
 
     @Test
@@ -79,7 +81,6 @@ public class JdbcRunnerTest {
                         new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
 
-//        String statement1 = "create table citizen (id bigint not null, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))";
         List<String> statements = Arrays.asList(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
@@ -187,7 +188,6 @@ public class JdbcRunnerTest {
                         new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
 
-//        String statement1 = "create table citizen (id bigint not null, first_name varchar(255), last_name varchar(255), version bigint, primary key (id))";
         List<String> statements = Arrays.asList(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
@@ -302,6 +302,11 @@ public class JdbcRunnerTest {
 
     @Test
     public void generateNextSequenceValue() throws Exception {
+        if (connectionProperties.getDatabase(System.getProperty("minijpa.test")) == Database.MYSQL) {
+            assertTrue(true);
+            return;
+        }
+
         Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
 
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
@@ -372,7 +377,12 @@ public class JdbcRunnerTest {
 
         Assertions.assertEquals(1, collection.size());
         Object[] result = (Object[]) collection.get(0);
-        Assertions.assertEquals(1L, result[0]);
+        if (result[0] instanceof Long)
+            Assertions.assertEquals(1L, result[0]);
+        // Oracle
+        if (result[0] instanceof BigDecimal)
+            Assertions.assertEquals(1L, ((BigDecimal) result[0]).longValue());
+
         Assertions.assertEquals("William", result[1]);
         Assertions.assertEquals("Shakespeare", result[2]);
 
@@ -457,14 +467,35 @@ public class JdbcRunnerTest {
 
         assertEquals(1, collection.size());
         Object[] result = (Object[]) collection.get(0);
-        assertEquals(1L, result[0]);
-        assertEquals(intValue, result[1]);
+        if (result[0] instanceof Long)
+            Assertions.assertEquals(1L, result[0]);
+        // Oracle
+        if (result[0] instanceof BigDecimal)
+            Assertions.assertEquals(1L, ((BigDecimal) result[0]).longValue());
+
+        if (result[1] instanceof Integer)
+            assertEquals(intValue, result[1]);
+        // Oracle
+        if (result[1] instanceof BigDecimal)
+            Assertions.assertEquals(intValue, ((BigDecimal) result[1]).intValue());
+
         BigDecimal bigDecimalResult = (BigDecimal) result[2];
         assertEquals(2, bigDecimal.scale());
         assertEquals(bigDecimal.scale(), bigDecimalResult.scale());
         assertEquals(bigDecimal, bigDecimalResult);
-        assertEquals(floatValue, result[3]);
-        assertEquals(doubleValue, result[4]);
+
+        if (result[3] instanceof Float)
+            assertEquals(floatValue, result[3]);
+        // Oracle
+        if (result[3] instanceof BigDecimal)
+            Assertions.assertEquals(floatValue, ((BigDecimal) result[3]).floatValue());
+
+        if (result[4] instanceof Double)
+            assertEquals(doubleValue, result[4]);
+        // Oracle
+        if (result[4] instanceof BigDecimal)
+            Assertions.assertEquals(doubleValue, ((BigDecimal) result[4]).doubleValue());
+
         assertEquals(time, result[5]);
         assertEquals(timestamp, result[6]);
 

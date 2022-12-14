@@ -14,7 +14,6 @@ import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.AttributeUtil;
 import org.minijpa.jpa.db.DbConfiguration;
-import org.minijpa.jpa.db.SqlStatementFactory;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
@@ -62,14 +61,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     private final Logger LOG = LoggerFactory.getLogger(JpqlParserVisitorImpl.class);
 
     private final PersistenceUnitContext persistenceUnitContext;
-    private final SqlStatementFactory sqlStatementFactory;
     private final DbConfiguration dbConfiguration;
     private AliasGenerator tableAliasGenerator;
 
-    public JpqlParserVisitorImpl(PersistenceUnitContext persistenceUnitContext, SqlStatementFactory sqlStatementFactory,
-            DbConfiguration dbConfiguration) {
+    public JpqlParserVisitorImpl(PersistenceUnitContext persistenceUnitContext, DbConfiguration dbConfiguration) {
         this.persistenceUnitContext = persistenceUnitContext;
-        this.sqlStatementFactory = sqlStatementFactory;
         this.dbConfiguration = dbConfiguration;
     }
 
@@ -354,15 +350,15 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
             String tableAlias = tableAliasGenerator
                     .getDefault(metaAttribute.getRelationship().getJoinTable().getTargetEntity().getTableName());
             jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);
-            List<FromJoin> fromJoins = sqlStatementFactory.calculateJoins(metaEntity, metaAttribute,
-                    tableAliasGenerator);
+            List<FromJoin> fromJoins = dbConfiguration.getSqlStatementFactory().calculateJoins(metaEntity,
+                    metaAttribute, tableAliasGenerator);
             jpqlVisitorParameters.fromJoins.addAll(fromJoins);
         } else if (metaAttribute.getRelationship().getJoinColumnMapping().isPresent()) {
             String tableAlias = tableAliasGenerator
                     .getDefault(metaAttribute.getRelationship().getAttributeType().getTableName());
             jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);
-            List<FromJoin> fromJoins = sqlStatementFactory.calculateJoins(metaEntity, metaAttribute,
-                    tableAliasGenerator);
+            List<FromJoin> fromJoins = dbConfiguration.getSqlStatementFactory().calculateJoins(metaEntity,
+                    metaAttribute, tableAliasGenerator);
             jpqlVisitorParameters.fromJoins.addAll(fromJoins);
         }
     }
@@ -1454,8 +1450,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                         jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);
                     }
 
-                    Condition condition = sqlStatementFactory.generateJoinCondition(metaAttribute.getRelationship(),
-                            metaEntity, metaAttribute.getRelationship().getAttributeType(), tableAliasGenerator);
+                    Condition condition = dbConfiguration.getSqlStatementFactory().generateJoinCondition(
+                            metaAttribute.getRelationship(), metaEntity,
+                            metaAttribute.getRelationship().getAttributeType(), tableAliasGenerator);
                     jpqlVisitorParameters.conditions.add(condition);
                 }
 

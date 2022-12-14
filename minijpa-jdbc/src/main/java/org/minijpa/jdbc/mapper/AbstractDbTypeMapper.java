@@ -57,8 +57,10 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
     private final AttributeMapper calendarAttributeMapper = new CalendarAttributeMapper();
     protected final AttributeMapper bigDecimalToDoubleAttributeMapper = new BigDecimalToDoubleAttributeMapper();
     protected final AttributeMapper integerToDoubleAttributeMapper = new IntegerToDoubleAttributeMapper();
-    protected final AttributeMapper integerToLongAttributeMapper = new NumberToLongAttributeMapper();
+    public static final AttributeMapper numberToLongAttributeMapper = new NumberToLongAttributeMapper();
     public static final AttributeMapper numberToBigIntegerAttributeMapper = new NumberToBigIntegerAttributeMapper();
+    public static final AttributeMapper numberToDoubleAttributeMapper = new NumberToDoubleAttributeMapper();
+    public static final AttributeMapper numberToFloatAttributeMapper = new NumberToFloatAttributeMapper();
 
     @Override
     public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType) {

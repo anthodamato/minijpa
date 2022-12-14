@@ -22,41 +22,38 @@ import org.minijpa.sql.model.SqlStatement;
  */
 public class JpqlModule {
 
-	private final DbConfiguration dbConfiguration;
-	private final SqlStatementFactory sqlStatementFactory;
-	private final PersistenceUnitContext persistenceUnitContext;
-	private JpqlParser parser;
-	private JpqlParserVisitor visitor;
+    private final DbConfiguration dbConfiguration;
+    private final PersistenceUnitContext persistenceUnitContext;
+    private JpqlParser parser;
+    private JpqlParserVisitor visitor;
 
-	public JpqlModule(DbConfiguration dbConfiguration, SqlStatementFactory sqlStatementFactory,
-			PersistenceUnitContext persistenceUnitContext) {
-		this.dbConfiguration = dbConfiguration;
-		this.sqlStatementFactory = sqlStatementFactory;
-		this.persistenceUnitContext = persistenceUnitContext;
-	}
+    public JpqlModule(DbConfiguration dbConfiguration, PersistenceUnitContext persistenceUnitContext) {
+        this.dbConfiguration = dbConfiguration;
+        this.persistenceUnitContext = persistenceUnitContext;
+    }
 
-	public JpqlResult parse(String jpqlQuery) throws ParseException, Error, IllegalStateException {
-		StringReader reader = new StringReader(jpqlQuery);
-		if (parser == null) {
-			parser = new JpqlParser(reader);
-		} else
-			parser.ReInit(reader);
+    public JpqlResult parse(String jpqlQuery) throws ParseException, Error, IllegalStateException {
+        StringReader reader = new StringReader(jpqlQuery);
+        if (parser == null) {
+            parser = new JpqlParser(reader);
+        } else
+            parser.ReInit(reader);
 
-		ASTQLStatement qlStatement = parser.QL_statement();
-		if (visitor == null) {
-			visitor = new JpqlParserVisitorImpl(persistenceUnitContext, sqlStatementFactory, dbConfiguration);
-		}
+        ASTQLStatement qlStatement = parser.QL_statement();
+        if (visitor == null) {
+            visitor = new JpqlParserVisitorImpl(persistenceUnitContext, dbConfiguration);
+        }
 
-		SqlStatement sqlStatement = (SqlStatement) qlStatement.jjtAccept(visitor, null);
-		if (sqlStatement == null)
-			throw new IllegalStateException("Jpql Parsing failed: '" + jpqlQuery + "'");
+        SqlStatement sqlStatement = (SqlStatement) qlStatement.jjtAccept(visitor, null);
+        if (sqlStatement == null)
+            throw new IllegalStateException("Jpql Parsing failed: '" + jpqlQuery + "'");
 
-		String sql = null;
-		if (sqlStatement instanceof SqlSelectData)
-			sql = dbConfiguration.getSqlStatementGenerator().export(((SqlSelectData) sqlStatement));
-		else
-			sql = dbConfiguration.getSqlStatementGenerator().export(sqlStatement);
+        String sql = null;
+        if (sqlStatement instanceof SqlSelectData)
+            sql = dbConfiguration.getSqlStatementGenerator().export(((SqlSelectData) sqlStatement));
+        else
+            sql = dbConfiguration.getSqlStatementGenerator().export(sqlStatement);
 
-		return new JpqlResult(sqlStatement, sql);
-	}
+        return new JpqlResult(sqlStatement, sql);
+    }
 }

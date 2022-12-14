@@ -123,7 +123,7 @@ public class CriteriaExpressionHelper {
         return null;
     }
 
-    private Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
+    protected Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
             LocateExpression locateExpression, Query query, List<QueryParameter> parameters) {
         Locate.Builder builder = new Locate.Builder();
         Object xParam = createParameterFromExpression(query, locateExpression.getX(), aliasGenerator, parameters,

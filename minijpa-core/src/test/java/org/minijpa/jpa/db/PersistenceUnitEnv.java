@@ -98,7 +98,6 @@ public class PersistenceUnitEnv {
         LOG.debug("build: persistenceUnitContext=" + persistenceUnitContext);
         MiniPersistenceContext miniPersistenceContext = new MiniPersistenceContext(
                 persistenceUnitContext.getEntities());
-        SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
 
         ConnectionProvider connectionProvider = null;
         try {
@@ -119,7 +118,7 @@ public class PersistenceUnitEnv {
         new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo, connectionProvider);
         EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);
 
-        JdbcQueryRunner jdbcQueryRunner = new JdbcQueryRunner(connectionHolder, dbConfiguration, sqlStatementFactory,
+        JdbcQueryRunner jdbcQueryRunner = new JdbcQueryRunner(connectionHolder, dbConfiguration,
                 persistenceUnitContext.getAliasGenerator());
         EntityHandlerImpl entityLoader = new EntityHandlerImpl(persistenceUnitContext, miniPersistenceContext,
                 jdbcQueryRunner);

@@ -823,7 +823,7 @@ public class SearchDataTest {
         searchData1.setPattern("##");
         searchData1.setOccurences(3);
         searchData1.setAverageValue(4);
-        searchData1.setFloatAverageValue(-4.2f);
+        searchData1.setFloatAverageValue(-4.0f);
 
         SearchData searchData2 = new SearchData();
         searchData2.setName("SearchName2");
@@ -831,7 +831,7 @@ public class SearchDataTest {
         searchData2.setPattern("##");
         searchData2.setOccurences(4);
         searchData2.setAverageValue(4);
-        searchData2.setFloatAverageValue(-5.2f);
+        searchData2.setFloatAverageValue(-5.0f);
 
         SearchData searchData3 = new SearchData();
         searchData3.setName("SearchName3");
@@ -839,7 +839,7 @@ public class SearchDataTest {
         searchData3.setPattern("##%");
         searchData3.setOccurences(24);
         searchData3.setAverageValue(5);
-        searchData3.setFloatAverageValue(-7.8f);
+        searchData3.setFloatAverageValue(-7.0f);
 
         final EntityTransaction tx = em.getTransaction();
         tx.begin();
@@ -919,9 +919,15 @@ public class SearchDataTest {
         TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
         List<Number> resultList = typedQuery.getResultList();
         Assertions.assertEquals(3, resultList.size());
-        Assertions.assertEquals(7.8f, resultList.get(0));
-        Assertions.assertEquals(5.2f, resultList.get(1));
-        Assertions.assertEquals(4.2f, resultList.get(2));
+
+        // Oracle returns a BigDecimal, MySql a Double
+        Assertions.assertEquals(7.0f, ((Number) resultList.get(0)).floatValue());
+
+        // Oracle returns a BigDecimal, MySql a Double
+        Assertions.assertEquals(5.0f, ((Number) resultList.get(1)).floatValue());
+
+        // Oracle returns a BigDecimal, MySql a Double
+        Assertions.assertEquals(4.0f, ((Number) resultList.get(2)).floatValue());
     }
 
     private void testMod1(EntityManager em) {
@@ -1115,6 +1121,10 @@ public class SearchDataTest {
         tx.commit();
 
         tx.begin();
+        testLocate5(em);
+        tx.commit();
+
+        tx.begin();
         em.remove(searchData1);
         em.remove(searchData2);
         em.remove(searchData3);
@@ -1142,6 +1152,19 @@ public class SearchDataTest {
         Root<SearchData> root = criteriaQuery.from(SearchData.class);
         Predicate predicate = cb.equal(root.get("averageValue"), 7);
         criteriaQuery.where(predicate);
+        // "SearchName2Name"
+        // "Name" -> "ame2Name" 5+8-1=12
+        // "No" -> "ame2Name" 0+8-1=7
+        // SELECT COALESCE(NULLIF(STRPOS(SUBSTRING(NAME FROM ?), PATTERN), 0) - 1 + ?,
+        // 0) FROM search_data WHERE (average_value = ?)
+        //
+        // select (position(searchdata0_.pattern in substring(searchdata0_.name,
+        // ?))+?-1) as col_0_0_ from search_data searchdata0_ where
+        // searchdata0_.average_value=7
+        //
+        // select coalesce(nullif(position(searchdata0_.pattern in substring(searchdata0_.name,
+        // ?)),0)+?-1,0) as col_0_0_ from search_data searchdata0_ where
+        // searchdata0_.average_value=7
         criteriaQuery.select(cb.locate(root.get("name"), "Name", 8));
         TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
         List<?> resultList = typedQuery.getResultList();
@@ -1174,6 +1197,27 @@ public class SearchDataTest {
         List<?> resultList = typedQuery.getResultList();
         Assertions.assertEquals(1, resultList.size());
         Assertions.assertEquals(12, resultList.get(0));
+    }
+
+    private void testLocate5(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        // "SearchName2Name"
+        // "Name" -> "ame2Name" 5+8-1=12
+        // "No" -> "ame2Name" 0+8-1=7
+        // SELECT COALESCE(NULLIF(STRPOS(SUBSTRING(NAME FROM ?), PATTERN), 0) - 1 + ?,
+        // 0) FROM search_data WHERE (average_value = ?)
+        // select (position(searchdata0_.pattern in substring(searchdata0_.name,
+        // ?))+?-1) as col_0_0_ from search_data searchdata0_ where
+        // searchdata0_.average_value=7
+        criteriaQuery.select(cb.locate(root.get("name"), "No", 8));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(0, resultList.get(0));
     }
 
     @Test

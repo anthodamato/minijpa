@@ -13,21 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jdbc.mapper;
 
-import org.minijpa.jdbc.DbTypeMapper;
-import org.minijpa.jdbc.JdbcRunner;
-import org.minijpa.sql.model.SqlStatementGenerator;
+/**
+ *
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
+public class NumberToFloatAttributeMapper implements AttributeMapper<Float, Number> {
 
-public interface DbConfiguration {
+    @Override
+    public Number attributeToDatabase(Float k) {
+        return k;
+    }
 
-    public DbJdbc getDbJdbc();
+    @Override
+    public Float databaseToAttribute(Number v) {
+        return v.floatValue();
+    }
 
-    public DbTypeMapper getDbTypeMapper();
-
-    public SqlStatementGenerator getSqlStatementGenerator();
-
-    public JdbcRunner getJdbcRunner();
-
-    public SqlStatementFactory getSqlStatementFactory();
 }

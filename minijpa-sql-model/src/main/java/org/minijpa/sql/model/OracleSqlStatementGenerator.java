@@ -19,6 +19,7 @@ import java.sql.Time;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.minijpa.sql.model.function.CurrentTime;
 import org.minijpa.sql.model.function.Locate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,6 +153,11 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
         sb.append(")");
         return sb.toString();
+    }
+
+    @Override
+    protected String exportFunction(CurrentTime currentTime) {
+        return "CURRENT_TIMESTAMP";
     }
 
     private class LocalNameTranslator extends DefaultNameTranslator {

@@ -23,38 +23,46 @@ import org.minijpa.sql.model.SqlStatementGenerator;
 
 public class PostgresConfiguration implements DbConfiguration {
 
-	private final DbJdbc dbJdbc;
-	private final DbTypeMapper dbTypeMapper;
-	private final SqlStatementGenerator sqlStatementGenerator;
-	private final JdbcRunner jdbcRunner;
+    private final DbJdbc dbJdbc;
+    private final DbTypeMapper dbTypeMapper;
+    private final SqlStatementGenerator sqlStatementGenerator;
+    private final JdbcRunner jdbcRunner;
+    private final SqlStatementFactory sqlStatementFactory;
 
-	public PostgresConfiguration() {
-		super();
-		this.dbJdbc = new PostgresJdbc();
-		this.dbTypeMapper = new PostgresDbTypeMapper();
-		this.sqlStatementGenerator = new PostgresSqlStatementGenerator();
-		this.sqlStatementGenerator.init();
-		this.jdbcRunner = new JpaJdbcRunner();
-	}
+    public PostgresConfiguration() {
+        super();
+        this.dbJdbc = new PostgresJdbc();
+        this.dbTypeMapper = new PostgresDbTypeMapper();
+        this.sqlStatementGenerator = new PostgresSqlStatementGenerator();
+        this.sqlStatementGenerator.init();
+        this.jdbcRunner = new JdbcRunner();
+        this.sqlStatementFactory = new PostgresSqlStatementFactory();
+        this.sqlStatementFactory.init();
+    }
 
-	@Override
-	public DbJdbc getDbJdbc() {
-		return dbJdbc;
-	}
+    @Override
+    public DbJdbc getDbJdbc() {
+        return dbJdbc;
+    }
 
-	@Override
-	public DbTypeMapper getDbTypeMapper() {
-		return dbTypeMapper;
-	}
+    @Override
+    public DbTypeMapper getDbTypeMapper() {
+        return dbTypeMapper;
+    }
 
-	@Override
-	public SqlStatementGenerator getSqlStatementGenerator() {
-		return sqlStatementGenerator;
-	}
+    @Override
+    public SqlStatementGenerator getSqlStatementGenerator() {
+        return sqlStatementGenerator;
+    }
 
-	@Override
-	public JdbcRunner getJdbcRunner() {
-		return jdbcRunner;
-	}
+    @Override
+    public JdbcRunner getJdbcRunner() {
+        return jdbcRunner;
+    }
+
+    @Override
+    public SqlStatementFactory getSqlStatementFactory() {
+        return sqlStatementFactory;
+    }
 
 }
