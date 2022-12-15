@@ -1,4 +1,4 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
 import java.sql.Types;
 import java.util.List;

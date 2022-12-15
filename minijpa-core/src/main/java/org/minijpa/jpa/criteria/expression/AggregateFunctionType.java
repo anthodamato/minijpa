@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
-public interface BinaryExpressionTypeInfo {
-
-    public ExpressionOperator getExpressionOperator();
+/**
+ *
+ * @author adamato
+ */
+public enum AggregateFunctionType {
+    MIN, MAX, SUM, AVG, COUNT;
 }

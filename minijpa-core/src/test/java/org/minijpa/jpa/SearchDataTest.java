@@ -1162,7 +1162,8 @@ public class SearchDataTest {
         // ?))+?-1) as col_0_0_ from search_data searchdata0_ where
         // searchdata0_.average_value=7
         //
-        // select coalesce(nullif(position(searchdata0_.pattern in substring(searchdata0_.name,
+        // select coalesce(nullif(position(searchdata0_.pattern in
+        // substring(searchdata0_.name,
         // ?)),0)+?-1,0) as col_0_0_ from search_data searchdata0_ where
         // searchdata0_.average_value=7
         criteriaQuery.select(cb.locate(root.get("name"), "Name", 8));
@@ -1435,4 +1436,120 @@ public class SearchDataTest {
         Assertions.assertTrue(result[3] instanceof java.sql.Timestamp);
     }
 
+    @Test
+    public void substring() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        SearchData searchData1 = new SearchData();
+        searchData1.setName("SearchName1");
+        searchData1.setModel("Free");
+        searchData1.setPattern(" ## ");
+        searchData1.setOccurences(3);
+        searchData1.setAverageValue(4);
+        searchData1.setFloatAverageValue(-4.2f);
+
+        SearchData searchData2 = new SearchData();
+        searchData2.setName("SearchName2Name");
+        searchData2.setModel("SpecialS");
+        searchData2.setPattern("Na");
+        searchData2.setOccurences(4);
+        searchData2.setAverageValue(7);
+        searchData2.setFloatAverageValue(-5.2f);
+
+        SearchData searchData3 = new SearchData();
+        searchData3.setName("SearchName3");
+        searchData3.setModel("Usual");
+        searchData3.setPattern("##%");
+        searchData3.setOccurences(24);
+        searchData3.setAverageValue(5);
+        searchData3.setFloatAverageValue(-7.8f);
+
+        final EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        em.persist(searchData1);
+        em.persist(searchData2);
+        em.persist(searchData3);
+
+        tx.commit();
+
+        tx.begin();
+        testSubstring1(em);
+        tx.commit();
+
+        tx.begin();
+        testSubstring2(em);
+        tx.commit();
+
+        tx.begin();
+        testSubstring3(em);
+        tx.commit();
+
+        tx.begin();
+        testSubstring4(em);
+        tx.commit();
+
+        tx.begin();
+        em.remove(searchData1);
+        em.remove(searchData2);
+        em.remove(searchData3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testSubstring1(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.substring(root.get("name"), cb.parameter(Integer.class, "from")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("from", 7);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("Name3", resultList.get(0));
+    }
+
+    private void testSubstring2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.substring(root.get("name"), 7));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("Name3", resultList.get(0));
+    }
+
+    private void testSubstring3(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.substring(root.get("name"), cb.parameter(Integer.class, "from"),
+                cb.parameter(Integer.class, "len")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("from", 7);
+        typedQuery.setParameter("len", 4);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("Name", resultList.get(0));
+    }
+
+    private void testSubstring4(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<String> criteriaQuery = cb.createQuery(String.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.substring(root.get("name"), 7, 4));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals("Name", resultList.get(0));
+    }
 }

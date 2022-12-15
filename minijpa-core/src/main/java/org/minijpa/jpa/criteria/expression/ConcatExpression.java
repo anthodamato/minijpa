@@ -1,4 +1,4 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
 import java.util.Collection;
 import java.util.List;

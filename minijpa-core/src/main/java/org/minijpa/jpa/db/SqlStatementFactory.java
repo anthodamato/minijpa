@@ -50,22 +50,23 @@ import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
-import org.minijpa.jpa.criteria.AggregateFunctionExpression;
 import org.minijpa.jpa.criteria.AttributePath;
-import org.minijpa.jpa.criteria.BinaryExpression;
-import org.minijpa.jpa.criteria.ConcatExpression;
-import org.minijpa.jpa.criteria.CriteriaExpressionHelper;
 import org.minijpa.jpa.criteria.CriteriaUtils;
-import org.minijpa.jpa.criteria.CurrentDateExpression;
-import org.minijpa.jpa.criteria.CurrentTimeExpression;
-import org.minijpa.jpa.criteria.CurrentTimestampExpression;
-import org.minijpa.jpa.criteria.ExpressionOperator;
-import org.minijpa.jpa.criteria.LocateExpression;
 import org.minijpa.jpa.criteria.MiniCriteriaUpdate;
 import org.minijpa.jpa.criteria.MiniRoot;
-import org.minijpa.jpa.criteria.TrimExpression;
-import org.minijpa.jpa.criteria.TypecastExpression;
-import org.minijpa.jpa.criteria.UnaryExpression;
+import org.minijpa.jpa.criteria.expression.AggregateFunctionExpression;
+import org.minijpa.jpa.criteria.expression.BinaryExpression;
+import org.minijpa.jpa.criteria.expression.ConcatExpression;
+import org.minijpa.jpa.criteria.expression.CriteriaExpressionHelper;
+import org.minijpa.jpa.criteria.expression.CurrentDateExpression;
+import org.minijpa.jpa.criteria.expression.CurrentTimeExpression;
+import org.minijpa.jpa.criteria.expression.CurrentTimestampExpression;
+import org.minijpa.jpa.criteria.expression.ExpressionOperator;
+import org.minijpa.jpa.criteria.expression.LocateExpression;
+import org.minijpa.jpa.criteria.expression.SubstringExpression;
+import org.minijpa.jpa.criteria.expression.TrimExpression;
+import org.minijpa.jpa.criteria.expression.TypecastExpression;
+import org.minijpa.jpa.criteria.expression.UnaryExpression;
 import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
 import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
 import org.minijpa.jpa.criteria.predicate.BinaryBooleanExprPredicate;
@@ -541,15 +542,15 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         } else if (selection instanceof AggregateFunctionExpression<?>) {
             AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
             if (aggregateFunctionExpression
-                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT) {
+                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.expression.AggregateFunctionType.COUNT) {
                 FetchParameter cnv = new BasicFetchParameter("count", null, Optional.empty());
                 return Optional.of(cnv);
             } else if (aggregateFunctionExpression
-                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.SUM) {
+                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.expression.AggregateFunctionType.SUM) {
                 FetchParameter cnv = new BasicFetchParameter("sum", null, Optional.empty());
                 return Optional.of(cnv);
             } else if (aggregateFunctionExpression
-                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.AVG) {
+                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.expression.AggregateFunctionType.AVG) {
                 FetchParameter cnv = new BasicFetchParameter("avg", null, Optional.empty());
                 return Optional.of(cnv);
             } else {
@@ -629,11 +630,13 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                 return Optional.of(new BasicFetchParameter("result", Types.OTHER,
                         Optional.of(AbstractDbTypeMapper.numberToLongAttributeMapper)));
         } else if (selection instanceof ConcatExpression) {
-            return Optional.of(new BasicFetchParameter("result", Types.VARCHAR, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("concat", Types.VARCHAR, Optional.empty()));
         } else if (selection instanceof TrimExpression) {
-            return Optional.of(new BasicFetchParameter("result", Types.VARCHAR, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("trim", Types.VARCHAR, Optional.empty()));
         } else if (selection instanceof LocateExpression) {
-            return Optional.of(new BasicFetchParameter("result", Types.INTEGER, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("locate", Types.INTEGER, Optional.empty()));
+        } else if (selection instanceof SubstringExpression) {
+            return Optional.of(new BasicFetchParameter("substring", Types.VARCHAR, Optional.empty()));
         } else if (selection instanceof CurrentDateExpression) {
             return Optional.of(new BasicFetchParameter("date", Types.DATE, Optional.empty()));
         } else if (selection instanceof CurrentTimeExpression) {

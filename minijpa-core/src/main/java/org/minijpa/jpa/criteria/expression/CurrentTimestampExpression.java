@@ -1,47 +1,17 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
-import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
-public class TrimExpression implements Expression<String> {
-    private Expression<String> x;
-    private Optional<Expression<Character>> t;
-    private Optional<Character> tChar;
-    private Optional<Trimspec> ts;
-
-    public TrimExpression(Expression<String> x, Optional<Expression<Character>> t, Optional<Character> tChar,
-            Optional<Trimspec> ts) {
-        super();
-        this.x = x;
-        this.t = t;
-        this.tChar = tChar;
-        this.ts = ts;
-    }
-
-    public Expression<String> getX() {
-        return x;
-    }
-
-    public Optional<Expression<Character>> getT() {
-        return t;
-    }
-
-    public Optional<Character> gettChar() {
-        return tChar;
-    }
-
-    public Optional<Trimspec> getTs() {
-        return ts;
-    }
+public class CurrentTimestampExpression implements Expression<Timestamp> {
 
     @Override
-    public Selection<String> alias(String name) {
+    public Selection<Timestamp> alias(String name) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -59,7 +29,7 @@ public class TrimExpression implements Expression<String> {
     }
 
     @Override
-    public Class<? extends String> getJavaType() {
+    public Class<? extends Timestamp> getJavaType() {
         // TODO Auto-generated method stub
         return null;
     }

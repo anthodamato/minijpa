@@ -1,17 +1,52 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
-import java.sql.Date;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
-public class CurrentDateExpression implements Expression<Date> {
+public class LocateExpression implements Expression<Integer> {
+    private Expression<String> x;
+    private Optional<Expression<String>> pattern;
+    private Optional<String> patternString;
+    private Optional<Expression<Integer>> from;
+    private Optional<Integer> fromInteger;
+
+    public LocateExpression(Expression<String> x, Optional<Expression<String>> pattern, Optional<String> patternString,
+            Optional<Expression<Integer>> from, Optional<Integer> fromInteger) {
+        super();
+        this.x = x;
+        this.pattern = pattern;
+        this.patternString = patternString;
+        this.from = from;
+        this.fromInteger = fromInteger;
+    }
+
+    public Expression<String> getX() {
+        return x;
+    }
+
+    public Optional<Expression<String>> getPattern() {
+        return pattern;
+    }
+
+    public Optional<String> getPatternString() {
+        return patternString;
+    }
+
+    public Optional<Expression<Integer>> getFrom() {
+        return from;
+    }
+
+    public Optional<Integer> getFromInteger() {
+        return fromInteger;
+    }
 
     @Override
-    public Selection<Date> alias(String name) {
+    public Selection<Integer> alias(String name) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -29,7 +64,7 @@ public class CurrentDateExpression implements Expression<Date> {
     }
 
     @Override
-    public Class<? extends Date> getJavaType() {
+    public Class<? extends Integer> getJavaType() {
         // TODO Auto-generated method stub
         return null;
     }

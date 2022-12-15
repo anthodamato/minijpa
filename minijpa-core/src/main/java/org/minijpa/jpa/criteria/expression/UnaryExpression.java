@@ -1,4 +1,4 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;

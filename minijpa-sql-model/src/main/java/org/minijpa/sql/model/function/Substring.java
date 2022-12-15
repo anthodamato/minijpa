@@ -28,31 +28,56 @@ import org.minijpa.sql.model.Value;
  */
 public class Substring implements Function, Value {
 
-	private final Object argument;
-	private final Object startIndex;
-	private Optional<Object> length = Optional.empty();
+    private final Object argument;
+    private final Object startIndex;
+    private Optional<Object> length = Optional.empty();
 
-	public Substring(Object argument, Object startIndex) {
-		this.argument = argument;
-		this.startIndex = startIndex;
-	}
+    public Substring(Object argument, Object startIndex) {
+        this.argument = argument;
+        this.startIndex = startIndex;
+    }
 
-	public Substring(Object argument, Object startIndex, Optional<Object> length) {
-		this.argument = argument;
-		this.startIndex = startIndex;
-		this.length = length;
-	}
+    public Substring(Object argument, Object startIndex, Optional<Object> length) {
+        this.argument = argument;
+        this.startIndex = startIndex;
+        this.length = length;
+    }
 
-	public Object getArgument() {
-		return argument;
-	}
+    public Object getArgument() {
+        return argument;
+    }
 
-	public Object getStartIndex() {
-		return startIndex;
-	}
+    public Object getStartIndex() {
+        return startIndex;
+    }
 
-	public Optional<Object> getLength() {
-		return length;
-	}
+    public Optional<Object> getLength() {
+        return length;
+    }
+
+    public static class Builder {
+        private Object argument;
+        private Object startIndex;
+        private Optional<Object> len = Optional.empty();
+
+        public Builder withArgument(Object argument) {
+            this.argument = argument;
+            return this;
+        }
+
+        public Builder withFrom(Object startIndex) {
+            this.startIndex = startIndex;
+            return this;
+        }
+
+        public Builder withLen(Optional<Object> len) {
+            this.len = len;
+            return this;
+        }
+
+        public Substring build() {
+            return new Substring(argument, startIndex, len);
+        }
+    }
 
 }

@@ -1,6 +1,6 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
-import java.sql.Timestamp;
+import java.sql.Date;
 import java.util.Collection;
 import java.util.List;
 
@@ -8,10 +8,10 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
-public class CurrentTimestampExpression implements Expression<Timestamp> {
+public class CurrentDateExpression implements Expression<Date> {
 
     @Override
-    public Selection<Timestamp> alias(String name) {
+    public Selection<Date> alias(String name) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -29,7 +29,7 @@ public class CurrentTimestampExpression implements Expression<Timestamp> {
     }
 
     @Override
-    public Class<? extends Timestamp> getJavaType() {
+    public Class<? extends Date> getJavaType() {
         // TODO Auto-generated method stub
         return null;
     }

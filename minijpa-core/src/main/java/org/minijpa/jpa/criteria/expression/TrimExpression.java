@@ -1,52 +1,47 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
-public class LocateExpression implements Expression<Integer> {
+public class TrimExpression implements Expression<String> {
     private Expression<String> x;
-    private Optional<Expression<String>> pattern;
-    private Optional<String> patternString;
-    private Optional<Expression<Integer>> from;
-    private Optional<Integer> fromInteger;
+    private Optional<Expression<Character>> t;
+    private Optional<Character> tChar;
+    private Optional<Trimspec> ts;
 
-    public LocateExpression(Expression<String> x, Optional<Expression<String>> pattern, Optional<String> patternString,
-            Optional<Expression<Integer>> from, Optional<Integer> fromInteger) {
+    public TrimExpression(Expression<String> x, Optional<Expression<Character>> t, Optional<Character> tChar,
+            Optional<Trimspec> ts) {
         super();
         this.x = x;
-        this.pattern = pattern;
-        this.patternString = patternString;
-        this.from = from;
-        this.fromInteger = fromInteger;
+        this.t = t;
+        this.tChar = tChar;
+        this.ts = ts;
     }
 
     public Expression<String> getX() {
         return x;
     }
 
-    public Optional<Expression<String>> getPattern() {
-        return pattern;
+    public Optional<Expression<Character>> getT() {
+        return t;
     }
 
-    public Optional<String> getPatternString() {
-        return patternString;
+    public Optional<Character> gettChar() {
+        return tChar;
     }
 
-    public Optional<Expression<Integer>> getFrom() {
-        return from;
-    }
-
-    public Optional<Integer> getFromInteger() {
-        return fromInteger;
+    public Optional<Trimspec> getTs() {
+        return ts;
     }
 
     @Override
-    public Selection<Integer> alias(String name) {
+    public Selection<String> alias(String name) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -64,7 +59,7 @@ public class LocateExpression implements Expression<Integer> {
     }
 
     @Override
-    public Class<? extends Integer> getJavaType() {
+    public Class<? extends String> getJavaType() {
         // TODO Auto-generated method stub
         return null;
     }

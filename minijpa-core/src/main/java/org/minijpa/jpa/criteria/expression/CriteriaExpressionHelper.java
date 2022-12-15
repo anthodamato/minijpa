@@ -1,4 +1,4 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
 import java.sql.Types;
 import java.util.ArrayList;
@@ -14,6 +14,9 @@ import javax.persistence.criteria.Selection;
 
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jpa.criteria.AttributePath;
+import org.minijpa.jpa.criteria.CriteriaUtils;
+import org.minijpa.jpa.criteria.MiniRoot;
 import org.minijpa.jpa.jpql.AggregateFunctionType;
 import org.minijpa.jpa.jpql.FunctionUtils;
 import org.minijpa.jpa.model.MetaAttribute;
@@ -36,6 +39,7 @@ import org.minijpa.sql.model.function.Locate;
 import org.minijpa.sql.model.function.Lower;
 import org.minijpa.sql.model.function.Mod;
 import org.minijpa.sql.model.function.Sqrt;
+import org.minijpa.sql.model.function.Substring;
 import org.minijpa.sql.model.function.Trim;
 import org.minijpa.sql.model.function.TrimType;
 import org.minijpa.sql.model.function.Upper;
@@ -54,7 +58,7 @@ public class CriteriaExpressionHelper {
     }
 
     private AggregateFunctionType getAggregateFunction(
-            org.minijpa.jpa.criteria.AggregateFunctionType aggregateFunctionType) {
+            org.minijpa.jpa.criteria.expression.AggregateFunctionType aggregateFunctionType) {
         switch (aggregateFunctionType) {
         case AVG:
             return AggregateFunctionType.AVG;
@@ -121,6 +125,36 @@ public class CriteriaExpressionHelper {
         }
 
         return null;
+    }
+
+    protected Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
+            SubstringExpression substringExpression, Query query, List<QueryParameter> parameters) {
+        Substring.Builder builder = new Substring.Builder();
+        Object xParam = createParameterFromExpression(query, substringExpression.getX(), aliasGenerator, parameters,
+                "locate", Types.VARCHAR, Optional.empty());
+        builder.withArgument(xParam);
+
+        if (substringExpression.getFrom().isPresent()) {
+            Object fromParam = createParameterFromExpression(query, substringExpression.getFrom().get(), aliasGenerator,
+                    parameters, "locate", Types.INTEGER, Optional.empty());
+            builder.withFrom(fromParam);
+        }
+
+        if (substringExpression.getFromInteger().isPresent()) {
+            builder.withFrom(CriteriaUtils.buildValue(substringExpression.getFromInteger().get()));
+        }
+
+        if (substringExpression.getLen().isPresent()) {
+            Object lenParam = createParameterFromExpression(query, substringExpression.getLen().get(), aliasGenerator,
+                    parameters, "len", Types.INTEGER, Optional.empty());
+            builder.withLen(Optional.of(lenParam));
+        }
+
+        if (substringExpression.getLenInteger().isPresent()) {
+            builder.withLen(Optional.of(substringExpression.getLenInteger().get()));
+        }
+
+        return Optional.of(builder.build());
     }
 
     protected Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
@@ -287,7 +321,7 @@ public class CriteriaExpressionHelper {
             AggregateFunctionExpression<?> aggregateFunctionExpression) {
         Expression<?> expr = aggregateFunctionExpression.getX();
         if (aggregateFunctionExpression
-                .getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT) {
+                .getAggregateFunctionType() == org.minijpa.jpa.criteria.expression.AggregateFunctionType.COUNT) {
             if (expr instanceof AttributePath<?>) {
                 AttributePath<?> miniPath = (AttributePath<?>) expr;
                 MetaAttribute metaAttribute = miniPath.getMetaAttribute();
@@ -339,6 +373,8 @@ public class CriteriaExpressionHelper {
             return createSelectionValue(fromTable, aliasGenerator, (TrimExpression) selection, query, parameters);
         } else if (selection instanceof LocateExpression) {
             return createSelectionValue(fromTable, aliasGenerator, (LocateExpression) selection, query, parameters);
+        } else if (selection instanceof SubstringExpression) {
+            return createSelectionValue(fromTable, aliasGenerator, (SubstringExpression) selection, query, parameters);
         } else if (selection instanceof CurrentDateExpression) {
             return Optional.of(new CurrentDate());
         } else if (selection instanceof CurrentTimeExpression) {

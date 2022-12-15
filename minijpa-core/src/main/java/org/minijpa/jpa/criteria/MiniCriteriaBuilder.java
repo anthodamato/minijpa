@@ -46,6 +46,20 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.Metamodel;
 
+import org.minijpa.jpa.criteria.expression.AggregateFunctionExpression;
+import org.minijpa.jpa.criteria.expression.AggregateFunctionType;
+import org.minijpa.jpa.criteria.expression.BinaryExpression;
+import org.minijpa.jpa.criteria.expression.ConcatExpression;
+import org.minijpa.jpa.criteria.expression.CurrentDateExpression;
+import org.minijpa.jpa.criteria.expression.CurrentTimeExpression;
+import org.minijpa.jpa.criteria.expression.CurrentTimestampExpression;
+import org.minijpa.jpa.criteria.expression.ExpressionOperator;
+import org.minijpa.jpa.criteria.expression.LocateExpression;
+import org.minijpa.jpa.criteria.expression.MiniParameterExpression;
+import org.minijpa.jpa.criteria.expression.SubstringExpression;
+import org.minijpa.jpa.criteria.expression.TrimExpression;
+import org.minijpa.jpa.criteria.expression.TypecastExpression;
+import org.minijpa.jpa.criteria.expression.UnaryExpression;
 import org.minijpa.jpa.criteria.predicate.AbstractPredicate;
 import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
 import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
@@ -676,26 +690,22 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<String> substring(Expression<String> x, Expression<Integer> from) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SubstringExpression(x, Optional.of(from), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, int from) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SubstringExpression(x, Optional.empty(), Optional.of(from), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, Expression<Integer> from, Expression<Integer> len) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SubstringExpression(x, Optional.of(from), Optional.empty(), Optional.of(len), Optional.empty());
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, int from, int len) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SubstringExpression(x, Optional.empty(), Optional.of(from), Optional.empty(), Optional.of(len));
     }
 
     @Override

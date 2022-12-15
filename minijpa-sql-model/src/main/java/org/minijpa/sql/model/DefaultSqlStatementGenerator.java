@@ -316,7 +316,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
     protected String exportFunction(Substring substring) {
         StringBuilder sb = new StringBuilder("SUBSTR(");
-
         sb.append(exportExpression(substring.getArgument(), nameTranslator));
         sb.append(", ");
         sb.append(exportExpression(substring.getStartIndex(), nameTranslator));

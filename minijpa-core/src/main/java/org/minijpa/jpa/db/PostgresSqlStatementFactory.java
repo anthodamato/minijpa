@@ -1,6 +1,6 @@
 package org.minijpa.jpa.db;
 
-import org.minijpa.jpa.criteria.PostgresCriteriaExpressionHelper;
+import org.minijpa.jpa.criteria.expression.PostgresCriteriaExpressionHelper;
 
 public class PostgresSqlStatementFactory extends SqlStatementFactory {
 
