@@ -15,7 +15,7 @@
  */
 package org.minijpa.jpa.db;
 
-import java.time.LocalDate;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,20 +39,37 @@ import javax.persistence.criteria.Selection;
 
 import org.minijpa.jdbc.BasicFetchParameter;
 import org.minijpa.jdbc.FetchParameter;
+import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.db.SqlSelectDataBuilder;
+import org.minijpa.jdbc.mapper.AbstractDbTypeMapper;
+import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
-import org.minijpa.jpa.criteria.AggregateFunctionExpression;
 import org.minijpa.jpa.criteria.AttributePath;
-import org.minijpa.jpa.criteria.BinaryExpression;
-import org.minijpa.jpa.criteria.ExpressionOperator;
+import org.minijpa.jpa.criteria.CriteriaUtils;
 import org.minijpa.jpa.criteria.MiniCriteriaUpdate;
 import org.minijpa.jpa.criteria.MiniRoot;
+import org.minijpa.jpa.criteria.expression.AggregateFunctionExpression;
+import org.minijpa.jpa.criteria.expression.BinaryExpression;
+import org.minijpa.jpa.criteria.expression.CoalesceExpression;
+import org.minijpa.jpa.criteria.expression.ConcatExpression;
+import org.minijpa.jpa.criteria.expression.CriteriaExpressionHelper;
+import org.minijpa.jpa.criteria.expression.CurrentDateExpression;
+import org.minijpa.jpa.criteria.expression.CurrentTimeExpression;
+import org.minijpa.jpa.criteria.expression.CurrentTimestampExpression;
+import org.minijpa.jpa.criteria.expression.ExpressionOperator;
+import org.minijpa.jpa.criteria.expression.LocateExpression;
+import org.minijpa.jpa.criteria.expression.NegationExpression;
+import org.minijpa.jpa.criteria.expression.NullifExpression;
+import org.minijpa.jpa.criteria.expression.SubstringExpression;
+import org.minijpa.jpa.criteria.expression.TrimExpression;
+import org.minijpa.jpa.criteria.expression.TypecastExpression;
+import org.minijpa.jpa.criteria.expression.UnaryExpression;
 import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
 import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
 import org.minijpa.jpa.criteria.predicate.BinaryBooleanExprPredicate;
@@ -60,13 +77,10 @@ import org.minijpa.jpa.criteria.predicate.BooleanExprPredicate;
 import org.minijpa.jpa.criteria.predicate.ComparisonPredicate;
 import org.minijpa.jpa.criteria.predicate.ExprPredicate;
 import org.minijpa.jpa.criteria.predicate.InPredicate;
-import org.minijpa.jpa.criteria.predicate.LikePatternExprPredicate;
-import org.minijpa.jpa.criteria.predicate.LikePatternPredicate;
+import org.minijpa.jpa.criteria.predicate.LikePredicate;
 import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
 import org.minijpa.jpa.criteria.predicate.PredicateType;
 import org.minijpa.jpa.criteria.predicate.PredicateTypeInfo;
-import org.minijpa.jpa.jpql.AggregateFunctionType;
-import org.minijpa.jpa.jpql.FunctionUtils;
 import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
@@ -94,12 +108,9 @@ import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.condition.EmptyCondition;
 import org.minijpa.sql.model.condition.InCondition;
+import org.minijpa.sql.model.condition.LikeCondition;
 import org.minijpa.sql.model.condition.UnaryCondition;
 import org.minijpa.sql.model.condition.UnaryLogicConditionImpl;
-import org.minijpa.sql.model.expression.SqlBinaryExpression;
-import org.minijpa.sql.model.expression.SqlBinaryExpressionBuilder;
-import org.minijpa.sql.model.expression.SqlExpressionOperator;
-import org.minijpa.sql.model.function.Count;
 import org.minijpa.sql.model.join.FromJoin;
 import org.minijpa.sql.model.join.FromJoinImpl;
 import org.slf4j.Logger;
@@ -107,11 +118,14 @@ import org.slf4j.LoggerFactory;
 
 public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
-    public static final String QM = "?";
-
     private final Logger LOG = LoggerFactory.getLogger(SqlStatementFactory.class);
+    protected CriteriaExpressionHelper criteriaExpressionHelper;
 
     public SqlStatementFactory() {
+    }
+
+    public void init() {
+        this.criteriaExpressionHelper = new CriteriaExpressionHelper();
     }
 
     public SqlInsert generateInsert(MetaEntity entity, List<String> columns, boolean hasIdentityColumn,
@@ -144,7 +158,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                 tableAliasGenerator.getDefault(entity.getTableName()));
         List<TableColumn> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
         List<Condition> conditions = tableColumns.stream().map(t -> {
-            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
+            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(CriteriaUtils.QM).build();
         }).collect(Collectors.toList());
 
         Condition condition = Condition.toAnd(conditions);
@@ -153,8 +167,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         if (lockType != null)
             sqlSelectBuilder.withForUpdate(calcForUpdate(lockType));
 
-        sqlSelectBuilder.withValues(MetaEntityHelper.toValues(entity, fromTable))
-                .withConditions(Arrays.asList(condition));
+        sqlSelectBuilder.withValues(MetaEntityHelper.toValues(entity, fromTable)).withConditions(List.of(condition));
         sqlSelectBuilder.withFetchParameters(fetchParameters);
         return (SqlSelectData) sqlSelectBuilder.build();
     }
@@ -167,7 +180,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                 tableAliasGenerator.getDefault(entity.getTableName()));
         List<TableColumn> tableColumns = MetaEntityHelper.toValues(entity.getId().getAttributes(), fromTable);
         List<Condition> conditions = tableColumns.stream().map(t -> {
-            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
+            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(CriteriaUtils.QM).build();
         }).collect(Collectors.toList());
 
         Condition condition = Condition.toAnd(conditions);
@@ -176,10 +189,9 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         if (lockType != null)
             sqlSelectBuilder.withForUpdate(calcForUpdate(lockType));
 
-        sqlSelectBuilder
-                .withValues(Arrays.asList(MetaEntityHelper.toValue(entity.getVersionAttribute().get(), fromTable)))
-                .withConditions(Arrays.asList(condition));
-        sqlSelectBuilder.withFetchParameters(Arrays.asList(fetchParameter));
+        sqlSelectBuilder.withValues(List.of(MetaEntityHelper.toValue(entity.getVersionAttribute().get(), fromTable)))
+                .withConditions(List.of(condition));
+        sqlSelectBuilder.withFetchParameters(List.of(fetchParameter));
         return (SqlSelectData) sqlSelectBuilder.build();
     }
 
@@ -194,7 +206,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         List<TableColumn> tableColumns = columns.stream().map(c -> new TableColumn(fromTable, new Column(c)))
                 .collect(Collectors.toList());
         List<Condition> conditions = tableColumns.stream().map(t -> {
-            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
+            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(CriteriaUtils.QM).build();
         }).collect(Collectors.toList());
 
         Condition condition = Condition.toAnd(conditions);
@@ -234,11 +246,11 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
      *
      * @param entity
      * @param metaAttribute
-     * @param tableAliasGenerator
+     * @param aliasGenerator
      * @return
      */
     public List<FromJoin> calculateJoins(MetaEntity entity, MetaAttribute metaAttribute,
-            AliasGenerator tableAliasGenerator) {
+            AliasGenerator aliasGenerator) {
         if (metaAttribute.getRelationship().getJoinTable() != null) {
             List<MetaAttribute> idSourceAttributes = entity.getId().getAttributes();
             List<Column> idSourceColumns = idSourceAttributes.stream().map(a -> {
@@ -251,9 +263,9 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                         return new Column(a.getColumnName());
                     }).collect(Collectors.toList());
 
-            String tableAlias = tableAliasGenerator.getDefault(relationshipJoinTable.getTableName());
+            String tableAlias = aliasGenerator.getDefault(relationshipJoinTable.getTableName());
             FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), tableAlias);
-            tableAlias = tableAliasGenerator.getDefault(entity.getTableName());
+            tableAlias = aliasGenerator.getDefault(entity.getTableName());
             FromJoin fromJoin = new FromJoinImpl(joinTable, tableAlias, idSourceColumns, idOwningColumns);
 
             MetaEntity destEntity = relationshipJoinTable.getTargetEntity();
@@ -266,11 +278,10 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                     .stream().map(a -> {
                         return new Column(a.getColumnName());
                     }).collect(Collectors.toList());
-            tableAlias = tableAliasGenerator.getDefault(destEntity.getTableName());
+            tableAlias = aliasGenerator.getDefault(destEntity.getTableName());
             FromTable joinTable2 = new FromTableImpl(destEntity.getTableName(), tableAlias);
             FromJoin fromJoin2 = new FromJoinImpl(joinTable2,
-                    tableAliasGenerator.getDefault(relationshipJoinTable.getTableName()), idTargetColumns,
-                    idDestColumns);
+                    aliasGenerator.getDefault(relationshipJoinTable.getTableName()), idTargetColumns, idDestColumns);
 
             return Arrays.asList(fromJoin, fromJoin2);
         } else if (metaAttribute.getRelationship().getJoinColumnMapping().isPresent()) {
@@ -287,12 +298,12 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                 return new Column(a.getColumnName());
             }).collect(Collectors.toList());
 
-            String tableAlias = tableAliasGenerator.getDefault(destEntity.getTableName());
+            String tableAlias = aliasGenerator.getDefault(destEntity.getTableName());
             FromTable joinTable = new FromTableImpl(destEntity.getTableName(), tableAlias);
-            tableAlias = tableAliasGenerator.getDefault(entity.getTableName());
+            tableAlias = aliasGenerator.getDefault(entity.getTableName());
             FromJoin fromJoin = new FromJoinImpl(joinTable, tableAlias, idSourceColumns, idDestColumns);
 
-            return Arrays.asList(fromJoin);
+            return List.of(fromJoin);
         }
 
         return null;
@@ -313,8 +324,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(),
                 tableAliasGenerator.getDefault(relationshipJoinTable.getTableName()));
         String tableAlias = tableAliasGenerator.getDefault(entity.getTableName());
-        FromJoin fromJoin = new FromJoinImpl(joinTable, tableAlias, idColumns, idTargetColumns);
-        return fromJoin;
+        return new FromJoinImpl(joinTable, tableAlias, idColumns, idTargetColumns);
     }
 
     public Condition generateJoinCondition(Relationship relationship, MetaEntity owningEntity, MetaEntity targetEntity,
@@ -384,29 +394,26 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     }
 
     /**
-     *
-     *
      * @param entity
      * @param relationshipJoinTable
      * @param attributes
-     * @param tableAliasGenerator
+     * @param aliasGenerator
      * @return
      * @throws Exception
      */
     public SqlSelectData generateSelectByJoinTable(MetaEntity entity, RelationshipJoinTable relationshipJoinTable,
-            List<AbstractAttribute> attributes, AliasGenerator tableAliasGenerator) throws Exception {
+            List<AbstractAttribute> attributes, AliasGenerator aliasGenerator) throws Exception {
         // select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
         // where j.t2=fk
         FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(),
-                tableAliasGenerator.getDefault(relationshipJoinTable.getTableName()));
-        FromJoin fromJoin = calculateFromTableByJoinTable(entity, relationshipJoinTable, tableAliasGenerator);
-        FromTable fromTable = FromTable.of(entity.getTableName(),
-                tableAliasGenerator.getDefault(entity.getTableName()));
+                aliasGenerator.getDefault(relationshipJoinTable.getTableName()));
+        FromJoin fromJoin = calculateFromTableByJoinTable(entity, relationshipJoinTable, aliasGenerator);
+        FromTable fromTable = FromTable.of(entity.getTableName(), aliasGenerator.getDefault(entity.getTableName()));
         // handles multiple column pk
 
         List<TableColumn> tableColumns = MetaEntityHelper.attributesToTableColumns(attributes, joinTable);
         List<Condition> conditions = tableColumns.stream().map(t -> {
-            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
+            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(CriteriaUtils.QM).build();
         }).collect(Collectors.toList());
 
         Condition condition = Condition.toAnd(conditions);
@@ -446,7 +453,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         List<TableColumn> tableColumns = MetaEntityHelper.attributesToTableColumns(attributes, joinTable);
 
         List<Condition> conditions = tableColumns.stream().map(t -> {
-            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(QM).build();
+            return new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(t).withRight(CriteriaUtils.QM).build();
         }).collect(Collectors.toList());
 
         Condition condition = Condition.toAnd(conditions);
@@ -512,151 +519,41 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     private Condition createAttributeEqualCondition(FromTable fromTable, List<String> columns) throws Exception {
         if (columns.size() == 1)
             return new BinaryCondition.Builder(ConditionType.EQUAL)
-                    .withLeft(new TableColumn(fromTable, new Column(columns.get(0)))).withRight(QM).build();
+                    .withLeft(new TableColumn(fromTable, new Column(columns.get(0)))).withRight(CriteriaUtils.QM)
+                    .build();
 
         List<Condition> conditions = new ArrayList<>();
         for (String columnName : columns) {
             BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-                    .withLeft(new TableColumn(fromTable, new Column(columnName))).withRight(QM).build();
+                    .withLeft(new TableColumn(fromTable, new Column(columnName))).withRight(CriteriaUtils.QM).build();
             conditions.add(binaryCondition);
         }
 
         return new BinaryLogicConditionImpl(ConditionType.AND, conditions);
     }
 
-    private Optional<Value> createSelectionValue(FromTable fromTable, Selection<?> selection,
-            AliasGenerator tableAliasGenerator) {
+    private Optional<FetchParameter> createFetchParameter(Selection<?> selection, Class<?> resultClass) {
         if (selection == null)
             return Optional.empty();
 
+        LOG.debug("createFetchParameter: selection={}", selection);
         if (selection instanceof AttributePath<?>) {
             AttributePath<?> miniPath = (AttributePath<?>) selection;
             MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-            return Optional.of(new TableColumn(fromTable, new Column(metaAttribute.getColumnName())));
-        } else if (selection instanceof AggregateFunctionExpression<?>) {
-            AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
-            Expression<?> expr = aggregateFunctionExpression.getX();
-            if (aggregateFunctionExpression
-                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT) {
-                if (expr instanceof AttributePath<?>) {
-                    AttributePath<?> miniPath = (AttributePath<?>) expr;
-                    MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-                    return Optional.of(new Count(new TableColumn(fromTable, new Column(metaAttribute.getColumnName())),
-                            aggregateFunctionExpression.isDistinct()));
-                } else if (expr instanceof MiniRoot<?>) {
-                    MiniRoot<?> miniRoot = (MiniRoot<?>) expr;
-                    MetaEntity metaEntity = miniRoot.getMetaEntity();
-                    List<MetaAttribute> idAttrs = metaEntity.getId().getAttributes();
-                    return Optional
-                            .of(new Count(
-                                    new TableColumn(
-                                            FromTable.of(metaEntity.getTableName(),
-                                                    tableAliasGenerator.getDefault(metaEntity.getTableName())),
-                                            new Column(idAttrs.get(0).getColumnName())),
-                                    aggregateFunctionExpression.isDistinct()));
-                }
-            } else if (expr instanceof AttributePath<?>) {
-                AttributePath<?> miniPath = (AttributePath<?>) expr;
-                MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-                Value value = FunctionUtils.createAggregateFunction(
-                        getAggregateFunction(aggregateFunctionExpression.getAggregateFunctionType()),
-                        new TableColumn(fromTable, new Column(metaAttribute.getColumnName())), false);
-                return Optional.of(value);
-                // return Optional.of(new BasicAggregateFunction(
-                // getAggregateFunction(aggregateFunctionExpression.getAggregateFunctionType()),
-                // new TableColumn(fromTable, new Column(metaAttribute.getColumnName())),
-                // false));
-            }
-        } else if (selection instanceof BinaryExpression) {
-            BinaryExpression binaryExpression = (BinaryExpression) selection;
-            SqlBinaryExpressionBuilder builder = new SqlBinaryExpressionBuilder(
-                    getSqlExpressionOperator(binaryExpression.getExpressionOperator()));
-            if (binaryExpression.getX().isPresent()) {
-                AttributePath<?> miniPath = (AttributePath<?>) binaryExpression.getX().get();
-                MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-                builder.setLeftExpression(new TableColumn(
-                        FromTable.of(miniPath.getMetaEntity().getTableName(),
-                                tableAliasGenerator.getDefault(miniPath.getMetaEntity().getTableName())),
-                        new Column(metaAttribute.getColumnName())));
-            }
-
-            if (binaryExpression.getxValue().isPresent())
-                if (requireQM(binaryExpression.getxValue().get()))
-                    builder.setLeftExpression(QM);
-                else
-                    builder.setLeftExpression(buildValue(binaryExpression.getxValue().get()));
-
-            if (binaryExpression.getY().isPresent()) {
-                AttributePath<?> miniPath = (AttributePath<?>) binaryExpression.getY().get();
-                MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-                builder.setRightExpression(new TableColumn(
-                        FromTable.of(miniPath.getMetaEntity().getTableName(),
-                                tableAliasGenerator.getDefault(miniPath.getMetaEntity().getTableName())),
-                        new Column(metaAttribute.getColumnName())));
-            }
-
-            if (binaryExpression.getyValue().isPresent())
-                if (requireQM(binaryExpression.getyValue().get()))
-                    builder.setRightExpression(QM);
-                else
-                    builder.setRightExpression(buildValue(binaryExpression.getyValue().get()));
-
-            SqlBinaryExpression sqlBinaryExpression = builder.build();
-            return Optional.of((Value) sqlBinaryExpression);
-        }
-
-        return Optional.empty();
-    }
-
-    private List<Value> createSelectionValues(FromTable fromTable, Selection<?> selection,
-            AliasGenerator tableAliasGenerator) {
-        if (selection == null)
-            return Collections.emptyList();
-
-        List<Value> values = new ArrayList<>();
-        if (selection.isCompoundSelection()) {
-            List<Selection<?>> selections = selection.getCompoundSelectionItems();
-            for (Selection<?> s : selections) {
-                Optional<Value> optional = createSelectionValue(fromTable, s, tableAliasGenerator);
-                if (optional.isPresent())
-                    values.add(optional.get());
-            }
-        } else {
-            Optional<Value> optional = createSelectionValue(fromTable, selection, tableAliasGenerator);
-            if (optional.isPresent())
-                values.add(optional.get());
-        }
-
-        return values;
-    }
-
-    private Optional<FetchParameter> createFetchParameter(Selection<?> selection) {
-        if (selection == null)
-            return Optional.empty();
-
-        if (selection instanceof AttributePath<?>) {
-            AttributePath<?> miniPath = (AttributePath<?>) selection;
-            MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-            FetchParameter columnNameValue = AttributeFetchParameterImpl.build(metaAttribute);
+            FetchParameter columnNameValue = AttributeFetchParameter.build(metaAttribute);
             return Optional.of(columnNameValue);
         } else if (selection instanceof AggregateFunctionExpression<?>) {
             AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
             if (aggregateFunctionExpression
-                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.COUNT) {
-                // AttributeMapper attributeMapper =
-                // dbConfiguration.getDbTypeMapper().aggregateFunctionMapper(Count.class);
+                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.expression.AggregateFunctionType.COUNT) {
                 FetchParameter cnv = new BasicFetchParameter("count", null, Optional.empty());
                 return Optional.of(cnv);
             } else if (aggregateFunctionExpression
-                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.SUM) {
-                // AttributeMapper attributeMapper =
-                // dbConfiguration.getDbTypeMapper().aggregateFunctionMapper(Sum.class);
+                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.expression.AggregateFunctionType.SUM) {
                 FetchParameter cnv = new BasicFetchParameter("sum", null, Optional.empty());
                 return Optional.of(cnv);
             } else if (aggregateFunctionExpression
-                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.AggregateFunctionType.AVG) {
-                // AttributeMapper attributeMapper =
-                // dbConfiguration.getDbTypeMapper().aggregateFunctionMapper(Avg.class);
+                    .getAggregateFunctionType() == org.minijpa.jpa.criteria.expression.AggregateFunctionType.AVG) {
                 FetchParameter cnv = new BasicFetchParameter("avg", null, Optional.empty());
                 return Optional.of(cnv);
             } else {
@@ -664,30 +561,162 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                 if (expr instanceof AttributePath<?>) {
                     AttributePath<?> miniPath = (AttributePath<?>) expr;
                     MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-                    FetchParameter columnNameValue = AttributeFetchParameterImpl.build(metaAttribute);
+                    FetchParameter columnNameValue = AttributeFetchParameter.build(metaAttribute);
                     return Optional.of(columnNameValue);
                 }
             }
         } else if (selection instanceof BinaryExpression) {
+            Integer sqlType = resultClass != null ? JdbcTypes.sqlTypeFromClass(resultClass) : null;
             BinaryExpression binaryExpression = (BinaryExpression) selection;
-            AttributePath<?> miniPath = null;
-            if (binaryExpression.getX().isPresent())
-                miniPath = (AttributePath<?>) binaryExpression.getX().get();
-            else if (binaryExpression.getY().isPresent())
-                miniPath = (AttributePath<?>) binaryExpression.getY().get();
+            if (binaryExpression.getX().isPresent()) {
+                if (checkDataType((AttributePath<?>) binaryExpression.getX().get(), sqlType))
+                    return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+            }
 
-            if (miniPath == null)
-                throw new IllegalArgumentException("Binary expression without data type");
+            if (binaryExpression.getY().isPresent()) {
+                if (checkDataType((AttributePath<?>) binaryExpression.getY().get(), sqlType))
+                    return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+            }
 
-            MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-            FetchParameter columnNameValue = AttributeFetchParameterImpl.build(metaAttribute);
-            return Optional.of(columnNameValue);
+            if (binaryExpression.getxValue().isPresent()) {
+                if (sqlType != null && sqlType != Types.NULL
+                        && binaryExpression.getxValue().get().getClass() == resultClass)
+                    return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+            }
+
+            if (binaryExpression.getyValue().isPresent()) {
+                if (sqlType != null && sqlType != Types.NULL
+                        && binaryExpression.getyValue().get().getClass() == resultClass)
+                    return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+            }
+
+            sqlType = calculateSqlType(binaryExpression);
+            Optional<AttributeMapper> attributeMapper = Optional.empty();
+            if (sqlType == Types.FLOAT) {
+                // Postgres throws an exception: Persistence conversion to class java.lang.Float
+                // from numeric not supported
+                attributeMapper = Optional.of(AbstractDbTypeMapper.numberToFloatAttributeMapper);
+                sqlType = Types.OTHER;
+            }
+
+            LOG.debug("createFetchParameter: sqlType={}", sqlType);
+            return Optional.of(new BasicFetchParameter("result", sqlType, attributeMapper));
+        } else if (selection instanceof UnaryExpression<?>) {
+            UnaryExpression<?> unaryExpression = (UnaryExpression<?>) selection;
+            if (unaryExpression.getExpressionOperator() == ExpressionOperator.SQRT) {
+                return Optional.of(new BasicFetchParameter("result", Types.DOUBLE, Optional.empty()));
+            } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.LOWER) {
+                return Optional.of(new BasicFetchParameter("result", Types.VARCHAR, Optional.empty()));
+            } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.UPPER) {
+                return Optional.of(new BasicFetchParameter("result", Types.VARCHAR, Optional.empty()));
+            } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.ABS) {
+                return Optional.of(new BasicFetchParameter("result", null, Optional.empty()));
+            } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.MOD) {
+                return Optional.of(new BasicFetchParameter("result", Types.INTEGER, Optional.empty()));
+            }
+        } else if (selection instanceof TypecastExpression<?>) {
+            ExpressionOperator expressionOperator = ((TypecastExpression<?>) selection).getExpressionOperator();
+            if (expressionOperator == ExpressionOperator.TO_BIGDECIMAL)
+                return Optional.of(new BasicFetchParameter("result", Types.DECIMAL, Optional.empty()));
+            else if (expressionOperator == ExpressionOperator.TO_BIGINTEGER)
+                return Optional.of(new BasicFetchParameter("result", Types.OTHER,
+                        Optional.of(AbstractDbTypeMapper.numberToBigIntegerAttributeMapper)));
+            else if (expressionOperator == ExpressionOperator.TO_DOUBLE)
+                return Optional.of(new BasicFetchParameter("result", Types.OTHER,
+                        Optional.of(AbstractDbTypeMapper.numberToDoubleAttributeMapper)));
+            else if (expressionOperator == ExpressionOperator.TO_FLOAT)
+                return Optional.of(new BasicFetchParameter("result", Types.OTHER,
+                        Optional.of(AbstractDbTypeMapper.numberToFloatAttributeMapper)));
+            else if (expressionOperator == ExpressionOperator.TO_INTEGER)
+                return Optional.of(new BasicFetchParameter("result", Types.INTEGER, Optional.empty()));
+            else if (expressionOperator == ExpressionOperator.TO_LONG)
+                return Optional.of(new BasicFetchParameter("result", Types.OTHER,
+                        Optional.of(AbstractDbTypeMapper.numberToLongAttributeMapper)));
+        } else if (selection instanceof ConcatExpression) {
+            return Optional.of(new BasicFetchParameter("concat", Types.VARCHAR, Optional.empty()));
+        } else if (selection instanceof TrimExpression) {
+            return Optional.of(new BasicFetchParameter("trim", Types.VARCHAR, Optional.empty()));
+        } else if (selection instanceof LocateExpression) {
+            return Optional.of(new BasicFetchParameter("locate", Types.INTEGER, Optional.empty()));
+        } else if (selection instanceof SubstringExpression) {
+            return Optional.of(new BasicFetchParameter("substring", Types.VARCHAR, Optional.empty()));
+        } else if (selection instanceof NullifExpression) {
+            return Optional.of(new BasicFetchParameter("nullif", Types.OTHER, Optional.empty()));
+        } else if (selection instanceof CoalesceExpression) {
+            return Optional.of(new BasicFetchParameter("coalesce", Types.OTHER, Optional.empty()));
+        } else if (selection instanceof NegationExpression) {
+            return Optional.of(new BasicFetchParameter("negation", Types.OTHER, Optional.empty()));
+        } else if (selection instanceof CurrentDateExpression) {
+            return Optional.of(new BasicFetchParameter("date", Types.DATE, Optional.empty()));
+        } else if (selection instanceof CurrentTimeExpression) {
+            return Optional.of(new BasicFetchParameter("time", Types.TIME, Optional.empty()));
+        } else if (selection instanceof CurrentTimestampExpression) {
+            return Optional.of(new BasicFetchParameter("timestamp", Types.TIMESTAMP, Optional.empty()));
         }
 
         return Optional.empty();
     }
 
-    private List<FetchParameter> createFetchParameters(Selection<?> selection) {
+    private Integer calculateSqlType(BinaryExpression binaryExpression) {
+        LOG.debug("calculateSqlType: binaryExpression.getX().isPresent()={}", binaryExpression.getX().isPresent());
+        if (binaryExpression.getX().isPresent()) {
+            LOG.debug("calculateSqlType: binaryExpression.getX().get()={}", binaryExpression.getX().get());
+            return calculateSqlTypeFromExpression((Expression<?>) binaryExpression.getX().get(),
+                    binaryExpression.getY(), binaryExpression.getyValue());
+        }
+
+        Integer sqlType1 = JdbcTypes.sqlTypeFromClass(binaryExpression.getxValue().get().getClass());
+        LOG.debug("calculateSqlType: binaryExpression.getxValue().get().getClass()={}",
+                binaryExpression.getxValue().get().getClass());
+        if (binaryExpression.getY().isPresent()) {
+            AttributePath<?> attributePath2 = (AttributePath<?>) binaryExpression.getY().get();
+            MetaAttribute metaAttribute2 = attributePath2.getMetaAttribute();
+            Integer sqlType2 = metaAttribute2.getSqlType();
+            int compare = JdbcTypes.compareNumericTypes(sqlType1, sqlType2);
+            LOG.debug("calculateSqlType: sqlType1={}, sqlType2={}, compare={}", sqlType1, sqlType2, compare);
+            return compare < 0 ? sqlType2 : sqlType1;
+        }
+
+        Integer sqlType2 = JdbcTypes.sqlTypeFromClass(binaryExpression.getyValue().get().getClass());
+        int compare = JdbcTypes.compareNumericTypes(sqlType1, sqlType2);
+        LOG.debug("calculateSqlType: sqlType1={}, sqlType2={}, compare={}", sqlType1, sqlType2, compare);
+        return compare < 0 ? sqlType2 : sqlType1;
+    }
+
+    private Integer calculateSqlTypeFromExpression(Expression<?> expression, Optional<Expression<?>> optionalExpression,
+            Optional<Object> optionalValue) {
+        AttributePath<?> attributePath1 = (AttributePath<?>) expression;
+        LOG.debug("calculateSqlTypeFromExpression: attributePath1={}", attributePath1);
+        MetaAttribute metaAttribute1 = attributePath1.getMetaAttribute();
+        Integer sqlType1 = metaAttribute1.getSqlType();
+        LOG.debug("calculateSqlTypeFromExpression: sqlType1={}", sqlType1);
+        if (optionalExpression.isPresent()) {
+            AttributePath<?> attributePath2 = (AttributePath<?>) optionalExpression.get();
+            MetaAttribute metaAttribute2 = attributePath2.getMetaAttribute();
+            Integer sqlType2 = metaAttribute2.getSqlType();
+            int compare = JdbcTypes.compareNumericTypes(sqlType1, sqlType2);
+            LOG.debug("calculateSqlTypeFromExpression: sqlType1={}, sqlType2={}, compare={}", sqlType1, sqlType2,
+                    compare);
+            return compare < 0 ? sqlType2 : sqlType1;
+        }
+
+        Integer sqlType2 = JdbcTypes.sqlTypeFromClass(optionalValue.get().getClass());
+        int compare = JdbcTypes.compareNumericTypes(sqlType1, sqlType2);
+        LOG.debug("calculateSqlTypeFromExpression: value={}", optionalValue.get());
+        LOG.debug("calculateSqlTypeFromExpression: sqlType1={}, sqlType2={}, compare={}", sqlType1, sqlType2, compare);
+        return compare < 0 ? sqlType2 : sqlType1;
+    }
+
+    private boolean checkDataType(AttributePath<?> attributePath, Integer sqlType) {
+        MetaAttribute metaAttribute = attributePath.getMetaAttribute();
+        LOG.debug("checkDataType: sqlType={}, metaAttribute.getSqlType()={}", sqlType, metaAttribute.getSqlType());
+        if (sqlType != null && sqlType != Types.NULL && sqlType == metaAttribute.getSqlType())
+            return true;
+
+        return false;
+    }
+
+    private List<FetchParameter> createFetchParameters(Selection<?> selection, Class<?> resultClass) {
         if (selection == null)
             return Collections.emptyList();
 
@@ -695,12 +724,12 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         if (selection.isCompoundSelection()) {
             List<Selection<?>> selections = selection.getCompoundSelectionItems();
             for (Selection<?> s : selections) {
-                Optional<FetchParameter> optional = createFetchParameter(s);
+                Optional<FetchParameter> optional = createFetchParameter(s, resultClass);
                 if (optional.isPresent())
                     values.add(optional.get());
             }
         } else {
-            Optional<FetchParameter> optional = createFetchParameter(selection);
+            Optional<FetchParameter> optional = createFetchParameter(selection, resultClass);
             if (optional.isPresent())
                 values.add(optional.get());
         }
@@ -708,44 +737,12 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         return values;
     }
 
-    private boolean requireQM(Object value) {
-        if (value instanceof LocalDate)
-            return true;
-
-        return false;
-    }
-
-    private void addParameter(ParameterExpression<?> parameterExpression, MetaAttribute attribute,
-            List<QueryParameter> parameters, Query query) {
-        Object value = null;
-        if (parameterExpression.getName() != null)
-            value = query.getParameterValue(parameterExpression.getName());
-        else if (parameterExpression.getPosition() != null)
-            value = query.getParameter(parameterExpression.getPosition());
-
-        QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), value, attribute.getType(),
-                attribute.getSqlType(), attribute.getAttributeMapper());
-        parameters.add(queryParameter);
-    }
-
-    private String buildValue(Object value) {
-        StringBuilder sb = new StringBuilder();
-        if (value instanceof String) {
-            sb.append("'");
-            sb.append((String) value);
-            sb.append("'");
-        } else
-            sb.append(value.toString());
-
-        return sb.toString();
-    }
-
-    private TableColumn createTableColumnFromPath(AttributePath<?> miniPath, AliasGenerator tableAliasGenerator) {
-        MetaAttribute attribute1 = miniPath.getMetaAttribute();
+    private TableColumn createTableColumnFromPath(AttributePath<?> attributePath, AliasGenerator tableAliasGenerator) {
+        MetaAttribute attribute = attributePath.getMetaAttribute();
         return new TableColumn(
-                FromTable.of(miniPath.getMetaEntity().getTableName(),
-                        tableAliasGenerator.getDefault(miniPath.getMetaEntity().getTableName())),
-                new Column(attribute1.getColumnName()));
+                FromTable.of(attributePath.getMetaEntity().getTableName(),
+                        tableAliasGenerator.getDefault(attributePath.getMetaEntity().getTableName())),
+                new Column(attribute.getColumnName()));
     }
 
     private ConditionType getOperator(PredicateType predicateType) {
@@ -797,46 +794,6 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         throw new IllegalArgumentException("Unknown condition type for predicate type: " + predicateType);
     }
 
-    private AggregateFunctionType getAggregateFunction(
-            org.minijpa.jpa.criteria.AggregateFunctionType aggregateFunctionType) {
-        switch (aggregateFunctionType) {
-        case AVG:
-            return AggregateFunctionType.AVG;
-        case MAX:
-            return AggregateFunctionType.MAX;
-        case MIN:
-            return AggregateFunctionType.MIN;
-        case COUNT:
-            return AggregateFunctionType.COUNT;
-        case SUM:
-            return AggregateFunctionType.SUM;
-        default:
-            break;
-        }
-
-        throw new IllegalArgumentException(
-                "Unknown aggregate function type for predicate type: " + aggregateFunctionType);
-    }
-
-    private SqlExpressionOperator getSqlExpressionOperator(ExpressionOperator expressionOperator) {
-        switch (expressionOperator) {
-        case DIFF:
-            return SqlExpressionOperator.DIFF;
-        case MINUS:
-            return SqlExpressionOperator.MINUS;
-        case PROD:
-            return SqlExpressionOperator.PROD;
-        case QUOT:
-            return SqlExpressionOperator.QUOT;
-        case SUM:
-            return SqlExpressionOperator.SUM;
-        default:
-            break;
-        }
-
-        throw new IllegalArgumentException("Unknown  operator for expression type: " + expressionOperator);
-    }
-
     private Optional<Condition> translateComparisonPredicate(ComparisonPredicate comparisonPredicate,
             List<QueryParameter> parameters, Query query, AliasGenerator tableAliasGenerator) {
         Expression<?> expression1 = comparisonPredicate.getX();
@@ -844,55 +801,30 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
         ConditionType conditionType = getOperator(comparisonPredicate.getPredicateType());
         BinaryCondition.Builder builder = new BinaryCondition.Builder(conditionType);
+        if (comparisonPredicate.isNot())
+            builder.not();
+
         if (expression1 instanceof AttributePath<?>) {
-            AttributePath<?> miniPath = (AttributePath<?>) expression1;
-            MetaAttribute attribute1 = miniPath.getMetaAttribute();
-            TableColumn tableColumn1 = createTableColumnFromPath(miniPath, tableAliasGenerator);
+            AttributePath<?> attributePath = (AttributePath<?>) expression1;
+            MetaAttribute attribute1 = attributePath.getMetaAttribute();
+            TableColumn tableColumn1 = createTableColumnFromPath(attributePath, tableAliasGenerator);
             if (expression2 != null) {
-                if (expression2 instanceof AttributePath<?>) {
-                    miniPath = (AttributePath<?>) expression2;
-                    TableColumn tableColumn2 = createTableColumnFromPath(miniPath, tableAliasGenerator);
-                    builder.withLeft(tableColumn1).withRight(tableColumn2);
-                } else if (expression2 instanceof ParameterExpression<?>) {
-                    ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression2;
-                    addParameter(parameterExpression, attribute1, parameters, query);
-                    builder.withLeft(tableColumn1).withRight(QM);
-                }
-            } else if (comparisonPredicate.getValue() != null)
-                if (requireQM(comparisonPredicate.getValue())) {
+                Object p = criteriaExpressionHelper.createParameterFromExpression(query, expression2,
+                        tableAliasGenerator, parameters, attribute1.getColumnName(), attribute1.getSqlType(),
+                        attribute1.getAttributeMapper());
+                builder.withLeft(tableColumn1).withRight(p);
+            } else if (comparisonPredicate.getValue() != null) {
+                if (CriteriaUtils.requireQM(comparisonPredicate.getValue())) {
                     QueryParameter queryParameter = new QueryParameter(attribute1.getColumnName(),
-                            comparisonPredicate.getValue(), attribute1.getType(), attribute1.getSqlType(),
-                            attribute1.getAttributeMapper());
+                            comparisonPredicate.getValue(), attribute1.getSqlType(), attribute1.getAttributeMapper());
                     parameters.add(queryParameter);
-                    builder.withLeft(tableColumn1).withRight(QM);
+                    builder.withLeft(tableColumn1).withRight(CriteriaUtils.QM);
                 } else
-                    builder.withLeft(tableColumn1).withRight(buildValue(comparisonPredicate.getValue()));
+                    builder.withLeft(tableColumn1).withRight(CriteriaUtils.buildValue(comparisonPredicate.getValue()));
+            }
 
             return Optional.of(builder.build());
         }
-        // else if (expression1 instanceof ParameterExpression<?>) {
-        // ParameterExpression<?> parameterExpression = (ParameterExpression<?>)
-        // expression1;
-        //// MiniPath<?> miniPath = (MiniPath<?>) expression1;
-        //// MetaAttribute attribute1 = miniPath.getMetaAttribute();
-        // addParameter(parameterExpression, attribute1, parameters, query);
-        // if (expression2 instanceof MiniPath<?>) {
-        // MiniPath<?> miniPath = (MiniPath<?>) expression2;
-        //// MetaAttribute attribute2 = miniPath.getMetaAttribute();
-        //// FromTable fromTable2 = FromTable.of(miniPath.getMetaEntity());
-        //// Column column1 = new Column(attribute2.getColumnName(),
-        // fromTable2.getAlias().get());
-        //// TableColumn tableColumn = new TableColumn(fromTable2, column1);
-        // TableColumn tableColumn = createTableColumnFromPath(miniPath);
-        // return Optional.of(new EqualExprColumnCondition(QM, tableColumn));
-        // } else if (expression2 instanceof ParameterExpression<?>) {
-        // parameterExpression = (ParameterExpression<?>) expression2;
-        // miniPath = (MiniPath<?>) expression2;
-        // MetaAttribute attribute2 = miniPath.getMetaAttribute();
-        // addParameter(parameterExpression, attribute2, parameters, query);
-        // return Optional.of(new EqualExprExprCondition(QM, QM));
-        // }
-        // }
 
         return Optional.empty();
     }
@@ -907,21 +839,13 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
         BetweenCondition.Builder builder = new BetweenCondition.Builder(
                 createTableColumnFromPath(miniPath, tableAliasGenerator));
-        if (expression1 instanceof AttributePath<?>)
-            builder.withLeftExpression(createTableColumnFromPath((AttributePath<?>) expression1, tableAliasGenerator));
-        else if (expression1 instanceof ParameterExpression<?>) {
-            ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression1;
-            addParameter(parameterExpression, attribute, parameters, query);
-            builder.withLeftExpression(QM);
-        }
+        builder.withLeftExpression(
+                criteriaExpressionHelper.createParameterFromExpression(query, expression1, tableAliasGenerator,
+                        parameters, attribute.getColumnName(), attribute.getSqlType(), attribute.getAttributeMapper()));
 
-        if (expression2 instanceof AttributePath<?>)
-            builder.withRightExpression(createTableColumnFromPath((AttributePath<?>) expression2, tableAliasGenerator));
-        else if (expression2 instanceof ParameterExpression<?>) {
-            ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression2;
-            addParameter(parameterExpression, attribute, parameters, query);
-            builder.withLeftExpression(QM);
-        }
+        builder.withRightExpression(
+                criteriaExpressionHelper.createParameterFromExpression(query, expression2, tableAliasGenerator,
+                        parameters, attribute.getColumnName(), attribute.getSqlType(), attribute.getAttributeMapper()));
 
         return Optional.of(builder.build());
     }
@@ -935,21 +859,21 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
         BetweenCondition.Builder builder = new BetweenCondition.Builder(
                 createTableColumnFromPath(miniPath, tableAliasGenerator));
-        if (requireQM(x)) {
-            QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), x, attribute.getType(),
-                    attribute.getSqlType(), attribute.getAttributeMapper());
+        if (CriteriaUtils.requireQM(x)) {
+            QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), x, attribute.getSqlType(),
+                    attribute.getAttributeMapper());
             parameters.add(queryParameter);
-            builder.withLeftExpression(QM);
+            builder.withLeftExpression(CriteriaUtils.QM);
         } else
-            builder.withLeftExpression(buildValue(x));
+            builder.withLeftExpression(CriteriaUtils.buildValue(x));
 
-        if (requireQM(y)) {
-            QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), y, attribute.getType(),
-                    attribute.getSqlType(), attribute.getAttributeMapper());
+        if (CriteriaUtils.requireQM(y)) {
+            QueryParameter queryParameter = new QueryParameter(attribute.getColumnName(), y, attribute.getSqlType(),
+                    attribute.getAttributeMapper());
             parameters.add(queryParameter);
-            builder.withRightExpression(QM);
+            builder.withRightExpression(CriteriaUtils.QM);
         } else
-            builder.withRightExpression(buildValue(y));
+            builder.withRightExpression(CriteriaUtils.buildValue(y));
 
         return Optional.of(builder.build());
     }
@@ -975,13 +899,12 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     }
 
     private Optional<Condition> translateExprPredicate(ExprPredicate exprPredicate, List<QueryParameter> parameters,
-            Query query, AliasGenerator tableAliasGenerator) {
+            Query query, AliasGenerator aliasGenerator) {
         Expression<?> x = exprPredicate.getX();
-
         if (x instanceof AttributePath<?>) {
             AttributePath<?> miniPath = (AttributePath<?>) x;
             return Optional.of(new UnaryCondition(getOperator(exprPredicate.getPredicateType()),
-                    createTableColumnFromPath(miniPath, tableAliasGenerator)));
+                    createTableColumnFromPath(miniPath, aliasGenerator)));
         }
 
         return Optional.empty();
@@ -1011,19 +934,17 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         Expression<Boolean> x = binaryBooleanExprPredicate.getX();
         Expression<Boolean> y = binaryBooleanExprPredicate.getY();
 
-        LOG.info("translateBinaryBooleanExprPredicate: x={}", x);
-        LOG.info("translateBinaryBooleanExprPredicate: y={}", y);
+        LOG.debug("translateBinaryBooleanExprPredicate: x={}", x);
+        LOG.debug("translateBinaryBooleanExprPredicate: y={}", y);
         List<Condition> conditions = new ArrayList<>();
         if (x instanceof Predicate) {
             Optional<Condition> optional = createConditions((Predicate) x, parameters, query, tableAliasGenerator);
-            if (optional.isPresent())
-                conditions.add(optional.get());
+            optional.ifPresent(conditions::add);
         }
 
         if (y instanceof Predicate) {
             Optional<Condition> optional = createConditions((Predicate) y, parameters, query, tableAliasGenerator);
-            if (optional.isPresent())
-                conditions.add(optional.get());
+            optional.ifPresent(conditions::add);
         }
 
         if (!conditions.isEmpty())
@@ -1031,18 +952,6 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                     conditions, true));
 
         return Optional.empty();
-    }
-
-    private Optional<Condition> translateLikePatternPredicate(LikePatternPredicate likePatternPredicate, Query query,
-            AliasGenerator tableAliasGenerator) {
-        String pattern = likePatternPredicate.getPattern();
-        AttributePath<?> miniPath = (AttributePath<?>) likePatternPredicate.getX();
-        BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
-                .withLeft(createTableColumnFromPath(miniPath, tableAliasGenerator)).withRight(buildValue(pattern));
-        if (likePatternPredicate.isNot())
-            builder.not();
-
-        return Optional.of(builder.build());
     }
 
     private Optional<Condition> translateInPredicate(InPredicate<?> inPredicate, List<QueryParameter> parameters,
@@ -1056,11 +965,11 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             tableColumn = createTableColumnFromPath(miniPath, tableAliasGenerator);
 
             List<String> list = inPredicate.getValues().stream().map(v -> {
-                return QM;
+                return CriteriaUtils.QM;
             }).collect(Collectors.toList());
 
             List<QueryParameter> queryParameters = inPredicate.getValues().stream().map(v -> {
-                return new QueryParameter(attribute.getColumnName(), v, attribute.getType(), attribute.getSqlType(),
+                return new QueryParameter(attribute.getColumnName(), v, attribute.getSqlType(),
                         attribute.getAttributeMapper());
             }).collect(Collectors.toList());
             parameters.addAll(queryParameters);
@@ -1071,22 +980,50 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         return Optional.empty();
     }
 
-    private Optional<Condition> translateLikePatternExprPredicate(LikePatternExprPredicate likePatternExprPredicate,
-            List<QueryParameter> parameters, Query query, AliasGenerator tableAliasGenerator) {
-        Expression<String> pattern = likePatternExprPredicate.getPatternEx();
-        AttributePath<?> miniPath = (AttributePath<?>) likePatternExprPredicate.getX();
+    private Optional<Condition> translateLikePredicate(LikePredicate likePredicate, List<QueryParameter> parameters,
+            Query query, AliasGenerator aliasGenerator) {
+        Optional<Expression<String>> patternExpression = likePredicate.getPatternExpression();
+        Optional<String> pattern = likePredicate.getPattern();
+        AttributePath<?> miniPath = (AttributePath<?>) likePredicate.getX();
         MetaAttribute attribute = miniPath.getMetaAttribute();
-        if (pattern instanceof ParameterExpression<?>) {
-            ParameterExpression<?> parameterExpression = (ParameterExpression<?>) pattern;
-            addParameter(parameterExpression, attribute, parameters, query);
+        Object right = null;
+        if (pattern.isPresent()) {
+            right = CriteriaUtils.buildValue(pattern.get());
+        } else if (patternExpression.isPresent()) {
+            right = criteriaExpressionHelper.createParameterFromExpression(query, patternExpression.get(),
+                    aliasGenerator, parameters, attribute.getColumnName(), attribute.getSqlType(),
+                    attribute.getAttributeMapper());
         }
 
-        BinaryCondition.Builder builder = new BinaryCondition.Builder(ConditionType.LIKE)
-                .withLeft(createTableColumnFromPath(miniPath, tableAliasGenerator)).withRight(buildValue(QM));
-        if (likePatternExprPredicate.isNot())
-            builder.not();
+        String escapeChar = null;
+        Optional<Character> escapeCharacter = likePredicate.getEscapeChar();
+        Optional<Expression<Character>> escapeExpression = likePredicate.getEscapeCharEx();
+        if (escapeCharacter.isPresent()) {
+            escapeChar = CriteriaUtils.buildValue("" + likePredicate.getEscapeChar().get());
+        } else if (escapeExpression.isPresent()) {
+            if (escapeExpression.get() instanceof ParameterExpression<?>) {
+                ParameterExpression<?> parameterExpression = (ParameterExpression<?>) escapeExpression.get();
 
-        return Optional.of(builder.build());
+                // TODO: escape char not working on Derby (OneToManyUniTest.testLike5). Replaced
+                // with string value
+//                parameters.add(createQueryParameterForParameterExpression(parameterExpression, "escape",
+//                        Character.class, Types.CHAR, query));
+//                escapeChar = QM;
+
+                Object value = null;
+                if (parameterExpression.getName() != null)
+                    value = query.getParameterValue(parameterExpression.getName());
+                else if (parameterExpression.getPosition() != null)
+                    value = query.getParameter(parameterExpression.getPosition());
+
+                escapeChar = CriteriaUtils.buildValue("" + String.valueOf((char) value));
+            }
+        }
+
+        LikeCondition likeCondition = new LikeCondition(createTableColumnFromPath(miniPath, aliasGenerator), right,
+                escapeChar, likePredicate.isNot());
+
+        return Optional.of(likeCondition);
     }
 
     private Optional<Condition> createConditions(Predicate predicate, List<QueryParameter> parameters, Query query,
@@ -1108,11 +1045,8 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             BetweenValuesPredicate betweenValuesPredicate = (BetweenValuesPredicate) predicate;
             return translateBetweenValuesPredicate(betweenValuesPredicate, parameters, tableAliasGenerator);
         } else if (predicateType == PredicateType.LIKE_PATTERN) {
-            LikePatternPredicate likePatternPredicate = (LikePatternPredicate) predicate;
-            return translateLikePatternPredicate(likePatternPredicate, query, tableAliasGenerator);
-        } else if (predicateType == PredicateType.LIKE_PATTERN_EXPR) {
-            LikePatternExprPredicate likePatternExprPredicate = (LikePatternExprPredicate) predicate;
-            return translateLikePatternExprPredicate(likePatternExprPredicate, parameters, query, tableAliasGenerator);
+            LikePredicate likePredicate = (LikePredicate) predicate;
+            return translateLikePredicate(likePredicate, parameters, query, tableAliasGenerator);
         } else if (predicateType == PredicateType.OR || predicateType == PredicateType.AND)
             if (predicate instanceof MultiplePredicate)
                 return translateMultiplePredicate((MultiplePredicate) predicate, parameters, query,
@@ -1164,7 +1098,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         return Optional.of(result);
     }
 
-    public StatementParameters select(Query query, AliasGenerator tableAliasGenerator) {
+    public StatementParameters select(Query query, AliasGenerator aliasGenerator) {
         CriteriaQuery<?> criteriaQuery = null;
         if (query instanceof MiniTypedQuery<?>)
             criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
@@ -1177,13 +1111,26 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         List<QueryParameter> parameters = new ArrayList<>();
         Optional<Condition> optionalCondition = Optional.empty();
         if (restriction != null)
-            optionalCondition = createConditions(restriction, parameters, query, tableAliasGenerator);
+            optionalCondition = createConditions(restriction, parameters, query, aliasGenerator);
 
         List<Condition> conditions = null;
         if (optionalCondition.isPresent())
-            conditions = Arrays.asList(optionalCondition.get());
+            conditions = List.of(optionalCondition.get());
+
+        SqlSelectDataBuilder builder = new SqlSelectDataBuilder();
+        FromTable fromTable = FromTable.of(entity.getTableName(), aliasGenerator.getDefault(entity.getTableName()));
+        builder.withFromTable(fromTable);
 
         LockType lockType = LockTypeUtils.toLockType(query.getLockMode());
+        if (lockType != null)
+            builder.withForUpdate(calcForUpdate(lockType));
+
+        Optional<List<OrderBy>> optionalOrderBy = createOrderByList(criteriaQuery, aliasGenerator);
+        optionalOrderBy.ifPresent(builder::withOrderBy);
+
+        if (criteriaQuery.isDistinct())
+            builder.distinct();
+
         Selection<?> selection = criteriaQuery.getSelection();
         if (selection instanceof MiniRoot<?>) {
             List<FetchParameter> fetchParameters = MetaEntityHelper.convertAllAttributes(entity);
@@ -1192,39 +1139,19 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             fetchParameters.forEach(
                     f -> LOG.debug("select: f.getAttribute()={}", ((AttributeFetchParameter) f).getAttribute()));
 
-            FromTable fromTable = FromTable.of(entity.getTableName(),
-                    tableAliasGenerator.getDefault(entity.getTableName()));
-            SqlSelectDataBuilder sqlSelectBuilder = new SqlSelectDataBuilder();
-            sqlSelectBuilder.withFromTable(fromTable);
-            if (lockType != null)
-                sqlSelectBuilder.withForUpdate(calcForUpdate(lockType));
-
-            sqlSelectBuilder.withValues(MetaEntityHelper.toValues(entity, fromTable)).withConditions(conditions)
+            builder.withValues(MetaEntityHelper.toValues(entity, fromTable)).withConditions(conditions)
                     .withResult(fromTable);
-            sqlSelectBuilder.withFetchParameters(fetchParameters);
-            SqlSelectData sqlSelectData = (SqlSelectData) sqlSelectBuilder.build();
+            builder.withFetchParameters(fetchParameters);
+            SqlSelectData sqlSelectData = (SqlSelectData) builder.build();
             return new StatementParameters(sqlSelectData, parameters);
         }
 
-        FromTable fromTable = FromTable.of(entity.getTableName(),
-                tableAliasGenerator.getDefault(entity.getTableName()));
-        List<Value> values = createSelectionValues(fromTable, selection, tableAliasGenerator);
-        List<FetchParameter> fetchParameters = createFetchParameters(selection);
-        Optional<List<OrderBy>> optionalOrderBy = createOrderByList(criteriaQuery, tableAliasGenerator);
+        List<Value> values = criteriaExpressionHelper.createSelectionValues(fromTable, aliasGenerator, selection, query,
+                parameters);
+        List<FetchParameter> fetchParameters = createFetchParameters(selection, criteriaQuery.getResultType());
+        fetchParameters.forEach(f -> LOG.debug("select: f={}", f));
 
-        SqlSelectDataBuilder builder = new SqlSelectDataBuilder();
-        builder.withFromTable(fromTable);
         builder.withValues(values).withConditions(conditions);
-
-        if (optionalOrderBy.isPresent())
-            builder.withOrderBy(optionalOrderBy.get());
-
-        if (criteriaQuery.isDistinct())
-            builder.distinct();
-
-        if (lockType != null)
-            builder.withForUpdate(calcForUpdate(lockType));
-
         builder.withFetchParameters(fetchParameters);
         SqlSelect sqlSelect = builder.build();
         return new StatementParameters(sqlSelect, parameters);
@@ -1232,7 +1159,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
     private QueryParameter createQueryParameter(AttributePath<?> miniPath, Object value) {
         MetaAttribute a = miniPath.getMetaAttribute();
-        return new QueryParameter(a.getColumnName(), value, a.getType(), a.getSqlType(), a.getAttributeMapper());
+        return new QueryParameter(a.getColumnName(), value, a.getSqlType(), a.getAttributeMapper());
     }
 
     public SqlUpdate update(Query query, List<QueryParameter> parameters, AliasGenerator tableAliasGenerator) {
@@ -1242,7 +1169,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         FromTable fromTable = FromTable.of(entity.getTableName(),
                 tableAliasGenerator.getDefault(entity.getTableName()));
         List<TableColumn> columns = new ArrayList<>();
-        Map<Path<?>, Object> setValues = ((MiniCriteriaUpdate) criteriaUpdate).getSetValues();
+        Map<Path<?>, Object> setValues = ((MiniCriteriaUpdate<?>) criteriaUpdate).getSetValues();
         setValues.forEach((k, v) -> {
             AttributePath<?> miniPath = (AttributePath<?>) k;
             TableColumn tableColumn = new TableColumn(fromTable,
@@ -1261,7 +1188,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     public List<QueryParameter> createUpdateParameters(Query query) {
         CriteriaUpdate<?> criteriaUpdate = ((UpdateQuery) query).getCriteriaUpdate();
         List<QueryParameter> parameters = new ArrayList<>();
-        Map<Path<?>, Object> setValues = ((MiniCriteriaUpdate) criteriaUpdate).getSetValues();
+        Map<Path<?>, Object> setValues = ((MiniCriteriaUpdate<?>) criteriaUpdate).getSetValues();
         setValues.forEach((k, v) -> {
             AttributePath<?> miniPath = (AttributePath<?>) k;
             QueryParameter qp = createQueryParameter(miniPath, v);
@@ -1288,129 +1215,4 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         return new StatementParameters(sqlDelete, parameters);
     }
 
-//	private int indexOfFirstEntity(List<MetaEntity> entities) {
-//		for (int i = 0; i < entities.size(); ++i) {
-//			MetaEntity metaEntity = entities.get(i);
-//			List<MetaAttribute> relationshipAttributes = metaEntity.expandRelationshipAttributes();
-//			if (relationshipAttributes.isEmpty())
-//				return i;
-//
-//			long rc = relationshipAttributes.stream().filter(a -> a.getRelationship().isOwner()).count();
-//			if (rc == 0)
-//				return i;
-//		}
-//
-//		return 0;
-//	}
-
-//	private List<MetaEntity> sortForDDL(List<MetaEntity> entities) {
-//		List<MetaEntity> sorted = new ArrayList<>();
-//		List<MetaEntity> toSort = new ArrayList<>(entities);
-//		for (int i = 0; i < entities.size(); ++i) {
-//			int index = indexOfFirstEntity(toSort);
-//			sorted.add(toSort.get(index));
-//			toSort.remove(index);
-//		}
-//
-//		return sorted;
-//	}
-
-//    private static ColumnDeclaration toColumnDeclaration(MetaAttribute a) {
-//        Optional<JdbcDDLData> optional = Optional.empty();
-//        if (a.getDdlData().isPresent()) {
-//            DDLData ddlData = a.getDdlData().get();
-//            JdbcDDLData jdbcDDLData = new JdbcDDLData(ddlData.getColumnDefinition(), ddlData.getLength(),
-//                    ddlData.getPrecision(), ddlData.getScale(), ddlData.getNullable());
-//            optional = Optional.of(jdbcDDLData);
-//        }
-//
-//        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
-//    }
-
-//    private static JdbcPk buildJdbcPk(Pk pk) {
-//        if (pk.isComposite()) {
-//            List<ColumnDeclaration> columnDeclarations = pk.getAttributes().stream().map(c -> {
-//                return toColumnDeclaration(c);
-//            }).collect(Collectors.toList());
-//
-//            return new CompositeJdbcPk(columnDeclarations);
-//        }
-//
-//        return new SimpleJdbcPk(toColumnDeclaration(pk.getAttribute()),
-//                pk.getPkGeneration().getPkStrategy() == PkStrategy.IDENTITY);
-//    }
-//
-//    private static ColumnDeclaration toColumnDeclaration(JoinColumnAttribute a) {
-//        Optional<JdbcDDLData> optional = Optional.empty();
-//        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
-//    }
-//
-//    public static JdbcJoinColumnMapping toJdbcJoinColumnMapping(JoinColumnMapping joinColumnMapping) {
-//        if (joinColumnMapping.isComposite()) {
-//            List<ColumnDeclaration> columnDeclarations = joinColumnMapping.getJoinColumnAttributes().stream()
-//                    .map(j -> toColumnDeclaration(j)).collect(Collectors.toList());
-//            return new CompositeJdbcJoinColumnMapping(columnDeclarations,
-//                    buildJdbcPk(joinColumnMapping.getForeignKey()));
-//        }
-//
-//        return new SingleJdbcJoinColumnMapping(toColumnDeclaration(joinColumnMapping.get()),
-//                buildJdbcPk(joinColumnMapping.getForeignKey()));
-//    }
-
-//	public List<SqlDDLStatement> buildDDLStatements(PersistenceUnitContext persistenceUnitContext) {
-//		List<SqlDDLStatement> sqlStatements = new ArrayList<>();
-//		Map<String, MetaEntity> entities = persistenceUnitContext.getEntities();
-//		List<MetaEntity> sorted = sortForDDL(new ArrayList<>(entities.values()));
-//		sorted.forEach(v -> {
-//			List<MetaAttribute> attributes = new ArrayList<>(v.getBasicAttributes());
-//			attributes.addAll(v.expandEmbeddables());
-//
-//			// foreign keys
-//			List<JoinColumnMapping> joinColumnMappings = v.expandJoinColumnMappings();
-//			List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
-//			for (JoinColumnMapping joinColumnMapping : joinColumnMappings) {
-//				MetaEntity toEntity = entities.get(joinColumnMapping.getAttribute().getType().getName());
-//				JdbcJoinColumnMapping jdbcJoinColumnMapping = toJdbcJoinColumnMapping(joinColumnMapping);
-//				foreignKeyDeclarations.add(new ForeignKeyDeclaration(jdbcJoinColumnMapping, toEntity.getTableName()));
-//			}
-//
-//			LOG.debug("buildDDLStatements: v.getTableName()=" + v.getTableName());
-//			List<ColumnDeclaration> columnDeclarations = attributes.stream().map(c -> {
-//				return toColumnDeclaration(c);
-//			}).collect(Collectors.toList());
-//
-//			SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(), buildJdbcPk(v.getId()),
-//					columnDeclarations, foreignKeyDeclarations);
-//			sqlStatements.add(sqlCreateTable);
-//		});
-//
-//		sorted.forEach(v -> {
-//			List<RelationshipJoinTable> relationshipJoinTables = v.expandRelationshipAttributes().stream()
-//					.filter(a -> a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner())
-//					.map(a -> a.getRelationship().getJoinTable()).collect(Collectors.toList());
-//			for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
-//				List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();
-//				JdbcJoinColumnMapping owningJdbcJoinColumnMapping = toJdbcJoinColumnMapping(
-//						relationshipJoinTable.getOwningJoinColumnMapping());
-//				foreignKeyDeclarations.add(new ForeignKeyDeclaration(owningJdbcJoinColumnMapping,
-//						relationshipJoinTable.getOwningEntity().getTableName()));
-//				JdbcJoinColumnMapping targetJdbcJoinColumnMapping = toJdbcJoinColumnMapping(
-//						relationshipJoinTable.getTargetJoinColumnMapping());
-//				foreignKeyDeclarations.add(new ForeignKeyDeclaration(targetJdbcJoinColumnMapping,
-//						relationshipJoinTable.getTargetEntity().getTableName()));
-//				SqlCreateJoinTable sqlCreateJoinTable = new SqlCreateJoinTable(relationshipJoinTable.getTableName(),
-//						foreignKeyDeclarations);
-//				sqlStatements.add(sqlCreateJoinTable);
-//			}
-//		});
-//
-//		// sorted.forEach(v -> {
-//		// if (v.getId().getPkGeneration().getPkStrategy() == PkStrategy.SEQUENCE) {
-//		// SqlCreateSequence sqlCreateSequence = new
-//		// SqlCreateSequence(v.getId().getPkGeneration().getPkSequenceGenerator());
-//		// sqlStatements.add(sqlCreateSequence);
-//		// }
-//		// });
-//		return sqlStatements;
-//	}
 }

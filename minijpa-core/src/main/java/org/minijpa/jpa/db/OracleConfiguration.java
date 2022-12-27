@@ -17,44 +17,53 @@ package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.DbTypeMapper;
 import org.minijpa.jdbc.JdbcRunner;
+import org.minijpa.jdbc.OracleJdbcRunner;
 import org.minijpa.jdbc.mapper.OracleDbTypeMapper;
 import org.minijpa.sql.model.OracleSqlStatementGenerator;
 import org.minijpa.sql.model.SqlStatementGenerator;
 
 public class OracleConfiguration implements DbConfiguration {
 
-	private final DbJdbc dbJdbc;
-	private final DbTypeMapper dbTypeMapper;
-	private final SqlStatementGenerator sqlStatementGenerator;
-	private final JdbcRunner jdbcRunner;
+    private final DbJdbc dbJdbc;
+    private final DbTypeMapper dbTypeMapper;
+    private final SqlStatementGenerator sqlStatementGenerator;
+    private final JdbcRunner jdbcRunner;
+    private final SqlStatementFactory sqlStatementFactory;
 
-	public OracleConfiguration() {
-		super();
-		this.dbJdbc = new OracleJdbc();
-		this.dbTypeMapper = new OracleDbTypeMapper();
-		this.sqlStatementGenerator = new OracleSqlStatementGenerator();
-		this.sqlStatementGenerator.init();
-		this.jdbcRunner = new OracleJdbcRunner();
-	}
+    public OracleConfiguration() {
+        super();
+        this.dbJdbc = new OracleJdbc();
+        this.dbTypeMapper = new OracleDbTypeMapper();
+        this.sqlStatementGenerator = new OracleSqlStatementGenerator();
+        this.sqlStatementGenerator.init();
+        this.jdbcRunner = new OracleJdbcRunner();
+        this.sqlStatementFactory = new SqlStatementFactory();
+        this.sqlStatementFactory.init();
+    }
 
-	@Override
-	public DbJdbc getDbJdbc() {
-		return dbJdbc;
-	}
+    @Override
+    public DbJdbc getDbJdbc() {
+        return dbJdbc;
+    }
 
-	@Override
-	public DbTypeMapper getDbTypeMapper() {
-		return dbTypeMapper;
-	}
+    @Override
+    public DbTypeMapper getDbTypeMapper() {
+        return dbTypeMapper;
+    }
 
-	@Override
-	public SqlStatementGenerator getSqlStatementGenerator() {
-		return sqlStatementGenerator;
-	}
+    @Override
+    public SqlStatementGenerator getSqlStatementGenerator() {
+        return sqlStatementGenerator;
+    }
 
-	@Override
-	public JdbcRunner getJdbcRunner() {
-		return jdbcRunner;
-	}
+    @Override
+    public JdbcRunner getJdbcRunner() {
+        return jdbcRunner;
+    }
+
+    @Override
+    public SqlStatementFactory getSqlStatementFactory() {
+        return sqlStatementFactory;
+    }
 
 }

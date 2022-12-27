@@ -31,6 +31,7 @@ import org.minijpa.sql.model.condition.BinaryLogicCondition;
 import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.condition.InCondition;
+import org.minijpa.sql.model.condition.LikeCondition;
 import org.minijpa.sql.model.condition.UnaryCondition;
 import org.minijpa.sql.model.condition.UnaryLogicCondition;
 import org.minijpa.sql.model.expression.SqlBinaryExpression;
@@ -38,6 +39,7 @@ import org.minijpa.sql.model.expression.SqlExpression;
 import org.minijpa.sql.model.expression.SqlExpressionOperator;
 import org.minijpa.sql.model.function.Abs;
 import org.minijpa.sql.model.function.Avg;
+import org.minijpa.sql.model.function.Coalesce;
 import org.minijpa.sql.model.function.Concat;
 import org.minijpa.sql.model.function.Count;
 import org.minijpa.sql.model.function.CurrentDate;
@@ -50,6 +52,8 @@ import org.minijpa.sql.model.function.Lower;
 import org.minijpa.sql.model.function.Max;
 import org.minijpa.sql.model.function.Min;
 import org.minijpa.sql.model.function.Mod;
+import org.minijpa.sql.model.function.Negation;
+import org.minijpa.sql.model.function.Nullif;
 import org.minijpa.sql.model.function.Sqrt;
 import org.minijpa.sql.model.function.Substring;
 import org.minijpa.sql.model.function.Sum;
@@ -217,18 +221,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         throw new IllegalArgumentException("Sql operator '" + operator + "' not supported");
     }
 
-//	private String exportOperand(Object operand) {
-//		if (operand instanceof TableColumn)
-//			return sqlStatementExporter.exportTableColumn((TableColumn) operand, dbJdbc);
-//
-//		if (operand instanceof String)
-//			return (String) operand;
-//
-//		if (operand instanceof Boolean)
-//			return dbJdbc.booleanValue((Boolean) operand);
-//
-//		return "";
-//	}
     protected String exportFunction(Abs abs) {
         return "ABS(" + exportExpression(abs.getArgument(), nameTranslator) + ")";
     }
@@ -240,6 +232,16 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     protected String exportFunction(Concat concat) {
         return Arrays.stream(concat.getParams()).map(p -> exportExpression(p, nameTranslator))
                 .collect(Collectors.joining("||"));
+    }
+
+    protected String exportFunction(Coalesce coalesce) {
+        return "COALESCE(" + Arrays.stream(coalesce.getParams()).map(p -> exportExpression(p, nameTranslator))
+                .collect(Collectors.joining(", ")) + ")";
+    }
+
+    protected String exportFunction(Nullif nullif) {
+        return "NULLIF(" + exportExpression(nullif.getP1(), nameTranslator) + ","
+                + exportExpression(nullif.getP2(), nameTranslator) + ")";
     }
 
     protected String exportFunction(Count count) {
@@ -301,6 +303,10 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         return "SQRT(" + exportExpression(sqrt.getArgument(), nameTranslator) + ")";
     }
 
+    protected String exportFunction(Negation negation) {
+        return "-" + exportExpression(negation.getArgument(), nameTranslator);
+    }
+
     protected String exportFunction(CurrentDate currentDate) {
         return "CURRENT_DATE";
     }
@@ -315,7 +321,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
     protected String exportFunction(Substring substring) {
         StringBuilder sb = new StringBuilder("SUBSTR(");
-
         sb.append(exportExpression(substring.getArgument(), nameTranslator));
         sb.append(", ");
         sb.append(exportExpression(substring.getStartIndex(), nameTranslator));
@@ -348,15 +353,15 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             default:
                 break;
             }
-
-            if (trim.getTrimCharacter() != null) {
-                sb.append(" '");
-                sb.append(trim.getTrimCharacter());
-                sb.append("'");
-            }
-
-            sb.append(" FROM ");
         }
+
+        if (trim.getTrimCharacter() != null) {
+            sb.append(" ");
+            sb.append(trim.getTrimCharacter());
+        }
+
+        if (trim.getTrimType().isPresent() || trim.getTrimCharacter() != null)
+            sb.append(" FROM ");
 
         sb.append(exportExpression(trim.getArgument(), nameTranslator));
         sb.append(")");
@@ -370,6 +375,8 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             return exportFunction((Avg) function);
         else if (function instanceof Concat)
             return exportFunction((Concat) function);
+        else if (function instanceof Coalesce)
+            return exportFunction((Coalesce) function);
         else if (function instanceof Count)
             return exportFunction((Count) function);
         else if (function instanceof Length)
@@ -384,8 +391,12 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             return exportFunction((Min) function);
         else if (function instanceof Mod)
             return exportFunction((Mod) function);
+        else if (function instanceof Nullif)
+            return exportFunction((Nullif) function);
         else if (function instanceof Sqrt)
             return exportFunction((Sqrt) function);
+        else if (function instanceof Negation)
+            return exportFunction((Negation) function);
         else if (function instanceof Substring)
             return exportFunction((Substring) function);
         else if (function instanceof Sum)
@@ -437,13 +448,16 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         if (expression instanceof Function)
             return exportFunction((Function) expression, nameTranslator);
 
+        if (expression instanceof SqlBinaryExpression)
+            return exportSqlBinaryExpression((SqlBinaryExpression) expression, nameTranslator);
+
         if (expression instanceof Integer)
             return ((Integer) expression).toString();
 
         return "";
     }
 
-    private String exportSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression) {
+    private String exportSqlBinaryExpression(SqlBinaryExpression sqlBinaryExpression, NameTranslator nameTranslator) {
         StringBuilder sb = new StringBuilder();
         Object leftExpression = sqlBinaryExpression.getLeftExpression();
         sb.append(exportExpression(leftExpression, nameTranslator));
@@ -457,6 +471,31 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
     private String exportSqlExpression(SqlExpression sqlExpression) {
         return exportExpression(sqlExpression.getExpression(), nameTranslator);
+    }
+
+    protected String exportCondition(LikeCondition likeCondition, NameTranslator nameTranslator) {
+        StringBuilder sb = new StringBuilder();
+        if (likeCondition.isNot())
+            sb.append("not ");
+
+        Object left = likeCondition.getLeft();
+        LOG.debug("exportCondition: left={}", left);
+        sb.append(exportExpression(left, nameTranslator));
+
+        sb.append(" ");
+        sb.append(getOperator(likeCondition.getConditionType()));
+        sb.append(" ");
+        Object right = likeCondition.getRight();
+        LOG.debug("exportCondition: right={}", right);
+        LOG.debug("exportCondition: likeCondition.getEscapeChar()={}", likeCondition.getEscapeChar());
+        sb.append(exportExpression(right, nameTranslator));
+//        if (likeCondition.getEscapeChar() != null && !likeCondition.getEscapeChar().equals("'\\'")) {
+        if (likeCondition.getEscapeChar() != null) {
+            sb.append(" escape ");
+            sb.append(likeCondition.getEscapeChar());
+        }
+
+        return sb.toString();
     }
 
     protected String exportCondition(Condition condition, NameTranslator nameTranslator) {
@@ -516,11 +555,11 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             return sb.toString();
         }
 
-//		if (condition instanceof LikeCondition) {
-//			LikeCondition likeCondition = (LikeCondition) condition;
-//			return exportColumn(likeCondition.getColumn()) + getOperator(condition.getConditionType()) + " '"
-//					+ likeCondition.getExpression() + "'";
-//		}
+        if (condition instanceof LikeCondition) {
+            LikeCondition likeCondition = (LikeCondition) condition;
+            return exportCondition(likeCondition, nameTranslator);
+        }
+
         if (condition instanceof BinaryCondition) {
             BinaryCondition binaryCondition = (BinaryCondition) condition;
 
@@ -633,6 +672,14 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         return exportTableColumn(orderBy.getTableColumn(), nameTranslator) + ad;
     }
 
+    @Override
+    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+        if (optionalSchema.isEmpty())
+            return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
+
+        return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
+    }
+
     protected String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
         Optional<FromTable> optionalFromTable = tableColumn.getTable();
         LOG.debug("exportTableColumn: optionalFromTable={}", optionalFromTable);
@@ -657,7 +704,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         if (item instanceof SqlExpression)
             return exportSqlExpression((SqlExpression) item);
         if (item instanceof SqlBinaryExpression)
-            return exportSqlBinaryExpression((SqlBinaryExpression) item);
+            return exportSqlBinaryExpression((SqlBinaryExpression) item, nameTranslator);
         if (item instanceof SelectItem)
             return exportSelectItem((SelectItem) item);
 
@@ -727,7 +774,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         return sb.toString();
     }
 
-    private String getOperator(ConditionType conditionType) {
+    protected String getOperator(ConditionType conditionType) {
         switch (conditionType) {
         case EQUAL:
             return equalOperator();

@@ -16,44 +16,38 @@
 package org.minijpa.jdbc;
 
 import java.util.Optional;
+
 import org.minijpa.jdbc.mapper.AttributeMapper;
 
 public class QueryParameter {
 
-	private String columnName;
-	private Object value;
-	private Class<?> type;
-	private Integer sqlType;
-	protected Optional<AttributeMapper> attributeMapper = Optional.empty();
+    private String columnName;
+    private Object value;
+    private Integer sqlType;
+    protected Optional<AttributeMapper> attributeMapper = Optional.empty();
 
-	public QueryParameter(String columnName, Object value, Class<?> type, Integer sqlType,
-			Optional<AttributeMapper> attributeMapper) {
-		super();
-		this.columnName = columnName;
-		this.value = value;
-		this.type = type;
-		this.sqlType = sqlType;
-		this.attributeMapper = attributeMapper;
-	}
+    public QueryParameter(String columnName, Object value, Integer sqlType, Optional<AttributeMapper> attributeMapper) {
+        super();
+        this.columnName = columnName;
+        this.value = value;
+        this.sqlType = sqlType;
+        this.attributeMapper = attributeMapper;
+    }
 
-	public String getColumnName() {
-		return columnName;
-	}
+    public String getColumnName() {
+        return columnName;
+    }
 
-	public Object getValue() {
-		return value;
-	}
+    public Object getValue() {
+        return value;
+    }
 
-	public Class<?> getType() {
-		return type;
-	}
+    public Integer getSqlType() {
+        return sqlType;
+    }
 
-	public Integer getSqlType() {
-		return sqlType;
-	}
-
-	public Optional<AttributeMapper> getAttributeMapper() {
-		return attributeMapper;
-	}
+    public Optional<AttributeMapper> getAttributeMapper() {
+        return attributeMapper;
+    }
 
 }

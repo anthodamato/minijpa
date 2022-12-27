@@ -41,194 +41,193 @@ import org.minijpa.metadata.PersistenceUnitContext;
 
 public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
 
-	private Class<T> resultClass;
-	private final Metamodel metamodel;
-	private final PersistenceUnitContext persistenceUnitContext;
-	private final Set<Root<?>> roots = new HashSet<>();
-	protected Selection<? extends T> selection;
-	private Predicate restriction;
-	private final List<Order> orders = new ArrayList<>();
-	private boolean distinct;
+    private Class<T> resultClass;
+    private final Metamodel metamodel;
+    private final PersistenceUnitContext persistenceUnitContext;
+    private final Set<Root<?>> roots = new HashSet<>();
+    protected Selection<? extends T> selection;
+    private Predicate restriction;
+    private final List<Order> orders = new ArrayList<>();
+    private boolean distinct;
 
-	public MiniCriteriaQuery(Class<T> resultClass, Metamodel metamodel, PersistenceUnitContext persistenceUnitContext) {
-		super();
-		this.resultClass = resultClass;
-		this.metamodel = metamodel;
-		this.persistenceUnitContext = persistenceUnitContext;
-	}
+    public MiniCriteriaQuery(Class<T> resultClass, Metamodel metamodel, PersistenceUnitContext persistenceUnitContext) {
+        super();
+        this.resultClass = resultClass;
+        this.metamodel = metamodel;
+        this.persistenceUnitContext = persistenceUnitContext;
+    }
 
-	@SuppressWarnings("unchecked")
-	public MiniCriteriaQuery(Metamodel metamodel, PersistenceUnitContext persistenceUnitContext) {
-		super();
-		this.metamodel = metamodel;
-		this.persistenceUnitContext = persistenceUnitContext;
-	}
+    public MiniCriteriaQuery(Metamodel metamodel, PersistenceUnitContext persistenceUnitContext) {
+        super();
+        this.metamodel = metamodel;
+        this.persistenceUnitContext = persistenceUnitContext;
+    }
 
-	@Override
-	public <X> Root<X> from(Class<X> entityClass) {
-		EntityType<X> entityType = metamodel.entity(entityClass);
-		MetaEntity metaEntity = persistenceUnitContext.getEntities().get(entityClass.getName());
-		Root<X> root = new MiniRoot<>(entityType, metaEntity);
-		roots.add(root);
-		return root;
-	}
+    @Override
+    public <X> Root<X> from(Class<X> entityClass) {
+        EntityType<X> entityType = metamodel.entity(entityClass);
+        MetaEntity metaEntity = persistenceUnitContext.getEntities().get(entityClass.getName());
+        Root<X> root = new MiniRoot<>(entityType, metaEntity);
+        roots.add(root);
+        return root;
+    }
 
-	@Override
-	public <X> Root<X> from(EntityType<X> entity) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public <X> Root<X> from(EntityType<X> entity) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public Set<Root<?>> getRoots() {
-		return new HashSet<>(roots);
-	}
+    @Override
+    public Set<Root<?>> getRoots() {
+        return new HashSet<>(roots);
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public Selection<T> getSelection() {
-		if (selection == null && !roots.isEmpty())
-			return (MiniRoot<T>) roots.iterator().next();
+    @SuppressWarnings("unchecked")
+    @Override
+    public Selection<T> getSelection() {
+        if (selection == null && !roots.isEmpty())
+            return (MiniRoot<T>) roots.iterator().next();
 
-		return (Selection<T>) selection;
-	}
+        return (Selection<T>) selection;
+    }
 
-	@Override
-	public List<Expression<?>> getGroupList() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public List<Expression<?>> getGroupList() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public Predicate getGroupRestriction() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Predicate getGroupRestriction() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public boolean isDistinct() {
-		return distinct;
-	}
+    @Override
+    public boolean isDistinct() {
+        return distinct;
+    }
 
-	@Override
-	public Class<T> getResultType() {
-		return resultClass;
-	}
+    @Override
+    public Class<T> getResultType() {
+        return resultClass;
+    }
 
-	@Override
-	public <U> Subquery<U> subquery(Class<U> type) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public <U> Subquery<U> subquery(Class<U> type) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public Predicate getRestriction() {
-		return restriction;
-	}
+    @Override
+    public Predicate getRestriction() {
+        return restriction;
+    }
 
-	@Override
-	public CriteriaQuery<T> select(Selection<? extends T> selection) {
-		this.selection = selection;
-		return this;
-	}
+    @Override
+    public CriteriaQuery<T> select(Selection<? extends T> selection) {
+        this.selection = selection;
+        return this;
+    }
 
-	@Override
-	public CriteriaQuery<T> multiselect(Selection<?>... selections) {
-		Class<T> rc = getResultType();
-		if (rc == null)
-			rc = (Class<T>) Object[].class;
+    @Override
+    public CriteriaQuery<T> multiselect(Selection<?>... selections) {
+        Class<T> rc = getResultType();
+        if (rc == null)
+            rc = (Class<T>) Object[].class;
 
-		this.selection = new CompoundSelectionImpl<>(Arrays.asList(selections), rc);
-		return this;
-	}
+        this.selection = new CompoundSelectionImpl<>(Arrays.asList(selections), rc);
+        return this;
+    }
 
-	@Override
-	public CriteriaQuery<T> multiselect(List<Selection<?>> selectionList) {
-		Class<T> rc = getResultType();
-		if (rc == null)
-			rc = (Class<T>) Object[].class;
+    @Override
+    public CriteriaQuery<T> multiselect(List<Selection<?>> selectionList) {
+        Class<T> rc = getResultType();
+        if (rc == null)
+            rc = (Class<T>) Object[].class;
 
-		this.selection = new CompoundSelectionImpl<>(Collections.unmodifiableList(selectionList), rc);
-		return this;
-	}
+        this.selection = new CompoundSelectionImpl<>(Collections.unmodifiableList(selectionList), rc);
+        return this;
+    }
 
-	@Override
-	public CriteriaQuery<T> where(Expression<Boolean> restriction) {
-		this.restriction = (Predicate) restriction;
-		return this;
-	}
+    @Override
+    public CriteriaQuery<T> where(Expression<Boolean> restriction) {
+        this.restriction = (Predicate) restriction;
+        return this;
+    }
 
-	@Override
-	public CriteriaQuery<T> where(Predicate... restrictions) {
-		if (restrictions.length == 0)
-			this.restriction = null;
+    @Override
+    public CriteriaQuery<T> where(Predicate... restrictions) {
+        if (restrictions.length == 0)
+            this.restriction = null;
 
-		this.restriction = new MultiplePredicate(PredicateType.AND, restrictions);
-		return this;
-	}
+        this.restriction = new MultiplePredicate(PredicateType.AND, restrictions);
+        return this;
+    }
 
-	@Override
-	public CriteriaQuery<T> groupBy(Expression<?>... grouping) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public CriteriaQuery<T> groupBy(Expression<?>... grouping) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public CriteriaQuery<T> groupBy(List<Expression<?>> grouping) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public CriteriaQuery<T> groupBy(List<Expression<?>> grouping) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public CriteriaQuery<T> having(Expression<Boolean> restriction) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public CriteriaQuery<T> having(Expression<Boolean> restriction) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public CriteriaQuery<T> having(Predicate... restrictions) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public CriteriaQuery<T> having(Predicate... restrictions) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public CriteriaQuery<T> orderBy(Order... o) {
-		orders.clear();
-		if (o == null)
-			return this;
+    @Override
+    public CriteriaQuery<T> orderBy(Order... o) {
+        orders.clear();
+        if (o == null)
+            return this;
 
-		orders.addAll(Arrays.asList(o));
-		return this;
-	}
+        orders.addAll(Arrays.asList(o));
+        return this;
+    }
 
-	@Override
-	public CriteriaQuery<T> orderBy(List<Order> o) {
-		orders.clear();
-		if (o == null)
-			return this;
+    @Override
+    public CriteriaQuery<T> orderBy(List<Order> o) {
+        orders.clear();
+        if (o == null)
+            return this;
 
-		orders.addAll(o);
-		return this;
-	}
+        orders.addAll(o);
+        return this;
+    }
 
-	@Override
-	public CriteriaQuery<T> distinct(boolean distinct) {
-		this.distinct = distinct;
-		return this;
-	}
+    @Override
+    public CriteriaQuery<T> distinct(boolean distinct) {
+        this.distinct = distinct;
+        return this;
+    }
 
-	@Override
-	public List<Order> getOrderList() {
-		return Collections.unmodifiableList(orders);
-	}
+    @Override
+    public List<Order> getOrderList() {
+        return Collections.unmodifiableList(orders);
+    }
 
-	@Override
-	public Set<ParameterExpression<?>> getParameters() {
-		if (restriction == null)
-			return new HashSet<>();
+    @Override
+    public Set<ParameterExpression<?>> getParameters() {
+        if (restriction == null)
+            return new HashSet<>();
 
-		Set<ParameterExpression<?>> parameterExpressions = PredicateUtils.findParameters(restriction);
-		return parameterExpressions;
-	}
+        Set<ParameterExpression<?>> parameterExpressions = PredicateUtils.findParameters(restriction);
+        return parameterExpressions;
+    }
 
 }

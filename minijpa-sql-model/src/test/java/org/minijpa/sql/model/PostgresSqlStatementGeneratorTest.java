@@ -89,13 +89,27 @@ public class PostgresSqlStatementGeneratorTest {
                 sqlStatementGenerator.export(sqlSelect));
     }
 
+//    @Test
+//    public void locateWithStartIndex() {
+//        FromTable fromTable = new FromTableImpl("citizen", "c");
+//        Column nameColumn = new Column("first_name");
+//
+//        SelectItem selectItem = new SelectItem(
+//                new Locate("'a'", new TableColumn(fromTable, nameColumn), Optional.of(4)), Optional.of("position"));
+//        SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
+//        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+//        Assertions.assertEquals(
+//                "select COALESCE(NULLIF(POSITION('a' IN SUBSTR(c.first_name, 4)),0)+4-1, 0) AS position from citizen AS c",
+//                sqlStatementGenerator.export(sqlSelect));
+//    }
+
     @Test
     public void trim() {
         FromTable fromTable = new FromTableImpl("citizen", "c");
         Column nameColumn = new Column("first_name");
 
         SelectItem selectItem = new SelectItem(
-                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "\""),
+                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "'\"'"),
                 Optional.of("name"));
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();

@@ -38,190 +38,190 @@ public abstract class AbstractQuery implements Query {
 
     @Override
     public Query setMaxResults(int maxResult) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public int getMaxResults() {
-	// TODO Auto-generated method stub
-	return 0;
+        // TODO Auto-generated method stub
+        return 0;
     }
 
     @Override
     public Query setFirstResult(int startPosition) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public int getFirstResult() {
-	// TODO Auto-generated method stub
-	return 0;
+        // TODO Auto-generated method stub
+        return 0;
     }
 
     @Override
     public Query setHint(String hintName, Object value) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Map<String, Object> getHints() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <T> Query setParameter(Parameter<T> param, T value) {
-	parameterValues.put(param, value);
-	return this;
+        parameterValues.put(param, value);
+        return this;
     }
 
     @Override
     public Query setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Query setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Query setParameter(String name, Object value) {
-	MiniParameter<?> parameter = new MiniParameter<>(name, null, null);
-	parameterValues.put(parameter, value);
-	return this;
+        MiniParameter<?> parameter = new MiniParameter<>(name, null, null);
+        parameterValues.put(parameter, value);
+        return this;
     }
 
     @Override
     public Query setParameter(String name, Calendar value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Query setParameter(String name, Date value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Query setParameter(int position, Object value) {
-	MiniParameter<?> parameter = new MiniParameter<>(null, position, null);
-	parameterValues.put(parameter, value);
-	return this;
+        MiniParameter<?> parameter = new MiniParameter<>(null, position, null);
+        parameterValues.put(parameter, value);
+        return this;
     }
 
     @Override
     public Query setParameter(int position, Calendar value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Query setParameter(int position, Date value, TemporalType temporalType) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Set<Parameter<?>> getParameters() {
-	return parameterValues.keySet();
+        return parameterValues.keySet();
     }
 
     @Override
     public Parameter<?> getParameter(String name) {
-	Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);
-	if (optional.isEmpty())
-	    throw new IllegalArgumentException("Parameter '" + name + "' not found");
+        Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);
+        if (optional.isEmpty())
+            throw new IllegalArgumentException("Parameter '" + name + "' not found");
 
-	return optional.get();
+        return optional.get();
     }
 
     @Override
     public <T> Parameter<T> getParameter(String name, Class<T> type) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public Parameter<?> getParameter(int position) {
-	Optional<Parameter<?>> optional = ParameterUtils.findParameterByPosition(position, parameterValues);
-	if (optional.isEmpty())
-	    throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
+        Optional<Parameter<?>> optional = ParameterUtils.findParameterByPosition(position, parameterValues);
+        if (optional.isEmpty())
+            throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
 
-	return optional.get();
+        return optional.get();
     }
 
     @Override
     public <T> Parameter<T> getParameter(int position, Class<T> type) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public boolean isBound(Parameter<?> param) {
-	// TODO Auto-generated method stub
-	return false;
+        // TODO Auto-generated method stub
+        return false;
     }
 
     @Override
     public <T> T getParameterValue(Parameter<T> param) {
-	if (!parameterValues.containsKey(param))
-	    throw new IllegalArgumentException("Parameter not found: " + param);
+        if (!parameterValues.containsKey(param))
+            throw new IllegalArgumentException("Parameter not found: " + param);
 
-	return (T) parameterValues.get(param);
+        return (T) parameterValues.get(param);
     }
 
     @Override
     public Object getParameterValue(String name) {
-	Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);
-	if (optional.isEmpty())
-	    throw new IllegalArgumentException("Parameter '" + name + "' not found");
+        Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);
+        if (optional.isEmpty())
+            throw new IllegalArgumentException("Parameter '" + name + "' not found");
 
-	return parameterValues.get(optional.get());
+        return parameterValues.get(optional.get());
     }
 
     @Override
     public Object getParameterValue(int position) {
-	Optional<Parameter<?>> optional = ParameterUtils.findParameterByPosition(position, parameterValues);
-	if (optional.isEmpty())
-	    throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
+        Optional<Parameter<?>> optional = ParameterUtils.findParameterByPosition(position, parameterValues);
+        if (optional.isEmpty())
+            throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
 
-	return parameterValues.get(optional.get());
+        return parameterValues.get(optional.get());
     }
 
     @Override
     public Query setFlushMode(FlushModeType flushMode) {
-	this.flushModeType = flushMode;
-	return this;
+        this.flushModeType = flushMode;
+        return this;
     }
 
     @Override
     public FlushModeType getFlushMode() {
-	return flushModeType;
+        return flushModeType;
     }
 
     @Override
     public Query setLockMode(LockModeType lockMode) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public LockModeType getLockMode() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public <T> T unwrap(Class<T> cls) {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

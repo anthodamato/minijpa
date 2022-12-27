@@ -62,15 +62,9 @@ public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator 
     @Override
     protected String exportFunction(Locate locate) {
         StringBuilder sb = new StringBuilder("POSITION(");
-
         sb.append(exportExpression(locate.getSearchString(), nameTranslator));
         sb.append(" IN ");
         sb.append(exportExpression(locate.getInputString(), nameTranslator));
-        if (locate.getPosition().isPresent()) {
-            sb.append(", ");
-            sb.append(exportExpression(locate.getPosition().get(), nameTranslator));
-        }
-
         sb.append(")");
         return sb.toString();
     }

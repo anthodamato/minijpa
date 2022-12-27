@@ -15,32 +15,22 @@
  */
 package org.minijpa.sql.model.condition;
 
-import org.minijpa.sql.model.Column;
+public class LikeCondition extends BinaryCondition {
 
-public class LikeCondition implements Condition {
+    private String escapeChar;
 
-    private ConditionType conditionType;
-    private Column column;
-    private String expression;
-
-    public LikeCondition(ConditionType conditionType, Column column, String expression) {
-        super();
-        this.conditionType = conditionType;
-        this.column = column;
-        this.expression = expression;
+    public LikeCondition(Object left, Object right, String escapeChar) {
+        super(ConditionType.LIKE, left, right);
+        this.escapeChar = escapeChar;
     }
 
-    @Override
-    public ConditionType getConditionType() {
-        return conditionType;
+    public LikeCondition(Object left, Object right, String escapeChar, boolean not) {
+        super(ConditionType.LIKE, left, right, not);
+        this.escapeChar = escapeChar;
     }
 
-    public String getExpression() {
-        return expression;
-    }
-
-    public Column getColumn() {
-        return column;
+    public String getEscapeChar() {
+        return escapeChar;
     }
 
 }

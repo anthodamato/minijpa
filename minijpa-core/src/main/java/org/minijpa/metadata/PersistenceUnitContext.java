@@ -26,7 +26,7 @@ public class PersistenceUnitContext {
 	private final String persistenceUnitName;
 	private final Map<String, MetaEntity> entities;
 	private final Optional<Map<String, QueryResultMapping>> queryResultMappings;
-	private AliasGenerator tableAliasGenerator;
+	private AliasGenerator aliasGenerator;
 
 	public PersistenceUnitContext(String persistenceUnitName, Map<String, MetaEntity> entities,
 			Optional<Map<String, QueryResultMapping>> queryResultMappings) {
@@ -78,11 +78,11 @@ public class PersistenceUnitContext {
 //
 //		return Optional.empty();
 //	}
-	public AliasGenerator getTableAliasGenerator() {
-		if (tableAliasGenerator == null)
-			this.tableAliasGenerator = new TableAliasGeneratorImpl();
+	public AliasGenerator getAliasGenerator() {
+		if (aliasGenerator == null)
+			this.aliasGenerator = new TableAliasGeneratorImpl();
 
-		return tableAliasGenerator;
+		return aliasGenerator;
 
 	}
 

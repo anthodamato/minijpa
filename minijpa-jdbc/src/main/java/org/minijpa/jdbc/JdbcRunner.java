@@ -57,6 +57,7 @@ public class JdbcRunner {
         }
 
         Class<?> type = value.getClass();
+        LOG.debug("setPreparedStatementQM: type={}", type);
         if (type == String.class) {
             preparedStatement.setString(index, (String) value);
         } else if (type == Integer.class) {
@@ -81,14 +82,12 @@ public class JdbcRunner {
             preparedStatement.setTime(index, time, calendar);
         } else if (type == Boolean.class) {
             preparedStatement.setBoolean(index, (Boolean) value);
+        } else if (type == Character.class) {
+            Character c = (Character) value;
+            preparedStatement.setString(index, String.valueOf(c));
+        } else {
+            preparedStatement.setObject(index, value);
         }
-//	else if (type == Character.class) {
-//	    Character characters = (Character) value;
-//	    preparedStatement.setString(index, String.valueOf(characters));
-//	} else if (type == Character[].class) {
-//	    Character[] characters = (Character[]) value;
-//	    preparedStatement.setString(index, String.valueOf(characters));
-//	} 
     }
 
     protected void setPreparedStatementParameters(PreparedStatement preparedStatement,
@@ -98,8 +97,6 @@ public class JdbcRunner {
 
         int index = 1;
         for (QueryParameter queryParameter : queryParameters) {
-            LOG.debug("setPreparedStatementParameters: type={}; value={}", queryParameter.getType().getName(),
-                    queryParameter.getValue());
             setPreparedStatementQM(preparedStatement, queryParameter, index);
             ++index;
         }
@@ -138,13 +135,12 @@ public class JdbcRunner {
             setPreparedStatementParameters(preparedStatement, parameters);
             preparedStatement.execute();
 
-            Object id = null;
             resultSet = preparedStatement.getGeneratedKeys();
             if (resultSet.next()) {
-                id = resultSet.getObject(1);
+                return resultSet.getObject(1);
             }
 
-            return id;
+            return null;
         } finally {
             if (resultSet != null) {
                 resultSet.close();
@@ -168,8 +164,9 @@ public class JdbcRunner {
         }
     }
 
-    public Optional<?> findById(String sql, Connection connection, List<QueryParameter> parameters,
-            JdbcValueBuilder jdbcValueBuilder) throws Exception {
+    public Optional<ModelValueArray<FetchParameter>> findById(String sql, Connection connection,
+            List<QueryParameter> parameters, JdbcValueBuilder<ModelValueArray<FetchParameter>> jdbcValueBuilder)
+            throws Exception {
         PreparedStatement preparedStatement = null;
         ResultSet rs = null;
         try {
@@ -194,7 +191,7 @@ public class JdbcRunner {
         }
     }
 
-    protected static Object getValue(ResultSet rs, int index, int columnType) throws SQLException {
+    public static Object getValue(ResultSet rs, int index, int columnType) throws SQLException {
         switch (columnType) {
         case Types.VARCHAR:
             return rs.getString(index);
@@ -259,7 +256,7 @@ public class JdbcRunner {
         case Types.NVARCHAR:
             break;
         case Types.OTHER:
-            break;
+            return rs.getObject(index);
         case Types.REF:
             break;
         case Types.REF_CURSOR:
@@ -279,7 +276,7 @@ public class JdbcRunner {
         return null;
     }
 
-    protected static Object getValueByAttributeMapper(ResultSet rs, int index, int sqlType,
+    public static Object getValueByAttributeMapper(ResultSet rs, int index, int sqlType,
             Optional<AttributeMapper> attributeMapper) throws SQLException {
         LOG.debug("getValueByAttributeMapper: sqlType={}", sqlType);
         Object value = getValue(rs, index, sqlType);
@@ -300,7 +297,7 @@ public class JdbcRunner {
         return getValueByAttributeMapper(rs, index, sqlType, fetchParameter.getAttributeMapper());
     }
 
-    protected static Optional<ModelValueArray<FetchParameter>> createModelValueArrayFromResultSetAM(
+    public static Optional<ModelValueArray<FetchParameter>> createModelValueArrayFromResultSetAM(
             List<FetchParameter> fetchParameters, ResultSet rs, ResultSetMetaData metaData) throws Exception {
         if (fetchParameters.isEmpty())
             return Optional.empty();
@@ -420,7 +417,7 @@ public class JdbcRunner {
         }
     }
 
-    public static class JdbcValueBuilderById implements JdbcValueBuilder {
+    public static class JdbcValueBuilderById implements JdbcValueBuilder<ModelValueArray<FetchParameter>> {
         private List<FetchParameter> fetchParameters;
 
         public void setFetchParameters(List<FetchParameter> fetchParameters) {
@@ -428,7 +425,8 @@ public class JdbcRunner {
         }
 
         @Override
-        public Optional<?> build(ResultSet rs, ResultSetMetaData metaData) throws Exception {
+        public Optional<ModelValueArray<FetchParameter>> build(ResultSet rs, ResultSetMetaData metaData)
+                throws Exception {
             return createModelValueArrayFromResultSetAM(fetchParameters, rs, metaData);
         }
     }

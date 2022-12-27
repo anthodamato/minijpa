@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
 /**
- *
  * @author adamato
  */
 public enum ExpressionOperator {
-    SUM, PROD, DIFF, QUOT, MINUS;
+    ABS, SUM, PROD, DIFF, QUOT, MINUS, MOD, NEGATION, SQRT, TO_LONG, TO_INTEGER, TO_FLOAT, TO_DOUBLE, TO_BIGDECIMAL,
+    TO_BIGINTEGER, TO_STRING, UPPER, LOWER;
 }

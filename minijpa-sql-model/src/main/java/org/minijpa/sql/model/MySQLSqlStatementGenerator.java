@@ -26,27 +26,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.minijpa.sql.model.condition.LikeCondition;
 import org.minijpa.sql.model.function.Concat;
 import org.minijpa.sql.model.function.CurrentDate;
 import org.minijpa.sql.model.function.CurrentTime;
 import org.minijpa.sql.model.function.CurrentTimestamp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
+    private final Logger LOG = LoggerFactory.getLogger(MySQLSqlStatementGenerator.class);
 
     public MySQLSqlStatementGenerator() {
         super();
-    }
-
-    @Override
-    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-        if (optionalSchema.isEmpty())
-            return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
-
-        return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
     }
 
     @Override
@@ -197,6 +193,31 @@ public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
     @Override
     protected String exportFunction(CurrentTimestamp currentTimestamp) {
         return "CURRENT_TIMESTAMP()";
+    }
+
+    @Override
+    protected String exportCondition(LikeCondition likeCondition, NameTranslator nameTranslator) {
+        StringBuilder sb = new StringBuilder();
+        if (likeCondition.isNot())
+            sb.append("not ");
+
+        Object left = likeCondition.getLeft();
+        LOG.debug("exportCondition: left={}", left);
+        sb.append(exportExpression(left, nameTranslator));
+
+        sb.append(" ");
+        sb.append(getOperator(likeCondition.getConditionType()));
+        sb.append(" ");
+        Object right = likeCondition.getRight();
+        LOG.debug("exportCondition: right={}", right);
+        LOG.debug("exportCondition: likeCondition.getEscapeChar()={}", likeCondition.getEscapeChar());
+        sb.append(exportExpression(right, nameTranslator));
+        if (likeCondition.getEscapeChar() != null && !likeCondition.getEscapeChar().equals("'\\'")) {
+            sb.append(" escape ");
+            sb.append(likeCondition.getEscapeChar());
+        }
+
+        return sb.toString();
     }
 
 }

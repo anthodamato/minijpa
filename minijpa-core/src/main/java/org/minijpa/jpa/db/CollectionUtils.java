@@ -27,108 +27,108 @@ import java.util.Set;
 
 public class CollectionUtils {
 
-	/**
-	 * Given an attribute class declared as interface, this method returns an
-	 * implementation class to use in the lazy attributes.
-	 *
-	 * @param c
-	 * @return
-	 */
-	public static Class<?> findCollectionImplementationClass(Class<?> c) {
-		if (!isCollectionClass(c))
-			throw new IllegalArgumentException("Class '" + c.getName() + "' is not a collection or map class");
+    /**
+     * Given an attribute class declared as interface, this method returns an
+     * implementation class to use in the lazy attributes.
+     *
+     * @param c
+     * @return
+     */
+    public static Class<?> findCollectionImplementationClass(Class<?> c) {
+        if (!isCollectionClass(c))
+            throw new IllegalArgumentException("Class '" + c.getName() + "' is not a collection or map class");
 
-		if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers()))
-			return c;
+        if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers()))
+            return c;
 
-		if (c == Collection.class || c == Set.class)
-			return HashSet.class;
+        if (c == Collection.class || c == Set.class)
+            return HashSet.class;
 
-		if (c == List.class)
-			return ArrayList.class;
+        if (c == List.class)
+            return ArrayList.class;
 
-		if (c == Map.class)
-			return HashMap.class;
+        if (c == Map.class)
+            return HashMap.class;
 
-		return null;
-	}
+        return null;
+    }
 
-	public static Object createInstance(Object currentValue, Class<?> collectionClass) throws Exception {
-		if (currentValue != null)
-			return (Collection<Object>) currentValue;
+    public static Object createInstance(Object currentValue, Class<?> collectionClass) throws Exception {
+        if (currentValue != null)
+            return (Collection<Object>) currentValue;
 
-		Constructor<?>[] cs = collectionClass.getConstructors();
-		for (Constructor<?> c : cs) {
-			if (c.getParameterCount() == 0)
-				return c.newInstance();
-		}
+        Constructor<?>[] cs = collectionClass.getConstructors();
+        for (Constructor<?> c : cs) {
+            if (c.getParameterCount() == 0)
+                return c.newInstance();
+        }
 
-		throw new IllegalArgumentException("Unable to create a '" + collectionClass.getName() + "' instance");
-	}
+        throw new IllegalArgumentException("Unable to create a '" + collectionClass.getName() + "' instance");
+    }
 
-	public static boolean isCollectionName(String name) {
-		if (name.equals(Collection.class.getName()))
-			return true;
+    public static boolean isCollectionName(String name) {
+        if (name.equals(Collection.class.getName()))
+            return true;
 
-		if (name.equals(Map.class.getName()) || name.equals(HashMap.class.getName()))
-			return true;
+        if (name.equals(Map.class.getName()) || name.equals(HashMap.class.getName()))
+            return true;
 
-		if (name.equals(List.class.getName()))
-			return true;
+        if (name.equals(List.class.getName()))
+            return true;
 
-		if (name.equals(Set.class.getName()) || name.equals(HashSet.class.getName()))
-			return true;
+        if (name.equals(Set.class.getName()) || name.equals(HashSet.class.getName()))
+            return true;
 
-		return false;
-	}
+        return false;
+    }
 
-	private static boolean implementsInterface(Class<?> c, Class<?> interfaceClass) {
-		if (c == interfaceClass)
-			return true;
+    private static boolean implementsInterface(Class<?> c, Class<?> interfaceClass) {
+        if (c == interfaceClass)
+            return true;
 
-		Class<?>[] ics = c.getInterfaces();
-		for (Class<?> ic : ics) {
-			if (ic == interfaceClass)
-				return true;
-		}
+        Class<?>[] ics = c.getInterfaces();
+        for (Class<?> ic : ics) {
+            if (ic == interfaceClass)
+                return true;
+        }
 
-		Class<?> sc = c.getSuperclass();
-		if (sc == null)
-			return false;
+        Class<?> sc = c.getSuperclass();
+        if (sc == null)
+            return false;
 
-		return implementsInterface(sc, interfaceClass);
-	}
+        return implementsInterface(sc, interfaceClass);
+    }
 
-	public static boolean isCollectionClass(Class<?> c) {
-		if (implementsInterface(c, Collection.class))
-			return true;
+    public static boolean isCollectionClass(Class<?> c) {
+        if (implementsInterface(c, Collection.class))
+            return true;
 
-		if (implementsInterface(c, Map.class))
-			return true;
+        if (implementsInterface(c, Map.class))
+            return true;
 
-		return false;
-	}
+        return false;
+    }
 
-	public static boolean isCollectionEmpty(Object instance) {
-		Class<?> c = instance.getClass();
-		if (implementsInterface(c, Collection.class))
-			return ((Collection<?>) instance).isEmpty();
-		else if (implementsInterface(c, Map.class))
-			return ((Map<?, ?>) instance).isEmpty();
+    public static boolean isCollectionEmpty(Object instance) {
+        Class<?> c = instance.getClass();
+        if (implementsInterface(c, Collection.class))
+            return ((Collection<?>) instance).isEmpty();
+        else if (implementsInterface(c, Map.class))
+            return ((Map<?, ?>) instance).isEmpty();
 
-		return true;
-	}
+        return true;
+    }
 
-	public static Collection<?> getCollectionFromCollectionOrMap(Object instance) {
-		Class<?> c = instance.getClass();
-		if (implementsInterface(c, Collection.class))
-			return (Collection<?>) instance;
-		else if (implementsInterface(c, Map.class)) {
-			Map<?, ?> map = (Map<?, ?>) instance;
-			return map.values();
-		}
+    public static Collection<?> getCollectionFromCollectionOrMap(Object instance) {
+        Class<?> c = instance.getClass();
+        if (implementsInterface(c, Collection.class))
+            return (Collection<?>) instance;
+        else if (implementsInterface(c, Map.class)) {
+            Map<?, ?> map = (Map<?, ?>) instance;
+            return map.values();
+        }
 
-		return new ArrayList<>();
-	}
+        return new ArrayList<>();
+    }
 
 }

@@ -16,16 +16,16 @@
 package org.minijpa.metadata;
 
 import org.minijpa.jpa.db.EntityContainer;
-import org.minijpa.jpa.db.JpaEntityLoader;
+import org.minijpa.jpa.db.EntityHandler;
 
 public class EntityContainerContext {
 
     private final PersistenceUnitContext persistenceUnitContext;
     private final EntityContainer entityContainer;
-    private final JpaEntityLoader entityLoader;
+    private final EntityHandler entityLoader;
 
     public EntityContainerContext(PersistenceUnitContext persistenceUnitContext, EntityContainer entityContainer,
-            JpaEntityLoader entityLoader) {
+            EntityHandler entityLoader) {
         super();
         this.persistenceUnitContext = persistenceUnitContext;
         this.entityContainer = entityContainer;
@@ -36,7 +36,7 @@ public class EntityContainerContext {
         return entityContainer;
     }
 
-    public JpaEntityLoader getEntityLoader() {
+    public EntityHandler getEntityLoader() {
         return entityLoader;
     }
 

@@ -13,22 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jpa.criteria.expression;
 
-import org.minijpa.jdbc.ModelValueArray;
-import org.minijpa.jpa.model.MetaAttribute;
-import org.minijpa.jpa.model.MetaEntity;
+public interface BinaryExpressionTypeInfo {
 
-/**
- *
- * @author Antonio Damato <anto.damato@gmail.com>
- */
-public interface EntityWriter {
-
-    public void persist(MetaEntity entity, Object entityInstance,
-	    ModelValueArray<MetaAttribute> attributeValueArray) throws Exception;
-
-    public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception;
-
-    public void delete(Object entityInstance, MetaEntity e) throws Exception;
+    public ExpressionOperator getExpressionOperator();
 }

@@ -16,22 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.minijpa.metadata;
+package org.minijpa.sql.model.function;
+
+import org.minijpa.sql.model.Value;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface TableAliasGenerator extends AliasGenerator {
+public class Negation implements Function, Value {
 
-//	/**
-//	 * Returns the default alias for the given entity.
-//	 *
-//	 * @param entity
-//	 * @return the default alias
-//	 */
-//	public default String getDefault(MetaEntity entity) {
-//		return getDefault(entity.getTableName());
-//	}
+	private final Object argument;
+
+	public Negation(Object argument) {
+		this.argument = argument;
+	}
+
+	public Object getArgument() {
+		return argument;
+	}
 
 }

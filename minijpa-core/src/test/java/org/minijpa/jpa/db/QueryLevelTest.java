@@ -49,7 +49,7 @@ public class QueryLevelTest {
 
         JdbcEntityManager jdbcEntityManager = persistenceUnitEnv.getJdbcEntityManager();
         EntityContainer entityContainer = persistenceUnitEnv.getEntityContainer();
-        JpaEntityLoader entityLoader = persistenceUnitEnv.getEntityLoader();
+        EntityHandler entityLoader = persistenceUnitEnv.getEntityLoader();
 
         ProgramManager programManager = new ProgramManager();
         programManager.setId(2);
@@ -107,7 +107,7 @@ public class QueryLevelTest {
                 .get("org.minijpa.jpa.model.Capital");
         JdbcEntityManager jdbcEntityManager = persistenceUnitEnv.getJdbcEntityManager();
         EntityContainer entityContainer = persistenceUnitEnv.getEntityContainer();
-        JpaEntityLoader entityLoader = persistenceUnitEnv.getEntityLoader();
+        EntityHandler entityLoader = persistenceUnitEnv.getEntityLoader();
 
         State state = new State();
         state.setName("England");
@@ -153,7 +153,7 @@ public class QueryLevelTest {
                 .get("org.minijpa.jpa.model.Fingerprint");
         JdbcEntityManager jdbcEntityManager = persistenceUnitEnv.getJdbcEntityManager();
         EntityContainer entityContainer = persistenceUnitEnv.getEntityContainer();
-        JpaEntityLoader entityLoader = persistenceUnitEnv.getEntityLoader();
+        EntityHandler entityLoader = persistenceUnitEnv.getEntityLoader();
 
         Person person = new Person();
         person.setName("John Smith");

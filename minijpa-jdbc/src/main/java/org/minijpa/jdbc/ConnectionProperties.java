@@ -66,4 +66,26 @@ public class ConnectionProperties {
 
         return Database.UNKNOWN;
     }
+
+    public JdbcRunner getJdbcRunner(String db) {
+        String dbPrefix = this.dbPrefix;
+        if (db != null && db.trim().length() > 0)
+            dbPrefix = db;
+
+        switch (dbPrefix) {
+        case "derby":
+        case "h2":
+        case "mariadb":
+        case "mysql":
+        case "postgres":
+            return new JdbcRunner();
+        case "oracle":
+            return new OracleJdbcRunner();
+
+        default:
+            break;
+        }
+
+        return null;
+    }
 }

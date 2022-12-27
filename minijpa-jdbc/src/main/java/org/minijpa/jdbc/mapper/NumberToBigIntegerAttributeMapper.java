@@ -13,9 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.criteria;
+package org.minijpa.jdbc.mapper;
 
-public interface AggregateFunctionTypeInfo {
+import java.math.BigInteger;
 
-    public AggregateFunctionType getAggregateFunctionType();
+/**
+ * @author Antonio Damato <anto.damato@gmail.com>
+ */
+public class NumberToBigIntegerAttributeMapper implements AttributeMapper<BigInteger, Number> {
+
+    @Override
+    public Number attributeToDatabase(BigInteger k) {
+        return k;
+    }
+
+    @Override
+    public BigInteger databaseToAttribute(Number v) {
+        return BigInteger.valueOf(v.longValue());
+    }
+
 }

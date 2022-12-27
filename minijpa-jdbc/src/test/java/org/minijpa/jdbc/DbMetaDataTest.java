@@ -22,6 +22,6 @@ public class DbMetaDataTest {
         DbMetaData dbMetaData = new DbMetaData();
         Database database = dbMetaData.database(connection);
         Assertions.assertEquals(connectionProperties.getDatabase(System.getProperty("minijpa.test")), database);
-        dbMetaData.showDatabaseMetadata(connection);
+//        dbMetaData.showDatabaseMetadata(connection);
     }
 }

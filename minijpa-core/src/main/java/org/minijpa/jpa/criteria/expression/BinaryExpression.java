@@ -13,40 +13,67 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.expression;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
-public class AggregateFunctionExpression<N extends Number> implements Expression<N>, AggregateFunctionTypeInfo {
+import org.minijpa.jpa.criteria.AttributePath;
 
-	private final AggregateFunctionType aggregateFunctionType;
-	private Expression<N> x;
-	private boolean distinct = false;
+public class BinaryExpression<N extends Number> implements Expression<N>, BinaryExpressionTypeInfo {
+
+	private final ExpressionOperator expressionOperator;
+	private Optional<Expression<N>> x = Optional.empty();
+	private Optional<Object> xValue = Optional.empty();
+	private Optional<Expression<N>> y = Optional.empty();
+	private Optional<Object> yValue = Optional.empty();
 	private String alias;
 
-	public AggregateFunctionExpression(AggregateFunctionType aggregateFunctionType, Expression<N> x, boolean distinct) {
+	public BinaryExpression(ExpressionOperator expressionOperator, Expression<N> x, Expression<N> y) {
 		super();
-		this.aggregateFunctionType = aggregateFunctionType;
-		this.x = x;
-		this.distinct = distinct;
+		this.expressionOperator = expressionOperator;
+		this.x = Optional.of(x);
+		this.y = Optional.of(y);
+	}
+
+	public BinaryExpression(ExpressionOperator expressionOperator, Expression<N> x, Object yValue) {
+		super();
+		this.expressionOperator = expressionOperator;
+		this.x = Optional.of(x);
+		this.yValue = Optional.of(yValue);
+	}
+
+	public BinaryExpression(ExpressionOperator expressionOperator, Object xValue, Expression<N> y) {
+		super();
+		this.expressionOperator = expressionOperator;
+		this.xValue = Optional.of(xValue);
+		this.y = Optional.of(y);
 	}
 
 	@Override
-	public AggregateFunctionType getAggregateFunctionType() {
-		return aggregateFunctionType;
+	public ExpressionOperator getExpressionOperator() {
+		return expressionOperator;
 	}
 
-	public boolean isDistinct() {
-		return distinct;
-	}
-
-	public Expression<N> getX() {
+	public Optional<Expression<N>> getX() {
 		return x;
+	}
+
+	public Optional<Object> getxValue() {
+		return xValue;
+	}
+
+	public Optional<Expression<N>> getY() {
+		return y;
+	}
+
+	public Optional<Object> getyValue() {
+		return yValue;
 	}
 
 	@Override
@@ -70,7 +97,12 @@ public class AggregateFunctionExpression<N extends Number> implements Expression
 
 	@Override
 	public Class<? extends N> getJavaType() {
-		// TODO Auto-generated method stub
+		if (x.isPresent() && x.get() instanceof AttributePath)
+			return ((AttributePath) x.get()).getJavaType();
+
+		if (y.isPresent() && y.get() instanceof AttributePath)
+			return ((AttributePath) y.get()).getJavaType();
+
 		return null;
 	}
 

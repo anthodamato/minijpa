@@ -22,6 +22,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.Tuple;
@@ -45,6 +46,23 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.Metamodel;
 
+import org.minijpa.jpa.criteria.expression.AggregateFunctionExpression;
+import org.minijpa.jpa.criteria.expression.AggregateFunctionType;
+import org.minijpa.jpa.criteria.expression.BinaryExpression;
+import org.minijpa.jpa.criteria.expression.CoalesceExpression;
+import org.minijpa.jpa.criteria.expression.ConcatExpression;
+import org.minijpa.jpa.criteria.expression.CurrentDateExpression;
+import org.minijpa.jpa.criteria.expression.CurrentTimeExpression;
+import org.minijpa.jpa.criteria.expression.CurrentTimestampExpression;
+import org.minijpa.jpa.criteria.expression.ExpressionOperator;
+import org.minijpa.jpa.criteria.expression.LocateExpression;
+import org.minijpa.jpa.criteria.expression.MiniParameterExpression;
+import org.minijpa.jpa.criteria.expression.NegationExpression;
+import org.minijpa.jpa.criteria.expression.NullifExpression;
+import org.minijpa.jpa.criteria.expression.SubstringExpression;
+import org.minijpa.jpa.criteria.expression.TrimExpression;
+import org.minijpa.jpa.criteria.expression.TypecastExpression;
+import org.minijpa.jpa.criteria.expression.UnaryExpression;
 import org.minijpa.jpa.criteria.predicate.AbstractPredicate;
 import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
 import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
@@ -54,8 +72,7 @@ import org.minijpa.jpa.criteria.predicate.ComparisonPredicate;
 import org.minijpa.jpa.criteria.predicate.EmptyPredicate;
 import org.minijpa.jpa.criteria.predicate.ExprPredicate;
 import org.minijpa.jpa.criteria.predicate.InPredicate;
-import org.minijpa.jpa.criteria.predicate.LikePatternExprPredicate;
-import org.minijpa.jpa.criteria.predicate.LikePatternPredicate;
+import org.minijpa.jpa.criteria.predicate.LikePredicate;
 import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
 import org.minijpa.jpa.criteria.predicate.PredicateType;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -139,14 +156,14 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<Long> sumAsLong(Expression<Integer> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_LONG,
+                new AggregateFunctionExpression<>(AggregateFunctionType.SUM, x, false));
     }
 
     @Override
     public Expression<Double> sumAsDouble(Expression<Float> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_DOUBLE,
+                new AggregateFunctionExpression<>(AggregateFunctionType.SUM, x, false));
     }
 
     @Override
@@ -381,14 +398,12 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <N extends Number> Expression<N> neg(Expression<N> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new NegationExpression<>(x);
     }
 
     @Override
     public <N extends Number> Expression<N> abs(Expression<N> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new UnaryExpression<>(ExpressionOperator.ABS, x);
     }
 
     @Override
@@ -453,68 +468,57 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<Integer> mod(Expression<Integer> x, Expression<Integer> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new BinaryExpression<Integer>(ExpressionOperator.MOD, x, y);
     }
 
     @Override
     public Expression<Integer> mod(Expression<Integer> x, Integer y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new BinaryExpression<Integer>(ExpressionOperator.MOD, x, y);
     }
 
     @Override
     public Expression<Integer> mod(Integer x, Expression<Integer> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new BinaryExpression<Integer>(ExpressionOperator.MOD, x, y);
     }
 
     @Override
     public Expression<Double> sqrt(Expression<? extends Number> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new UnaryExpression<>(ExpressionOperator.SQRT, x);
     }
 
     @Override
     public Expression<Long> toLong(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_LONG, number);
     }
 
     @Override
     public Expression<Integer> toInteger(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_INTEGER, number);
     }
 
     @Override
     public Expression<Float> toFloat(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_FLOAT, number);
     }
 
     @Override
     public Expression<Double> toDouble(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_DOUBLE, number);
     }
 
     @Override
     public Expression<BigDecimal> toBigDecimal(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_BIGDECIMAL, number);
     }
 
     @Override
     public Expression<BigInteger> toBigInteger(Expression<? extends Number> number) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_BIGINTEGER, number);
     }
 
     @Override
     public Expression<String> toString(Expression<Character> character) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TypecastExpression<>(ExpressionOperator.TO_STRING, character);
     }
 
     @Override
@@ -601,152 +605,149 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern) {
-        return new LikePatternExprPredicate(x, pattern, null, null, false, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty(), false,
+                false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern) {
-        return new LikePatternPredicate(x, pattern, null, null, false, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty(), false,
+                false);
     }
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-        return new LikePatternExprPredicate(x, pattern, null, escapeChar, false, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(escapeChar),
+                false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern, char escapeChar) {
-        return new LikePatternExprPredicate(x, pattern, escapeChar, null, false, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.of(escapeChar), Optional.empty(),
+                false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-        return new LikePatternPredicate(x, pattern, null, escapeChar, false, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.of(escapeChar),
+                false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern, char escapeChar) {
-        return new LikePatternPredicate(x, pattern, escapeChar, null, false, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.of(escapeChar), Optional.empty(),
+                false, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern) {
-        return new LikePatternExprPredicate(x, pattern, null, null, true, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty(), true,
+                false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern) {
-        return new LikePatternPredicate(x, pattern, null, null, true, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty(), true,
+                false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-        return new LikePatternExprPredicate(x, pattern, null, escapeChar, true, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(escapeChar),
+                true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern, char escapeChar) {
-        return new LikePatternExprPredicate(x, pattern, escapeChar, null, true, false);
+        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.of(escapeChar), Optional.empty(),
+                true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-        return new LikePatternPredicate(x, pattern, null, escapeChar, true, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.of(escapeChar),
+                true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern, char escapeChar) {
-        return new LikePatternPredicate(x, pattern, escapeChar, null, true, false);
+        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.of(escapeChar), Optional.empty(),
+                true, false);
     }
 
     @Override
     public Expression<String> concat(Expression<String> x, Expression<String> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new ConcatExpression(Optional.of(x), Optional.empty(), Optional.of(y), Optional.empty());
     }
 
     @Override
     public Expression<String> concat(Expression<String> x, String y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new ConcatExpression(Optional.of(x), Optional.empty(), Optional.empty(), Optional.of(y));
     }
 
     @Override
     public Expression<String> concat(String x, Expression<String> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new ConcatExpression(Optional.empty(), Optional.of(x), Optional.of(y), Optional.empty());
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, Expression<Integer> from) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SubstringExpression(x, Optional.of(from), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, int from) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SubstringExpression(x, Optional.empty(), Optional.of(from), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, Expression<Integer> from, Expression<Integer> len) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SubstringExpression(x, Optional.of(from), Optional.empty(), Optional.of(len), Optional.empty());
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, int from, int len) {
-        // TODO Auto-generated method stub
-        return null;
+        return new SubstringExpression(x, Optional.empty(), Optional.of(from), Optional.empty(), Optional.of(len));
     }
 
     @Override
     public Expression<String> trim(Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.empty(), Optional.empty(), Optional.of(ts));
     }
 
     @Override
     public Expression<String> trim(Expression<Character> t, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.of(t), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, Expression<Character> t, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.of(t), Optional.empty(), Optional.of(ts));
     }
 
     @Override
     public Expression<String> trim(char t, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.empty(), Optional.of(t), Optional.empty());
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, char t, Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new TrimExpression(x, Optional.empty(), Optional.of(t), Optional.of(ts));
     }
 
     @Override
     public Expression<String> lower(Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new UnaryExpression<>(ExpressionOperator.LOWER, x);
     }
 
     @Override
     public Expression<String> upper(Expression<String> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new UnaryExpression<>(ExpressionOperator.UPPER, x);
     }
 
     @Override
@@ -757,44 +758,37 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<Integer> locate(Expression<String> x, Expression<String> pattern) {
-        // TODO Auto-generated method stub
-        return null;
+        return new LocateExpression(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, String pattern) {
-        // TODO Auto-generated method stub
-        return null;
+        return new LocateExpression(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty());
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, Expression<String> pattern, Expression<Integer> from) {
-        // TODO Auto-generated method stub
-        return null;
+        return new LocateExpression(x, Optional.of(pattern), Optional.empty(), Optional.of(from), Optional.empty());
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, String pattern, int from) {
-        // TODO Auto-generated method stub
-        return null;
+        return new LocateExpression(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(from));
     }
 
     @Override
     public Expression<Date> currentDate() {
-        // TODO Auto-generated method stub
-        return null;
+        return new CurrentDateExpression();
     }
 
     @Override
     public Expression<Timestamp> currentTimestamp() {
-        // TODO Auto-generated method stub
-        return null;
+        return new CurrentTimestampExpression();
     }
 
     @Override
     public Expression<Time> currentTime() {
-        // TODO Auto-generated method stub
-        return null;
+        return new CurrentTimeExpression();
     }
 
     @Override
@@ -804,32 +798,27 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y> Expression<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new CoalesceExpression(Optional.of(x), Optional.of(y), Optional.empty());
     }
 
     @Override
     public <Y> Expression<Y> coalesce(Expression<? extends Y> x, Y y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new CoalesceExpression(Optional.of(x), Optional.empty(), Optional.of(y));
     }
 
     @Override
     public <Y> Expression<Y> nullif(Expression<Y> x, Expression<?> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new NullifExpression<>(x, Optional.of(y), Optional.empty());
     }
 
     @Override
     public <Y> Expression<Y> nullif(Expression<Y> x, Y y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new NullifExpression<>(x, Optional.empty(), Optional.of(y));
     }
 
     @Override
     public <T> Coalesce<T> coalesce() {
-        // TODO Auto-generated method stub
-        return null;
+        return new CoalesceExpression();
     }
 
     @Override

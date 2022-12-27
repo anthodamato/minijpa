@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.criteria;
+package org.minijpa.jdbc.mapper;
 
 /**
  *
- * @author adamato
+ * @author Antonio Damato <anto.damato@gmail.com>
  */
-public enum AggregateFunctionType {
-    MIN, MAX, SUM, AVG, COUNT;
+public class NumberToFloatAttributeMapper implements AttributeMapper<Float, Number> {
+
+    @Override
+    public Number attributeToDatabase(Float k) {
+        return k;
+    }
+
+    @Override
+    public Float databaseToAttribute(Number v) {
+        return v.floatValue();
+    }
+
 }

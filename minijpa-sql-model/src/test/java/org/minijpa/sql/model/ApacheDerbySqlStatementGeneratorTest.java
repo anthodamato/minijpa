@@ -18,6 +18,7 @@ import org.minijpa.sql.model.condition.BinaryLogicConditionImpl;
 import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.condition.InCondition;
+import org.minijpa.sql.model.condition.LikeCondition;
 import org.minijpa.sql.model.condition.UnaryCondition;
 import org.minijpa.sql.model.condition.UnaryLogicCondition;
 import org.minijpa.sql.model.condition.UnaryLogicConditionImpl;
@@ -115,12 +116,11 @@ public class ApacheDerbySqlStatementGeneratorTest {
         BinaryLogicCondition binaryLogicCondition1 = new BinaryLogicConditionImpl(ConditionType.AND,
                 Arrays.asList(binaryCondition1, binaryCondition2), true);
 
-        BinaryCondition binaryCondition3 = new BinaryCondition.Builder(ConditionType.LIKE)
-                .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Ed%'").build();
+        LikeCondition likeCondition = new LikeCondition(new TableColumn(fromTable, nameColumn), "'Ed%'", null);
         BinaryCondition binaryCondition4 = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, surnameColumn)).withRight("'Smith'").build();
         BinaryLogicCondition binaryLogicCondition2 = new BinaryLogicConditionImpl(ConditionType.AND,
-                Arrays.asList(binaryCondition3, binaryCondition4), true);
+                Arrays.asList(likeCondition, binaryCondition4), true);
 
         BinaryLogicCondition binaryLogicCondition = new BinaryLogicConditionImpl(ConditionType.OR,
                 Arrays.asList(binaryLogicCondition1, binaryLogicCondition2));
@@ -600,7 +600,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
         Column nameColumn = new Column("first_name");
 
         SelectItem selectItem = new SelectItem(
-                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "\""),
+                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "'\"'"),
                 Optional.of("name"));
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();

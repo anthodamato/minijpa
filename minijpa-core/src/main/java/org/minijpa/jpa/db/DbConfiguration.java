@@ -21,11 +21,13 @@ import org.minijpa.sql.model.SqlStatementGenerator;
 
 public interface DbConfiguration {
 
-	public DbJdbc getDbJdbc();
+    public DbJdbc getDbJdbc();
 
-	public DbTypeMapper getDbTypeMapper();
+    public DbTypeMapper getDbTypeMapper();
 
-	public SqlStatementGenerator getSqlStatementGenerator();
+    public SqlStatementGenerator getSqlStatementGenerator();
 
-	public JdbcRunner getJdbcRunner();
+    public JdbcRunner getJdbcRunner();
+
+    public SqlStatementFactory getSqlStatementFactory();
 }

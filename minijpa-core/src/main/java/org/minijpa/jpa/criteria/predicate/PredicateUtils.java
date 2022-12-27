@@ -23,7 +23,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 
-import org.minijpa.jpa.criteria.MiniParameterExpression;
+import org.minijpa.jpa.criteria.expression.MiniParameterExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,7 +1,6 @@
 <persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
-             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
 	version="2.2">
 
 	<persistence-unit name="citizens">
@@ -638,6 +637,23 @@
 			<property
 				name="javax.persistence.schema-generation.create-script-source"
 				value="META-INF/create_data_types_db.sql" />
+		</properties>
+	</persistence-unit>
+
+	<persistence-unit name="search_data">
+		<description>Search Data</description>
+		<class>org.minijpa.jpa.model.SearchData</class>
+		<properties>
+			<property name="javax.persistence.jdbc.url"
+				value="jdbc:derby:memory:search_data;create=true" />
+			<property name="javax.persistence.jdbc.driver"
+				value="org.apache.derby.jdbc.EmbeddedDriver" />
+			<property
+				name="javax.persistence.schema-generation.database.action"
+				value="create" />
+			<property
+				name="javax.persistence.schema-generation.create-source"
+				value="metadata" />
 		</properties>
 	</persistence-unit>
 

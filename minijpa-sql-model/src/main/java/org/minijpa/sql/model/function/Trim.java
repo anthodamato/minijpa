@@ -21,6 +21,7 @@ package org.minijpa.sql.model.function;
 import java.util.Optional;
 
 import org.minijpa.sql.model.Value;
+import org.minijpa.sql.model.function.Locate.Builder;
 
 /**
  *
@@ -28,40 +29,65 @@ import org.minijpa.sql.model.Value;
  */
 public class Trim implements Function, Value {
 
-	private Optional<TrimType> trimType = Optional.empty();
-	private final Object argument;
-	private String trimCharacter;
+    private Optional<TrimType> trimType = Optional.empty();
+    private final Object argument;
+    private String trimCharacter;
 
-	public Trim(Object argument) {
-		this.argument = argument;
-	}
+    public Trim(Object argument) {
+        this.argument = argument;
+    }
 
-	public Trim(Object argument, String trimCharacter) {
-		this.argument = argument;
-		this.trimCharacter = trimCharacter;
-	}
+    public Trim(Object argument, String trimCharacter) {
+        this.argument = argument;
+        this.trimCharacter = trimCharacter;
+    }
 
-	public Trim(Object argument, Optional<TrimType> trimType) {
-		this.argument = argument;
-		this.trimType = trimType;
-	}
+    public Trim(Object argument, Optional<TrimType> trimType) {
+        this.argument = argument;
+        this.trimType = trimType;
+    }
 
-	public Trim(Object argument, Optional<TrimType> trimType, String trimCharacter) {
-		this.argument = argument;
-		this.trimType = trimType;
-		this.trimCharacter = trimCharacter;
-	}
+    public Trim(Object argument, Optional<TrimType> trimType, String trimCharacter) {
+        this.argument = argument;
+        this.trimType = trimType;
+        this.trimCharacter = trimCharacter;
+    }
 
-	public Optional<TrimType> getTrimType() {
-		return trimType;
-	}
+    public Optional<TrimType> getTrimType() {
+        return trimType;
+    }
 
-	public Object getArgument() {
-		return argument;
-	}
+    public Object getArgument() {
+        return argument;
+    }
 
-	public String getTrimCharacter() {
-		return trimCharacter;
-	}
+    public String getTrimCharacter() {
+        return trimCharacter;
+    }
+
+    public static class Builder {
+        private Object argument;
+        private String trimCharacter;
+        private Optional<TrimType> trimType = Optional.empty();
+
+        public Builder withArgument(Object argument) {
+            this.argument = argument;
+            return this;
+        }
+
+        public Builder withTrimCharacter(String trimCharacter) {
+            this.trimCharacter = trimCharacter;
+            return this;
+        }
+
+        public Builder withTrimType(Optional<TrimType> trimType) {
+            this.trimType = trimType;
+            return this;
+        }
+
+        public Trim build() {
+            return new Trim(argument, trimType, trimCharacter);
+        }
+    }
 
 }

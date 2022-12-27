@@ -21,14 +21,14 @@ package org.minijpa.jdbc.mapper;
  */
 public class NumberToLongAttributeMapper implements AttributeMapper<Long, Number> {
 
-	@Override
-	public Integer attributeToDatabase(Long k) {
-		return k.intValue();
-	}
+    @Override
+    public Number attributeToDatabase(Long k) {
+        return k;
+    }
 
-	@Override
-	public Long databaseToAttribute(Number v) {
-		return v.longValue();
-	}
+    @Override
+    public Long databaseToAttribute(Number v) {
+        return v.longValue();
+    }
 
 }

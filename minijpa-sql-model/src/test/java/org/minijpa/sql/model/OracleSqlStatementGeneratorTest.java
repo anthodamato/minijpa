@@ -81,7 +81,7 @@ public class OracleSqlStatementGeneratorTest {
         Column nameColumn = new Column("first_name");
 
         SelectItem selectItem = new SelectItem(
-                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "\""),
+                new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "'\"'"),
                 Optional.of("name"));
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
         SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();

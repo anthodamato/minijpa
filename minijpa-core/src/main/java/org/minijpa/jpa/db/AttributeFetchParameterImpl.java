@@ -33,11 +33,6 @@ public class AttributeFetchParameterImpl implements AttributeFetchParameter {
         this.attribute = attribute;
     }
 
-    public static AttributeFetchParameter build(MetaAttribute attribute) {
-        return new AttributeFetchParameterImpl(attribute.getColumnName(), attribute.getSqlType(), attribute);
-
-    }
-
     public String getColumnName() {
         return columnName;
     }
