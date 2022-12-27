@@ -49,6 +49,7 @@ import javax.persistence.metamodel.Metamodel;
 import org.minijpa.jpa.criteria.expression.AggregateFunctionExpression;
 import org.minijpa.jpa.criteria.expression.AggregateFunctionType;
 import org.minijpa.jpa.criteria.expression.BinaryExpression;
+import org.minijpa.jpa.criteria.expression.CoalesceExpression;
 import org.minijpa.jpa.criteria.expression.ConcatExpression;
 import org.minijpa.jpa.criteria.expression.CurrentDateExpression;
 import org.minijpa.jpa.criteria.expression.CurrentTimeExpression;
@@ -56,6 +57,8 @@ import org.minijpa.jpa.criteria.expression.CurrentTimestampExpression;
 import org.minijpa.jpa.criteria.expression.ExpressionOperator;
 import org.minijpa.jpa.criteria.expression.LocateExpression;
 import org.minijpa.jpa.criteria.expression.MiniParameterExpression;
+import org.minijpa.jpa.criteria.expression.NegationExpression;
+import org.minijpa.jpa.criteria.expression.NullifExpression;
 import org.minijpa.jpa.criteria.expression.SubstringExpression;
 import org.minijpa.jpa.criteria.expression.TrimExpression;
 import org.minijpa.jpa.criteria.expression.TypecastExpression;
@@ -395,8 +398,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <N extends Number> Expression<N> neg(Expression<N> x) {
-        // TODO Auto-generated method stub
-        return null;
+        return new NegationExpression<>(x);
     }
 
     @Override
@@ -796,32 +798,27 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y> Expression<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new CoalesceExpression(Optional.of(x), Optional.of(y), Optional.empty());
     }
 
     @Override
     public <Y> Expression<Y> coalesce(Expression<? extends Y> x, Y y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new CoalesceExpression(Optional.of(x), Optional.empty(), Optional.of(y));
     }
 
     @Override
     public <Y> Expression<Y> nullif(Expression<Y> x, Expression<?> y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new NullifExpression<>(x, Optional.of(y), Optional.empty());
     }
 
     @Override
     public <Y> Expression<Y> nullif(Expression<Y> x, Y y) {
-        // TODO Auto-generated method stub
-        return null;
+        return new NullifExpression<>(x, Optional.empty(), Optional.of(y));
     }
 
     @Override
     public <T> Coalesce<T> coalesce() {
-        // TODO Auto-generated method stub
-        return null;
+        return new CoalesceExpression();
     }
 
     @Override

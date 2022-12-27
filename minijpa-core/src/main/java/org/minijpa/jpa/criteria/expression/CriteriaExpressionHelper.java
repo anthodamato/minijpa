@@ -30,6 +30,7 @@ import org.minijpa.sql.model.expression.SqlBinaryExpression;
 import org.minijpa.sql.model.expression.SqlBinaryExpressionBuilder;
 import org.minijpa.sql.model.expression.SqlExpressionOperator;
 import org.minijpa.sql.model.function.Abs;
+import org.minijpa.sql.model.function.Coalesce;
 import org.minijpa.sql.model.function.Concat;
 import org.minijpa.sql.model.function.Count;
 import org.minijpa.sql.model.function.CurrentDate;
@@ -38,6 +39,8 @@ import org.minijpa.sql.model.function.CurrentTimestamp;
 import org.minijpa.sql.model.function.Locate;
 import org.minijpa.sql.model.function.Lower;
 import org.minijpa.sql.model.function.Mod;
+import org.minijpa.sql.model.function.Negation;
+import org.minijpa.sql.model.function.Nullif;
 import org.minijpa.sql.model.function.Sqrt;
 import org.minijpa.sql.model.function.Substring;
 import org.minijpa.sql.model.function.Trim;
@@ -125,6 +128,49 @@ public class CriteriaExpressionHelper {
         }
 
         return null;
+    }
+
+    protected Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
+            NegationExpression<?> negationExpression, Query query, List<QueryParameter> parameters) {
+        Object xParam = createParameterFromExpression(query, negationExpression.getExpression(), aliasGenerator,
+                parameters, "negation", Types.OTHER, Optional.empty());
+        return Optional.of(new Negation(xParam));
+    }
+
+    protected Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
+            CoalesceExpression<?> coalesceExpression, Query query, List<QueryParameter> parameters) {
+        List<Object> arguments = new ArrayList<>();
+        if (coalesceExpression.getX().isPresent()) {
+            Object xParam = createParameterFromExpression(query, (Expression<?>) coalesceExpression.getX().get(),
+                    aliasGenerator, parameters, "coalesce", Types.OTHER, Optional.empty());
+            arguments.add(xParam);
+        }
+
+        if (coalesceExpression.getY().isPresent()) {
+            Object param = createParameterFromExpression(query, (Expression<?>) coalesceExpression.getY().get(),
+                    aliasGenerator, parameters, "coalesce", Types.OTHER, Optional.empty());
+            arguments.add(param);
+        }
+
+        if (coalesceExpression.getyValue().isPresent())
+            arguments.add(CriteriaUtils.buildValue(coalesceExpression.getyValue().get()));
+
+        arguments.addAll(coalesceExpression.getArguments());
+        return Optional.of(new Coalesce(arguments.toArray()));
+    }
+
+    protected Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
+            NullifExpression<?> nullifExpression, Query query, List<QueryParameter> parameters) {
+        Object xParam = createParameterFromExpression(query, nullifExpression.getX(), aliasGenerator, parameters,
+                "nullif", Types.OTHER, Optional.empty());
+
+        if (nullifExpression.getY().isPresent()) {
+            Object yParam = createParameterFromExpression(query, (Expression<?>) nullifExpression.getY().get(),
+                    aliasGenerator, parameters, "nullif", Types.OTHER, Optional.empty());
+            return Optional.of(new Nullif(xParam, yParam));
+        }
+
+        return Optional.of(new Nullif(xParam, nullifExpression.getyValue().get()));
     }
 
     protected Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
@@ -251,6 +297,8 @@ public class CriteriaExpressionHelper {
             return Optional.of(new Lower(optional.get()));
         } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.UPPER) {
             return Optional.of(new Upper(optional.get()));
+        } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.NEGATION) {
+            return Optional.of(new Negation(optional.get()));
         }
 
         return Optional.empty();
@@ -375,6 +423,14 @@ public class CriteriaExpressionHelper {
             return createSelectionValue(fromTable, aliasGenerator, (LocateExpression) selection, query, parameters);
         } else if (selection instanceof SubstringExpression) {
             return createSelectionValue(fromTable, aliasGenerator, (SubstringExpression) selection, query, parameters);
+        } else if (selection instanceof NullifExpression) {
+            return createSelectionValue(fromTable, aliasGenerator, (NullifExpression<?>) selection, query, parameters);
+        } else if (selection instanceof CoalesceExpression) {
+            return createSelectionValue(fromTable, aliasGenerator, (CoalesceExpression<?>) selection, query,
+                    parameters);
+        } else if (selection instanceof NegationExpression) {
+            return createSelectionValue(fromTable, aliasGenerator, (NegationExpression<?>) selection, query,
+                    parameters);
         } else if (selection instanceof CurrentDateExpression) {
             return Optional.of(new CurrentDate());
         } else if (selection instanceof CurrentTimeExpression) {

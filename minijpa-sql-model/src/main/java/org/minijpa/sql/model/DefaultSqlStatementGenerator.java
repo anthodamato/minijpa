@@ -52,6 +52,7 @@ import org.minijpa.sql.model.function.Lower;
 import org.minijpa.sql.model.function.Max;
 import org.minijpa.sql.model.function.Min;
 import org.minijpa.sql.model.function.Mod;
+import org.minijpa.sql.model.function.Negation;
 import org.minijpa.sql.model.function.Nullif;
 import org.minijpa.sql.model.function.Sqrt;
 import org.minijpa.sql.model.function.Substring;
@@ -302,6 +303,10 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         return "SQRT(" + exportExpression(sqrt.getArgument(), nameTranslator) + ")";
     }
 
+    protected String exportFunction(Negation negation) {
+        return "-" + exportExpression(negation.getArgument(), nameTranslator);
+    }
+
     protected String exportFunction(CurrentDate currentDate) {
         return "CURRENT_DATE";
     }
@@ -390,6 +395,8 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             return exportFunction((Nullif) function);
         else if (function instanceof Sqrt)
             return exportFunction((Sqrt) function);
+        else if (function instanceof Negation)
+            return exportFunction((Negation) function);
         else if (function instanceof Substring)
             return exportFunction((Substring) function);
         else if (function instanceof Sum)

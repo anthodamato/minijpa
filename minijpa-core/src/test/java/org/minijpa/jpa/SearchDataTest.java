@@ -12,6 +12,7 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -863,6 +864,10 @@ public class SearchDataTest {
         tx.commit();
 
         tx.begin();
+        testNeg(em);
+        tx.commit();
+
+        tx.begin();
         testMod1(em);
         tx.commit();
 
@@ -928,6 +933,20 @@ public class SearchDataTest {
 
         // Oracle returns a BigDecimal, MySql a Double
         Assertions.assertEquals(4.0f, ((Number) resultList.get(2)).floatValue());
+    }
+
+    private void testNeg(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Number> criteriaQuery = cb.createQuery(Number.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.orderBy(cb.desc(root.get("name")));
+        criteriaQuery.select(cb.neg(root.get("floatAverageValue")));
+        TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
+        List<Number> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(7.0f, resultList.get(0));
     }
 
     private void testMod1(EntityManager em) {
@@ -1551,5 +1570,179 @@ public class SearchDataTest {
         List<?> resultList = typedQuery.getResultList();
         Assertions.assertEquals(1, resultList.size());
         Assertions.assertEquals("Name", resultList.get(0));
+    }
+
+    @Test
+    public void nullif() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        SearchData searchData1 = new SearchData();
+        searchData1.setName("SearchName1");
+        searchData1.setModel("Free");
+        searchData1.setPattern(" ## ");
+        searchData1.setOccurences(3);
+        searchData1.setAverageValue(4);
+        searchData1.setFloatAverageValue(-4.2f);
+
+        SearchData searchData2 = new SearchData();
+        searchData2.setName("SearchName2Name");
+        searchData2.setModel("SpecialS");
+        searchData2.setPattern("Na");
+        searchData2.setOccurences(7);
+        searchData2.setAverageValue(7);
+        searchData2.setFloatAverageValue(-5.2f);
+
+        SearchData searchData3 = new SearchData();
+        searchData3.setName("SearchName3");
+        searchData3.setModel("Usual");
+        searchData3.setPattern("##%");
+        searchData3.setOccurences(24);
+        searchData3.setAverageValue(5);
+        searchData3.setFloatAverageValue(-7.8f);
+
+        final EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        em.persist(searchData1);
+        em.persist(searchData2);
+        em.persist(searchData3);
+
+        tx.commit();
+
+        tx.begin();
+        testNullif1(em);
+        tx.commit();
+
+        tx.begin();
+        testNullif2(em);
+        tx.commit();
+
+        tx.begin();
+        testNullif3(em);
+        tx.commit();
+
+        tx.begin();
+        em.remove(searchData1);
+        em.remove(searchData2);
+        em.remove(searchData3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testNullif1(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        Expression<Integer> expression = root.get("occurences");
+        criteriaQuery.select(cb.nullif(expression, root.get("averageValue")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertNull(resultList.get(0));
+    }
+
+    private void testNullif2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        Expression<Integer> expression = root.get("occurences");
+        criteriaQuery.select(cb.nullif(expression, 24));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertNull(resultList.get(0));
+    }
+
+    private void testNullif3(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        Expression<Integer> expression = root.get("occurences");
+        criteriaQuery.select(cb.nullif(expression, cb.parameter(Integer.class, "avg")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        typedQuery.setParameter("avg", 7);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertNull(resultList.get(0));
+    }
+
+    @Test
+    public void coalesce() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        SearchData searchData1 = new SearchData();
+        searchData1.setName("SearchName1");
+        searchData1.setModel("Free");
+        searchData1.setOccurences(3);
+        searchData1.setAverageValue(4);
+        searchData1.setFloatAverageValue(-4.2f);
+
+        SearchData searchData2 = new SearchData();
+        searchData2.setName("SearchName2Name");
+        searchData2.setOccurences(7);
+        searchData2.setAverageValue(7);
+        searchData2.setFloatAverageValue(-5.2f);
+
+        SearchData searchData3 = new SearchData();
+        searchData3.setName("SearchName3");
+        searchData3.setModel("Usual");
+        searchData3.setAverageValue(5);
+        searchData3.setFloatAverageValue(-7.8f);
+
+        final EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        em.persist(searchData1);
+        em.persist(searchData2);
+        em.persist(searchData3);
+
+        tx.commit();
+
+        tx.begin();
+        testCoalesce1(em);
+        tx.commit();
+
+        tx.begin();
+        testCoalesce2(em);
+        tx.commit();
+
+        tx.begin();
+        em.remove(searchData1);
+        em.remove(searchData2);
+        em.remove(searchData3);
+        tx.commit();
+
+        em.close();
+    }
+
+    private void testCoalesce1(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 7);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.coalesce(root.get("pattern"), root.get("model")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertNull(resultList.get(0));
+    }
+
+    private void testCoalesce2(EntityManager em) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Integer> criteriaQuery = cb.createQuery(Integer.class);
+        Root<SearchData> root = criteriaQuery.from(SearchData.class);
+        Predicate predicate = cb.equal(root.get("averageValue"), 5);
+        criteriaQuery.where(predicate);
+        criteriaQuery.select(cb.coalesce(root.get("occurences"), root.get("averageValue")));
+        TypedQuery<?> typedQuery = em.createQuery(criteriaQuery);
+        List<?> resultList = typedQuery.getResultList();
+        Assertions.assertEquals(1, resultList.size());
+        Assertions.assertEquals(5, resultList.get(0));
     }
 }

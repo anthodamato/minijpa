@@ -56,6 +56,7 @@ import org.minijpa.jpa.criteria.MiniCriteriaUpdate;
 import org.minijpa.jpa.criteria.MiniRoot;
 import org.minijpa.jpa.criteria.expression.AggregateFunctionExpression;
 import org.minijpa.jpa.criteria.expression.BinaryExpression;
+import org.minijpa.jpa.criteria.expression.CoalesceExpression;
 import org.minijpa.jpa.criteria.expression.ConcatExpression;
 import org.minijpa.jpa.criteria.expression.CriteriaExpressionHelper;
 import org.minijpa.jpa.criteria.expression.CurrentDateExpression;
@@ -63,6 +64,8 @@ import org.minijpa.jpa.criteria.expression.CurrentTimeExpression;
 import org.minijpa.jpa.criteria.expression.CurrentTimestampExpression;
 import org.minijpa.jpa.criteria.expression.ExpressionOperator;
 import org.minijpa.jpa.criteria.expression.LocateExpression;
+import org.minijpa.jpa.criteria.expression.NegationExpression;
+import org.minijpa.jpa.criteria.expression.NullifExpression;
 import org.minijpa.jpa.criteria.expression.SubstringExpression;
 import org.minijpa.jpa.criteria.expression.TrimExpression;
 import org.minijpa.jpa.criteria.expression.TypecastExpression;
@@ -637,6 +640,12 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             return Optional.of(new BasicFetchParameter("locate", Types.INTEGER, Optional.empty()));
         } else if (selection instanceof SubstringExpression) {
             return Optional.of(new BasicFetchParameter("substring", Types.VARCHAR, Optional.empty()));
+        } else if (selection instanceof NullifExpression) {
+            return Optional.of(new BasicFetchParameter("nullif", Types.OTHER, Optional.empty()));
+        } else if (selection instanceof CoalesceExpression) {
+            return Optional.of(new BasicFetchParameter("coalesce", Types.OTHER, Optional.empty()));
+        } else if (selection instanceof NegationExpression) {
+            return Optional.of(new BasicFetchParameter("negation", Types.OTHER, Optional.empty()));
         } else if (selection instanceof CurrentDateExpression) {
             return Optional.of(new BasicFetchParameter("date", Types.DATE, Optional.empty()));
         } else if (selection instanceof CurrentTimeExpression) {
@@ -833,26 +842,10 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         builder.withLeftExpression(
                 criteriaExpressionHelper.createParameterFromExpression(query, expression1, tableAliasGenerator,
                         parameters, attribute.getColumnName(), attribute.getSqlType(), attribute.getAttributeMapper()));
-//        if (expression1 instanceof AttributePath<?>)
-//            builder.withLeftExpression(createTableColumnFromPath((AttributePath<?>) expression1, tableAliasGenerator));
-//        else if (expression1 instanceof ParameterExpression<?>) {
-//            ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression1;
-//            parameters.add(criteriaExpressionHelper.createQueryParameterForParameterExpression(parameterExpression,
-//                    attribute, query));
-//            builder.withLeftExpression(CriteriaUtils.QM);
-//        }
 
         builder.withRightExpression(
                 criteriaExpressionHelper.createParameterFromExpression(query, expression2, tableAliasGenerator,
                         parameters, attribute.getColumnName(), attribute.getSqlType(), attribute.getAttributeMapper()));
-//        if (expression2 instanceof AttributePath<?>)
-//            builder.withRightExpression(createTableColumnFromPath((AttributePath<?>) expression2, tableAliasGenerator));
-//        else if (expression2 instanceof ParameterExpression<?>) {
-//            ParameterExpression<?> parameterExpression = (ParameterExpression<?>) expression2;
-//            parameters.add(criteriaExpressionHelper.createQueryParameterForParameterExpression(parameterExpression,
-//                    attribute, query));
-//            builder.withRightExpression(CriteriaUtils.QM);
-//        }
 
         return Optional.of(builder.build());
     }
