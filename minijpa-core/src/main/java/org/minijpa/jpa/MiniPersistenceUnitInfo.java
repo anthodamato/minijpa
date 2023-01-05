@@ -35,147 +35,147 @@ public class MiniPersistenceUnitInfo implements PersistenceUnitInfo {
     private DataSource nonJtaDataSource;
 
     public MiniPersistenceUnitInfo() {
-	super();
+        super();
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     @Override
     public String getPersistenceUnitName() {
-	return name;
+        return name;
     }
 
     @Override
     public Properties getProperties() {
-	return properties;
+        return properties;
     }
 
     @Override
     public String getPersistenceProviderClassName() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public PersistenceUnitTransactionType getTransactionType() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public DataSource getJtaDataSource() {
-	return jtaDataSource;
+        return jtaDataSource;
     }
 
     @Override
     public DataSource getNonJtaDataSource() {
-	return nonJtaDataSource;
+        return nonJtaDataSource;
     }
 
     @Override
     public List<String> getMappingFileNames() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public List<URL> getJarFileUrls() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public URL getPersistenceUnitRootUrl() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public List<String> getManagedClassNames() {
-	return managedClassNames;
+        return managedClassNames;
     }
 
     @Override
     public boolean excludeUnlistedClasses() {
-	// TODO Auto-generated method stub
-	return false;
+        // TODO Auto-generated method stub
+        return false;
     }
 
     @Override
     public SharedCacheMode getSharedCacheMode() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public ValidationMode getValidationMode() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public String getPersistenceXMLSchemaVersion() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public ClassLoader getClassLoader() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
     public void addTransformer(ClassTransformer transformer) {
-	// TODO Auto-generated method stub
+        // TODO Auto-generated method stub
 
     }
 
     @Override
     public ClassLoader getNewTempClassLoader() {
-	// TODO Auto-generated method stub
-	return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 
     public static class Builder {
 
-	private String name;
-	private List<String> managedClassNames;
-	private DataSource jtaDataSource;
-	private DataSource nonJtaDataSource;
+        private String name;
+        private List<String> managedClassNames;
+        private DataSource jtaDataSource;
+        private DataSource nonJtaDataSource;
 
-	public Builder() {
-	}
+        public Builder() {
+        }
 
-	public Builder withName(String name) {
-	    this.name = name;
-	    return this;
-	}
+        public Builder withName(String name) {
+            this.name = name;
+            return this;
+        }
 
-	public Builder withManagedClassNames(List<String> managedClassNames) {
-	    this.managedClassNames = managedClassNames;
-	    return this;
-	}
+        public Builder withManagedClassNames(List<String> managedClassNames) {
+            this.managedClassNames = managedClassNames;
+            return this;
+        }
 
-	public Builder withJtaDataSource(DataSource jtaDataSource) {
-	    this.jtaDataSource = jtaDataSource;
-	    return this;
-	}
+        public Builder withJtaDataSource(DataSource jtaDataSource) {
+            this.jtaDataSource = jtaDataSource;
+            return this;
+        }
 
-	public Builder withNonJtaDataSource(DataSource nonJtaDataSource) {
-	    this.nonJtaDataSource = nonJtaDataSource;
-	    return this;
-	}
+        public Builder withNonJtaDataSource(DataSource nonJtaDataSource) {
+            this.nonJtaDataSource = nonJtaDataSource;
+            return this;
+        }
 
-	public PersistenceUnitInfo build() {
-	    MiniPersistenceUnitInfo impl = new MiniPersistenceUnitInfo();
-	    impl.name = name;
-	    impl.managedClassNames = managedClassNames;
-	    impl.jtaDataSource = jtaDataSource;
-	    impl.nonJtaDataSource = nonJtaDataSource;
-	    return impl;
-	}
+        public PersistenceUnitInfo build() {
+            MiniPersistenceUnitInfo impl = new MiniPersistenceUnitInfo();
+            impl.name = name;
+            impl.managedClassNames = managedClassNames;
+            impl.jtaDataSource = jtaDataSource;
+            impl.nonJtaDataSource = nonJtaDataSource;
+            return impl;
+        }
     }
 }

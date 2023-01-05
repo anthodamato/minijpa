@@ -29,62 +29,62 @@ public class Citizen {
     private Long version;
 
     public Long getId() {
-	return id;
+        return id;
     }
 
     public void setId(Long id) {
-	this.id = id;
+        this.id = id;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public void setName(String name) {
-	this.name = name;
+        this.name = name;
     }
 
     public String getLastName() {
-	return lastName;
+        return lastName;
     }
 
     public void setLastName(String lastName) {
-	this.lastName = lastName;
+        this.lastName = lastName;
     }
 
     public Long getVersion() {
-	return version;
+        return version;
     }
 
     public void setVersion(Long version) {
-	this.version = version;
+        this.version = version;
     }
 
     @Override
     public int hashCode() {
-	int hash = 7;
-	hash = 97 * hash + Objects.hashCode(this.id);
-	hash = 97 * hash + Objects.hashCode(this.name);
-	hash = 97 * hash + Objects.hashCode(this.lastName);
-	return hash;
+        int hash = 7;
+        hash = 97 * hash + Objects.hashCode(this.id);
+        hash = 97 * hash + Objects.hashCode(this.name);
+        hash = 97 * hash + Objects.hashCode(this.lastName);
+        return hash;
     }
 
     @Override
     public boolean equals(Object obj) {
-	if (this == obj)
-	    return true;
-	if (obj == null)
-	    return false;
-	if (getClass() != obj.getClass())
-	    return false;
-	final Citizen other = (Citizen) obj;
-	if (!Objects.equals(this.name, other.name))
-	    return false;
-	if (!Objects.equals(this.lastName, other.lastName))
-	    return false;
-	if (!Objects.equals(this.id, other.id))
-	    return false;
-	return true;
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        final Citizen other = (Citizen) obj;
+        if (!Objects.equals(this.name, other.name))
+            return false;
+        if (!Objects.equals(this.lastName, other.lastName))
+            return false;
+        if (!Objects.equals(this.id, other.id))
+            return false;
+        return true;
     }
 
 }

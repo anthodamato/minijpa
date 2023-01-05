@@ -23,22 +23,22 @@ public class AttributeData {
     private ManagedData embeddedData;
 
     public AttributeData(Property property, boolean parentIsEmbeddedId, ManagedData embeddedData) {
-	super();
-	this.property = property;
-	this.parentEmbeddedId = parentIsEmbeddedId;
-	this.embeddedData = embeddedData;
+        super();
+        this.property = property;
+        this.parentEmbeddedId = parentIsEmbeddedId;
+        this.embeddedData = embeddedData;
     }
 
     public ManagedData getEmbeddedData() {
-	return embeddedData;
+        return embeddedData;
     }
 
     public Property getProperty() {
-	return property;
+        return property;
     }
 
     public boolean isParentEmbeddedId() {
-	return parentEmbeddedId;
+        return parentEmbeddedId;
     }
 
 }

@@ -31,57 +31,53 @@ public class Property {
     private final Optional<RelationshipProperties> relationshipProperties;
     private boolean embeddedIdParent = false;
 
-    public Property(boolean id,
-	    PropertyMethod getPropertyMethod,
-	    PropertyMethod setPropertyMethod,
-	    CtField ctField,
-	    boolean embedded,
-	    List<Property> embeddedProperties,
-	    Optional<RelationshipProperties> relationshipProperties) {
-	super();
-	this.id = id;
-	this.getPropertyMethod = getPropertyMethod;
-	this.setPropertyMethod = setPropertyMethod;
-	this.ctField = ctField;
-	this.embedded = embedded;
-	this.embeddedProperties = embeddedProperties;
-	this.relationshipProperties = relationshipProperties;
+    public Property(boolean id, PropertyMethod getPropertyMethod, PropertyMethod setPropertyMethod, CtField ctField,
+            boolean embedded, List<Property> embeddedProperties,
+            Optional<RelationshipProperties> relationshipProperties) {
+        super();
+        this.id = id;
+        this.getPropertyMethod = getPropertyMethod;
+        this.setPropertyMethod = setPropertyMethod;
+        this.ctField = ctField;
+        this.embedded = embedded;
+        this.embeddedProperties = embeddedProperties;
+        this.relationshipProperties = relationshipProperties;
     }
 
     public boolean isId() {
-	return id;
+        return id;
     }
 
     public PropertyMethod getGetPropertyMethod() {
-	return getPropertyMethod;
+        return getPropertyMethod;
     }
 
     public PropertyMethod getSetPropertyMethod() {
-	return setPropertyMethod;
+        return setPropertyMethod;
     }
 
     public CtField getCtField() {
-	return ctField;
+        return ctField;
     }
 
     public boolean isEmbedded() {
-	return embedded;
+        return embedded;
     }
 
     public List<Property> getEmbeddedProperties() {
-	return embeddedProperties;
+        return embeddedProperties;
     }
 
     public Optional<RelationshipProperties> getRelationshipProperties() {
-	return relationshipProperties;
+        return relationshipProperties;
     }
 
     public boolean isEmbeddedIdParent() {
-	return embeddedIdParent;
+        return embeddedIdParent;
     }
 
     public void setEmbeddedIdParent(boolean embeddedIdParent) {
-	this.embeddedIdParent = embeddedIdParent;
+        this.embeddedIdParent = embeddedIdParent;
     }
 
 }

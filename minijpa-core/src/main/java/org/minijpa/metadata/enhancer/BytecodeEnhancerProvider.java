@@ -16,23 +16,32 @@
 package org.minijpa.metadata.enhancer;
 
 import org.minijpa.metadata.enhancer.javassist.JavassistBytecodeEnhancer;
+import org.minijpa.metadata.enhancer.javassist.JavassistEntityMetadataProvider;
 
 public class BytecodeEnhancerProvider {
 
-	private static final BytecodeEnhancerProvider bytecodeEnhancerProvider = new BytecodeEnhancerProvider();
+    private static final BytecodeEnhancerProvider bytecodeEnhancerProvider = new BytecodeEnhancerProvider();
 
-	private final BytecodeEnhancer bytecodeEnhancer = new JavassistBytecodeEnhancer();
+    private final BytecodeEnhancer bytecodeEnhancer = new JavassistBytecodeEnhancer();
+    private EntityMetadataProvider entityMetadataProvider;
 
-	private BytecodeEnhancerProvider() {
+    private BytecodeEnhancerProvider() {
 
-	}
+    }
 
-	public static BytecodeEnhancerProvider getInstance() {
-		return bytecodeEnhancerProvider;
-	}
+    public static BytecodeEnhancerProvider getInstance() {
+        return bytecodeEnhancerProvider;
+    }
 
-	public BytecodeEnhancer getBytecodeEnhancer() {
-		return bytecodeEnhancer;
-	}
+    public BytecodeEnhancer getBytecodeEnhancer() {
+        return bytecodeEnhancer;
+    }
 
+    public EntityMetadataProvider getEntityMetadataProvider() {
+        if (this.entityMetadataProvider != null)
+            return this.entityMetadataProvider;
+
+        this.entityMetadataProvider = new JavassistEntityMetadataProvider();
+        return this.entityMetadataProvider;
+    }
 }
