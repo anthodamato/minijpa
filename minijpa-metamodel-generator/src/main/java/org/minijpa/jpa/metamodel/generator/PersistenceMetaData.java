@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.metadata.enhancer;
+package org.minijpa.jpa.metamodel.generator;
 
-import org.minijpa.metadata.enhancer.javassist.JavassistBytecodeEnhancer;
+import java.util.Map;
 
-public class BytecodeEnhancerProvider {
+import javax.persistence.spi.PersistenceUnitInfo;
 
-    private static final BytecodeEnhancerProvider bytecodeEnhancerProvider = new BytecodeEnhancerProvider();
+public class PersistenceMetaData {
 
-    private final BytecodeEnhancer bytecodeEnhancer = new JavassistBytecodeEnhancer();
+    private final Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas;
 
-    private BytecodeEnhancerProvider() {
-
+    public PersistenceMetaData(Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas) {
+        super();
+        this.persistenceUnitMetaDatas = persistenceUnitMetaDatas;
     }
 
-    public static BytecodeEnhancerProvider getInstance() {
-        return bytecodeEnhancerProvider;
+    public Map<String, PersistenceUnitInfo> getPersistenceUnitMetaDatas() {
+        return persistenceUnitMetaDatas;
     }
 
-    public BytecodeEnhancer getBytecodeEnhancer() {
-        return bytecodeEnhancer;
+    public PersistenceUnitInfo getPersistenceUnitMetaData(String name) {
+        return persistenceUnitMetaDatas.get(name);
     }
 }

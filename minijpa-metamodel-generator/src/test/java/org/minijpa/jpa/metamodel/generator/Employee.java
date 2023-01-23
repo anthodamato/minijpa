@@ -1,4 +1,4 @@
-package org.minijpa.jpa.model;
+package org.minijpa.jpa.metamodel.generator;
 
 import java.math.BigDecimal;
 

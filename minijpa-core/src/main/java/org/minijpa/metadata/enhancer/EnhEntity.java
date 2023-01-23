@@ -35,83 +35,84 @@ public class EnhEntity {
 //    private boolean embeddedId = false;
 
     public String getClassName() {
-	return className;
+        return className;
     }
 
     public void setClassName(String className) {
-	this.className = className;
+        this.className = className;
     }
 
     public List<EnhAttribute> getEnhAttributes() {
-	return enhAttributes;
+        return enhAttributes;
     }
 
     public void setEnhAttributes(List<EnhAttribute> enhAttributes) {
-	this.enhAttributes = enhAttributes;
+        this.enhAttributes = enhAttributes;
     }
 
     public EnhEntity getMappedSuperclass() {
-	return mappedSuperclass;
+        return mappedSuperclass;
     }
 
     public void setMappedSuperclass(EnhEntity mappedSuperclass) {
-	this.mappedSuperclass = mappedSuperclass;
+        this.mappedSuperclass = mappedSuperclass;
     }
 
     public String getModificationAttributeGetMethod() {
-	return modificationAttributeGetMethod;
+        return modificationAttributeGetMethod;
     }
 
     public void setModificationAttributeGetMethod(String modificationAttributeGetMethod) {
-	this.modificationAttributeGetMethod = modificationAttributeGetMethod;
+        this.modificationAttributeGetMethod = modificationAttributeGetMethod;
     }
 
     public Optional<String> getLazyLoadedAttributeGetMethod() {
-	return lazyLoadedAttributeGetMethod;
+        return lazyLoadedAttributeGetMethod;
     }
 
     public void setLazyLoadedAttributeGetMethod(Optional<String> lazyLoadedAttributeGetMethod) {
-	this.lazyLoadedAttributeGetMethod = lazyLoadedAttributeGetMethod;
+        this.lazyLoadedAttributeGetMethod = lazyLoadedAttributeGetMethod;
     }
 
     public Optional<String> getJoinColumnPostponedUpdateAttributeGetMethod() {
-	return joinColumnPostponedUpdateAttributeGetMethod;
+        return joinColumnPostponedUpdateAttributeGetMethod;
     }
 
-    public void setJoinColumnPostponedUpdateAttributeGetMethod(Optional<String> joinColumnPostponedUpdateAttributeGetMethod) {
-	this.joinColumnPostponedUpdateAttributeGetMethod = joinColumnPostponedUpdateAttributeGetMethod;
+    public void setJoinColumnPostponedUpdateAttributeGetMethod(
+            Optional<String> joinColumnPostponedUpdateAttributeGetMethod) {
+        this.joinColumnPostponedUpdateAttributeGetMethod = joinColumnPostponedUpdateAttributeGetMethod;
     }
 
     public Optional<String> getLockTypeAttributeGetMethod() {
-	return lockTypeAttributeGetMethod;
+        return lockTypeAttributeGetMethod;
     }
 
     public void setLockTypeAttributeGetMethod(Optional<String> lockTypeAttributeGetMethod) {
-	this.lockTypeAttributeGetMethod = lockTypeAttributeGetMethod;
+        this.lockTypeAttributeGetMethod = lockTypeAttributeGetMethod;
     }
 
     public Optional<String> getLockTypeAttributeSetMethod() {
-	return lockTypeAttributeSetMethod;
+        return lockTypeAttributeSetMethod;
     }
 
     public void setLockTypeAttributeSetMethod(Optional<String> lockTypeAttributeSetMethod) {
-	this.lockTypeAttributeSetMethod = lockTypeAttributeSetMethod;
+        this.lockTypeAttributeSetMethod = lockTypeAttributeSetMethod;
     }
 
     public Optional<String> getEntityStatusAttributeGetMethod() {
-	return entityStatusAttributeGetMethod;
+        return entityStatusAttributeGetMethod;
     }
 
     public void setEntityStatusAttributeGetMethod(Optional<String> entityStatusAttributeGetMethod) {
-	this.entityStatusAttributeGetMethod = entityStatusAttributeGetMethod;
+        this.entityStatusAttributeGetMethod = entityStatusAttributeGetMethod;
     }
 
     public Optional<String> getEntityStatusAttributeSetMethod() {
-	return entityStatusAttributeSetMethod;
+        return entityStatusAttributeSetMethod;
     }
 
     public void setEntityStatusAttributeSetMethod(Optional<String> entityStatusAttributeSetMethod) {
-	this.entityStatusAttributeSetMethod = entityStatusAttributeSetMethod;
+        this.entityStatusAttributeSetMethod = entityStatusAttributeSetMethod;
     }
 
 //    public boolean isEmbeddedId() {
@@ -122,17 +123,17 @@ public class EnhEntity {
 //	this.embeddedId = embeddedId;
 //    }
     public void findEmbeddables(Set<EnhEntity> embeddables) {
-	for (EnhAttribute enhAttribute : enhAttributes) {
-	    if (enhAttribute.isEmbedded()) {
-		EnhEntity enhEntity = enhAttribute.getEmbeddedEnhEntity();
-		embeddables.add(enhEntity);
+        for (EnhAttribute enhAttribute : enhAttributes) {
+            if (enhAttribute.isEmbedded()) {
+                EnhEntity enhEntity = enhAttribute.getEmbeddedEnhEntity();
+                embeddables.add(enhEntity);
 
-		enhEntity.findEmbeddables(embeddables);
-	    }
-	}
+                enhEntity.findEmbeddables(embeddables);
+            }
+        }
     }
 
     public Optional<EnhAttribute> getAttribute(String name) {
-	return enhAttributes.stream().filter(a -> a.getName().equals(name)).findFirst();
+        return enhAttributes.stream().filter(a -> a.getName().equals(name)).findFirst();
     }
 }

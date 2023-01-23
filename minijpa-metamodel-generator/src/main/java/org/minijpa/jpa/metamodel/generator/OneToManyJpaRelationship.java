@@ -13,25 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.metadata.enhancer;
+package org.minijpa.jpa.metamodel.generator;
 
-import org.minijpa.metadata.enhancer.javassist.JavassistBytecodeEnhancer;
+public final class OneToManyJpaRelationship extends JpaRelationship {
 
-public class BytecodeEnhancerProvider {
+    private Class<?> collectionClass;
 
-    private static final BytecodeEnhancerProvider bytecodeEnhancerProvider = new BytecodeEnhancerProvider();
-
-    private final BytecodeEnhancer bytecodeEnhancer = new JavassistBytecodeEnhancer();
-
-    private BytecodeEnhancerProvider() {
-
+    public OneToManyJpaRelationship() {
+        super();
     }
 
-    public static BytecodeEnhancerProvider getInstance() {
-        return bytecodeEnhancerProvider;
+    public Class<?> getCollectionClass() {
+        return collectionClass;
     }
 
-    public BytecodeEnhancer getBytecodeEnhancer() {
-        return bytecodeEnhancer;
+    public void setCollectionClass(Class<?> collectionClass) {
+        this.collectionClass = collectionClass;
     }
+
+    @Override
+    public boolean toMany() {
+        return true;
+    }
+
+    @Override
+    public boolean fromOne() {
+        return true;
+    }
+
 }

@@ -19,6 +19,7 @@
 		<module>minijpa-sql-model</module>
 		<module>minijpa-jdbc</module>
 		<module>minijpa-core</module>
+        <module>minijpa-metamodel-generator</module>
 	</modules>
 
 	<dependencyManagement>

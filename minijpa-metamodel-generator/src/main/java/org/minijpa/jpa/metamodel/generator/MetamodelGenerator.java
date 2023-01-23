@@ -1,18 +1,16 @@
 package org.minijpa.jpa.metamodel.generator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
-import org.minijpa.jpa.PersistenceProviderHelper;
-import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MetamodelGenerator {
     private static Logger LOG = LoggerFactory.getLogger(MetamodelGenerator.class);
     private MetamodelExporter metamodelExporter = new MetamodelExporterImpl();
+// java -cp minijpa-metamodel-generator/target/minijpa-metamodel-generator-0.0.1-SNAPSHOT.jar:"/Users/adamato/workspace-minijpa/minijpa/minijpa-core/target/test-classes" org.minijpa.jpa.metamodel.generator.MetamodelGenerator manytoone_bid /Users/adamato/workspace-minijpa/minijpa/minijpa-core/src/test/resources/META-INF/persistence.xml /Users/adamato/workspace-minijpa/minijpa/minijpa-core/src/test/java -Dlogback.configurationFile=/Users/adamato/workspace-minijpa/minijpa/minijpa-core/src/test/resources/logback-test.xml
 
     /**
      * @param args
@@ -36,12 +34,12 @@ public class MetamodelGenerator {
             throws Exception {
         PersistenceUnitInfo persistenceUnitInfo = findPersistenceUnitInfo(persistenceUnitName, persistenceXmlPath);
         LOG.info("Parsing entity classes...");
-        List<EntityMetadata> entityMetadatas = new ArrayList<>();
-        for (String className : persistenceUnitInfo.getManagedClassNames()) {
-            EntityMetadata entityMetadata = BytecodeEnhancerProvider.getInstance().getEntityMetadataProvider()
-                    .build(className);
-            entityMetadatas.add(entityMetadata);
-        }
+        EntityMetadataProvider entityMetadataProvider = new EntityMetadataProviderImpl();
+        List<EntityMetadata> entityMetadatas = entityMetadataProvider.build(persistenceUnitInfo.getManagedClassNames());
+//        for (String className : persistenceUnitInfo.getManagedClassNames()) {
+//            EntityMetadata entityMetadata = entityMetadataProvider.build(className);
+//            entityMetadatas.add(entityMetadata);
+//        }
 
         LOG.info("Exporting metamodel...");
         for (EntityMetadata em : entityMetadatas) {

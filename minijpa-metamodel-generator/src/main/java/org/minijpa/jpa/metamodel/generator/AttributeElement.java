@@ -4,12 +4,21 @@ public class AttributeElement {
     private String name;
     private AttributeType attributeType;
     private Class<?> type;
+    private boolean relationship = false;
 
     public AttributeElement(String name, AttributeType attributeType, Class<?> type) {
         super();
         this.name = name;
         this.attributeType = attributeType;
         this.type = type;
+    }
+
+    public AttributeElement(String name, AttributeType attributeType, Class<?> type, boolean relationship) {
+        super();
+        this.name = name;
+        this.attributeType = attributeType;
+        this.type = type;
+        this.relationship = relationship;
     }
 
     public String getName() {
@@ -22,6 +31,10 @@ public class AttributeElement {
 
     public Class<?> getType() {
         return type;
+    }
+
+    public boolean isRelationship() {
+        return relationship;
     }
 
 }

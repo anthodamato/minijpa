@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.metadata.enhancer;
+package org.minijpa.jpa.metamodel.generator;
 
-import org.minijpa.metadata.enhancer.javassist.JavassistBytecodeEnhancer;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
-public class BytecodeEnhancerProvider {
+public class ReflectionUtil {
 
-    private static final BytecodeEnhancerProvider bytecodeEnhancerProvider = new BytecodeEnhancerProvider();
+	public static Class<?> findTargetEntity(Field field) {
+		Type type = field.getGenericType();
+		Class<?> targetEntity = null;
+		if (type instanceof ParameterizedType) {
+			ParameterizedType aType = (ParameterizedType) type;
+			Type[] fieldArgTypes = aType.getActualTypeArguments();
+			for (Type fieldArgType : fieldArgTypes) {
+				targetEntity = (Class<?>) fieldArgType;
+			}
+		}
 
-    private final BytecodeEnhancer bytecodeEnhancer = new JavassistBytecodeEnhancer();
+		return targetEntity;
+	}
 
-    private BytecodeEnhancerProvider() {
-
-    }
-
-    public static BytecodeEnhancerProvider getInstance() {
-        return bytecodeEnhancerProvider;
-    }
-
-    public BytecodeEnhancer getBytecodeEnhancer() {
-        return bytecodeEnhancer;
-    }
 }
