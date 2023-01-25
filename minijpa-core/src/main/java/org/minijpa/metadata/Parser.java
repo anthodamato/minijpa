@@ -155,8 +155,8 @@ public class Parser {
             tableName = table.name();
 
         LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
-        List<MetaAttribute> attributes = readAttributes(enhEntity, Optional.empty());
-        List<MetaEntity> embeddables = readEmbeddables(enhEntity, parsedEntities, Optional.empty());
+        List<MetaAttribute> attributes = parseAttributes(enhEntity, Optional.empty());
+        List<MetaEntity> embeddables = parseEmbeddables(enhEntity, parsedEntities, Optional.empty());
         MetaEntity mappedSuperclassEntity = null;
         LOG.debug("parse: enhEntity.getMappedSuperclass()={}", enhEntity.getMappedSuperclass());
         if (enhEntity.getMappedSuperclass() != null)
@@ -260,8 +260,8 @@ public class Parser {
 
         LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
         String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
-        List<MetaAttribute> attributes = readAttributes(enhEntity, Optional.of(path));
-        List<MetaEntity> embeddables = readEmbeddables(enhEntity, parsedEntities, Optional.of(path));
+        List<MetaAttribute> attributes = parseAttributes(enhEntity, Optional.of(path));
+        List<MetaEntity> embeddables = parseEmbeddables(enhEntity, parsedEntities, Optional.of(path));
 
         Method modificationAttributeReadMethod = null;
         if (enhEntity.getModificationAttributeGetMethod() != null)
@@ -304,8 +304,8 @@ public class Parser {
             throw new Exception("@MappedSuperclass annotation not found: '" + c.getName() + "'");
 
         LOG.debug("Reading mapped superclass '" + enhEntity.getClassName() + "' attributes...");
-        List<MetaAttribute> attributes = readAttributes(enhEntity, Optional.empty());
-        List<MetaEntity> embeddables = readEmbeddables(enhEntity, parsedEntities, Optional.empty());
+        List<MetaAttribute> attributes = parseAttributes(enhEntity, Optional.empty());
+        List<MetaEntity> embeddables = parseEmbeddables(enhEntity, parsedEntities, Optional.empty());
 
         Pk pk = null;
         Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
@@ -349,21 +349,21 @@ public class Parser {
                 .withJoinColumnPostponedUpdateAttributeReadMethod(joinColumnPostponedUpdateAttributeReadMethod).build();
     }
 
-    private List<MetaAttribute> readAttributes(EnhEntity enhEntity, Optional<String> parentPath) throws Exception {
+    private List<MetaAttribute> parseAttributes(EnhEntity enhEntity, Optional<String> parentPath) throws Exception {
         List<MetaAttribute> attributes = new ArrayList<>();
         for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
             LOG.debug("readAttributes: enhAttribute.getName()={}", enhAttribute.getName());
             if (enhAttribute.isEmbedded())
                 continue;
 
-            MetaAttribute attribute = readAttribute(enhEntity.getClassName(), enhAttribute, parentPath);
+            MetaAttribute attribute = parseAttribute(enhEntity.getClassName(), enhAttribute, parentPath);
             attributes.add(attribute);
         }
 
         return attributes;
     }
 
-    private List<MetaEntity> readEmbeddables(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities,
+    private List<MetaEntity> parseEmbeddables(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities,
             Optional<String> parentPath) throws Exception {
         List<MetaEntity> metaEntities = new ArrayList<>();
         for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
@@ -404,7 +404,7 @@ public class Parser {
         return Optional.empty();
     }
 
-    private MetaAttribute readAttribute(String parentClassName, EnhAttribute enhAttribute, Optional<String> parentPath)
+    private MetaAttribute parseAttribute(String parentClassName, EnhAttribute enhAttribute, Optional<String> parentPath)
             throws Exception {
         String columnName = enhAttribute.getName();
         Class<?> c = Class.forName(parentClassName);

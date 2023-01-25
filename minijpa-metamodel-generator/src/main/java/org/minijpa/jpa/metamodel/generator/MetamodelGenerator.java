@@ -23,6 +23,7 @@ public class MetamodelGenerator {
     public static void main(String[] args) {
         LOG.info("Persistence Unit Name: {}", args[0]);
         LOG.info("Persistence Xml file path: {}", args[1]);
+        LOG.info("Persistence Source Path: {}", args[2]);
         try {
             new MetamodelGenerator().generate(args[0], args[1], args[2]);
         } catch (Exception e) {

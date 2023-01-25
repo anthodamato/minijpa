@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -38,11 +39,13 @@ public class EntityParser {
             name = ec.name();
 
         List<JpaAttribute> attributes = readAttributes(c);
+        List<JpaEntity> embeddables = parseEmbeddables(c, parsedEntities);
         JpaEntity entity = new JpaEntity();
         entity.setClassName(className);
         entity.setName(name);
         entity.setType(c);
         attributes.forEach(entity::addAttribute);
+        embeddables.forEach(entity::addEmbeddable);
         return entity;
     }
 
@@ -151,6 +154,63 @@ public class EntityParser {
         attribute.setType(attributeClass);
         attribute.setRelationship(relationship);
         return attribute;
+    }
+
+    private List<JpaEntity> parseEmbeddables(Class<?> entityClass, Collection<JpaEntity> parsedEntities)
+            throws Exception {
+        List<JpaEntity> metaEntities = new ArrayList<>();
+        Field[] fields = entityClass.getDeclaredFields();
+
+        for (Field field : fields) {
+            LOG.debug("readAttributes: parsing '{}' attribute", field.getName());
+            Transient tr = field.getAnnotation(Transient.class);
+            if (tr != null)
+                continue;
+
+            Embedded embedded = field.getAnnotation(Embedded.class);
+            if (embedded == null)
+                continue;
+
+            JpaEntity jpaEntity = parseEmbeddable(field, field.getType().getName(), parsedEntities, null);
+            metaEntities.add(jpaEntity);
+        }
+
+        return metaEntities;
+    }
+
+    private JpaEntity parseEmbeddable(Field field, String entityClassName, Collection<JpaEntity> parsedEntities,
+            Optional<String> parentPath) throws Exception {
+        Optional<JpaEntity> optional = parsedEntities.stream().filter(e -> e.getClassName().equals(entityClassName))
+                .findFirst();
+        if (optional.isPresent())
+            return optional.get();
+
+        Class<?> c = Class.forName(entityClassName);
+        Embeddable ec = c.getAnnotation(Embeddable.class);
+        if (ec == null)
+            throw new Exception("@Embeddable annotation not found: '" + c.getName() + "'");
+
+        LOG.debug("Reading '" + entityClassName + "' attributes...");
+//        String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
+        List<JpaAttribute> attributes = readAttributes(c);
+        List<JpaEntity> embeddables = parseEmbeddables(field.getType(), parsedEntities);
+
+//        Class<?> attributeClass = Class.forName(enhAttribute.getClassName());
+//        Class<?> parentClass = Class.forName(parentClassName);
+//
+//        Field field = parentClass.getDeclaredField(attributeName);
+//        boolean id = field.getAnnotation(EmbeddedId.class) != null;
+
+//        List<JpaAttribute> basicAttributes = attributes.stream().filter(a -> a.getRelationship().isEmpty())
+//                .collect(Collectors.toList());
+//        List<JpaAttribute> relationshipAttributes = attributes.stream().filter(a -> a.getRelationship() != null)
+//                .collect(Collectors.toList());
+        JpaEntity entity = new JpaEntity();
+        entity.setClassName(entityClassName);
+        entity.setName(field.getName());
+        entity.setType(c);
+        attributes.forEach(entity::addAttribute);
+        return entity;
     }
 
     private Optional<JpaRelationship> buildRelationship(Field field) {

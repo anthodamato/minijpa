@@ -89,4 +89,19 @@ public class EntityMetadataProviderTest {
         Assertions.assertEquals(AttributeType.COLLECTION, attributeElementEmployees.getAttributeType());
     }
 
+    @Test
+    public void embBooks() throws IOException, Exception {
+        EntityMetadataProvider entityMetadataProvider = new EntityMetadataProviderImpl();
+        List<EntityMetadata> entityMetadataList = entityMetadataProvider.build(
+                List.of("org.minijpa.jpa.metamodel.generator.Book"));
+        EntityMetadata entityMetadata = entityMetadataList.stream().filter(e -> e.getEntityClassName().equals("Book"))
+                .findFirst().get();
+        Assertions.assertNotNull(entityMetadata);
+        Assertions.assertEquals("Book_", entityMetadata.getClassName());
+        Assertions.assertEquals("Book", entityMetadata.getEntityClassName());
+        Assertions.assertEquals("org.minijpa.jpa.metamodel.generator", entityMetadata.getPackagePath());
+        Assertions.assertEquals("org/minijpa/jpa/metamodel/generator/Book_.java", entityMetadata.getPath());
+        Assertions.assertEquals(4, entityMetadata.getAttributeElements().size());
+    }
+
 }

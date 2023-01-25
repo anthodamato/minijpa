@@ -74,6 +74,12 @@ public class EntityMetadataProviderImpl implements EntityMetadataProvider {
             }
         }
 
+        LOG.debug("build: jpaEntity.getEmbeddables().size()={}", jpaEntity.getEmbeddables().size());
+        for (JpaEntity entity : jpaEntity.getEmbeddables()) {
+            entityMetadata.addAttribute(
+                    new AttributeElement(entity.getName(), AttributeType.SINGULAR, entity.getType(), true));
+        }
+
         return entityMetadata;
     }
 
