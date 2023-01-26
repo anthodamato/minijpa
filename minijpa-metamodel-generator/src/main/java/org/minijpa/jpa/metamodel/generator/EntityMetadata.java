@@ -2,6 +2,7 @@ package org.minijpa.jpa.metamodel.generator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class EntityMetadata {
     private String path;
@@ -9,6 +10,7 @@ public class EntityMetadata {
     private String className;
     private String entityClassName;
     private List<AttributeElement> attributeElements = new ArrayList<>();
+    private Optional<EntityMetadata> mappedSuperclass = Optional.empty();
 
     public void addAttribute(AttributeElement attributeElement) {
         attributeElements.add(attributeElement);
@@ -48,6 +50,14 @@ public class EntityMetadata {
 
     public void setEntityClassName(String entityClassName) {
         this.entityClassName = entityClassName;
+    }
+
+    public Optional<EntityMetadata> getMappedSuperclass() {
+        return mappedSuperclass;
+    }
+
+    public void setMappedSuperclass(Optional<EntityMetadata> mappedSuperclass) {
+        this.mappedSuperclass = mappedSuperclass;
     }
 
 }

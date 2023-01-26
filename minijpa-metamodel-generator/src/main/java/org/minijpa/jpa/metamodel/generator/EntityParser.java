@@ -13,6 +13,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
@@ -38,7 +39,16 @@ public class EntityParser {
         if (ec.name() != null && !ec.name().trim().isEmpty())
             name = ec.name();
 
-        List<JpaAttribute> attributes = readAttributes(c);
+        Class<?> superClass = c.getSuperclass();
+        Optional<JpaEntity> optionalMappedSuperclass = Optional.empty();
+        if (superClass != null) {
+            MappedSuperclass mappedSuperclass = superClass.getAnnotation(MappedSuperclass.class);
+            if (mappedSuperclass != null) {
+                optionalMappedSuperclass = Optional.of(parseMappedSuperclass(superClass.getName(), parsedEntities));
+            }
+        }
+
+        List<JpaAttribute> attributes = parseAttributes(c);
         List<JpaEntity> embeddables = parseEmbeddables(c, parsedEntities);
         JpaEntity entity = new JpaEntity();
         entity.setClassName(className);
@@ -46,10 +56,11 @@ public class EntityParser {
         entity.setType(c);
         attributes.forEach(entity::addAttribute);
         embeddables.forEach(entity::addEmbeddable);
+        entity.setMappedSuperclass(optionalMappedSuperclass);
         return entity;
     }
 
-    private List<JpaAttribute> readAttributes(Class<?> entityClass) throws Exception {
+    private List<JpaAttribute> parseAttributes(Class<?> entityClass) throws Exception {
         List<JpaAttribute> attributes = new ArrayList<>();
         Field[] fields = entityClass.getDeclaredFields();
 
@@ -63,14 +74,14 @@ public class EntityParser {
             if (embedded != null)
                 continue;
 
-            JpaAttribute attribute = readAttribute(field);
+            JpaAttribute attribute = parseAttribute(field);
             attributes.add(attribute);
         }
 
         return attributes;
     }
 
-    private JpaAttribute readAttribute(Field field) throws Exception {
+    private JpaAttribute parseAttribute(Field field) throws Exception {
 //        String columnName = enhAttribute.getName();
         Class<?> attributeClass = field.getType();
 
@@ -192,7 +203,7 @@ public class EntityParser {
 
         LOG.debug("Reading '" + entityClassName + "' attributes...");
 //        String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
-        List<JpaAttribute> attributes = readAttributes(c);
+        List<JpaAttribute> attributes = parseAttributes(c);
         List<JpaEntity> embeddables = parseEmbeddables(field.getType(), parsedEntities);
 
 //        Class<?> attributeClass = Class.forName(enhAttribute.getClassName());
@@ -210,6 +221,48 @@ public class EntityParser {
         entity.setName(field.getName());
         entity.setType(c);
         attributes.forEach(entity::addAttribute);
+        embeddables.forEach(entity::addEmbeddable);
+        return entity;
+    }
+
+    private JpaEntity parseMappedSuperclass(String entityClassName, Collection<JpaEntity> parsedEntities)
+            throws Exception {
+        Class<?> c = Class.forName(entityClassName);
+        MappedSuperclass ec = c.getAnnotation(MappedSuperclass.class);
+        if (ec == null)
+            throw new Exception("@MappedSuperclass annotation not found: '" + c.getName() + "'");
+
+        LOG.debug("Reading mapped superclass '" + entityClassName + "' attributes...");
+        List<JpaAttribute> attributes = parseAttributes(c);
+        List<JpaEntity> embeddables = parseEmbeddables(c, parsedEntities);
+
+//        Pk pk = null;
+//        Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
+//        if (optionalId.isPresent()) {
+//            Field field = c.getDeclaredField(optionalId.get().getName());
+//            PkGeneration gv = buildPkGeneration(field);
+//            if (gv.getPkStrategy() == PkStrategy.SEQUENCE && gv.getPkSequenceGenerator() == null) {
+//                gv.setPkSequenceGenerator(generateDefaultSequenceGenerator(c.getSimpleName().toUpperCase()));
+//            }
+//
+//            pk = new BasicAttributePk(optionalId.get(), gv);
+//            attributes.remove(optionalId.get());
+//        } else {
+//            Optional<MetaEntity> optionalME = embeddables.stream().filter(e -> e.isEmbeddedId()).findFirst();
+//            if (optionalME.isEmpty())
+//                throw new Exception(
+//                        "@Id or @EmbeddedId annotation not found in mapped superclass: '" + c.getName() + "'");
+//
+//            pk = new EmbeddedPk(optionalME.get());
+//            embeddables.remove(optionalME.get());
+//        }
+
+        JpaEntity entity = new JpaEntity();
+        entity.setClassName(entityClassName);
+//        entity.setName(field.getName());
+        entity.setType(c);
+        attributes.forEach(entity::addAttribute);
+        embeddables.forEach(entity::addEmbeddable);
         return entity;
     }
 

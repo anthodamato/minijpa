@@ -81,7 +81,13 @@ public class MetamodelExporterImpl implements MetamodelExporter {
         writer.newLine();
         writer.write("@StaticMetamodel(" + entityMetadata.getEntityClassName() + ".class" + ")");
         writer.newLine();
-        writer.write("public class " + entityMetadata.getClassName() + " {");
+        writer.write("public class " + entityMetadata.getClassName());
+        if (entityMetadata.getMappedSuperclass().isPresent()) {
+            writer.write(" extends " + entityMetadata.getMappedSuperclass().get().getPackagePath() + "."
+                    + entityMetadata.getMappedSuperclass().get().getClassName());
+        }
+
+        writer.write(" {");
         writer.newLine();
         for (AttributeElement ae : entityMetadata.getAttributeElements()) {
             if (ae.getAttributeType() == AttributeType.SINGULAR) {

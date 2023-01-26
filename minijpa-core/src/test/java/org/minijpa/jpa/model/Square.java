@@ -6,8 +6,8 @@ import javax.persistence.Entity;
 public class Square extends Shape {
 
     public Square() {
-	super();
-	this.sides = 4;
+        super();
+        this.sides = 4;
     }
 
 }

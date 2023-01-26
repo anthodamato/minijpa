@@ -42,13 +42,19 @@ public class EntityMetadataProviderImpl implements EntityMetadataProvider {
         for (JpaEntity jpaEntity : map.values()) {
             allEntities.add(jpaEntity);
             allEntities.addAll(jpaEntity.getEmbeddables());
-            if (jpaEntity.getMappedSuperclass().isPresent())
-                allEntities.add(jpaEntity.getMappedSuperclass().get());
+//            if (jpaEntity.getMappedSuperclass().isPresent())
+//                allEntities.add(jpaEntity.getMappedSuperclass().get());
         }
 
         List<EntityMetadata> entityMetadatas = new ArrayList<>();
         for (JpaEntity jpaEntity : allEntities) {
+            Optional<EntityMetadata> mappedSuperClass = Optional.empty();
+            if (jpaEntity.getMappedSuperclass().isPresent()) {
+                mappedSuperClass = Optional.of(build(jpaEntity.getMappedSuperclass().get()));
+            }
+
             EntityMetadata entityMetadata = build(jpaEntity);
+            entityMetadata.setMappedSuperclass(mappedSuperClass);
             entityMetadatas.add(entityMetadata);
         }
 
