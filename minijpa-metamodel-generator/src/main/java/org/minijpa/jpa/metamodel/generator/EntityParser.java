@@ -10,7 +10,6 @@ import java.util.Optional;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
@@ -31,6 +30,8 @@ public class EntityParser {
             return optional.get();
 
         Class<?> c = Class.forName(className);
+
+        LOG.debug("parse: class '{}' loaded", className);
         Entity ec = c.getAnnotation(Entity.class);
         if (ec == null)
             throw new Exception("@Entity annotation not found: '" + c.getName() + "'");
@@ -82,84 +83,9 @@ public class EntityParser {
     }
 
     private JpaAttribute parseAttribute(Field field) throws Exception {
-//        String columnName = enhAttribute.getName();
         Class<?> attributeClass = field.getType();
-
-//        LOG.debug("readAttribute: attributeClass={}", attributeClass);
-//        Method readMethod = c.getMethod(enhAttribute.getGetMethod());
-//        Method writeMethod = c.getMethod(enhAttribute.getSetMethod(), attributeClass);
-//        Column column = field.getAnnotation(Column.class);
-
-        Id idAnnotation = field.getAnnotation(Id.class);
-//        boolean nullableColumn = !attributeClass.isPrimitive() && !enhAttribute.isParentEmbeddedId()
-//                && (idAnnotation == null);
-//        Optional<DDLData> ddlData;
-//        if (column != null) {
-//            String cn = column.name();
-//            if (cn != null && cn.trim().length() > 0)
-//                columnName = cn;
-//
-//            ddlData = buildDDLData(column, nullableColumn);
-//        } else
-//            ddlData = Optional.of(new DDLData(Optional.empty(), Optional.of(255), Optional.of(0), Optional.of(0),
-//                    Optional.of(nullableColumn)));
-
-//        Enumerated enumerated = field.getAnnotation(Enumerated.class);
-////        LOG.debug("readAttribute: enumerated={}", enumerated);
-//        Optional<Class<?>> enumerationType = enumerationType(attributeClass, enumerated);
-////        LOG.debug("readAttribute: dbConfiguration={}", dbConfiguration);
-//        Class<?> readWriteType = findDatabaseType(field, attributeClass, enumerationType);
-////        LOG.debug("readAttribute: readWriteType={}", readWriteType);
-//        Integer sqlType = findSqlType(readWriteType, enumerated);
-//        LOG.debug("readAttribute: sqlType={}", sqlType);
-//        LOG.debug("readAttribute: parentPath.isEmpty() ={}", parentPath.isEmpty());
-//        String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
-//        LOG.debug("readAttribute: idAnnotation={}", idAnnotation);
-//        if (idAnnotation != null) {
-//            AttributeMapper<?, ?> attributeMapper = dbConfiguration.getDbTypeMapper().attributeMapper(attributeClass,
-//                    readWriteType);
-//            LOG.debug("readAttribute: id attributeMapper={}", attributeMapper);
-//            Optional<AttributeMapper> optionalAM = Optional.empty();
-//            if (attributeMapper != null)
-//                optionalAM = Optional.of(attributeMapper);
-//
-//            MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
-//                    .withType(attributeClass).withReadWriteDbType(readWriteType).withReadMethod(readMethod)
-//                    .withWriteMethod(writeMethod).isId(true).withSqlType(sqlType).withJavaMember(field).isBasic(true)
-//                    .withPath(path).withDDLData(ddlData).withAttributeMapper(optionalAM);
-//
-//            return builder.build();
-//        }
-
-//        boolean isCollection = CollectionUtils.isCollectionClass(attributeClass);
-//        Class<?> collectionImplementationClass = null;
-//        if (isCollection)
-//            collectionImplementationClass = CollectionUtils.findCollectionImplementationClass(attributeClass);
-
-//        boolean version = field.getAnnotation(Version.class) != null;
-//
-//        MetaAttribute.Builder builder = new MetaAttribute.Builder(enhAttribute.getName()).withColumnName(columnName)
-//                .withType(attributeClass).withReadWriteDbType(readWriteType).withReadMethod(readMethod)
-//                .withWriteMethod(writeMethod).withSqlType(sqlType).isCollection(isCollection).withJavaMember(field)
-//                .withCollectionImplementationClass(collectionImplementationClass).isVersion(version)
-//                .isBasic(AttributeUtil.isBasicAttribute(attributeClass)).withPath(path).withDDLData(ddlData);
-//
-//        AttributeMapper<?, ?> attributeMapper = dbConfiguration.getDbTypeMapper().attributeMapper(attributeClass,
-//                readWriteType);
-//        if (attributeMapper != null)
-//            builder.withAttributeMapper(Optional.of(attributeMapper));
-
         Optional<JpaRelationship> relationship = buildRelationship(field);
 
-//        // Basic annotation
-//        Basic basic = field.getAnnotation(Basic.class);
-//        if (basic != null) {
-//            if (!basic.optional())
-//                builder.isNullable(false);
-//        }
-
-//        MetaAttribute attribute = builder.build();
-//        LOG.debug("readAttribute: attribute: " + attribute);
         JpaAttribute attribute = new JpaAttribute();
         attribute.setName(field.getName());
         attribute.setType(attributeClass);
@@ -202,20 +128,9 @@ public class EntityParser {
             throw new Exception("@Embeddable annotation not found: '" + c.getName() + "'");
 
         LOG.debug("Reading '" + entityClassName + "' attributes...");
-//        String path = parentPath.isEmpty() ? enhAttribute.getName() : parentPath.get() + "." + enhAttribute.getName();
         List<JpaAttribute> attributes = parseAttributes(c);
         List<JpaEntity> embeddables = parseEmbeddables(field.getType(), parsedEntities);
 
-//        Class<?> attributeClass = Class.forName(enhAttribute.getClassName());
-//        Class<?> parentClass = Class.forName(parentClassName);
-//
-//        Field field = parentClass.getDeclaredField(attributeName);
-//        boolean id = field.getAnnotation(EmbeddedId.class) != null;
-
-//        List<JpaAttribute> basicAttributes = attributes.stream().filter(a -> a.getRelationship().isEmpty())
-//                .collect(Collectors.toList());
-//        List<JpaAttribute> relationshipAttributes = attributes.stream().filter(a -> a.getRelationship() != null)
-//                .collect(Collectors.toList());
         JpaEntity entity = new JpaEntity();
         entity.setClassName(entityClassName);
         entity.setName(field.getName());
@@ -236,30 +151,8 @@ public class EntityParser {
         List<JpaAttribute> attributes = parseAttributes(c);
         List<JpaEntity> embeddables = parseEmbeddables(c, parsedEntities);
 
-//        Pk pk = null;
-//        Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
-//        if (optionalId.isPresent()) {
-//            Field field = c.getDeclaredField(optionalId.get().getName());
-//            PkGeneration gv = buildPkGeneration(field);
-//            if (gv.getPkStrategy() == PkStrategy.SEQUENCE && gv.getPkSequenceGenerator() == null) {
-//                gv.setPkSequenceGenerator(generateDefaultSequenceGenerator(c.getSimpleName().toUpperCase()));
-//            }
-//
-//            pk = new BasicAttributePk(optionalId.get(), gv);
-//            attributes.remove(optionalId.get());
-//        } else {
-//            Optional<MetaEntity> optionalME = embeddables.stream().filter(e -> e.isEmbeddedId()).findFirst();
-//            if (optionalME.isEmpty())
-//                throw new Exception(
-//                        "@Id or @EmbeddedId annotation not found in mapped superclass: '" + c.getName() + "'");
-//
-//            pk = new EmbeddedPk(optionalME.get());
-//            embeddables.remove(optionalME.get());
-//        }
-
         JpaEntity entity = new JpaEntity();
         entity.setClassName(entityClassName);
-//        entity.setName(field.getName());
         entity.setType(c);
         attributes.forEach(entity::addAttribute);
         embeddables.forEach(entity::addEmbeddable);
@@ -376,7 +269,6 @@ public class EntityParser {
         });
 
         for (JpaAttribute a : attributes) {
-//            LOG.debug("finalizeRelationships: a={}", a);
             Optional<JpaRelationship> opRelationship = a.getRelationship();
             if (opRelationship.isEmpty())
                 continue;
@@ -384,7 +276,6 @@ public class EntityParser {
             JpaRelationship relationship = opRelationship.get();
             if (relationship instanceof OneToOneJpaRelationship) {
                 JpaEntity toEntity = entities.get(a.getType().getName());
-//                LOG.debug("finalizeRelationships: OneToOne toEntity={}", toEntity);
                 if (toEntity == null)
                     throw new IllegalArgumentException("One to One entity not found (" + a.getType().getName() + ")");
 
@@ -392,7 +283,6 @@ public class EntityParser {
                 finalizeRelationship(oneToOne, entity, toEntity);
             } else if (relationship instanceof ManyToOneJpaRelationship) {
                 JpaEntity toEntity = entities.get(a.getType().getName());
-//                LOG.debug("finalizeRelationships: ManyToOne toEntity={}", toEntity);
                 if (toEntity == null)
                     throw new IllegalArgumentException("Many to One entity not found (" + a.getType().getName() + ")");
 
@@ -400,8 +290,6 @@ public class EntityParser {
                 finalizeRelationship(manyToOne, toEntity);
             } else if (relationship instanceof OneToManyJpaRelationship) {
                 JpaEntity toEntity = entities.get(relationship.getTargetEntityClass().getName());
-//                LOG.debug("finalizeRelationships: OneToMany toEntity={}; a.getType().getName()=", toEntity,
-//                        a.getType().getName());
                 if (toEntity == null)
                     throw new IllegalArgumentException("One to Many target entity not found ("
                             + relationship.getTargetEntityClass().getName() + ")");
@@ -410,8 +298,6 @@ public class EntityParser {
                 finalizeRelationship(oneToMany, entity, toEntity);
             } else if (relationship instanceof ManyToManyJpaRelationship) {
                 JpaEntity toEntity = entities.get(relationship.getTargetEntityClass().getName());
-//                LOG.debug("finalizeRelationships: ManyToMany toEntity={}; a.getType().getName()=", toEntity,
-//                        a.getType().getName());
                 if (toEntity == null)
                     throw new IllegalArgumentException("Many to Many target entity not found ("
                             + relationship.getTargetEntityClass().getName() + ")");
@@ -447,10 +333,6 @@ public class EntityParser {
 
     private Optional<String> getMappedBy(ManyToMany manyToMany) {
         return evalMappedBy(manyToMany.mappedBy());
-    }
-
-    private Optional<String> getMappedBy(ManyToOne manyToOne) {
-        return Optional.empty();
     }
 
 }

@@ -28,6 +28,7 @@ public class MetamodelGenerator {
             new MetamodelGenerator().generate(args[0], args[1], args[2]);
         } catch (Exception e) {
             LOG.error(e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -37,10 +38,6 @@ public class MetamodelGenerator {
         LOG.info("Parsing entity classes...");
         EntityMetadataProvider entityMetadataProvider = new EntityMetadataProviderImpl();
         List<EntityMetadata> entityMetadatas = entityMetadataProvider.build(persistenceUnitInfo.getManagedClassNames());
-//        for (String className : persistenceUnitInfo.getManagedClassNames()) {
-//            EntityMetadata entityMetadata = entityMetadataProvider.build(className);
-//            entityMetadatas.add(entityMetadata);
-//        }
 
         LOG.info("Exporting metamodel...");
         for (EntityMetadata em : entityMetadatas) {

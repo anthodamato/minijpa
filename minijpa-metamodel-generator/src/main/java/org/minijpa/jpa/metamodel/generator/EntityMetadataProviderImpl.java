@@ -28,10 +28,6 @@ public class EntityMetadataProviderImpl implements EntityMetadataProvider {
             LOG.debug("build: Parsing '{}'", className);
             JpaEntity jpaEntity = entityParser.parse(className, parsedEntities);
             parsedEntities.add(jpaEntity);
-//            parsedEntities.addAll(jpaEntity.getEmbeddables());
-//            if (jpaEntity.getMappedSuperclass().isPresent())
-//                parsedEntities.add(jpaEntity.getMappedSuperclass().get());
-
             map.put(jpaEntity.getClassName(), jpaEntity);
         }
 
@@ -42,8 +38,6 @@ public class EntityMetadataProviderImpl implements EntityMetadataProvider {
         for (JpaEntity jpaEntity : map.values()) {
             allEntities.add(jpaEntity);
             allEntities.addAll(jpaEntity.getEmbeddables());
-//            if (jpaEntity.getMappedSuperclass().isPresent())
-//                allEntities.add(jpaEntity.getMappedSuperclass().get());
         }
 
         List<EntityMetadata> entityMetadatas = new ArrayList<>();
