@@ -19,7 +19,6 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import javax.persistence.spi.PersistenceUnitInfo;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -31,7 +30,7 @@ public class PersistenceProviderHelper {
 
     private Logger LOG = LoggerFactory.getLogger(PersistenceProviderHelper.class);
 
-    public PersistenceUnitInfo parseXml(String filePath, String persistenceUnitName, Map<String, String> properties)
+    public PersistenceUnitData parseXml(String filePath, String persistenceUnitName, Map<String, String> properties)
             throws Exception {
         File file = getClass().getResource(filePath) != null
                 ? Paths.get(getClass().getResource(filePath).toURI()).toFile()
@@ -55,18 +54,11 @@ public class PersistenceProviderHelper {
             throw new IllegalArgumentException("'persistence' element not found, file path: " + filePath);
         }
 
-        PersistenceUnitInfo persistenceUnitInfo = persistenceMetaData.getPersistenceUnitMetaData(persistenceUnitName);
-        if (persistenceUnitInfo == null)
+        PersistenceUnitData persistenceUnitData = persistenceMetaData.getPersistenceUnitMetaData(persistenceUnitName);
+        if (persistenceUnitData == null)
             return null;
 
-        // overwrite properties
-        if (properties != null) {
-            for (Map.Entry<String, String> entry : properties.entrySet()) {
-                persistenceUnitInfo.getProperties().setProperty(entry.getKey(), entry.getValue());
-            }
-        }
-
-        return persistenceUnitInfo;
+        return persistenceUnitData;
     }
 
 }

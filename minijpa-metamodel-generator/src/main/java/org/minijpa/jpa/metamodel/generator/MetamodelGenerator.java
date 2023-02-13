@@ -2,8 +2,6 @@ package org.minijpa.jpa.metamodel.generator;
 
 import java.util.List;
 
-import javax.persistence.spi.PersistenceUnitInfo;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +32,7 @@ public class MetamodelGenerator {
 
     public void generate(String persistenceUnitName, String persistenceXmlPath, String sourceBasePath)
             throws Exception {
-        PersistenceUnitInfo persistenceUnitInfo = findPersistenceUnitInfo(persistenceUnitName, persistenceXmlPath);
+        PersistenceUnitData persistenceUnitInfo = findPersistenceUnitInfo(persistenceUnitName, persistenceXmlPath);
         LOG.info("Parsing entity classes...");
         EntityMetadataProvider entityMetadataProvider = new EntityMetadataProviderImpl();
         List<EntityMetadata> entityMetadatas = entityMetadataProvider.build(persistenceUnitInfo.getManagedClassNames());
@@ -45,16 +43,16 @@ public class MetamodelGenerator {
         }
     }
 
-    private PersistenceUnitInfo findPersistenceUnitInfo(String persistenceUnitName, String persistenceXmlPath)
+    private PersistenceUnitData findPersistenceUnitInfo(String persistenceUnitName, String persistenceXmlPath)
             throws Exception {
-        PersistenceUnitInfo persistenceUnitInfo = null;
+        PersistenceUnitData persistenceUnitData = null;
         LOG.info("findPersistenceUnitInfo: emName={}, path={}", persistenceUnitName, persistenceXmlPath);
-        persistenceUnitInfo = new PersistenceProviderHelper().parseXml(persistenceXmlPath, persistenceUnitName, null);
-        if (persistenceUnitInfo == null) {
+        persistenceUnitData = new PersistenceProviderHelper().parseXml(persistenceXmlPath, persistenceUnitName, null);
+        if (persistenceUnitData == null) {
             LOG.error("Persistence Unit '{}' not found", persistenceUnitName);
             return null;
         }
 
-        return persistenceUnitInfo;
+        return persistenceUnitData;
     }
 }

@@ -11,13 +11,6 @@ public class EntityMetadataProviderTest {
 
     @Test
     public void citizen() throws IOException, Exception {
-//        String persistenceUnitName = "citizens";
-//        Persistence.createEntityManagerFactory(persistenceUnitName, null);
-//        DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
-//        DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitName, dbConfiguration);
-//
-//        PersistenceUnitInfo persistenceUnitInfo = new PersistenceProviderHelper().parseXml("/META-INF/persistence.xml",
-//                persistenceUnitName, null);
         EntityMetadataProvider entityMetadataProvider = new EntityMetadataProviderImpl();
 
         List<EntityMetadata> entityMetadataList = entityMetadataProvider
@@ -48,13 +41,6 @@ public class EntityMetadataProviderTest {
 
     @Test
     public void employee() throws IOException, Exception {
-//        String persistenceUnitName = "manytoone_bid";
-//        Persistence.createEntityManagerFactory(persistenceUnitName, PersistenceUnitProperties.getProperties());
-//        DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
-//        DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitName, dbConfiguration);
-
-//        PersistenceUnitInfo persistenceUnitInfo = new PersistenceProviderHelper().parseXml("/META-INF/persistence.xml",
-//                persistenceUnitName, PersistenceUnitProperties.getProperties());
         EntityMetadataProvider entityMetadataProvider = new EntityMetadataProviderImpl();
         List<EntityMetadata> entityMetadataList = entityMetadataProvider.build(List
                 .of("org.minijpa.jpa.metamodel.generator.Department", "org.minijpa.jpa.metamodel.generator.Employee"));
@@ -92,8 +78,8 @@ public class EntityMetadataProviderTest {
     @Test
     public void embBooks() throws IOException, Exception {
         EntityMetadataProvider entityMetadataProvider = new EntityMetadataProviderImpl();
-        List<EntityMetadata> entityMetadataList = entityMetadataProvider.build(
-                List.of("org.minijpa.jpa.metamodel.generator.Book"));
+        List<EntityMetadata> entityMetadataList = entityMetadataProvider
+                .build(List.of("org.minijpa.jpa.metamodel.generator.Book"));
         EntityMetadata entityMetadata = entityMetadataList.stream().filter(e -> e.getEntityClassName().equals("Book"))
                 .findFirst().get();
         Assertions.assertNotNull(entityMetadata);
@@ -102,6 +88,34 @@ public class EntityMetadataProviderTest {
         Assertions.assertEquals("org.minijpa.jpa.metamodel.generator", entityMetadata.getPackagePath());
         Assertions.assertEquals("org/minijpa/jpa/metamodel/generator/Book_.java", entityMetadata.getPath());
         Assertions.assertEquals(4, entityMetadata.getAttributeElements().size());
+
+        Optional<AttributeElement> optionalId = entityMetadata.getAttributeElements().stream()
+                .filter(a -> a.getName().equals("id")).findFirst();
+        Assertions.assertTrue(optionalId.isPresent());
+        AttributeElement attributeElement = optionalId.get();
+        Assertions.assertEquals(Long.class, attributeElement.getType());
+        Assertions.assertEquals(AttributeType.SINGULAR, attributeElement.getAttributeType());
+
+        Optional<AttributeElement> optionalTitle = entityMetadata.getAttributeElements().stream()
+                .filter(a -> a.getName().equals("title")).findFirst();
+        Assertions.assertTrue(optionalTitle.isPresent());
+        AttributeElement attributeElementTitle = optionalTitle.get();
+        Assertions.assertEquals(String.class, attributeElementTitle.getType());
+        Assertions.assertEquals(AttributeType.SINGULAR, attributeElementTitle.getAttributeType());
+
+        Optional<AttributeElement> optionalAuthor = entityMetadata.getAttributeElements().stream()
+                .filter(a -> a.getName().equals("author")).findFirst();
+        Assertions.assertTrue(optionalAuthor.isPresent());
+        AttributeElement attributeElementAuthor = optionalAuthor.get();
+        Assertions.assertEquals(String.class, attributeElementAuthor.getType());
+        Assertions.assertEquals(AttributeType.SINGULAR, attributeElementAuthor.getAttributeType());
+
+        Optional<AttributeElement> optionalBookFormat = entityMetadata.getAttributeElements().stream()
+                .filter(a -> a.getName().equals("bookFormat")).findFirst();
+        Assertions.assertTrue(optionalBookFormat.isPresent());
+        AttributeElement attributeElementBookFormat = optionalBookFormat.get();
+        Assertions.assertEquals(BookFormat.class, attributeElementBookFormat.getType());
+        Assertions.assertEquals(AttributeType.SINGULAR, attributeElementBookFormat.getAttributeType());
     }
 
 }
