@@ -24,15 +24,15 @@ public class PersistenceMetaData {
     private final Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas;
 
     public PersistenceMetaData(Map<String, PersistenceUnitInfo> persistenceUnitMetaDatas) {
-	super();
-	this.persistenceUnitMetaDatas = persistenceUnitMetaDatas;
+        super();
+        this.persistenceUnitMetaDatas = persistenceUnitMetaDatas;
     }
 
     public Map<String, PersistenceUnitInfo> getPersistenceUnitMetaDatas() {
-	return persistenceUnitMetaDatas;
+        return persistenceUnitMetaDatas;
     }
 
     public PersistenceUnitInfo getPersistenceUnitMetaData(String name) {
-	return persistenceUnitMetaDatas.get(name);
+        return persistenceUnitMetaDatas.get(name);
     }
 }

@@ -35,10 +35,13 @@ public class PersistenceProviderHelper {
 
     public PersistenceUnitInfo parseXml(String filePath, String persistenceUnitName, Map<String, String> properties)
             throws Exception {
-        File file = Paths.get(getClass().getResource(filePath).toURI()).toFile();
+        File file = getClass().getResource(filePath) != null
+                ? Paths.get(getClass().getResource(filePath).toURI()).toFile()
+                : new File(filePath);
         if (file == null)
             throw new Exception("Persistence file '" + filePath + "' not found");
 
+        LOG.info("parseXml: file={}", file);
         SAXParserFactory spf = SAXParserFactory.newInstance();
 //		spf.setNamespaceAware(true);
         SAXParser saxParser = spf.newSAXParser();
@@ -48,8 +51,10 @@ public class PersistenceProviderHelper {
         xmlReader.setContentHandler(persistenceParser);
         xmlReader.parse(file.getAbsolutePath());
         PersistenceMetaData persistenceMetaData = persistenceParser.getPersistenceMetaData();
+        LOG.info("parseXml: persistenceMetaData={}", persistenceMetaData);
         if (persistenceMetaData == null) {
             LOG.error("'persistence' element not found, file path: {}", filePath);
+            throw new IllegalArgumentException("'persistence' element not found, file path: " + filePath);
         }
 
         PersistenceUnitInfo persistenceUnitInfo = persistenceMetaData.getPersistenceUnitMetaData(persistenceUnitName);

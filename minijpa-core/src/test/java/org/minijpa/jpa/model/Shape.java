@@ -15,19 +15,19 @@ public class Shape {
     protected Integer sides;
 
     public Long getId() {
-	return id;
+        return id;
     }
 
     public Integer getArea() {
-	return area;
+        return area;
     }
 
     public void setArea(Integer area) {
-	this.area = area;
+        this.area = area;
     }
 
     public Integer getSides() {
-	return sides;
+        return sides;
     }
 
 }

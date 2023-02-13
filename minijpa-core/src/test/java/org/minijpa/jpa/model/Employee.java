@@ -22,34 +22,34 @@ public class Employee {
     private Department department;
 
     public Long getId() {
-	return id;
+        return id;
     }
 
     public void setId(Long id) {
-	this.id = id;
+        this.id = id;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public void setName(String name) {
-	this.name = name;
+        this.name = name;
     }
 
     public BigDecimal getSalary() {
-	return salary;
+        return salary;
     }
 
     public void setSalary(BigDecimal salary) {
-	this.salary = salary;
+        this.salary = salary;
     }
 
     public Department getDepartment() {
-	return department;
+        return department;
     }
 
     public void setDepartment(Department department) {
-	this.department = department;
+        this.department = department;
     }
 }

@@ -19,20 +19,19 @@ import org.minijpa.metadata.enhancer.javassist.JavassistBytecodeEnhancer;
 
 public class BytecodeEnhancerProvider {
 
-	private static final BytecodeEnhancerProvider bytecodeEnhancerProvider = new BytecodeEnhancerProvider();
+    private static final BytecodeEnhancerProvider bytecodeEnhancerProvider = new BytecodeEnhancerProvider();
 
-	private final BytecodeEnhancer bytecodeEnhancer = new JavassistBytecodeEnhancer();
+    private final BytecodeEnhancer bytecodeEnhancer = new JavassistBytecodeEnhancer();
 
-	private BytecodeEnhancerProvider() {
+    private BytecodeEnhancerProvider() {
 
-	}
+    }
 
-	public static BytecodeEnhancerProvider getInstance() {
-		return bytecodeEnhancerProvider;
-	}
+    public static BytecodeEnhancerProvider getInstance() {
+        return bytecodeEnhancerProvider;
+    }
 
-	public BytecodeEnhancer getBytecodeEnhancer() {
-		return bytecodeEnhancer;
-	}
-
+    public BytecodeEnhancer getBytecodeEnhancer() {
+        return bytecodeEnhancer;
+    }
 }

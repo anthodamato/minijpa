@@ -34,50 +34,50 @@ public class RelationshipProperties {
     private Optional<CtMethod> ctMethodSetter;
 
     public RelationshipProperties(String fieldName, CtClass type, boolean lazy, boolean joinColumn) {
-	this.fieldName = fieldName;
-	this.type = type;
-	this.lazy = lazy;
-	this.joinColumn = joinColumn;
+        this.fieldName = fieldName;
+        this.type = type;
+        this.lazy = lazy;
+        this.joinColumn = joinColumn;
     }
 
     public boolean isLazy() {
-	return lazy;
+        return lazy;
     }
 
     public boolean hasJoinColumn() {
-	return joinColumn;
+        return joinColumn;
     }
 
     public String getFieldName() {
-	return fieldName;
+        return fieldName;
     }
 
     public CtClass getType() {
-	return type;
+        return type;
     }
 
     public Optional<String> getJoinColumnFieldName() {
-	return joinColumnFieldName;
+        return joinColumnFieldName;
     }
 
     public void setJoinColumnFieldName(Optional<String> joinColumnFieldName) {
-	this.joinColumnFieldName = joinColumnFieldName;
+        this.joinColumnFieldName = joinColumnFieldName;
     }
 
     public Optional<CtMethod> getCtMethodGetter() {
-	return ctMethodGetter;
+        return ctMethodGetter;
     }
 
     public void setCtMethodGetter(Optional<CtMethod> ctMethodGetter) {
-	this.ctMethodGetter = ctMethodGetter;
+        this.ctMethodGetter = ctMethodGetter;
     }
 
     public Optional<CtMethod> getCtMethodSetter() {
-	return ctMethodSetter;
+        return ctMethodSetter;
     }
 
     public void setCtMethodSetter(Optional<CtMethod> ctMethodSetter) {
-	this.ctMethodSetter = ctMethodSetter;
+        this.ctMethodSetter = ctMethodSetter;
     }
 
 }

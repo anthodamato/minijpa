@@ -6,8 +6,8 @@ import javax.persistence.Entity;
 public class Triangle extends Shape {
 
     public Triangle() {
-	super();
-	this.sides = 3;
+        super();
+        this.sides = 3;
     }
 
 }

@@ -39,101 +39,101 @@ public class ClassInspectorTest {
 
     @Test
     public void book() throws Exception {
-	String className = "org.minijpa.jpa.model.Book";
-	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className);
-	assertNotNull(managedData);
-	assertNotNull(managedData.getCtClass());
-	assertEquals(className, managedData.getCtClass().getName());
-	assertEquals(ManagedData.ENTITY, managedData.getType());
-	assertEquals("mds0", managedData.getModificationAttribute());
-	assertEquals("lta0", managedData.getLockTypeAttribute().get());
+        String className = "org.minijpa.jpa.model.Book";
+        ClassInspector classInspector = new ClassInspector();
+        ManagedData managedData = classInspector.inspect(className);
+        assertNotNull(managedData);
+        assertNotNull(managedData.getCtClass());
+        assertEquals(className, managedData.getCtClass().getName());
+        assertEquals(ManagedData.ENTITY, managedData.getType());
+        assertEquals("mds0", managedData.getModificationAttribute());
+        assertEquals("lta0", managedData.getLockTypeAttribute().get());
 
-	List<AttributeData> attributeDatas = managedData.getAttributeDataList();
-	assertNotNull(attributeDatas);
-	assertEquals(4, attributeDatas.size());
+        List<AttributeData> attributeDatas = managedData.getAttributeDataList();
+        assertNotNull(attributeDatas);
+        assertEquals(4, attributeDatas.size());
 
-	Optional<AttributeData> optional = managedData.findAttribute("id");
-	assertTrue(optional.isPresent());
+        Optional<AttributeData> optional = managedData.findAttribute("id");
+        assertTrue(optional.isPresent());
 
-	optional = managedData.findAttribute("title");
-	assertTrue(optional.isPresent());
+        optional = managedData.findAttribute("title");
+        assertTrue(optional.isPresent());
 
-	optional = managedData.findAttribute("author");
-	assertTrue(optional.isPresent());
+        optional = managedData.findAttribute("author");
+        assertTrue(optional.isPresent());
 
-	optional = managedData.findAttribute("bookFormat");
-	assertTrue(optional.isPresent());
-	AttributeData attributeData = optional.get();
-	Property property = attributeData.getProperty();
-	assertTrue(property.isEmbedded());
+        optional = managedData.findAttribute("bookFormat");
+        assertTrue(optional.isPresent());
+        AttributeData attributeData = optional.get();
+        Property property = attributeData.getProperty();
+        assertTrue(property.isEmbedded());
 
-	assertNotNull(attributeData.getEmbeddedData());
-	ManagedData embeddedData = attributeData.getEmbeddedData();
-	assertNotNull(embeddedData.getCtClass());
-	assertEquals("org.minijpa.jpa.model.BookFormat", embeddedData.getCtClass().getName());
-	assertEquals(ManagedData.EMBEDDABLE, embeddedData.getType());
-	assertEquals("mds0", embeddedData.getModificationAttribute());
+        assertNotNull(attributeData.getEmbeddedData());
+        ManagedData embeddedData = attributeData.getEmbeddedData();
+        assertNotNull(embeddedData.getCtClass());
+        assertEquals("org.minijpa.jpa.model.BookFormat", embeddedData.getCtClass().getName());
+        assertEquals(ManagedData.EMBEDDABLE, embeddedData.getType());
+        assertEquals("mds0", embeddedData.getModificationAttribute());
 
-	List<AttributeData> embeddedAttributeDatas = embeddedData.getAttributeDataList();
-	assertNotNull(embeddedAttributeDatas);
-	assertEquals(2, embeddedAttributeDatas.size());
-	Optional<AttributeData> opt = embeddedData.findAttribute("format");
-	assertTrue(opt.isPresent());
-	attributeData = opt.get();
-	assertFalse(attributeData.getProperty().isEmbedded());
-	assertFalse(attributeData.isParentEmbeddedId());
+        List<AttributeData> embeddedAttributeDatas = embeddedData.getAttributeDataList();
+        assertNotNull(embeddedAttributeDatas);
+        assertEquals(2, embeddedAttributeDatas.size());
+        Optional<AttributeData> opt = embeddedData.findAttribute("format");
+        assertTrue(opt.isPresent());
+        attributeData = opt.get();
+        assertFalse(attributeData.getProperty().isEmbedded());
+        assertFalse(attributeData.isParentEmbeddedId());
 
-	opt = embeddedData.findAttribute("pages");
-	assertTrue(opt.isPresent());
+        opt = embeddedData.findAttribute("pages");
+        assertTrue(opt.isPresent());
     }
 
     @Test
     public void hotelBooking() throws Exception {
-	String className = "org.minijpa.jpa.model.HotelBooking";
-	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className);
-	assertNotNull(managedData);
-	assertNotNull(managedData.getCtClass());
-	assertEquals(className, managedData.getCtClass().getName());
-	assertEquals(ManagedData.ENTITY, managedData.getType());
+        String className = "org.minijpa.jpa.model.HotelBooking";
+        ClassInspector classInspector = new ClassInspector();
+        ManagedData managedData = classInspector.inspect(className);
+        assertNotNull(managedData);
+        assertNotNull(managedData.getCtClass());
+        assertEquals(className, managedData.getCtClass().getName());
+        assertEquals(ManagedData.ENTITY, managedData.getType());
 
-	List<AttributeData> attributeDatas = managedData.getAttributeDataList();
-	assertNotNull(attributeDatas);
-	assertEquals(3, attributeDatas.size());
+        List<AttributeData> attributeDatas = managedData.getAttributeDataList();
+        assertNotNull(attributeDatas);
+        assertEquals(3, attributeDatas.size());
 
-	Optional<AttributeData> optional = managedData.findAttribute("roomBookingId");
-	assertTrue(optional.isPresent());
-	assertNotNull(optional.get().getEmbeddedData());
+        Optional<AttributeData> optional = managedData.findAttribute("roomBookingId");
+        assertTrue(optional.isPresent());
+        assertNotNull(optional.get().getEmbeddedData());
 
-	optional = managedData.findAttribute("customerId");
-	assertTrue(optional.isPresent());
+        optional = managedData.findAttribute("customerId");
+        assertTrue(optional.isPresent());
 
-	optional = managedData.findAttribute("price");
-	assertTrue(optional.isPresent());
+        optional = managedData.findAttribute("price");
+        assertTrue(optional.isPresent());
     }
 
     @Test
     public void bookingSale() throws Exception {
-	String className = "org.minijpa.jpa.model.BookingSale";
-	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className);
-	assertNotNull(managedData);
-	assertNotNull(managedData.getCtClass());
-	assertEquals(className, managedData.getCtClass().getName());
-	assertEquals(ManagedData.ENTITY, managedData.getType());
+        String className = "org.minijpa.jpa.model.BookingSale";
+        ClassInspector classInspector = new ClassInspector();
+        ManagedData managedData = classInspector.inspect(className);
+        assertNotNull(managedData);
+        assertNotNull(managedData.getCtClass());
+        assertEquals(className, managedData.getCtClass().getName());
+        assertEquals(ManagedData.ENTITY, managedData.getType());
 
-	List<AttributeData> attributeDatas = managedData.getAttributeDataList();
-	assertNotNull(attributeDatas);
-	assertEquals(3, attributeDatas.size());
+        List<AttributeData> attributeDatas = managedData.getAttributeDataList();
+        assertNotNull(attributeDatas);
+        assertEquals(3, attributeDatas.size());
 
-	Optional<AttributeData> optional = managedData.findAttribute("id");
-	assertTrue(optional.isPresent());
+        Optional<AttributeData> optional = managedData.findAttribute("id");
+        assertTrue(optional.isPresent());
 
-	optional = managedData.findAttribute("booking");
-	assertTrue(optional.isPresent());
+        optional = managedData.findAttribute("booking");
+        assertTrue(optional.isPresent());
 
-	optional = managedData.findAttribute("perc");
-	assertTrue(optional.isPresent());
+        optional = managedData.findAttribute("perc");
+        assertTrue(optional.isPresent());
     }
 }
