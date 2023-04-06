@@ -449,8 +449,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     @Override
     public List<?> select(Query query) throws Exception {
         CriteriaQuery<?> criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
-        if (criteriaQuery.getSelection() == null)
-            throw new IllegalStateException("Selection not defined or not inferable");
+//        if (criteriaQuery.getSelection() == null)
+//            throw new IllegalStateException("Selection not defined or not inferable");
 
         StatementParameters statementParameters = dbConfiguration.getSqlStatementFactory().select(query,
                 persistenceUnitContext.getAliasGenerator());
@@ -459,7 +459,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
         sqlSelectData.getFetchParameters().forEach(f -> LOG.debug("select: f={}", f));
         LOG.debug("select: sql={}", sql);
-        LOG.debug("select: sqlSelectData.getSqlSelect().getResult()={}", sqlSelectData.getResult());
+        LOG.debug("select: sqlSelectData.getResult()={}", sqlSelectData.getResult());
         if (sqlSelectData.getResult() != null) {
             Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
                     CollectionUtils.findCollectionImplementationClass(List.class));

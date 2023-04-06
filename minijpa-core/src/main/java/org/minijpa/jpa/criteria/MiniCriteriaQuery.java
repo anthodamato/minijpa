@@ -86,8 +86,8 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
     @SuppressWarnings("unchecked")
     @Override
     public Selection<T> getSelection() {
-        if (selection == null && !roots.isEmpty())
-            return (MiniRoot<T>) roots.iterator().next();
+//        if (selection == null && !roots.isEmpty())
+//            return (MiniRoot<T>) roots.iterator().next();
 
         return (Selection<T>) selection;
     }

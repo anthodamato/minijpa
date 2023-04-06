@@ -99,7 +99,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
         jpqlVisitorParameters.fromTables.forEach(f -> selectBuilder.withFromTable(f));
         if (jpqlVisitorParameters.fromJoins != null) {
-            selectBuilder.withJoins(jpqlVisitorParameters.fromJoins);
+            jpqlVisitorParameters.fromJoins.forEach(selectBuilder::withFromTable);
+//            selectBuilder.withJoins(jpqlVisitorParameters.fromJoins);
         }
 
         selectBuilder.withValues(jpqlVisitorParameters.values);
