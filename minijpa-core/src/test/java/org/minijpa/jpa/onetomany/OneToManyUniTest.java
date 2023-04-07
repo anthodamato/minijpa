@@ -86,9 +86,7 @@ public class OneToManyUniTest {
     Assertions.assertEquals(2, s.getItems().size());
     Assertions.assertFalse(s == store);
 
-    em.remove(s);
-    em.remove(item1);
-    em.remove(item2);
+    removeStore(store.getId(), em);
     tx.commit();
 
     em.close();
@@ -148,10 +146,7 @@ public class OneToManyUniTest {
     Number count = (Number) query.getSingleResult();
     Assertions.assertEquals(3, count.intValue());
 
-    em.remove(s);
-    em.remove(item1);
-    em.remove(item2);
-    em.remove(item3);
+    removeStore(store.getId(), em);
     tx.commit();
 
     LOG.info("persistCollection: s=" + s);
@@ -213,11 +208,7 @@ public class OneToManyUniTest {
     tx.commit();
 
     tx.begin();
-    Store s = em.find(Store.class, store.getId());
-    em.remove(s);
-    em.remove(item1);
-    em.remove(item2);
-    em.remove(item3);
+    removeStore(store.getId(), em);
     tx.commit();
 
     em.close();
@@ -353,11 +344,7 @@ public class OneToManyUniTest {
     tx.commit();
 
     tx.begin();
-    Store s = em.find(Store.class, store.getId());
-    em.remove(s);
-    em.remove(item1);
-    em.remove(item2);
-    em.remove(item3);
+    removeStore(store.getId(), em);
     tx.commit();
 
     em.close();
@@ -507,11 +494,7 @@ public class OneToManyUniTest {
 
     em.detach(store);
     tx.begin();
-    Store sr = em.find(Store.class, store.getId());
-    em.remove(sr);
-    em.remove(item1);
-    em.remove(item2);
-    em.remove(item3);
+    removeStore(store.getId(), em);
     tx.commit();
 
     em.close();
@@ -560,10 +543,10 @@ public class OneToManyUniTest {
     CriteriaBuilder cb = em.getCriteriaBuilder();
     CriteriaQuery<Store> cq = cb.createQuery(Store.class);
     Root<Store> root = cq.from(Store.class);
-    Join<Store, Item> item = root.join(Store_.items);
+    Join<Store, Item> item = root.join("items");
 
     ParameterExpression<String> pTitle = cb.parameter(String.class);
-    cq.where(cb.like(item.get(Item_.model), pTitle));
+    cq.where(cb.like(item.get("model"), pTitle));
 
     TypedQuery<Store> q = em.createQuery(cq);
     q.setParameter(pTitle, "%Castles%");
@@ -583,12 +566,7 @@ public class OneToManyUniTest {
 
     em.detach(store);
     tx.begin();
-    Store sr = em.find(Store.class, store.getId());
-    em.remove(sr);
-    em.remove(item1);
-    em.remove(item2);
-    em.remove(item3);
-    em.remove(item4);
+    removeStore(store.getId(), em);
     tx.commit();
 
     em.close();
@@ -612,51 +590,70 @@ public class OneToManyUniTest {
     item3.setName("Pen");
     item3.setModel("Castles");
 
+    Item item4 = new Item();
+    item4.setName("Notepad");
+    item4.setModel("Free Inch");
+
+    Item item5 = new Item();
+    item5.setName("Pencil");
+    item5.setModel("Staedtler");
+
     store.setItems(Arrays.asList(item1, item2, item3));
+
+    Store store2 = new Store();
+    store2.setName("Upton Store 2nd");
+    store2.setItems(Arrays.asList(item4, item5));
+
+    Store store3 = new Store();
+    store3.setName("Upton Store 3rd");
 
     final EntityTransaction tx = em.getTransaction();
     tx.begin();
 
     em.persist(item1);
     em.persist(store);
+    em.persist(store2);
+    em.persist(store3);
     em.persist(item2);
     em.persist(item3);
+    em.persist(item4);
+    em.persist(item5);
 
     tx.commit();
 
     Assertions.assertFalse(store.getItems().isEmpty());
 
     em.detach(store);
+    em.detach(store2);
+    em.detach(store3);
 
     tx.begin();
     CriteriaBuilder cb = em.getCriteriaBuilder();
     CriteriaQuery<Store> cq = cb.createQuery(Store.class);
     Root<Store> root = cq.from(Store.class);
-    Join<Store, Item> item = root.join(Store_.items, JoinType.LEFT);
+    Join<Store, Item> item = root.join("items", JoinType.LEFT);
 
-    ParameterExpression<String> pTitle = cb.parameter(String.class);
-    cq.where(cb.like(item.get(Item_.model), pTitle));
-
+    cq.distinct(true);
     TypedQuery<Store> q = em.createQuery(cq);
-    q.setParameter(pTitle, "%Castles%");
     List<Store> stores = q.getResultList();
     tx.commit();
+
     Assertions.assertFalse(stores.isEmpty());
-    Assertions.assertEquals(1, stores.size());
+    Assertions.assertEquals(3, stores.size());
     Store s = stores.get(0);
     Assertions.assertEquals("Upton Store", s.getName());
     Assertions.assertFalse(s == store);
+    Assertions.assertEquals("Upton Store 2nd", stores.get(1).getName());
+    Assertions.assertEquals("Upton Store 3rd", stores.get(2).getName());
 
     Collection<Item> items = s.getItems();
     Assertions.assertEquals(3, items.size());
 
     em.detach(store);
     tx.begin();
-    Store sr = em.find(Store.class, store.getId());
-    em.remove(sr);
-    em.remove(item1);
-    em.remove(item2);
-    em.remove(item3);
+    removeStore(store.getId(), em);
+    removeStore(store2.getId(), em);
+    removeStore(store3.getId(), em);
     tx.commit();
 
     em.close();
@@ -700,10 +697,10 @@ public class OneToManyUniTest {
     CriteriaBuilder cb = em.getCriteriaBuilder();
     CriteriaQuery<Store> cq = cb.createQuery(Store.class);
     Root<Store> root = cq.from(Store.class);
-    Join<Store, Item> item = (Join<Store, Item>) root.fetch(Store_.items);
+    Join<Object, Object> item = (Join<Object, Object>) root.fetch("items");
 
     ParameterExpression<String> pTitle = cb.parameter(String.class);
-    cq.where(cb.like(item.get(Item_.model), pTitle));
+    cq.where(cb.like(item.get("model"), pTitle));
 
     TypedQuery<Store> q = em.createQuery(cq);
     q.setParameter(pTitle, "%Castles%");
@@ -729,4 +726,12 @@ public class OneToManyUniTest {
 
     em.close();
   }
+
+  private void removeStore(long id, EntityManager em) {
+    Store sr = em.find(Store.class, id);
+    Collection<Item> items = sr.getItems();
+    em.remove(sr);
+    items.forEach(em::remove);
+  }
+
 }
