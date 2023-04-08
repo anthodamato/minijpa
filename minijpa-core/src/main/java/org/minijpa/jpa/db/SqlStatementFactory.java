@@ -19,26 +19,22 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListResourceBundle;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.persistence.Query;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
-
 import javax.persistence.metamodel.Attribute;
 import org.minijpa.jdbc.BasicFetchParameter;
 import org.minijpa.jdbc.FetchParameter;
@@ -117,6 +113,7 @@ import org.minijpa.sql.model.condition.UnaryCondition;
 import org.minijpa.sql.model.condition.UnaryLogicConditionImpl;
 import org.minijpa.sql.model.join.FromJoin;
 import org.minijpa.sql.model.join.FromJoinImpl;
+import org.minijpa.sql.model.join.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -269,6 +266,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
    * @return
    */
   public List<FromJoin> calculateJoins(MetaEntity entity, MetaAttribute metaAttribute,
+      JoinType joinType,
       AliasGenerator aliasGenerator) {
     if (metaAttribute.getRelationship().getJoinTable() != null) {
       List<MetaAttribute> idSourceAttributes = entity.getId().getAttributes();
@@ -285,7 +283,8 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
       String tableAlias = aliasGenerator.getDefault(relationshipJoinTable.getTableName());
       FromTable joinTable = new FromTableImpl(relationshipJoinTable.getTableName(), tableAlias);
       tableAlias = aliasGenerator.getDefault(entity.getTableName());
-      FromJoin fromJoin = new FromJoinImpl(joinTable, tableAlias, idSourceColumns, idOwningColumns);
+      FromJoin fromJoin = new FromJoinImpl(joinTable, tableAlias, idSourceColumns, idOwningColumns,
+          joinType);
 
       MetaEntity destEntity = relationshipJoinTable.getTargetEntity();
       List<MetaAttribute> idTargetAttributes = destEntity.getId().getAttributes();
@@ -301,7 +300,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
       FromTable joinTable2 = new FromTableImpl(destEntity.getTableName(), tableAlias);
       FromJoin fromJoin2 = new FromJoinImpl(joinTable2,
           aliasGenerator.getDefault(relationshipJoinTable.getTableName()), idTargetColumns,
-          idDestColumns);
+          idDestColumns, joinType);
 
       return Arrays.asList(fromJoin, fromJoin2);
     } else if (metaAttribute.getRelationship().getJoinColumnMapping().isPresent()) {
@@ -320,7 +319,8 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
       String tableAlias = aliasGenerator.getDefault(destEntity.getTableName());
       FromTable joinTable = new FromTableImpl(destEntity.getTableName(), tableAlias);
       tableAlias = aliasGenerator.getDefault(entity.getTableName());
-      FromJoin fromJoin = new FromJoinImpl(joinTable, tableAlias, idSourceColumns, idDestColumns);
+      FromJoin fromJoin = new FromJoinImpl(joinTable, tableAlias, idSourceColumns, idDestColumns,
+          joinType);
 
       return List.of(fromJoin);
     }
@@ -1165,6 +1165,19 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     return Optional.of(result);
   }
 
+  private JoinType decodeJoinType(javax.persistence.criteria.JoinType jt) {
+    switch (jt) {
+      case INNER:
+        return JoinType.Inner;
+      case LEFT:
+        return JoinType.Left;
+      case RIGHT:
+        return JoinType.Right;
+    }
+
+    throw new IllegalArgumentException("Join Type not supported: " + jt);
+  }
+
   private List<From> buildFromClauseFromJoins(Set<Root<?>> roots,
       AliasGenerator aliasGenerator) {
     List<From> froms = new ArrayList<>();
@@ -1178,21 +1191,14 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
           Attribute attribute = collectionJoin.getAttribute();
           String attributeName = attribute.getName();
           MetaAttribute metaAttribute = entity.getAttribute(attributeName);
-          List<FromJoin> fromJoins = calculateJoins(entity, metaAttribute, aliasGenerator);
+          List<FromJoin> fromJoins = calculateJoins(entity, metaAttribute,
+              decodeJoinType(collectionJoin.getJoinType()), aliasGenerator);
           froms.addAll(fromJoins);
         }
       });
     });
 
     return froms;
-//    return roots.stream().filter(root -> !root.getJoins().isEmpty()).map(root -> {
-//      MetaEntity entity = ((MiniRoot<?>) root).getMetaEntity();
-//      return FromTable.of(entity.getTableName(), aliasGenerator.getDefault(entity.getTableName()));
-//    }).collect(Collectors.toList());
-  }
-
-  private List<FromJoin> buildFromJoins(Set<Root<?>> roots, AliasGenerator aliasGenerator) {
-    return List.of();
   }
 
   private List<Value> buildValues(MiniRoot<?> miniRoot, List<FromTable> fromTables) {
@@ -1288,6 +1294,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     SqlSelectDataBuilder builder = new SqlSelectDataBuilder();
     List<From> froms = buildFromClauseFromJoins(criteriaQuery.getRoots(), aliasGenerator);
     froms.forEach(builder::withFromTable);
+    LOG.debug("select: froms={}", froms);
 
     LockType lockType = LockTypeUtils.toLockType(query.getLockMode());
     if (lockType != null) {

@@ -12,12 +12,7 @@ import org.minijpa.jpa.model.MetaEntity;
 public class CollectionJoinImpl<Z, E> extends AbstractFrom<Z, E> implements CollectionJoin<Z, E> {
 
   private final Attribute<? super Z, E> attribute;
-  private JoinType joinType = JoinType.INNER;
-
-  public CollectionJoinImpl(MetaEntity metaEntity, Attribute<? super Z, E> attribute) {
-    super(metaEntity);
-    this.attribute = attribute;
-  }
+  private final JoinType joinType;
 
   public CollectionJoinImpl(MetaEntity metaEntity, Attribute<? super Z, E> attribute,
       JoinType joinType) {

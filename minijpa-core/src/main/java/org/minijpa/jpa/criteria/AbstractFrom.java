@@ -73,7 +73,7 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 
   @Override
   public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection) {
-    return (CollectionJoin<X, Y>) new CollectionJoinImpl<>(metaEntity, collection);
+    return (CollectionJoin<X, Y>) new CollectionJoinImpl<>(metaEntity, collection, JoinType.INNER);
   }
 
   @Override
@@ -148,7 +148,7 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
         Attribute attribute = new AttributeImpl<>(attributeName,
             PersistentAttributeType.BASIC, null, metaAttribute.getType(), null, false, true);
         Join join = new CollectionJoinImpl<>(metaAttribute.getRelationship().getAttributeType(),
-            attribute);
+            attribute, jt);
         joins.add(join);
         return join;
       }
@@ -158,7 +158,8 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 //    if (optional.isPresent()) {
 //    }
 
-    return null;
+    throw new IllegalArgumentException(
+        "Join not supported: attribute '" + attributeName + "' Join: " + jt);
   }
 
   @Override

@@ -655,9 +655,12 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     throw new IllegalArgumentException("Condition '" + condition + "' not supported");
   }
 
-  protected String exportInnerJoin(FromJoin fromJoin) {
+  protected String exportJoin(FromJoin fromJoin) {
     StringBuilder sb = new StringBuilder();
-    sb.append(" INNER JOIN ");
+    sb.append(" ");
+    sb.append(exportJoinKeyword(fromJoin.getType()));
+    sb.append(" ");
+
     FromTable toTable = fromJoin.getToTable();
     sb.append(nameTranslator.toTableName(toTable.getAlias(), toTable.getName()));
     sb.append(" ON ");
@@ -684,12 +687,23 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     return sb.toString();
   }
 
+  protected String exportJoinKeyword(JoinType joinType) {
+    switch (joinType) {
+      case Inner:
+        return "INNER JOIN";
+      case Left:
+        return "LEFT OUTER JOIN";
+      case Right:
+        return "RIGHT OUTER JOIN";
+    }
+
+    return null;
+  }
+
   protected String exportJoins(List<FromJoin> fromJoins) {
     StringBuilder sb = new StringBuilder();
     for (FromJoin fromJoin : fromJoins) {
-      if (fromJoin.getType() == JoinType.InnerJoin) {
-        sb.append(exportInnerJoin(fromJoin));
-      }
+      sb.append(exportJoin(fromJoin));
     }
 
     return sb.toString();
@@ -713,9 +727,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         }
       } else if (from instanceof FromJoin) {
         FromJoin fromJoin = (FromJoin) from;
-        if (fromJoin.getType() == JoinType.InnerJoin) {
-          sb.append(exportInnerJoin(fromJoin));
-        }
+        sb.append(exportJoin(fromJoin));
       }
 
       ++i;
@@ -817,9 +829,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     sb.append(cc);
     sb.append(" from ");
     sb.append(exportFrom(sqlSelect.getFrom()));
-//    if (sqlSelect.getJoins().isPresent()) {
-//      sb.append(exportJoins(sqlSelect.getJoins().get()));
-//    }
 
     if (sqlSelect.getConditions().isPresent()) {
       sb.append(" where ");
@@ -945,6 +954,14 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         + " not null";
   }
 
+  protected String buildJoinTableColumnDeclaration(JdbcJoinColumnMapping jdbcJoinColumnMapping) {
+    return jdbcJoinColumnMapping.getJoinColumns().stream()
+        .map(c -> nameTranslator.adjustName(c.getName()) + " "
+            + buildColumnDefinition(c.getDatabaseType(), Optional.empty()) + (
+            jdbcJoinColumnMapping.unique() ? "" : " not null"))
+        .collect(Collectors.joining(", "));
+  }
+
   protected String buildDeclaration(ColumnDeclaration columnDeclaration) {
     return nameTranslator.adjustName(columnDeclaration.getName()) + " "
         + buildColumnDefinition(columnDeclaration.getDatabaseType(), Optional.empty());
@@ -1017,12 +1034,12 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     sb.append("create table ");
     sb.append(nameTranslator.adjustName(sqlCreateJoinTable.getTableName()));
     sb.append(" (");
-    List<ColumnDeclaration> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations()
+    String cols = sqlCreateJoinTable.getForeignKeyDeclarations()
         .stream()
-        .map(d -> d.getJdbcJoinColumnMapping().getJoinColumns()).flatMap(List::stream)
-        .collect(Collectors.toList());
-    String cols = joinColumnAttributes.stream().map(a -> buildJoinTableColumnDeclaration(a))
+        .map(ForeignKeyDeclaration::getJdbcJoinColumnMapping).map(
+            this::buildJoinTableColumnDeclaration)
         .collect(Collectors.joining(", "));
+
     sb.append(cols);
 
     // foreign keys
@@ -1033,6 +1050,16 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
       sb.append(cols);
       sb.append(") references ");
       sb.append(foreignKeyDeclaration.getReferenceTable());
+    }
+
+    // possible table constraints
+    for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateJoinTable.getForeignKeyDeclarations()) {
+      if (foreignKeyDeclaration.getJdbcJoinColumnMapping().unique()) {
+        sb.append(", unique (");
+        sb.append(foreignKeyDeclaration.getJdbcJoinColumnMapping()
+            .getJoinColumns().stream().map(ColumnDeclaration::getName).collect(Collectors.joining(", ")));
+        sb.append(")");
+      }
     }
 
     sb.append(")");
