@@ -191,7 +191,7 @@ public class JpaSqlStatementGeneratorTest {
         Assertions.assertEquals("create sequence HOTELCUSTOMER_PK_SEQ start with 1 increment by 1", ddl);
         ddl = ddlStatements.get(3);
         Assertions.assertEquals(
-                "create table HotelBookingDetail_HotelCustomer (HotelBookingDetail_dateof date not null, HotelBookingDetail_room_number integer not null, customers_id bigint not null, foreign key (HotelBookingDetail_dateof, HotelBookingDetail_room_number) references HotelBookingDetail, foreign key (customers_id) references HotelCustomer)",
+                "create table HotelBookingDetail_HotelCustomer (HotelBookingDetail_dateof date not null, HotelBookingDetail_room_number integer not null, customers_id bigint, foreign key (HotelBookingDetail_dateof, HotelBookingDetail_room_number) references HotelBookingDetail, foreign key (customers_id) references HotelCustomer, unique (customers_id))",
                 ddl);
     }
 }

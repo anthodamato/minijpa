@@ -302,6 +302,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
           aliasGenerator.getDefault(relationshipJoinTable.getTableName()), idTargetColumns,
           idDestColumns, joinType);
 
+      LOG.debug("calculateJoins: fromJoin={}, fromJoin2={}", fromJoin, fromJoin2);
       return Arrays.asList(fromJoin, fromJoin2);
     } else if (metaAttribute.getRelationship().getJoinColumnMapping().isPresent()) {
       List<JoinColumnAttribute> joinColumnAttributes = metaAttribute.getRelationship()
@@ -1238,6 +1239,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     }
 
     FromTable fromTable = null; // get FromTable from selection
+    LOG.debug("buildSelectionValues: selection={}", selection);
     Optional<Value> optional = criteriaExpressionHelper.createSelectionValue(fromTable,
         aliasGenerator, selection, query, parameters);
     optional.ifPresent(values::add);

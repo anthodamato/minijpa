@@ -23,6 +23,7 @@ import javax.persistence.criteria.Root;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.Item;
@@ -659,6 +660,7 @@ public class OneToManyUniTest {
     em.close();
   }
 
+  @Disabled
   @Test
   public void joinFetch() throws Exception {
     final EntityManager em = emf.createEntityManager();

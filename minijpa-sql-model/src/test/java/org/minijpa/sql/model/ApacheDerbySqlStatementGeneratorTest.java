@@ -67,13 +67,12 @@ public class ApacheDerbySqlStatementGeneratorTest {
     Column nameColumn = new Column("first_name");
 
     List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
-    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-        .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
+    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(
+        new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
     List<Condition> conditions = Arrays.asList(binaryCondition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals("select c.id from citizen AS c where c.first_name = 'Sam'",
         sqlStatementGenerator.export(sqlSelect));
   }
@@ -96,8 +95,8 @@ public class ApacheDerbySqlStatementGeneratorTest {
   public void delete() {
     FromTable fromTable = new FromTableImpl("citizen", "c");
     Column nameColumn = new Column("first_name");
-    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-        .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
+    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(
+        new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
     SqlDelete sqlDelete = new SqlDelete(fromTable, Optional.of(binaryCondition));
     Assertions.assertEquals("delete from citizen AS c where c.first_name = 'Sam'",
         sqlStatementGenerator.export(sqlDelete));
@@ -111,17 +110,18 @@ public class ApacheDerbySqlStatementGeneratorTest {
     Column surnameColumn = new Column("last_name");
 
     List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
-    BinaryCondition binaryCondition1 = new BinaryCondition.Builder(ConditionType.EQUAL)
-        .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
-    BinaryCondition binaryCondition2 = new BinaryCondition.Builder(ConditionType.NOT_EQUAL)
-        .withLeft(new TableColumn(fromTable, surnameColumn)).withRight("'Smith'").build();
+    BinaryCondition binaryCondition1 = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(
+        new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
+    BinaryCondition binaryCondition2 = new BinaryCondition.Builder(
+        ConditionType.NOT_EQUAL).withLeft(new TableColumn(fromTable, surnameColumn))
+        .withRight("'Smith'").build();
     BinaryLogicCondition binaryLogicCondition1 = new BinaryLogicConditionImpl(ConditionType.AND,
         Arrays.asList(binaryCondition1, binaryCondition2), true);
 
     LikeCondition likeCondition = new LikeCondition(new TableColumn(fromTable, nameColumn), "'Ed%'",
         null);
-    BinaryCondition binaryCondition4 = new BinaryCondition.Builder(ConditionType.EQUAL)
-        .withLeft(new TableColumn(fromTable, surnameColumn)).withRight("'Smith'").build();
+    BinaryCondition binaryCondition4 = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(
+        new TableColumn(fromTable, surnameColumn)).withRight("'Smith'").build();
     BinaryLogicCondition binaryLogicCondition2 = new BinaryLogicConditionImpl(ConditionType.AND,
         Arrays.asList(likeCondition, binaryCondition4), true);
 
@@ -131,8 +131,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     List<Condition> conditions = Arrays.asList(binaryLogicCondition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals(
         "select c.id from citizen AS c where (c.first_name = 'Sam' and c.last_name <> 'Smith') or (c.first_name like 'Ed%' and c.last_name = 'Smith')",
         sqlStatementGenerator.export(sqlSelect));
@@ -146,10 +145,11 @@ public class ApacheDerbySqlStatementGeneratorTest {
     Column surnameColumn = new Column("last_name");
 
     List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
-    BinaryCondition binaryCondition1 = new BinaryCondition.Builder(ConditionType.EQUAL)
-        .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
-    BinaryCondition binaryCondition2 = new BinaryCondition.Builder(ConditionType.NOT_EQUAL)
-        .withLeft(new TableColumn(fromTable, surnameColumn)).withRight("'Smith'").build();
+    BinaryCondition binaryCondition1 = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(
+        new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
+    BinaryCondition binaryCondition2 = new BinaryCondition.Builder(
+        ConditionType.NOT_EQUAL).withLeft(new TableColumn(fromTable, surnameColumn))
+        .withRight("'Smith'").build();
     BinaryLogicCondition binaryLogicCondition1 = new BinaryLogicConditionImpl(ConditionType.AND,
         Arrays.asList(binaryCondition1, binaryCondition2));
 
@@ -159,8 +159,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     List<Condition> conditions = Arrays.asList(unaryLogicCondition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals(
         "select c.id from citizen AS c where not (c.first_name = 'Sam' and c.last_name <> 'Smith')",
         sqlStatementGenerator.export(sqlSelect));
@@ -179,8 +178,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals("select c.id from citizen AS c where c.gender = TRUE",
         sqlStatementGenerator.export(sqlSelect));
   }
@@ -198,8 +196,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals("select c.id from citizen AS c where c.gender = FALSE",
         sqlStatementGenerator.export(sqlSelect));
   }
@@ -217,8 +214,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals("select a.id from account AS a where a.expiry_date is null",
         sqlStatementGenerator.export(sqlSelect));
   }
@@ -236,8 +232,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals("select a.id from account AS a where a.expiry_date is not null",
         sqlStatementGenerator.export(sqlSelect));
   }
@@ -250,14 +245,12 @@ public class ApacheDerbySqlStatementGeneratorTest {
 
     List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
     Condition condition = new BetweenCondition(new TableColumn(fromTable, expiryDateColumn),
-        "'01-01-2000'",
-        "'01-01-2020'", true);
+        "'01-01-2000'", "'01-01-2020'", true);
 
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals(
         "select a.id from account AS a where a.expiry_date not between '01-01-2000' and '01-01-2020'",
         sqlStatementGenerator.export(sqlSelect));
@@ -276,8 +269,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals(
         "select a.id from account AS a where a.status not in ('CLOSED', 'SUSPENDED')",
         sqlStatementGenerator.export(sqlSelect));
@@ -341,19 +333,17 @@ public class ApacheDerbySqlStatementGeneratorTest {
     FromTable cityTable = new FromTableImpl("city", "c");
     FromTable regionTable = new FromTableImpl("region", "r");
     FromJoin fromJoin = new FromJoinImpl(cityTable, regionTable.getAlias().get(),
-        Arrays.asList(regionIdColumn),
-        Arrays.asList(regionColumn));
+        Arrays.asList(regionIdColumn), Arrays.asList(regionColumn));
 
     Column regionNameColumn = new Column("name");
 
     List<Value> values = Arrays.asList(new TableColumn(regionTable, regionNameColumn));
-    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-        .withLeft(new TableColumn(cityTable, nameColumn)).withRight("'Nottingham'").build();
+    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(
+        new TableColumn(cityTable, nameColumn)).withRight("'Nottingham'").build();
     List<Condition> conditions = Arrays.asList(binaryCondition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(regionTable).withFromTable(fromJoin)
-        .withValues(values)
-        .withConditions(conditions).build();
+        .withValues(values).withConditions(conditions).build();
 
     Assertions.assertEquals(
         "select r.name from region AS r INNER JOIN city AS c ON r.id = c.region_id where c.name = 'Nottingham'",
@@ -367,8 +357,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     Column surnameColumn = new Column("last_name");
 
     SqlInsert sqlInsert = new SqlInsert(FromTable.of("citizen"),
-        Arrays.asList(idColumn, nameColumn, surnameColumn),
-        false, false, Optional.empty());
+        Arrays.asList(idColumn, nameColumn, surnameColumn), false, false, Optional.empty());
     Assertions.assertEquals("insert into citizen (id,first_name,last_name) values (?,?,?)",
         sqlStatementGenerator.export(sqlInsert));
   }
@@ -378,12 +367,11 @@ public class ApacheDerbySqlStatementGeneratorTest {
     FromTable fromTable = new FromTableImpl("citizen", "c");
     Column idColumn = new Column("id");
     Column surnameColumn = new Column("last_name");
-    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
-        .withLeft(new TableColumn(fromTable, idColumn)).withRight(456).build();
+    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL).withLeft(
+        new TableColumn(fromTable, idColumn)).withRight(456).build();
 
     SqlUpdate sqlUpdate = new SqlUpdate(fromTable,
-        Arrays.asList(new TableColumn(fromTable, surnameColumn)),
-        Optional.of(binaryCondition));
+        Arrays.asList(new TableColumn(fromTable, surnameColumn)), Optional.of(binaryCondition));
     Assertions.assertEquals("update citizen AS c set c.last_name = ? where c.id = 456",
         sqlStatementGenerator.export(sqlUpdate));
   }
@@ -394,8 +382,8 @@ public class ApacheDerbySqlStatementGeneratorTest {
     Column categoryColumn = new Column("category");
     TableColumn tableColumn = new TableColumn(fromTable, categoryColumn);
     Column idColumn = new Column("id");
-    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.NOT_EQUAL)
-        .withLeft(new TableColumn(fromTable, idColumn)).withRight("1").build();
+    BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.NOT_EQUAL).withLeft(
+        new TableColumn(fromTable, idColumn)).withRight("1").build();
 
     SqlUpdate sqlUpdate = new SqlUpdate(fromTable, Arrays.asList(tableColumn),
         Optional.of(binaryCondition));
@@ -411,9 +399,9 @@ public class ApacheDerbySqlStatementGeneratorTest {
     ForeignKeyDeclaration foreignKeyDeclaration = new ForeignKeyDeclaration(jdbcJoinColumnMapping,
         "address");
 
-    JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(),
-        Optional.empty(),
-        Optional.empty());
+    JdbcDDLData jdbcDDLData = new JdbcDDLData(
+        Optional.empty(), Optional.of(50), Optional.empty(),
+        Optional.empty(), Optional.empty(), Optional.empty());
     SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
         new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
         Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
@@ -429,8 +417,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
   @Test
   public void createTableIdentityColumn() {
     JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(),
-        Optional.empty(),
-        Optional.empty());
+        Optional.empty(), Optional.empty(), Optional.empty());
     SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
         new SimpleSqlPk(new ColumnDeclaration("id", Long.class), true),
         Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
@@ -466,8 +453,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
   @Test
   public void createDataTypeTable() {
     JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.of(16),
-        Optional.of(2),
-        Optional.empty());
+        Optional.of(2), Optional.empty(), Optional.empty());
     SqlCreateTable sqlCreateTable = new SqlCreateTable("datatype",
         new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
         Arrays.asList(new ColumnDeclaration("counter", Integer.class),
@@ -475,8 +461,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
             new ColumnDeclaration("division", Double.class),
             new ColumnDeclaration("big_number", BigDecimal.class, Optional.of(jdbcDDLData)),
             new ColumnDeclaration("dob", java.sql.Timestamp.class),
-            new ColumnDeclaration("timehh", Time.class)),
-        Arrays.asList());
+            new ColumnDeclaration("timehh", Time.class)), Arrays.asList());
     Assertions.assertEquals(
         "create table datatype (id bigint, counter integer, percentage real, division double precision, big_number decimal(16,2), dob timestamp, timehh time, primary key (id))",
         sqlStatementGenerator.export(sqlCreateTable));
@@ -496,15 +481,13 @@ public class ApacheDerbySqlStatementGeneratorTest {
   @Test
   public void exportDddlList() {
     JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(),
-        Optional.empty(),
-        Optional.empty());
+        Optional.empty(), Optional.empty(), Optional.empty());
     SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
         new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
         Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
             new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData)),
             new ColumnDeclaration("dob", java.sql.Date.class),
-            new ColumnDeclaration("citizenship", Boolean.class)),
-        Collections.emptyList());
+            new ColumnDeclaration("citizenship", Boolean.class)), Collections.emptyList());
 
     SqlCreateSequence sqlCreateSequence = new SqlCreateSequence();
     sqlCreateSequence.setSequenceName("citizen_seq");
@@ -534,9 +517,8 @@ public class ApacheDerbySqlStatementGeneratorTest {
   public void mod() {
     FromTable fromTable = new FromTableImpl("statistic", "s");
     Column occColumn = new Column("occurrences");
-    List<Value> values = Arrays
-        .asList(new SelectItem(new Mod(new TableColumn(fromTable, occColumn), 2),
-            Optional.of("modulus")));
+    List<Value> values = Arrays.asList(
+        new SelectItem(new Mod(new TableColumn(fromTable, occColumn), 2), Optional.of("modulus")));
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
     Assertions.assertEquals("select MOD(s.occurrences, 2) AS modulus from statistic AS s",
@@ -547,8 +529,8 @@ public class ApacheDerbySqlStatementGeneratorTest {
   public void sqrt() {
     FromTable fromTable = new FromTableImpl("statistic", "s");
     Column occColumn = new Column("occurrences");
-    List<Value> values = Arrays
-        .asList(new SelectItem(new Sqrt(new TableColumn(fromTable, occColumn)),
+    List<Value> values = Arrays.asList(
+        new SelectItem(new Sqrt(new TableColumn(fromTable, occColumn)),
             Optional.of("square_root")));
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
@@ -573,9 +555,8 @@ public class ApacheDerbySqlStatementGeneratorTest {
     Column nameColumn = new Column("first_name");
     Column surnameColumn = new Column("last_name");
 
-    List<Value> values = Arrays.asList(
-        new Concat(new TableColumn(fromTable, nameColumn), "' '",
-            new TableColumn(fromTable, surnameColumn)));
+    List<Value> values = Arrays.asList(new Concat(new TableColumn(fromTable, nameColumn), "' '",
+        new TableColumn(fromTable, surnameColumn)));
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values).build();
     Assertions.assertEquals("select c.first_name||' '||c.last_name from citizen AS c",
@@ -600,8 +581,7 @@ public class ApacheDerbySqlStatementGeneratorTest {
     Column nameColumn = new Column("first_name");
 
     SelectItem selectItem = new SelectItem(
-        new Locate("'a'", new TableColumn(fromTable, nameColumn)),
-        Optional.of("position"));
+        new Locate("'a'", new TableColumn(fromTable, nameColumn)), Optional.of("position"));
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable)
         .withValues(Arrays.asList(selectItem)).build();
@@ -696,14 +676,13 @@ public class ApacheDerbySqlStatementGeneratorTest {
 
     List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
 
-    Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN)
-        .withLeft(new TableColumn(fromTable, availDateColumn)).withRight(new CurrentDate()).build();
+    Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN).withLeft(
+        new TableColumn(fromTable, availDateColumn)).withRight(new CurrentDate()).build();
 
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals("select f.id from flights AS f where f.avail_date > CURRENT_DATE",
         sqlStatementGenerator.export(sqlSelect));
   }
@@ -716,15 +695,13 @@ public class ApacheDerbySqlStatementGeneratorTest {
 
     List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
 
-    Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN)
-        .withLeft(new TableColumn(fromTable, availDateColumn)).withRight(new CurrentTimestamp())
-        .build();
+    Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN).withLeft(
+        new TableColumn(fromTable, availDateColumn)).withRight(new CurrentTimestamp()).build();
 
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals("select f.id from flights AS f where f.avail_date > CURRENT_TIMESTAMP",
         sqlStatementGenerator.export(sqlSelect));
   }
@@ -737,14 +714,13 @@ public class ApacheDerbySqlStatementGeneratorTest {
 
     List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
 
-    Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN)
-        .withLeft(new TableColumn(fromTable, availDateColumn)).withRight(new CurrentTime()).build();
+    Condition condition = new BinaryCondition.Builder(ConditionType.GREATER_THAN).withLeft(
+        new TableColumn(fromTable, availDateColumn)).withRight(new CurrentTime()).build();
 
     List<Condition> conditions = Arrays.asList(condition);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
     SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(values)
-        .withConditions(conditions)
-        .build();
+        .withConditions(conditions).build();
     Assertions.assertEquals("select f.id from flights AS f where f.start_time > CURRENT_TIME",
         sqlStatementGenerator.export(sqlSelect));
   }
@@ -755,8 +731,8 @@ public class ApacheDerbySqlStatementGeneratorTest {
     Column minColumn = new Column("min_temp");
     Column maxColumn = new Column("max_temp");
     SqlBinaryExpression sqlBinaryExpression = new SqlBinaryExpressionImpl(
-        SqlExpressionOperator.DIFF,
-        new TableColumn(fromTable, maxColumn), new TableColumn(fromTable, minColumn));
+        SqlExpressionOperator.DIFF, new TableColumn(fromTable, maxColumn),
+        new TableColumn(fromTable, minColumn));
     SelectItem selectItem = new SelectItem(sqlBinaryExpression, Optional.of("difference"));
     List<Value> values = Arrays.asList(selectItem);
     SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();

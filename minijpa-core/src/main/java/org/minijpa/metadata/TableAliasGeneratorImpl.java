@@ -23,62 +23,63 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class TableAliasGeneratorImpl implements AliasGenerator {
 
-	/**
-	 * Counter for each table name. They start from one.
-	 */
-	private final Map<String, Integer> aliasCounters = new HashMap<>();
-//	private final Map<String, List<String>> allAliasTable = new HashMap<>();
-	private final Map<String, String> tableAliasMap = new HashMap<>();
+  /**
+   * Counter for each table name. They start from one.
+   */
+  private final Map<String, Integer> aliasCounters = new HashMap<>();
+  private final Map<String, String> tableAliasMap = new HashMap<>();
 
-	@Override
-	public String getDefault(String objectName) {
-		String alias = objectName.toLowerCase() + "0";
-		tableAliasMap.put(alias, objectName);
-		return alias;
-	}
+  @Override
+  public String getDefault(String objectName) {
+    String alias = objectName.toLowerCase() + "0";
+    tableAliasMap.put(alias, objectName);
+    return alias;
+  }
 
-	@Override
-	public String next(String objectName) {
-		Integer counter = aliasCounters.get(objectName);
-		if (counter == null)
-			counter = 1;
-		else
-			++counter;
+  @Override
+  public String next(String objectName) {
+    Integer counter = aliasCounters.get(objectName);
+    if (counter == null) {
+      counter = 1;
+    } else {
+      ++counter;
+    }
 
-		aliasCounters.put(objectName, counter);
-		String alias = objectName.toLowerCase() + counter.toString();
-		tableAliasMap.put(alias, objectName);
-		return alias;
-	}
+    aliasCounters.put(objectName, counter);
+    String alias = objectName.toLowerCase() + counter.toString();
+    tableAliasMap.put(alias, objectName);
+    return alias;
+  }
 
-	@Override
-	public void reset() {
-		aliasCounters.clear();
-	}
+  @Override
+  public void reset() {
+    aliasCounters.clear();
+  }
 
-	@Override
-	public Optional<String> findObjectNameByAlias(String alias) {
-		System.out.println("TableAliasGeneratorImpl.findObjectNameByAlias: alias="+alias);
-		String tableName = tableAliasMap.get(alias);
-		tableAliasMap.forEach((k,v)->System.out.println(k+"; "+v));
-		if (tableName == null)
-			return Optional.empty();
+  @Override
+  public Optional<String> findObjectNameByAlias(String alias) {
+    System.out.println("TableAliasGeneratorImpl.findObjectNameByAlias: alias=" + alias);
+    String tableName = tableAliasMap.get(alias);
+    tableAliasMap.forEach((k, v) -> System.out.println(k + "; " + v));
+    if (tableName == null) {
+      return Optional.empty();
+    }
 
-		return Optional.of(tableName);
-	}
+    return Optional.of(tableName);
+  }
 
-	@Override
-	public Optional<String> findAliasByObjectName(String objectName) {
-		for (Map.Entry<String, String> entry : tableAliasMap.entrySet()) {
-			if (entry.getValue().equals(objectName))
-				return Optional.of(entry.getKey());
-		}
+  @Override
+  public Optional<String> findAliasByObjectName(String objectName) {
+    for (Map.Entry<String, String> entry : tableAliasMap.entrySet()) {
+      if (entry.getValue().equals(objectName)) {
+        return Optional.of(entry.getKey());
+      }
+    }
 
-		return Optional.empty();
-	}
+    return Optional.empty();
+  }
 }

@@ -26,28 +26,28 @@ import org.minijpa.sql.model.function.Min;
 import org.minijpa.sql.model.function.Sum;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class FunctionUtils {
 
-	public static Value createAggregateFunction(AggregateFunctionType aggregateFunctionType, Object argument, boolean distinct) {
-		switch (aggregateFunctionType) {
-			case AVG:
-				return new Avg(argument);
-			case COUNT:
-				return new Count(argument, distinct);
-			case MAX:
-				return new Max(argument);
-			case MIN:
-				return new Min(argument);
-			case SUM:
-				return new Sum(argument);
-			default:
-				break;
-		}
+  public static Value createAggregateFunction(AggregateFunctionType aggregateFunctionType,
+      Object argument, boolean distinct) {
+    switch (aggregateFunctionType) {
+      case AVG:
+        return new Avg(argument);
+      case COUNT:
+        return new Count(argument, distinct);
+      case MAX:
+        return new Max(argument);
+      case MIN:
+        return new Min(argument);
+      case SUM:
+        return new Sum(argument);
+      default:
+        break;
+    }
 
-		return null;
-	}
+    return null;
+  }
 
 }

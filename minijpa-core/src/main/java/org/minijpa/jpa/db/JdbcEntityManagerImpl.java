@@ -70,11 +70,11 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   protected ConnectionHolder connectionHolder;
   private final EntityHandler entityHandler;
   private final JpqlModule jpqlModule;
-  private JdbcFPRecordBuilder jdbcFPRecordBuilder = new JdbcFPRecordBuilder();
-  private JdbcRunner.JdbcRecordBuilderValue jdbcJpqlRecordBuilder = new JdbcRunner.JdbcRecordBuilderValue();
-  private JdbcTupleRecordBuilder jdbcTupleRecordBuilder = new JdbcTupleRecordBuilder();
-  private JdbcNativeRecordBuilder nativeRecordBuilder = new JdbcNativeRecordBuilder();
-  private JdbcQRMRecordBuilder qrmRecordBuilder = new JdbcQRMRecordBuilder();
+  private final JdbcFPRecordBuilder jdbcFPRecordBuilder = new JdbcFPRecordBuilder();
+  private final JdbcRunner.JdbcRecordBuilderValue jdbcJpqlRecordBuilder = new JdbcRunner.JdbcRecordBuilderValue();
+  private final JdbcTupleRecordBuilder jdbcTupleRecordBuilder = new JdbcTupleRecordBuilder();
+  private final JdbcNativeRecordBuilder nativeRecordBuilder = new JdbcNativeRecordBuilder();
+  private final JdbcQRMRecordBuilder qrmRecordBuilder = new JdbcQRMRecordBuilder();
 
   public JdbcEntityManagerImpl(DbConfiguration dbConfiguration,
       PersistenceUnitContext persistenceUnitContext,
@@ -253,9 +253,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   /**
    * The modified attributes must include the not nullable attributes.
    *
-   * @param entity   the meta entity
-   * @param optional the modified attributes
-   * @throws PersistenceException
+   * @param entity              the meta entity
+   * @param entityInstance      entity instance
+   * @param attributeValueArray modified values
    */
   private void checkNullableAttributes(MetaEntity entity, Object entityInstance,
       ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
@@ -279,7 +279,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
           "Attribute '" + notNullableAttributes.get(0).getName() + "' is null");
     }
 
-    notNullableAttributes.stream().forEach(a -> {
+    notNullableAttributes.forEach(a -> {
       Optional<MetaAttribute> o = attributeValueArray.getModels().stream().filter(av -> av == a)
           .findFirst();
       if (o.isEmpty()) {
@@ -355,10 +355,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   /**
    * Inserts entities related to join columns not flushed yet.
    *
-   * @param me
-   * @param modelValueArray
-   * @param managedEntityList
-   * @throws Exception
+   * @param me                meta entity
+   * @param modelValueArray   values
+   * @param managedEntityList entity list
    */
   private void persistEarlyInsertEntityInstance(MetaEntity me,
       ModelValueArray<MetaAttribute> modelValueArray,
@@ -398,10 +397,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   /**
    * Deletes entities related to join columns not flushed yet.
    *
-   * @param me
-   * @param entityInstance
-   * @param managedEntityList
-   * @throws Exception
+   * @param me                meta entity
+   * @param entityInstance    entity instance
+   * @param managedEntityList entity list
    */
   private void persistEarlyDeleteEntityInstance(MetaEntity me, Object entityInstance,
       List<Object> managedEntityList)
@@ -499,9 +497,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   @Override
   public List<?> select(Query query) throws Exception {
     CriteriaQuery<?> criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
-//        if (criteriaQuery.getSelection() == null)
-//            throw new IllegalStateException("Selection not defined or not inferable");
-
     StatementParameters statementParameters = dbConfiguration.getSqlStatementFactory().select(query,
         persistenceUnitContext.getAliasGenerator());
     LOG.debug("select: statementParameters={}", statementParameters);
@@ -520,16 +515,11 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
           .findMetaEntityByTableName(sqlSelectData.getResult().getName());
       MetaEntity entity = optionalEntity.get();
       entityHandler.setLockType(LockType.NONE);
-//            entityRecordCollector.setCollectionResult(collectionResult);
-//            entityRecordCollector.setEntityLoader(entityLoader);
-//            entityRecordCollector.setMetaEntity(entity);
       jdbcFPRecordBuilder.setCollectionResult(collectionResult);
       jdbcFPRecordBuilder.setEntityLoader(entityHandler);
       jdbcFPRecordBuilder.setMetaEntity(entity);
       jdbcFPRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
 
-//            dbConfiguration.getJdbcRunner().select(connectionHolder.getConnection(), sql,
-//                    sqlSelectData.getFetchParameters(), statementParameters.getParameters(), entityRecordCollector);
       dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
           statementParameters.getParameters(), jdbcFPRecordBuilder);
       return (List<?>) collectionResult;
@@ -549,9 +539,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
       dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
           statementParameters.getParameters(), jdbcTupleRecordBuilder);
       return collectionResult;
-//            return ((JpaJdbcRunner) dbConfiguration.getJdbcRunner()).runTupleQuery(connectionHolder.getConnection(),
-//                    sql, sqlSelectData, (CompoundSelection<?>) criteriaQuery.getSelection(),
-//                    statementParameters.getParameters());
     }
 
     // returns an aggregate expression result (max, min, etc)
@@ -586,9 +573,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
           .findMetaEntityByTableName(sqlSelectData.getResult().getName());
       MetaEntity entity = optionalEntity.get();
       entityHandler.setLockType(LockType.NONE);
-//            entityRecordCollector.setCollectionResult(collectionResult);
-//            entityRecordCollector.setEntityLoader(entityLoader);
-//            entityRecordCollector.setMetaEntity(entity);
       jdbcFPRecordBuilder.setCollectionResult(collectionResult);
       jdbcFPRecordBuilder.setEntityLoader(entityHandler);
       jdbcFPRecordBuilder.setMetaEntity(entity);
@@ -724,7 +708,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         statementParameters.getParameters());
   }
 
-  private class JdbcTupleRecordBuilder implements JdbcRecordBuilder {
+  private static class JdbcTupleRecordBuilder implements JdbcRecordBuilder {
 
     private List<Tuple> objects;
     private SqlSelectData sqlSelectData;
@@ -767,7 +751,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
   }
 
-  private class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
+  private static class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
 
     private List<Object> objects;
     private QueryResultMapping queryResultMapping;

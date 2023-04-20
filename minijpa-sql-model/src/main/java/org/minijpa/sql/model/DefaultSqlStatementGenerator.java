@@ -720,11 +720,12 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     int i = 0;
     for (From from : fromTables) {
       if (from instanceof FromTable) {
-        FromTable fromTable = (FromTable) from;
-        sb.append(nameTranslator.toTableName(fromTable.getAlias(), fromTable.getName()));
         if (i > 0) {
           sb.append(", ");
         }
+        
+        FromTable fromTable = (FromTable) from;
+        sb.append(nameTranslator.toTableName(fromTable.getAlias(), fromTable.getName()));
       } else if (from instanceof FromJoin) {
         FromJoin fromJoin = (FromJoin) from;
         sb.append(exportJoin(fromJoin));

@@ -301,8 +301,6 @@ public class EntityHandlerImpl implements EntityHandler {
       MetaEntity toEntity = joinColumnMapping.getAttribute().getRelationship().getAttributeType();
 //	    LOG.debug("buildAttributeValues: toEntity={}", toEntity);
       Object parent = buildEntityByValues(modelValueArray, toEntity, lockType);
-//	    Object parent = loadRelationshipByForeignKey(parentInstance,
-//		    metaEntity, joinColumnMapping.getAttribute(), fk, lockType);
       MetaEntityHelper.writeMetaAttributeValue(parentInstance, parentInstance.getClass(),
           joinColumnMapping.getAttribute(), parent, metaEntity);
     }
@@ -462,9 +460,8 @@ public class EntityHandlerImpl implements EntityHandler {
 
     MetaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, modelValueArray);
     List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(modelValueArray);
-    List<String> columns = parameters.stream().map(p -> {
-      return p.getColumnName();
-    }).collect(Collectors.toList());
+    List<String> columns = parameters.stream().map(QueryParameter::getColumnName)
+        .collect(Collectors.toList());
 
     Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
     LOG.debug("update: idValue={}", idValue);

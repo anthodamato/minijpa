@@ -408,15 +408,17 @@ public class CriteriaExpressionHelper {
     return Optional.of((Value) sqlBinaryExpression);
   }
 
-  private Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
+  private Optional<Value> createSelectionValue(AliasGenerator aliasGenerator,
       AggregateFunctionExpression<?> aggregateFunctionExpression) {
     Expression<?> expr = aggregateFunctionExpression.getX();
     if (aggregateFunctionExpression
         .getAggregateFunctionType()
         == org.minijpa.jpa.criteria.expression.AggregateFunctionType.COUNT) {
       if (expr instanceof AttributePath<?>) {
-        AttributePath<?> miniPath = (AttributePath<?>) expr;
-        MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+        AttributePath<?> attributePath = (AttributePath<?>) expr;
+        MetaAttribute metaAttribute = attributePath.getMetaAttribute();
+        MetaEntity metaEntity = attributePath.getMetaEntity();
+        FromTable fromTable = buildFromTable(attributePath, aliasGenerator);
         return Optional.of(
             new Count(new TableColumn(fromTable, new Column(metaAttribute.getColumnName())),
                 aggregateFunctionExpression.isDistinct()));
@@ -430,8 +432,9 @@ public class CriteriaExpressionHelper {
             new Column(idAttrs.get(0).getColumnName())), aggregateFunctionExpression.isDistinct()));
       }
     } else if (expr instanceof AttributePath<?>) {
-      AttributePath<?> miniPath = (AttributePath<?>) expr;
-      MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+      AttributePath<?> attributePath = (AttributePath<?>) expr;
+      MetaAttribute metaAttribute = attributePath.getMetaAttribute();
+      FromTable fromTable = buildFromTable(attributePath, aliasGenerator);
       Value value = FunctionUtils.createAggregateFunction(
           getAggregateFunction(aggregateFunctionExpression.getAggregateFunctionType()),
           new TableColumn(fromTable, new Column(metaAttribute.getColumnName())), false);
@@ -439,6 +442,12 @@ public class CriteriaExpressionHelper {
     }
 
     return Optional.empty();
+  }
+
+  private FromTable buildFromTable(AttributePath<?> attributePath, AliasGenerator aliasGenerator) {
+    MetaEntity metaEntity = attributePath.getMetaEntity();
+    return FromTable.of(metaEntity.getTableName(),
+        aliasGenerator.getDefault(metaEntity.getTableName()));
   }
 
   public Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
@@ -455,12 +464,12 @@ public class CriteriaExpressionHelper {
 
     LOG.debug("createSelectionValue: selection={}", selection);
     if (selection instanceof AttributePath<?>) {
-      AttributePath<?> miniPath = (AttributePath<?>) selection;
-      MetaAttribute metaAttribute = miniPath.getMetaAttribute();
-      return Optional.of(new TableColumn(fromTable, new Column(metaAttribute.getColumnName())));
+      AttributePath<?> attributePath = (AttributePath<?>) selection;
+      MetaAttribute metaAttribute = attributePath.getMetaAttribute();
+      FromTable ft = buildFromTable(attributePath, aliasGenerator);
+      return Optional.of(new TableColumn(ft, new Column(metaAttribute.getColumnName())));
     } else if (selection instanceof AggregateFunctionExpression<?>) {
-      return createSelectionValue(fromTable, aliasGenerator,
-          (AggregateFunctionExpression<?>) selection);
+      return createSelectionValue(aliasGenerator, (AggregateFunctionExpression<?>) selection);
     } else if (selection instanceof BinaryExpression) {
       return createSelectionValue(fromTable, aliasGenerator, (BinaryExpression<?>) selection, query,
           parameters);

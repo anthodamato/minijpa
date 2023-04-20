@@ -50,7 +50,7 @@ public final class MetaEntityHelper {
     private static final Logger LOG = LoggerFactory.getLogger(MetaEntityHelper.class);
 
     public static List<FetchParameter> convertAttributes(List<MetaAttribute> attributes) {
-        return attributes.stream().map(a -> AttributeFetchParameter.build(a)).collect(Collectors.toList());
+        return attributes.stream().map(AttributeFetchParameter::build).collect(Collectors.toList());
     }
 
     public static AttributeFetchParameter toFetchParameter(MetaAttribute attribute) {
