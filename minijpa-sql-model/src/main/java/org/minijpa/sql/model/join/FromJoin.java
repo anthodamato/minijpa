@@ -18,17 +18,18 @@ package org.minijpa.sql.model.join;
 import java.util.List;
 
 import org.minijpa.sql.model.Column;
+import org.minijpa.sql.model.From;
 import org.minijpa.sql.model.FromTable;
 
-public interface FromJoin {
+public interface FromJoin extends From {
 
-    public FromTable getToTable();
+  public FromTable getToTable();
 
-    public String getFromAlias();
+  public String getFromAlias();
 
-    public List<Column> getFromColumns();
+  public List<Column> getFromColumns();
 
-    public List<Column> getToColumns();
+  public List<Column> getToColumns();
 
-    public JoinType getType();
+  public JoinType getType();
 }

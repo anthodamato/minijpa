@@ -16,12 +16,11 @@
 package org.minijpa.jpa.metamodel;
 
 import java.lang.reflect.Member;
-
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-public class MetamodelSingularAttribute<X, T> implements SingularAttribute<X, T> {
+public class SingularAttributeImpl<X, T> implements SingularAttribute<X, T> {
 
   private String name;
   private PersistentAttributeType persistentAttributeType = PersistentAttributeType.BASIC;
@@ -150,8 +149,8 @@ public class MetamodelSingularAttribute<X, T> implements SingularAttribute<X, T>
       return this;
     }
 
-    public MetamodelSingularAttribute build() {
-      MetamodelSingularAttribute<?, ?> singularAttribute = new MetamodelSingularAttribute();
+    public SingularAttributeImpl build() {
+      SingularAttributeImpl<?, ?> singularAttribute = new SingularAttributeImpl();
       singularAttribute.persistentAttributeType = persistentAttributeType;
       singularAttribute.javaType = javaType;
       singularAttribute.javaMember = javaMember;

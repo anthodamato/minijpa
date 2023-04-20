@@ -19,87 +19,83 @@ import javax.persistence.PersistenceException;
 import org.junit.jupiter.api.Assertions;
 
 /**
- *
  * @author adamato
- *
  */
 public class PropertyTest {
 
-	private static EntityManagerFactory emf;
+  private static EntityManagerFactory emf;
 
-	@BeforeAll
-	public static void beforeAll() throws Exception{
-		emf = Persistence.createEntityManagerFactory("property_many_to_many_uni", PersistenceUnitProperties.getProperties());
-	}
+  @BeforeAll
+  public static void beforeAll() throws Exception {
+    emf = Persistence.createEntityManagerFactory("property_many_to_many_uni",
+        PersistenceUnitProperties.getProperties());
+  }
 
-	@AfterAll
-	public static void afterAll() {
-		emf.close();
-	}
+  @AfterAll
+  public static void afterAll() {
+    emf.close();
+  }
 
-	@Test
-	public void properties() throws Exception {
-		final EntityManager em = emf.createEntityManager();
-		try {
-			final EntityTransaction tx = em.getTransaction();
-			tx.begin();
+  @Test
+  public void properties() throws Exception {
+    final EntityManager em = emf.createEntityManager();
 
-			PropertyOwner owner1 = new PropertyOwner();
-			owner1.setName("Media Ltd");
-			em.persist(owner1);
+    final EntityTransaction tx = em.getTransaction();
+    tx.begin();
 
-			PropertyOwner owner2 = new PropertyOwner();
-			owner2.setName("Simply Ltd");
-			em.persist(owner2);
+    PropertyOwner owner1 = new PropertyOwner();
+    owner1.setName("Media Ltd");
+    em.persist(owner1);
 
-			Property property = new Property();
-			property.setAddress("England Rd, London");
-			property.setOwners(Arrays.asList(owner1, owner2));
-			property.setPropertyType(PropertyType.apartment);
-			em.persist(property);
+    PropertyOwner owner2 = new PropertyOwner();
+    owner2.setName("Simply Ltd");
+    em.persist(owner2);
 
-			tx.commit();
+    Property property = new Property();
+    property.setAddress("England Rd, London");
+    property.setOwners(Arrays.asList(owner1, owner2));
+    property.setPropertyType(PropertyType.apartment);
+    em.persist(property);
 
-			tx.begin();
-			em.detach(property);
-			Property p = em.find(Property.class, property.getId());
-			Collection<PropertyOwner> owners = p.getOwners();
-			Assertions.assertNotNull(owners);
-			Assertions.assertEquals(2, owners.size());
-			tx.commit();
-		} finally {
-			em.close();
-		}
-	}
+    tx.commit();
 
-	@Test
-	public void optional() {
-		final EntityManager em = emf.createEntityManager();
-		try {
-			final EntityTransaction tx = em.getTransaction();
-			tx.begin();
+    tx.begin();
+    em.detach(property);
+    Property p = em.find(Property.class, property.getId());
+    Collection<PropertyOwner> owners = p.getOwners();
+    Assertions.assertNotNull(owners);
+    Assertions.assertEquals(2, owners.size());
+    tx.commit();
 
-			PropertyOwner owner1 = new PropertyOwner();
-			owner1.setName("Media Ltd");
-			em.persist(owner1);
+    em.close();
+  }
 
-			PropertyOwner owner2 = new PropertyOwner();
-			owner2.setName("Simply Ltd");
-			em.persist(owner2);
+  @Test
+  public void optional() {
+    final EntityManager em = emf.createEntityManager();
 
-			Property property = new Property();
-			property.setAddress("England Rd, London");
-			property.setOwners(Arrays.asList(owner1, owner2));
+    final EntityTransaction tx = em.getTransaction();
+    tx.begin();
 
-			Assertions.assertThrows(PersistenceException.class, () -> {
-				em.persist(property);
-			});
+    PropertyOwner owner1 = new PropertyOwner();
+    owner1.setName("Media Ltd");
+    em.persist(owner1);
 
-			tx.commit();
+    PropertyOwner owner2 = new PropertyOwner();
+    owner2.setName("Simply Ltd");
+    em.persist(owner2);
 
-		} finally {
-			em.close();
-		}
-	}
+    Property property = new Property();
+    property.setAddress("England Rd, London");
+    property.setOwners(Arrays.asList(owner1, owner2));
+
+    Assertions.assertThrows(PersistenceException.class, () -> {
+      em.persist(property);
+    });
+
+    tx.commit();
+
+    em.close();
+  }
 
 }

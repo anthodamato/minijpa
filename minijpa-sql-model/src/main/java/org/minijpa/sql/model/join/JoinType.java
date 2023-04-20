@@ -16,5 +16,7 @@
 package org.minijpa.sql.model.join;
 
 public enum JoinType {
-    InnerJoin;
+  Inner,
+  Left,
+  Right;
 }
