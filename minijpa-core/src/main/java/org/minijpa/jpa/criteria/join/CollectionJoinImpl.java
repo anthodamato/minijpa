@@ -1,4 +1,4 @@
-package org.minijpa.jpa.criteria;
+package org.minijpa.jpa.criteria.join;
 
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
@@ -7,18 +7,35 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.CollectionAttribute;
+import org.minijpa.jpa.criteria.AbstractFrom;
+import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 
-public class CollectionJoinImpl<Z, E> extends AbstractFrom<Z, E> implements CollectionJoin<Z, E> {
+public class CollectionJoinImpl<Z, E> extends AbstractFrom<Z, E> implements CollectionJoin<Z, E>,
+    FetchJoinSpec {
 
+  private MetaAttribute metaAttribute;
   private final Attribute<? super Z, E> attribute;
   private final JoinType joinType;
+  private final FetchJoinType fetchJoinType;
 
-  public CollectionJoinImpl(MetaEntity metaEntity, Attribute<? super Z, E> attribute,
-      JoinType joinType) {
+  public CollectionJoinImpl(MetaEntity metaEntity, MetaAttribute metaAttribute,
+      Attribute<? super Z, E> attribute,
+      JoinType joinType, FetchJoinType fetchJoinType) {
     super(metaEntity);
+    this.metaAttribute = metaAttribute;
     this.attribute = attribute;
     this.joinType = joinType;
+    this.fetchJoinType = fetchJoinType;
+  }
+
+  public MetaAttribute getMetaAttribute() {
+    return metaAttribute;
+  }
+
+  @Override
+  public FetchJoinType getFetchJoinType() {
+    return fetchJoinType;
   }
 
   @Override
