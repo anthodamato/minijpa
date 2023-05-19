@@ -23,19 +23,23 @@ import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+import org.minijpa.jpa.criteria.join.CollectionFetchJoinImpl;
+import org.minijpa.jpa.criteria.join.CollectionJoinImpl;
+import org.minijpa.jpa.criteria.join.FetchJoinType;
 import org.minijpa.jpa.metamodel.AttributeImpl;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
-import org.minijpa.jpa.model.relationship.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 
-  private MetaEntity metaEntity;
+  private Logger LOG = LoggerFactory.getLogger(AbstractFrom.class);
+  private final MetaEntity metaEntity;
   private final Set<Join<X, ?>> joins = new HashSet<>();
 
   public AbstractFrom(MetaEntity metaEntity) {
@@ -73,7 +77,9 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 
   @Override
   public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection) {
-    return (CollectionJoin<X, Y>) new CollectionJoinImpl<>(metaEntity, collection, JoinType.INNER);
+    return (CollectionJoin<X, Y>) new CollectionJoinImpl<>(metaEntity,
+        metaEntity.getAttribute(collection.getName()), collection, JoinType.INNER,
+        FetchJoinType.JOIN);
   }
 
   @Override
@@ -138,6 +144,29 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 
   @Override
   public <X1, Y> Join<X1, Y> join(String attributeName, JoinType jt) {
+    Join<X1, Y> join = buildJoin(attributeName, jt, FetchJoinType.JOIN);
+    if (join != null) {
+      return join;
+    }
+
+    throw new IllegalArgumentException(
+        "Join not supported: attribute '" + attributeName + "' Join: " + jt);
+  }
+
+  private <X1, Y> Join<X1, Y> buildCollectionJoinAttribute(MetaEntity entity,
+      MetaAttribute metaAttribute, Attribute attribute,
+      JoinType jt, FetchJoinType fetchJoinType) {
+    if (fetchJoinType == FetchJoinType.JOIN) {
+      return new CollectionJoinImpl<>(entity, metaAttribute, attribute, jt, fetchJoinType);
+    } else if (fetchJoinType == FetchJoinType.FETCH_JOIN) {
+      return new CollectionFetchJoinImpl<>(entity, metaAttribute, attribute, jt, fetchJoinType);
+    }
+
+    return null;
+  }
+
+  private <X1, Y> Join<X1, Y> buildJoin(String attributeName, JoinType jt,
+      FetchJoinType fetchJoinType) {
     MetaAttribute metaAttribute = metaEntity.getAttribute(attributeName);
     if (metaAttribute == null) {
       throw new IllegalArgumentException("Attribute '" + attributeName + "' not found");
@@ -147,19 +176,22 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
       if (metaAttribute.isCollection() && metaAttribute.getType() == Collection.class) {
         Attribute attribute = new AttributeImpl<>(attributeName,
             PersistentAttributeType.BASIC, null, metaAttribute.getType(), null, false, true);
-        Join join = new CollectionJoinImpl<>(metaAttribute.getRelationship().getAttributeType(),
-            attribute, jt);
-        joins.add(join);
+        Join join = buildCollectionJoinAttribute(metaAttribute.getRelationship().getAttributeType(),
+            metaAttribute,
+            attribute, jt, fetchJoinType);
+        if (join != null) {
+          joins.add(join);
+        }
+
         return join;
       }
     }
 
-//    Optional<MetaEntity> optional = metaEntity.getEmbeddable(attributeName);
+    //    Optional<MetaEntity> optional = metaEntity.getEmbeddable(attributeName);
 //    if (optional.isPresent()) {
 //    }
 
-    throw new IllegalArgumentException(
-        "Join not supported: attribute '" + attributeName + "' Join: " + jt);
+    return null;
   }
 
   @Override
@@ -209,12 +241,18 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 
   @Override
   public <X1, Y> Fetch<X1, Y> fetch(String attributeName) {
-    return null;
+    return fetch(attributeName, JoinType.INNER);
   }
 
   @Override
   public <X1, Y> Fetch<X1, Y> fetch(String attributeName, JoinType jt) {
-    return null;
+    Join<X1, Y> join = buildJoin(attributeName, jt, FetchJoinType.FETCH_JOIN);
+    if (join != null) {
+      return (Fetch<X1, Y>) join;
+    }
+
+    throw new IllegalArgumentException(
+        "Fetch Join not supported: attribute '" + attributeName + "' Join: " + jt);
   }
 
   @Override

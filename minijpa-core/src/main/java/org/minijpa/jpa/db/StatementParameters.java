@@ -17,28 +17,56 @@ package org.minijpa.jpa.db;
 
 import java.util.List;
 import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.sql.model.SqlStatement;
 
 /**
- *
  * @author adamato
  */
 public class StatementParameters {
 
-	private final SqlStatement sqlStatement;
-	private final List<QueryParameter> parameters;
+  private final SqlStatement sqlStatement;
+  private final List<QueryParameter> parameters;
+  private StatementType statementType = StatementType.PLAIN;
+  private List<MetaEntity> fetchJoinMetaEntities;
+  private List<MetaAttribute> fetchJoinMetaAttributes;
 
-	public StatementParameters(SqlStatement sqlStatement, List<QueryParameter> parameters) {
-		this.sqlStatement = sqlStatement;
-		this.parameters = parameters;
-	}
+  public StatementParameters(SqlStatement sqlStatement, List<QueryParameter> parameters) {
+    this.sqlStatement = sqlStatement;
+    this.parameters = parameters;
+  }
 
-	public SqlStatement getSqlStatement() {
-		return sqlStatement;
-	}
+  public StatementParameters(
+      SqlStatement sqlStatement,
+      List<QueryParameter> parameters,
+      StatementType statementType,
+      List<MetaEntity> fetchJoinMetaEntities,
+      List<MetaAttribute> fetchJoinMetaAttributes) {
+    this.sqlStatement = sqlStatement;
+    this.parameters = parameters;
+    this.statementType = statementType;
+    this.fetchJoinMetaEntities = fetchJoinMetaEntities;
+    this.fetchJoinMetaAttributes = fetchJoinMetaAttributes;
+  }
 
-	public List<QueryParameter> getParameters() {
-		return parameters;
-	}
+  public SqlStatement getSqlStatement() {
+    return sqlStatement;
+  }
 
+  public List<QueryParameter> getParameters() {
+    return parameters;
+  }
+
+  public StatementType getStatementType() {
+    return statementType;
+  }
+
+  public List<MetaEntity> getFetchJoinMetaEntities() {
+    return fetchJoinMetaEntities;
+  }
+
+  public List<MetaAttribute> getFetchJoinMetaAttributes() {
+    return fetchJoinMetaAttributes;
+  }
 }

@@ -660,9 +660,13 @@ public class OneToManyUniTest {
     em.close();
   }
 
-  @Disabled
+  /**
+   * Doesn't work with EclipseLink
+   *
+   * @throws Exception
+   */
   @Test
-  public void joinFetch() throws Exception {
+  public void fetchJoin() throws Exception {
     final EntityManager em = emf.createEntityManager();
     Store store = new Store();
     store.setName("Upton Store");
@@ -673,7 +677,7 @@ public class OneToManyUniTest {
 
     Item item2 = new Item();
     item2.setName("Pencil");
-    item2.setModel("Staedtler");
+    item2.setModel("Castles");
 
     Item item3 = new Item();
     item3.setName("Pen");
@@ -696,6 +700,22 @@ public class OneToManyUniTest {
     em.detach(store);
 
     tx.begin();
+
+//    Query query = em.createNativeQuery(
+//        "select distinct store0_.id as id1_1_0_, item2_.id as id1_0_1_, "
+//            + "store0_.name as name2_1_0_, item2_.model as model2_0_1_, "
+//            + "item2_.name as name3_0_1_, items1_.Store_id as store_id1_2_0__, items1_.items_id as items_id2_2_0__ "
+//            + "from Store store0_ inner join store_items items1_ on store0_.id=items1_.Store_id "
+//            + "inner join Item item2_ on items1_.items_id=item2_.id where item2_.model like '%Castles%'");
+//    List<Object> list= query.getResultList();
+//    Assertions.assertEquals(1, list.size());
+
+//    Query query = em.createNativeQuery(
+//        "SELECT DISTINCT t1.ID, t1.NAME, t0.ID, t0.MODEL, t0.NAME "
+//            + "FROM ITEM t0, store_items t2, STORE t1 WHERE (t0.MODEL LIKE '%Castles%' AND ((t2.Store_ID = t1.ID) AND (t0.ID = t2.items_ID)))");
+//    List<Object> list= query.getResultList();
+//    Assertions.assertEquals(1, list.size());
+
     CriteriaBuilder cb = em.getCriteriaBuilder();
     CriteriaQuery<Store> cq = cb.createQuery(Store.class);
     Root<Store> root = cq.from(Store.class);
@@ -704,6 +724,7 @@ public class OneToManyUniTest {
     ParameterExpression<String> pTitle = cb.parameter(String.class);
     cq.where(cb.like(item.get("model"), pTitle));
 
+    cq.select(root).distinct(true);
     TypedQuery<Store> q = em.createQuery(cq);
     q.setParameter(pTitle, "%Castles%");
     List<Store> stores = q.getResultList();
@@ -715,7 +736,7 @@ public class OneToManyUniTest {
     Assertions.assertFalse(s == store);
 
     Collection<Item> items = s.getItems();
-    Assertions.assertEquals(1, items.size());
+    Assertions.assertEquals(2, items.size());
 
     em.detach(store);
     tx.begin();

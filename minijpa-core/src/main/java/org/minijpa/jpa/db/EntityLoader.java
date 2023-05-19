@@ -20,21 +20,36 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jpa.model.MetaEntity;
 
 /**
- *
  * @author adamato
  */
 public interface EntityLoader {
 
-    public Object build(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity) throws Exception;
+  public Object build(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity)
+      throws Exception;
 
-    /**
-     * Build the entity instance.
-     *
-     * @param modelValueArray
-     * @param entity
-     * @return
-     * @throws Exception
-     */
-    public Object buildNoQueries(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity) throws Exception;
+  /**
+   * Build the entity instance.
+   *
+   * @param modelValueArray
+   * @param entity
+   * @return
+   * @throws Exception
+   */
+  public Object buildNoQueries(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity)
+      throws Exception;
+
+  /**
+   * Build the entity instance. Relationship attributes are not loaded. Useful in case of Fetch
+   * Join.
+   *
+   * @param modelValueArray
+   * @param entity
+   * @return
+   * @throws Exception
+   */
+  public Object buildEntityNoRelationshipAttributeLoading(
+      ModelValueArray<FetchParameter> modelValueArray,
+      MetaEntity entity)
+      throws Exception;
 
 }

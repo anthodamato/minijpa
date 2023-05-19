@@ -61,7 +61,7 @@ public class AttributeUtil {
     int index = indexOfAttribute(modelValueArray, id.getAttribute());
       if (index == -1) {
           throw new IllegalArgumentException(
-              "Column '" + id.getAttribute().getColumnName() + "' is missing");
+              "Column '" + id.getAttribute().getColumnName() + "' not found");
       }
 
     return modelValueArray.getValue(index);

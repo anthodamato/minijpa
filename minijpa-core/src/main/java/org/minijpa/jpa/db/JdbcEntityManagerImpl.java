@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
 
 public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
-  private final Logger LOG = LoggerFactory.getLogger(JdbcEntityManagerImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JdbcEntityManagerImpl.class);
   protected DbConfiguration dbConfiguration;
   protected PersistenceUnitContext persistenceUnitContext;
   private final EntityContainer entityContainer;
@@ -75,6 +75,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   private final JdbcTupleRecordBuilder jdbcTupleRecordBuilder = new JdbcTupleRecordBuilder();
   private final JdbcNativeRecordBuilder nativeRecordBuilder = new JdbcNativeRecordBuilder();
   private final JdbcQRMRecordBuilder qrmRecordBuilder = new JdbcQRMRecordBuilder();
+  private final JdbcFJRecordBuilder jdbcFJRecordBuilder = new JdbcFJRecordBuilder();
 
   public JdbcEntityManagerImpl(DbConfiguration dbConfiguration,
       PersistenceUnitContext persistenceUnitContext,
@@ -505,6 +506,32 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     sqlSelectData.getFetchParameters().forEach(f -> LOG.debug("select: f={}", f));
     LOG.debug("select: sql={}", sql);
     LOG.debug("select: sqlSelectData.getResult()={}", sqlSelectData.getResult());
+    LOG.debug("select: statementParameters.getStatementType()={}",
+        statementParameters.getStatementType());
+    if (statementParameters.getStatementType() == StatementType.FETCH_JOIN) {
+      Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
+          null,
+          CollectionUtils.findCollectionImplementationClass(List.class));
+      LOG.debug("select: collectionResult={}", collectionResult);
+
+      Optional<MetaEntity> optionalEntity = persistenceUnitContext
+          .findMetaEntityByTableName(sqlSelectData.getResult().getName());
+      MetaEntity entity = optionalEntity.get();
+      entityHandler.setLockType(LockType.NONE);
+      jdbcFJRecordBuilder.setCollectionResult(collectionResult);
+      jdbcFJRecordBuilder.setEntityLoader(entityHandler);
+      jdbcFJRecordBuilder.setMetaEntity(entity);
+      jdbcFJRecordBuilder.setFetchJoinMetaEntities(statementParameters.getFetchJoinMetaEntities());
+      jdbcFJRecordBuilder.setFetchJoinMetaAttributes(
+          statementParameters.getFetchJoinMetaAttributes());
+      jdbcFJRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
+      jdbcFJRecordBuilder.setDistinct(sqlSelectData.isDistinct());
+
+      dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
+          statementParameters.getParameters(), jdbcFJRecordBuilder);
+      return (List<?>) collectionResult;
+    }
+
     if (sqlSelectData.getResult() != null) {
       Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
           null,
@@ -778,7 +805,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
       }
     }
 
-    private Object buildRecord(ResultSetMetaData metaData, ResultSet rs,
+    private Object buildRecord(
+        ResultSetMetaData metaData,
+        ResultSet rs,
         QueryResultMapping queryResultMapping,
         EntityLoader entityLoader) throws Exception {
       ModelValueArray<FetchParameter> modelValueArray = new ModelValueArray<>();
@@ -886,6 +915,86 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         if (optional.isPresent()) {
           Object instance = entityLoader.build(optional.get(), metaEntity);
           collectionResult.add(instance);
+        }
+      }
+    }
+  }
+
+  public static class JdbcFJRecordBuilder implements JdbcRecordBuilder {
+
+    private List<FetchParameter> fetchParameters;
+    private Collection<Object> collectionResult;
+    private MetaEntity metaEntity;
+    private EntityLoader entityLoader;
+    private List<MetaEntity> fetchJoinMetaEntities;
+    private List<MetaAttribute> fetchJoinMetaAttributes;
+    private boolean distinct = false;
+
+    public void setFetchParameters(List<FetchParameter> fetchParameters) {
+      this.fetchParameters = fetchParameters;
+    }
+
+    public void setCollectionResult(Collection<Object> collectionResult) {
+      this.collectionResult = collectionResult;
+    }
+
+    public void setMetaEntity(MetaEntity metaEntity) {
+      this.metaEntity = metaEntity;
+    }
+
+    public void setEntityLoader(EntityLoader entityLoader) {
+      this.entityLoader = entityLoader;
+    }
+
+    public void setFetchJoinMetaEntities(
+        List<MetaEntity> fetchJoinMetaEntities) {
+      this.fetchJoinMetaEntities = fetchJoinMetaEntities;
+    }
+
+    public void setFetchJoinMetaAttributes(
+        List<MetaAttribute> fetchJoinMetaAttributes) {
+      this.fetchJoinMetaAttributes = fetchJoinMetaAttributes;
+    }
+
+    public void setDistinct(boolean distinct) {
+      this.distinct = distinct;
+    }
+
+    @Override
+    public void collectRecords(ResultSet rs) throws Exception {
+      ResultSetMetaData metaData = rs.getMetaData();
+      while (rs.next()) {
+        Optional<ModelValueArray<FetchParameter>> optional = JdbcRunner
+            .createModelValueArrayFromResultSetAM(fetchParameters, rs, metaData);
+        LOG.debug("collectRecords: optional={}", optional);
+        if (optional.isPresent()) {
+          Object instance = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
+              metaEntity);
+          if (distinct) {
+            if (!collectionResult.contains(instance)) {
+              collectionResult.add(instance);
+              // set lazy loaded flag for those attributes
+              for (int i = 0; i < fetchJoinMetaAttributes.size(); ++i) {
+                MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttributes.get(i),
+                    instance, true);
+              }
+            }
+          } else {
+            collectionResult.add(instance);
+            // set lazy loaded flag for those attributes
+            for (int i = 0; i < fetchJoinMetaAttributes.size(); ++i) {
+              MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttributes.get(i),
+                  instance, true);
+            }
+          }
+
+          // set relationship attribute values
+          for (int i = 0; i < fetchJoinMetaEntities.size(); ++i) {
+            Object value = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
+                fetchJoinMetaEntities.get(i));
+            MetaEntityHelper.addElementToCollectionAttribute(instance, metaEntity,
+                fetchJoinMetaAttributes.get(i), value);
+          }
         }
       }
     }

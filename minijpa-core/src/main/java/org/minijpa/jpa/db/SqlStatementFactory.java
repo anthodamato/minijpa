@@ -29,6 +29,8 @@ import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
@@ -49,6 +51,7 @@ import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.UpdateQuery;
+import org.minijpa.jpa.criteria.AbstractFrom;
 import org.minijpa.jpa.criteria.AttributePath;
 import org.minijpa.jpa.criteria.CriteriaUtils;
 import org.minijpa.jpa.criteria.MiniCriteriaUpdate;
@@ -69,6 +72,8 @@ import org.minijpa.jpa.criteria.expression.SubstringExpression;
 import org.minijpa.jpa.criteria.expression.TrimExpression;
 import org.minijpa.jpa.criteria.expression.TypecastExpression;
 import org.minijpa.jpa.criteria.expression.UnaryExpression;
+import org.minijpa.jpa.criteria.join.CollectionJoinImpl;
+import org.minijpa.jpa.criteria.join.FetchJoinType;
 import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
 import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
 import org.minijpa.jpa.criteria.predicate.BinaryBooleanExprPredicate;
@@ -1179,6 +1184,51 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     throw new IllegalArgumentException("Join Type not supported: " + jt);
   }
 
+  private StatementType getStatementType(Set<Root<?>> roots) {
+    for (Root<?> root : roots) {
+      for (Join join : root.getJoins()) {
+        if (join instanceof CollectionJoinImpl) {
+          if (((CollectionJoinImpl) join).getFetchJoinType() == FetchJoinType.FETCH_JOIN) {
+            return StatementType.FETCH_JOIN;
+          }
+        }
+      }
+    }
+
+    return StatementType.PLAIN;
+  }
+
+  private List<MetaEntity> getFetchJoinEntities(Set<Root<?>> roots) {
+    List<MetaEntity> metaEntities = new ArrayList<>();
+    roots.forEach(root -> {
+//      MetaEntity entity = ((MiniRoot<?>) root).getMetaEntity();
+      root.getJoins().forEach(join -> {
+        if (join instanceof CollectionJoinImpl) {
+          if (((CollectionJoinImpl) join).getFetchJoinType() == FetchJoinType.FETCH_JOIN) {
+            metaEntities.add(((CollectionJoinImpl) join).getMetaEntity());
+          }
+        }
+      });
+    });
+
+    return metaEntities;
+  }
+
+  private List<MetaAttribute> getFetchJoinMetaAttributes(Set<Root<?>> roots) {
+    List<MetaAttribute> metaAttributes = new ArrayList<>();
+    roots.forEach(root -> {
+      root.getJoins().forEach(join -> {
+        if (join instanceof CollectionJoinImpl) {
+          if (((CollectionJoinImpl) join).getFetchJoinType() == FetchJoinType.FETCH_JOIN) {
+            metaAttributes.add(((CollectionJoinImpl) join).getMetaAttribute());
+          }
+        }
+      });
+    });
+
+    return metaAttributes;
+  }
+
   private List<From> buildFromClauseFromJoins(Set<Root<?>> roots,
       AliasGenerator aliasGenerator) {
     List<From> froms = new ArrayList<>();
@@ -1202,12 +1252,27 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     return froms;
   }
 
-  private List<Value> buildValues(MiniRoot<?> miniRoot, List<FromTable> fromTables) {
+  private List<Value> buildValues(MiniRoot<?> miniRoot, List<FromTable> fromTables,
+      AliasGenerator aliasGenerator) {
     MetaEntity entity = miniRoot.getMetaEntity();
     Optional<FromTable> optional = fromTables.stream()
         .filter(ft -> ft.getName().equals(entity.getTableName())).findFirst();
-    return optional.map(fromTable -> MetaEntityHelper.toValues(entity, fromTable))
-        .orElseGet(List::of);
+
+    List<Value> values = MetaEntityHelper.toValues(entity, optional.get());
+    LOG.debug("buildValues: values={}", values);
+    miniRoot.getJoins().forEach(j -> {
+      if (j instanceof Fetch) {
+        AbstractFrom from = (AbstractFrom) j;
+        MetaEntity joinMetaEntity = from.getMetaEntity();
+        FromTable fetchFromTable = FromTable.of(joinMetaEntity.getTableName(),
+            aliasGenerator.getDefault(joinMetaEntity.getTableName()));
+        values.addAll(MetaEntityHelper.toValues(joinMetaEntity, fetchFromTable));
+      }
+    });
+
+    return values;
+//    return optional.map(fromTable -> MetaEntityHelper.toValues(entity, fromTable))
+//        .orElseGet(List::of);
   }
 
   private List<Value> buildSelectionValues(CriteriaQuery<?> criteriaQuery,
@@ -1217,12 +1282,12 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     if (selection == null) {
       List<Value> values = new ArrayList<>();
       criteriaQuery.getRoots()
-          .forEach(r -> values.addAll(buildValues((MiniRoot<?>) r, fromTables)));
+          .forEach(r -> values.addAll(buildValues((MiniRoot<?>) r, fromTables, aliasGenerator)));
       return values;
     }
 
     if (selection instanceof MiniRoot<?>) {
-      return buildValues((MiniRoot<?>) selection, fromTables);
+      return buildValues((MiniRoot<?>) selection, fromTables, aliasGenerator);
     }
 
     List<Value> values = new ArrayList<>();
@@ -1254,13 +1319,37 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
       criteriaQuery.getRoots().forEach(r -> {
         MetaEntity entity = ((MiniRoot<?>) r).getMetaEntity();
         fetchParameters.addAll(MetaEntityHelper.convertAllAttributes(entity));
+
+        // fetch join cases
+        r.getJoins().forEach(join -> {
+          LOG.debug("createFetchParameters: join instanceof Fetch={}", (join instanceof Fetch));
+          if (join instanceof Fetch) {
+            AbstractFrom from = (AbstractFrom) join;
+            MetaEntity fetchMetaEntity = from.getMetaEntity();
+            LOG.debug("createFetchParameters: fetchMetaEntity={}", fetchMetaEntity);
+            fetchParameters.addAll(MetaEntityHelper.convertAllAttributes(fetchMetaEntity));
+          }
+        });
       });
+
       return fetchParameters;
     }
 
     if (selection instanceof MiniRoot<?>) {
       MetaEntity entity = ((MiniRoot<?>) selection).getMetaEntity();
-      return MetaEntityHelper.convertAllAttributes(entity);
+
+      List<FetchParameter> fetchParameters = new ArrayList<>();
+      fetchParameters.addAll(MetaEntityHelper.convertAllAttributes(entity));
+
+      ((MiniRoot) selection).getJoins().forEach(j -> {
+        if (j instanceof Fetch) {
+          AbstractFrom from = (AbstractFrom) j;
+          MetaEntity joinMetaEntity = from.getMetaEntity();
+          fetchParameters.addAll(MetaEntityHelper.convertAllAttributes(joinMetaEntity));
+        }
+      });
+
+      return fetchParameters;
     }
 
     List<FetchParameter> values = new ArrayList<>();
@@ -1336,6 +1425,13 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     }
 
     SqlSelect sqlSelect = builder.build();
+    List<MetaEntity> metaEntities = getFetchJoinEntities(criteriaQuery.getRoots());
+    if (!metaEntities.isEmpty()) {
+      List<MetaAttribute> metaAttributes = getFetchJoinMetaAttributes(criteriaQuery.getRoots());
+      return new StatementParameters(sqlSelect, parameters,
+          StatementType.FETCH_JOIN, metaEntities, metaAttributes);
+    }
+
     return new StatementParameters(sqlSelect, parameters);
   }
 
