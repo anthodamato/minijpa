@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
@@ -722,37 +723,17 @@ public class EntityHandlerImpl implements EntityHandler {
     }
   }
 
-  private List<RelationshipJoinTable> findRelationshipJoinTable(MetaEntity entity) {
-    List<RelationshipJoinTable> joinTables = new ArrayList<>();
-    persistenceUnitContext.getEntities().values().forEach(e -> {
-      List<MetaAttribute> attributes = e.getRelationshipAttributes();
-      List<RelationshipJoinTable> relationshipJoinTables = attributes.stream()
-          .filter(a -> a.getRelationship().getJoinTable() != null)
-          .map(a -> a.getRelationship().getJoinTable()).collect(Collectors.toList());
-      for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
-        if (relationshipJoinTable.getOwningEntity() == entity
-            || relationshipJoinTable.getTargetEntity() == entity) {
-          Optional<RelationshipJoinTable> optional = joinTables.stream()
-              .filter(j -> j.getTableName().equals(relationshipJoinTable.getTableName()))
-              .findFirst();
-          if (optional.isEmpty()) {
-            joinTables.add(relationshipJoinTable);
-          }
-        }
-      }
-    });
-
-    return joinTables;
-  }
-
-  private void removeJoinTableRecords(MetaEntity entity, Object primaryKey,
-      List<QueryParameter> idParameters)
-      throws Exception {
-    List<RelationshipJoinTable> relationshipJoinTables = findRelationshipJoinTable(entity);
-    LOG.debug("removeJoinTableRecords: relationshipJoinTables.size()={}",
-        relationshipJoinTables.size());
+  @Override
+  public void removeJoinTableRecords(Object entityInstance, MetaEntity e) throws Exception {
+    Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+    List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(e.getId(), idValue);
+    Set<RelationshipJoinTable> relationshipJoinTables = e.getRelationshipAttributes().stream()
+        .map(MetaAttribute::getRelationship)
+        .filter(r -> r.getJoinTable() != null && r.getJoinTable().getOwningEntity() == e)
+        .map(Relationship::getJoinTable)
+        .collect(Collectors.toSet());
     for (RelationshipJoinTable relationshipJoinTable : relationshipJoinTables) {
-      jdbcQueryRunner.removeJoinTableRecords(entity, primaryKey, idParameters,
+      jdbcQueryRunner.removeJoinTableRecords(e, idValue, idParameters,
           relationshipJoinTable);
     }
   }
@@ -763,7 +744,6 @@ public class EntityHandlerImpl implements EntityHandler {
     LOG.debug("delete: idValue={}", idValue);
 
     List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(e.getId(), idValue);
-    removeJoinTableRecords(e, idValue, idParameters);
     if (MetaEntityHelper.hasOptimisticLock(e, entityInstance)) {
       Object currentVersionValue = e.getVersionAttribute().get().getReadMethod()
           .invoke(entityInstance);

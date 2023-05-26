@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -293,6 +294,17 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   public void flush() throws Exception {
     LOG.debug("Flushing entities...");
     List<Object> managedEntityList = entityContainer.getManagedEntityList();
+    // removes join table owning entity records first
+    for (Object entityInstance : managedEntityList) {
+      MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
+      EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
+      if (entityStatus == EntityStatus.REMOVED_NOT_FLUSHED) {
+        LOG.debug("flush: REMOVED_NOT_FLUSHED Join Table Records entityInstance={}",
+            entityInstance);
+        entityHandler.removeJoinTableRecords(entityInstance, me);
+      }
+    }
+
     for (Object entityInstance : managedEntityList) {
       MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
       EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
