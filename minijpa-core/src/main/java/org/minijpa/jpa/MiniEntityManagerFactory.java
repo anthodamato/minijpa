@@ -39,172 +39,164 @@ import org.slf4j.LoggerFactory;
 
 public class MiniEntityManagerFactory implements EntityManagerFactory {
 
-	private final Logger LOG = LoggerFactory.getLogger(MiniEntityManagerFactory.class);
-	private final EntityManagerType entityManagerType;
-	private final PersistenceUnitInfo persistenceUnitInfo;
-	private final Map<String, Object> properties = new HashMap<>();
-	private final Map map;
-	private ConnectionProvider connectionProvider;
-	/**
-	 * The key used is the full class name.
-	 */
-	private PersistenceUnitContext persistenceUnitContext;
-	private Metamodel metamodel;
+  private final Logger LOG = LoggerFactory.getLogger(MiniEntityManagerFactory.class);
+  private final EntityManagerType entityManagerType;
+  private final PersistenceUnitInfo persistenceUnitInfo;
+  private final Map<String, Object> properties = new HashMap<>();
+  private final Map map;
+  private ConnectionProvider connectionProvider;
+  /**
+   * The key used is the full class name.
+   */
+  private PersistenceUnitContext persistenceUnitContext;
+  private Metamodel metamodel;
 
-	public MiniEntityManagerFactory(EntityManagerType entityManagerType, PersistenceUnitInfo persistenceUnitInfo,
-			@SuppressWarnings("rawtypes") Map map, ConnectionProvider connectionProvider) {
-		super();
-		this.entityManagerType = entityManagerType;
-		this.persistenceUnitInfo = persistenceUnitInfo;
-		this.map = map;
-		this.connectionProvider = connectionProvider;
-	}
+  public MiniEntityManagerFactory(EntityManagerType entityManagerType,
+      PersistenceUnitInfo persistenceUnitInfo,
+      @SuppressWarnings("rawtypes") Map map, ConnectionProvider connectionProvider) {
+    super();
+    this.entityManagerType = entityManagerType;
+    this.persistenceUnitInfo = persistenceUnitInfo;
+    this.map = map;
+    this.connectionProvider = connectionProvider;
+  }
 
-	public EntityManagerType getEntityManagerType() {
-		return entityManagerType;
-	}
+  public EntityManagerType getEntityManagerType() {
+    return entityManagerType;
+  }
 
-	@Override
-	public EntityManager createEntityManager() {
-		synchronized (persistenceUnitInfo) {
-			if (persistenceUnitContext == null)
-				try {
-					persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-				} catch (Exception e) {
-					LOG.error("Unable to read entities: " + e.getMessage());
-					if (e instanceof InvocationTargetException) {
-						InvocationTargetException targetException = (InvocationTargetException) e;
-						if (targetException.getTargetException() != null)
-							LOG.error("Unable to read entities: " + targetException.getTargetException().getMessage());
-					}
+  @Override
+  public EntityManager createEntityManager() {
+    synchronized (persistenceUnitInfo) {
+      buildPersistenceUnitContext();
+    }
 
-					if (e.getStackTrace() != null) {
-						LOG.error("stacktrace: ");
-						for (StackTraceElement element : e.getStackTrace()) {
-							LOG.error(element.getClassName() + "." + element.getMethodName() + " - "
-									+ element.getLineNumber());
-						}
-					}
+    return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext,
+        connectionProvider);
+  }
 
-					throw new IllegalStateException(e.getMessage());
-				}
-		}
+  private void buildPersistenceUnitContext() {
+    if (persistenceUnitContext == null) {
+      try {
+        persistenceUnitContext = PersistenceUnitContextManager.getInstance()
+            .get(persistenceUnitInfo);
+      } catch (Exception e) {
+        LOG.error("Unable to read entities: " + e.getMessage());
+        if (e instanceof InvocationTargetException) {
+          InvocationTargetException targetException = (InvocationTargetException) e;
+          if (targetException.getTargetException() != null) {
+            LOG.error(
+                "Unable to read entities: " + targetException.getTargetException().getMessage());
+          }
+        }
 
-		return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext, connectionProvider);
-	}
+        if (e.getStackTrace() != null) {
+          LOG.error("stacktrace: ");
+          for (StackTraceElement element : e.getStackTrace()) {
+            LOG.error(element.getClassName() + "." + element.getMethodName() + " - "
+                + element.getLineNumber());
+          }
+        }
 
-	@Override
-	public EntityManager createEntityManager(@SuppressWarnings("rawtypes") Map map) {
-		synchronized (persistenceUnitInfo) {
-			if (persistenceUnitContext == null)
-				try {
-					persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-				} catch (Exception e) {
-					LOG.error("Unable to read entities: " + e.getMessage());
-					throw new IllegalStateException(e.getMessage());
-				}
-		}
+        throw new IllegalStateException(e.getMessage());
+      }
+    }
+  }
 
-		return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext, connectionProvider);
-	}
+  @Override
+  public EntityManager createEntityManager(@SuppressWarnings("rawtypes") Map map) {
+    synchronized (persistenceUnitInfo) {
+      buildPersistenceUnitContext();
+    }
 
-	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    return new MiniEntityManager(this, persistenceUnitInfo, persistenceUnitContext,
+        connectionProvider);
+  }
 
-	@Override
-	public EntityManager createEntityManager(SynchronizationType synchronizationType,
-			@SuppressWarnings("rawtypes") Map map) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public EntityManager createEntityManager(SynchronizationType synchronizationType) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public CriteriaBuilder getCriteriaBuilder() {
-		synchronized (persistenceUnitInfo) {
-			if (persistenceUnitContext == null)
-				try {
-					persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-				} catch (Exception e) {
-					LOG.error("Unable to read entities: {}", e.getMessage());
-					throw new IllegalStateException(e.getMessage());
-				}
-		}
+  @Override
+  public EntityManager createEntityManager(SynchronizationType synchronizationType,
+      @SuppressWarnings("rawtypes") Map map) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-		return new MiniCriteriaBuilder(getMetamodel(), persistenceUnitContext);
-	}
+  @Override
+  public CriteriaBuilder getCriteriaBuilder() {
+    synchronized (persistenceUnitInfo) {
+      buildPersistenceUnitContext();
+    }
 
-	@Override
-	public Metamodel getMetamodel() {
-		LOG.debug("getMetamodel: metamodel={}", metamodel);
-		if (metamodel == null) {
-			synchronized (persistenceUnitInfo) {
-				if (persistenceUnitContext == null)
-					try {
-						persistenceUnitContext = PersistenceUnitContextManager.getInstance().get(persistenceUnitInfo);
-					} catch (Exception e) {
-						LOG.error("Unable to read entities: {}", e.getMessage());
-						throw new IllegalStateException(e.getMessage());
-					}
-			}
+    return new MiniCriteriaBuilder(getMetamodel(), persistenceUnitContext);
+  }
 
-			try {
-				metamodel = new MetamodelFactory(persistenceUnitContext.getEntities()).build();
-			} catch (Exception e) {
-				LOG.error(e.getMessage());
-			}
-		}
+  @Override
+  public Metamodel getMetamodel() {
+    LOG.debug("getMetamodel: metamodel={}", metamodel);
+    synchronized (persistenceUnitInfo) {
+      buildPersistenceUnitContext();
+      if (metamodel == null) {
+        try {
+          metamodel = new MetamodelFactory(persistenceUnitContext.getEntities()).build();
+        } catch (Exception e) {
+          LOG.error(e.getMessage());
+        }
+      }
+    }
 
-		return metamodel;
-	}
+    return metamodel;
+  }
 
-	@Override
-	public boolean isOpen() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+  @Override
+  public boolean isOpen() {
+    // TODO Auto-generated method stub
+    return false;
+  }
 
-	@Override
-	public void close() {
-		// TODO Auto-generated method stub
+  @Override
+  public void close() {
+    // TODO Auto-generated method stub
 
-	}
+  }
 
-	@Override
-	public Map<String, Object> getProperties() {
-		return properties;
-	}
+  @Override
+  public Map<String, Object> getProperties() {
+    return properties;
+  }
 
-	@Override
-	public Cache getCache() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public Cache getCache() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public PersistenceUnitUtil getPersistenceUnitUtil() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public PersistenceUnitUtil getPersistenceUnitUtil() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public void addNamedQuery(String name, Query query) {
-		// TODO Auto-generated method stub
+  @Override
+  public void addNamedQuery(String name, Query query) {
+    // TODO Auto-generated method stub
 
-	}
+  }
 
-	@Override
-	public <T> T unwrap(Class<T> cls) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public <T> T unwrap(Class<T> cls) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		// TODO Auto-generated method stub
+  @Override
+  public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
+    // TODO Auto-generated method stub
 
-	}
+  }
 
 }
