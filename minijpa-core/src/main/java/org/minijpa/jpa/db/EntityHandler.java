@@ -20,29 +20,35 @@ import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 
 /**
- *
  * @author adamato
  */
 public interface EntityHandler extends EntityLoader {
 
-    public void setLockType(LockType lockType);
+  public void setLockType(LockType lockType);
 
-    public LockType getLockType();
+  public LockType getLockType();
 
-    public Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType) throws Exception;
+  public Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType)
+      throws Exception;
 
-    public Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType) throws Exception;
+  public Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType)
+      throws Exception;
 
-    public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey, LockType lockType)
-            throws Exception;
+  public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey,
+      LockType lockType)
+      throws Exception;
 
-    public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value) throws Exception;
+  public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value)
+      throws Exception;
 
-    public void persist(MetaEntity entity, Object entityInstance, ModelValueArray<MetaAttribute> modelValueArray)
-            throws Exception;
+  public void persist(MetaEntity entity, Object entityInstance,
+      ModelValueArray<MetaAttribute> modelValueArray)
+      throws Exception;
 
-    public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception;
+  public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception;
 
-    public void delete(Object entityInstance, MetaEntity e) throws Exception;
+  public void delete(Object entityInstance, MetaEntity e) throws Exception;
+
+  public void removeJoinTableRecords(Object entityInstance, MetaEntity e) throws Exception;
 
 }
