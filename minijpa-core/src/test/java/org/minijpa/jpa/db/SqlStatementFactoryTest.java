@@ -34,6 +34,7 @@ import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
 import org.minijpa.jpa.model.Store;
+import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -147,9 +148,9 @@ public class SqlStatementFactoryTest {
         sqlStatementFactory.init();
         MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
         RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
-        ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk,
+        ModelValueArray<JoinColumnAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk,
                 store.getId(), relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
-        List<AbstractAttribute> attributes = modelValueArray.getModels();
+        List<JoinColumnAttribute> attributes = modelValueArray.getModels();
         List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
                 attributes, optional.get().getAliasGenerator());
@@ -193,9 +194,9 @@ public class SqlStatementFactoryTest {
         sqlStatementFactory.init();
         MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
         RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
-        ModelValueArray<AbstractAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, 1L,
+        ModelValueArray<JoinColumnAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, 1L,
                 relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
-        List<AbstractAttribute> attributes = modelValueArray.getModels();
+        List<JoinColumnAttribute> attributes = modelValueArray.getModels();
         List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
                 attributes, optional.get().getAliasGenerator());

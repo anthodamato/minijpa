@@ -17,18 +17,18 @@ package org.minijpa.metadata;
 
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class OneToManyOwningJoinColumnMappingFactory extends OwningJoinColumnMappingFactory {
 
-    @Override
-    public String createDefaultJoinColumnName(MetaEntity owningEntity,
-	    MetaAttribute owningAttribute,
-	    MetaAttribute foreignKeyAttribute) {
-	return owningEntity.getName() + "_" + foreignKeyAttribute.getColumnName();
-    }
+  @Override
+  public String createDefaultJoinColumnName(MetaEntity owningEntity,
+      RelationshipMetaAttribute owningAttribute,
+      MetaAttribute foreignKeyAttribute) {
+    return owningEntity.getName() + "_" + foreignKeyAttribute.getColumnName();
+  }
 
 }

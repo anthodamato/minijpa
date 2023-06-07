@@ -10,16 +10,17 @@ import javax.persistence.metamodel.CollectionAttribute;
 import org.minijpa.jpa.criteria.AbstractFrom;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 public class CollectionJoinImpl<Z, E> extends AbstractFrom<Z, E> implements CollectionJoin<Z, E>,
     FetchJoinSpec {
 
-  private MetaAttribute metaAttribute;
+  private RelationshipMetaAttribute metaAttribute;
   private final Attribute<? super Z, E> attribute;
   private final JoinType joinType;
   private final FetchJoinType fetchJoinType;
 
-  public CollectionJoinImpl(MetaEntity metaEntity, MetaAttribute metaAttribute,
+  public CollectionJoinImpl(MetaEntity metaEntity, RelationshipMetaAttribute metaAttribute,
       Attribute<? super Z, E> attribute,
       JoinType joinType, FetchJoinType fetchJoinType) {
     super(metaEntity);
@@ -29,7 +30,7 @@ public class CollectionJoinImpl<Z, E> extends AbstractFrom<Z, E> implements Coll
     this.fetchJoinType = fetchJoinType;
   }
 
-  public MetaAttribute getMetaAttribute() {
+  public RelationshipMetaAttribute getMetaAttribute() {
     return metaAttribute;
   }
 

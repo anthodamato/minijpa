@@ -16,6 +16,8 @@ import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
+import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.Relationship;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
 import org.minijpa.metadata.AliasGenerator;
@@ -86,7 +88,7 @@ public class JdbcQueryRunner {
       LockType lockType, EntityHandler entityLoader) throws Exception {
     List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute,
         foreignKey);
-    List<String> columns = parameters.stream().map(p -> p.getColumnName())
+    List<String> columns = parameters.stream().map(QueryParameter::getColumnName)
         .collect(Collectors.toList());
     SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
         .generateSelectByForeignKey(entity,
@@ -106,22 +108,22 @@ public class JdbcQueryRunner {
   }
 
   public Object selectByJoinTable(Object primaryKey, Pk id, Relationship relationship,
-      MetaAttribute metaAttribute,
+      RelationshipMetaAttribute metaAttribute,
       EntityHandler entityLoader) throws Exception {
-    ModelValueArray<AbstractAttribute> modelValueArray = null;
+    ModelValueArray<JoinColumnAttribute> modelValueArray = null;
     SqlSelectData sqlSelectData = null;
     if (relationship.isOwner()) {
       modelValueArray = dbConfiguration.getSqlStatementFactory()
           .expandJoinColumnAttributes(id, primaryKey,
               relationship.getJoinTable().getOwningJoinColumnMapping().getJoinColumnAttributes());
-      List<AbstractAttribute> attributes = modelValueArray.getModels();
+      List<JoinColumnAttribute> attributes = modelValueArray.getModels();
       sqlSelectData = dbConfiguration.getSqlStatementFactory().generateSelectByJoinTable(
           relationship.getAttributeType(), relationship.getJoinTable(), attributes, aliasGenerator);
     } else {
       modelValueArray = dbConfiguration.getSqlStatementFactory()
           .expandJoinColumnAttributes(id, primaryKey,
               relationship.getJoinTable().getTargetJoinColumnMapping().getJoinColumnAttributes());
-      List<AbstractAttribute> attributes = modelValueArray.getModels();
+      List<JoinColumnAttribute> attributes = modelValueArray.getModels();
       sqlSelectData = dbConfiguration.getSqlStatementFactory().generateSelectByJoinTableFromTarget(
           relationship.getAttributeType(), relationship.getJoinTable(), attributes, aliasGenerator);
     }
@@ -207,10 +209,10 @@ public class JdbcQueryRunner {
       List<QueryParameter> idParameters,
       RelationshipJoinTable relationshipJoinTable) throws Exception {
     if (relationshipJoinTable.getOwningEntity() == entity) {
-      ModelValueArray<AbstractAttribute> modelValueArray = dbConfiguration.getSqlStatementFactory()
+      ModelValueArray<JoinColumnAttribute> modelValueArray = dbConfiguration.getSqlStatementFactory()
           .expandJoinColumnAttributes(entity.getId(), primaryKey,
               relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
-      List<AbstractAttribute> attributes = modelValueArray.getModels();
+      List<JoinColumnAttribute> attributes = modelValueArray.getModels();
 
       List<String> idColumns = attributes.stream().map(p -> p.getColumnName())
           .collect(Collectors.toList());

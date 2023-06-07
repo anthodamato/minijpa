@@ -26,6 +26,7 @@ import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.relationship.OneToManyRelationship;
 import org.minijpa.jpa.model.relationship.Relationship;
@@ -69,7 +70,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
   private int indexOfFirstEntity(List<MetaEntity> entities) {
     for (int i = 0; i < entities.size(); ++i) {
       MetaEntity metaEntity = entities.get(i);
-      List<MetaAttribute> relationshipAttributes = metaEntity.expandRelationshipAttributes();
+      List<RelationshipMetaAttribute> relationshipAttributes = metaEntity.expandRelationshipAttributes();
       if (relationshipAttributes.isEmpty()) {
         return i;
       }
@@ -183,7 +184,7 @@ public abstract class AbstractDbJdbc implements DbJdbc {
     sorted.forEach(v -> {
       List<Relationship> relationships = v.expandRelationshipAttributes().stream()
           .filter(a -> a.getRelationship().getJoinTable() != null && a.getRelationship().isOwner())
-          .map(MetaAttribute::getRelationship).collect(Collectors.toList());
+          .map(RelationshipMetaAttribute::getRelationship).collect(Collectors.toList());
       for (Relationship relationship : relationships) {
         RelationshipJoinTable relationshipJoinTable = relationship.getJoinTable();
         List<ForeignKeyDeclaration> foreignKeyDeclarations = new ArrayList<>();

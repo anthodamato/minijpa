@@ -19,6 +19,7 @@ import java.util.List;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.sql.model.SqlStatement;
 
 /**
@@ -30,7 +31,7 @@ public class StatementParameters {
   private final List<QueryParameter> parameters;
   private StatementType statementType = StatementType.PLAIN;
   private List<MetaEntity> fetchJoinMetaEntities;
-  private List<MetaAttribute> fetchJoinMetaAttributes;
+  private List<RelationshipMetaAttribute> fetchJoinMetaAttributes;
 
   public StatementParameters(SqlStatement sqlStatement, List<QueryParameter> parameters) {
     this.sqlStatement = sqlStatement;
@@ -42,7 +43,7 @@ public class StatementParameters {
       List<QueryParameter> parameters,
       StatementType statementType,
       List<MetaEntity> fetchJoinMetaEntities,
-      List<MetaAttribute> fetchJoinMetaAttributes) {
+      List<RelationshipMetaAttribute> fetchJoinMetaAttributes) {
     this.sqlStatement = sqlStatement;
     this.parameters = parameters;
     this.statementType = statementType;
@@ -66,7 +67,7 @@ public class StatementParameters {
     return fetchJoinMetaEntities;
   }
 
-  public List<MetaAttribute> getFetchJoinMetaAttributes() {
+  public List<RelationshipMetaAttribute> getFetchJoinMetaAttributes() {
     return fetchJoinMetaAttributes;
   }
 }

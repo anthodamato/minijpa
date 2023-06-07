@@ -22,6 +22,7 @@ import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 public final class ManyToManyRelationship extends Relationship {
 
@@ -48,10 +49,10 @@ public final class ManyToManyRelationship extends Relationship {
         private FetchType fetchType = FetchType.LAZY;
         private Set<Cascade> cascades;
         private MetaEntity owningEntity;
-        private MetaAttribute owningAttribute;
+        private RelationshipMetaAttribute owningAttribute;
         private Class<?> collectionClass;
         private Class<?> targetEntityClass;
-        private MetaAttribute targetAttribute;
+        private RelationshipMetaAttribute targetAttribute;
         private RelationshipJoinTable joinTable;
         private MetaEntity attributeType;
         private JoinTableAttributes joinTableAttributes;
@@ -86,7 +87,7 @@ public final class ManyToManyRelationship extends Relationship {
             return this;
         }
 
-        public Builder withOwningAttribute(MetaAttribute attribute) {
+        public Builder withOwningAttribute(RelationshipMetaAttribute attribute) {
             this.owningAttribute = attribute;
             return this;
         }
@@ -101,7 +102,7 @@ public final class ManyToManyRelationship extends Relationship {
             return this;
         }
 
-        public Builder withTargetAttribute(MetaAttribute targetAttribute) {
+        public Builder withTargetAttribute(RelationshipMetaAttribute targetAttribute) {
             this.targetAttribute = targetAttribute;
             return this;
         }

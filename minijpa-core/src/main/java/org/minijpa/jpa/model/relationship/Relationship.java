@@ -22,6 +22,7 @@ import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 public abstract class Relationship {
 
@@ -29,14 +30,14 @@ public abstract class Relationship {
 	protected String joinColumnTable;
 	protected MetaEntity owningEntity;
 	// for bidirectional relationships
-	protected MetaAttribute owningAttribute;
+	protected RelationshipMetaAttribute owningAttribute;
 
 	/**
 	 * This is the target entity.
 	 */
 	protected MetaEntity attributeType;
 	// for bidirectional relationships
-	protected MetaAttribute targetAttribute;
+	protected RelationshipMetaAttribute targetAttribute;
 	protected Optional<String> mappedBy;
 	protected Set<Cascade> cascades;
 	protected RelationshipJoinTable joinTable;
@@ -61,7 +62,7 @@ public abstract class Relationship {
 		return owningEntity;
 	}
 
-	public MetaAttribute getOwningAttribute() {
+	public RelationshipMetaAttribute getOwningAttribute() {
 		return owningAttribute;
 	}
 
@@ -69,7 +70,7 @@ public abstract class Relationship {
 		return attributeType;
 	}
 
-	public MetaAttribute getTargetAttribute() {
+	public RelationshipMetaAttribute getTargetAttribute() {
 		return targetAttribute;
 	}
 

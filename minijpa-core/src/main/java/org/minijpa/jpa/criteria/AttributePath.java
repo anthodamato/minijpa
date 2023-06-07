@@ -29,22 +29,23 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 
 public class AttributePath<X> implements Path<X> {
 
-    private final MetaAttribute metaAttribute;
+    private final AbstractMetaAttribute metaAttribute;
     private final MetaEntity metaEntity;
     private String alias;
 
-    public AttributePath(MetaAttribute metaAttribute, MetaEntity metaEntity) {
+    public AttributePath(AbstractMetaAttribute metaAttribute, MetaEntity metaEntity) {
         super();
         this.metaAttribute = metaAttribute;
         this.metaEntity = metaEntity;
     }
 
-    public MetaAttribute getMetaAttribute() {
+    public AbstractMetaAttribute getMetaAttribute() {
         return metaAttribute;
     }
 
@@ -161,7 +162,7 @@ public class AttributePath<X> implements Path<X> {
 
     @Override
     public <Y> Path<Y> get(String attributeName) {
-        MetaAttribute attribute = this.metaEntity.getAttribute(attributeName);
+        AbstractMetaAttribute attribute = this.metaEntity.getAttribute(attributeName);
         if (attribute != null)
             return new AttributePath<>(attribute, metaEntity);
 

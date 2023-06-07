@@ -20,64 +20,68 @@ import java.util.List;
 
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class SingleJoinColumnMapping implements JoinColumnMapping {
 
-	private final JoinColumnAttribute joinColumnAttribute;
-	private final MetaAttribute attribute;
-	private final Pk pk;
+  private final JoinColumnAttribute joinColumnAttribute;
+  private final RelationshipMetaAttribute attribute;
+  private final Pk pk;
 
-	public SingleJoinColumnMapping(JoinColumnAttribute joinColumnAttribute, MetaAttribute attribute, Pk pk) {
-		this.joinColumnAttribute = joinColumnAttribute;
-		this.attribute = attribute;
-		this.pk = pk;
-	}
+  public SingleJoinColumnMapping(
+      JoinColumnAttribute joinColumnAttribute,
+      RelationshipMetaAttribute attribute,
+      Pk pk) {
+    this.joinColumnAttribute = joinColumnAttribute;
+    this.attribute = attribute;
+    this.pk = pk;
+  }
 
-	@Override
-	public MetaAttribute getAttribute() {
-		return attribute;
-	}
+  @Override
+  public RelationshipMetaAttribute getAttribute() {
+    return attribute;
+  }
 
-	@Override
-	public boolean isComposite() {
-		return false;
-	}
+  @Override
+  public boolean isComposite() {
+    return false;
+  }
 
-	@Override
-	public int size() {
-		return 1;
-	}
+  @Override
+  public int size() {
+    return 1;
+  }
 
-	@Override
-	public JoinColumnAttribute get(int index) {
-		if (index == 0)
-			return joinColumnAttribute;
+  @Override
+  public JoinColumnAttribute get(int index) {
+    if (index == 0) {
+      return joinColumnAttribute;
+    }
 
-		throw new IndexOutOfBoundsException("Index '" + index + "' out of bounds");
-	}
+    throw new IndexOutOfBoundsException("Index '" + index + "' out of bounds");
+  }
 
-	@Override
-	public JoinColumnAttribute get() {
-		return joinColumnAttribute;
-	}
+  @Override
+  public JoinColumnAttribute get() {
+    return joinColumnAttribute;
+  }
 
-	@Override
-	public Pk getForeignKey() {
-		return pk;
-	}
+  @Override
+  public Pk getForeignKey() {
+    return pk;
+  }
 
-	@Override
-	public boolean isLazy() {
-		return joinColumnAttribute.getAttribute().isLazy();
-	}
+  @Override
+  public boolean isLazy() {
+    return joinColumnAttribute.getAttribute().isLazy();
+  }
 
-	@Override
-	public List<JoinColumnAttribute> getJoinColumnAttributes() {
-		return Arrays.asList(joinColumnAttribute);
-	}
+  @Override
+  public List<JoinColumnAttribute> getJoinColumnAttributes() {
+    return Arrays.asList(joinColumnAttribute);
+  }
 
 }

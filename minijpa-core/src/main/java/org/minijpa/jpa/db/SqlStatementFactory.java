@@ -86,9 +86,11 @@ import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
 import org.minijpa.jpa.criteria.predicate.PredicateType;
 import org.minijpa.jpa.criteria.predicate.PredicateTypeInfo;
 import org.minijpa.jpa.model.AbstractAttribute;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.Relationship;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
@@ -237,10 +239,10 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     return (SqlSelectData) sqlSelectBuilder.build();
   }
 
-  public ModelValueArray<AbstractAttribute> expandJoinColumnAttributes(Pk owningId,
+  public ModelValueArray<JoinColumnAttribute> expandJoinColumnAttributes(Pk owningId,
       Object joinTableForeignKey, List<JoinColumnAttribute> allJoinColumnAttributes)
       throws Exception {
-    ModelValueArray<MetaAttribute> modelValueArray = new ModelValueArray<>();
+    ModelValueArray<AbstractMetaAttribute> modelValueArray = new ModelValueArray<>();
     LOG.debug("expandJoinColumnAttributes: owningId={}", owningId);
     MetaEntityHelper.expand(owningId, joinTableForeignKey, modelValueArray);
 
@@ -248,9 +250,9 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     allJoinColumnAttributes.forEach(
         a -> LOG.debug("expandJoinColumnAttributes: a.getForeignKeyAttribute()={}",
             a.getForeignKeyAttribute()));
-    ModelValueArray<AbstractAttribute> result = new ModelValueArray<>();
+    ModelValueArray<JoinColumnAttribute> result = new ModelValueArray<>();
     for (int i = 0; i < modelValueArray.size(); ++i) {
-      MetaAttribute attribute = modelValueArray.getModel(i);
+      MetaAttribute attribute = (MetaAttribute) modelValueArray.getModel(i);
       LOG.debug("expandJoinColumnAttributes: attribute={}", attribute);
       Optional<JoinColumnAttribute> optional = allJoinColumnAttributes.stream()
           .filter(j -> j.getForeignKeyAttribute() == attribute).findFirst();
@@ -270,7 +272,9 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
    * @param aliasGenerator
    * @return
    */
-  public List<FromJoin> calculateJoins(MetaEntity entity, MetaAttribute metaAttribute,
+  public List<FromJoin> calculateJoins(
+      MetaEntity entity,
+      RelationshipMetaAttribute metaAttribute,
       JoinType joinType,
       AliasGenerator aliasGenerator) {
     if (metaAttribute.getRelationship().getJoinTable() != null) {
@@ -430,8 +434,10 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
    * @return
    * @throws Exception
    */
-  public SqlSelectData generateSelectByJoinTable(MetaEntity entity,
-      RelationshipJoinTable relationshipJoinTable, List<AbstractAttribute> attributes,
+  public SqlSelectData generateSelectByJoinTable(
+      MetaEntity entity,
+      RelationshipJoinTable relationshipJoinTable,
+      List<? extends AbstractAttribute> attributes,
       AliasGenerator aliasGenerator) throws Exception {
     // select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
     // where j.t2=fk
@@ -464,7 +470,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
   }
 
   public SqlSelectData generateSelectByJoinTableFromTarget(MetaEntity entity,
-      RelationshipJoinTable relationshipJoinTable, List<AbstractAttribute> attributes,
+      RelationshipJoinTable relationshipJoinTable, List<? extends AbstractAttribute> attributes,
       AliasGenerator tableAliasGenerator) throws Exception {
     // select t1.id, t1.p1 from entity t1 inner join jointable j on t1.id=j.id1
     // where j.t2=fk
@@ -586,7 +592,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     LOG.debug("createFetchParameter: selection={}", selection);
     if (selection instanceof AttributePath<?>) {
       AttributePath<?> miniPath = (AttributePath<?>) selection;
-      MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+      AbstractMetaAttribute metaAttribute = miniPath.getMetaAttribute();
       FetchParameter columnNameValue = AttributeFetchParameter.build(metaAttribute);
       return Optional.of(columnNameValue);
     } else if (selection instanceof AggregateFunctionExpression<?>) {
@@ -607,7 +613,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         Expression<?> expr = aggregateFunctionExpression.getX();
         if (expr instanceof AttributePath<?>) {
           AttributePath<?> miniPath = (AttributePath<?>) expr;
-          MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+          AbstractMetaAttribute metaAttribute = miniPath.getMetaAttribute();
           FetchParameter columnNameValue = AttributeFetchParameter.build(metaAttribute);
           return Optional.of(columnNameValue);
         }
@@ -724,7 +730,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         binaryExpression.getxValue().get().getClass());
     if (binaryExpression.getY().isPresent()) {
       AttributePath<?> attributePath2 = (AttributePath<?>) binaryExpression.getY().get();
-      MetaAttribute metaAttribute2 = attributePath2.getMetaAttribute();
+      AbstractMetaAttribute metaAttribute2 = attributePath2.getMetaAttribute();
       Integer sqlType2 = metaAttribute2.getSqlType();
       int compare = JdbcTypes.compareNumericTypes(sqlType1, sqlType2);
       LOG.debug("calculateSqlType: sqlType1={}, sqlType2={}, compare={}", sqlType1, sqlType2,
@@ -743,12 +749,12 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
       Optional<Expression<?>> optionalExpression, Optional<Object> optionalValue) {
     AttributePath<?> attributePath1 = (AttributePath<?>) expression;
     LOG.debug("calculateSqlTypeFromExpression: attributePath1={}", attributePath1);
-    MetaAttribute metaAttribute1 = attributePath1.getMetaAttribute();
+    AbstractMetaAttribute metaAttribute1 = attributePath1.getMetaAttribute();
     Integer sqlType1 = metaAttribute1.getSqlType();
     LOG.debug("calculateSqlTypeFromExpression: sqlType1={}", sqlType1);
     if (optionalExpression.isPresent()) {
       AttributePath<?> attributePath2 = (AttributePath<?>) optionalExpression.get();
-      MetaAttribute metaAttribute2 = attributePath2.getMetaAttribute();
+      AbstractMetaAttribute metaAttribute2 = attributePath2.getMetaAttribute();
       Integer sqlType2 = metaAttribute2.getSqlType();
       int compare = JdbcTypes.compareNumericTypes(sqlType1, sqlType2);
       LOG.debug("calculateSqlTypeFromExpression: sqlType1={}, sqlType2={}, compare={}", sqlType1,
@@ -765,7 +771,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
   }
 
   private boolean checkDataType(AttributePath<?> attributePath, Integer sqlType) {
-    MetaAttribute metaAttribute = attributePath.getMetaAttribute();
+    AbstractMetaAttribute metaAttribute = attributePath.getMetaAttribute();
     LOG.debug("checkDataType: sqlType={}, metaAttribute.getSqlType()={}", sqlType,
         metaAttribute.getSqlType());
     if (sqlType != null && sqlType != Types.NULL && sqlType == metaAttribute.getSqlType()) {
@@ -778,7 +784,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
   private TableColumn createTableColumnFromPath(AttributePath<?> attributePath,
       AliasGenerator tableAliasGenerator) {
-    MetaAttribute attribute = attributePath.getMetaAttribute();
+    AbstractMetaAttribute attribute = attributePath.getMetaAttribute();
     return new TableColumn(FromTable.of(attributePath.getMetaEntity().getTableName(),
         tableAliasGenerator.getDefault(attributePath.getMetaEntity().getTableName())),
         new Column(attribute.getColumnName()));
@@ -847,7 +853,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
 
     if (expression1 instanceof AttributePath<?>) {
       AttributePath<?> attributePath = (AttributePath<?>) expression1;
-      MetaAttribute attribute1 = attributePath.getMetaAttribute();
+      AbstractMetaAttribute attribute1 = attributePath.getMetaAttribute();
       TableColumn tableColumn1 = createTableColumnFromPath(attributePath, tableAliasGenerator);
       if (expression2 != null) {
         Object p = criteriaExpressionHelper.createParameterFromExpression(query, expression2,
@@ -879,7 +885,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     Expression<?> expression1 = betweenExpressionsPredicate.getX();
     Expression<?> expression2 = betweenExpressionsPredicate.getY();
     AttributePath<?> miniPath = (AttributePath<?>) betweenExpressionsPredicate.getV();
-    MetaAttribute attribute = miniPath.getMetaAttribute();
+    AbstractMetaAttribute attribute = miniPath.getMetaAttribute();
 
     BetweenCondition.Builder builder = new BetweenCondition.Builder(
         createTableColumnFromPath(miniPath, tableAliasGenerator));
@@ -902,7 +908,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     Object x = betweenValuesPredicate.getX();
     Object y = betweenValuesPredicate.getY();
     AttributePath<?> miniPath = (AttributePath<?>) betweenValuesPredicate.getV();
-    MetaAttribute attribute = miniPath.getMetaAttribute();
+    AbstractMetaAttribute attribute = miniPath.getMetaAttribute();
 
     BetweenCondition.Builder builder = new BetweenCondition.Builder(
         createTableColumnFromPath(miniPath, tableAliasGenerator));
@@ -1021,7 +1027,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     TableColumn tableColumn = null;
     if (expression instanceof AttributePath<?>) {
       AttributePath<?> miniPath = (AttributePath<?>) expression;
-      MetaAttribute attribute = miniPath.getMetaAttribute();
+      AbstractMetaAttribute attribute = miniPath.getMetaAttribute();
       tableColumn = createTableColumnFromPath(miniPath, tableAliasGenerator);
 
       List<String> list = inPredicate.getValues().stream().map(v -> {
@@ -1045,7 +1051,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     Optional<Expression<String>> patternExpression = likePredicate.getPatternExpression();
     Optional<String> pattern = likePredicate.getPattern();
     AttributePath<?> miniPath = (AttributePath<?>) likePredicate.getX();
-    MetaAttribute attribute = miniPath.getMetaAttribute();
+    AbstractMetaAttribute attribute = miniPath.getMetaAttribute();
     Object right = null;
     if (pattern.isPresent()) {
       right = CriteriaUtils.buildValue(pattern.get());
@@ -1153,7 +1159,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
       Expression<?> expression = order.getExpression();
       if (expression instanceof AttributePath<?>) {
         AttributePath<?> miniPath = (AttributePath<?>) expression;
-        MetaAttribute metaAttribute = miniPath.getMetaAttribute();
+        AbstractMetaAttribute metaAttribute = miniPath.getMetaAttribute();
         TableColumn tableColumn = new TableColumn(
             FromTable.of(miniPath.getMetaEntity().getTableName(),
                 tableAliasGenerator.getDefault(miniPath.getMetaEntity().getTableName())),
@@ -1214,8 +1220,8 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     return metaEntities;
   }
 
-  private List<MetaAttribute> getFetchJoinMetaAttributes(Set<Root<?>> roots) {
-    List<MetaAttribute> metaAttributes = new ArrayList<>();
+  private List<RelationshipMetaAttribute> getFetchJoinMetaAttributes(Set<Root<?>> roots) {
+    List<RelationshipMetaAttribute> metaAttributes = new ArrayList<>();
     roots.forEach(root -> {
       root.getJoins().forEach(join -> {
         if (join instanceof CollectionJoinImpl) {
@@ -1241,7 +1247,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
           CollectionJoin collectionJoin = (CollectionJoin) join;
           Attribute attribute = collectionJoin.getAttribute();
           String attributeName = attribute.getName();
-          MetaAttribute metaAttribute = entity.getAttribute(attributeName);
+          RelationshipMetaAttribute metaAttribute = entity.getRelationshipAttribute(attributeName);
           List<FromJoin> fromJoins = calculateJoins(entity, metaAttribute,
               decodeJoinType(collectionJoin.getJoinType()), aliasGenerator);
           froms.addAll(fromJoins);
@@ -1427,7 +1433,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     SqlSelect sqlSelect = builder.build();
     List<MetaEntity> metaEntities = getFetchJoinEntities(criteriaQuery.getRoots());
     if (!metaEntities.isEmpty()) {
-      List<MetaAttribute> metaAttributes = getFetchJoinMetaAttributes(criteriaQuery.getRoots());
+      List<RelationshipMetaAttribute> metaAttributes = getFetchJoinMetaAttributes(criteriaQuery.getRoots());
       return new StatementParameters(sqlSelect, parameters,
           StatementType.FETCH_JOIN, metaEntities, metaAttributes);
     }
@@ -1436,7 +1442,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
   }
 
   private QueryParameter createQueryParameter(AttributePath<?> miniPath, Object value) {
-    MetaAttribute a = miniPath.getMetaAttribute();
+    AbstractMetaAttribute a = miniPath.getMetaAttribute();
     return new QueryParameter(a.getColumnName(), value, a.getSqlType(), a.getAttributeMapper());
   }
 

@@ -19,26 +19,26 @@ import java.util.List;
 
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public interface JoinColumnMapping {
 
-	public MetaAttribute getAttribute();
+  public RelationshipMetaAttribute getAttribute();
 
-	public boolean isComposite();
+  public boolean isComposite();
 
-	public int size();
+  public int size();
 
-	public JoinColumnAttribute get(int index);
+  public JoinColumnAttribute get(int index);
 
-	public JoinColumnAttribute get();
+  public JoinColumnAttribute get();
 
-	public List<JoinColumnAttribute> getJoinColumnAttributes();
+  public List<JoinColumnAttribute> getJoinColumnAttributes();
 
-	public Pk getForeignKey();
+  public Pk getForeignKey();
 
-	public boolean isLazy();
+  public boolean isLazy();
 }

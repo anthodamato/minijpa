@@ -66,11 +66,13 @@ import org.minijpa.jpa.db.PkGeneration;
 import org.minijpa.jpa.db.PkGenerationType;
 import org.minijpa.jpa.db.PkStrategy;
 import org.minijpa.jpa.db.QueryResultMapping;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.BasicAttributePk;
 import org.minijpa.jpa.model.EmbeddedPk;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.ManyToManyRelationship;
 import org.minijpa.jpa.model.relationship.ManyToOneRelationship;
 import org.minijpa.jpa.model.relationship.OneToManyRelationship;
@@ -166,7 +168,7 @@ public class Parser {
     }
 
     LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
-    List<MetaAttribute> attributes = parseAttributes(enhEntity, Optional.empty());
+    EntityAttributes entityAttributes = parseAttributes(enhEntity, Optional.empty());
     List<MetaEntity> embeddables = parseEmbeddables(enhEntity, parsedEntities, Optional.empty());
     MetaEntity mappedSuperclassEntity = null;
     LOG.debug("parse: enhEntity.getMappedSuperclass()={}", enhEntity.getMappedSuperclass());
@@ -188,8 +190,8 @@ public class Parser {
             parsedEntities);
       }
 
-      List<MetaAttribute> msAttributes = mappedSuperclassEntity.getAttributes();
-      attributes.addAll(msAttributes);
+      List<AbstractMetaAttribute> msAttributes = mappedSuperclassEntity.getAttributes();
+      entityAttributes.metaAttributes.addAll(msAttributes);
     }
 
     LOG.debug("Getting '" + c.getName() + "' Id...");
@@ -197,7 +199,10 @@ public class Parser {
     if (mappedSuperclassEntity != null) {
       id = mappedSuperclassEntity.getId();
     } else {
-      Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
+      Optional<MetaAttribute> optionalId = entityAttributes.metaAttributes.stream()
+          .filter(a -> a instanceof MetaAttribute).map(a -> (MetaAttribute) a)
+          .filter(MetaAttribute::isId)
+          .findFirst();
       if (optionalId.isPresent()) {
         Field field = c.getDeclaredField(optionalId.get().getName());
         PkGeneration gv = buildPkGeneration(field);
@@ -206,9 +211,9 @@ public class Parser {
         }
 
         id = new BasicAttributePk(optionalId.get(), gv);
-        attributes.remove(optionalId.get());
+        entityAttributes.metaAttributes.remove(optionalId.get());
       } else {
-        Optional<MetaEntity> optionalME = embeddables.stream().filter(e -> e.isEmbeddedId())
+        Optional<MetaEntity> optionalME = embeddables.stream().filter(MetaEntity::isEmbeddedId)
             .findFirst();
         if (optionalME.isEmpty()) {
           throw new Exception("@Id or @EmbeddedId annotation not found: '" + c.getName() + "'");
@@ -253,15 +258,18 @@ public class Parser {
     Method entityStatusAttributeWriteMethod = c.getMethod(
         enhEntity.getEntityStatusAttributeSetMethod().get(),
         EntityStatus.class);
-    List<MetaAttribute> basicAttributes = attributes.stream().filter(a -> a.isBasic())
+    List<MetaAttribute> basicAttributes = entityAttributes.metaAttributes.stream()
+        .filter(a -> a instanceof MetaAttribute).map(a -> (MetaAttribute) a)
+        .filter(MetaAttribute::isBasic)
         .collect(Collectors.toList());
-    List<MetaAttribute> relationshipAttributes = attributes.stream()
-        .filter(a -> a.getRelationship() != null)
-        .collect(Collectors.toList());
+//    List<MetaAttribute> relationshipAttributes = attributes.stream()
+//        .filter(a -> a.getRelationship() != null)
+//        .collect(Collectors.toList());
     return new MetaEntity.Builder().withEntityClass(c).withName(name).withTableName(tableName)
-        .withId(id).withAttributes(attributes)
+        .withId(id).withAttributes(entityAttributes.metaAttributes)
         .withBasicAttributes(Collections.unmodifiableList(basicAttributes))
-        .withRelationshipAttributes(relationshipAttributes).withEmbeddables(embeddables)
+        .withRelationshipAttributes(entityAttributes.relationshipMetaAttributes)
+        .withEmbeddables(embeddables)
         .withMappedSuperclassEntity(mappedSuperclassEntity)
         .withModificationAttributeReadMethod(modificationAttributeReadMethod)
         .withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
@@ -292,7 +300,7 @@ public class Parser {
     LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
     String path = parentPath.isEmpty() ? enhAttribute.getName()
         : parentPath.get() + "." + enhAttribute.getName();
-    List<MetaAttribute> attributes = parseAttributes(enhEntity, Optional.of(path));
+    EntityAttributes entityAttributes = parseAttributes(enhEntity, Optional.of(path));
     List<MetaEntity> embeddables = parseEmbeddables(enhEntity, parsedEntities, Optional.of(path));
 
     Method modificationAttributeReadMethod = null;
@@ -320,16 +328,19 @@ public class Parser {
     Field field = parentClass.getDeclaredField(enhAttribute.getName());
     boolean id = field.getAnnotation(EmbeddedId.class) != null;
 
-    List<MetaAttribute> basicAttributes = attributes.stream().filter(a -> a.isBasic())
+    List<MetaAttribute> basicAttributes = entityAttributes.metaAttributes.stream()
+        .filter(a -> a instanceof MetaAttribute).map(a -> (MetaAttribute) a)
+        .filter(MetaAttribute::isBasic)
         .collect(Collectors.toList());
-    List<MetaAttribute> relationshipAttributes = attributes.stream()
-        .filter(a -> a.getRelationship() != null)
-        .collect(Collectors.toList());
+//    List<MetaAttribute> relationshipAttributes = attributes.stream()
+//        .filter(a -> a.getRelationship() != null)
+//        .collect(Collectors.toList());
     return new MetaEntity.Builder().withEntityClass(c).withName(enhAttribute.getName())
         .isEmbeddedId(id)
-        .withAttributes(attributes)
+        .withAttributes(entityAttributes.metaAttributes)
         .withBasicAttributes(Collections.unmodifiableList(basicAttributes))
-        .withRelationshipAttributes(relationshipAttributes).withEmbeddables(embeddables)
+        .withRelationshipAttributes(entityAttributes.relationshipMetaAttributes)
+        .withEmbeddables(embeddables)
         .withReadMethod(readMethod).withWriteMethod(writeMethod).withPath(path)
         .withModificationAttributeReadMethod(modificationAttributeReadMethod)
         .withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
@@ -347,11 +358,13 @@ public class Parser {
     }
 
     LOG.debug("Reading mapped superclass '" + enhEntity.getClassName() + "' attributes...");
-    List<MetaAttribute> attributes = parseAttributes(enhEntity, Optional.empty());
+    EntityAttributes entityAttributes = parseAttributes(enhEntity, Optional.empty());
     List<MetaEntity> embeddables = parseEmbeddables(enhEntity, parsedEntities, Optional.empty());
 
     Pk pk = null;
-    Optional<MetaAttribute> optionalId = attributes.stream().filter(a -> a.isId()).findFirst();
+    Optional<MetaAttribute> optionalId = entityAttributes.metaAttributes.stream()
+        .filter(a -> a instanceof MetaAttribute).map(a -> (MetaAttribute) a)
+        .filter(MetaAttribute::isId).findFirst();
     if (optionalId.isPresent()) {
       Field field = c.getDeclaredField(optionalId.get().getName());
       PkGeneration gv = buildPkGeneration(field);
@@ -361,9 +374,9 @@ public class Parser {
       }
 
       pk = new BasicAttributePk(optionalId.get(), gv);
-      attributes.remove(optionalId.get());
+      entityAttributes.metaAttributes.remove(optionalId.get());
     } else {
-      Optional<MetaEntity> optionalME = embeddables.stream().filter(e -> e.isEmbeddedId())
+      Optional<MetaEntity> optionalME = embeddables.stream().filter(MetaEntity::isEmbeddedId)
           .findFirst();
       if (optionalME.isEmpty()) {
         throw new Exception(
@@ -388,34 +401,119 @@ public class Parser {
           .of(c.getMethod(enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod().get()));
     }
 
-    List<MetaAttribute> basicAttributes = attributes.stream().filter(a -> a.isBasic())
+    List<MetaAttribute> basicAttributes = entityAttributes.metaAttributes.stream()
+        .filter(a -> a instanceof MetaAttribute).map(a -> (MetaAttribute) a)
+        .filter(MetaAttribute::isBasic)
         .collect(Collectors.toList());
-    List<MetaAttribute> relationshipAttributes = attributes.stream()
-        .filter(a -> a.getRelationship() != null)
-        .collect(Collectors.toList());
-    return new MetaEntity.Builder().withEntityClass(c).withId(pk).withAttributes(attributes)
+//    List<MetaAttribute> relationshipAttributes = attributes.stream()
+//        .filter(a -> a.getRelationship() != null)
+//        .collect(Collectors.toList());
+    return new MetaEntity.Builder().withEntityClass(c).withId(pk)
+        .withAttributes(entityAttributes.metaAttributes)
         .withBasicAttributes(Collections.unmodifiableList(basicAttributes))
-        .withRelationshipAttributes(relationshipAttributes).withEmbeddables(embeddables)
+        .withRelationshipAttributes(entityAttributes.relationshipMetaAttributes)
+        .withEmbeddables(embeddables)
         .withModificationAttributeReadMethod(modificationAttributeReadMethod)
         .withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
         .withJoinColumnPostponedUpdateAttributeReadMethod(
             joinColumnPostponedUpdateAttributeReadMethod).build();
   }
 
-  private List<MetaAttribute> parseAttributes(EnhEntity enhEntity, Optional<String> parentPath)
+  private static class EntityAttributes {
+
+    List<AbstractMetaAttribute> metaAttributes;
+    List<RelationshipMetaAttribute> relationshipMetaAttributes;
+  }
+
+  private EntityAttributes parseAttributes(EnhEntity enhEntity, Optional<String> parentPath)
       throws Exception {
-    List<MetaAttribute> attributes = new ArrayList<>();
+    List<AbstractMetaAttribute> metaAttributes = new ArrayList<>();
+    List<RelationshipMetaAttribute> relationshipMetaAttributes = new ArrayList<>();
     for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
       LOG.debug("readAttributes: enhAttribute.getName()={}", enhAttribute.getName());
       if (enhAttribute.isEmbedded()) {
         continue;
       }
 
-      MetaAttribute attribute = parseAttribute(enhEntity.getClassName(), enhAttribute, parentPath);
-      attributes.add(attribute);
+      String columnName = enhAttribute.getName();
+      Class<?> c = Class.forName(enhEntity.getClassName());
+      LOG.debug("Reading attribute '" + columnName + "'");
+      Field field = c.getDeclaredField(enhAttribute.getName());
+      Id idAnnotation = field.getAnnotation(Id.class);
+      Optional<Relationship> relationship = buildRelationship(field);
+      if (idAnnotation != null && relationship.isPresent()) {
+        throw new IllegalArgumentException(
+            "Id annotation and relationship annotation at '" + field.getName() + "'");
+      }
+
+      Class<?> attributeClass = null;
+      if (enhAttribute.isPrimitiveType()) {
+        attributeClass = JavaTypes.getClass(enhAttribute.getClassName());
+      } else {
+        attributeClass = Class.forName(enhAttribute.getClassName());
+      }
+
+      LOG.debug("readAttribute: attributeClass={}", attributeClass);
+      Method readMethod = c.getMethod(enhAttribute.getGetMethod());
+      Method writeMethod = c.getMethod(enhAttribute.getSetMethod(), attributeClass);
+      if (relationship.isPresent()) {
+        RelationshipMetaAttribute relationshipMetaAttribute = buildRelationshipMetaAttribute(c,
+            enhAttribute, attributeClass, readMethod, writeMethod,
+            relationship.get());
+        relationshipMetaAttributes.add(relationshipMetaAttribute);
+        metaAttributes.add(relationshipMetaAttribute);
+      } else {
+        MetaAttribute attribute = parseAttribute(
+            field,
+            attributeClass,
+            readMethod,
+            writeMethod,
+            enhEntity.getClassName(),
+            enhAttribute,
+            parentPath);
+        metaAttributes.add(attribute);
+      }
     }
 
-    return attributes;
+    EntityAttributes entityAttributes = new EntityAttributes();
+    entityAttributes.metaAttributes = metaAttributes;
+    entityAttributes.relationshipMetaAttributes = relationshipMetaAttributes;
+    return entityAttributes;
+  }
+
+  private RelationshipMetaAttribute buildRelationshipMetaAttribute(
+      Class<?> parentClass,
+      EnhAttribute enhAttribute,
+      Class<?> attributeClass,
+      Method readMethod,
+      Method writeMethod,
+      Relationship relationship) throws Exception {
+    boolean isCollection = CollectionUtils.isCollectionClass(attributeClass);
+    Class<?> collectionImplementationClass = null;
+    if (isCollection) {
+      collectionImplementationClass = CollectionUtils.findCollectionImplementationClass(
+          attributeClass);
+    }
+
+    Optional<Method> joinColumnReadMethod = enhAttribute.getJoinColumnGetMethod().isPresent()
+        ? Optional.of(parentClass.getMethod(enhAttribute.getJoinColumnGetMethod().get()))
+        : Optional.empty();
+    Optional<Method> joinColumnWriteMethod = enhAttribute.getJoinColumnSetMethod().isPresent()
+        ? Optional.of(
+        parentClass.getMethod(enhAttribute.getJoinColumnSetMethod().get(), Object.class))
+        : Optional.empty();
+
+    RelationshipMetaAttribute.Builder builder = new RelationshipMetaAttribute.Builder()
+        .withName(enhAttribute.getName())
+        .withType(attributeClass)
+        .withReadMethod(readMethod)
+        .withWriteMethod(writeMethod)
+        .isCollection(isCollection)
+        .withCollectionImplementationClass(collectionImplementationClass)
+        .withRelationship(relationship)
+        .withJoinColumnReadMethod(joinColumnReadMethod)
+        .withJoinColumnWriteMethod(joinColumnWriteMethod);
+    return builder.build();
   }
 
   private List<MetaEntity> parseEmbeddables(EnhEntity enhEntity,
@@ -466,23 +564,29 @@ public class Parser {
     return Optional.empty();
   }
 
-  private MetaAttribute parseAttribute(String parentClassName, EnhAttribute enhAttribute,
+  private MetaAttribute parseAttribute(
+      Field field,
+      Class<?> attributeClass,
+      Method readMethod,
+      Method writeMethod,
+      String parentClassName,
+      EnhAttribute enhAttribute,
       Optional<String> parentPath)
       throws Exception {
     String columnName = enhAttribute.getName();
-    Class<?> c = Class.forName(parentClassName);
-    LOG.debug("Reading attribute '" + columnName + "'");
-    Field field = c.getDeclaredField(enhAttribute.getName());
-    Class<?> attributeClass = null;
-    if (enhAttribute.isPrimitiveType()) {
-      attributeClass = JavaTypes.getClass(enhAttribute.getClassName());
-    } else {
-      attributeClass = Class.forName(enhAttribute.getClassName());
-    }
+//    Class<?> c = Class.forName(parentClassName);
+//    LOG.debug("Reading attribute '" + columnName + "'");
+//    Field field = c.getDeclaredField(enhAttribute.getName());
+//    Class<?> attributeClass = null;
+//    if (enhAttribute.isPrimitiveType()) {
+//      attributeClass = JavaTypes.getClass(enhAttribute.getClassName());
+//    } else {
+//      attributeClass = Class.forName(enhAttribute.getClassName());
+//    }
 
-    LOG.debug("readAttribute: attributeClass={}", attributeClass);
-    Method readMethod = c.getMethod(enhAttribute.getGetMethod());
-    Method writeMethod = c.getMethod(enhAttribute.getSetMethod(), attributeClass);
+//    LOG.debug("readAttribute: attributeClass={}", attributeClass);
+//    Method readMethod = c.getMethod(enhAttribute.getGetMethod());
+//    Method writeMethod = c.getMethod(enhAttribute.getSetMethod(), attributeClass);
     Column column = field.getAnnotation(Column.class);
 
     Id idAnnotation = field.getAnnotation(Id.class);
@@ -535,21 +639,23 @@ public class Parser {
       return builder.build();
     }
 
-    boolean isCollection = CollectionUtils.isCollectionClass(attributeClass);
-    Class<?> collectionImplementationClass = null;
-    if (isCollection) {
-      collectionImplementationClass = CollectionUtils.findCollectionImplementationClass(
-          attributeClass);
-    }
+//    boolean isCollection = CollectionUtils.isCollectionClass(attributeClass);
+//    Class<?> collectionImplementationClass = null;
+//    if (isCollection) {
+//      collectionImplementationClass = CollectionUtils.findCollectionImplementationClass(
+//          attributeClass);
+//    }
 
     boolean version = field.getAnnotation(Version.class) != null;
 
     MetaAttribute.Builder builder = new MetaAttribute.Builder(
         enhAttribute.getName()).withColumnName(columnName)
         .withType(attributeClass).withReadWriteDbType(readWriteType).withReadMethod(readMethod)
-        .withWriteMethod(writeMethod).withSqlType(sqlType).isCollection(isCollection)
+        .withWriteMethod(writeMethod).withSqlType(sqlType)
+//        .isCollection(isCollection)
         .withJavaMember(field)
-        .withCollectionImplementationClass(collectionImplementationClass).isVersion(version)
+//        .withCollectionImplementationClass(collectionImplementationClass)
+        .isVersion(version)
         .isBasic(AttributeUtil.isBasicAttribute(attributeClass)).withPath(path)
         .withDDLData(ddlData);
 
@@ -560,18 +666,18 @@ public class Parser {
       builder.withAttributeMapper(Optional.of(attributeMapper));
     }
 
-    Optional<Relationship> relationship = buildRelationship(field);
-    if (relationship.isPresent()) {
-      builder.withRelationship(relationship.get());
-      Optional<Method> joinColumnReadMethod = enhAttribute.getJoinColumnGetMethod().isPresent()
-          ? Optional.of(c.getMethod(enhAttribute.getJoinColumnGetMethod().get()))
-          : Optional.empty();
-      Optional<Method> joinColumnWriteMethod = enhAttribute.getJoinColumnSetMethod().isPresent()
-          ? Optional.of(c.getMethod(enhAttribute.getJoinColumnSetMethod().get(), Object.class))
-          : Optional.empty();
-      builder.withJoinColumnReadMethod(joinColumnReadMethod)
-          .withJoinColumnWriteMethod(joinColumnWriteMethod);
-    }
+//    Optional<Relationship> relationship = buildRelationship(field);
+//    if (relationship.isPresent()) {
+//      builder.withRelationship(relationship.get());
+//      Optional<Method> joinColumnReadMethod = enhAttribute.getJoinColumnGetMethod().isPresent()
+//          ? Optional.of(c.getMethod(enhAttribute.getJoinColumnGetMethod().get()))
+//          : Optional.empty();
+//      Optional<Method> joinColumnWriteMethod = enhAttribute.getJoinColumnSetMethod().isPresent()
+//          ? Optional.of(c.getMethod(enhAttribute.getJoinColumnSetMethod().get(), Object.class))
+//          : Optional.empty();
+//      builder.withJoinColumnReadMethod(joinColumnReadMethod)
+//          .withJoinColumnWriteMethod(joinColumnWriteMethod);
+//    }
 
     // Basic annotation
     Basic basic = field.getAnnotation(Basic.class);
@@ -798,19 +904,17 @@ public class Parser {
     return null;
   }
 
-  private void finalizeRelationships(MetaEntity entity, Map<String, MetaEntity> entities,
-      List<MetaAttribute> attributes) {
+  private void finalizeRelationships(
+      MetaEntity entity,
+      Map<String, MetaEntity> entities,
+      List<RelationshipMetaAttribute> attributes) {
     entity.getEmbeddables().forEach(embeddable -> {
-      finalizeRelationships(embeddable, entities, embeddable.getAttributes());
+      finalizeRelationships(embeddable, entities, embeddable.getRelationshipAttributes());
     });
 
-    for (MetaAttribute a : attributes) {
+    for (RelationshipMetaAttribute a : attributes) {
       LOG.debug("finalizeRelationships: a={}", a);
       Relationship relationship = a.getRelationship();
-      if (relationship == null) {
-        continue;
-      }
-
       if (relationship instanceof OneToOneRelationship) {
         MetaEntity toEntity = entities.get(a.getType().getName());
         LOG.debug("finalizeRelationships: OneToOne toEntity={}", toEntity);
@@ -835,7 +939,8 @@ public class Parser {
             manyToOneHelper.finalizeRelationship(manyToOne, a, entity, toEntity, dbConfiguration));
       } else if (relationship instanceof OneToManyRelationship) {
         MetaEntity toEntity = entities.get(relationship.getTargetEntityClass().getName());
-        LOG.debug("finalizeRelationships: OneToMany toEntity={}; a.getType().getName()=", toEntity,
+        LOG.debug("finalizeRelationships: OneToMany toEntity={}; a.getType().getName()={}",
+            toEntity,
             a.getType().getName());
         if (toEntity == null) {
           throw new IllegalArgumentException("One to Many target entity not found ("
@@ -849,7 +954,8 @@ public class Parser {
         a.setRelationship(otm);
       } else if (relationship instanceof ManyToManyRelationship) {
         MetaEntity toEntity = entities.get(relationship.getTargetEntityClass().getName());
-        LOG.debug("finalizeRelationships: ManyToMany toEntity={}; a.getType().getName()=", toEntity,
+        LOG.debug("finalizeRelationships: ManyToMany toEntity={}; a.getType().getName()={}",
+            toEntity,
             a.getType().getName());
         if (toEntity == null) {
           throw new IllegalArgumentException("Many to Many target entity not found ("
@@ -874,22 +980,17 @@ public class Parser {
   private void finalizeRelationships(Map<String, MetaEntity> entities) {
     for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
       MetaEntity entity = entry.getValue();
-      List<MetaAttribute> attributes = entity.getAttributes();
-      finalizeRelationships(entity, entities, attributes);
+      finalizeRelationships(entity, entities, entity.getRelationshipAttributes());
     }
   }
 
   private void printAttributes(Map<String, MetaEntity> entities) {
     for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
       MetaEntity entity = entry.getValue();
-      List<MetaAttribute> attributes = entity.getAttributes();
-      for (int i = 0; i < attributes.size(); ++i) {
-        MetaAttribute a = attributes.get(i);
-        LOG.debug("printAttributes: a={}", a);
-        if (a.getRelationship() != null) {
-          LOG.debug("printAttributes: a.getRelationship()={}", a.getRelationship());
-        }
-      }
+      List<AbstractMetaAttribute> attributes = entity.getAttributes();
+      entity.getAttributes().forEach(a -> LOG.debug("printAttributes: a={}", a));
+      entity.getRelationshipAttributes()
+          .forEach(a -> LOG.debug("printAttributes: a.getRelationship()={}", a.getRelationship()));
     }
   }
 

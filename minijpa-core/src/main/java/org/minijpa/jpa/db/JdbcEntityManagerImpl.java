@@ -51,8 +51,10 @@ import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
 import org.minijpa.jpa.UpdateQuery;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.Cascade;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
@@ -126,9 +128,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     entityHandler.refresh(entity, entityInstance, primaryKey, lockType);
 
     // cascades
-    List<MetaAttribute> cascadeAttributes = entity.getCascadeAttributes(Cascade.ALL,
+    List<RelationshipMetaAttribute> cascadeAttributes = entity.getCascadeAttributes(Cascade.ALL,
         Cascade.REFRESH);
-    for (MetaAttribute attribute : cascadeAttributes) {
+    for (RelationshipMetaAttribute attribute : cascadeAttributes) {
       Object attributeInstance = MetaEntityHelper.getAttributeValue(entityInstance, attribute);
       if (attribute.getRelationship().toMany()) {
         Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
@@ -182,7 +184,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
           "Id must be manually assigned for '" + entity.getEntityClass().getName() + "'");
     }
 
-    ModelValueArray<MetaAttribute> modelValueArray = MetaEntityHelper.getModifications(entity,
+    ModelValueArray<AbstractMetaAttribute> modelValueArray = MetaEntityHelper.getModifications(entity,
         entityInstance);
     checkNullableAttributes(entity, entityInstance, modelValueArray);
     if (idValue == null) {
@@ -217,9 +219,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     entityContainer.addManaged(entityInstance, idValue);
 
     // cascades
-    List<MetaAttribute> cascadeAttributes = entity.getCascadeAttributes(Cascade.ALL,
+    List<RelationshipMetaAttribute> cascadeAttributes = entity.getCascadeAttributes(Cascade.ALL,
         Cascade.PERSIST);
-    for (MetaAttribute attribute : cascadeAttributes) {
+    for (RelationshipMetaAttribute attribute : cascadeAttributes) {
       Object attributeInstance = MetaEntityHelper.getAttributeValue(entityInstance, attribute);
       if (attribute.getRelationship().toMany()) {
         Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
@@ -233,7 +235,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   }
 
   private void addInfoForPostponedUpdateEntities(Object idValue, MetaEntity entity,
-      ModelValueArray<MetaAttribute> modelValueArray)
+      ModelValueArray<AbstractMetaAttribute> modelValueArray)
       throws IllegalAccessException, InvocationTargetException {
     for (JoinColumnMapping joinColumnMapping : entity.getJoinColumnMappings()) {
       int index = modelValueArray.indexOfModel(joinColumnMapping.getAttribute());
@@ -260,7 +262,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
    * @param attributeValueArray modified values
    */
   private void checkNullableAttributes(MetaEntity entity, Object entityInstance,
-      ModelValueArray<MetaAttribute> attributeValueArray) throws Exception {
+      ModelValueArray<AbstractMetaAttribute> attributeValueArray) throws Exception {
     if (entityContainer.isManaged(entityInstance)) {
       EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(entity, entityInstance);
       if (entityStatus == EntityStatus.FLUSHED
@@ -271,7 +273,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
       }
     }
 
-    List<MetaAttribute> notNullableAttributes = entity.notNullableAttributes();
+    List<AbstractMetaAttribute> notNullableAttributes = entity.notNullableAttributes();
     if (notNullableAttributes.isEmpty()) {
       return;
     }
@@ -282,7 +284,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
     notNullableAttributes.forEach(a -> {
-      Optional<MetaAttribute> o = attributeValueArray.getModels().stream().filter(av -> av == a)
+      Optional<AbstractMetaAttribute> o = attributeValueArray.getModels().stream().filter(av -> av == a)
           .findFirst();
       if (o.isEmpty()) {
         throw new PersistenceException("Attribute '" + a.getName() + "' is null");
@@ -314,7 +316,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         case FLUSHED_LOADED_FROM_DB:
           // makes updates
           LOG.debug("flush: FLUSHED_LOADED_FROM_DB entityInstance={}", entityInstance);
-          ModelValueArray<MetaAttribute> modelValueArray = MetaEntityHelper.getModifications(me,
+          ModelValueArray<AbstractMetaAttribute> modelValueArray = MetaEntityHelper.getModifications(me,
               entityInstance);
           LOG.debug("flush: FLUSHED_LOADED_FROM_DB modelValueArray.size()={}",
               modelValueArray.size());
@@ -373,7 +375,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
    * @param managedEntityList entity list
    */
   private void persistEarlyInsertEntityInstance(MetaEntity me,
-      ModelValueArray<MetaAttribute> modelValueArray,
+      ModelValueArray<AbstractMetaAttribute> modelValueArray,
       List<Object> managedEntityList) throws Exception {
     List<JoinColumnMapping> joinColumnMappings = me.getJoinColumnMappings();
     LOG.debug("persistEarlyInsertEntityInstance: joinColumnMappings={}", joinColumnMappings);
@@ -397,7 +399,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
           continue;
         }
 
-        ModelValueArray<MetaAttribute> mva = MetaEntityHelper.getModifications(metaEntity,
+        ModelValueArray<AbstractMetaAttribute> mva = MetaEntityHelper.getModifications(metaEntity,
             instance);
         entityHandler.persist(metaEntity, instance, mva);
         LOG.debug("persistEarlyInsertEntityInstance: instance={}", instance);
@@ -417,8 +419,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
   private void persistEarlyDeleteEntityInstance(MetaEntity me, Object entityInstance,
       List<Object> managedEntityList)
       throws Exception {
-    List<MetaAttribute> relationshipAttributes = me.getRelationshipAttributes();
-    for (MetaAttribute relationshipAttribute : relationshipAttributes) {
+    List<RelationshipMetaAttribute> relationshipAttributes = me.getRelationshipAttributes();
+    for (RelationshipMetaAttribute relationshipAttribute : relationshipAttributes) {
       LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute={}",
           relationshipAttribute);
       LOG.debug("persistEarlyDeleteEntityInstance: relationshipAttribute.getRelationship()="
@@ -461,8 +463,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
       entityContainer.markForRemoval(entity);
       LOG.debug("remove: entity={}", entity);
       // cascades
-      List<MetaAttribute> cascadeAttributes = e.getCascadeAttributes(Cascade.ALL, Cascade.REMOVE);
-      for (MetaAttribute attribute : cascadeAttributes) {
+      List<RelationshipMetaAttribute> cascadeAttributes = e.getCascadeAttributes(Cascade.ALL,
+          Cascade.REMOVE);
+      for (RelationshipMetaAttribute attribute : cascadeAttributes) {
         if (!attribute.getRelationship().fromOne()) {
           continue;
         }
@@ -493,8 +496,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     // cascades
     MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
-    List<MetaAttribute> cascadeAttributes = e.getCascadeAttributes(Cascade.ALL, Cascade.DETACH);
-    for (MetaAttribute attribute : cascadeAttributes) {
+    List<RelationshipMetaAttribute> cascadeAttributes = e.getCascadeAttributes(Cascade.ALL,
+        Cascade.DETACH);
+    for (RelationshipMetaAttribute attribute : cascadeAttributes) {
       Object attributeInstance = MetaEntityHelper.getAttributeValue(entity, attribute);
       if (attribute.getRelationship().toMany()) {
         Collection<?> ees = CollectionUtils.getCollectionFromCollectionOrMap(attributeInstance);
@@ -877,7 +881,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         MetaAttribute metaAttribute = optional.get();
         FetchParameter fetchParameter = new AttributeFetchParameterImpl(
             metaAttribute.getColumnName(),
-            metaAttribute.getSqlType(), metaAttribute);
+            metaAttribute.getSqlType(),
+            metaAttribute,
+            metaAttribute.getAttributeMapper());
         return Optional.of(fetchParameter);
       }
 
@@ -887,7 +893,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         JoinColumnAttribute joinColumnAttribute = optionalJoinColumn.get();
         FetchParameter fetchParameter = new AttributeFetchParameterImpl(
             joinColumnAttribute.getColumnName(),
-            joinColumnAttribute.getSqlType(), joinColumnAttribute.getAttribute());
+            joinColumnAttribute.getSqlType(),
+            joinColumnAttribute.getAttribute(),
+            Optional.empty());
         return Optional.of(fetchParameter);
       }
 
@@ -939,7 +947,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     private MetaEntity metaEntity;
     private EntityLoader entityLoader;
     private List<MetaEntity> fetchJoinMetaEntities;
-    private List<MetaAttribute> fetchJoinMetaAttributes;
+    private List<RelationshipMetaAttribute> fetchJoinMetaAttributes;
     private boolean distinct = false;
 
     public void setFetchParameters(List<FetchParameter> fetchParameters) {
@@ -964,7 +972,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
     public void setFetchJoinMetaAttributes(
-        List<MetaAttribute> fetchJoinMetaAttributes) {
+        List<RelationshipMetaAttribute> fetchJoinMetaAttributes) {
       this.fetchJoinMetaAttributes = fetchJoinMetaAttributes;
     }
 

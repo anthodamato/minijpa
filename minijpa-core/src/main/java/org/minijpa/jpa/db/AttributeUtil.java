@@ -35,6 +35,7 @@ import java.util.function.Function;
 
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
@@ -47,8 +48,8 @@ public class AttributeUtil {
   @SuppressWarnings("unused")
   private static final Logger LOG = LoggerFactory.getLogger(AttributeUtil.class);
 
-  public static final Function<AttributeFetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f
-      .getAttribute();
+//  public static final Function<AttributeFetchParameter, MetaAttribute> fetchParameterToMetaAttribute = f -> f
+//      .getAttribute();
 
   public static Object buildPK(Pk id, ModelValueArray<FetchParameter> modelValueArray)
       throws Exception {
@@ -59,10 +60,10 @@ public class AttributeUtil {
     }
 
     int index = indexOfAttribute(modelValueArray, id.getAttribute());
-      if (index == -1) {
-          throw new IllegalArgumentException(
-              "Column '" + id.getAttribute().getColumnName() + "' not found");
-      }
+    if (index == -1) {
+      throw new IllegalArgumentException(
+          "Column '" + id.getAttribute().getColumnName() + "' not found");
+    }
 
     return modelValueArray.getValue(index);
   }
@@ -73,9 +74,9 @@ public class AttributeUtil {
     for (MetaAttribute a : attributes) {
       int index = indexOfAttribute(modelValueArray, a);
       LOG.debug("buildPK: index=" + index);
-        if (index == -1) {
-            throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
-        }
+      if (index == -1) {
+        throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
+      }
 
       a.getWriteMethod().invoke(pkObject, modelValueArray.getValue(index));
     }
@@ -84,9 +85,9 @@ public class AttributeUtil {
   public static int indexOfAttribute(ModelValueArray<FetchParameter> modelValueArray,
       MetaAttribute attribute) {
     for (int i = 0; i < modelValueArray.size(); ++i) {
-        if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute) {
-            return i;
-        }
+      if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute) {
+        return i;
+      }
     }
 
     return -1;
@@ -95,9 +96,9 @@ public class AttributeUtil {
   public static int indexOf(List<MetaAttribute> attributes, String name) {
     for (int i = 0; i < attributes.size(); ++i) {
       MetaAttribute a = attributes.get(i);
-        if (a.getName().equals(name)) {
-            return i;
-        }
+      if (a.getName().equals(name)) {
+        return i;
+      }
     }
 
     return -1;
@@ -106,9 +107,9 @@ public class AttributeUtil {
   public static int indexOfJoinColumnAttribute(List<JoinColumnAttribute> joinColumnAttributes,
       MetaAttribute a) {
     for (int i = 0; i < joinColumnAttributes.size(); ++i) {
-        if (joinColumnAttributes.get(i).getForeignKeyAttribute() == a) {
-            return i;
-        }
+      if (joinColumnAttributes.get(i).getForeignKeyAttribute() == a) {
+        return i;
+      }
     }
 
     return -1;
@@ -122,20 +123,20 @@ public class AttributeUtil {
     return id.getReadMethod().invoke(entityInstance);
   }
 
-  public static MetaAttribute findAttributeFromPath(String path, MetaEntity toEntity) {
+  public static AbstractMetaAttribute findAttributeFromPath(String path, MetaEntity toEntity) {
     String[] ss = path.split("\\.");
-      if (ss.length == 0) {
-          return null;
-      }
+    if (ss.length == 0) {
+      return null;
+    }
 
-      if (ss.length == 1) {
-          return toEntity.getAttribute(path);
-      }
+    if (ss.length == 1) {
+      return toEntity.getAttribute(path);
+    }
 
     Optional<MetaEntity> optional = toEntity.getEmbeddable(ss[0]);
-      if (optional.isEmpty()) {
-          return null;
-      }
+    if (optional.isEmpty()) {
+      return null;
+    }
 
     // it's an embedded
     MetaEntity embeddable = optional.get();
@@ -144,14 +145,14 @@ public class AttributeUtil {
       if (opt.isPresent()) {
         embeddable = opt.get();
       } else {
-        MetaAttribute attribute = embeddable.getAttribute(ss[i]);
-          if (attribute == null) {
-              return null;
-          }
+        AbstractMetaAttribute attribute = embeddable.getAttribute(ss[i]);
+        if (attribute == null) {
+          return null;
+        }
 
-          if (i == ss.length - 1) {
-              return attribute;
-          }
+        if (i == ss.length - 1) {
+          return attribute;
+        }
 
         return null;
       }
@@ -161,138 +162,138 @@ public class AttributeUtil {
   }
 
   public static boolean isAttributePathPk(String path, MetaEntity entity) {
-      if (entity.getId().getName().equals(path)) {
-          return true;
-      }
+    if (entity.getId().getName().equals(path)) {
+      return true;
+    }
 
     return false;
   }
 
   public static boolean isBasicAttribute(Class<?> c) {
-      if (c == String.class) {
-          return true;
-      }
+    if (c == String.class) {
+      return true;
+    }
 
-      if (c == Long.class) {
-          return true;
-      }
+    if (c == Long.class) {
+      return true;
+    }
 
-      if (c == BigInteger.class) {
-          return true;
-      }
+    if (c == BigInteger.class) {
+      return true;
+    }
 
-      if (c == Boolean.class) {
-          return true;
-      }
+    if (c == Boolean.class) {
+      return true;
+    }
 
-      if (c == Character.class) {
-          return true;
-      }
+    if (c == Character.class) {
+      return true;
+    }
 
-      if (c == BigDecimal.class) {
-          return true;
-      }
+    if (c == BigDecimal.class) {
+      return true;
+    }
 
-      if (c == Double.class) {
-          return true;
-      }
+    if (c == Double.class) {
+      return true;
+    }
 
-      if (c == Float.class) {
-          return true;
-      }
+    if (c == Float.class) {
+      return true;
+    }
 
-      if (c == Integer.class) {
-          return true;
-      }
+    if (c == Integer.class) {
+      return true;
+    }
 
-      if (c == Date.class) {
-          return true;
-      }
+    if (c == Date.class) {
+      return true;
+    }
 
-      if (c == LocalDate.class) {
-          return true;
-      }
+    if (c == LocalDate.class) {
+      return true;
+    }
 
-      if (c == LocalDateTime.class) {
-          return true;
-      }
+    if (c == LocalDateTime.class) {
+      return true;
+    }
 
-      if (c == OffsetDateTime.class) {
-          return true;
-      }
+    if (c == OffsetDateTime.class) {
+      return true;
+    }
 
-      if (c == OffsetTime.class) {
-          return true;
-      }
+    if (c == OffsetTime.class) {
+      return true;
+    }
 
-      if (c == ZonedDateTime.class) {
-          return true;
-      }
+    if (c == ZonedDateTime.class) {
+      return true;
+    }
 
-      if (c == Duration.class) {
-          return true;
-      }
+    if (c == Duration.class) {
+      return true;
+    }
 
-      if (c == Instant.class) {
-          return true;
-      }
+    if (c == Instant.class) {
+      return true;
+    }
 
-      if (c == LocalTime.class) {
-          return true;
-      }
+    if (c == LocalTime.class) {
+      return true;
+    }
 
-      if (c == Calendar.class) {
-          return true;
-      }
+    if (c == Calendar.class) {
+      return true;
+    }
 
-      if (c == java.sql.Date.class) {
-          return true;
-      }
+    if (c == java.sql.Date.class) {
+      return true;
+    }
 
-      if (c == Timestamp.class) {
-          return true;
-      }
+    if (c == Timestamp.class) {
+      return true;
+    }
 
-      if (c == Time.class) {
-          return true;
-      }
+    if (c == Time.class) {
+      return true;
+    }
 
-      if (c.isEnum()) {
-          return true;
-      }
+    if (c.isEnum()) {
+      return true;
+    }
 
     if (c.isPrimitive()) {
-        if (c.getName().equals("byte")) {
-            return true;
-        }
+      if (c.getName().equals("byte")) {
+        return true;
+      }
 
-        if (c.getName().equals("short")) {
-            return true;
-        }
+      if (c.getName().equals("short")) {
+        return true;
+      }
 
-        if (c.getName().equals("int")) {
-            return true;
-        }
+      if (c.getName().equals("int")) {
+        return true;
+      }
 
-        if (c.getName().equals("long")) {
-            return true;
-        }
+      if (c.getName().equals("long")) {
+        return true;
+      }
 
-        if (c.getName().equals("float")) {
-            return true;
-        }
+      if (c.getName().equals("float")) {
+        return true;
+      }
 
-        if (c.getName().equals("double")) {
-            return true;
-        }
+      if (c.getName().equals("double")) {
+        return true;
+      }
 
-        if (c.getName().equals("boolean")) {
-            return true;
-        }
+      if (c.getName().equals("boolean")) {
+        return true;
+      }
 
-        if (c.getName().equals("char")) {
-            return true;
-        }
+      if (c.getName().equals("char")) {
+        return true;
+      }
     }
 
     return false;
@@ -300,9 +301,9 @@ public class AttributeUtil {
 
   public static Object increaseVersionValue(MetaEntity metaEntity, Object currentValue)
       throws Exception {
-      if (!metaEntity.hasVersionAttribute()) {
-          return null;
-      }
+    if (!metaEntity.hasVersionAttribute()) {
+      return null;
+    }
 
     MetaAttribute attribute = metaEntity.getVersionAttribute().get();
     Class<?> type = attribute.getType();
