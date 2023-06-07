@@ -17,13 +17,14 @@ package org.minijpa.jpa.model.relationship;
 
 import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 public class JoinColumnAttribute extends AbstractAttribute {
 
-	private MetaAttribute attribute;
+	private RelationshipMetaAttribute attribute;
 	private MetaAttribute foreignKeyAttribute;
 
-	public MetaAttribute getAttribute() {
+	public RelationshipMetaAttribute getAttribute() {
 		return attribute;
 	}
 
@@ -35,9 +36,9 @@ public class JoinColumnAttribute extends AbstractAttribute {
 
 		private String columnName;
 		private Class<?> type;
-		private Class<?> readWriteDbType;
+		private Class<?> databaseType;
 		private Integer sqlType;
-		private MetaAttribute attribute;
+		private RelationshipMetaAttribute attribute;
 		private MetaAttribute foreignKeyAttribute;
 
 		public Builder withColumnName(String columnName) {
@@ -50,8 +51,8 @@ public class JoinColumnAttribute extends AbstractAttribute {
 			return this;
 		}
 
-		public Builder withReadWriteDbType(Class<?> readWriteDbType) {
-			this.readWriteDbType = readWriteDbType;
+		public Builder withDatabaseType(Class<?> databaseType) {
+			this.databaseType = databaseType;
 			return this;
 		}
 
@@ -60,7 +61,7 @@ public class JoinColumnAttribute extends AbstractAttribute {
 			return this;
 		}
 
-		public Builder withAttribute(MetaAttribute attribute) {
+		public Builder withAttribute(RelationshipMetaAttribute attribute) {
 			this.attribute = attribute;
 			return this;
 		}
@@ -74,7 +75,7 @@ public class JoinColumnAttribute extends AbstractAttribute {
 			JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute();
 			joinColumnAttribute.columnName = columnName;
 			joinColumnAttribute.type = type;
-			joinColumnAttribute.databaseType = readWriteDbType;
+			joinColumnAttribute.databaseType = databaseType;
 			joinColumnAttribute.sqlType = sqlType;
 			joinColumnAttribute.attribute = attribute;
 			joinColumnAttribute.foreignKeyAttribute = foreignKeyAttribute;

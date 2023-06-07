@@ -18,36 +18,46 @@ package org.minijpa.jpa.db;
 import java.util.Optional;
 
 import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 
 public class AttributeFetchParameterImpl implements AttributeFetchParameter {
 
-    private final String columnName;
-    private final Integer sqlType;
-    private final MetaAttribute attribute;
+  private final String columnName;
+  private final Integer sqlType;
+  private final AbstractMetaAttribute attribute;
+  private final Optional<AttributeMapper> attributeMapper;
 
-    public AttributeFetchParameterImpl(String columnName, Integer sqlType, MetaAttribute attribute) {
-        super();
-        this.columnName = columnName;
-        this.sqlType = sqlType;
-        this.attribute = attribute;
-    }
+  public AttributeFetchParameterImpl(
+      String columnName,
+      Integer sqlType,
+      AbstractMetaAttribute attribute,
+      Optional<AttributeMapper> attributeMapper) {
+    super();
+    this.columnName = columnName;
+    this.sqlType = sqlType;
+    this.attribute = attribute;
+    this.attributeMapper = attributeMapper;
+  }
 
-    public String getColumnName() {
-        return columnName;
-    }
+  @Override
+  public String getColumnName() {
+    return columnName;
+  }
 
-    public Integer getSqlType() {
-        return sqlType;
-    }
+  @Override
+  public Integer getSqlType() {
+    return sqlType;
+  }
 
-    public MetaAttribute getAttribute() {
-        return attribute;
-    }
+  @Override
+  public AbstractMetaAttribute getAttribute() {
+    return attribute;
+  }
 
-    @Override
-    public Optional<AttributeMapper> getAttributeMapper() {
-        return attribute.getAttributeMapper();
-    }
+  @Override
+  public Optional<AttributeMapper> getAttributeMapper() {
+    return attributeMapper;
+  }
 
 }

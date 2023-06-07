@@ -21,41 +21,39 @@ import java.util.List;
 import org.minijpa.jpa.db.PkGeneration;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public interface Pk {
 
-	public PkGeneration getPkGeneration();
+  public PkGeneration getPkGeneration();
 
-	public boolean isComposite();
+  public boolean isComposite();
 
-	public boolean isEmbedded();
+  public boolean isEmbedded();
 
-	public MetaAttribute getAttribute();
+  public MetaAttribute getAttribute();
 
-	public List<MetaAttribute> getAttributes();
+  public List<MetaAttribute> getAttributes();
 
-	public Class<?> getType();
+  public Class<?> getType();
 
-	public String getName();
+  public String getName();
 
-	public Method getReadMethod();
+  public Method getReadMethod();
 
-	public Method getWriteMethod();
+  public Method getWriteMethod();
 
-	/**
-	 * Converts the 'value' read from a resultSet to an object of class returned by
-	 * <code>getType</code>.
-	 *
-	 * This method is called only to convert the generated key of an identity
-	 * column.
-	 *
-	 * @param value returned by the result set
-	 * @return the primary key value
-	 */
-	public default Object convertGeneratedKey(Object value) {
-		return ((Number) value).longValue();
-	}
+  /**
+   * Converts the 'value' read from a resultSet to an object of class returned by
+   * <code>getType</code>.
+   * <p>
+   * This method is called only to convert the generated key of an identity column.
+   *
+   * @param value returned by the result set
+   * @return the primary key value
+   */
+  public default Object convertGeneratedKey(Object value) {
+    return ((Number) value).longValue();
+  }
 
 }

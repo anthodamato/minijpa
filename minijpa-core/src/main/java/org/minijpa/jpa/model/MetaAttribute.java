@@ -17,285 +17,168 @@ package org.minijpa.jpa.model;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jpa.model.relationship.FetchType;
-import org.minijpa.jpa.model.relationship.Relationship;
 
-public class MetaAttribute extends AbstractAttribute {
+public class MetaAttribute extends AbstractMetaAttribute {
 
-	// attribute name
-	private String name;
-	// methods for read/write ops
-	private Method readMethod;
-	private Method writeMethod;
-	private boolean id;
-	private Relationship relationship;
-	private boolean collection = false;
-	private Field javaMember;
-	// calculated fields
-	private List<MetaAttribute> expandedAttributeList;
-	private boolean nullable = true;
-	// it's a version attribute
-	private boolean version = false;
-	// it's a basic attribute
-	private boolean basic;
-	// The attribute path. If this is a basic attribute the path is the attribute
-	// name.
-	// If the parent is an embeddable the path is the embeddable path. For example
-	// 'jobInfo.jobDescription'.
-	private String path;
-	private Optional<Method> joinColumnReadMethod = Optional.empty();
-	private Optional<Method> joinColumnWriteMethod = Optional.empty();
-	private Optional<DDLData> ddlData = Optional.empty();
+    private boolean id;
+    private Field javaMember;
+    // it's a version attribute
+    private boolean version = false;
+    // it's a basic attribute
+    private boolean basic;
+    private Optional<DDLData> ddlData = Optional.empty();
+    protected Optional<AttributeMapper> attributeMapper = Optional.empty();
 
-	public String getName() {
-		return name;
-	}
+    public boolean isId() {
+        return id;
+    }
 
-	public Method getReadMethod() {
-		return readMethod;
-	}
+    public Field getJavaMember() {
+        return javaMember;
+    }
 
-	public Method getWriteMethod() {
-		return writeMethod;
-	}
+    public boolean isVersion() {
+        return version;
+    }
 
-	public boolean isId() {
-		return id;
-	}
+    public void setVersion(boolean version) {
+        this.version = version;
+    }
 
-	public Relationship getRelationship() {
-		return relationship;
-	}
+    public boolean isBasic() {
+        return basic;
+    }
 
-	public void setRelationship(Relationship relationship) {
-		this.relationship = relationship;
-	}
+    public Optional<DDLData> getDdlData() {
+        return ddlData;
+    }
 
-	public Field getJavaMember() {
-		return javaMember;
-	}
+    @Override
+    public Optional<AttributeMapper> getAttributeMapper() {
+        return attributeMapper;
+    }
 
-	public boolean isCollection() {
-		return collection;
-	}
+    @Override
+    public String toString() {
+        return super.toString() + "; (Name=" + name + "; columnName=" + columnName + ")";
+    }
 
-	public boolean isNullable() {
-		return nullable;
-	}
+    public static class Builder {
 
-	public boolean isVersion() {
-		return version;
-	}
+        private final String name;
+        private String columnName;
+        private Class<?> type;
+        private Class<?> readWriteDbType;
+        private Method readMethod;
+        private Method writeMethod;
+        private boolean id;
+        private Integer sqlType;
+        private Field javaMember;
+        private Optional<AttributeMapper> attributeMapper = Optional.empty();
+        private boolean nullable = true;
+        private boolean version = false;
+        private boolean basic;
+        private String path;
+        private Optional<DDLData> ddlData = Optional.empty();
 
-	public void setVersion(boolean version) {
-		this.version = version;
-	}
+        public Builder(String name) {
+            super();
+            this.name = name;
+            this.columnName = name;
+        }
 
-	public boolean isBasic() {
-		return basic;
-	}
+        public Builder withColumnName(String columnName) {
+            this.columnName = columnName;
+            return this;
+        }
 
-	public String getPath() {
-		return path;
-	}
+        public Builder withType(Class<?> type) {
+            this.type = type;
+            return this;
+        }
 
-	public Optional<Method> getJoinColumnReadMethod() {
-		return joinColumnReadMethod;
-	}
+        public Builder withReadWriteDbType(Class<?> readWriteDbType) {
+            this.readWriteDbType = readWriteDbType;
+            return this;
+        }
 
-	public Optional<Method> getJoinColumnWriteMethod() {
-		return joinColumnWriteMethod;
-	}
+        public Builder withReadMethod(Method readMethod) {
+            this.readMethod = readMethod;
+            return this;
+        }
 
-	public Optional<DDLData> getDdlData() {
-		return ddlData;
-	}
+        public Builder withWriteMethod(Method writeMethod) {
+            this.writeMethod = writeMethod;
+            return this;
+        }
 
-	public List<MetaAttribute> expand() {
-		if (expandedAttributeList != null)
-			return expandedAttributeList;
+        public Builder isId(boolean id) {
+            this.id = id;
+            return this;
+        }
 
-		List<MetaAttribute> list = new ArrayList<>();
-		if (relationship == null)
-			list.add(this);
+        public Builder withSqlType(Integer sqlType) {
+            this.sqlType = sqlType;
+            return this;
+        }
 
-		expandedAttributeList = Collections.unmodifiableList(list);
-		return expandedAttributeList;
-	}
+        public Builder withJavaMember(Field field) {
+            this.javaMember = field;
+            return this;
+        }
 
-	public boolean isEager() {
-		if (relationship == null)
-			return false;
+        public Builder withAttributeMapper(Optional<AttributeMapper> attributeMapper) {
+            this.attributeMapper = attributeMapper;
+            return this;
+        }
 
-		return relationship.getFetchType() == FetchType.EAGER;
-	}
+        public Builder isNullable(boolean nullable) {
+            this.nullable = nullable;
+            return this;
+        }
 
-	public boolean isLazy() {
-		if (relationship == null)
-			return false;
+        public Builder isVersion(boolean version) {
+            this.version = version;
+            return this;
+        }
 
-		return relationship.isLazy();
-	}
+        public Builder isBasic(boolean basic) {
+            this.basic = basic;
+            return this;
+        }
 
-	@Override
-	public String toString() {
-		return super.toString() + "; (Name=" + name + "; columnName=" + columnName + ")";
-	}
+        public Builder withPath(String path) {
+            this.path = path;
+            return this;
+        }
 
-	public static class Builder {
+        public Builder withDDLData(Optional<DDLData> ddlData) {
+            this.ddlData = ddlData;
+            return this;
+        }
 
-		private final String name;
-		private String columnName;
-		private Class<?> type;
-		private Class<?> readWriteDbType;
-		private Method readMethod;
-		private Method writeMethod;
-		private boolean id;
-		private Integer sqlType;
-		private Relationship relationship;
-		private boolean collection = false;
-		private Field javaMember;
-		private Optional<AttributeMapper> attributeMapper = Optional.empty();
-		private Class<?> collectionImplementationClass;
-		private boolean nullable = true;
-		private boolean version = false;
-		private boolean basic;
-		private String path;
-		private Optional<Method> joinColumnReadMethod;
-		private Optional<Method> joinColumnWriteMethod;
-		private Optional<DDLData> ddlData = Optional.empty();
-
-		public Builder(String name) {
-			super();
-			this.name = name;
-			this.columnName = name;
-		}
-
-		public Builder withColumnName(String columnName) {
-			this.columnName = columnName;
-			return this;
-		}
-
-		public Builder withType(Class<?> type) {
-			this.type = type;
-			return this;
-		}
-
-		public Builder withReadWriteDbType(Class<?> readWriteDbType) {
-			this.readWriteDbType = readWriteDbType;
-			return this;
-		}
-
-		public Builder withReadMethod(Method readMethod) {
-			this.readMethod = readMethod;
-			return this;
-		}
-
-		public Builder withWriteMethod(Method writeMethod) {
-			this.writeMethod = writeMethod;
-			return this;
-		}
-
-		public Builder isId(boolean id) {
-			this.id = id;
-			return this;
-		}
-
-		public Builder withSqlType(Integer sqlType) {
-			this.sqlType = sqlType;
-			return this;
-		}
-
-		public Builder withRelationship(Relationship relationship) {
-			this.relationship = relationship;
-			return this;
-		}
-
-		public Builder isCollection(boolean collection) {
-			this.collection = collection;
-			return this;
-		}
-
-		public Builder withJavaMember(Field field) {
-			this.javaMember = field;
-			return this;
-		}
-
-		public Builder withAttributeMapper(Optional<AttributeMapper> attributeMapper) {
-			this.attributeMapper = attributeMapper;
-			return this;
-		}
-
-		public Builder withCollectionImplementationClass(Class<?> collectionImplementationClass) {
-			this.collectionImplementationClass = collectionImplementationClass;
-			return this;
-		}
-
-		public Builder isNullable(boolean nullable) {
-			this.nullable = nullable;
-			return this;
-		}
-
-		public Builder isVersion(boolean version) {
-			this.version = version;
-			return this;
-		}
-
-		public Builder isBasic(boolean basic) {
-			this.basic = basic;
-			return this;
-		}
-
-		public Builder withPath(String path) {
-			this.path = path;
-			return this;
-		}
-
-		public Builder withJoinColumnReadMethod(Optional<Method> joinColumnReadMethod) {
-			this.joinColumnReadMethod = joinColumnReadMethod;
-			return this;
-		}
-
-		public Builder withJoinColumnWriteMethod(Optional<Method> joinColumnWriteMethod) {
-			this.joinColumnWriteMethod = joinColumnWriteMethod;
-			return this;
-		}
-
-		public Builder withDDLData(Optional<DDLData> ddlData) {
-			this.ddlData = ddlData;
-			return this;
-		}
-
-		public MetaAttribute build() {
-			MetaAttribute attribute = new MetaAttribute();
-			attribute.name = name;
-			attribute.columnName = columnName;
-			attribute.type = type;
-			attribute.databaseType = readWriteDbType;
-			attribute.readMethod = readMethod;
-			attribute.writeMethod = writeMethod;
-			attribute.id = id;
-			attribute.sqlType = sqlType;
-			attribute.relationship = relationship;
-			attribute.collection = collection;
-			attribute.javaMember = javaMember;
-			attribute.attributeMapper = attributeMapper;
-			attribute.collectionImplementationClass = collectionImplementationClass;
-			attribute.nullable = nullable;
-			attribute.version = version;
-			attribute.basic = basic;
-			attribute.path = path;
-			attribute.joinColumnReadMethod = joinColumnReadMethod;
-			attribute.joinColumnWriteMethod = joinColumnWriteMethod;
-			attribute.ddlData = ddlData;
-			return attribute;
-		}
-	}
+        public MetaAttribute build() {
+            MetaAttribute attribute = new MetaAttribute();
+            attribute.name = name;
+            attribute.columnName = columnName;
+            attribute.type = type;
+            attribute.databaseType = readWriteDbType;
+            attribute.readMethod = readMethod;
+            attribute.writeMethod = writeMethod;
+            attribute.id = id;
+            attribute.sqlType = sqlType;
+            attribute.javaMember = javaMember;
+            attribute.attributeMapper = attributeMapper;
+            attribute.nullable = nullable;
+            attribute.version = version;
+            attribute.basic = basic;
+            attribute.path = path;
+            attribute.ddlData = ddlData;
+            return attribute;
+        }
+    }
 }

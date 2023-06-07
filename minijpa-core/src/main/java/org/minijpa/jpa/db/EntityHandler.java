@@ -16,8 +16,10 @@
 package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 /**
  * @author adamato
@@ -38,11 +40,11 @@ public interface EntityHandler extends EntityLoader {
       LockType lockType)
       throws Exception;
 
-  public Object loadAttribute(Object parentInstance, MetaAttribute a, Object value)
+  public Object loadAttribute(Object parentInstance, AbstractMetaAttribute a, Object value)
       throws Exception;
 
   public void persist(MetaEntity entity, Object entityInstance,
-      ModelValueArray<MetaAttribute> modelValueArray)
+      ModelValueArray<AbstractMetaAttribute> modelValueArray)
       throws Exception;
 
   public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception;

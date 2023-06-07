@@ -35,9 +35,11 @@ import org.minijpa.jpa.db.CollectionUtils;
 import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.db.LockType;
 import org.minijpa.jpa.model.AbstractAttribute;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.sql.model.Column;
@@ -59,12 +61,21 @@ public final class MetaEntityHelper {
     return AttributeFetchParameter.build(attribute);
   }
 
+  public static AttributeFetchParameter toFetchParameter(RelationshipMetaAttribute attribute) {
+    return AttributeFetchParameter.build(attribute);
+  }
+
+  public static AttributeFetchParameter toFetchParameter(AbstractMetaAttribute attribute) {
+    return AttributeFetchParameter.build(attribute);
+  }
+
   public static List<FetchParameter> toFetchParameter(List<JoinColumnAttribute> attributes) {
     List<FetchParameter> list = new ArrayList<>();
     for (JoinColumnAttribute a : attributes) {
       FetchParameter columnNameValue = new AttributeFetchParameterImpl(a.getColumnName(),
           a.getSqlType(),
-          a.getForeignKeyAttribute());
+          a.getForeignKeyAttribute(),
+          a.getForeignKeyAttribute().getAttributeMapper());
       list.add(columnNameValue);
     }
 
@@ -72,14 +83,14 @@ public final class MetaEntityHelper {
   }
 
   public static List<QueryParameter> convertAbstractAVToQP(
-      ModelValueArray<AbstractAttribute> attributeValueArray)
+      ModelValueArray<? extends AbstractAttribute> attributeValueArray)
       throws Exception {
     List<QueryParameter> list = new ArrayList<>();
     for (int i = 0; i < attributeValueArray.size(); ++i) {
       AbstractAttribute a = attributeValueArray.getModel(i);
       QueryParameter queryParameter = new QueryParameter(a.getColumnName(),
           attributeValueArray.getValue(i),
-          a.getSqlType(), a.getAttributeMapper());
+          a.getSqlType(), Optional.empty());
       list.add(queryParameter);
     }
 
@@ -88,19 +99,22 @@ public final class MetaEntityHelper {
 
   public static List<QueryParameter> convertAVToQP(MetaAttribute a, Object value) throws Exception {
     List<QueryParameter> list = new ArrayList<>();
-    if (a.getRelationship() != null) {
-      if (a.getRelationship().getJoinColumnMapping().isPresent()) {
-        JoinColumnMapping joinColumnMapping = a.getRelationship().getJoinColumnMapping().get();
-        Object v = joinColumnMapping.isComposite()
-            ? joinColumnMapping.getForeignKey().getReadMethod().invoke(value)
-            : value;
-        LOG.debug("convertAVToQP: v={}", v);
-        list.addAll(convertAVToQP(v, a.getRelationship().getJoinColumnMapping().get()));
-      }
-    } else {
-      QueryParameter queryParameter = new QueryParameter(a.getColumnName(), value, a.getSqlType(),
-          a.getAttributeMapper());
-      list.add(queryParameter);
+    QueryParameter queryParameter = new QueryParameter(a.getColumnName(), value, a.getSqlType(),
+        a.getAttributeMapper());
+    list.add(queryParameter);
+    return list;
+  }
+
+  public static List<QueryParameter> convertAVToQP(RelationshipMetaAttribute a, Object value)
+      throws Exception {
+    List<QueryParameter> list = new ArrayList<>();
+    if (a.getRelationship().getJoinColumnMapping().isPresent()) {
+      JoinColumnMapping joinColumnMapping = a.getRelationship().getJoinColumnMapping().get();
+      Object v = joinColumnMapping.isComposite()
+          ? joinColumnMapping.getForeignKey().getReadMethod().invoke(value)
+          : value;
+      LOG.debug("convertAVToQP: v={}", v);
+      list.addAll(convertAVToQP(v, a.getRelationship().getJoinColumnMapping().get()));
     }
 
     return list;
@@ -142,7 +156,7 @@ public final class MetaEntityHelper {
     LOG.debug("convertAVToQP: pk={}; value={}", pk, value);
     List<QueryParameter> list = new ArrayList<>();
     if (pk.isEmbedded()) {
-      ModelValueArray<MetaAttribute> modelValueArray = new ModelValueArray<>();
+      ModelValueArray<AbstractMetaAttribute> modelValueArray = new ModelValueArray<>();
       expand(pk, value, modelValueArray);
       list.addAll(convertAVToQP(modelValueArray));
       return list;
@@ -154,12 +168,20 @@ public final class MetaEntityHelper {
     return list;
   }
 
-  public static List<QueryParameter> convertAVToQP(ModelValueArray<MetaAttribute> modelValueArray)
+  public static List<QueryParameter> convertAVToQP(
+      ModelValueArray<AbstractMetaAttribute> modelValueArray)
       throws Exception {
     List<QueryParameter> list = new ArrayList<>();
     for (int i = 0; i < modelValueArray.size(); ++i) {
       LOG.debug("convertAVToQP: modelValueArray.getModel(i)={}", modelValueArray.getModel(i));
-      list.addAll(convertAVToQP(modelValueArray.getModel(i), modelValueArray.getValue(i)));
+      if (modelValueArray.getModel(i) instanceof MetaAttribute) {
+        list.addAll(convertAVToQP((MetaAttribute) modelValueArray.getModel(i),
+            modelValueArray.getValue(i)));
+      } else {
+        list.addAll(convertAVToQP((RelationshipMetaAttribute)
+                modelValueArray.getModel(i),
+            modelValueArray.getValue(i)));
+      }
     }
 
     return list;
@@ -168,11 +190,11 @@ public final class MetaEntityHelper {
   public static List<QueryParameter> createJoinColumnAVSToQP(
       List<JoinColumnAttribute> joinColumnAttributes,
       Pk owningId, Object joinTableForeignKey) throws Exception {
-    ModelValueArray<MetaAttribute> modelValueArray = new ModelValueArray<>();
+    ModelValueArray<AbstractMetaAttribute> modelValueArray = new ModelValueArray<>();
     expand(owningId, joinTableForeignKey, modelValueArray);
     List<QueryParameter> queryParameters = new ArrayList<>();
     for (int i = 0; i < modelValueArray.size(); ++i) {
-      MetaAttribute attribute = modelValueArray.getModel(i);
+      MetaAttribute attribute = (MetaAttribute) modelValueArray.getModel(i);
       int index = AttributeUtil.indexOfJoinColumnAttribute(joinColumnAttributes, attribute);
       MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
       QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(),
@@ -191,7 +213,7 @@ public final class MetaEntityHelper {
     return fetchColumnNameValues;
   }
 
-  public static TableColumn toValue(MetaAttribute attribute, FromTable fromTable) {
+  public static TableColumn toValue(AbstractMetaAttribute attribute, FromTable fromTable) {
     return new TableColumn(fromTable, new Column(attribute.getColumnName()));
   }
 
@@ -229,7 +251,8 @@ public final class MetaEntityHelper {
         .collect(Collectors.toList());
   }
 
-  public static List<TableColumn> attributesToTableColumns(List<AbstractAttribute> attributes,
+  public static List<TableColumn> attributesToTableColumns(
+      List<? extends AbstractAttribute> attributes,
       FromTable fromTable) {
     return attributes.stream().map(a -> new TableColumn(fromTable, new Column(a.getColumnName())))
         .collect(Collectors.toList());
@@ -258,8 +281,10 @@ public final class MetaEntityHelper {
     entity.getVersionAttribute().get().getWriteMethod().invoke(entityInstance, versionValue);
   }
 
-  public static void createVersionAttributeArrayEntry(MetaEntity entity, Object entityInstance,
-      ModelValueArray<MetaAttribute> modelValueArray) throws Exception {
+  public static void createVersionAttributeArrayEntry(
+      MetaEntity entity,
+      Object entityInstance,
+      ModelValueArray<AbstractMetaAttribute> modelValueArray) throws Exception {
     if (!hasOptimisticLock(entity, entityInstance)) {
       return;
     }
@@ -270,7 +295,8 @@ public final class MetaEntityHelper {
     modelValueArray.add(entity.getVersionAttribute().get(), versionValue);
   }
 
-  public static void expand(Pk pk, Object value, ModelValueArray<MetaAttribute> modelValueArray)
+  public static void expand(Pk pk, Object value,
+      ModelValueArray<AbstractMetaAttribute> modelValueArray)
       throws Exception {
     if (pk.isEmbedded()) {
       for (MetaAttribute a : pk.getAttributes()) {
@@ -328,13 +354,14 @@ public final class MetaEntityHelper {
     entity.getEntityStatusAttributeWriteMethod().get().invoke(entityInstance, entityStatus);
   }
 
-  public static void setForeignKeyValue(MetaAttribute attribute, Object entityInstance,
+  public static void setForeignKeyValue(RelationshipMetaAttribute attribute, Object entityInstance,
       Object value)
       throws IllegalAccessException, InvocationTargetException {
     attribute.getJoinColumnWriteMethod().get().invoke(entityInstance, value);
   }
 
-  public static Object getForeignKeyValue(MetaAttribute attribute, Object entityInstance)
+  public static Object getForeignKeyValue(RelationshipMetaAttribute attribute,
+      Object entityInstance)
       throws IllegalAccessException, InvocationTargetException {
     return attribute.getJoinColumnReadMethod().get().invoke(entityInstance);
   }
@@ -370,10 +397,10 @@ public final class MetaEntityHelper {
     MetaEntityHelper.clearModificationAttributes(entity, entityInstance);
   }
 
-  public static ModelValueArray<MetaAttribute> getModifications(MetaEntity entity,
+  public static ModelValueArray<AbstractMetaAttribute> getModifications(MetaEntity entity,
       Object entityInstance)
       throws IllegalAccessException, InvocationTargetException {
-    ModelValueArray<MetaAttribute> modelValueArray = new ModelValueArray();
+    ModelValueArray<AbstractMetaAttribute> modelValueArray = new ModelValueArray<>();
     Method m = entity.getModificationAttributeReadMethod();
     List list = (List) m.invoke(entityInstance);
     if (list.isEmpty()) {
@@ -382,13 +409,14 @@ public final class MetaEntityHelper {
 
     for (Object p : list) {
       String v = (String) p;
-      MetaAttribute attribute = entity.getAttribute(v);
+      AbstractMetaAttribute attribute = entity.getAttribute(v);
       if (attribute == null) {
         Optional<MetaEntity> embeddable = entity.getEmbeddable(v);
         if (embeddable.isPresent()) {
           Object embeddedInstance = MetaEntityHelper.getEmbeddableValue(entityInstance,
               embeddable.get());
-          ModelValueArray<MetaAttribute> mva = getModifications(embeddable.get(), embeddedInstance);
+          ModelValueArray<AbstractMetaAttribute> mva = getModifications(embeddable.get(),
+              embeddedInstance);
           modelValueArray.add(mva);
         }
       } else {
@@ -407,7 +435,7 @@ public final class MetaEntityHelper {
     return (List) m.invoke(parentInstance);
   }
 
-  public static Object getAttributeValue(Object parentInstance, MetaAttribute attribute)
+  public static Object getAttributeValue(Object parentInstance, AbstractMetaAttribute attribute)
       throws Exception {
     return attribute.getReadMethod().invoke(parentInstance);
   }
@@ -418,7 +446,7 @@ public final class MetaEntityHelper {
   }
 
   public static Object writeMetaAttributeValue(Object parentInstance, Class<?> parentClass,
-      MetaAttribute attribute,
+      AbstractMetaAttribute attribute,
       Object value, MetaEntity entity) throws Exception {
     Object parent = parentInstance;
     if (parent == null) {
@@ -455,7 +483,7 @@ public final class MetaEntityHelper {
   }
 
   public static Object writeAttributeValue(MetaEntity entity, Object parentInstance,
-      MetaAttribute attribute,
+      AbstractMetaAttribute attribute,
       Object value) throws Exception {
     LOG.debug("writeAttributeValue: parentInstance={}", parentInstance);
     LOG.debug("writeAttributeValue: attribute.getName()={}; value={}", attribute.getName(), value);
@@ -463,16 +491,19 @@ public final class MetaEntityHelper {
         entity);
   }
 
-  private static Object findAndSetAttributeValue(Class<?> parentClass, Object parentInstance,
-      MetaAttribute attribute,
-      Object value, MetaEntity entity) throws Exception {
+  private static Object findAndSetAttributeValue(
+      Class<?> parentClass,
+      Object parentInstance,
+      AbstractMetaAttribute attribute,
+      Object value,
+      MetaEntity entity) throws Exception {
     LOG.debug("findAndSetAttributeValue: value={}; attribute={}", value, attribute);
     LOG.debug("findAndSetAttributeValue: parentInstance={}; parentClass={}", parentInstance,
         parentClass);
     LOG.debug("findAndSetAttributeValue: entity={}", entity);
 
     // search over all attributes
-    for (MetaAttribute a : entity.getAttributes()) {
+    for (AbstractMetaAttribute a : entity.getAttributes()) {
       if (a == attribute) {
         return MetaEntityHelper.writeMetaAttributeValue(parentInstance, parentClass, a, value,
             entity);
@@ -506,7 +537,7 @@ public final class MetaEntityHelper {
 
   // TODO the MetaEntity.getLazyLoadedAttributeReadMethod() method could be empty.
   // If there ara not lazy attributes it's empty
-  public static boolean isLazyAttributeLoaded(MetaEntity entity, MetaAttribute a,
+  public static boolean isLazyAttributeLoaded(MetaEntity entity, AbstractMetaAttribute a,
       Object entityInstance)
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
     // TODO condition added to avoid that 'entity.getLazyLoadedAttributeReadMethod().get()'
@@ -520,7 +551,8 @@ public final class MetaEntityHelper {
     return list.contains(a.getName());
   }
 
-  public static void lazyAttributeLoaded(MetaEntity entity, MetaAttribute a, Object entityInstance,
+  public static void lazyAttributeLoaded(MetaEntity entity, AbstractMetaAttribute a,
+      Object entityInstance,
       boolean loaded)
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
     Method m = entity.getLazyLoadedAttributeReadMethod().get();
@@ -545,8 +577,11 @@ public final class MetaEntityHelper {
     list.clear();
   }
 
-  public static void addElementToCollectionAttribute(Object entityInstance, MetaEntity metaEntity,
-      MetaAttribute metaAttribute, Object element) throws Exception {
+  public static void addElementToCollectionAttribute(
+      Object entityInstance,
+      MetaEntity metaEntity,
+      RelationshipMetaAttribute metaAttribute,
+      Object element) throws Exception {
     LOG.debug("addElementToCollectionAttribute: entityInstance={}", entityInstance);
     LOG.debug("addElementToCollectionAttribute: metaAttribute={}", metaAttribute);
     Object collectionInstance = getAttributeValue(entityInstance, metaAttribute);

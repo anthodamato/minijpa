@@ -31,8 +31,10 @@ import org.minijpa.jpa.criteria.join.CollectionFetchJoinImpl;
 import org.minijpa.jpa.criteria.join.CollectionJoinImpl;
 import org.minijpa.jpa.criteria.join.FetchJoinType;
 import org.minijpa.jpa.metamodel.AttributeImpl;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +80,7 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
   @Override
   public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection) {
     return (CollectionJoin<X, Y>) new CollectionJoinImpl<>(metaEntity,
-        metaEntity.getAttribute(collection.getName()), collection, JoinType.INNER,
+        metaEntity.getRelationshipAttribute(collection.getName()), collection, JoinType.INNER,
         FetchJoinType.JOIN);
   }
 
@@ -154,7 +156,7 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
   }
 
   private <X1, Y> Join<X1, Y> buildCollectionJoinAttribute(MetaEntity entity,
-      MetaAttribute metaAttribute, Attribute attribute,
+      RelationshipMetaAttribute metaAttribute, Attribute attribute,
       JoinType jt, FetchJoinType fetchJoinType) {
     if (fetchJoinType == FetchJoinType.JOIN) {
       return new CollectionJoinImpl<>(entity, metaAttribute, attribute, jt, fetchJoinType);
@@ -167,7 +169,7 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 
   private <X1, Y> Join<X1, Y> buildJoin(String attributeName, JoinType jt,
       FetchJoinType fetchJoinType) {
-    MetaAttribute metaAttribute = metaEntity.getAttribute(attributeName);
+    RelationshipMetaAttribute metaAttribute = metaEntity.getRelationshipAttribute(attributeName);
     if (metaAttribute == null) {
       throw new IllegalArgumentException("Attribute '" + attributeName + "' not found");
     }
@@ -267,7 +269,7 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 
   @Override
   public <Y> Path<Y> get(SingularAttribute<? super X, Y> attribute) {
-    MetaAttribute metaAttribute = metaEntity.getAttribute(attribute.getName());
+    AbstractMetaAttribute metaAttribute = metaEntity.getAttribute(attribute.getName());
     if (metaAttribute == null) {
       throw new IllegalArgumentException("Attribute '" + attribute.getName() + "' does not exist");
     }
@@ -292,7 +294,7 @@ public abstract class AbstractFrom<Z, X> implements From<Z, X> {
 
   @Override
   public <Y> Path<Y> get(String attributeName) {
-    MetaAttribute metaAttribute = metaEntity.getAttribute(attributeName);
+    AbstractMetaAttribute metaAttribute = metaEntity.getAttribute(attributeName);
     if (metaAttribute != null) {
       return new AttributePath<>(metaAttribute, metaEntity);
     }

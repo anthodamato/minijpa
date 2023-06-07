@@ -14,8 +14,10 @@ import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.AttributeUtil;
 import org.minijpa.jpa.db.DbConfiguration;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
 import org.minijpa.metadata.AliasGenerator;
 import org.minijpa.metadata.PersistenceUnitContext;
@@ -348,26 +350,28 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     }
 
     MetaEntity metaEntity = optional.get();
-    MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+    AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
+        metaEntity);
     if (metaAttribute == null) {
       throw new SemanticException(
           "Attribute path '" + attributePath + "' on '" + metaEntity.getName()
               + "' entity not found");
     }
 
-    if (metaAttribute.getRelationship() == null) {
+    if (!(metaAttribute instanceof RelationshipMetaAttribute)) {
       throw new SemanticException(
           "Attribute '" + metaAttribute.getName() + "' is not a relationship attribute");
     }
 
-    createRelationshipFromJoin(jpqlVisitorParameters, metaAttribute, metaEntity,
+    createRelationshipFromJoin(jpqlVisitorParameters, (RelationshipMetaAttribute) metaAttribute,
+        metaEntity,
         identificationVariable, decodeJoinType(jt));
     return object;
   }
 
   private void createRelationshipFromJoin(
       JpqlVisitorParameters jpqlVisitorParameters,
-      MetaAttribute metaAttribute,
+      RelationshipMetaAttribute metaAttribute,
       MetaEntity metaEntity,
       String entityAlias,
       org.minijpa.sql.model.join.JoinType joinType) {
@@ -1236,7 +1240,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
           node.setMetaAttributes(metaEntity.getId().getAttributes());
         } else {
-          MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
+          MetaAttribute metaAttribute = (MetaAttribute) AttributeUtil.findAttributeFromPath(
+              attributePath,
               metaEntity);
           if (metaAttribute == null) {
             throw new SemanticException(
@@ -1286,7 +1291,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
           });
           jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
         } else {
-          MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
+          AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
               metaEntity);
           if (metaAttribute == null) {
             throw new SemanticException(
@@ -1381,7 +1386,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                 jpqlVisitorParameters.orderByList.add(orderBy);
               });
             } else {
-              MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
+              AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
                   metaEntity);
               if (metaAttribute == null) {
                 throw new SemanticException("Attribute path '" + attributePath + "' on '"
@@ -1478,7 +1483,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         MetaEntity metaEntity = optional.get();
 
         String attributePath = simpleDerivedPath.getpath();
-        MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
+        AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
             metaEntity);
         if (metaAttribute == null) {
           throw new SemanticException(
@@ -1486,15 +1491,17 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                   + "' entity not found");
         }
 
-        if (metaAttribute.getRelationship() != null) {
+        if (metaAttribute instanceof RelationshipMetaAttribute) {
+          RelationshipMetaAttribute relationshipMetaAttribute = (RelationshipMetaAttribute) metaAttribute;
           FromTable fromTable = FromTable
-              .of(metaAttribute.getRelationship().getAttributeType().getTableName(),
+              .of(relationshipMetaAttribute.getRelationship().getAttributeType().getTableName(),
                   tableAliasGenerator
                       .getDefault(
-                          metaAttribute.getRelationship().getAttributeType().getTableName()));
+                          relationshipMetaAttribute.getRelationship().getAttributeType()
+                              .getTableName()));
           jpqlVisitorParameters.fromTables.add(fromTable);
-          if (metaAttribute.getRelationship().getJoinTable() != null) {
-            RelationshipJoinTable relationshipJoinTable = metaAttribute.getRelationship()
+          if (relationshipMetaAttribute.getRelationship().getJoinTable() != null) {
+            RelationshipJoinTable relationshipJoinTable = relationshipMetaAttribute.getRelationship()
                 .getJoinTable();
             String tableAlias = tableAliasGenerator
                 .getDefault(relationshipJoinTable.getTargetEntity().getTableName());
@@ -1504,13 +1511,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                     tableAliasGenerator.getDefault(relationshipJoinTable.getTableName())));
           } else {
             String tableAlias = tableAliasGenerator
-                .getDefault(metaAttribute.getRelationship().getAttributeType().getTableName());
+                .getDefault(
+                    relationshipMetaAttribute.getRelationship().getAttributeType().getTableName());
             jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);
           }
 
           Condition condition = dbConfiguration.getSqlStatementFactory().generateJoinCondition(
-              metaAttribute.getRelationship(), metaEntity,
-              metaAttribute.getRelationship().getAttributeType(), tableAliasGenerator);
+              relationshipMetaAttribute.getRelationship(), metaEntity,
+              relationshipMetaAttribute.getRelationship().getAttributeType(), tableAliasGenerator);
           jpqlVisitorParameters.conditions.add(condition);
         }
 
@@ -1631,7 +1639,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
       MetaEntity metaEntity = optional.get();
 
-      MetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+      AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
       if (metaAttribute == null) {
         throw new SemanticException(
             "Attribute path '" + attributePath + "' on '" + metaEntity.getName()

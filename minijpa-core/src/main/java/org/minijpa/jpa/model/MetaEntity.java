@@ -38,13 +38,13 @@ public class MetaEntity {
     /**
      * Collection of basic and relationship attributes.
      */
-    private List<MetaAttribute> attributes;
+    private List<AbstractMetaAttribute> attributes;
     /**
      * Basic attributes
      */
-    private List<MetaAttribute> basicAttributes = Collections.unmodifiableList(Collections.emptyList());
-    private List<MetaAttribute> relationshipAttributes = Collections.emptyList();
-    private List<MetaEntity> embeddables = Collections.emptyList();
+    private List<MetaAttribute> basicAttributes = List.of();
+    private List<RelationshipMetaAttribute> relationshipAttributes = List.of();
+    private List<MetaEntity> embeddables = List.of();
     private Method readMethod; // used for embeddables
     private Method writeMethod; // used for embeddables
     private String path; // used for embeddables
@@ -84,7 +84,7 @@ public class MetaEntity {
         return embeddedId;
     }
 
-    public List<MetaAttribute> getAttributes() {
+    public List<AbstractMetaAttribute> getAttributes() {
         return attributes;
     }
 
@@ -92,7 +92,7 @@ public class MetaEntity {
         return basicAttributes;
     }
 
-    public List<MetaAttribute> getRelationshipAttributes() {
+    public List<RelationshipMetaAttribute> getRelationshipAttributes() {
         return relationshipAttributes;
     }
 
@@ -148,18 +148,24 @@ public class MetaEntity {
         return entityStatusAttributeWriteMethod;
     }
 
-    public MetaAttribute getAttribute(String name) {
-        for (MetaAttribute attribute : attributes) {
-            if (attribute.getName().equals(name))
+    public AbstractMetaAttribute getAttribute(String name) {
+        for (AbstractMetaAttribute attribute : attributes) {
+            if (attribute.getName().equals(name)) {
                 return attribute;
+            }
         }
 
         return null;
     }
 
-    public Optional<MetaAttribute> findAttribute(String name) {
-        List<MetaAttribute> list = expandAllAttributes();
-        return list.stream().filter(a -> a.getName().equals(name)).findFirst();
+    public RelationshipMetaAttribute getRelationshipAttribute(String name) {
+        for (RelationshipMetaAttribute attribute : relationshipAttributes) {
+            if (attribute.getName().equals(name)) {
+                return attribute;
+            }
+        }
+
+        return null;
     }
 
     public Optional<MetaEntity> getEmbeddable(String name) {
@@ -168,12 +174,11 @@ public class MetaEntity {
 
     public List<MetaAttribute> expandAllAttributes() {
         List<MetaAttribute> list = new ArrayList<>();
-        if (id != null)
+        if (id != null) {
             list.addAll(id.getAttributes());
+        }
 
-        basicAttributes.forEach(a -> {
-            list.add(a);
-        });
+        list.addAll(basicAttributes);
 
         list.addAll(expandEmbeddables());
 
@@ -204,24 +209,26 @@ public class MetaEntity {
         return jcas;
     }
 
-    public Optional<MetaAttribute> findJoinColumnMappingAttribute(String attributeName) {
+    public Optional<RelationshipMetaAttribute> findJoinColumnMappingAttribute(String attributeName) {
         Optional<JoinColumnMapping> o = joinColumnMappings.stream()
                 .filter(j -> j.getAttribute().getName().equals(attributeName)).findFirst();
-        if (o.isPresent())
+        if (o.isPresent()) {
             return Optional.of(o.get().getAttribute());
+        }
 
         for (MetaEntity embeddable : embeddables) {
-            Optional<MetaAttribute> optional = embeddable.findJoinColumnMappingAttribute(attributeName);
-            if (optional.isPresent())
-                return Optional.of(optional.get());
+            Optional<RelationshipMetaAttribute> optional = embeddable.findJoinColumnMappingAttribute(
+                    attributeName);
+            if (optional.isPresent()) {
+                return optional;
+            }
         }
 
         return Optional.empty();
     }
 
     public List<JoinColumnMapping> expandJoinColumnMappings() {
-        List<JoinColumnMapping> jcms = new ArrayList<>();
-        jcms.addAll(joinColumnMappings);
+        List<JoinColumnMapping> jcms = new ArrayList<>(joinColumnMappings);
 
         embeddables.forEach(metaEntity -> {
             jcms.addAll(metaEntity.expandJoinColumnMappings());
@@ -230,9 +237,8 @@ public class MetaEntity {
         return jcms;
     }
 
-    public List<MetaAttribute> expandRelationshipAttributes() {
-        List<MetaAttribute> list = new ArrayList<>();
-        list.addAll(relationshipAttributes);
+    public List<RelationshipMetaAttribute> expandRelationshipAttributes() {
+        List<RelationshipMetaAttribute> list = new ArrayList<>(relationshipAttributes);
         embeddables.forEach(e -> {
             list.addAll(e.expandRelationshipAttributes());
         });
@@ -240,10 +246,11 @@ public class MetaEntity {
         return list;
     }
 
-    public MetaAttribute findAttributeByMappedBy(String mappedBy) {
-        for (MetaAttribute attribute : relationshipAttributes) {
-            if (mappedBy.equals(attribute.getRelationship().getMappedBy().get()))
+    public RelationshipMetaAttribute findAttributeByMappedBy(String mappedBy) {
+        for (RelationshipMetaAttribute attribute : relationshipAttributes) {
+            if (mappedBy.equals(attribute.getRelationship().getMappedBy().get())) {
                 return attribute;
+            }
         }
 
         return null;
@@ -254,7 +261,7 @@ public class MetaEntity {
         return super.toString() + " class: " + entityClass.getName() + "; tableName: " + tableName;
     }
 
-    public List<MetaAttribute> notNullableAttributes() {
+    public List<AbstractMetaAttribute> notNullableAttributes() {
         return attributes.stream().filter(a -> !a.isNullable()).collect(Collectors.toList());
     }
 
@@ -272,19 +279,20 @@ public class MetaEntity {
     }
 
     public boolean hasVersionAttribute() {
-        return basicAttributes.stream().filter(a -> a.isVersion() && !a.isId()).findFirst().isPresent();
+        return basicAttributes.stream().anyMatch(a -> a.isVersion() && !a.isId());
     }
 
     public Optional<MetaAttribute> getVersionAttribute() {
         return basicAttributes.stream().filter(a -> a.isVersion() && !a.isId()).findFirst();
     }
 
-    public List<MetaAttribute> getCascadeAttributes(Cascade... cascades) {
-        List<MetaAttribute> attrs = new ArrayList<>();
+    public List<RelationshipMetaAttribute> getCascadeAttributes(Cascade... cascades) {
+        List<RelationshipMetaAttribute> attrs = new ArrayList<>();
         getRelationshipAttributes().forEach(attribute -> {
             Relationship r = attribute.getRelationship();
-            if (r.isOwner() && r.hasAnyCascades(cascades))
+            if (r.isOwner() && r.hasAnyCascades(cascades)) {
                 attrs.add(attribute);
+            }
         });
 
         return attrs;
@@ -297,9 +305,9 @@ public class MetaEntity {
         private String tableName;
         private Pk id;
         private boolean embeddedId;
-        private List<MetaAttribute> attributes;
+        private List<AbstractMetaAttribute> attributes;
         private List<MetaAttribute> basicAttributes;
-        private List<MetaAttribute> relationshipAttributes;
+        private List<RelationshipMetaAttribute> relationshipAttributes;
         private List<MetaEntity> embeddables;
         private Method readMethod; // used for embeddables
         private Method writeMethod; // used for embeddables
@@ -338,7 +346,7 @@ public class MetaEntity {
             return this;
         }
 
-        public Builder withAttributes(List<MetaAttribute> attributes) {
+        public Builder withAttributes(List<AbstractMetaAttribute> attributes) {
             this.attributes = attributes;
             return this;
         }
@@ -348,7 +356,7 @@ public class MetaEntity {
             return this;
         }
 
-        public Builder withRelationshipAttributes(List<MetaAttribute> attributes) {
+        public Builder withRelationshipAttributes(List<RelationshipMetaAttribute> attributes) {
             this.relationshipAttributes = attributes;
             return this;
         }
@@ -383,7 +391,8 @@ public class MetaEntity {
             return this;
         }
 
-        public Builder withLazyLoadedAttributeReadMethod(Optional<Method> lazyLoadedAttributeReadMethod) {
+        public Builder withLazyLoadedAttributeReadMethod(
+                Optional<Method> lazyLoadedAttributeReadMethod) {
             this.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
             return this;
         }
@@ -404,12 +413,14 @@ public class MetaEntity {
             return this;
         }
 
-        public Builder withEntityStatusAttributeReadMethod(Optional<Method> entityStatusAttributeReadMethod) {
+        public Builder withEntityStatusAttributeReadMethod(
+                Optional<Method> entityStatusAttributeReadMethod) {
             this.entityStatusAttributeReadMethod = entityStatusAttributeReadMethod;
             return this;
         }
 
-        public Builder withEntityStatusAttributeWriteMethod(Optional<Method> entityStatusAttributeWriteMethod) {
+        public Builder withEntityStatusAttributeWriteMethod(
+                Optional<Method> entityStatusAttributeWriteMethod) {
             this.entityStatusAttributeWriteMethod = entityStatusAttributeWriteMethod;
             return this;
         }

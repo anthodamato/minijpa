@@ -19,6 +19,7 @@ import org.minijpa.jpa.criteria.CriteriaUtils;
 import org.minijpa.jpa.criteria.MiniRoot;
 import org.minijpa.jpa.jpql.AggregateFunctionType;
 import org.minijpa.jpa.jpql.FunctionUtils;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.metadata.AliasGenerator;
@@ -55,7 +56,7 @@ public class CriteriaExpressionHelper {
 
   private TableColumn createTableColumnFromPath(AttributePath<?> attributePath,
       AliasGenerator tableAliasGenerator) {
-    MetaAttribute attribute = attributePath.getMetaAttribute();
+    AbstractMetaAttribute attribute = attributePath.getMetaAttribute();
     return new TableColumn(
         FromTable.of(attributePath.getMetaEntity().getTableName(),
             tableAliasGenerator.getDefault(attributePath.getMetaEntity().getTableName())),
@@ -416,7 +417,7 @@ public class CriteriaExpressionHelper {
         == org.minijpa.jpa.criteria.expression.AggregateFunctionType.COUNT) {
       if (expr instanceof AttributePath<?>) {
         AttributePath<?> attributePath = (AttributePath<?>) expr;
-        MetaAttribute metaAttribute = attributePath.getMetaAttribute();
+        AbstractMetaAttribute metaAttribute = attributePath.getMetaAttribute();
         MetaEntity metaEntity = attributePath.getMetaEntity();
         FromTable fromTable = buildFromTable(attributePath, aliasGenerator);
         return Optional.of(
@@ -433,7 +434,7 @@ public class CriteriaExpressionHelper {
       }
     } else if (expr instanceof AttributePath<?>) {
       AttributePath<?> attributePath = (AttributePath<?>) expr;
-      MetaAttribute metaAttribute = attributePath.getMetaAttribute();
+      AbstractMetaAttribute metaAttribute = attributePath.getMetaAttribute();
       FromTable fromTable = buildFromTable(attributePath, aliasGenerator);
       Value value = FunctionUtils.createAggregateFunction(
           getAggregateFunction(aggregateFunctionExpression.getAggregateFunctionType()),
@@ -465,7 +466,7 @@ public class CriteriaExpressionHelper {
     LOG.debug("createSelectionValue: selection={}", selection);
     if (selection instanceof AttributePath<?>) {
       AttributePath<?> attributePath = (AttributePath<?>) selection;
-      MetaAttribute metaAttribute = attributePath.getMetaAttribute();
+      AbstractMetaAttribute metaAttribute = attributePath.getMetaAttribute();
       FromTable ft = buildFromTable(attributePath, aliasGenerator);
       return Optional.of(new TableColumn(ft, new Column(metaAttribute.getColumnName())));
     } else if (selection instanceof AggregateFunctionExpression<?>) {

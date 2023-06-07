@@ -55,7 +55,7 @@ public class EmbeddedPk implements Pk {
 
 	@Override
 	public List<MetaAttribute> getAttributes() {
-		return entity.getAttributes();
+		return entity.getBasicAttributes();
 	}
 
 	@Override

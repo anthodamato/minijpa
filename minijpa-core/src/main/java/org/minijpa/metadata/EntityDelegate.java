@@ -22,6 +22,7 @@ import java.util.Optional;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.db.EntityHandler;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
@@ -64,7 +65,7 @@ public final class EntityDelegate implements EntityListener {
       }
 
       LOG.debug("get: attributeName={}", attributeName);
-      MetaAttribute a = entity.getAttribute(attributeName);
+      AbstractMetaAttribute a = entity.getAttribute(attributeName);
       LOG.debug("get: a={}", a);
 //      LOG.debug("get: a.isLazy()={}", a.isLazy());
 //      LOG.debug("get: MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)={}", MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance));
