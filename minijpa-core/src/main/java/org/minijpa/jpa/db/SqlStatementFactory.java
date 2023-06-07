@@ -215,7 +215,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
   }
 
   public SqlSelectData generateSelectByForeignKey(MetaEntity entity,
-      MetaAttribute foreignKeyAttribute, List<String> columns, AliasGenerator tableAliasGenerator)
+      List<String> columns, AliasGenerator tableAliasGenerator)
       throws Exception {
     List<FetchParameter> fetchColumnNameValues = MetaEntityHelper.convertAllAttributes(entity);
     // LOG.info("generateSelectByForeignKey: fetchColumnNameValues=" +
@@ -1433,7 +1433,8 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     SqlSelect sqlSelect = builder.build();
     List<MetaEntity> metaEntities = getFetchJoinEntities(criteriaQuery.getRoots());
     if (!metaEntities.isEmpty()) {
-      List<RelationshipMetaAttribute> metaAttributes = getFetchJoinMetaAttributes(criteriaQuery.getRoots());
+      List<RelationshipMetaAttribute> metaAttributes = getFetchJoinMetaAttributes(
+          criteriaQuery.getRoots());
       return new StatementParameters(sqlSelect, parameters,
           StatementType.FETCH_JOIN, metaEntities, metaAttributes);
     }

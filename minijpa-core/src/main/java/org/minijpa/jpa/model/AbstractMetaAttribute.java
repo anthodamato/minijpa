@@ -8,6 +8,11 @@ public abstract class AbstractMetaAttribute extends AbstractAttribute {
 
   // attribute name
   protected String name;
+  // The attribute path. If this is a basic attribute the path is the attribute
+  // name.
+  // If the parent is an embeddable the path is the embeddable path. For example
+  // 'jobInfo.jobDescription'.
+  protected String path;
   // methods for read/write ops
   protected Method readMethod;
   protected Method writeMethod;
@@ -16,6 +21,10 @@ public abstract class AbstractMetaAttribute extends AbstractAttribute {
 
   public String getName() {
     return name;
+  }
+
+  public String getPath() {
+    return path;
   }
 
   public Method getReadMethod() {

@@ -33,6 +33,7 @@ import org.minijpa.jpa.model.Item;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
+import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.Store;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
@@ -47,222 +48,247 @@ import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.condition.UnaryCondition;
 
 public class SqlStatementFactoryTest {
-    private final SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
 
-    @BeforeEach
-    void init() {
-        sqlStatementGenerator.init();
+  private final SqlStatementGenerator sqlStatementGenerator = new ApacheDerbySqlStatementGenerator();
+
+  @BeforeEach
+  void init() {
+    sqlStatementGenerator.init();
+  }
+
+  @Test
+  public void generateSelectByForeignKey() throws Exception {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("manytoone_bid",
+        PersistenceUnitProperties.getProperties());
+    emf.createEntityManager();
+    Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
+        .getEntityContext("manytoone_bid");
+    if (!optional.isPresent()) {
+      Assertions.fail("Meta entities not found");
     }
 
-    @Test
-    public void generateSelectByForeignKey() throws Exception {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("manytoone_bid",
-                PersistenceUnitProperties.getProperties());
-        emf.createEntityManager();
-        Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("manytoone_bid");
-        if (!optional.isPresent())
-            Assertions.fail("Meta entities not found");
+    DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
+        .getDbConfiguration("manytoone_bid");
+    Map<String, MetaEntity> map = optional.get().getEntities();
 
-        DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("manytoone_bid");
-        Map<String, MetaEntity> map = optional.get().getEntities();
+    Department department = new Department();
+    department.setName("Research");
 
-        Department department = new Department();
-        department.setName("Research");
+    Employee employee = new Employee();
+    employee.setName("John Smith");
+    employee.setSalary(new BigDecimal(130000));
+    employee.setDepartment(department);
 
-        Employee employee = new Employee();
-        employee.setName("John Smith");
-        employee.setSalary(new BigDecimal(130000));
-        employee.setDepartment(department);
+    Employee emp = new Employee();
+    emp.setName("Margaret White");
+    emp.setSalary(new BigDecimal(170000));
+    emp.setDepartment(department);
 
-        Employee emp = new Employee();
-        emp.setName("Margaret White");
-        emp.setSalary(new BigDecimal(170000));
-        emp.setDepartment(department);
+    MetaEntity employeeEntity = map.get(Employee.class.getName());
+    RelationshipMetaAttribute foreignKeyAttribute = (RelationshipMetaAttribute) employeeEntity.getAttribute(
+        "department");
+    List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute,
+        department);
+    List<String> columns = parameters.stream().map(QueryParameter::getColumnName)
+        .collect(Collectors.toList());
 
-        MetaEntity employeeEntity = map.get(Employee.class.getName());
-        MetaAttribute foreignKeyAttribute = employeeEntity.getAttribute("department");
-        List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute, department);
-        List<String> columns = parameters.stream().map(p -> p.getColumnName()).collect(Collectors.toList());
+    SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+    sqlStatementFactory.init();
+    SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(employeeEntity,
+        columns, optional.get().getAliasGenerator());
+    Optional<List<Condition>> opt = sqlSelectData.getConditions();
+    Assertions.assertTrue(opt.isPresent());
+    List<Condition> conditions = opt.get();
+    Assertions.assertEquals(1, conditions.size());
+    Condition condition = conditions.get(0);
+    Assertions.assertTrue(condition instanceof BinaryCondition);
+    BinaryCondition equalColumnExprCondition = (BinaryCondition) condition;
+    Assertions.assertEquals("department_id",
+        ((TableColumn) equalColumnExprCondition.getLeft()).getColumn().getName());
 
-        SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-        sqlStatementFactory.init();
-        SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(employeeEntity,
-                foreignKeyAttribute, columns, optional.get().getAliasGenerator());
-        Optional<List<Condition>> opt = sqlSelectData.getConditions();
-        Assertions.assertTrue(opt.isPresent());
-        List<Condition> conditions = opt.get();
-        Assertions.assertEquals(1, conditions.size());
-        Condition condition = conditions.get(0);
-        Assertions.assertTrue(condition instanceof BinaryCondition);
-        BinaryCondition equalColumnExprCondition = (BinaryCondition) condition;
-        Assertions.assertEquals("department_id",
-                ((TableColumn) equalColumnExprCondition.getLeft()).getColumn().getName());
+    String sql = sqlStatementGenerator.export(sqlSelectData);
+    Assertions.assertEquals(
+        "select employee0.id, employee0.salary, employee0.name, employee0.department_id from Employee AS employee0 where employee0.department_id = ?",
+        sql);
 
-        String sql = sqlStatementGenerator.export(sqlSelectData);
-        Assertions.assertEquals(
-                "select employee0.id, employee0.salary, employee0.name, employee0.department_id from Employee AS employee0 where employee0.department_id = ?",
-                sql);
+    emf.close();
+  }
 
-        emf.close();
+  @Test
+  public void generateSelectByJoinTable() throws Exception {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni",
+        PersistenceUnitProperties.getProperties());
+    final EntityManager em = emf.createEntityManager();
+
+    Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
+        .getEntityContext("onetomany_uni");
+    if (!optional.isPresent()) {
+      Assertions.fail("Meta entities not found");
     }
 
-    @Test
-    public void generateSelectByJoinTable() throws Exception {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni",
-                PersistenceUnitProperties.getProperties());
-        final EntityManager em = emf.createEntityManager();
+    DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
+        .getDbConfiguration("onetomany_uni");
+    Map<String, MetaEntity> map = optional.get().getEntities();
+    Store store = new Store();
+    store.setName("Upton Store");
 
-        Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("onetomany_uni");
-        if (!optional.isPresent())
-            Assertions.fail("Meta entities not found");
+    Item item1 = new Item();
+    item1.setName("Notepad");
+    item1.setModel("Free Ink");
 
-        DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("onetomany_uni");
-        Map<String, MetaEntity> map = optional.get().getEntities();
-        Store store = new Store();
-        store.setName("Upton Store");
+    Item item2 = new Item();
+    item2.setName("Pencil");
+    item2.setModel("Staedtler");
 
-        Item item1 = new Item();
-        item1.setName("Notepad");
-        item1.setModel("Free Ink");
+    store.setItems(Arrays.asList(item1, item2));
 
-        Item item2 = new Item();
-        item2.setName("Pencil");
-        item2.setModel("Staedtler");
+    final EntityTransaction tx = em.getTransaction();
+    tx.begin();
 
-        store.setItems(Arrays.asList(item1, item2));
+    em.persist(item1);
+    em.persist(store);
+    em.persist(item2);
 
-        final EntityTransaction tx = em.getTransaction();
-        tx.begin();
+    tx.commit();
 
-        em.persist(item1);
-        em.persist(store);
-        em.persist(item2);
+    MetaEntity storeEntity = map.get(Store.class.getName());
+    MetaEntity itemEntity = map.get(Item.class.getName());
+    Pk pk = storeEntity.getId();
 
-        tx.commit();
+    SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+    sqlStatementFactory.init();
+    RelationshipMetaAttribute relationshipAttribute = (RelationshipMetaAttribute) storeEntity.getAttribute(
+        "items");
+    RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship()
+        .getJoinTable();
+    ModelValueArray<JoinColumnAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(
+        pk,
+        store.getId(),
+        relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
+    List<JoinColumnAttribute> attributes = modelValueArray.getModels();
+    List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
+    SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
+        relationshipJoinTable,
+        attributes, optional.get().getAliasGenerator());
 
-        MetaEntity storeEntity = map.get(Store.class.getName());
-        MetaEntity itemEntity = map.get(Item.class.getName());
-        Pk pk = storeEntity.getId();
+    Optional<List<Condition>> opt = sqlSelectData.getConditions();
+    Assertions.assertTrue(opt.isPresent());
 
-        SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-        sqlStatementFactory.init();
-        MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
-        RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
-        ModelValueArray<JoinColumnAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk,
-                store.getId(), relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
-        List<JoinColumnAttribute> attributes = modelValueArray.getModels();
-        List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
-        SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
-                attributes, optional.get().getAliasGenerator());
+    String sql = sqlStatementGenerator.export(sqlSelectData);
+    Assertions.assertEquals(
+        "select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
+        sql);
 
-        Optional<List<Condition>> opt = sqlSelectData.getConditions();
-        Assertions.assertTrue(opt.isPresent());
+    tx.begin();
+    em.remove(store);
+    em.remove(item1);
+    em.remove(item2);
+    tx.commit();
 
-        String sql = sqlStatementGenerator.export(sqlSelectData);
-        Assertions.assertEquals(
-                "select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
-                sql);
+    em.close();
+    emf.close();
+  }
 
-        tx.begin();
-        em.remove(store);
-        em.remove(item1);
-        em.remove(item2);
-        tx.commit();
+  @Test
+  public void generateSelectStringByJoinTable() throws Exception {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni",
+        PersistenceUnitProperties.getProperties());
+    final EntityManager em = emf.createEntityManager();
 
-        em.close();
-        emf.close();
+    Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
+        .getEntityContext("onetomany_uni");
+    if (!optional.isPresent()) {
+      Assertions.fail("Meta entities not found");
     }
 
-    @Test
-    public void generateSelectStringByJoinTable() throws Exception {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("onetomany_uni",
-                PersistenceUnitProperties.getProperties());
-        final EntityManager em = emf.createEntityManager();
+    DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
+        .getDbConfiguration("onetomany_uni");
+    Map<String, MetaEntity> map = optional.get().getEntities();
 
-        Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("onetomany_uni");
-        if (!optional.isPresent())
-            Assertions.fail("Meta entities not found");
+    MetaEntity storeEntity = map.get(Store.class.getName());
+    MetaEntity itemEntity = map.get(Item.class.getName());
+    Pk pk = storeEntity.getId();
 
-        DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("onetomany_uni");
-        Map<String, MetaEntity> map = optional.get().getEntities();
+    SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+    sqlStatementFactory.init();
+    RelationshipMetaAttribute relationshipAttribute = (RelationshipMetaAttribute) storeEntity.getAttribute(
+        "items");
+    RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship()
+        .getJoinTable();
+    ModelValueArray<JoinColumnAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(
+        pk, 1L,
+        relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
+    List<JoinColumnAttribute> attributes = modelValueArray.getModels();
+    List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
+    SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
+        relationshipJoinTable,
+        attributes, optional.get().getAliasGenerator());
 
-        MetaEntity storeEntity = map.get(Store.class.getName());
-        MetaEntity itemEntity = map.get(Item.class.getName());
-        Pk pk = storeEntity.getId();
+    Optional<List<Condition>> opt = sqlSelectData.getConditions();
+    Assertions.assertTrue(opt.isPresent());
 
-        SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-        sqlStatementFactory.init();
-        MetaAttribute relationshipAttribute = storeEntity.getAttribute("items");
-        RelationshipJoinTable relationshipJoinTable = relationshipAttribute.getRelationship().getJoinTable();
-        ModelValueArray<JoinColumnAttribute> modelValueArray = sqlStatementFactory.expandJoinColumnAttributes(pk, 1L,
-                relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
-        List<JoinColumnAttribute> attributes = modelValueArray.getModels();
-        List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
-        SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity, relationshipJoinTable,
-                attributes, optional.get().getAliasGenerator());
+    String sql = sqlStatementGenerator.export(sqlSelectData);
+    Assertions.assertEquals(
+        "select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
+        sql);
 
-        Optional<List<Condition>> opt = sqlSelectData.getConditions();
-        Assertions.assertTrue(opt.isPresent());
+    em.close();
+    emf.close();
+  }
 
-        String sql = sqlStatementGenerator.export(sqlSelectData);
-        Assertions.assertEquals(
-                "select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
-                sql);
+  @Test
+  public void generateIsNullSelectByCriteria() throws Exception {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens",
+        PersistenceUnitProperties.getProperties());
+    final EntityManager em = emf.createEntityManager();
 
-        em.close();
-        emf.close();
+    Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
+        .getEntityContext("citizens");
+    if (!optional.isPresent()) {
+      Assertions.fail("Meta entities not found");
     }
 
-    @Test
-    public void generateIsNullSelectByCriteria() throws Exception {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("citizens",
-                PersistenceUnitProperties.getProperties());
-        final EntityManager em = emf.createEntityManager();
+    DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
+        .getDbConfiguration("citizens");
+    EntityTransaction tx = em.getTransaction();
+    tx.begin();
 
-        Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance().getEntityContext("citizens");
-        if (!optional.isPresent())
-            Assertions.fail("Meta entities not found");
+    CriteriaBuilder cb = em.getCriteriaBuilder();
+    CriteriaQuery<Address> cq = cb.createQuery(Address.class);
+    Root<Address> root = cq.from(Address.class);
 
-        DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration("citizens");
-        EntityTransaction tx = em.getTransaction();
-        tx.begin();
+    // postcode is null
+    Predicate isNull = cb.isNull(root.get("postcode"));
+    cq.where(isNull);
 
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Address> cq = cb.createQuery(Address.class);
-        Root<Address> root = cq.from(Address.class);
+    cq.select(root);
 
-        // postcode is null
-        Predicate isNull = cb.isNull(root.get("postcode"));
-        cq.where(isNull);
+    TypedQuery<Address> typedQuery = em.createQuery(cq);
 
-        cq.select(root);
+    tx.commit();
 
-        TypedQuery<Address> typedQuery = em.createQuery(cq);
+    SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
+    sqlStatementFactory.init();
+    StatementParameters statementParameters = sqlStatementFactory.select(typedQuery,
+        optional.get().getAliasGenerator());
+    SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+    Assertions.assertNotNull(sqlSelectData.getValues());
+    Optional<List<Condition>> opt = sqlSelectData.getConditions();
+    Assertions.assertTrue(opt.isPresent());
+    List<Condition> conditions = opt.get();
+    Assertions.assertEquals(1, conditions.size());
+    Condition condition = conditions.get(0);
+    Assertions.assertTrue(condition instanceof UnaryCondition);
+    Assertions.assertEquals(ConditionType.IS_NULL, condition.getConditionType());
+    UnaryCondition unaryCondition = (UnaryCondition) condition;
+    Assertions.assertNotNull(unaryCondition.getOperand());
 
-        tx.commit();
+    String sql = sqlStatementGenerator.export(sqlSelectData);
+    Assertions.assertEquals(
+        "select address0.id, address0.name, address0.postcode, address0.tt from Address AS address0 where address0.postcode is null",
+        sql);
 
-        SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
-        sqlStatementFactory.init();
-        StatementParameters statementParameters = sqlStatementFactory.select(typedQuery,
-                optional.get().getAliasGenerator());
-        SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
-        Assertions.assertNotNull(sqlSelectData.getValues());
-        Optional<List<Condition>> opt = sqlSelectData.getConditions();
-        Assertions.assertTrue(opt.isPresent());
-        List<Condition> conditions = opt.get();
-        Assertions.assertEquals(1, conditions.size());
-        Condition condition = conditions.get(0);
-        Assertions.assertTrue(condition instanceof UnaryCondition);
-        Assertions.assertEquals(ConditionType.IS_NULL, condition.getConditionType());
-        UnaryCondition unaryCondition = (UnaryCondition) condition;
-        Assertions.assertNotNull(unaryCondition.getOperand());
-
-        String sql = sqlStatementGenerator.export(sqlSelectData);
-        Assertions.assertEquals(
-                "select address0.id, address0.name, address0.postcode, address0.tt from Address AS address0 where address0.postcode is null",
-                sql);
-
-        em.close();
-        emf.close();
-    }
+    em.close();
+    emf.close();
+  }
 }

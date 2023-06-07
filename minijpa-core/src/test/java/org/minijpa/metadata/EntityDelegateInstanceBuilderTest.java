@@ -30,6 +30,7 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniEntityManager;
 import org.minijpa.jpa.PersistenceUnitProperties;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.JobEmployee;
 import org.minijpa.jpa.model.JobInfo;
 import org.minijpa.jpa.model.MetaAttribute;
@@ -74,15 +75,15 @@ public class EntityDelegateInstanceBuilderTest {
 		e1.setName("Abraham");
 		e1.setJobInfo(jobInfo);
 
-		ModelValueArray<MetaAttribute> modelValueArray = MetaEntityHelper.getModifications(metaEntityPM,
+		ModelValueArray<AbstractMetaAttribute> modelValueArray = MetaEntityHelper.getModifications(metaEntityPM,
 				programManager);
 		Assertions.assertTrue(modelValueArray.isEmpty());
 
 		modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
 		Assertions.assertEquals(3, modelValueArray.size());
-		MetaAttribute a0 = modelValueArray.getModel(0);
-		MetaAttribute a1 = modelValueArray.getModel(1);
-		MetaAttribute a2 = modelValueArray.getModel(2);
+		AbstractMetaAttribute a0 = modelValueArray.getModel(0);
+		AbstractMetaAttribute a1 = modelValueArray.getModel(1);
+		AbstractMetaAttribute a2 = modelValueArray.getModel(2);
 
 		MetaAttributeFolder metaAttributeFolder = new MetaAttributeFolder(a0, a1, a2);
 		Assertions.assertTrue(metaAttributeFolder.findByName("name").isPresent());

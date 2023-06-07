@@ -15,6 +15,7 @@
  */
 package org.minijpa.metadata;
 
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
@@ -27,7 +28,7 @@ public class OneToManyOwningJoinColumnMappingFactory extends OwningJoinColumnMap
   @Override
   public String createDefaultJoinColumnName(MetaEntity owningEntity,
       RelationshipMetaAttribute owningAttribute,
-      MetaAttribute foreignKeyAttribute) {
+      AbstractMetaAttribute foreignKeyAttribute) {
     return owningEntity.getName() + "_" + foreignKeyAttribute.getColumnName();
   }
 

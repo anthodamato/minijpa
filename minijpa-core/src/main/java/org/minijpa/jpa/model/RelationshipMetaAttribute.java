@@ -1,14 +1,17 @@
 package org.minijpa.jpa.model;
 
+import org.minijpa.jpa.model.relationship.Relationship;
+
 import java.lang.reflect.Method;
 import java.util.Optional;
-import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jpa.model.relationship.Relationship;
 
 public class RelationshipMetaAttribute extends AbstractMetaAttribute {
 
   private Relationship relationship;
   private boolean collection = false;
+  /**
+   * If an attribute type is a collection this is the chosen implementation.
+   */
   private Class<?> collectionImplementationClass;
   private Optional<Method> joinColumnReadMethod = Optional.empty();
   private Optional<Method> joinColumnWriteMethod = Optional.empty();

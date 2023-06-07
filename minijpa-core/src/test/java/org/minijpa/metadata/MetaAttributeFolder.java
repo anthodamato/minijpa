@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 
 /**
@@ -27,9 +28,9 @@ import org.minijpa.jpa.model.MetaAttribute;
  */
 public class MetaAttributeFolder {
 
-	private final List<MetaAttribute> attributes;
+	private final List<AbstractMetaAttribute> attributes;
 
-	public MetaAttributeFolder(MetaAttribute... attributes) {
+	public MetaAttributeFolder(AbstractMetaAttribute... attributes) {
 		this.attributes = Arrays.asList(attributes);
 	}
 
@@ -37,7 +38,7 @@ public class MetaAttributeFolder {
 		return attributes.size();
 	}
 
-	public Optional<MetaAttribute> findByName(String name) {
+	public Optional<AbstractMetaAttribute> findByName(String name) {
 		return attributes.stream().filter(a -> a.getName().equals(name)).findFirst();
 	}
 }

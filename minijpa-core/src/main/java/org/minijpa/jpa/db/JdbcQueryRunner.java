@@ -83,16 +83,18 @@ public class JdbcQueryRunner {
    *
    * @author adamato
    */
-  public Object selectByForeignKey(MetaEntity entity, MetaAttribute foreignKeyAttribute,
+  public Object selectByForeignKey(
+      MetaEntity entity,
+      RelationshipMetaAttribute foreignKeyAttribute,
       Object foreignKey,
-      LockType lockType, EntityHandler entityLoader) throws Exception {
+      LockType lockType,
+      EntityHandler entityLoader) throws Exception {
     List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute,
         foreignKey);
     List<String> columns = parameters.stream().map(QueryParameter::getColumnName)
         .collect(Collectors.toList());
     SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
-        .generateSelectByForeignKey(entity,
-            foreignKeyAttribute, columns, aliasGenerator);
+        .generateSelectByForeignKey(entity, columns, aliasGenerator);
     String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
     Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
         CollectionUtils.findCollectionImplementationClass(List.class));
