@@ -430,7 +430,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
               + relationshipAttribute.getRelationship().isOwner());
       if (!relationshipAttribute.getRelationship().isOwner()
           && relationshipAttribute.getRelationship().toOne()) {
-        LOG.debug("persistEarlyDeleteEntityInstance: 1");
         Object instance = MetaEntityHelper.getAttributeValue(entityInstance, relationshipAttribute);
         LOG.debug("persistEarlyDeleteEntityInstance: instance={}", instance);
         if (instance == null) {
