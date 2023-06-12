@@ -16,14 +16,52 @@
 package org.minijpa.jpa.db;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public enum EntityStatus {
-    NEW, PERSIST_NOT_FLUSHED,
+    /**
+     * This status is set when the entity instance is created.
+     */
+    NEW,
+    /**
+     * The EntityManager.persist method has been called,
+     * the entity instance has been added to the persistence context but the entity is not flushed yet.
+     */
+    PERSIST_NOT_FLUSHED,
+    /**
+     * The entity instance is flushed.
+     */
     FLUSHED,
-    PARTIALLY_FLUSHED, // in this case some data are missing, for example the join columns
-    DETACHED, FLUSHED_LOADED_FROM_DB,
-    REMOVED_NOT_FLUSHED, REMOVED, EARLY_REMOVE,
+    /**
+     * In this case some data are missing, for example the join columns
+     */
+    PARTIALLY_FLUSHED,
+    /**
+     * The entity is detached.
+     */
+    DETACHED,
+    /**
+     * The entity already exists on db,
+     * it's added in the persistence context using, for example, the EntityManager.find method
+     */
+    FLUSHED_LOADED_FROM_DB,
+    /**
+     * The entity instance has been removed from persistence context using the EntityManager.remove method
+     * but it's not flushed yet.
+     */
+    REMOVED_NOT_FLUSHED,
+    /**
+     * The entity instance has been removed from persistence context and from db.
+     */
+    REMOVED,
+    /**
+     * This status is used for entities related to join columns.
+     * When an entity instance is removed from db the join column entity must be removed first.
+     */
+    EARLY_REMOVE,
+    /**
+     * This status is used for entities related to join columns.
+     * When an entity instance is inserted into db the join column entity must be inserted first.
+     */
     EARLY_INSERT;
 }
