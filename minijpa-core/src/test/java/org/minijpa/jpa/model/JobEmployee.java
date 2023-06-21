@@ -16,27 +16,37 @@ import javax.persistence.SqlResultSetMapping;
 import javax.persistence.Table;
 
 /**
- *
  * @author adamato
  */
 @SqlResultSetMapping(name = "JobEmployeeResult", entities = {
-    @EntityResult(entityClass = JobEmployee.class, fields = {
-	@FieldResult(name = "id", column = "e_id"),
-	@FieldResult(name = "name", column = "e_name"),
-	@FieldResult(name = "jobInfo.jobDescription", column = "jd")
-    }),
-    @EntityResult(entityClass = ProgramManager.class, fields = {
-	@FieldResult(name = "id", column = "p_id"),
-	@FieldResult(name = "name", column = "p_name")
-    })
+        @EntityResult(entityClass = JobEmployee.class, fields = {
+                @FieldResult(name = "id", column = "e_id"),
+                @FieldResult(name = "name", column = "e_name"),
+                @FieldResult(name = "jobInfo.jobDescription", column = "jd")
+        }),
+        @EntityResult(entityClass = ProgramManager.class, fields = {
+                @FieldResult(name = "id", column = "p_id"),
+                @FieldResult(name = "name", column = "p_name")
+        })
 })
 @SqlResultSetMapping(name = "JobEmployeeResultConstructor", classes = {
-    @ConstructorResult(targetClass = JobEmployeeDetails.class, columns = {
-	@ColumnResult(name = "e_id"),
-	@ColumnResult(name = "e_name"),
-	@ColumnResult(name = "p_name")
-    })
+        @ConstructorResult(targetClass = JobEmployeeDetails.class, columns = {
+                @ColumnResult(name = "e_id"),
+                @ColumnResult(name = "e_name"),
+                @ColumnResult(name = "p_name")
+        })
 })
+@SqlResultSetMapping(name = "JobEmployeeResultConstructorAndScalars", classes = {
+        @ConstructorResult(targetClass = JobEmployeeDetails.class, columns = {
+                @ColumnResult(name = "e_id"),
+                @ColumnResult(name = "e_name")
+        })
+},
+        columns = {
+                @ColumnResult(name = "p_name"),
+                @ColumnResult(name = "start_date", type = java.util.Date.class)
+        }
+)
 @Entity
 @Table(name = "job_employee")
 public class JobEmployee {
@@ -50,27 +60,27 @@ public class JobEmployee {
     JobInfo jobInfo;
 
     public int getId() {
-	return id;
+        return id;
     }
 
     public void setId(int id) {
-	this.id = id;
+        this.id = id;
     }
 
     public JobInfo getJobInfo() {
-	return jobInfo;
+        return jobInfo;
     }
 
     public void setJobInfo(JobInfo jobInfo) {
-	this.jobInfo = jobInfo;
+        this.jobInfo = jobInfo;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public void setName(String name) {
-	this.name = name;
+        this.name = name;
     }
 
 }

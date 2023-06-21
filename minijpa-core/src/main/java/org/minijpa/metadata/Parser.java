@@ -65,7 +65,7 @@ import org.minijpa.jpa.db.LockType;
 import org.minijpa.jpa.db.PkGeneration;
 import org.minijpa.jpa.db.PkGenerationType;
 import org.minijpa.jpa.db.PkStrategy;
-import org.minijpa.jpa.db.QueryResultMapping;
+import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.BasicAttributePk;
 import org.minijpa.jpa.model.EmbeddedPk;

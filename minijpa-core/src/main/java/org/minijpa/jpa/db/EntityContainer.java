@@ -15,8 +15,11 @@
  */
 package org.minijpa.jpa.db;
 
+import org.minijpa.jpa.model.MetaEntity;
+
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface EntityContainer {
 
@@ -40,7 +43,6 @@ public interface EntityContainer {
 
     public boolean isManaged(Object entityInstance) throws Exception;
 
-//    public boolean isManaged(List<Object> entityInstanceList) throws Exception;
     public boolean isManaged(Collection<?> entityInstanceList) throws Exception;
 
     public void close();
@@ -50,4 +52,6 @@ public interface EntityContainer {
     public void detachAll() throws Exception;
 
     public void resetLockType();
+
+    public Optional<MetaEntity> isManagedClass(Class<?> c);
 }

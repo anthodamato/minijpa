@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jpa.db.querymapping;
 
 import java.util.List;
 
@@ -21,21 +21,37 @@ import java.util.List;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class ConstructorMapping implements ResultMapping {
+public class QueryResultMapping {
 
-    private Class<?> targetClass;
+    private String name;
+    private final List<EntityMapping> entityMappings;
+    private final List<ConstructorMapping> constructorMappings;
     private final List<SingleColumnMapping> singleColumnMappings;
 
-    public ConstructorMapping(Class<?> targetClass, List<SingleColumnMapping> singleColumnMappings) {
+    public QueryResultMapping(String name, List<EntityMapping> entityMappings,
+            List<ConstructorMapping> constructorMappings, List<SingleColumnMapping> singleColumnMappings) {
+        this.entityMappings = entityMappings;
+        this.constructorMappings = constructorMappings;
         this.singleColumnMappings = singleColumnMappings;
     }
 
-    public Class<?> getTargetClass() {
-        return targetClass;
+    public String getName() {
+        return name;
+    }
+
+    public List<EntityMapping> getEntityMappings() {
+        return entityMappings;
+    }
+
+    public List<ConstructorMapping> getConstructorMappings() {
+        return constructorMappings;
     }
 
     public List<SingleColumnMapping> getSingleColumnMappings() {
         return singleColumnMappings;
     }
 
+    public int size() {
+        return entityMappings.size() + constructorMappings.size() + singleColumnMappings.size();
+    }
 }

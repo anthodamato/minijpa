@@ -23,7 +23,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
-import org.minijpa.jpa.db.QueryResultMapping;
+import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.metadata.EntityDelegate;
 import org.minijpa.metadata.Parser;

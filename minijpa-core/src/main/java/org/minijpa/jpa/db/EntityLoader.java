@@ -35,18 +35,27 @@ public interface EntityLoader {
    * @return
    * @throws Exception
    */
-  public Object buildNoQueries(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity)
-      throws Exception;
+//  public Object buildNoQueries(
+//          ModelValueArray<FetchParameter> modelValueArray,
+//          MetaEntity entity,
+//          LockType lockType)
+//      throws Exception;
 
-  /**
-   * Build the entity instance. Relationship attributes are not loaded. Useful in case of Fetch
-   * Join.
-   *
-   * @param modelValueArray
-   * @param entity
-   * @return
-   * @throws Exception
-   */
+//  public Object buildEntityByValues(
+//          ModelValueArray<FetchParameter> modelValueArray,
+//          MetaEntity entity,
+//          LockType lockType,
+//          EntityBuilder entityBuilder) throws Exception;
+
+    /**
+     * Build the entity instance. Relationship attributes are not loaded. Useful in case of Fetch
+     * Join.
+     *
+     * @param modelValueArray
+     * @param entity
+     * @return
+     * @throws Exception
+     */
   public Object buildEntityNoRelationshipAttributeLoading(
       ModelValueArray<FetchParameter> modelValueArray,
       MetaEntity entity)

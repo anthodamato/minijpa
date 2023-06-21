@@ -21,18 +21,18 @@ public class PersistenceParserTest {
 
     @Test
     public void parse() throws ParserConfigurationException, SAXException, URISyntaxException, IOException {
-	File file = Paths.get(getClass().getResource("/META-INF/persistence.xml").toURI()).toFile();
-	SAXParserFactory spf = SAXParserFactory.newInstance();
-	SAXParser saxParser = spf.newSAXParser();
+        File file = Paths.get(getClass().getResource("/META-INF/persistence.xml").toURI()).toFile();
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        SAXParser saxParser = spf.newSAXParser();
 
-	XMLReader xmlReader = saxParser.getXMLReader();
-	PersistenceParser persistenceParser = new PersistenceParser();
-	xmlReader.setContentHandler(persistenceParser);
-	xmlReader.parse(file.getAbsolutePath());
-	PersistenceMetaData persistenceMetaData = persistenceParser.getPersistenceMetaData();
-	Assertions.assertNotNull(persistenceMetaData);
-	PersistenceUnitInfo persistenceUnitMetaData = persistenceMetaData.getPersistenceUnitMetaData("citizens");
-	Assertions.assertNotNull(persistenceUnitMetaData);
-	Assertions.assertTrue(persistenceUnitMetaData.getManagedClassNames().size() > 0);
+        XMLReader xmlReader = saxParser.getXMLReader();
+        PersistenceParser persistenceParser = new PersistenceParser();
+        xmlReader.setContentHandler(persistenceParser);
+        xmlReader.parse(file.getAbsolutePath());
+        PersistenceMetaData persistenceMetaData = persistenceParser.getPersistenceMetaData();
+        Assertions.assertNotNull(persistenceMetaData);
+        PersistenceUnitInfo persistenceUnitMetaData = persistenceMetaData.getPersistenceUnitMetaData("citizens");
+        Assertions.assertNotNull(persistenceUnitMetaData);
+        Assertions.assertTrue(persistenceUnitMetaData.getManagedClassNames().size() > 0);
     }
 }

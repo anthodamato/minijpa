@@ -88,7 +88,7 @@ public class JpaSqlStatementGeneratorTest {
                 "create table program_manager (id integer not null, name varchar(255) not null, primary key (id))", d0);
         String d1 = ddlStatements.get(1);
         Assertions.assertEquals(
-                "create table job_employee (id integer not null, name varchar(255), jd varchar(255), pm_id integer, primary key (id), foreign key (pm_id) references program_manager)",
+                "create table job_employee (id integer not null, name varchar(255), jd varchar(255), start_date date, pm_id integer, primary key (id), foreign key (pm_id) references program_manager)",
                 d1);
     }
 
