@@ -13,12 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jpa.db.querymapping;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public interface ResultMapping {
-    
+public class AttributeNameMapping {
+
+	private final String name;
+	private final String alias;
+
+	public AttributeNameMapping(String name, String alias) {
+		this.name = name;
+		this.alias = alias;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getAlias() {
+		return alias;
+	}
+
 }

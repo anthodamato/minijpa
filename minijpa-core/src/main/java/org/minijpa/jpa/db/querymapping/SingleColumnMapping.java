@@ -13,28 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jpa.db.querymapping;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class SingleColumnMapping implements ResultMapping {
+public class SingleColumnMapping {
 
-    private String name;
-    private Class<?> type;
+    private final String name;
+    private final Class<?> type;
 
     public SingleColumnMapping(String name, Class<?> type) {
-	this.name = name;
-	this.type = type;
+        this.name = name;
+        this.type = type;
     }
 
     public String getName() {
-	return name;
+        return name;
     }
 
     public Class<?> getType() {
-	return type;
+        return type;
     }
 
 }

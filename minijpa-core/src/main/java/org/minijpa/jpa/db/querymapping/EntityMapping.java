@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.minijpa.jpa.db;
+package org.minijpa.jpa.db.querymapping;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +26,7 @@ import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class EntityMapping implements ResultMapping {
+public class EntityMapping {
 
 	private final MetaEntity metaEntity;
 	private final List<AttributeNameMapping> attributeNameMappings;

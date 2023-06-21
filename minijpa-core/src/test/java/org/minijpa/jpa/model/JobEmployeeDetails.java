@@ -24,6 +24,11 @@ public class JobEmployeeDetails {
 		this.managerName = managerName;
 	}
 
+	public JobEmployeeDetails(int id, String employeeName) {
+		this.id = id;
+		this.employeeName = employeeName;
+	}
+
 	public int getId() {
 		return id;
 	}
