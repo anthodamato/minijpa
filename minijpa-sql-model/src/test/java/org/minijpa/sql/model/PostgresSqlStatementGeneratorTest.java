@@ -72,7 +72,7 @@ public class PostgresSqlStatementGeneratorTest {
         BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
         SqlDelete sqlDelete = new SqlDelete(fromTable, Optional.of(binaryCondition));
-        Assertions.assertEquals("delete from citizen AS c where c.first_name = 'Sam'",
+        Assertions.assertEquals("delete from citizen where first_name = 'Sam'",
                 sqlStatementGenerator.export(sqlDelete));
     }
 

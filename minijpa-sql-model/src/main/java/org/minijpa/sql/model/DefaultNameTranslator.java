@@ -22,24 +22,16 @@ public class DefaultNameTranslator implements NameTranslator {
     @Override
     public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias) {
         if (tableAlias.isPresent()) {
-            if (columnAlias.isPresent())
-                return tableAlias.get() + "." + columnName + " AS " + columnAlias.get();
-            else
-                return tableAlias.get() + "." + columnName;
+            return columnAlias.map(s -> tableAlias.get() + "." + columnName + " AS " + s)
+                    .orElseGet(() -> tableAlias.get() + "." + columnName);
         }
 
-        if (columnAlias.isPresent())
-            return columnName + " AS " + columnAlias.get();
-
-        return columnName;
+        return columnAlias.map(s -> columnName + " AS " + s).orElse(columnName);
     }
 
     @Override
     public String toTableName(Optional<String> tableAlias, String tableName) {
-        if (tableAlias.isPresent())
-            return tableName + " AS " + tableAlias.get();
-
-        return tableName;
+        return tableAlias.map(s -> tableName + " AS " + s).orElse(tableName);
     }
 
 }

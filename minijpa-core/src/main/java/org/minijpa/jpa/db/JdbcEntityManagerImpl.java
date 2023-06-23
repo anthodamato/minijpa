@@ -15,11 +15,9 @@
  */
 package org.minijpa.jpa.db;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +35,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import org.minijpa.jdbc.*;
 import org.minijpa.jdbc.JdbcRunner.JdbcNativeRecordBuilder;
 import org.minijpa.jdbc.db.SqlSelectData;
-import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniNativeQuery;
@@ -45,16 +42,12 @@ import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.TupleImpl;
 import org.minijpa.jpa.UpdateQuery;
-import org.minijpa.jpa.db.querymapping.ConstructorMapping;
 import org.minijpa.jpa.db.querymapping.EntityMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
-import org.minijpa.jpa.db.querymapping.SingleColumnMapping;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.Cascade;
-import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.sql.model.SqlDelete;
@@ -71,12 +64,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     protected ConnectionHolder connectionHolder;
     private final EntityHandler entityHandler;
     private final JpqlModule jpqlModule;
-    private final JdbcFPRecordBuilder jdbcFPRecordBuilder = new JdbcFPRecordBuilder();
+    private final JdbcFetchParameterRecordBuilder jdbcFPRecordBuilder = new JdbcFetchParameterRecordBuilder();
     private final JdbcRunner.JdbcRecordBuilderValue jdbcJpqlRecordBuilder = new JdbcRunner.JdbcRecordBuilderValue();
     private final JdbcTupleRecordBuilder jdbcTupleRecordBuilder = new JdbcTupleRecordBuilder();
     private final JdbcNativeRecordBuilder nativeRecordBuilder = new JdbcNativeRecordBuilder();
     private final JdbcQRMRecordBuilder qrmRecordBuilder = new JdbcQRMRecordBuilder();
-    private final JdbcFJRecordBuilder jdbcFJRecordBuilder = new JdbcFJRecordBuilder();
+    private final JdbcFetchJoinRecordBuilder jdbcFJRecordBuilder = new JdbcFetchJoinRecordBuilder();
 
     public JdbcEntityManagerImpl(DbConfiguration dbConfiguration,
                                  PersistenceUnitContext persistenceUnitContext,
@@ -752,166 +745,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
         return dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(),
                 statementParameters.getParameters());
-    }
-
-    private static class JdbcTupleRecordBuilder implements JdbcRecordBuilder {
-
-        private List<Tuple> objects;
-        private SqlSelectData sqlSelectData;
-        private CompoundSelection<?> compoundSelection;
-
-        public void setObjects(List<Tuple> objects) {
-            this.objects = objects;
-        }
-
-        public void setSqlSelectData(SqlSelectData sqlSelectData) {
-            this.sqlSelectData = sqlSelectData;
-        }
-
-        public void setCompoundSelection(CompoundSelection<?> compoundSelection) {
-            this.compoundSelection = compoundSelection;
-        }
-
-        protected Object[] createRecord(int nc, List<FetchParameter> fetchParameters, ResultSet rs,
-                                        ResultSetMetaData metaData) throws Exception {
-            Object[] values = new Object[nc];
-            for (int i = 0; i < nc; ++i) {
-                int columnType = metaData.getColumnType(i + 1);
-                Object v = JdbcRunner.getValue(rs, i + 1, columnType);
-                values[i] = v;
-            }
-
-            return values;
-        }
-
-        @Override
-        public void collectRecords(ResultSet rs) throws Exception {
-            int nc = sqlSelectData.getValues().size();
-            List<FetchParameter> fetchParameters = sqlSelectData.getFetchParameters();
-            ResultSetMetaData metaData = rs.getMetaData();
-            while (rs.next()) {
-                Object[] values = createRecord(nc, fetchParameters, rs, metaData);
-                objects.add(new TupleImpl(values, compoundSelection));
-            }
-
-        }
-    }
-
-    public static class JdbcFPRecordBuilder implements JdbcRecordBuilder {
-
-        private List<FetchParameter> fetchParameters;
-        private Collection<Object> collectionResult;
-        private MetaEntity metaEntity;
-        private EntityLoader entityLoader;
-
-        public void setFetchParameters(List<FetchParameter> fetchParameters) {
-            this.fetchParameters = fetchParameters;
-        }
-
-        public void setCollectionResult(Collection<Object> collectionResult) {
-            this.collectionResult = collectionResult;
-        }
-
-        public void setMetaEntity(MetaEntity metaEntity) {
-            this.metaEntity = metaEntity;
-        }
-
-        public void setEntityLoader(EntityLoader entityLoader) {
-            this.entityLoader = entityLoader;
-        }
-
-        @Override
-        public void collectRecords(ResultSet rs) throws Exception {
-            ResultSetMetaData metaData = rs.getMetaData();
-            while (rs.next()) {
-                Optional<ModelValueArray<FetchParameter>> optional = JdbcRunner
-                        .createModelValueArrayFromResultSetAM(fetchParameters, rs, metaData);
-                if (optional.isPresent()) {
-                    Object instance = entityLoader.build(optional.get(), metaEntity);
-                    collectionResult.add(instance);
-                }
-            }
-        }
-    }
-
-    public static class JdbcFJRecordBuilder implements JdbcRecordBuilder {
-
-        private List<FetchParameter> fetchParameters;
-        private Collection<Object> collectionResult;
-        private MetaEntity metaEntity;
-        private EntityLoader entityLoader;
-        private List<MetaEntity> fetchJoinMetaEntities;
-        private List<RelationshipMetaAttribute> fetchJoinMetaAttributes;
-        private boolean distinct = false;
-
-        public void setFetchParameters(List<FetchParameter> fetchParameters) {
-            this.fetchParameters = fetchParameters;
-        }
-
-        public void setCollectionResult(Collection<Object> collectionResult) {
-            this.collectionResult = collectionResult;
-        }
-
-        public void setMetaEntity(MetaEntity metaEntity) {
-            this.metaEntity = metaEntity;
-        }
-
-        public void setEntityLoader(EntityLoader entityLoader) {
-            this.entityLoader = entityLoader;
-        }
-
-        public void setFetchJoinMetaEntities(
-                List<MetaEntity> fetchJoinMetaEntities) {
-            this.fetchJoinMetaEntities = fetchJoinMetaEntities;
-        }
-
-        public void setFetchJoinMetaAttributes(
-                List<RelationshipMetaAttribute> fetchJoinMetaAttributes) {
-            this.fetchJoinMetaAttributes = fetchJoinMetaAttributes;
-        }
-
-        public void setDistinct(boolean distinct) {
-            this.distinct = distinct;
-        }
-
-        @Override
-        public void collectRecords(ResultSet rs) throws Exception {
-            ResultSetMetaData metaData = rs.getMetaData();
-            while (rs.next()) {
-                Optional<ModelValueArray<FetchParameter>> optional = JdbcRunner
-                        .createModelValueArrayFromResultSetAM(fetchParameters, rs, metaData);
-                log.debug("collectRecords: optional={}", optional);
-                if (optional.isPresent()) {
-                    Object instance = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
-                            metaEntity);
-                    if (distinct) {
-                        if (!collectionResult.contains(instance)) {
-                            collectionResult.add(instance);
-                            // set lazy loaded flag for those attributes
-                            for (int i = 0; i < fetchJoinMetaAttributes.size(); ++i) {
-                                MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttributes.get(i),
-                                        instance, true);
-                            }
-                        }
-                    } else {
-                        collectionResult.add(instance);
-                        // set lazy loaded flag for those attributes
-                        for (int i = 0; i < fetchJoinMetaAttributes.size(); ++i) {
-                            MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttributes.get(i),
-                                    instance, true);
-                        }
-                    }
-
-                    // set relationship attribute values
-                    for (int i = 0; i < fetchJoinMetaEntities.size(); ++i) {
-                        Object value = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
-                                fetchJoinMetaEntities.get(i));
-                        MetaEntityHelper.addElementToCollectionAttribute(instance, metaEntity,
-                                fetchJoinMetaAttributes.get(i), value);
-                    }
-                }
-            }
-        }
     }
 
 }
