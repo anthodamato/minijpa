@@ -750,6 +750,86 @@ public class OneToManyUniTest {
     em.close();
   }
 
+  @Test
+  public void jpqlLeftJoin() throws Exception {
+    final EntityManager em = emf.createEntityManager();
+    Store store = new Store();
+    store.setName("Upton Store");
+
+    Item item1 = new Item();
+    item1.setName("Notepad");
+    item1.setModel("Free Inch");
+
+    Item item2 = new Item();
+    item2.setName("Pencil");
+    item2.setModel("Staedtler");
+
+    Item item3 = new Item();
+    item3.setName("Pen");
+    item3.setModel("Castles");
+
+    Item item4 = new Item();
+    item4.setName("Notepad");
+    item4.setModel("Free Inch");
+
+    Item item5 = new Item();
+    item5.setName("Pencil");
+    item5.setModel("Staedtler");
+
+    store.setItems(Arrays.asList(item1, item2, item3));
+
+    Store store2 = new Store();
+    store2.setName("Upton Store 2nd");
+    store2.setItems(Arrays.asList(item4, item5));
+
+    Store store3 = new Store();
+    store3.setName("Upton Store 3rd");
+
+    final EntityTransaction tx = em.getTransaction();
+    tx.begin();
+
+    em.persist(item1);
+    em.persist(store);
+    em.persist(store2);
+    em.persist(store3);
+    em.persist(item2);
+    em.persist(item3);
+    em.persist(item4);
+    em.persist(item5);
+
+    tx.commit();
+
+    Assertions.assertFalse(store.getItems().isEmpty());
+
+    em.detach(store);
+    em.detach(store2);
+    em.detach(store3);
+
+    tx.begin();
+    Query q = em.createQuery("select distinct s from Store s left outer join s.items i");
+    List<Store> stores = q.getResultList();
+    tx.commit();
+
+    Assertions.assertFalse(stores.isEmpty());
+    Assertions.assertEquals(3, stores.size());
+    Store s = stores.get(0);
+    Assertions.assertEquals("Upton Store", s.getName());
+    Assertions.assertFalse(s == store);
+    Assertions.assertEquals("Upton Store 2nd", stores.get(1).getName());
+    Assertions.assertEquals("Upton Store 3rd", stores.get(2).getName());
+
+    Collection<Item> items = s.getItems();
+    Assertions.assertEquals(3, items.size());
+
+    em.detach(store);
+    tx.begin();
+    removeStore(store.getId(), em);
+    removeStore(store2.getId(), em);
+    removeStore(store3.getId(), em);
+    tx.commit();
+
+    em.close();
+  }
   private void removeStore(long id, EntityManager em) {
     Store sr = em.find(Store.class, id);
     Collection<Item> items = sr.getItems();

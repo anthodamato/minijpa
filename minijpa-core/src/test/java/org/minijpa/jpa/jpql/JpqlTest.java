@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class JpqlTest {
@@ -54,20 +53,15 @@ public class JpqlTest {
             JpqlResult jpqlResult = jpqlModule.parse(query);
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
-                        "select distinct simple_order0.id from simple_order simple_order0 INNER JOIN simple_order_line_item simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id where line_item0.shipped = 0",
+                        "select distinct simple_order0.id, simple_order0.created_at from simple_order simple_order0 INNER JOIN simple_order_line_item simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id where line_item0.shipped = 0",
                         jpqlResult.getSql());
             else
                 Assertions.assertEquals(
-                        "select distinct simple_order0.id from simple_order AS simple_order0 INNER JOIN simple_order_line_item AS simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item AS line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id where line_item0.shipped = FALSE",
+                        "select distinct simple_order0.id, simple_order0.created_at from simple_order AS simple_order0 INNER JOIN simple_order_line_item AS simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item AS line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id where line_item0.shipped = FALSE",
                         jpqlResult.getSql());
-        } catch (ParseException ex) {
+        } catch (ParseException | Error ex) {
             LOG.debug(ex.getMessage());
             Throwable t = ex.getCause();
-            LOG.debug("t=" + t);
-            Assertions.fail();
-        } catch (Error error) {
-            LOG.debug(error.getMessage());
-            Throwable t = error.getCause();
             LOG.debug("t=" + t);
             Assertions.fail();
         }
@@ -94,11 +88,11 @@ public class JpqlTest {
             JpqlResult jpqlResult = jpqlModule.parse(query);
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
-                        "select distinct simple_order0.id from simple_order simple_order0 INNER JOIN simple_order_line_item simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id INNER JOIN simple_product simple_product0 ON line_item0.product_id = simple_product0.id where simple_product0.productType = 'office_supplies'",
+                        "select distinct simple_order0.id, simple_order0.created_at from simple_order simple_order0 INNER JOIN simple_order_line_item simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id INNER JOIN simple_product simple_product0 ON line_item0.product_id = simple_product0.id where simple_product0.productType = 'office_supplies'",
                         jpqlResult.getSql());
             else
                 Assertions.assertEquals(
-                        "select distinct simple_order0.id from simple_order AS simple_order0 INNER JOIN simple_order_line_item AS simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item AS line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id INNER JOIN simple_product AS simple_product0 ON line_item0.product_id = simple_product0.id where simple_product0.productType = 'office_supplies'",
+                        "select distinct simple_order0.id, simple_order0.created_at from simple_order AS simple_order0 INNER JOIN simple_order_line_item AS simple_order_line_item0 ON simple_order0.id = simple_order_line_item0.SimpleOrder_id INNER JOIN line_item AS line_item0 ON simple_order_line_item0.lineItems_id = line_item0.id INNER JOIN simple_product AS simple_product0 ON line_item0.product_id = simple_product0.id where simple_product0.productType = 'office_supplies'",
                         jpqlResult.getSql());
         } catch (ParseException ex) {
             LOG.debug(ex.getMessage());
