@@ -3,9 +3,9 @@ options {
   MULTI=true;
   VISITOR=true;
   NODE_DEFAULT_VOID=true;
-//  DEBUG_PARSER=true;
-//  DEBUG_LOOKAHEAD=true;
-//  DEBUG_TOKEN_MANAGER=true;
+  DEBUG_PARSER=true;
+  DEBUG_LOOKAHEAD=true;
+  DEBUG_TOKEN_MANAGER=true;
 }
 
 PARSER_BEGIN(JpqlParser)
@@ -550,7 +550,7 @@ void join_association_path_expression() #JoinAssociationPathExpression :
 }
 
 
-//  join ::= join_spec join_association_path_expression [AS] identification_variable [join_condition]
+// join ::= join_spec join_association_path_expression [AS] identification_variable [join_condition]
 // TODO: to be completed
 void join() #Join :
 {
@@ -571,9 +571,10 @@ void join() #Join :
 }
 
 
-//    fetch_join ::= join_spec FETCH join_association_path_expression
+// fetch_join ::= join_spec FETCH join_association_path_expression [AS] identification_variable
 void fetch_join() #FetchJoin :
 {
+  Token t;
   JoinType jt;
 }
 {
@@ -583,6 +584,11 @@ void fetch_join() #FetchJoin :
      }
   <FETCH>
   join_association_path_expression()
+  [<AS>]
+  t=<NAME>
+    {
+      jjtThis.setIdentificationVariable(t.image);
+    }
 }
 
 
@@ -630,7 +636,7 @@ void identification_variable_declaration() #IdentificationVariableDeclaration :
 {
    range_variable_declaration()
    (
-    LOOKAHEAD(2)
+    LOOKAHEAD(3)
     join()
     |
     fetch_join()
@@ -904,17 +910,17 @@ void trim_function() #TrimFunction :
    [
     <LEADING>
     {
-      jjtThis.setTrimType(org.minijpa.jdbc.model.function.TrimType.LEADING);
+      jjtThis.setTrimType(org.minijpa.sql.model.function.TrimType.LEADING);
     }
     |
     <TRAILING>
     {
-      jjtThis.setTrimType(org.minijpa.jdbc.model.function.TrimType.TRAILING);
+      jjtThis.setTrimType(org.minijpa.sql.model.function.TrimType.TRAILING);
     }
     |
     <BOTH>
     {
-      jjtThis.setTrimType(org.minijpa.jdbc.model.function.TrimType.BOTH);
+      jjtThis.setTrimType(org.minijpa.sql.model.function.TrimType.BOTH);
     }
    ]
    [
@@ -958,25 +964,25 @@ void upper_function() #UpperFunction :
 //      CURRENT_DATE |
 //      CURRENT_TIME |
 //      CURRENT_TIMESTAMP
-org.minijpa.jdbc.model.function.Function functions_returning_datetime() :
+org.minijpa.sql.model.function.Function functions_returning_datetime() :
 {
 }
 {
   <CURRENT_DATE>
   {
-    return new org.minijpa.jdbc.model.function.CurrentDate();
+    return new org.minijpa.sql.model.function.CurrentDate();
   }
 
   |
   <CURRENT_TIME>
   {
-    return new org.minijpa.jdbc.model.function.CurrentTime();
+    return new org.minijpa.sql.model.function.CurrentTime();
   }
 
   |
   <CURRENT_TIMESTAMP>
   {
-    return new org.minijpa.jdbc.model.function.CurrentTimestamp();
+    return new org.minijpa.sql.model.function.CurrentTimestamp();
   }
 }
 
@@ -1643,7 +1649,7 @@ void datetime_expression() #DatetimeExpression :
 {
   Token t;
   StringBuilder sb=new StringBuilder();
-  org.minijpa.jdbc.model.function.Function function;
+  org.minijpa.sql.model.function.Function function;
 }
 {
   LOOKAHEAD(2)
@@ -1815,7 +1821,6 @@ void arithmetic_term() #ArithmeticTerm :
 }
 {
   arithmetic_factor()
-
   (
    LOOKAHEAD(2)
    (
@@ -1973,13 +1978,14 @@ void boolean_expression_comparison() #BooleanExpressionComparison :
 }
 {
   boolean_expression()
+  //LOOKAHEAD(2)
   (
-   "="
+   <EQ>
    {
     jjtThis.setComparisonOperator("=");
    }
    |
-   "<>"
+   <NE>
    {
     jjtThis.setComparisonOperator("<>");
    }
@@ -2253,10 +2259,17 @@ void like_expression() #LikeExpression :
    }
   ]
   <LIKE>
+  (
   t=<STRING_LITERAL>
     {
       jjtThis.setPatternValue(t.image);
     }
+    |
+  t=<INPUT_PARAMETER>
+    {
+      jjtThis.setInputParameter(t.image);
+    }
+  )
   [
    <ESCAPE>
    t=<STRING_LITERAL>
@@ -2844,12 +2857,12 @@ void orderby_item() #OrderByItem :
  [
   <ASC>
   {
-    jjtThis.setOrderByType(org.minijpa.jdbc.model.OrderByType.ASC);
+    jjtThis.setOrderByType(org.minijpa.sql.model.OrderByType.ASC);
   }
   |
   <DESC>
   {
-    jjtThis.setOrderByType(org.minijpa.jdbc.model.OrderByType.DESC);
+    jjtThis.setOrderByType(org.minijpa.sql.model.OrderByType.DESC);
   }
  ]
 }

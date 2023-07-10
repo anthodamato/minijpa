@@ -87,7 +87,7 @@ public class JdbcTypes {
                 return Types.CHAR;
         }
 
-        return Types.NULL;
+        return Types.OTHER;
     }
 
     public static int compareNumericTypes(int sqlType1, int sqlType2) {

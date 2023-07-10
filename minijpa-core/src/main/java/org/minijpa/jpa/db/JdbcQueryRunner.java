@@ -3,6 +3,7 @@ package org.minijpa.jpa.db;
 import org.minijpa.jdbc.*;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
@@ -25,11 +26,11 @@ import java.util.stream.Collectors;
 public class JdbcQueryRunner {
 
     private final Logger log = LoggerFactory.getLogger(JdbcQueryRunner.class);
-    private ConnectionHolder connectionHolder;
-    private DbConfiguration dbConfiguration;
-    private AliasGenerator aliasGenerator;
+    private final ConnectionHolder connectionHolder;
+    private final DbConfiguration dbConfiguration;
+    private final AliasGenerator aliasGenerator;
     private final JdbcRunner.JdbcValueBuilderById jdbcValueBuilderById = new JdbcRunner.JdbcValueBuilderById();
-    private JdbcFetchParameterRecordBuilder jdbcFetchParameterRecordBuilder = new JdbcFetchParameterRecordBuilder();
+    private final JdbcFetchParameterRecordBuilder jdbcFetchParameterRecordBuilder = new JdbcFetchParameterRecordBuilder();
 
     public JdbcQueryRunner(ConnectionHolder connectionHolder, DbConfiguration dbConfiguration,
                            AliasGenerator tableAliasGenerator) {
@@ -138,12 +139,12 @@ public class JdbcQueryRunner {
         return collectionResult;
     }
 
-    public Object insertWithIdentityColumn(MetaEntity entity, Object entityInstance,
-                                           List<QueryParameter> parameters,
-                                           boolean isIdentityColumnNull) throws Exception {
-        List<String> columns = parameters.stream().map(p -> {
-            return p.getColumnName();
-        }).collect(Collectors.toList());
+    public Object insertWithIdentityColumn(
+            MetaEntity entity,
+            Object entityInstance,
+            List<QueryParameter> parameters,
+            boolean isIdentityColumnNull) throws Exception {
+        List<String> columns = parameters.stream().map(QueryParameter::getColumnName).collect(Collectors.toList());
         Pk pk = entity.getId();
         SqlInsert sqlInsert = dbConfiguration.getSqlStatementFactory()
                 .generateInsert(entity, columns, true,
@@ -154,12 +155,12 @@ public class JdbcQueryRunner {
                         parameters, pk.getAttribute().getColumnName());
     }
 
-    public void insert(MetaEntity entity, Object entityInstance, List<QueryParameter> parameters)
+    public void insert(
+            MetaEntity entity,
+            Object entityInstance,
+            List<QueryParameter> parameters)
             throws Exception {
-        List<String> columns = parameters.stream().map(p -> {
-            return p.getColumnName();
-        }).collect(Collectors.toList());
-
+        List<String> columns = parameters.stream().map(QueryParameter::getColumnName).collect(Collectors.toList());
         SqlInsert sqlInsert = dbConfiguration.getSqlStatementFactory()
                 .generateInsert(entity, columns, false, false,
                         Optional.empty(), aliasGenerator);
@@ -168,7 +169,7 @@ public class JdbcQueryRunner {
     }
 
     public void deleteById(MetaEntity e, List<QueryParameter> idParameters) throws Exception {
-        List<String> idColumns = idParameters.stream().map(p -> p.getColumnName())
+        List<String> idColumns = idParameters.stream().map(QueryParameter::getColumnName)
                 .collect(Collectors.toList());
         SqlDelete sqlDelete = dbConfiguration.getSqlStatementFactory()
                 .generateDeleteById(e, idColumns, aliasGenerator);
@@ -176,8 +177,11 @@ public class JdbcQueryRunner {
         dbConfiguration.getJdbcRunner().delete(sql, connectionHolder.getConnection(), idParameters);
     }
 
-    public int update(MetaEntity entity, List<QueryParameter> parameters, List<String> columns,
-                      List<String> idColumns)
+    public int update(
+            MetaEntity entity,
+            List<QueryParameter> parameters,
+            List<String> columns,
+            List<String> idColumns)
             throws Exception {
         SqlUpdate sqlUpdate = dbConfiguration.getSqlStatementFactory()
                 .generateUpdate(entity, columns, idColumns,
@@ -192,7 +196,7 @@ public class JdbcQueryRunner {
                                          Object instance) throws Exception {
         List<QueryParameter> parameters = dbConfiguration.getSqlStatementFactory()
                 .createRelationshipJoinTableParameters(relationshipJoinTable, entityInstance, instance);
-        List<String> columnNames = parameters.stream().map(p -> p.getColumnName())
+        List<String> columnNames = parameters.stream().map(QueryParameter::getColumnName)
                 .collect(Collectors.toList());
         SqlInsert sqlInsert = dbConfiguration.getSqlStatementFactory()
                 .generateJoinTableInsert(relationshipJoinTable,
@@ -210,7 +214,7 @@ public class JdbcQueryRunner {
                             relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
             List<JoinColumnAttribute> attributes = modelValueArray.getModels();
 
-            List<String> idColumns = attributes.stream().map(p -> p.getColumnName())
+            List<String> idColumns = attributes.stream().map(AbstractAttribute::getColumnName)
                     .collect(Collectors.toList());
             FromTable fromTable = FromTable.of(relationshipJoinTable.getTableName());
             SqlDelete sqlDelete = dbConfiguration.getSqlStatementFactory()

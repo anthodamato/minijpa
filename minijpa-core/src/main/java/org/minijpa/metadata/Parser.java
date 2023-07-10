@@ -526,11 +526,11 @@ public class Parser {
 
     private Integer findSqlType(Class<?> attributeClass, Enumerated enumerated) {
         Integer sqlType = JdbcTypes.sqlTypeFromClass(attributeClass);
-        if (sqlType != Types.NULL) {
-            return sqlType;
-        }
+//        if (sqlType != Types.OTHER) {
+        return sqlType;
+//        }
 
-        return Types.NULL;
+//        return Types.NULL;
     }
 
     private Optional<Class<?>> enumerationType(Class<?> attributeClass, Enumerated enumerated) {

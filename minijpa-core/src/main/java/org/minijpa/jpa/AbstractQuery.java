@@ -133,6 +133,10 @@ public abstract class AbstractQuery implements Query {
         return parameterValues.keySet();
     }
 
+    public Map<Parameter<?>, Object> getParameterMap() {
+        return parameterValues;
+    }
+
     @Override
     public Parameter<?> getParameter(String name) {
         Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);

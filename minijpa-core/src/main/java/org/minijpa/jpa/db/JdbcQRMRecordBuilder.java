@@ -187,7 +187,7 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
             if (optional.isPresent()) {
                 Class<?> type = optional.get().getType();
                 int sqlType = type != void.class ? JdbcTypes.sqlTypeFromClass(type) : metaData.getColumnType(i + 1);
-                if (sqlType == Types.NULL)
+                if (sqlType == Types.OTHER)
                     sqlType = metaData.getColumnType(i + 1);
 
                 Object v = JdbcRunner.getValue(rs, i + 1, sqlType);

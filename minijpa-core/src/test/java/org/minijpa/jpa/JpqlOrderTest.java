@@ -45,7 +45,7 @@ public class JpqlOrderTest {
 	}
 
 	@Test
-	public void simpleOrder() throws Exception {
+	public void simpleOrder() {
 		EntityManager em = emf.createEntityManager();
 
 		EntityTransaction tx = em.getTransaction();
@@ -57,7 +57,7 @@ public class JpqlOrderTest {
 		Query query = em
 				.createQuery("SELECT DISTINCT o FROM SimpleOrder AS o JOIN o.lineItems AS l WHERE l.shipped = FALSE");
 		List list = query.getResultList();
-		Assertions.assertTrue(!list.isEmpty());
+		Assertions.assertFalse(list.isEmpty());
 		Assertions.assertEquals(1, list.size());
 		Object so = list.get(0);
 		Assertions.assertTrue(so instanceof SimpleOrder);

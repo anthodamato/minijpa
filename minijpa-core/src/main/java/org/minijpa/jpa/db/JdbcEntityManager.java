@@ -16,7 +16,9 @@
 package org.minijpa.jpa.db;
 
 import java.util.List;
+import java.util.Map;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 
 import org.minijpa.jpa.DeleteQuery;
@@ -32,7 +34,7 @@ public interface JdbcEntityManager {
 
     public List<?> select(Query query) throws Exception;
 
-    public List<?> selectJpql(String jpqlStatement) throws Exception;
+    public List<?> selectJpql(String jpqlStatement, Map<Parameter<?>, Object> parameterMap) throws Exception;
 
     public List<?> selectNative(MiniNativeQuery query) throws Exception;
 

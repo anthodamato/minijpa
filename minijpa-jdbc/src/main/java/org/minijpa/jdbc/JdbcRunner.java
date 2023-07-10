@@ -42,8 +42,10 @@ public class JdbcRunner {
     public JdbcRunner() {
     }
 
-    private void setPreparedStatementQM(PreparedStatement preparedStatement,
-                                        QueryParameter queryParameter, int index)
+    private void setPreparedStatementQM(
+            PreparedStatement preparedStatement,
+            QueryParameter queryParameter,
+            int index)
             throws SQLException {
         LOG.debug("setPreparedStatementQM: value={}; index={}; sqlType={}", queryParameter.getValue(),
                 index,

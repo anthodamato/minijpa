@@ -13,7 +13,7 @@ QL_statement ::= select_statement | update_statement | delete_statement
 
   join ::= join_spec join_association_path_expression [AS] identification_variable [join_condition]
 
-  fetch_join ::= join_spec FETCH join_association_path_expression
+  fetch_join ::= join_spec FETCH join_association_path_expression [AS] identification_variable
 
   join_spec ::= [LEFT [OUTER] | INNER] JOIN
 
@@ -171,7 +171,7 @@ in_expression ::= {state_valued_path_expression | type_discriminator} [NOT] IN
         {(in_item{, in_item}*) | (subquery) | collection_valued_input_parameter}
         
 in_item ::= literal | single_valued_input_parameter
-like_expression ::= string_expression [NOT] LIKE pattern_value [ESCAPE escape_character]
+like_expression ::= string_expression [NOT] LIKE (string_literal|input_parameter) [ESCAPE escape_character]
 null_comparison_expression ::= {single_valued_path_expression | input_parameter} IS [NOT] NULL
 empty_collection_comparison_expression ::= collection_valued_path_expression IS [NOT] EMPTY
 collection_member_expression ::= entity_or_value_expression [NOT] MEMBER [OF] collection_valued_path_expression
