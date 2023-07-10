@@ -171,19 +171,17 @@ public interface JpqlParserConstants {
   /** RegularExpression Id. */
   int INPUT_PARAMETER = 84;
   /** RegularExpression Id. */
-  int PATTERN_VALUE = 85;
+  int GT = 85;
   /** RegularExpression Id. */
-  int GT = 86;
+  int GE = 86;
   /** RegularExpression Id. */
-  int GE = 87;
+  int LT = 87;
   /** RegularExpression Id. */
-  int LT = 88;
+  int LE = 88;
   /** RegularExpression Id. */
-  int LE = 89;
+  int NE = 89;
   /** RegularExpression Id. */
-  int NE = 90;
-  /** RegularExpression Id. */
-  int EQ = 91;
+  int EQ = 90;
 
   /** Lexical state. */
   int DEFAULT = 0;

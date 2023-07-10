@@ -3,9 +3,9 @@ options {
   MULTI=true;
   VISITOR=true;
   NODE_DEFAULT_VOID=true;
-  DEBUG_PARSER=true;
-  DEBUG_LOOKAHEAD=true;
-  DEBUG_TOKEN_MANAGER=true;
+//  DEBUG_PARSER=true;
+//  DEBUG_LOOKAHEAD=true;
+//  DEBUG_TOKEN_MANAGER=true;
 }
 
 PARSER_BEGIN(JpqlParser)
