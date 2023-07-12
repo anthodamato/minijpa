@@ -23,88 +23,88 @@ import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.TransactionRequiredException;
+
 import org.minijpa.jpa.db.JdbcEntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author adamato
  */
 public class MiniJpqlQuery extends AbstractQuery {
 
-	private final Logger LOG = LoggerFactory.getLogger(MiniJpqlQuery.class);
+    private final Logger LOG = LoggerFactory.getLogger(MiniJpqlQuery.class);
 
-	private final String jpqlString;
-	private final Optional<Class<?>> resultClass;
-	private final EntityManager entityManager;
+    private final String jpqlString;
+    private final Optional<Class<?>> resultClass;
+    private final EntityManager entityManager;
 
-	public MiniJpqlQuery(String jpqlString, Optional<Class<?>> resultClass,
-			EntityManager entityManager,
-			JdbcEntityManager jdbcEntityManager) {
-		this.jpqlString = jpqlString;
-		this.resultClass = resultClass;
-		this.entityManager = entityManager;
-		this.jdbcEntityManager = jdbcEntityManager;
-	}
+    public MiniJpqlQuery(String jpqlString, Optional<Class<?>> resultClass,
+                         EntityManager entityManager,
+                         JdbcEntityManager jdbcEntityManager) {
+        this.jpqlString = jpqlString;
+        this.resultClass = resultClass;
+        this.entityManager = entityManager;
+        this.jdbcEntityManager = jdbcEntityManager;
+    }
 
-	public String getJpqlString() {
-		return jpqlString;
-	}
+    public String getJpqlString() {
+        return jpqlString;
+    }
 
-	public Optional<Class<?>> getResultClass() {
-		return resultClass;
-	}
+    public Optional<Class<?>> getResultClass() {
+        return resultClass;
+    }
 
-	@Override
-	public List getResultList() {
-		List<?> list = null;
-		try {
-			if (flushModeType == FlushModeType.AUTO)
-				jdbcEntityManager.flush();
+    @Override
+    public List getResultList() {
+        List<?> list = null;
+        try {
+            if (flushModeType == FlushModeType.AUTO)
+                jdbcEntityManager.flush();
 
-			list = jdbcEntityManager.selectJpql(jpqlString);
-		} catch (Exception e) {
-			LOG.error(e.getMessage());
-			throw new PersistenceException(e.getMessage());
-		}
+            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap());
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+            throw new PersistenceException(e.getMessage());
+        }
 
-		return list;
-	}
+        return list;
+    }
 
-	@Override
-	public Object getSingleResult() {
-		List<?> list = null;
-		try {
-			if (flushModeType == FlushModeType.AUTO)
-				jdbcEntityManager.flush();
+    @Override
+    public Object getSingleResult() {
+        List<?> list = null;
+        try {
+            if (flushModeType == FlushModeType.AUTO)
+                jdbcEntityManager.flush();
 
-			list = jdbcEntityManager.selectJpql(jpqlString);
-		} catch (Exception e) {
-			LOG.error(e.getMessage());
-			throw new PersistenceException(e.getMessage());
-		}
+            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap());
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+            throw new PersistenceException(e.getMessage());
+        }
 
-		if (list.isEmpty())
-			throw new NoResultException("No result to return");
+        if (list.isEmpty())
+            throw new NoResultException("No result to return");
 
-		if (list.size() > 1)
-			throw new NonUniqueResultException("More than one result to return");
+        if (list.size() > 1)
+            throw new NonUniqueResultException("More than one result to return");
 
-		return list.get(0);
-	}
+        return list.get(0);
+    }
 
-	@Override
-	public int executeUpdate() {
-		if (!entityManager.getTransaction().isActive())
-			throw new TransactionRequiredException("Update requires an active transaction");
+    @Override
+    public int executeUpdate() {
+        if (!entityManager.getTransaction().isActive())
+            throw new TransactionRequiredException("Update requires an active transaction");
 
-		try {
-			return jdbcEntityManager.update(jpqlString, this);
-		} catch (Exception e) {
-			LOG.error(e.getMessage());
-			throw new PersistenceException(e.getMessage());
-		}
-	}
+        try {
+            return jdbcEntityManager.update(jpqlString, this);
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+            throw new PersistenceException(e.getMessage());
+        }
+    }
 
 }

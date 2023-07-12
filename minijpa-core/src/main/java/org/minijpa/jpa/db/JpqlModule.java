@@ -5,19 +5,14 @@
  */
 package org.minijpa.jpa.db;
 
-import java.io.StringReader;
-
-import org.minijpa.jdbc.db.SqlSelectData;
-import org.minijpa.jpa.jpql.ASTQLStatement;
-import org.minijpa.jpa.jpql.JpqlParser;
-import org.minijpa.jpa.jpql.JpqlParserVisitor;
-import org.minijpa.jpa.jpql.JpqlParserVisitorImpl;
-import org.minijpa.jpa.jpql.ParseException;
+import org.minijpa.jpa.jpql.*;
 import org.minijpa.metadata.PersistenceUnitContext;
-import org.minijpa.sql.model.SqlStatement;
+
+import javax.persistence.Parameter;
+import java.io.StringReader;
+import java.util.Map;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class JpqlModule {
@@ -32,7 +27,9 @@ public class JpqlModule {
         this.persistenceUnitContext = persistenceUnitContext;
     }
 
-    public JpqlResult parse(String jpqlQuery) throws ParseException, Error, IllegalStateException {
+    public StatementParameters parse(
+            String jpqlQuery,
+            Map<Parameter<?>, Object> parameterMap) throws ParseException, Error, IllegalStateException {
         StringReader reader = new StringReader(jpqlQuery);
         if (parser == null) {
             parser = new JpqlParser(reader);
@@ -44,16 +41,10 @@ public class JpqlModule {
             visitor = new JpqlParserVisitorImpl(persistenceUnitContext, dbConfiguration);
         }
 
-        SqlStatement sqlStatement = (SqlStatement) qlStatement.jjtAccept(visitor, null);
-        if (sqlStatement == null)
+        StatementParameters statementParameters = (StatementParameters) qlStatement.jjtAccept(visitor, parameterMap);
+        if (statementParameters == null)
             throw new IllegalStateException("Jpql Parsing failed: '" + jpqlQuery + "'");
 
-        String sql = null;
-        if (sqlStatement instanceof SqlSelectData)
-            sql = dbConfiguration.getSqlStatementGenerator().export(((SqlSelectData) sqlStatement));
-        else
-            sql = dbConfiguration.getSqlStatementGenerator().export(sqlStatement);
-
-        return new JpqlResult(sqlStatement, sql);
+        return statementParameters;
     }
 }

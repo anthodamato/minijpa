@@ -18,12 +18,7 @@ package org.minijpa.jpa.db;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
@@ -506,7 +501,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         CriteriaQuery<?> criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
         StatementParameters statementParameters = dbConfiguration.getSqlStatementFactory().select(query,
                 persistenceUnitContext.getAliasGenerator());
-        log.debug("select: statementParameters={}", statementParameters);
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
         sqlSelectData.getFetchParameters().forEach(f -> log.debug("select: f={}", f));
@@ -514,6 +508,35 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         log.debug("select: sqlSelectData.getResult()={}", sqlSelectData.getResult());
         log.debug("select: statementParameters.getStatementType()={}",
                 statementParameters.getStatementType());
+
+        if (criteriaQuery.getResultType() == Tuple.class) {
+            if (!(criteriaQuery.getSelection() instanceof CompoundSelection<?>)) {
+                throw new IllegalArgumentException(
+                        "Selection '" + criteriaQuery.getSelection() + "' is not a compound selection");
+            }
+
+            List<Tuple> collectionResult = new ArrayList<>();
+            jdbcTupleRecordBuilder.setSqlSelectData(sqlSelectData);
+            jdbcTupleRecordBuilder.setObjects(collectionResult);
+            jdbcTupleRecordBuilder.setCompoundSelection(
+                    (CompoundSelection<?>) criteriaQuery.getSelection());
+            dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
+                    statementParameters.getParameters(), jdbcTupleRecordBuilder);
+            return collectionResult;
+        }
+
+        return runQuery(statementParameters);
+    }
+
+    private List<?> runQuery(StatementParameters statementParameters) throws Exception {
+        SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+        String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+        sqlSelectData.getFetchParameters().forEach(f -> log.debug("select: f={}", f));
+        log.debug("select: sql={}", sql);
+        log.debug("select: sqlSelectData.getResult()={}", sqlSelectData.getResult());
+        log.debug("select: statementParameters.getStatementType()={}",
+                statementParameters.getStatementType());
+
         if (statementParameters.getStatementType() == StatementType.FETCH_JOIN) {
             Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
                     null,
@@ -558,22 +581,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             return (List<?>) collectionResult;
         }
 
-        if (criteriaQuery.getResultType() == Tuple.class) {
-            if (!(criteriaQuery.getSelection() instanceof CompoundSelection<?>)) {
-                throw new IllegalArgumentException(
-                        "Selection '" + criteriaQuery.getSelection() + "' is not a compound selection");
-            }
-
-            List<Tuple> collectionResult = new ArrayList<>();
-            jdbcTupleRecordBuilder.setSqlSelectData(sqlSelectData);
-            jdbcTupleRecordBuilder.setObjects(collectionResult);
-            jdbcTupleRecordBuilder.setCompoundSelection(
-                    (CompoundSelection<?>) criteriaQuery.getSelection());
-            dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
-                    statementParameters.getParameters(), jdbcTupleRecordBuilder);
-            return collectionResult;
-        }
-
         // returns an aggregate expression result (max, min, etc)
         List<Object> collectionResult = new ArrayList<>();
         jdbcJpqlRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
@@ -584,44 +591,17 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
     @Override
-    public List<?> selectJpql(String jpqlStatement) throws Exception {
-        JpqlResult jpqlResult = null;
+    public List<?> selectJpql(String jpqlStatement, Map<Parameter<?>, Object> parameterMap) throws Exception {
+        StatementParameters statementParameters = null;
         try {
             log.debug("selectJpql: start parsing");
-            jpqlResult = jpqlModule.parse(jpqlStatement);
+            statementParameters = jpqlModule.parse(jpqlStatement, parameterMap);
             log.debug("selectJpql: end parsing");
         } catch (Error e) {
             throw new IllegalStateException("Internal Jpql Parser Error: " + e.getMessage());
         }
 
-        SqlSelectData sqlSelectData = (SqlSelectData) jpqlResult.getSqlStatement();
-        log.debug("selectJpql: sqlSelectData.getResult()={}", sqlSelectData.getResult());
-        if (sqlSelectData.getResult() != null) {
-            Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
-                    null,
-                    CollectionUtils.findCollectionImplementationClass(List.class));
-            log.debug("selectJpql: collectionResult={}", collectionResult);
-
-            Optional<MetaEntity> optionalEntity = persistenceUnitContext
-                    .findMetaEntityByTableName(sqlSelectData.getResult().getName());
-            MetaEntity entity = optionalEntity.get();
-            entityHandler.setLockType(LockType.NONE);
-            jdbcFPRecordBuilder.setCollectionResult(collectionResult);
-            jdbcFPRecordBuilder.setEntityLoader(entityHandler);
-            jdbcFPRecordBuilder.setMetaEntity(entity);
-            jdbcFPRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
-            dbConfiguration.getJdbcRunner()
-                    .runQuery(connectionHolder.getConnection(), jpqlResult.getSql(),
-                            Collections.emptyList(), jdbcFPRecordBuilder);
-            return (List<?>) collectionResult;
-        }
-
-        List<Object> collectionResult = new ArrayList<>();
-        jdbcJpqlRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
-        jdbcJpqlRecordBuilder.setCollectionResult(collectionResult);
-        dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), jpqlResult.getSql(),
-                new ArrayList<>(), jdbcJpqlRecordBuilder);
-        return collectionResult;
+        return runQuery(statementParameters);
     }
 
     @Override

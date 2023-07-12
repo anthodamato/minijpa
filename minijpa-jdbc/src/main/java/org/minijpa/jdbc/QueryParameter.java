@@ -26,7 +26,11 @@ public class QueryParameter {
     private Integer sqlType;
     protected Optional<AttributeMapper> attributeMapper = Optional.empty();
 
-    public QueryParameter(String columnName, Object value, Integer sqlType, Optional<AttributeMapper> attributeMapper) {
+    public QueryParameter(
+            String columnName,
+            Object value,
+            Integer sqlType,
+            Optional<AttributeMapper> attributeMapper) {
         super();
         this.columnName = columnName;
         this.value = value;

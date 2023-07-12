@@ -3,50 +3,50 @@
 package org.minijpa.jpa.jpql;
 
 import org.minijpa.jdbc.db.SqlSelectData;
+import org.minijpa.jpa.db.StatementParameters;
 
 public class ASTSubquery extends SimpleNode {
 
-	private SqlSelectData sqlSelectData;
+    private StatementParameters statementParameters;
 
-	public ASTSubquery(int id) {
-		super(id);
-	}
+    public ASTSubquery(int id) {
+        super(id);
+    }
 
-	public ASTSubquery(JpqlParser p, int id) {
-		super(p, id);
-	}
+    public ASTSubquery(JpqlParser p, int id) {
+        super(p, id);
+    }
 
-	/**
-	 * Accept the visitor. *
-	 */
-	public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
+    /**
+     * Accept the visitor. *
+     */
+    public Object jjtAccept(JpqlParserVisitor visitor, Object data) {
 
-		return visitor.visit(this, data);
-	}
+        return visitor.visit(this, data);
+    }
 
-	@Override
-	public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
-		for (int i = 0; i < children.length; ++i) {
-			if (children[i] instanceof ASTSubqueryFromClause)
-				children[i].jjtAccept(visitor, data);
-		}
+    @Override
+    public Object childrenAccept(JpqlParserVisitor visitor, Object data) {
+        for (int i = 0; i < children.length; ++i) {
+            if (children[i] instanceof ASTSubqueryFromClause)
+                children[i].jjtAccept(visitor, data);
+        }
 
-		for (int i = 0; i < children.length; ++i) {
-			if (!(children[i] instanceof ASTSubqueryFromClause))
-				children[i].jjtAccept(visitor, data);
-		}
+        for (int i = 0; i < children.length; ++i) {
+            if (!(children[i] instanceof ASTSubqueryFromClause))
+                children[i].jjtAccept(visitor, data);
+        }
 
-		return data;
-	}
+        return data;
+    }
 
-	public SqlSelectData getSqlSelectData() {
-		return sqlSelectData;
-	}
+    public StatementParameters getStatementParameters() {
+        return statementParameters;
+    }
 
-	public void setSqlSelectData(SqlSelectData sqlSelectData) {
-		this.sqlSelectData = sqlSelectData;
-	}
-
+    public void setStatementParameters(StatementParameters statementParameters) {
+        this.statementParameters = statementParameters;
+    }
 }
 /*
  * JavaCC - OriginalChecksum=044338bb882892f00ffa3eb7d757d5cb (do not edit this
