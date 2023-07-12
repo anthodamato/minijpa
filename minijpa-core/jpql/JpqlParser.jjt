@@ -1978,14 +1978,13 @@ void boolean_expression_comparison() #BooleanExpressionComparison :
 }
 {
   boolean_expression()
-  //LOOKAHEAD(2)
   (
-   <EQ>
+   "="
    {
     jjtThis.setComparisonOperator("=");
    }
    |
-   <NE>
+   "<>"
    {
     jjtThis.setComparisonOperator("<>");
    }
