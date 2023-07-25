@@ -30,24 +30,26 @@ import org.minijpa.sql.model.function.Sum;
  */
 public class FunctionUtils {
 
-  public static Value createAggregateFunction(AggregateFunctionType aggregateFunctionType,
-      Object argument, boolean distinct) {
-    switch (aggregateFunctionType) {
-      case AVG:
-        return new Avg(argument);
-      case COUNT:
-        return new Count(argument, distinct);
-      case MAX:
-        return new Max(argument);
-      case MIN:
-        return new Min(argument);
-      case SUM:
-        return new Sum(argument);
-      default:
-        break;
-    }
+    public static Value createAggregateFunction(
+            AggregateFunctionType aggregateFunctionType,
+            Object argument,
+            boolean distinct) {
+        switch (aggregateFunctionType) {
+            case AVG:
+                return new Avg(argument);
+            case COUNT:
+                return new Count(argument, distinct);
+            case MAX:
+                return new Max(argument);
+            case MIN:
+                return new Min(argument);
+            case SUM:
+                return new Sum(argument);
+            default:
+                break;
+        }
 
-    return null;
-  }
+        throw new IllegalArgumentException("Unknown aggregate function type: " + aggregateFunctionType);
+    }
 
 }

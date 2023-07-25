@@ -25,23 +25,51 @@ import javax.persistence.Parameter;
 import javax.persistence.Query;
 
 /**
- *
  * @author adamato
  */
 public class ParameterUtils {
 
-    public static Optional<Parameter<?>> findParameterByName(String name, Map<Parameter<?>, Object> parameterValues) {
-        return parameterValues.keySet().stream().filter(p -> p.getName() != null && p.getName().compareTo(name) == 0)
-                .findFirst();
-    }
-
-    public static Optional<Parameter<?>> findParameterByPosition(int position,
+    public static Parameter<?> findParameterByName(
+            String name,
             Map<Parameter<?>, Object> parameterValues) {
-        return parameterValues.keySet().stream()
-                .filter(p -> p.getPosition() != null && p.getPosition().compareTo(position) == 0).findFirst();
+        for (Map.Entry<Parameter<?>, Object> entry : parameterValues.entrySet()) {
+            MiniParameter<?> miniParameter = (MiniParameter<?>) entry.getKey();
+            if (miniParameter.getName() != null && miniParameter.getName().equals(name))
+                return miniParameter;
+        }
+
+        throw new IllegalArgumentException("Parameter '" + name + "' not found");
     }
 
-    private static List<IndexParameter> findIndexParameters(String sqlString, String ph, Parameter<?> p) {
+    public static Object findParameterValueByName(
+            String name,
+            Map<Parameter<?>, Object> parameterValues) {
+        return parameterValues.get(findParameterByName(name, parameterValues));
+    }
+
+
+    public static Parameter<?> findParameterByPosition(
+            int position,
+            Map<Parameter<?>, Object> parameterValues) {
+        for (Map.Entry<Parameter<?>, Object> entry : parameterValues.entrySet()) {
+            MiniParameter<?> miniParameter = (MiniParameter<?>) entry.getKey();
+            if (miniParameter.getPosition() != null && miniParameter.getPosition() == position)
+                return miniParameter;
+        }
+
+        throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
+    }
+
+    public static Object findParameterValueByPosition(
+            int position,
+            Map<Parameter<?>, Object> parameterValues) {
+        return parameterValues.get(findParameterByPosition(position, parameterValues));
+    }
+
+    private static List<IndexParameter> findIndexParameters(
+            String sqlString,
+            String ph,
+            Parameter<?> p) {
         int index = 0;
         List<IndexParameter> indexParameters = new ArrayList<>();
         while (index != -1) {
@@ -56,7 +84,9 @@ public class ParameterUtils {
         return indexParameters;
     }
 
-    public static List<IndexParameter> findIndexParameters(Query query, String sqlString) {
+    public static List<IndexParameter> findIndexParameters(
+            Query query,
+            String sqlString) {
         Set<Parameter<?>> parameters = query.getParameters();
         List<IndexParameter> indexParameters = new ArrayList<>();
         for (Parameter<?> p : parameters) {
@@ -81,7 +111,9 @@ public class ParameterUtils {
         return indexParameters;
     }
 
-    public static String replaceParameterPlaceholders(Query query, String sqlString,
+    public static String replaceParameterPlaceholders(
+            Query query,
+            String sqlString,
             List<IndexParameter> indexParameters) {
         String sql = sqlString;
         for (IndexParameter ip : indexParameters) {
@@ -98,6 +130,38 @@ public class ParameterUtils {
         }
 
         return values;
+    }
+
+    public static Optional<Object> findParameterValue(
+            Map<Parameter<?>, Object> map,
+            String inputParameter) {
+        if (inputParameter == null || inputParameter.trim().length() < 2)
+            return Optional.empty();
+
+        char c1 = inputParameter.charAt(0);
+        if (c1 == '?') {
+            int index = Integer.parseInt(inputParameter.substring(1));
+            for (Map.Entry<Parameter<?>, Object> entry : map.entrySet()) {
+                MiniParameter<?> miniParameter = (MiniParameter<?>) entry.getKey();
+                if (miniParameter.getPosition() != null && miniParameter.getPosition() == index)
+                    return Optional.of(entry.getValue());
+            }
+
+            return Optional.empty();
+        }
+
+        if (c1 == ':') {
+            String paramName = inputParameter.substring(1);
+            for (Map.Entry<Parameter<?>, Object> entry : map.entrySet()) {
+                MiniParameter<?> miniParameter = (MiniParameter<?>) entry.getKey();
+                if (miniParameter.getName() != null && miniParameter.getName().equals(paramName))
+                    return Optional.of(entry.getValue());
+            }
+
+            return Optional.empty();
+        }
+
+        return Optional.empty();
     }
 
     public static class IndexParameter {

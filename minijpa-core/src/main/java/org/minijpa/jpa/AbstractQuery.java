@@ -139,11 +139,7 @@ public abstract class AbstractQuery implements Query {
 
     @Override
     public Parameter<?> getParameter(String name) {
-        Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);
-        if (optional.isEmpty())
-            throw new IllegalArgumentException("Parameter '" + name + "' not found");
-
-        return optional.get();
+        return ParameterUtils.findParameterByName(name, parameterValues);
     }
 
     @Override
@@ -154,11 +150,7 @@ public abstract class AbstractQuery implements Query {
 
     @Override
     public Parameter<?> getParameter(int position) {
-        Optional<Parameter<?>> optional = ParameterUtils.findParameterByPosition(position, parameterValues);
-        if (optional.isEmpty())
-            throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
-
-        return optional.get();
+        return ParameterUtils.findParameterByPosition(position, parameterValues);
     }
 
     @Override
@@ -183,20 +175,12 @@ public abstract class AbstractQuery implements Query {
 
     @Override
     public Object getParameterValue(String name) {
-        Optional<Parameter<?>> optional = ParameterUtils.findParameterByName(name, parameterValues);
-        if (optional.isEmpty())
-            throw new IllegalArgumentException("Parameter '" + name + "' not found");
-
-        return parameterValues.get(optional.get());
+        return ParameterUtils.findParameterValueByName(name, parameterValues);
     }
 
     @Override
     public Object getParameterValue(int position) {
-        Optional<Parameter<?>> optional = ParameterUtils.findParameterByPosition(position, parameterValues);
-        if (optional.isEmpty())
-            throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
-
-        return parameterValues.get(optional.get());
+        return ParameterUtils.findParameterValueByPosition(position, parameterValues);
     }
 
     @Override
