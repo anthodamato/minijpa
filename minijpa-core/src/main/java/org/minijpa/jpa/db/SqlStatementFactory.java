@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CriteriaDelete;
@@ -48,10 +49,7 @@ import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jdbc.mapper.AbstractDbTypeMapper;
 import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jpa.DeleteQuery;
-import org.minijpa.jpa.MetaEntityHelper;
-import org.minijpa.jpa.MiniTypedQuery;
-import org.minijpa.jpa.UpdateQuery;
+import org.minijpa.jpa.*;
 import org.minijpa.jpa.criteria.AbstractFrom;
 import org.minijpa.jpa.criteria.AttributePath;
 import org.minijpa.jpa.criteria.CriteriaUtils;
@@ -858,7 +856,9 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             AbstractMetaAttribute attribute1 = attributePath.getMetaAttribute();
             TableColumn tableColumn1 = createTableColumnFromPath(attributePath, tableAliasGenerator);
             if (expression2 != null) {
-                Object p = criteriaExpressionHelper.createParameterFromExpression(query, expression2,
+                Object p = criteriaExpressionHelper.createParameterFromExpression(
+                        ((AbstractQuery) query).getParameterMap(),
+                        expression2,
                         tableAliasGenerator, parameters, attribute1.getColumnName(), attribute1.getSqlType(),
                         attribute1.getAttributeMapper());
                 builder.withLeft(tableColumn1).withRight(p);
@@ -892,12 +892,15 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         BetweenCondition.Builder builder = new BetweenCondition.Builder(
                 createTableColumnFromPath(miniPath, tableAliasGenerator));
         builder.withLeftExpression(
-                criteriaExpressionHelper.createParameterFromExpression(query, expression1,
+                criteriaExpressionHelper.createParameterFromExpression(
+                        ((AbstractQuery) query).getParameterMap(),
+                        expression1,
                         tableAliasGenerator, parameters, attribute.getColumnName(), attribute.getSqlType(),
                         attribute.getAttributeMapper()));
 
         builder.withRightExpression(
-                criteriaExpressionHelper.createParameterFromExpression(query, expression2,
+                criteriaExpressionHelper.createParameterFromExpression(
+                        ((AbstractQuery) query).getParameterMap(), expression2,
                         tableAliasGenerator, parameters, attribute.getColumnName(), attribute.getSqlType(),
                         attribute.getAttributeMapper()));
 
@@ -1063,7 +1066,9 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         if (pattern.isPresent()) {
             right = CriteriaUtils.buildValue(pattern.get());
         } else if (patternExpression.isPresent()) {
-            right = criteriaExpressionHelper.createParameterFromExpression(query, patternExpression.get(),
+            right = criteriaExpressionHelper.createParameterFromExpression(
+                    ((AbstractQuery) query).getParameterMap(),
+                    patternExpression.get(),
                     aliasGenerator, parameters, attribute.getColumnName(), attribute.getSqlType(),
                     attribute.getAttributeMapper());
         }
@@ -1297,7 +1302,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
     private List<Value> buildSelectionValues(
             CriteriaQuery<?> criteriaQuery,
             List<FromTable> fromTables,
-            Query query,
+            Map<Parameter<?>, Object> parameterValues,
             AliasGenerator aliasGenerator,
             List<QueryParameter> parameters) {
         Selection<?> selection = criteriaQuery.getSelection();
@@ -1318,7 +1323,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             for (Selection<?> s : selections) {
                 FromTable fromTable = null; // get FromTable from selection
                 Optional<Value> optional = criteriaExpressionHelper.createSelectionValue(fromTable,
-                        aliasGenerator, s, query, parameters);
+                        aliasGenerator, s, parameterValues, parameters);
                 optional.ifPresent(values::add);
             }
 
@@ -1328,7 +1333,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         FromTable fromTable = null; // get FromTable from selection
         LOG.debug("buildSelectionValues: selection={}", selection);
         Optional<Value> optional = criteriaExpressionHelper.createSelectionValue(fromTable,
-                aliasGenerator, selection, query, parameters);
+                aliasGenerator, selection, parameterValues, parameters);
         optional.ifPresent(values::add);
         return values;
     }
@@ -1426,7 +1431,8 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         List<FromTable> fromTables = froms.stream().filter(from -> from instanceof FromTable)
                 .map(from -> (FromTable) from)
                 .collect(Collectors.toList());
-        List<Value> values = buildSelectionValues(criteriaQuery, fromTables, query, aliasGenerator,
+        List<Value> values = buildSelectionValues(criteriaQuery, fromTables,
+                ((AbstractQuery) query).getParameterMap(), aliasGenerator,
                 parameters);
         builder.withValues(values);
         builder.withConditions(conditions);

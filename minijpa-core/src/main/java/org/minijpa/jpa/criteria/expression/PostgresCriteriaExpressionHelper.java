@@ -2,8 +2,10 @@ package org.minijpa.jpa.criteria.expression;
 
 import java.sql.Types;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 
 import org.minijpa.jdbc.QueryParameter;
@@ -22,8 +24,6 @@ public class PostgresCriteriaExpressionHelper extends CriteriaExpressionHelper {
 
     /**
      * Postgres doesn't support the position function with start index.
-     * 
-     *
      */
     // Start index not supported by Postgres
     // select coalesce(nullif(position(searchdata0_.pattern in
@@ -31,9 +31,14 @@ public class PostgresCriteriaExpressionHelper extends CriteriaExpressionHelper {
     // ?)),0)+?-1,0) as col_0_0_ from search_data searchdata0_ where
     // searchdata0_.average_value=7
     @Override
-    protected Optional<Value> createSelectionValue(FromTable fromTable, AliasGenerator aliasGenerator,
-            LocateExpression locateExpression, Query query, List<QueryParameter> parameters) {
-        Optional<Value> optional = super.createSelectionValue(fromTable, aliasGenerator, locateExpression, query,
+    protected Optional<Value> createSelectionValue(
+            FromTable fromTable,
+            AliasGenerator aliasGenerator,
+            LocateExpression locateExpression,
+            Map<Parameter<?>, Object> parameterValues,
+            List<QueryParameter> parameters) {
+        Optional<Value> optional = super.createSelectionValue(
+                fromTable, aliasGenerator, locateExpression, parameterValues,
                 parameters);
         if (optional.isPresent()) {
             Locate locate = (Locate) optional.get();
@@ -42,7 +47,8 @@ public class PostgresCriteriaExpressionHelper extends CriteriaExpressionHelper {
                 if (locateExpression.getFrom().isPresent()) {
                     // one more QueryParameter in case of ParameterExpression as it is used twice,
                     // in the substring and sum
-                    createParameterFromExpression(query, locateExpression.getFrom().get(), aliasGenerator, parameters,
+                    createParameterFromExpression(parameterValues,
+                            locateExpression.getFrom().get(), aliasGenerator, parameters,
                             "from", Types.INTEGER, Optional.empty());
                 }
 
@@ -56,7 +62,7 @@ public class PostgresCriteriaExpressionHelper extends CriteriaExpressionHelper {
     private Value createLocateReplacement(Locate locate) {
         Substring substring = new Substring(locate.getInputString(), locate.getPosition().get());
         Locate locate2 = new Locate(locate.getSearchString(), substring);
-        Nullif nullif = new Nullif(locate2, Integer.valueOf(0));
+        Nullif nullif = new Nullif(locate2, 0);
         SqlBinaryExpression sqlBinaryExpressionDiff = new SqlBinaryExpressionImpl(SqlExpressionOperator.DIFF,
                 locate.getPosition().get(), 1);
         SqlBinaryExpression sqlBinaryExpressionSum = new SqlBinaryExpressionImpl(SqlExpressionOperator.SUM, nullif,

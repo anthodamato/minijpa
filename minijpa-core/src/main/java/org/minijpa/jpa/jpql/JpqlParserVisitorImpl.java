@@ -11,6 +11,7 @@ import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.criteria.CriteriaUtils;
 import org.minijpa.jpa.db.AttributeUtil;
 import org.minijpa.jpa.db.DbConfiguration;
@@ -1227,7 +1228,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     private QueryParameter buildQueryParameter(
             Map<Parameter<?>, Object> parameterMap,
             String inputParameter) {
-        Optional<Object> optional = CriteriaUtils.findParameterValue(parameterMap, inputParameter);
+        Optional<Object> optional = ParameterUtils.findParameterValue(parameterMap, inputParameter);
         if (optional.isEmpty())
             throw new SemanticException("Input parameter '" + inputParameter + "' not found");
 
