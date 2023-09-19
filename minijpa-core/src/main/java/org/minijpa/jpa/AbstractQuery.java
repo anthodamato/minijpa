@@ -35,6 +35,7 @@ public abstract class AbstractQuery implements Query {
     protected JdbcEntityManager jdbcEntityManager;
     protected FlushModeType flushModeType = FlushModeType.AUTO;
     private final Map<Parameter<?>, Object> parameterValues = new HashMap<>();
+    private final Map<String, Object> hints = new HashMap<>();
 
     @Override
     public Query setMaxResults(int maxResult) {
@@ -62,14 +63,13 @@ public abstract class AbstractQuery implements Query {
 
     @Override
     public Query setHint(String hintName, Object value) {
-        // TODO Auto-generated method stub
-        return null;
+        hints.put(hintName, value);
+        return this;
     }
 
     @Override
     public Map<String, Object> getHints() {
-        // TODO Auto-generated method stub
-        return null;
+        return hints;
     }
 
     @Override

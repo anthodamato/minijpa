@@ -12,9 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class JdbcFetchJoinRecordBuilder implements JdbcRecordBuilder {
     private final Logger log = LoggerFactory.getLogger(JdbcFetchJoinRecordBuilder.class);
@@ -25,6 +23,7 @@ public class JdbcFetchJoinRecordBuilder implements JdbcRecordBuilder {
     private EntityLoader entityLoader;
     private List<MetaEntity> fetchJoinMetaEntities;
     private List<RelationshipMetaAttribute> fetchJoinMetaAttributes;
+    private final Map<RelationshipMetaAttribute, Set<Object>> relationshipAttributeIds = new HashMap<>();
     private boolean distinct = false;
 
     public void setFetchParameters(List<FetchParameter> fetchParameters) {
@@ -51,10 +50,30 @@ public class JdbcFetchJoinRecordBuilder implements JdbcRecordBuilder {
     public void setFetchJoinMetaAttributes(
             List<RelationshipMetaAttribute> fetchJoinMetaAttributes) {
         this.fetchJoinMetaAttributes = fetchJoinMetaAttributes;
+        relationshipAttributeIds.clear();
     }
 
     public void setDistinct(boolean distinct) {
         this.distinct = distinct;
+    }
+
+    private void addRelationshipEntityId(
+            RelationshipMetaAttribute relationshipMetaAttribute,
+            Object id) {
+        Set<Object> idSet = relationshipAttributeIds.get(relationshipMetaAttribute);
+        if (idSet == null) {
+            idSet = new HashSet<>();
+            relationshipAttributeIds.put(relationshipMetaAttribute, idSet);
+        }
+
+        idSet.add(id);
+    }
+
+    private boolean isRelationshipEntityIdPresent(
+            RelationshipMetaAttribute relationshipMetaAttribute,
+            Object id) {
+        Set<Object> idSet = relationshipAttributeIds.get(relationshipMetaAttribute);
+        return idSet != null && !idSet.isEmpty() && idSet.contains(id);
     }
 
     @Override
@@ -64,33 +83,39 @@ public class JdbcFetchJoinRecordBuilder implements JdbcRecordBuilder {
             Optional<ModelValueArray<FetchParameter>> optional = JdbcRunner
                     .createModelValueArrayFromResultSetAM(fetchParameters, rs, metaData);
             log.debug("collectRecords: optional={}", optional);
-            if (optional.isPresent()) {
-                Object instance = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
-                        metaEntity);
-                if (distinct) {
-                    if (!collectionResult.contains(instance)) {
-                        collectionResult.add(instance);
-                        // set lazy loaded flag for those attributes
-                        for (int i = 0; i < fetchJoinMetaAttributes.size(); ++i) {
-                            MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttributes.get(i),
-                                    instance, true);
-                        }
-                    }
-                } else {
+            if (optional.isEmpty())
+                continue;
+
+            Object instance = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
+                    metaEntity);
+            if (distinct) {
+                if (!collectionResult.contains(instance)) {
                     collectionResult.add(instance);
                     // set lazy loaded flag for those attributes
-                    for (int i = 0; i < fetchJoinMetaAttributes.size(); ++i) {
-                        MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttributes.get(i),
+                    for (RelationshipMetaAttribute fetchJoinMetaAttribute : fetchJoinMetaAttributes) {
+                        MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttribute,
                                 instance, true);
                     }
                 }
+            } else {
+                collectionResult.add(instance);
+                // set lazy loaded flag for those attributes
+                for (RelationshipMetaAttribute fetchJoinMetaAttribute : fetchJoinMetaAttributes) {
+                    MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttribute,
+                            instance, true);
+                }
+            }
 
-                // set relationship attribute values
-                for (int i = 0; i < fetchJoinMetaEntities.size(); ++i) {
-                    Object value = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
-                            fetchJoinMetaEntities.get(i));
+            // set relationship attribute values
+            for (int i = 0; i < fetchJoinMetaEntities.size(); ++i) {
+                Object value = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
+                        fetchJoinMetaEntities.get(i));
+                log.debug("collectRecords: Relationship Attribute Values value={}", value);
+                Object id = AttributeUtil.getIdValue(fetchJoinMetaEntities.get(i), value);
+                if (!isRelationshipEntityIdPresent(fetchJoinMetaAttributes.get(i), id)) {
                     MetaEntityHelper.addElementToCollectionAttribute(instance, metaEntity,
                             fetchJoinMetaAttributes.get(i), value);
+                    addRelationshipEntityId(fetchJoinMetaAttributes.get(i), id);
                 }
             }
         }

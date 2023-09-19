@@ -103,8 +103,8 @@ public class CollectionUtils {
         if (implementsInterface(c, Collection.class))
             return true;
 
-        if (implementsInterface(c, Map.class))
-            return true;
+//        if (implementsInterface(c, Map.class))
+//            return true;
 
         return false;
     }

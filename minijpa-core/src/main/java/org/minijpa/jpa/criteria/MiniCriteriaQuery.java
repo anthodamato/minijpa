@@ -19,6 +19,7 @@ import org.minijpa.jpa.criteria.predicate.PredicateUtils;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.criteria.predicate.PredicateType;
 import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,6 +62,14 @@ public class MiniCriteriaQuery<T> implements CriteriaQuery<T> {
         super();
         this.metamodel = metamodel;
         this.persistenceUnitContext = persistenceUnitContext;
+    }
+
+    public Metamodel getMetamodel() {
+        return metamodel;
+    }
+
+    public PersistenceUnitContext getPersistenceUnitContext() {
+        return persistenceUnitContext;
     }
 
     @Override

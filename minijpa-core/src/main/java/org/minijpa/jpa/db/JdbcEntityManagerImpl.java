@@ -16,27 +16,18 @@
 package org.minijpa.jpa.db;
 
 import java.lang.reflect.InvocationTargetException;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.util.*;
 
-import javax.persistence.Parameter;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.Tuple;
+import javax.persistence.*;
 import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
 
 import org.minijpa.jdbc.*;
 import org.minijpa.jdbc.JdbcRunner.JdbcNativeRecordBuilder;
 import org.minijpa.jdbc.db.SqlSelectData;
-import org.minijpa.jpa.DeleteQuery;
-import org.minijpa.jpa.MetaEntityHelper;
-import org.minijpa.jpa.MiniNativeQuery;
-import org.minijpa.jpa.MiniTypedQuery;
-import org.minijpa.jpa.ParameterUtils;
-import org.minijpa.jpa.TupleImpl;
-import org.minijpa.jpa.UpdateQuery;
+import org.minijpa.jpa.*;
+import org.minijpa.jpa.criteria.join.CollectionJoinImpl;
 import org.minijpa.jpa.db.querymapping.EntityMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
@@ -59,12 +50,12 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     protected ConnectionHolder connectionHolder;
     private final EntityHandler entityHandler;
     private final JpqlModule jpqlModule;
-    private final JdbcFetchParameterRecordBuilder jdbcFPRecordBuilder = new JdbcFetchParameterRecordBuilder();
+    private final JdbcFetchParameterRecordBuilder jdbcFetchParameterRecordBuilder = new JdbcFetchParameterRecordBuilder();
     private final JdbcRunner.JdbcRecordBuilderValue jdbcJpqlRecordBuilder = new JdbcRunner.JdbcRecordBuilderValue();
     private final JdbcTupleRecordBuilder jdbcTupleRecordBuilder = new JdbcTupleRecordBuilder();
     private final JdbcNativeRecordBuilder nativeRecordBuilder = new JdbcNativeRecordBuilder();
     private final JdbcQRMRecordBuilder qrmRecordBuilder = new JdbcQRMRecordBuilder();
-    private final JdbcFetchJoinRecordBuilder jdbcFJRecordBuilder = new JdbcFetchJoinRecordBuilder();
+    private final JdbcFetchJoinRecordBuilder jdbcFetchJoinRecordBuilder = new JdbcFetchJoinRecordBuilder();
 
     public JdbcEntityManagerImpl(DbConfiguration dbConfiguration,
                                  PersistenceUnitContext persistenceUnitContext,
@@ -286,7 +277,10 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         for (Object entityInstance : managedEntityList) {
             MetaEntity me = persistenceUnitContext.getEntities().get(entityInstance.getClass().getName());
             EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(me, entityInstance);
-            if (entityStatus == EntityStatus.REMOVED_NOT_FLUSHED) {
+            if (entityStatus == EntityStatus.REMOVED_NOT_FLUSHED
+//                    ||
+//                    entityStatus == EntityStatus.FLUSHED_LOADED_FROM_DB
+            ) {
                 log.debug("flush: REMOVED_NOT_FLUSHED Join Table Records entityInstance={}",
                         entityInstance);
                 entityHandler.removeJoinTableRecords(entityInstance, me);
@@ -496,24 +490,43 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         }
     }
 
+    private class StatementParametersMetaEntity {
+        private StatementParameters statementParameters;
+        private MetaEntity metaEntity;
+
+        public StatementParametersMetaEntity(StatementParameters statementParameters, MetaEntity metaEntity) {
+            this.statementParameters = statementParameters;
+            this.metaEntity = metaEntity;
+        }
+    }
+
+//    private void mergeEntityCollections(
+//            Collection<Object> finalCollectionResult,
+//            MetaEntity finalMetaEntity,
+//            Collection<Object> collectionResult,
+//            MetaEntity metaEntity) {
+//        for (Object entityInstance : collectionResult) {
+//            if (!finalCollectionResult.contains(entityInstance)) {
+//                finalCollectionResult.add(entityInstance);
+//            }
+//        }
+//    }
+
     @Override
     public List<?> select(Query query) throws Exception {
         CriteriaQuery<?> criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
-        StatementParameters statementParameters = dbConfiguration.getSqlStatementFactory().select(query,
-                persistenceUnitContext.getAliasGenerator());
-        SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
-        String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-        sqlSelectData.getFetchParameters().forEach(f -> log.debug("select: f={}", f));
-        log.debug("select: sql={}", sql);
-        log.debug("select: sqlSelectData.getResult()={}", sqlSelectData.getResult());
-        log.debug("select: statementParameters.getStatementType()={}",
-                statementParameters.getStatementType());
-
         if (criteriaQuery.getResultType() == Tuple.class) {
             if (!(criteriaQuery.getSelection() instanceof CompoundSelection<?>)) {
                 throw new IllegalArgumentException(
                         "Selection '" + criteriaQuery.getSelection() + "' is not a compound selection");
             }
+
+            Map<Parameter<?>, Object> parameterMap = ((AbstractQuery) query).getParameterMap();
+            StatementParameters statementParameters = dbConfiguration.getSqlStatementFactory().select(
+                    criteriaQuery, query.getLockMode(), parameterMap,
+                    persistenceUnitContext.getAliasGenerator());
+            SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+            String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
 
             List<Tuple> collectionResult = new ArrayList<>();
             jdbcTupleRecordBuilder.setSqlSelectData(sqlSelectData);
@@ -525,7 +538,104 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             return collectionResult;
         }
 
+        List<Join> joins = dbConfiguration.getSqlStatementFactory().getJoins(criteriaQuery.getRoots());
+        Map<String, Object> hints = query.getHints();
+        log.debug("select: joins.size()={}", joins.size());
+        log.debug("select: hints.get(QueryHints.SPLIT_MULTIPLE_JOINS)={}", hints.get(QueryHints.SPLIT_MULTIPLE_JOINS));
+        if (joins.size() > 1 &&
+                joins.size() == 2 &&
+                hints.get(QueryHints.SPLIT_MULTIPLE_JOINS) != null &&
+                ((Boolean) hints.get(QueryHints.SPLIT_MULTIPLE_JOINS))) {
+            // split multiple joins case
+            List<MetaEntity> joinMetaEntityList = new ArrayList<>();
+            joins.forEach(join -> {
+                if (join instanceof CollectionJoinImpl) {
+                    CollectionJoinImpl collectionJoin = (CollectionJoinImpl) join;
+                    joinMetaEntityList.add(collectionJoin.getMetaEntity());
+                }
+            });
+
+            List<StatementParametersMetaEntity> statementParametersList = new ArrayList<>();
+            Map<Parameter<?>, Object> parameterMap = ((AbstractQuery) query).getParameterMap();
+            joinMetaEntityList.forEach(metaEntity -> {
+                CriteriaQuery cq = dbConfiguration.getSqlStatementFactory().filterCriteriaQuery(criteriaQuery, metaEntity);
+                StatementParameters statementParameters = dbConfiguration.getSqlStatementFactory().select(
+                        cq, query.getLockMode(), parameterMap,
+                        persistenceUnitContext.getAliasGenerator());
+                List<MetaEntity> joinEntities = new ArrayList<>(joinMetaEntityList);
+                joinEntities.remove(metaEntity);
+                statementParametersList.add(new StatementParametersMetaEntity(statementParameters, joinEntities.get(0)));
+            });
+
+            Collection<Object> finalCollectionResult = (Collection<Object>) CollectionUtils.createInstance(
+                    null,
+                    CollectionUtils.findCollectionImplementationClass(List.class));
+            for (StatementParametersMetaEntity statementParametersMetaEntity : statementParametersList) {
+                StatementParameters statementParameters = statementParametersMetaEntity.statementParameters;
+                log.debug("select: ############ statementParameters.getStatementType()={}", statementParameters.getStatementType());
+                if (statementParameters.getStatementType() == StatementType.FETCH_JOIN) {
+                    Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
+                            null,
+                            CollectionUtils.findCollectionImplementationClass(List.class));
+                    SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+                    Optional<MetaEntity> optionalEntity = persistenceUnitContext
+                            .findMetaEntityByTableName(sqlSelectData.getResult().getName());
+                    MetaEntity entity = optionalEntity.get();
+
+                    initializeFetchJoinRecordBuilder(collectionResult, entity, statementParameters);
+                    String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+                    dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
+                            statementParameters.getParameters(), jdbcFetchJoinRecordBuilder);
+                    log.debug("select: ############ collectionResult.size()={}", collectionResult.size());
+
+                    // merge the collection with the final one
+                    for (Object entityInstance : collectionResult) {
+                        if (!finalCollectionResult.contains(entityInstance)) {
+                            finalCollectionResult.add(entityInstance);
+                        }
+                    }
+
+//                    mergeEntityCollections(finalCollectionResult, entity, collectionResult, statementParametersMetaEntity.metaEntity);
+                }
+            }
+
+            return (List<?>) finalCollectionResult;
+        }
+
+        Map<Parameter<?>, Object> parameterMap = ((AbstractQuery) query).getParameterMap();
+        StatementParameters statementParameters = dbConfiguration.getSqlStatementFactory().select(
+                criteriaQuery, query.getLockMode(), parameterMap,
+                persistenceUnitContext.getAliasGenerator());
+        SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+        String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+        sqlSelectData.getFetchParameters().forEach(f -> log.debug("select: f={}", f));
+        log.debug("select: sql={}", sql);
+        log.debug("select: sqlSelectData.getResult()={}", sqlSelectData.getResult());
+        log.debug("select: statementParameters.getStatementType()={}",
+                statementParameters.getStatementType());
+
         return runQuery(statementParameters);
+    }
+
+    private JdbcRecordBuilder initializeFetchJoinRecordBuilder(
+            Collection<Object> collectionResult,
+            MetaEntity metaEntity,
+            StatementParameters statementParameters) {
+        SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+        Optional<MetaEntity> optionalEntity = persistenceUnitContext
+                .findMetaEntityByTableName(sqlSelectData.getResult().getName());
+        MetaEntity entity = optionalEntity.get();
+
+        entityHandler.setLockType(LockType.NONE);
+        jdbcFetchJoinRecordBuilder.setCollectionResult(collectionResult);
+        jdbcFetchJoinRecordBuilder.setEntityLoader(entityHandler);
+        jdbcFetchJoinRecordBuilder.setMetaEntity(metaEntity);
+        jdbcFetchJoinRecordBuilder.setFetchJoinMetaEntities(statementParameters.getFetchJoinMetaEntities());
+        jdbcFetchJoinRecordBuilder.setFetchJoinMetaAttributes(
+                statementParameters.getFetchJoinMetaAttributes());
+        jdbcFetchJoinRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
+        jdbcFetchJoinRecordBuilder.setDistinct(sqlSelectData.isDistinct());
+        return jdbcFetchJoinRecordBuilder;
     }
 
     private List<?> runQuery(StatementParameters statementParameters) throws Exception {
@@ -542,22 +652,25 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                     null,
                     CollectionUtils.findCollectionImplementationClass(List.class));
             log.debug("select: collectionResult={}", collectionResult);
-
             Optional<MetaEntity> optionalEntity = persistenceUnitContext
                     .findMetaEntityByTableName(sqlSelectData.getResult().getName());
             MetaEntity entity = optionalEntity.get();
-            entityHandler.setLockType(LockType.NONE);
-            jdbcFJRecordBuilder.setCollectionResult(collectionResult);
-            jdbcFJRecordBuilder.setEntityLoader(entityHandler);
-            jdbcFJRecordBuilder.setMetaEntity(entity);
-            jdbcFJRecordBuilder.setFetchJoinMetaEntities(statementParameters.getFetchJoinMetaEntities());
-            jdbcFJRecordBuilder.setFetchJoinMetaAttributes(
-                    statementParameters.getFetchJoinMetaAttributes());
-            jdbcFJRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
-            jdbcFJRecordBuilder.setDistinct(sqlSelectData.isDistinct());
+            initializeFetchJoinRecordBuilder(collectionResult, entity, statementParameters);
+//            Optional<MetaEntity> optionalEntity = persistenceUnitContext
+//                    .findMetaEntityByTableName(sqlSelectData.getResult().getName());
+//            MetaEntity entity = optionalEntity.get();
+//            entityHandler.setLockType(LockType.NONE);
+//            jdbcFetchJoinRecordBuilder.setCollectionResult(collectionResult);
+//            jdbcFetchJoinRecordBuilder.setEntityLoader(entityHandler);
+//            jdbcFetchJoinRecordBuilder.setMetaEntity(entity);
+//            jdbcFetchJoinRecordBuilder.setFetchJoinMetaEntities(statementParameters.getFetchJoinMetaEntities());
+//            jdbcFetchJoinRecordBuilder.setFetchJoinMetaAttributes(
+//                    statementParameters.getFetchJoinMetaAttributes());
+//            jdbcFetchJoinRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
+//            jdbcFetchJoinRecordBuilder.setDistinct(sqlSelectData.isDistinct());
 
             dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
-                    statementParameters.getParameters(), jdbcFJRecordBuilder);
+                    statementParameters.getParameters(), jdbcFetchJoinRecordBuilder);
             return (List<?>) collectionResult;
         }
 
@@ -571,13 +684,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                     .findMetaEntityByTableName(sqlSelectData.getResult().getName());
             MetaEntity entity = optionalEntity.get();
             entityHandler.setLockType(LockType.NONE);
-            jdbcFPRecordBuilder.setCollectionResult(collectionResult);
-            jdbcFPRecordBuilder.setEntityLoader(entityHandler);
-            jdbcFPRecordBuilder.setMetaEntity(entity);
-            jdbcFPRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
+            jdbcFetchParameterRecordBuilder.setCollectionResult(collectionResult);
+            jdbcFetchParameterRecordBuilder.setEntityLoader(entityHandler);
+            jdbcFetchParameterRecordBuilder.setMetaEntity(entity);
+            jdbcFetchParameterRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
 
             dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
-                    statementParameters.getParameters(), jdbcFPRecordBuilder);
+                    statementParameters.getParameters(), jdbcFetchParameterRecordBuilder);
             return (List<?>) collectionResult;
         }
 

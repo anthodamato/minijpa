@@ -44,16 +44,19 @@ public class MiniPersistenceContext implements EntityContainer {
 
     private Map<Object, Object> getEntityMap(Class<?> c, Map<Class<?>, Map<Object, Object>> entities) {
         Map<Object, Object> mapEntities = entities.get(c);
+        LOG.debug("getEntityMap: c={}, mapEntities={}",c, mapEntities);
         if (mapEntities == null) {
             mapEntities = new HashMap<>();
             entities.put(c, mapEntities);
         }
 
+        LOG.debug("getEntityMap: mapEntities.size()={}", mapEntities.size());
         return mapEntities;
     }
 
     @Override
     public void addManaged(Object entityInstance, Object idValue) throws Exception {
+        LOG.debug("addManaged: entityInstance={}", entityInstance);
         Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
         mapEntities.put(idValue, entityInstance);
         managedEntityList.remove(entityInstance);
@@ -62,6 +65,7 @@ public class MiniPersistenceContext implements EntityContainer {
 
     @Override
     public void removeManaged(Object entityInstance) throws Exception {
+        LOG.debug("removeManaged: entityInstance={}", entityInstance);
         MetaEntity e = entities.get(entityInstance.getClass().getName());
         Object idValue = AttributeUtil.getIdValue(e, entityInstance);
         Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
@@ -91,7 +95,9 @@ public class MiniPersistenceContext implements EntityContainer {
         if (primaryKey == null)
             throw new IllegalArgumentException("Primary key is null (class '" + entityClass.getName() + "')");
 
+        LOG.debug("find: managed entityClass={}", entityClass);
         Map<Object, Object> map = getEntityMap(entityClass, managedEntities);
+        map.forEach((k, v) -> LOG.debug("find: k={}, v={}", k, v));
         Object entityInstance = map.get(primaryKey);
         LOG.debug("find: managed entityInstance={}", entityInstance);
         return entityInstance;
