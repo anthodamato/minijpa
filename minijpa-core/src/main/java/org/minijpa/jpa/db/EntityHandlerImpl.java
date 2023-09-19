@@ -327,10 +327,10 @@ public class EntityHandlerImpl implements EntityHandler {
             MetaEntity entity,
             LockType lockType) throws Exception {
         Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
-        LOG.debug("buildEntityByValues: primaryKey={}", primaryKey);
-        LOG.debug("buildEntityByValues: entity={}", entity);
+        LOG.debug("buildEntityByValuesNoRelationshipAttributeLoading: primaryKey={}", primaryKey);
+        LOG.debug("buildEntityByValuesNoRelationshipAttributeLoading: entity={}", entity);
         Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
-        LOG.debug("buildEntityByValues: entityInstance={}", entityInstance);
+        LOG.debug("buildEntityByValuesNoRelationshipAttributeLoading: entityInstance={}", entityInstance);
         if (entityInstance != null) {
             return entityInstance;
         }
@@ -659,6 +659,9 @@ public class EntityHandlerImpl implements EntityHandler {
 
     @Override
     public void removeJoinTableRecords(Object entityInstance, MetaEntity e) throws Exception {
+        if (e.getRelationshipAttributes().isEmpty())
+            return;
+
         Object idValue = AttributeUtil.getIdValue(e, entityInstance);
         List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(e.getId(), idValue);
         Set<RelationshipJoinTable> relationshipJoinTables = e.getRelationshipAttributes().stream()

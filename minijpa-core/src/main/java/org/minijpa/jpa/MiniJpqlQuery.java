@@ -39,7 +39,8 @@ public class MiniJpqlQuery extends AbstractQuery {
     private final Optional<Class<?>> resultClass;
     private final EntityManager entityManager;
 
-    public MiniJpqlQuery(String jpqlString, Optional<Class<?>> resultClass,
+    public MiniJpqlQuery(String jpqlString,
+                         Optional<Class<?>> resultClass,
                          EntityManager entityManager,
                          JdbcEntityManager jdbcEntityManager) {
         this.jpqlString = jpqlString;

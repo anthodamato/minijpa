@@ -28,8 +28,11 @@ import org.minijpa.jpa.model.relationship.Cascade;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.relationship.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MetaEntity {
+    private Logger log = LoggerFactory.getLogger(MetaEntity.class);
 
     private Class<?> entityClass;
     private String name;
@@ -160,6 +163,7 @@ public class MetaEntity {
 
     public RelationshipMetaAttribute getRelationshipAttribute(String name) {
         for (RelationshipMetaAttribute attribute : relationshipAttributes) {
+            log.debug("getRelationshipAttribute: attribute.getName()={}", attribute.getName());
             if (attribute.getName().equals(name)) {
                 return attribute;
             }

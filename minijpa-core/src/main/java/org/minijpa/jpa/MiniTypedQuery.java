@@ -15,10 +15,7 @@
  */
 package org.minijpa.jpa;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
@@ -80,12 +77,6 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
     }
 
     @Override
-    public Map<String, Object> getHints() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public boolean isBound(Parameter<?> param) {
         // TODO Auto-generated method stub
         return false;
@@ -133,8 +124,8 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 
     @Override
     public TypedQuery<X> setHint(String hintName, Object value) {
-        // TODO Auto-generated method stub
-        return null;
+        super.setHint(hintName, value);
+        return this;
     }
 
     @Override
