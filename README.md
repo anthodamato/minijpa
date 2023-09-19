@@ -100,6 +100,10 @@ The property "c3p0.datasource" set to "true" enables the connection pool.
 
             <property name="c3p0.datasource" value="true"></property>
 
+##### Multiple Join Split  
+In order to avoid cartesian product with multiple joins built with criteria you can use the query hint *QueryHints.SPLIT_MULTIPLE_JOINS*.
+MultipleJoinTest class contains an example test method.
+
 ## Metamodel Class Generation  
 Metamodel classes can be generated using the '*org.minijpa.jpa.metamodel.generator.MetamodelGenerator*' procedure provided by the module 'minijpa-metamodel-generator' with the following parameters:  
 
