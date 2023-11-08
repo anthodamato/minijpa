@@ -18,9 +18,8 @@ package org.minijpa.jpa;
 import javax.persistence.Parameter;
 
 /**
- *
- * @author adamato
  * @param <T>
+ * @author adamato
  */
 public class MiniParameter<T> implements Parameter<T> {
 
@@ -29,24 +28,24 @@ public class MiniParameter<T> implements Parameter<T> {
     private final Class<T> parameterType;
 
     public MiniParameter(String name, Integer position, Class<T> parameterType) {
-	this.name = name;
-	this.position = position;
-	this.parameterType = parameterType;
+        this.name = name;
+        this.position = position;
+        this.parameterType = parameterType;
     }
 
     @Override
     public String getName() {
-	return name;
+        return name;
     }
 
     @Override
     public Integer getPosition() {
-	return position;
+        return position;
     }
 
     @Override
     public Class<T> getParameterType() {
-	return parameterType;
+        return parameterType;
     }
 
 }
