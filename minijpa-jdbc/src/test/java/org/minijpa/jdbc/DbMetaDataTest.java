@@ -1,10 +1,10 @@
 package org.minijpa.jdbc;
 
-import java.sql.Connection;
-import java.util.Map;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.sql.Connection;
+import java.util.Map;
 
 public class DbMetaDataTest {
     private ConnectionProperties connectionProperties = new ConnectionProperties();
@@ -12,7 +12,6 @@ public class DbMetaDataTest {
     @Test
     public void metaData() throws Exception {
         Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
-
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
                 properties.get("driver"), properties.get("user"), properties.get("password"));
         connectionProvider.init();
@@ -21,7 +20,7 @@ public class DbMetaDataTest {
 
         DbMetaData dbMetaData = new DbMetaData();
         Database database = dbMetaData.database(connection);
-        Assertions.assertEquals(connectionProperties.getDatabase(System.getProperty("minijpa.test")), database);
+        Assertions.assertEquals(Database.getDatabaseById(System.getProperty("minijpa.test")), database);
 //        dbMetaData.showDatabaseMetadata(connection);
     }
 }

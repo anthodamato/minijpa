@@ -16,12 +16,35 @@
 package org.minijpa.jdbc;
 
 public enum Database {
-    UNKNOWN, // Unknown database
-    APACHE_DERBY, // Apache Derby
-    MYSQL, // MySQL
-    MARIADB, // MariaDB
-    POSTGRES, // PostgresSQL
-    ORACLE, // Oracle
-    H2 // H2
+    UNKNOWN("unknown"), // Unknown database
+    APACHE_DERBY("derby"), // Apache Derby
+    MYSQL("mysql"), // MySQL
+    MARIADB("mariadb"), // MariaDB
+    POSTGRES("postgres"), // PostgresSQL
+    ORACLE("oracle"), // Oracle
+    H2("h2") // H2
     ;
+
+    private String dbId;
+
+    Database(String dbid) {
+        this.dbId = dbid;
+    }
+
+    public String getDbId() {
+        return dbId;
+    }
+
+    public static Database getDatabaseById(String db) {
+        if (db == null || db.trim().length() == 0)
+            return APACHE_DERBY;
+
+        for (Database database : values()) {
+            if (database.dbId.equals(db))
+                return database;
+        }
+
+        return Database.UNKNOWN;
+    }
+
 }
