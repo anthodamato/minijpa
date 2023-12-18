@@ -22,53 +22,63 @@ import org.minijpa.sql.model.FromTable;
 
 public class FromJoinImpl implements FromJoin {
 
-  private final FromTable toTable;
-  private final String fromAlias;
-  private final List<Column> fromColumns;
-  private final List<Column> toColumns;
-  private JoinType joinType = JoinType.Inner;
+    private final FromTable toTable;
+    private final String fromAlias;
+    private final List<Column> fromColumns;
+    private final List<Column> toColumns;
+    private JoinType joinType = JoinType.Inner;
 
-  public FromJoinImpl(FromTable toTable, String fromAlias, List<Column> fromColumns,
-      List<Column> toColumns) {
-    super();
-    this.toTable = toTable;
-    this.fromAlias = fromAlias;
-    this.fromColumns = fromColumns;
-    this.toColumns = toColumns;
-  }
+    public FromJoinImpl(FromTable toTable, String fromAlias, List<Column> fromColumns,
+                        List<Column> toColumns) {
+        super();
+        this.toTable = toTable;
+        this.fromAlias = fromAlias;
+        this.fromColumns = fromColumns;
+        this.toColumns = toColumns;
+    }
 
-  public FromJoinImpl(FromTable toTable, String fromAlias, List<Column> fromColumns,
-      List<Column> toColumns, JoinType joinType) {
-    this.toTable = toTable;
-    this.fromAlias = fromAlias;
-    this.fromColumns = fromColumns;
-    this.toColumns = toColumns;
-    this.joinType = joinType;
-  }
+    public FromJoinImpl(FromTable toTable, String fromAlias, List<Column> fromColumns,
+                        List<Column> toColumns, JoinType joinType) {
+        this.toTable = toTable;
+        this.fromAlias = fromAlias;
+        this.fromColumns = fromColumns;
+        this.toColumns = toColumns;
+        this.joinType = joinType;
+    }
 
-  @Override
-  public FromTable getToTable() {
-    return toTable;
-  }
+    @Override
+    public FromTable getToTable() {
+        return toTable;
+    }
 
-  @Override
-  public String getFromAlias() {
-    return fromAlias;
-  }
+    @Override
+    public String getFromAlias() {
+        return fromAlias;
+    }
 
-  @Override
-  public List<Column> getFromColumns() {
-    return fromColumns;
-  }
+    @Override
+    public List<Column> getFromColumns() {
+        return fromColumns;
+    }
 
-  @Override
-  public List<Column> getToColumns() {
-    return toColumns;
-  }
+    @Override
+    public List<Column> getToColumns() {
+        return toColumns;
+    }
 
-  @Override
-  public JoinType getType() {
-    return joinType;
-  }
+    @Override
+    public JoinType getType() {
+        return joinType;
+    }
 
+    @Override
+    public String toString() {
+        return "FromJoinImpl{" +
+                "toTable=" + toTable +
+                ", fromAlias='" + fromAlias + '\'' +
+                ", fromColumns=" + fromColumns +
+                ", toColumns=" + toColumns +
+                ", joinType=" + joinType +
+                '}';
+    }
 }

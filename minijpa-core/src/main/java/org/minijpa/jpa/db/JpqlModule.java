@@ -5,12 +5,17 @@
  */
 package org.minijpa.jpa.db;
 
+import org.minijpa.jdbc.db.SqlSelectDataBuilder;
+import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.jpql.*;
 import org.minijpa.metadata.PersistenceUnitContext;
+import org.minijpa.sql.model.FromTable;
+import org.minijpa.sql.model.SqlSelect;
 
 import javax.persistence.Parameter;
 import java.io.StringReader;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Antonio Damato <anto.damato@gmail.com>
@@ -29,7 +34,8 @@ public class JpqlModule {
 
     public StatementParameters parse(
             String jpqlQuery,
-            Map<Parameter<?>, Object> parameterMap) throws ParseException, Error, IllegalStateException {
+            Map<Parameter<?>, Object> parameterMap,
+            Map<String, Object> hints) throws ParseException, Error, IllegalStateException {
         StringReader reader = new StringReader(jpqlQuery);
         if (parser == null) {
             parser = new JpqlParser(reader);
@@ -41,7 +47,8 @@ public class JpqlModule {
             visitor = new JpqlParserVisitorImpl(persistenceUnitContext, dbConfiguration);
         }
 
-        StatementParameters statementParameters = (StatementParameters) qlStatement.jjtAccept(visitor, parameterMap);
+        JpqlParserInputData jpqlParserInputData = new JpqlParserInputData(parameterMap, hints);
+        StatementParameters statementParameters = (StatementParameters) qlStatement.jjtAccept(visitor, jpqlParserInputData);
         if (statementParameters == null)
             throw new IllegalStateException("Jpql Parsing failed: '" + jpqlQuery + "'");
 

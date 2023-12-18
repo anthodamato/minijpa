@@ -64,7 +64,7 @@ public class MiniJpqlQuery extends AbstractQuery {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
-            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap());
+            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints());
         } catch (Exception e) {
             LOG.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
@@ -80,7 +80,7 @@ public class MiniJpqlQuery extends AbstractQuery {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
-            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap());
+            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints());
         } catch (Exception e) {
             LOG.error(e.getMessage());
             throw new PersistenceException(e.getMessage());

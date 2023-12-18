@@ -15,7 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -493,13 +492,13 @@ public class EntityHandlerImpl implements EntityHandler {
 
         MetaEntityHelper.createVersionAttributeArrayEntry(entity, entityInstance, modelValueArray);
         List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(modelValueArray);
-        List<String> columns = parameters.stream().map(QueryParameter::getColumnName)
+        List<String> columns = parameters.stream().map(p -> (String) p.getColumn())
                 .collect(Collectors.toList());
 
         Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
         LOG.debug("update: idValue={}", idValue);
         List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(entity.getId(), idValue);
-        List<String> idColumns = idParameters.stream().map(QueryParameter::getColumnName)
+        List<String> idColumns = idParameters.stream().map(p -> (String) p.getColumn())
                 .collect(Collectors.toList());
         if (MetaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
             idColumns.add(entity.getVersionAttribute().get().getColumnName());

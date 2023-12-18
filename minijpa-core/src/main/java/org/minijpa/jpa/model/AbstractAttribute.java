@@ -16,6 +16,7 @@
 package org.minijpa.jpa.model;
 
 import java.util.Optional;
+
 import org.minijpa.jdbc.mapper.AttributeMapper;
 
 /**
@@ -25,38 +26,45 @@ import org.minijpa.jdbc.mapper.AttributeMapper;
  */
 public abstract class AbstractAttribute {
 
-  // column name
-  protected String columnName;
-  /**
-   * Attribute type: java.lang.Long, java.lang.Date, java.lang.String, java.lang.Boolean,
-   * java.util.Collection, java.util.List, java.util.Map, java.util.Set, etc.
-   */
-  protected Class<?> type;
-  // sql type according to java.sql.Types constants
-  protected Integer sqlType;
-  // this type matches the database data type
-  protected Class<?> databaseType;
+    // column name
+    protected String columnName;
+    /**
+     * Attribute type: java.lang.Long, java.lang.Date, java.lang.String, java.lang.Boolean,
+     * java.util.Collection, java.util.List, java.util.Map, java.util.Set, etc.
+     */
+    protected Class<?> type;
+    // sql type according to java.sql.Types constants
+    protected Integer sqlType;
+    // this type matches the database data type
+    protected Class<?> databaseType;
 
-  public String getColumnName() {
-    return columnName;
-  }
+    public String getColumnName() {
+        return columnName;
+    }
 
-  public Class<?> getType() {
-    return type;
-  }
+    public Class<?> getType() {
+        return type;
+    }
 
-  public void setType(Class<?> type) {
-    this.type = type;
-  }
+    public void setType(Class<?> type) {
+        this.type = type;
+    }
 
-  public Integer getSqlType() {
-    return sqlType;
-  }
+    public Integer getSqlType() {
+        return sqlType;
+    }
 
-  public Class<?> getDatabaseType() {
-    return databaseType;
-  }
+    public Class<?> getDatabaseType() {
+        return databaseType;
+    }
 
-
-
+    @Override
+    public String toString() {
+        return "AbstractAttribute{" +
+                "columnName='" + columnName + '\'' +
+                ", type=" + type +
+                ", sqlType=" + sqlType +
+                ", databaseType=" + databaseType +
+                '}';
+    }
 }

@@ -6,7 +6,6 @@
 package org.minijpa.sql.model.condition;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class NestedCondition implements Condition {

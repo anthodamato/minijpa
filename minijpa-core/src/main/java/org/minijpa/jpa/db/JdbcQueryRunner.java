@@ -11,10 +11,7 @@ import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.Relationship;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
 import org.minijpa.metadata.AliasGenerator;
-import org.minijpa.sql.model.FromTable;
-import org.minijpa.sql.model.SqlDelete;
-import org.minijpa.sql.model.SqlInsert;
-import org.minijpa.sql.model.SqlUpdate;
+import org.minijpa.sql.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +83,11 @@ public class JdbcQueryRunner {
             EntityHandler entityLoader) throws Exception {
         List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute,
                 foreignKey);
-        List<String> columns = parameters.stream().map(QueryParameter::getColumnName)
+        List<String> columns = parameters.stream().map(p -> {
+                    if (p.getColumn() instanceof String) return (String) p.getColumn();
+
+                    return ((TableColumn) p.getColumn()).getColumn().getName();
+                })
                 .collect(Collectors.toList());
         SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
                 .generateSelectByForeignKey(entity, columns, aliasGenerator);
@@ -144,7 +145,12 @@ public class JdbcQueryRunner {
             Object entityInstance,
             List<QueryParameter> parameters,
             boolean isIdentityColumnNull) throws Exception {
-        List<String> columns = parameters.stream().map(QueryParameter::getColumnName).collect(Collectors.toList());
+        List<String> columns = parameters.stream().map(p -> {
+                    if (p.getColumn() instanceof String) return (String) p.getColumn();
+
+                    return ((TableColumn) p.getColumn()).getColumn().getName();
+                })
+                .collect(Collectors.toList());
         Pk pk = entity.getId();
         SqlInsert sqlInsert = dbConfiguration.getSqlStatementFactory()
                 .generateInsert(entity, columns, true,
@@ -160,7 +166,12 @@ public class JdbcQueryRunner {
             Object entityInstance,
             List<QueryParameter> parameters)
             throws Exception {
-        List<String> columns = parameters.stream().map(QueryParameter::getColumnName).collect(Collectors.toList());
+        List<String> columns = parameters.stream().map(p -> {
+                    if (p.getColumn() instanceof String) return (String) p.getColumn();
+
+                    return ((TableColumn) p.getColumn()).getColumn().getName();
+                })
+                .collect(Collectors.toList());
         SqlInsert sqlInsert = dbConfiguration.getSqlStatementFactory()
                 .generateInsert(entity, columns, false, false,
                         Optional.empty(), aliasGenerator);
@@ -169,8 +180,13 @@ public class JdbcQueryRunner {
     }
 
     public void deleteById(MetaEntity e, List<QueryParameter> idParameters) throws Exception {
-        List<String> idColumns = idParameters.stream().map(QueryParameter::getColumnName)
+        List<String> idColumns = idParameters.stream().map(p -> {
+                    if (p.getColumn() instanceof String) return (String) p.getColumn();
+
+                    return ((TableColumn) p.getColumn()).getColumn().getName();
+                })
                 .collect(Collectors.toList());
+
         SqlDelete sqlDelete = dbConfiguration.getSqlStatementFactory()
                 .generateDeleteById(e, idColumns, aliasGenerator);
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlDelete);
@@ -196,8 +212,13 @@ public class JdbcQueryRunner {
                                          Object instance) throws Exception {
         List<QueryParameter> parameters = dbConfiguration.getSqlStatementFactory()
                 .createRelationshipJoinTableParameters(relationshipJoinTable, entityInstance, instance);
-        List<String> columnNames = parameters.stream().map(QueryParameter::getColumnName)
+        List<String> columnNames = parameters.stream().map(p -> {
+                    if (p.getColumn() instanceof String) return (String) p.getColumn();
+
+                    return ((TableColumn) p.getColumn()).getColumn().getName();
+                })
                 .collect(Collectors.toList());
+
         SqlInsert sqlInsert = dbConfiguration.getSqlStatementFactory()
                 .generateJoinTableInsert(relationshipJoinTable,
                         columnNames);

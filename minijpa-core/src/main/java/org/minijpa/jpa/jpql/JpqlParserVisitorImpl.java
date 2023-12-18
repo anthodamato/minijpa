@@ -1,9 +1,5 @@
 package org.minijpa.jpa.jpql;
 
-import java.sql.Types;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import org.minijpa.jdbc.BasicFetchParameter;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.JdbcTypes;
@@ -24,36 +20,19 @@ import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
 import org.minijpa.metadata.AliasGenerator;
 import org.minijpa.metadata.PersistenceUnitContext;
-import org.minijpa.sql.model.Column;
-import org.minijpa.sql.model.FromTable;
-import org.minijpa.sql.model.FromTableImpl;
-import org.minijpa.sql.model.OrderBy;
-import org.minijpa.sql.model.SqlSelect;
-import org.minijpa.sql.model.TableColumn;
-import org.minijpa.sql.model.Value;
+import org.minijpa.sql.model.*;
 import org.minijpa.sql.model.aggregate.GroupBy;
 import org.minijpa.sql.model.condition.*;
 import org.minijpa.sql.model.expression.SqlExpressionImpl;
-import org.minijpa.sql.model.function.Abs;
-import org.minijpa.sql.model.function.Concat;
-import org.minijpa.sql.model.function.CurrentDate;
-import org.minijpa.sql.model.function.CurrentTime;
-import org.minijpa.sql.model.function.CurrentTimestamp;
-import org.minijpa.sql.model.function.Function;
-import org.minijpa.sql.model.function.Length;
-import org.minijpa.sql.model.function.Locate;
-import org.minijpa.sql.model.function.Lower;
-import org.minijpa.sql.model.function.Mod;
-import org.minijpa.sql.model.function.Sqrt;
-import org.minijpa.sql.model.function.Substring;
-import org.minijpa.sql.model.function.Trim;
-import org.minijpa.sql.model.function.TrimType;
-import org.minijpa.sql.model.function.Upper;
+import org.minijpa.sql.model.function.*;
 import org.minijpa.sql.model.join.FromJoin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.Parameter;
+import java.sql.Types;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
@@ -80,13 +59,40 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     public Object visit(ASTSelectStatement node, Object data) {
         this.tableAliasGenerator = persistenceUnitContext.createTableAliasGenerator();
         JpqlVisitorParameters jpqlVisitorParameters = new JpqlVisitorParameters();
-        jpqlVisitorParameters.parameterMap = (Map<Parameter<?>, Object>) data;
+        jpqlVisitorParameters.parameterMap = ((JpqlParserInputData) data).getParameterMap();
+        jpqlVisitorParameters.hints = ((JpqlParserInputData) data).getHints();
         node.childrenAccept(this, jpqlVisitorParameters);
         LOG.debug("visit: ASTSelectStatement - ");
-        return createFromParameters(jpqlVisitorParameters);
+        return createSelectFromParameters(jpqlVisitorParameters);
     }
 
-    private StatementParameters createFromParameters(JpqlVisitorParameters jpqlVisitorParameters) {
+
+    /**
+     * With multiple joins it has to extract two FromJoin. They are the main table and the join table.
+     *
+     * @param fetchJoinMetaEntity
+     * @param fromJoins
+     * @return
+     */
+    private List<FromJoin> extractRelatedFromJoins(
+            MetaEntity fetchJoinMetaEntity,
+            List<FromJoin> fromJoins) {
+        Optional<FromJoin> optional = fromJoins.stream().filter(fromJoin -> fromJoin.getToTable().getName().equals(fetchJoinMetaEntity.getTableName())).findFirst();
+        if (optional.isEmpty()) {
+            throw new SemanticException("Join table not found for " + fetchJoinMetaEntity.getTableName());
+        }
+
+        FromJoin fromJoin = optional.get();
+        Optional<FromJoin> optionalJoinTable = fromJoins.stream().filter(fj -> fj.getToTable().getAlias().get().equals(fromJoin.getFromAlias())).findFirst();
+        if (optionalJoinTable.isEmpty()) {
+            throw new SemanticException("Join table not found for " + fetchJoinMetaEntity.getTableName());
+        }
+
+        return List.of(fromJoin, optionalJoinTable.get());
+    }
+
+    private Object createSelectFromParameters(
+            JpqlVisitorParameters jpqlVisitorParameters) {
         SqlSelectDataBuilder selectBuilder = new SqlSelectDataBuilder();
 
         if (jpqlVisitorParameters.distinct) {
@@ -107,15 +113,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         // add values and fetch parameters in case of fetch join
         if (jpqlVisitorParameters.statementType == StatementType.FETCH_JOIN) {
             jpqlVisitorParameters.fetchJoinMetaEntities.forEach(joinMetaEntity -> {
-                Optional<String> optionalExistsAlias = tableAliasGenerator.findAliasByObjectName(
-                        joinMetaEntity.getTableName());
-                if (optionalExistsAlias.isEmpty()) {
-                    throw new SemanticException("'" + joinMetaEntity.getName() + "' Entity alias not found");
-                }
-
-                FromTable fetchFromTable = FromTable.of(joinMetaEntity.getTableName(),
-                        optionalExistsAlias.get());
-                jpqlVisitorParameters.values.addAll(MetaEntityHelper.toValues(joinMetaEntity, fetchFromTable));
+                jpqlVisitorParameters.values.addAll(buildFetchJoinValues(joinMetaEntity));
                 jpqlVisitorParameters.fetchParameters.addAll(MetaEntityHelper.convertAllAttributes(joinMetaEntity));
             });
         }
@@ -135,15 +133,28 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
         selectBuilder.withFetchParameters(jpqlVisitorParameters.fetchParameters);
         SqlSelect sqlSelect = selectBuilder.build();
-        if (jpqlVisitorParameters.statementType == StatementType.FETCH_JOIN)
+        if (jpqlVisitorParameters.statementType == StatementType.FETCH_JOIN) {
             return new StatementParameters(
                     sqlSelect,
                     jpqlVisitorParameters.parameters,
                     StatementType.FETCH_JOIN,
                     jpqlVisitorParameters.fetchJoinMetaEntities,
                     jpqlVisitorParameters.fetchJoinMetaAttributes);
+        }
 
         return new StatementParameters(sqlSelect, jpqlVisitorParameters.parameters);
+    }
+
+    private List<Value> buildFetchJoinValues(MetaEntity fetchJoinMetaEntity) {
+        Optional<String> optionalExistsAlias = tableAliasGenerator.findAliasByObjectName(
+                fetchJoinMetaEntity.getTableName());
+        if (optionalExistsAlias.isEmpty()) {
+            throw new SemanticException("'" + fetchJoinMetaEntity.getName() + "' Entity alias not found");
+        }
+
+        FromTable fetchFromTable = FromTable.of(fetchJoinMetaEntity.getTableName(),
+                optionalExistsAlias.get());
+        return MetaEntityHelper.toValues(fetchJoinMetaEntity, fetchFromTable);
     }
 
     private Optional<MetaEntity> findMetaEntityBySqlAlias(String sqlAlias) {
@@ -578,9 +589,15 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         Node n1 = node.jjtGetChild(1);
         if (n1 instanceof ASTStringExpression) {
             ASTStringExpression stringExpression1 = (ASTStringExpression) n1;
+            Object queryParameterObject0 = decodeExpression(stringExpression0, jpqlVisitorParameters, null);
+            Object queryParameterObject1 = decodeExpression(stringExpression1, jpqlVisitorParameters, queryParameterObject0);
+            if (queryParameterObject1 instanceof TableColumn) {
+                queryParameterObject0 = decodeExpression(stringExpression0, jpqlVisitorParameters, queryParameterObject1);
+            }
+
             BinaryCondition binaryCondition = new BinaryCondition(decodeConditionType(comparisonOperator),
-                    decodeExpression(stringExpression0, jpqlVisitorParameters),
-                    decodeExpression(stringExpression1, jpqlVisitorParameters));
+                    queryParameterObject0,
+                    queryParameterObject1);
             node.setCondition(binaryCondition);
         }
 
@@ -614,10 +631,17 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         Node n1 = node.jjtGetChild(1);
         if (n1 instanceof ASTBooleanExpression) {
             ASTBooleanExpression expression1 = (ASTBooleanExpression) n1;
+            // query parameter can be on the left or on the right
+            Object queryParameterObject0 = decodeExpression(expression0, jpqlVisitorParameters, null);
+            Object queryParameterObject1 = decodeExpression(expression1, jpqlVisitorParameters, queryParameterObject0);
+            if (queryParameterObject1 instanceof TableColumn) {
+                queryParameterObject0 = decodeExpression(expression0, jpqlVisitorParameters, queryParameterObject1);
+            }
+
             BinaryCondition binaryCondition = new BinaryCondition(decodeConditionType(comparisonOperator),
-                    decodeExpression(expression0, jpqlVisitorParameters),
-                    decodeExpression(expression1, jpqlVisitorParameters));
-            LOG.debug("visit: ASTBooleanExpressionComparison binaryCondition={}",binaryCondition);
+                    queryParameterObject0,
+                    queryParameterObject1);
+            LOG.debug("visit: ASTBooleanExpressionComparison binaryCondition={}", binaryCondition);
             node.setCondition(binaryCondition);
         }
 
@@ -678,8 +702,15 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
             ASTDatetimeExpression expression1 = (ASTDatetimeExpression) n1;
             BinaryCondition.Builder builder = new BinaryCondition.Builder(
                     decodeConditionType(comparisonOperator));
-            builder.withLeft(decodeExpression(expression0, jpqlVisitorParameters));
-            builder.withRight(decodeExpression(expression1, jpqlVisitorParameters));
+            // query parameter can be on the left or on the right
+            Object queryParameterObject0 = decodeExpression(expression0, jpqlVisitorParameters, null);
+            Object queryParameterObject1 = decodeExpression(expression1, jpqlVisitorParameters, queryParameterObject0);
+            if (queryParameterObject1 instanceof TableColumn) {
+                queryParameterObject0 = decodeExpression(expression0, jpqlVisitorParameters, queryParameterObject1);
+            }
+
+            builder.withLeft(queryParameterObject0);
+            builder.withRight(queryParameterObject1);
             node.setCondition(builder.build());
         }
 
@@ -687,7 +718,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     }
 
     private ConditionType decodeConditionType(String comparisonOperator) {
-        LOG.debug("decodeConditionType: comparisonOperator={}",comparisonOperator);
+        LOG.debug("decodeConditionType: comparisonOperator={}", comparisonOperator);
         if (comparisonOperator.equals(">")) {
             return ConditionType.GREATER_THAN;
         }
@@ -711,36 +742,40 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     }
 
     private Object decodeExpression(ASTArithmeticPrimary expression,
-                                    JpqlVisitorParameters jpqlVisitorParameters) {
+                                    JpqlVisitorParameters jpqlVisitorParameters,
+                                    Object queryParameterAttribute) {
         if (expression.getPath() != null) {
-            String[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
-            return sqlPath[0] + "." + sqlPath[2];
+            Object[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
+            return buildTableColumnFromPath(sqlPath);
         }
 
         if (expression.getInputParameter() != null) {
-            QueryParameter queryParameter = buildQueryParameter(jpqlVisitorParameters.parameterMap, expression.getInputParameter());
+            QueryParameter queryParameter = buildQueryParameter(
+                    queryParameterAttribute,
+                    jpqlVisitorParameters.parameterMap,
+                    expression.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
             return CriteriaUtils.QM;
         }
 
         Object result = expression.getResult();
         if (result instanceof String) {
-            return (String) result;
+            return result;
         }
 
         if (result instanceof SqlSelect) {
-            return (SqlSelect) result;
+            return result;
         }
 
         if (result instanceof SqlSelectData) {
-            return (SqlSelectData) result;
+            return result;
         }
 
         if (expression.jjtGetNumChildren() > 0) {
             Node node0 = expression.jjtGetChild(0);
             if (node0 instanceof ASTFunctionsReturningNumerics) {
                 Node node1 = node0.jjtGetChild(0);
-                return decodeFunction(node1, jpqlVisitorParameters);
+                return decodeFunction(node1, jpqlVisitorParameters, queryParameterAttribute);
             } else if (node0 instanceof ASTAggregateExpression) {
                 return ((ASTAggregateExpression) node0).getValue();
             }
@@ -749,17 +784,20 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         return "";
     }
 
-    private Object decodeFunction(Node node, JpqlVisitorParameters jpqlVisitorParameters) {
+    private Object decodeFunction(
+            Node node,
+            JpqlVisitorParameters jpqlVisitorParameters,
+            Object queryParameterAttribute) {
         if (node instanceof ASTConcatFunction) {
             List<Object> args = new ArrayList<>();
             for (Node n : ((SimpleNode) node).children) {
-                args.add(decodeExpression(n, jpqlVisitorParameters));
+                args.add(decodeExpression(n, jpqlVisitorParameters, queryParameterAttribute));
             }
 
             return new Concat(args.toArray());
         } else if (node instanceof ASTSubstringFunction) {
             Node node0 = node.jjtGetChild(0);
-            Object param1 = decodeExpression(node0, jpqlVisitorParameters);
+            Object param1 = decodeExpression(node0, jpqlVisitorParameters, queryParameterAttribute);
             List<Object> param2 = new ArrayList<>();
             processArithmeticExpressionResult((ASTArithmeticExpression) node.jjtGetChild(1), param2);
             if (node.jjtGetNumChildren() > 2) {
@@ -770,7 +808,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
             return new Substring(param1, param2);
         } else if (node instanceof ASTTrimFunction) {
-            Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters);
+            Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters, queryParameterAttribute);
             Optional<TrimType> trimType = ((ASTTrimFunction) node).getTrimType() != null
                     ? Optional.of(((ASTTrimFunction) node).getTrimType())
                     : Optional.empty();
@@ -780,17 +818,17 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                 return new Trim(param, trimType, ((ASTTrimFunction) node).getTrimCharacter());
             }
         } else if (node instanceof ASTLowerFunction) {
-            Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters);
+            Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters, queryParameterAttribute);
             return new Lower(param);
         } else if (node instanceof ASTUpperFunction) {
-            Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters);
+            Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters, queryParameterAttribute);
             return new Upper(param);
         } else if (node instanceof ASTLengthFunction) {
-            Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters);
+            Object param = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters, queryParameterAttribute);
             return new Length(param);
         } else if (node instanceof ASTLocateFunction) {
-            Object param1 = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters);
-            Object param2 = decodeExpression(node.jjtGetChild(1), jpqlVisitorParameters);
+            Object param1 = decodeExpression(node.jjtGetChild(0), jpqlVisitorParameters, queryParameterAttribute);
+            Object param2 = decodeExpression(node.jjtGetChild(1), jpqlVisitorParameters, queryParameterAttribute);
             if (node.jjtGetNumChildren() > 2) {
                 List<Object> param3 = new ArrayList<>();
                 processArithmeticExpressionResult((ASTArithmeticExpression) node.jjtGetChild(2), param3);
@@ -817,11 +855,20 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         return null;
     }
 
+    private TableColumn buildTableColumnFromPath(Object[] sqlPath) {
+        MetaEntity metaEntity = (MetaEntity) sqlPath[1];
+        TableColumn tableColumn = new TableColumn(
+                FromTable.of(metaEntity.getTableName(), (String) sqlPath[0]),
+                new Column((String) sqlPath[2]));
+        return tableColumn;
+    }
+
     private Object decodeExpression(ASTStringExpression expression,
-                                    JpqlVisitorParameters jpqlVisitorParameters) {
+                                    JpqlVisitorParameters jpqlVisitorParameters,
+                                    Object queryParameterAttribute) {
         if (expression.getPath() != null) {
-            String[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
-            return sqlPath[0] + "." + sqlPath[2];
+            Object[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
+            return buildTableColumnFromPath(sqlPath);
         }
 
         if (expression.getStringLiteral() != null) {
@@ -829,7 +876,10 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         }
 
         if (expression.getInputParameter() != null) {
-            QueryParameter queryParameter = buildQueryParameter(jpqlVisitorParameters.parameterMap, expression.getInputParameter());
+            QueryParameter queryParameter = buildQueryParameter(
+                    queryParameterAttribute,
+                    jpqlVisitorParameters.parameterMap,
+                    expression.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
             return CriteriaUtils.QM;
         }
@@ -838,7 +888,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
             Node node0 = expression.jjtGetChild(0);
             if (node0 instanceof ASTFunctionsReturningStrings) {
                 Node node1 = node0.jjtGetChild(0);
-                return decodeFunction(node1, jpqlVisitorParameters);
+                return decodeFunction(node1, jpqlVisitorParameters, queryParameterAttribute);
             }
         }
 
@@ -846,18 +896,22 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     }
 
     private Object decodeExpression(ASTBooleanExpression expression,
-                                    JpqlVisitorParameters jpqlVisitorParameters) {
+                                    JpqlVisitorParameters jpqlVisitorParameters,
+                                    Object queryParameterAttribute) {
         if (expression.getBooleanValue() != null) {
             return expression.getBooleanValue();
         }
 
         if (expression.getPath() != null) {
-            String[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
-            return sqlPath[0] + "." + sqlPath[2];
+            Object[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
+            return buildTableColumnFromPath(sqlPath);
         }
 
         if (expression.getInputParameter() != null) {
-            QueryParameter queryParameter = buildQueryParameter(jpqlVisitorParameters.parameterMap, expression.getInputParameter());
+            QueryParameter queryParameter = buildQueryParameter(
+                    queryParameterAttribute,
+                    jpqlVisitorParameters.parameterMap,
+                    expression.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
             return CriteriaUtils.QM;
         }
@@ -866,18 +920,22 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     }
 
     private Object decodeExpression(ASTDatetimeExpression expression,
-                                    JpqlVisitorParameters jpqlVisitorParameters) {
+                                    JpqlVisitorParameters jpqlVisitorParameters,
+                                    Object queryParameterAttribute) {
         if (expression.getFunction() != null) {
             return expression.getFunction();
         }
 
         if (expression.getPath() != null) {
-            String[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
-            return sqlPath[0] + "." + sqlPath[2];
+            Object[] sqlPath = splitJpqlPath(expression.getPath(), jpqlVisitorParameters);
+            return buildTableColumnFromPath(sqlPath);
         }
 
         if (expression.getInputParameter() != null) {
-            QueryParameter queryParameter = buildQueryParameter(jpqlVisitorParameters.parameterMap, expression.getInputParameter());
+            QueryParameter queryParameter = buildQueryParameter(
+                    queryParameterAttribute,
+                    jpqlVisitorParameters.parameterMap,
+                    expression.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
             return CriteriaUtils.QM;
         }
@@ -885,21 +943,24 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         return "";
     }
 
-    private Object decodeExpression(Node expression, JpqlVisitorParameters jpqlVisitorParameters) {
+    private Object decodeExpression(
+            Node expression,
+            JpqlVisitorParameters jpqlVisitorParameters,
+            Object queryParameterObject) {
         if (expression instanceof ASTArithmeticPrimary) {
-            return decodeExpression((ASTArithmeticPrimary) expression, jpqlVisitorParameters);
+            return decodeExpression((ASTArithmeticPrimary) expression, jpqlVisitorParameters, queryParameterObject);
         }
 
         if (expression instanceof ASTStringExpression) {
-            return decodeExpression((ASTStringExpression) expression, jpqlVisitorParameters);
+            return decodeExpression((ASTStringExpression) expression, jpqlVisitorParameters, queryParameterObject);
         }
 
         if (expression instanceof ASTBooleanExpression) {
-            return decodeExpression((ASTBooleanExpression) expression, jpqlVisitorParameters);
+            return decodeExpression((ASTBooleanExpression) expression, jpqlVisitorParameters, queryParameterObject);
         }
 
         if (expression instanceof ASTDatetimeExpression) {
-            return decodeExpression((ASTDatetimeExpression) expression, jpqlVisitorParameters);
+            return decodeExpression((ASTDatetimeExpression) expression, jpqlVisitorParameters, queryParameterObject);
         }
 
         return null;
@@ -1047,7 +1108,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         Object object = node.childrenAccept(this, data);
         JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
         ASTArithmeticPrimary n0_0 = (ASTArithmeticPrimary) node.jjtGetChild(0);
-        node.setResult(decodeExpression(n0_0, jpqlVisitorParameters));
+        node.setResult(decodeExpression(n0_0, jpqlVisitorParameters, null));
         return object;
     }
 
@@ -1107,16 +1168,16 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         } else if (node0 instanceof ASTDatetimeExpression) {
             ASTDatetimeExpression datetimeExpression = (ASTDatetimeExpression) node0;
             Value value = new SqlExpressionImpl(
-                    decodeExpression(datetimeExpression, jpqlVisitorParameters));
+                    decodeExpression(datetimeExpression, jpqlVisitorParameters, null));
             LOG.debug("visit: ASTSelectExpression value={}", value);
             node.setValue(value);
         } else if (node0 instanceof ASTStringExpression) {
             ASTStringExpression expression = (ASTStringExpression) node0;
-            Value value = new SqlExpressionImpl(decodeExpression(expression, jpqlVisitorParameters));
+            Value value = new SqlExpressionImpl(decodeExpression(expression, jpqlVisitorParameters, null));
             node.setValue(value);
         } else if (node0 instanceof ASTBooleanExpression) {
             ASTBooleanExpression expression = (ASTBooleanExpression) node0;
-            Value value = new SqlExpressionImpl(decodeExpression(expression, jpqlVisitorParameters));
+            Value value = new SqlExpressionImpl(decodeExpression(expression, jpqlVisitorParameters, null));
             node.setValue(value);
         }
 
@@ -1210,22 +1271,23 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
         Node n0 = node.jjtGetChild(0);
         LOG.debug("ASTLikeExpression: n0={}", n0);
-        Object left = decodeExpression((ASTStringExpression) n0, jpqlVisitorParameters);
+        Object left = decodeExpression((ASTStringExpression) n0, jpqlVisitorParameters, null);
         Object right = null;
         if (node.getPatternValue() != null) {
             right = CriteriaUtils.buildValue(node.getPatternValue());
         } else if (node.getInputParameter() != null) {
             right = CriteriaUtils.QM;
-            QueryParameter queryParameter = buildQueryParameter(jpqlVisitorParameters.parameterMap, node.getInputParameter());
+            QueryParameter queryParameter = buildQueryParameter(left, jpqlVisitorParameters.parameterMap, node.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
         }
 
-        Condition condition = new LikeCondition(left, right, node.getEscapeCharacter());
+        Condition condition = new LikeCondition(left, right, node.getEscapeCharacter(), node.isNot());
         node.setCondition(condition);
         return object;
     }
 
     private QueryParameter buildQueryParameter(
+            Object column,
             Map<Parameter<?>, Object> parameterMap,
             String inputParameter) {
         Optional<Object> optional = ParameterUtils.findParameterValue(parameterMap, inputParameter);
@@ -1233,7 +1295,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
             throw new SemanticException("Input parameter '" + inputParameter + "' not found");
 
         return new QueryParameter(
-                null,
+                column,
                 optional.get(),
                 JdbcTypes.sqlTypeFromClass(optional.get().getClass()),
                 Optional.empty());
@@ -1254,8 +1316,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
             ASTStateValuedPathExpression stateValuedPathExpression = (ASTStateValuedPathExpression) n0;
             String path = stateValuedPathExpression.getPath();
             LOG.debug("ASTInExpression: ASTStateValuedPathExpression path={}", path);
-            String[] sqlPath = splitJpqlPath(path, jpqlVisitorParameters);
-            tableColumn = new TableColumn(FromTable.of(sqlPath[1], sqlPath[0]), new Column(sqlPath[2]));
+            Object[] sqlPath = splitJpqlPath(path, jpqlVisitorParameters);
+            tableColumn = buildTableColumnFromPath(sqlPath);
         }
 
         if (node.jjtGetNumChildren() > 1) {
@@ -1624,7 +1686,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         jvp.parameterMap = jpqlVisitorParameters.parameterMap;
         Object object = node.childrenAccept(this, jvp);
 
-        StatementParameters statementParameters = createFromParameters(jvp);
+        StatementParameters statementParameters = (StatementParameters) createSelectFromParameters(jvp);
         node.setStatementParameters(statementParameters);
         return jpqlVisitorParameters;
     }
@@ -1654,10 +1716,10 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                 argument = createValueFrom(stateValuedPathExpression, jpqlVisitorParameters);
             } else if (n0 instanceof ASTFunctionsReturningStrings) {
                 Node functionNode = n0.jjtGetChild(0);
-                argument = decodeFunction(functionNode, jpqlVisitorParameters);
+                argument = decodeFunction(functionNode, jpqlVisitorParameters, null);
             } else if (n0 instanceof ASTFunctionsReturningNumerics) {
                 Node functionNode = n0.jjtGetChild(0);
-                argument = decodeFunction(functionNode, jpqlVisitorParameters);
+                argument = decodeFunction(functionNode, jpqlVisitorParameters, null);
             }
         }
 
@@ -1693,7 +1755,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
      * @param jpqlVisitorParameters visitor parameters
      * @return a string array like [table alias, table name, column name]
      */
-    private String[] splitJpqlPath(String jpqlPath, JpqlVisitorParameters jpqlVisitorParameters) {
+    private Object[] splitJpqlPath(String jpqlPath, JpqlVisitorParameters jpqlVisitorParameters) {
         String[] sps = jpqlPath.split("\\.");
         if (sps.length == 1) {
             String sqlTableAlias = jpqlVisitorParameters.aliases.get(sps[0]);
@@ -1704,7 +1766,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
             MetaEntity metaEntity = optional.get();
 
-            String[] result = {jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(),
+            Object[] result = {sqlTableAlias, metaEntity,
                     metaEntity.getId().getAttributes().get(0).getColumnName()};
             return result;
         } else {
@@ -1725,8 +1787,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                                 + "' entity not found");
             }
 
-            String[] result = {jpqlVisitorParameters.aliases.get(sps[0]), metaEntity.getTableName(),
-                    metaAttribute.getColumnName()};
+            Object[] result = {sqlTableAlias, metaEntity, metaAttribute.getColumnName()};
             return result;
         }
     }
@@ -1735,8 +1796,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                                   JpqlVisitorParameters jpqlVisitorParameters) {
         String path = stateValuedPathExpression.getPath();
         LOG.debug("createValueFrom: ASTStateValuedPathExpression path={}", path);
-        String[] sqlPath = splitJpqlPath(path, jpqlVisitorParameters);
-        return new TableColumn(FromTable.of(sqlPath[1], sqlPath[0]), new Column(sqlPath[2]));
+        Object[] sqlPath = splitJpqlPath(path, jpqlVisitorParameters);
+        return buildTableColumnFromPath(sqlPath);
     }
 
     @Override
@@ -1835,14 +1896,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
 
         ASTStringExpression expression = (ASTStringExpression) node.jjtGetChild(0);
-        BetweenCondition.Builder builder = new BetweenCondition.Builder(
-                decodeExpression(expression, jpqlVisitorParameters));
+        Object queryParameterObject = decodeExpression(expression, jpqlVisitorParameters, null);
+        BetweenCondition.Builder builder = new BetweenCondition.Builder(queryParameterObject);
 
         expression = (ASTStringExpression) node.jjtGetChild(1);
-        builder.withLeftExpression(decodeExpression(expression, jpqlVisitorParameters));
+        builder.withLeftExpression(decodeExpression(expression, jpqlVisitorParameters, queryParameterObject));
 
         expression = (ASTStringExpression) node.jjtGetChild(2);
-        builder.withRightExpression(decodeExpression(expression, jpqlVisitorParameters));
+        builder.withRightExpression(decodeExpression(expression, jpqlVisitorParameters, queryParameterObject));
 
         builder.withNot(node.isNot());
 
@@ -1855,14 +1916,15 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         Object object = node.childrenAccept(this, data);
         JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
         ASTDatetimeExpression expression = (ASTDatetimeExpression) node.jjtGetChild(0);
+        Object queryParameterObject = decodeExpression(expression, jpqlVisitorParameters, null);
         BetweenCondition.Builder builder = new BetweenCondition.Builder(
-                decodeExpression(expression, jpqlVisitorParameters));
+                queryParameterObject);
 
         expression = (ASTDatetimeExpression) node.jjtGetChild(1);
-        builder.withLeftExpression(decodeExpression(expression, jpqlVisitorParameters));
+        builder.withLeftExpression(decodeExpression(expression, jpqlVisitorParameters, queryParameterObject));
 
         expression = (ASTDatetimeExpression) node.jjtGetChild(2);
-        builder.withRightExpression(decodeExpression(expression, jpqlVisitorParameters));
+        builder.withRightExpression(decodeExpression(expression, jpqlVisitorParameters, queryParameterObject));
 
         builder.withNot(node.isNot());
 

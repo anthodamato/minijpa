@@ -17,6 +17,7 @@ package org.minijpa.jpa.db;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.persistence.*;
 import javax.persistence.criteria.CompoundSelection;
@@ -26,18 +27,22 @@ import javax.persistence.criteria.Join;
 import org.minijpa.jdbc.*;
 import org.minijpa.jdbc.JdbcRunner.JdbcNativeRecordBuilder;
 import org.minijpa.jdbc.db.SqlSelectData;
+import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jpa.*;
 import org.minijpa.jpa.criteria.join.CollectionJoinImpl;
 import org.minijpa.jpa.db.querymapping.EntityMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
+import org.minijpa.jpa.jpql.SemanticException;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.Cascade;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.metadata.PersistenceUnitContext;
-import org.minijpa.sql.model.SqlDelete;
-import org.minijpa.sql.model.SqlUpdate;
+import org.minijpa.sql.model.*;
+import org.minijpa.sql.model.condition.*;
+import org.minijpa.sql.model.join.FromJoin;
+import org.minijpa.sql.model.join.FromJoinImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -500,18 +505,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         }
     }
 
-//    private void mergeEntityCollections(
-//            Collection<Object> finalCollectionResult,
-//            MetaEntity finalMetaEntity,
-//            Collection<Object> collectionResult,
-//            MetaEntity metaEntity) {
-//        for (Object entityInstance : collectionResult) {
-//            if (!finalCollectionResult.contains(entityInstance)) {
-//                finalCollectionResult.add(entityInstance);
-//            }
-//        }
-//    }
-
     @Override
     public List<?> select(Query query) throws Exception {
         CriteriaQuery<?> criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
@@ -567,39 +560,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 statementParametersList.add(new StatementParametersMetaEntity(statementParameters, joinEntities.get(0)));
             });
 
-            Collection<Object> finalCollectionResult = (Collection<Object>) CollectionUtils.createInstance(
-                    null,
-                    CollectionUtils.findCollectionImplementationClass(List.class));
-            for (StatementParametersMetaEntity statementParametersMetaEntity : statementParametersList) {
-                StatementParameters statementParameters = statementParametersMetaEntity.statementParameters;
-                log.debug("select: ############ statementParameters.getStatementType()={}", statementParameters.getStatementType());
-                if (statementParameters.getStatementType() == StatementType.FETCH_JOIN) {
-                    Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
-                            null,
-                            CollectionUtils.findCollectionImplementationClass(List.class));
-                    SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
-                    Optional<MetaEntity> optionalEntity = persistenceUnitContext
-                            .findMetaEntityByTableName(sqlSelectData.getResult().getName());
-                    MetaEntity entity = optionalEntity.get();
-
-                    initializeFetchJoinRecordBuilder(collectionResult, entity, statementParameters);
-                    String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-                    dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
-                            statementParameters.getParameters(), jdbcFetchJoinRecordBuilder);
-                    log.debug("select: ############ collectionResult.size()={}", collectionResult.size());
-
-                    // merge the collection with the final one
-                    for (Object entityInstance : collectionResult) {
-                        if (!finalCollectionResult.contains(entityInstance)) {
-                            finalCollectionResult.add(entityInstance);
-                        }
-                    }
-
-//                    mergeEntityCollections(finalCollectionResult, entity, collectionResult, statementParametersMetaEntity.metaEntity);
-                }
-            }
-
-            return (List<?>) finalCollectionResult;
+            return runQueryMergeMultipleFetchJoins(statementParametersList);
         }
 
         Map<Parameter<?>, Object> parameterMap = ((AbstractQuery) query).getParameterMap();
@@ -614,8 +575,242 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         log.debug("select: statementParameters.getStatementType()={}",
                 statementParameters.getStatementType());
 
-        return runQuery(statementParameters);
+        return runQuery(statementParameters, hints);
     }
+
+    private List<?> runQueryMergeMultipleFetchJoins(
+            List<StatementParametersMetaEntity> statementParametersList) throws Exception {
+        Collection<Object> finalCollectionResult = (Collection<Object>) CollectionUtils.createInstance(
+                null,
+                CollectionUtils.findCollectionImplementationClass(List.class));
+        for (StatementParametersMetaEntity statementParametersMetaEntity : statementParametersList) {
+            StatementParameters statementParameters = statementParametersMetaEntity.statementParameters;
+            log.debug("runQueryMultipleFetchJoins: ############ statementParameters.getStatementType()={}", statementParameters.getStatementType());
+            // TODO what about normal join
+            if (statementParameters.getStatementType() == StatementType.FETCH_JOIN) {
+                Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
+                        null,
+                        CollectionUtils.findCollectionImplementationClass(List.class));
+                SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+                Optional<MetaEntity> optionalEntity = persistenceUnitContext
+                        .findMetaEntityByTableName(sqlSelectData.getResult().getName());
+                MetaEntity entity = optionalEntity.get();
+
+                initializeFetchJoinRecordBuilder(collectionResult, entity, statementParameters);
+                String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+                dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
+                        statementParameters.getParameters(), jdbcFetchJoinRecordBuilder);
+                log.debug("runQueryMultipleFetchJoins: ############ collectionResult.size()={}", collectionResult.size());
+
+                // merge the collection with the final one
+                for (Object entityInstance : collectionResult) {
+                    if (!finalCollectionResult.contains(entityInstance)) {
+                        finalCollectionResult.add(entityInstance);
+                    }
+                }
+            }
+        }
+
+        return (List<?>) finalCollectionResult;
+    }
+
+
+    private List<StatementParametersMetaEntity> splitMultipleFetchJoinQuery(
+            StatementParameters statementParameters) {
+        SqlSelect sqlSelect = (SqlSelect) statementParameters.getSqlStatement();
+        List<FromJoin> fromJoins = sqlSelect.getFrom().stream()
+                .filter(from -> (from instanceof FromJoin))
+                .map(from -> (FromJoin) from).collect(Collectors.toList());
+
+        List<StatementParametersMetaEntity> statementParametersList = new ArrayList<>();
+        statementParameters.getFetchJoinMetaEntities().forEach(fetchJoinMetaEntity -> {
+            SqlSelectDataBuilder selectBuilder = new SqlSelectDataBuilder();
+            if (sqlSelect.isDistinct())
+                selectBuilder.distinct();
+
+            Optional<FromTable> optionalFromTable = sqlSelect.getFrom().stream().filter(f -> (f instanceof FromTable)).map(f -> (FromTable) f).findFirst();
+            optionalFromTable.ifPresent(selectBuilder::withFromTable);
+
+            // Involved joins
+            List<FromJoin> relatedFromJoins = extractRelatedFromJoins(fetchJoinMetaEntity, fromJoins);
+            relatedFromJoins.forEach(selectBuilder::withFromTable);
+            selectBuilder.withResult(sqlSelect.getResult());
+
+            Optional<FromJoin> optionalFromJoin = fromJoins.stream().filter(fromJoin -> fromJoin.getToTable().getName().equals(fetchJoinMetaEntity.getTableName())).findFirst();
+            // Values
+            List<Value> values = sqlSelect.getValues().stream()
+                    .filter(v -> (v instanceof TableColumn)).map(v -> (TableColumn) v)
+                    .filter(t -> t.getTable().isPresent() &&
+                            (t.getTable().get().getAlias().get().equals(optionalFromTable.get().getAlias().get()) ||
+                                    t.getTable().get().getAlias().get().equals(optionalFromJoin.get().getToTable().getAlias().get())))
+                    .collect(Collectors.toList());
+            selectBuilder.withValues(values);
+            List<Integer> valueIndexes = findMatchingIndexes(sqlSelect.getValues(), values);
+
+            // filter conditions
+            List<Condition> conditions = new ArrayList<>();
+            optionalFromTable.flatMap(FromTable::getAlias).ifPresent(a -> filterConditions(sqlSelect, a, conditions));
+            relatedFromJoins.forEach(j -> {
+                j.getToTable().getAlias().ifPresent(a -> filterConditions(sqlSelect, a, conditions));
+            });
+            selectBuilder.withConditions(conditions);
+
+            SqlSelectData sqlSelectData = (SqlSelectData) sqlSelect;
+            List<FetchParameter> fetchParameters = new ArrayList<>();
+            valueIndexes.forEach(i -> fetchParameters.add(sqlSelectData.getFetchParameters().get(i)));
+            selectBuilder.withFetchParameters(fetchParameters);
+
+            List<RelationshipMetaAttribute> relationshipMetaAttributes = new ArrayList<>();
+            statementParameters.getFetchJoinMetaAttributes().forEach(m -> {
+                if (m.getRelationship().getAttributeType() == fetchJoinMetaEntity) {
+                    relationshipMetaAttributes.add(m);
+                }
+            });
+
+            // Query Parameters
+            List<QueryParameter> queryParameters = new ArrayList<>();
+            optionalFromTable.flatMap(FromTable::getAlias).ifPresent(a -> filterQueryParameterByAlias(statementParameters.getParameters(), a, queryParameters));
+            relatedFromJoins.forEach(j -> {
+                j.getToTable().getAlias().ifPresent(a -> filterQueryParameterByAlias(statementParameters.getParameters(), a, queryParameters));
+            });
+
+            StatementParameters sp = new StatementParameters(
+                    selectBuilder.build(),
+                    queryParameters,
+                    StatementType.FETCH_JOIN,
+                    List.of(fetchJoinMetaEntity),
+                    relationshipMetaAttributes);
+            statementParametersList.add(new StatementParametersMetaEntity(sp, fetchJoinMetaEntity));
+        });
+
+        return statementParametersList;
+    }
+
+    private List<Integer> findMatchingIndexes(List<Value> fullValues, List<Value> values) {
+        List<Integer> indexes = new ArrayList<>();
+        for (Value value : values) {
+            for (int k = 0; k < fullValues.size(); ++k) {
+                if (fullValues.get(k) == value) {
+                    indexes.add(k);
+                }
+            }
+        }
+
+        return indexes;
+    }
+
+    private boolean hasTableColumnTheAlias(TableColumn tableColumn, String alias) {
+        if (tableColumn.getTable().isEmpty())
+            return false;
+
+        if (tableColumn.getTable().get().getAlias().isEmpty())
+            return false;
+
+        return tableColumn.getTable().get().getAlias().get().equals(alias);
+    }
+
+
+    private void filterQueryParameterByAlias(
+            List<QueryParameter> queryParameters,
+            String alias,
+            List<QueryParameter> parameters) {
+        queryParameters.forEach(qp -> {
+            if (qp.getColumn() != null && qp.getColumn() instanceof TableColumn) {
+                if (hasTableColumnTheAlias((TableColumn) qp.getColumn(), alias)) {
+                    parameters.add(qp);
+                }
+            }
+        });
+    }
+
+    private void filterConditions(
+            SqlSelect sqlSelect,
+            String alias,
+            List<Condition> conditionList) {
+        if (sqlSelect.getConditions().isEmpty())
+            return;
+
+        List<Condition> conditions = sqlSelect.getConditions().get();
+        conditions.forEach(c -> {
+                    filterCondition(c, alias, conditionList);
+                }
+        );
+    }
+
+
+    private void filterCondition(
+            Condition condition,
+            String alias,
+            List<Condition> conditionList) {
+        if (condition instanceof BetweenCondition) {
+            BetweenCondition betweenCondition = (BetweenCondition) condition;
+            if (betweenCondition.getLeftExpression() instanceof TableColumn &&
+                    hasTableColumnTheAlias(((TableColumn) betweenCondition.getLeftExpression()), alias)) {
+                conditionList.add(condition);
+            } else if (betweenCondition.getRightExpression() instanceof TableColumn &&
+                    hasTableColumnTheAlias(((TableColumn) betweenCondition.getRightExpression()), alias)) {
+                conditionList.add(condition);
+            }
+        } else if (condition instanceof BinaryCondition) {
+            BinaryCondition binaryCondition = (BinaryCondition) condition;
+            if (binaryCondition.getLeft() instanceof TableColumn &&
+                    hasTableColumnTheAlias(((TableColumn) binaryCondition.getLeft()), alias)) {
+                conditionList.add(condition);
+            } else if (binaryCondition.getRight() instanceof TableColumn &&
+                    hasTableColumnTheAlias(((TableColumn) binaryCondition.getRight()), alias)) {
+                conditionList.add(condition);
+            }
+        } else if (condition instanceof BinaryLogicCondition) {
+            BinaryLogicCondition binaryLogicCondition = (BinaryLogicCondition) condition;
+            binaryLogicCondition.getConditions().forEach(bc -> filterCondition(bc, alias, conditionList));
+        } else if (condition instanceof InCondition) {
+            InCondition inCondition = (InCondition) condition;
+            if (hasTableColumnTheAlias(inCondition.getLeftColumn(), alias)) {
+                conditionList.add(condition);
+            }
+        } else if (condition instanceof NestedCondition) {
+            NestedCondition nestedCondition = (NestedCondition) condition;
+            filterCondition(nestedCondition.getCondition(), alias, conditionList);
+        } else if (condition instanceof NotCondition) {
+            NotCondition notCondition = (NotCondition) condition;
+            filterCondition(notCondition.getCondition(), alias, conditionList);
+        } else if (condition instanceof UnaryCondition) {
+            UnaryCondition unaryCondition = (UnaryCondition) condition;
+            if (unaryCondition.getOperand() instanceof TableColumn &&
+                    hasTableColumnTheAlias(((TableColumn) unaryCondition.getOperand()), alias)) {
+                conditionList.add(condition);
+            }
+        } else if (condition instanceof UnaryLogicCondition) {
+            UnaryLogicCondition unaryLogicCondition = (UnaryLogicCondition) condition;
+            filterCondition(unaryLogicCondition.getCondition(), alias, conditionList);
+        }
+    }
+
+
+    /**
+     * With multiple joins it has to extract two FromJoin. They are the main table and the join table.
+     *
+     * @param fetchJoinMetaEntity
+     * @param fromJoins
+     * @return
+     */
+    private List<FromJoin> extractRelatedFromJoins(
+            MetaEntity fetchJoinMetaEntity,
+            List<FromJoin> fromJoins) {
+        Optional<FromJoin> optional = fromJoins.stream().filter(fromJoin -> fromJoin.getToTable().getName().equals(fetchJoinMetaEntity.getTableName())).findFirst();
+        if (optional.isEmpty()) {
+            throw new SemanticException("Join table not found for " + fetchJoinMetaEntity.getTableName());
+        }
+
+        FromJoin fromJoin = optional.get();
+        Optional<FromJoin> optionalJoinTable = fromJoins.stream().filter(fj -> fj.getToTable().getAlias().get().equals(fromJoin.getFromAlias())).findFirst();
+        if (optionalJoinTable.isEmpty()) {
+            throw new SemanticException("Join table not found for " + fetchJoinMetaEntity.getTableName());
+        }
+
+        return List.of(optionalJoinTable.get(), fromJoin);
+    }
+
 
     private JdbcRecordBuilder initializeFetchJoinRecordBuilder(
             Collection<Object> collectionResult,
@@ -638,7 +833,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         return jdbcFetchJoinRecordBuilder;
     }
 
-    private List<?> runQuery(StatementParameters statementParameters) throws Exception {
+    private List<?> runQuery(
+            StatementParameters statementParameters,
+            Map<String, Object> hints) throws Exception {
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
         sqlSelectData.getFetchParameters().forEach(f -> log.debug("select: f={}", f));
@@ -648,6 +845,15 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 statementParameters.getStatementType());
 
         if (statementParameters.getStatementType() == StatementType.FETCH_JOIN) {
+            if (hints != null &&
+                    hints.get(QueryHints.SPLIT_MULTIPLE_JOINS) != null &&
+                    ((Boolean) hints.get(QueryHints.SPLIT_MULTIPLE_JOINS)) &&
+                    statementParameters.getStatementType() == StatementType.FETCH_JOIN &&
+                    statementParameters.getFetchJoinMetaEntities().size() > 1) {
+                List<StatementParametersMetaEntity> parametersMetaEntityList = splitMultipleFetchJoinQuery(statementParameters);
+                return runQueryMergeMultipleFetchJoins(parametersMetaEntityList);
+            }
+
             Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
                     null,
                     CollectionUtils.findCollectionImplementationClass(List.class));
@@ -656,19 +862,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                     .findMetaEntityByTableName(sqlSelectData.getResult().getName());
             MetaEntity entity = optionalEntity.get();
             initializeFetchJoinRecordBuilder(collectionResult, entity, statementParameters);
-//            Optional<MetaEntity> optionalEntity = persistenceUnitContext
-//                    .findMetaEntityByTableName(sqlSelectData.getResult().getName());
-//            MetaEntity entity = optionalEntity.get();
-//            entityHandler.setLockType(LockType.NONE);
-//            jdbcFetchJoinRecordBuilder.setCollectionResult(collectionResult);
-//            jdbcFetchJoinRecordBuilder.setEntityLoader(entityHandler);
-//            jdbcFetchJoinRecordBuilder.setMetaEntity(entity);
-//            jdbcFetchJoinRecordBuilder.setFetchJoinMetaEntities(statementParameters.getFetchJoinMetaEntities());
-//            jdbcFetchJoinRecordBuilder.setFetchJoinMetaAttributes(
-//                    statementParameters.getFetchJoinMetaAttributes());
-//            jdbcFetchJoinRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
-//            jdbcFetchJoinRecordBuilder.setDistinct(sqlSelectData.isDistinct());
-
             dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
                     statementParameters.getParameters(), jdbcFetchJoinRecordBuilder);
             return (List<?>) collectionResult;
@@ -703,18 +896,21 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         return collectionResult;
     }
 
+
     @Override
-    public List<?> selectJpql(String jpqlStatement, Map<Parameter<?>, Object> parameterMap) throws Exception {
-        StatementParameters statementParameters = null;
+    public List<?> selectJpql(String jpqlStatement,
+                              Map<Parameter<?>, Object> parameterMap,
+                              Map<String, Object> hints) throws Exception {
+        StatementParameters statementParameters;
         try {
             log.debug("selectJpql: start parsing");
-            statementParameters = jpqlModule.parse(jpqlStatement, parameterMap);
+            statementParameters = jpqlModule.parse(jpqlStatement, parameterMap, hints);
             log.debug("selectJpql: end parsing");
         } catch (Error e) {
             throw new IllegalStateException("Internal Jpql Parser Error: " + e.getMessage());
         }
 
-        return runQuery(statementParameters);
+        return runQuery(statementParameters, hints);
     }
 
     @Override

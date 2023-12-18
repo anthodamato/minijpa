@@ -25,14 +25,11 @@ import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.AbstractQuery;
 import org.minijpa.jpa.MetaEntityHelper;
-import org.minijpa.jpa.MiniTypedQuery;
 import org.minijpa.jpa.PersistenceUnitProperties;
-import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.Address;
 import org.minijpa.jpa.model.Department;
 import org.minijpa.jpa.model.Employee;
 import org.minijpa.jpa.model.Item;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Pk;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
@@ -91,7 +88,11 @@ public class SqlStatementFactoryTest {
                 "department");
         List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute,
                 department);
-        List<String> columns = parameters.stream().map(QueryParameter::getColumnName)
+        List<String> columns = parameters.stream().map(p -> {
+                    if (p.getColumn() instanceof String) return (String) p.getColumn();
+
+                    return ((TableColumn) p.getColumn()).getColumn().getName();
+                })
                 .collect(Collectors.toList());
 
         SqlStatementFactory sqlStatementFactory = new SqlStatementFactory();
