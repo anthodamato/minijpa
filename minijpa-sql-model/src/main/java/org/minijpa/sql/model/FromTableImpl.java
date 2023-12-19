@@ -19,28 +19,35 @@ import java.util.Optional;
 
 public class FromTableImpl implements FromTable {
 
-	private String name;
-	private Optional<String> alias = Optional.empty();
+    private String name;
+    private Optional<String> alias = Optional.empty();
 
-	public FromTableImpl(String name) {
-		super();
-		this.name = name;
-	}
+    public FromTableImpl(String name) {
+        super();
+        this.name = name;
+    }
 
-	public FromTableImpl(String name, String alias) {
-		super();
-		this.name = name;
-		this.alias = Optional.of(alias);
-	}
+    public FromTableImpl(String name, String alias) {
+        super();
+        this.name = name;
+        this.alias = Optional.of(alias);
+    }
 
-	@Override
-	public String getName() {
-		return name;
-	}
+    @Override
+    public String getName() {
+        return name;
+    }
 
-	@Override
-	public Optional<String> getAlias() {
-		return alias;
-	}
+    @Override
+    public Optional<String> getAlias() {
+        return alias;
+    }
 
+    @Override
+    public String toString() {
+        return "FromTableImpl{" +
+                "name='" + name + '\'' +
+                ", alias=" + alias +
+                '}';
+    }
 }

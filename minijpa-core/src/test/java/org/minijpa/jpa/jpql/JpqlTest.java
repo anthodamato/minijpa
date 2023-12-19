@@ -47,7 +47,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -83,7 +83,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -118,7 +118,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -153,7 +153,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -204,7 +204,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -245,7 +245,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -286,7 +286,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -327,7 +327,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -368,7 +368,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -415,7 +415,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals(
@@ -462,7 +462,7 @@ public class JpqlTest {
         JpqlModule jpqlModule = new JpqlModule(dbConfiguration, persistenceUnitContext);
 
         try {
-            StatementParameters statementParameters = jpqlModule.parse(query, Map.of());
+            StatementParameters statementParameters = jpqlModule.parse(query, Map.of(), Map.of());
             String sql = dbConfiguration.getSqlStatementGenerator().export(statementParameters.getSqlStatement());
             if (testDb != null && testDb.equals("oracle"))
                 Assertions.assertEquals("select SUM(numeric_set0.double_value)+0.2 from numeric_set numeric_set0",

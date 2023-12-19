@@ -24,95 +24,95 @@ import org.minijpa.sql.model.join.FromJoin;
 
 public class SqlSelect implements SqlStatement {
 
-  private List<From> fromTables;
-//  private Optional<List<FromJoin>> fromJoins = Optional.empty();
-  private FromTable result;
-  private List<Value> values;
-  private Optional<List<Condition>> conditions = Optional.empty();
-  private Optional<GroupBy> groupBy = Optional.empty();
-  private Optional<List<OrderBy>> orderByList = Optional.empty();
-  private boolean distinct = false;
-  private Optional<ForUpdate> optionalForUpdate = Optional.empty();
+    private List<From> fromTables;
+    //  private Optional<List<FromJoin>> fromJoins = Optional.empty();
+    private FromTable result;
+    private List<Value> values;
+    private Optional<List<Condition>> conditions = Optional.empty();
+    private Optional<GroupBy> groupBy = Optional.empty();
+    private Optional<List<OrderBy>> orderByList = Optional.empty();
+    private boolean distinct = false;
+    private Optional<ForUpdate> optionalForUpdate = Optional.empty();
 
-  public SqlSelect() {
-  }
+    public SqlSelect() {
+    }
 
-  public List<From> getFrom() {
-    return fromTables;
-  }
+    public List<From> getFrom() {
+        return fromTables;
+    }
 
 //  public Optional<List<FromJoin>> getJoins() {
 //    return fromJoins;
 //  }
 
-  public List<Value> getValues() {
-    return values;
-  }
+    public List<Value> getValues() {
+        return values;
+    }
 
-  public Optional<List<Condition>> getConditions() {
-    return conditions;
-  }
+    public Optional<List<Condition>> getConditions() {
+        return conditions;
+    }
 
-  public Optional<GroupBy> getGroupBy() {
-    return groupBy;
-  }
+    public Optional<GroupBy> getGroupBy() {
+        return groupBy;
+    }
 
-  public FromTable getResult() {
-    return result;
-  }
+    public FromTable getResult() {
+        return result;
+    }
 
-  public Optional<List<OrderBy>> getOrderByList() {
-    return orderByList;
-  }
+    public Optional<List<OrderBy>> getOrderByList() {
+        return orderByList;
+    }
 
-  public boolean isDistinct() {
-    return distinct;
-  }
+    public boolean isDistinct() {
+        return distinct;
+    }
 
-  public Optional<ForUpdate> getOptionalForUpdate() {
-    return optionalForUpdate;
-  }
+    public Optional<ForUpdate> getOptionalForUpdate() {
+        return optionalForUpdate;
+    }
 
-  @Override
-  public StatementType getType() {
-    return StatementType.SELECT;
-  }
+    @Override
+    public StatementType getType() {
+        return StatementType.SELECT;
+    }
 
-  public void setFrom(List<From> fromTables) {
-    this.fromTables = fromTables;
-  }
+    public void setFrom(List<From> fromTables) {
+        this.fromTables = fromTables;
+    }
 
 //  public void setFromJoins(Optional<List<FromJoin>> fromJoins) {
 //    this.fromJoins = fromJoins;
 //  }
 
-  public void setResult(FromTable result) {
-    this.result = result;
-  }
+    public void setResult(FromTable result) {
+        this.result = result;
+    }
 
-  public void setValues(List<Value> values) {
-    this.values = values;
-  }
+    public void setValues(List<Value> values) {
+        this.values = values;
+    }
 
-  public void setConditions(Optional<List<Condition>> conditions) {
-    this.conditions = conditions;
-  }
+    public void setConditions(Optional<List<Condition>> conditions) {
+        this.conditions = conditions;
+    }
 
-  public void setGroupBy(Optional<GroupBy> groupBy) {
-    this.groupBy = groupBy;
-  }
+    public void setGroupBy(Optional<GroupBy> groupBy) {
+        this.groupBy = groupBy;
+    }
 
-  public void setOrderByList(Optional<List<OrderBy>> orderByList) {
-    this.orderByList = orderByList;
-  }
+    public void setOrderByList(Optional<List<OrderBy>> orderByList) {
+        this.orderByList = orderByList;
+    }
 
-  public void setDistinct(boolean distinct) {
-    this.distinct = distinct;
-  }
+    public void setDistinct(boolean distinct) {
+        this.distinct = distinct;
+    }
 
-  public void setOptionalForUpdate(Optional<ForUpdate> optionalForUpdate) {
-    this.optionalForUpdate = optionalForUpdate;
-  }
+    public void setOptionalForUpdate(Optional<ForUpdate> optionalForUpdate) {
+        this.optionalForUpdate = optionalForUpdate;
+    }
 
 //	public static class SqlSelectBuilder {
 //

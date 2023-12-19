@@ -12,8 +12,11 @@ import javax.persistence.*;
 import javax.persistence.criteria.*;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 public class MultipleJoinTest {
-    private Logger log = LoggerFactory.getLogger(MultipleJoinTest.class);
+    private final Logger log = LoggerFactory.getLogger(MultipleJoinTest.class);
     private static EntityManagerFactory emf;
 
     @BeforeAll
@@ -38,9 +41,6 @@ public class MultipleJoinTest {
 
         tx.begin();
         em.detach(artist);
-        log.info("multipleJoins: artist.getId()={}", artist.getId());
-        artist.getMovies().forEach(m -> log.info("multipleJoins: m.getId()={}", m.getId()));
-        artist.getSongs().forEach(s -> log.info("multipleJoins: s.getId()={}", s.getId()));
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Artist> criteriaQuery = cb.createQuery(Artist.class);
         Root<Artist> root = criteriaQuery.from(Artist.class);
@@ -50,13 +50,10 @@ public class MultipleJoinTest {
         TypedQuery<Artist> q = em.createQuery(criteriaQuery);
         List<Artist> artists = q.getResultList();
 
-        log.info("multipleJoins: artists.get(0).getId()={}", artists.get(0).getId());
-        artists.get(0).getMovies().forEach(m -> log.info("multipleJoins: m.getId()={}", m.getId()));
-        artists.get(0).getSongs().forEach(s -> log.info("multipleJoins: s.getId()={}", s.getId()));
-        Assertions.assertNotNull(artists);
-        Assertions.assertEquals(1, artists.size());
-        Assertions.assertEquals(3, artists.get(0).getMovies().size());
-        Assertions.assertEquals(3, artists.get(0).getSongs().size());
+        assertNotNull(artists);
+        assertEquals(1, artists.size());
+        assertEquals(3, artists.get(0).getMovies().size());
+        assertEquals(3, artists.get(0).getSongs().size());
 
         removeArtist(em, artists.get(0));
         tx.commit();
@@ -76,9 +73,6 @@ public class MultipleJoinTest {
 
         tx.begin();
         em.detach(artist);
-        log.info("multipleJoins: artist.getId()={}", artist.getId());
-        artist.getMovies().forEach(m -> log.info("multipleJoins: m.getId()={}", m.getId()));
-        artist.getSongs().forEach(s -> log.info("multipleJoins: s.getId()={}", s.getId()));
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Artist> criteriaQuery = cb.createQuery(Artist.class);
         Root<Artist> root = criteriaQuery.from(Artist.class);
@@ -93,14 +87,72 @@ public class MultipleJoinTest {
         q.setHint(QueryHints.SPLIT_MULTIPLE_JOINS, true);
         q.setParameter(pName, "%Falling%");
         List<Artist> artists = q.getResultList();
+        assertNotNull(artists);
+        assertEquals(1, artists.size());
+        assertNotNull(artists.get(0).getSongs());
+        assertNotNull(artists.get(0).getMovies());
 
-        log.info("multipleJoins: artists.get(0).getId()={}", artists.get(0).getId());
-        artists.get(0).getMovies().forEach(m -> log.info("multipleJoins: m.getId()={}", m.getId()));
-        artists.get(0).getSongs().forEach(s -> log.info("multipleJoins: s.getId()={}", s.getId()));
-        Assertions.assertNotNull(artists);
-        Assertions.assertEquals(1, artists.size());
-        Assertions.assertEquals(3, artists.get(0).getMovies().size());
-        Assertions.assertEquals(3, artists.get(0).getSongs().size());
+        assertEquals(3, artists.get(0).getMovies().size());
+        assertEquals(3, artists.get(0).getSongs().size());
+
+        removeArtist(em, artists.get(0));
+        tx.commit();
+
+        em.close();
+    }
+
+    @Test
+    public void jpqlMultipleJoins() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        Artist artist = buildArtist();
+        persistArtist(em, artist);
+        tx.commit();
+
+        tx.begin();
+        em.detach(artist);
+        Query q = em.createQuery("select distinct a from Artist a inner join fetch a.movies m inner join fetch a.songs s where s.name not like :name");
+        q.setParameter("name", "%Falling%");
+        List<Artist> artists = q.getResultList();
+        assertNotNull(artists);
+        assertEquals(1, artists.size());
+        assertNotNull(artists.get(0).getSongs());
+        assertNotNull(artists.get(0).getMovies());
+
+        assertEquals(3, artists.get(0).getMovies().size());
+        assertEquals(3, artists.get(0).getSongs().size());
+
+        removeArtist(em, artists.get(0));
+        tx.commit();
+
+        em.close();
+    }
+
+    @Test
+    public void jpqlMultipleJoinsSplitQuery() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        Artist artist = buildArtist();
+        persistArtist(em, artist);
+        tx.commit();
+
+        tx.begin();
+        em.detach(artist);
+        Query q = em.createQuery("select distinct a from Artist a inner join fetch a.movies m inner join fetch a.songs s where s.name not like :name");
+        q.setParameter("name", "%Falling%");
+        q.setHint(QueryHints.SPLIT_MULTIPLE_JOINS, true);
+        List<Artist> artists = q.getResultList();
+        assertNotNull(artists);
+        assertEquals(1, artists.size());
+        assertNotNull(artists.get(0).getSongs());
+        assertNotNull(artists.get(0).getMovies());
+
+        assertEquals(3, artists.get(0).getMovies().size());
+        assertEquals(3, artists.get(0).getSongs().size());
 
         removeArtist(em, artists.get(0));
         tx.commit();

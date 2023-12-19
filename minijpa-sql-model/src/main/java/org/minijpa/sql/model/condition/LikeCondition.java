@@ -33,4 +33,11 @@ public class LikeCondition extends BinaryCondition {
         return escapeChar;
     }
 
+    @Override
+    public String toString() {
+        return super.toString() + "\n" +
+                "LikeCondition{" +
+                "escapeChar='" + escapeChar + '\'' +
+                '}';
+    }
 }

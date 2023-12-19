@@ -62,9 +62,7 @@ public class TableAliasGeneratorImpl implements AliasGenerator {
 
     @Override
     public Optional<String> findObjectNameByAlias(String alias) {
-        System.out.println("TableAliasGeneratorImpl.findObjectNameByAlias: alias=" + alias);
         String tableName = tableAliasMap.get(alias);
-        tableAliasMap.forEach((k, v) -> System.out.println(k + "; " + v));
         if (tableName == null) {
             return Optional.empty();
         }

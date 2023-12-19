@@ -34,7 +34,9 @@ public interface JdbcEntityManager {
 
     public List<?> select(Query query) throws Exception;
 
-    public List<?> selectJpql(String jpqlStatement, Map<Parameter<?>, Object> parameterMap) throws Exception;
+    public List<?> selectJpql(String jpqlStatement,
+                              Map<Parameter<?>, Object> parameterMap,
+                              Map<String, Object> hints) throws Exception;
 
     public List<?> selectNative(MiniNativeQuery query) throws Exception;
 

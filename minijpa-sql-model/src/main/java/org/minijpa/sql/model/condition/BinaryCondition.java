@@ -54,6 +54,16 @@ public class BinaryCondition implements Condition {
         return not;
     }
 
+    @Override
+    public String toString() {
+        return "BinaryCondition{" +
+                "conditionType=" + conditionType +
+                ", left=" + left +
+                ", right=" + right +
+                ", not=" + not +
+                '}';
+    }
+
     public static class Builder {
         private final ConditionType conditionType;
         private Object left;

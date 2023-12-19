@@ -21,25 +21,25 @@ import org.minijpa.jdbc.mapper.AttributeMapper;
 
 public class QueryParameter {
 
-    private String columnName;
+    private Object column;
     private Object value;
     private Integer sqlType;
-    protected Optional<AttributeMapper> attributeMapper = Optional.empty();
+    protected Optional<AttributeMapper> attributeMapper;
 
     public QueryParameter(
-            String columnName,
+            Object column,
             Object value,
             Integer sqlType,
             Optional<AttributeMapper> attributeMapper) {
         super();
-        this.columnName = columnName;
+        this.column = column;
         this.value = value;
         this.sqlType = sqlType;
         this.attributeMapper = attributeMapper;
     }
 
-    public String getColumnName() {
-        return columnName;
+    public Object getColumn() {
+        return column;
     }
 
     public Object getValue() {
@@ -54,4 +54,13 @@ public class QueryParameter {
         return attributeMapper;
     }
 
+    @Override
+    public String toString() {
+        return "QueryParameter{" +
+                "columnName='" + column + '\'' +
+                ", value=" + value +
+                ", sqlType=" + sqlType +
+                ", attributeMapper=" + attributeMapper +
+                '}';
+    }
 }

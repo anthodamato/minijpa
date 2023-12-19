@@ -29,25 +29,26 @@ import javax.persistence.Parameter;
  */
 public class JpqlVisitorParameters {
 
-    boolean distinct = false;
+    public boolean distinct = false;
     /**
      * Association between jpql alias and entity alias.
      */
     Map<String, String> aliases = new HashMap<>();
-    MetaEntity sourceEntity;
-    List<FromTable> fromTables = new ArrayList<>();
-    List<FromJoin> fromJoins = new ArrayList<>();
-    List<Value> values = new ArrayList<>();
+    public MetaEntity sourceEntity;
+    public List<FromTable> fromTables = new ArrayList<>();
+    public List<FromJoin> fromJoins = new ArrayList<>();
+    public List<Value> values = new ArrayList<>();
     // column aliases that can be used in subqueries
     Map<String, List<Value>> resultVariables = new HashMap<>();
-    List<FetchParameter> fetchParameters = new ArrayList<>();
-    List<Condition> conditions = new ArrayList<>();
-    MetaEntity identificationVariableEntity;
-    GroupBy groupBy;
-    List<OrderBy> orderByList = new ArrayList<>();
-    List<QueryParameter> parameters = new ArrayList<>();
+    public List<FetchParameter> fetchParameters = new ArrayList<>();
+    public List<Condition> conditions = new ArrayList<>();
+    public MetaEntity identificationVariableEntity;
+    public GroupBy groupBy;
+    public List<OrderBy> orderByList = new ArrayList<>();
+    public List<QueryParameter> parameters = new ArrayList<>();
     Map<Parameter<?>, Object> parameterMap = Map.of();
-    StatementType statementType = StatementType.PLAIN;
-    List<MetaEntity> fetchJoinMetaEntities = new ArrayList<>();
-    List<RelationshipMetaAttribute> fetchJoinMetaAttributes = new ArrayList<>();
+    Map<String, Object> hints;
+    public StatementType statementType = StatementType.PLAIN;
+    public List<MetaEntity> fetchJoinMetaEntities = new ArrayList<>();
+    public List<RelationshipMetaAttribute> fetchJoinMetaAttributes = new ArrayList<>();
 }
