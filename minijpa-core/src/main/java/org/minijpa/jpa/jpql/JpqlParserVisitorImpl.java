@@ -67,30 +67,6 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     }
 
 
-    /**
-     * With multiple joins it has to extract two FromJoin. They are the main table and the join table.
-     *
-     * @param fetchJoinMetaEntity
-     * @param fromJoins
-     * @return
-     */
-    private List<FromJoin> extractRelatedFromJoins(
-            MetaEntity fetchJoinMetaEntity,
-            List<FromJoin> fromJoins) {
-        Optional<FromJoin> optional = fromJoins.stream().filter(fromJoin -> fromJoin.getToTable().getName().equals(fetchJoinMetaEntity.getTableName())).findFirst();
-        if (optional.isEmpty()) {
-            throw new SemanticException("Join table not found for " + fetchJoinMetaEntity.getTableName());
-        }
-
-        FromJoin fromJoin = optional.get();
-        Optional<FromJoin> optionalJoinTable = fromJoins.stream().filter(fj -> fj.getToTable().getAlias().get().equals(fromJoin.getFromAlias())).findFirst();
-        if (optionalJoinTable.isEmpty()) {
-            throw new SemanticException("Join table not found for " + fetchJoinMetaEntity.getTableName());
-        }
-
-        return List.of(fromJoin, optionalJoinTable.get());
-    }
-
     private Object createSelectFromParameters(
             JpqlVisitorParameters jpqlVisitorParameters) {
         SqlSelectDataBuilder selectBuilder = new SqlSelectDataBuilder();
@@ -547,8 +523,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         } else {
             ASTGeneralIdentificationVariable generalIdentificationVariable = (ASTGeneralIdentificationVariable) n0_0_0;
             String identificationVariable = generalIdentificationVariable.getIdentificationVariable();
-            String r = identificationVariable;
-            node.setPath(r);
+            node.setPath(identificationVariable);
         }
 
         return object;

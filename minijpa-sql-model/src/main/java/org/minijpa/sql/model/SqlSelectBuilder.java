@@ -1,13 +1,12 @@
 package org.minijpa.sql.model;
 
+import org.minijpa.sql.model.aggregate.GroupBy;
+import org.minijpa.sql.model.condition.Condition;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import org.minijpa.sql.model.aggregate.GroupBy;
-import org.minijpa.sql.model.condition.Condition;
-import org.minijpa.sql.model.join.FromJoin;
 
 public class SqlSelectBuilder {
 
@@ -30,19 +29,6 @@ public class SqlSelectBuilder {
         return this;
     }
 
-//  public SqlSelectBuilder withJoin(FromJoin fromJoin) {
-//    if (this.fromJoins == null) {
-//      this.fromJoins = new ArrayList<>();
-//    }
-//
-//    this.fromJoins.add(fromJoin);
-//    return this;
-//  }
-
-//  public SqlSelectBuilder withJoins(List<FromJoin> fromJoins) {
-//    this.fromJoins = fromJoins;
-//    return this;
-//  }
 
     public SqlSelectBuilder withValues(List<Value> values) {
         this.values = Collections.unmodifiableList(values);
@@ -81,9 +67,6 @@ public class SqlSelectBuilder {
 
     protected void build(SqlSelect sqlSelect) {
         sqlSelect.setFrom(fromTables);
-//    if (fromJoins != null && !fromJoins.isEmpty()) {
-//      sqlSelect.setFromJoins(Optional.of(fromJoins));
-//    }
 
         sqlSelect.setValues(values);
         if (conditions != null && !conditions.isEmpty()) {
