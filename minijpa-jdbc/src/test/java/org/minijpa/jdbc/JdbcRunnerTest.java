@@ -25,22 +25,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.mapper.ToLongAttributeMapper;
-import org.minijpa.sql.model.Column;
-import org.minijpa.sql.model.ColumnDeclaration;
-import org.minijpa.sql.model.FromTable;
-import org.minijpa.sql.model.FromTableImpl;
-import org.minijpa.sql.model.JdbcDDLData;
-import org.minijpa.sql.model.OrderBy;
-import org.minijpa.sql.model.SimpleSqlPk;
-import org.minijpa.sql.model.SqlCreateSequence;
-import org.minijpa.sql.model.SqlCreateTable;
-import org.minijpa.sql.model.SqlInsert;
-import org.minijpa.sql.model.SqlSelect;
-import org.minijpa.sql.model.SqlSelectBuilder;
-import org.minijpa.sql.model.SqlStatementGenerator;
-import org.minijpa.sql.model.SqlUpdate;
-import org.minijpa.sql.model.TableColumn;
-import org.minijpa.sql.model.Value;
+import org.minijpa.sql.model.*;
 import org.minijpa.sql.model.condition.BinaryCondition;
 import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
@@ -350,7 +335,12 @@ public class JdbcRunnerTest {
 
         Long nextValue = jdbcRunner.generateNextSequenceValue(connection, seqStm);
         assertEquals(1, nextValue);
-        scriptRunner.runDDLStatements(Arrays.asList("drop sequence citizen_seq"), connection);
+
+        SqlDropSequence sqlDropSequence = new SqlDropSequence();
+        sqlDropSequence.setSequenceName("citizen_seq");
+        String dropSeqStmt = sqlStatementGenerator.export(sqlDropSequence);
+
+        scriptRunner.runDDLStatements(Arrays.asList(dropSeqStmt), connection);
         connectionHolder.closeConnection();
     }
 

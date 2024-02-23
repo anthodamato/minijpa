@@ -19,70 +19,78 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class ApacheDerbySqlStatementGenerator extends DefaultSqlStatementGenerator {
 
-	public ApacheDerbySqlStatementGenerator() {
-		super();
-	}
+    public ApacheDerbySqlStatementGenerator() {
+        super();
+    }
 
-	@Override
-	public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-		if (optionalSchema.isEmpty())
-			return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
+    @Override
+    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
+        if (optionalSchema.isEmpty())
+            return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
 
-		return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
-	}
+        return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
+    }
 
-	@Override
-	public String forUpdateClause(ForUpdate forUpdate) {
-		return "for update with rs";
-	}
+    @Override
+    public String forUpdateClause(ForUpdate forUpdate) {
+        return "for update with rs";
+    }
 
-	@Override
-	public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
-		if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
-			return "double precision";
+    @Override
+    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+        if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
+            return "double precision";
 
-		if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
-			return "real";
+        if (type == Float.class || (type.isPrimitive() && type.getName().equals("float")))
+            return "real";
 
-		return super.buildColumnDefinition(type, ddlData);
-	}
+        return super.buildColumnDefinition(type, ddlData);
+    }
 
-	@Override
-	public String export(SqlInsert sqlInsert) {
-		String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
-		StringBuilder sb = new StringBuilder();
-		sb.append("insert into ");
-		sb.append(sqlInsert.getFromTable().getName());
-		sb.append(" (");
-		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-			sb.append(sqlInsert.getIdentityColumn().get());
-			if (!cols.isEmpty())
-				sb.append(",");
-		}
+    @Override
+    public String export(SqlInsert sqlInsert) {
+        String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
+        StringBuilder sb = new StringBuilder();
+        sb.append("insert into ");
+        sb.append(sqlInsert.getFromTable().getName());
+        sb.append(" (");
+        if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
+            sb.append(sqlInsert.getIdentityColumn().get());
+            if (!cols.isEmpty())
+                sb.append(",");
+        }
 
-		sb.append(cols);
-		sb.append(") values (");
-		if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-			sb.append("default");
+        sb.append(cols);
+        sb.append(") values (");
+        if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
+            sb.append("default");
 
-			if (!cols.isEmpty())
-				sb.append(",");
-		}
+            if (!cols.isEmpty())
+                sb.append(",");
+        }
 
-		for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
-			if (i > 0)
-				sb.append(",");
+        for (int i = 0; i < sqlInsert.getColumns().size(); ++i) {
+            if (i > 0)
+                sb.append(",");
 
-			sb.append("?");
-		}
+            sb.append("?");
+        }
 
-		sb.append(")");
-		return sb.toString();
-	}
+        sb.append(")");
+        return sb.toString();
+    }
 
+    @Override
+    public String export(SqlDropSequence sqlDropSequence) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("drop sequence ");
+        sb.append(nameTranslator.adjustName(sqlDropSequence.getSequenceName()));
+        sb.append(" ");
+        sb.append("restrict");
+        return sb.toString();
+    }
 }

@@ -1082,6 +1082,14 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     @Override
+    public String export(SqlDropSequence sqlDropSequence) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("drop sequence ");
+        sb.append(nameTranslator.adjustName(sqlDropSequence.getSequenceName()));
+        return sb.toString();
+    }
+
+    @Override
     public List<String> export(List<SqlDDLStatement> sqlDDLStatement) {
         List<String> result = new ArrayList<>();
         List<SqlCreateTable> createTables = sqlDDLStatement.stream()
