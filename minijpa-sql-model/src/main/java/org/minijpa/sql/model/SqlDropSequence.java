@@ -18,13 +18,10 @@ package org.minijpa.sql.model;
 /**
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class SqlCreateSequence implements SqlDDLStatement {
+public class SqlDropSequence implements SqlDDLStatement {
 
     private String sequenceName;
     private String schema;
-    private Integer allocationSize;
-    private Integer initialValue;
-    private String catalog;
 
     public String getSequenceName() {
         return sequenceName;
@@ -42,28 +39,5 @@ public class SqlCreateSequence implements SqlDDLStatement {
         this.schema = schema;
     }
 
-    public Integer getAllocationSize() {
-        return allocationSize;
-    }
-
-    public void setAllocationSize(Integer allocationSize) {
-        this.allocationSize = allocationSize;
-    }
-
-    public Integer getInitialValue() {
-        return initialValue;
-    }
-
-    public void setInitialValue(Integer initialValue) {
-        this.initialValue = initialValue;
-    }
-
-    public String getCatalog() {
-        return catalog;
-    }
-
-    public void setCatalog(String catalog) {
-        this.catalog = catalog;
-    }
 
 }

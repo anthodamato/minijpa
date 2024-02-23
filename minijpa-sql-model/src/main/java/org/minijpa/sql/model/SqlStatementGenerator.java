@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public interface SqlStatementGenerator {
@@ -60,6 +59,8 @@ public interface SqlStatementGenerator {
     public String export(SqlCreateTable sqlCreateTable);
 
     public String export(SqlCreateSequence sqlCreateSequence);
+
+    public String export(SqlDropSequence sqlDropSequence);
 
     public List<String> export(List<SqlDDLStatement> sqlDDLStatement);
 
