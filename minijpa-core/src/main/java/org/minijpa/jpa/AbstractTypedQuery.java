@@ -15,49 +15,23 @@
  */
 package org.minijpa.jpa;
 
-import java.util.*;
-
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.Parameter;
-import javax.persistence.PersistenceException;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaQuery;
-
 import org.minijpa.jpa.db.JdbcEntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
+import javax.persistence.*;
+import java.util.Calendar;
+import java.util.Date;
 
-    private final Logger LOG = LoggerFactory.getLogger(MiniTypedQuery.class);
-    private final CriteriaQuery<?> criteriaQuery;
+public abstract class AbstractTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
 
-    public MiniTypedQuery(CriteriaQuery<?> criteriaQuery, JdbcEntityManager jdbcCriteriaEntityManager) {
+    private final Logger LOG = LoggerFactory.getLogger(AbstractTypedQuery.class);
+
+    public AbstractTypedQuery(JdbcEntityManager jdbcCriteriaEntityManager) {
         super();
-        this.criteriaQuery = criteriaQuery;
         this.jdbcEntityManager = jdbcCriteriaEntityManager;
     }
 
-    public CriteriaQuery<?> getCriteriaQuery() {
-        return criteriaQuery;
-    }
-
-    @Override
-    public List<X> getResultList() {
-        try {
-            if (flushModeType == FlushModeType.AUTO)
-                jdbcEntityManager.flush();
-
-            return (List<X>) jdbcEntityManager.select(this);
-        } catch (Exception e) {
-            LOG.error(e.getMessage());
-            throw new PersistenceException(e.getMessage());
-        }
-    }
 
     @Override
     public int executeUpdate() {
@@ -86,28 +60,6 @@ public class MiniTypedQuery<X> extends AbstractQuery implements TypedQuery<X> {
     public <T> T unwrap(Class<T> cls) {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public X getSingleResult() {
-        List<?> list = null;
-        try {
-            if (flushModeType == FlushModeType.AUTO)
-                jdbcEntityManager.flush();
-
-            list = jdbcEntityManager.select(this);
-        } catch (Exception e) {
-            LOG.error(e.getMessage());
-            throw new PersistenceException(e.getMessage());
-        }
-
-        if (list.isEmpty())
-            throw new NoResultException("No result to return");
-
-        if (list.size() > 1)
-            throw new NonUniqueResultException("More than one result to return");
-
-        return (X) list.get(0);
     }
 
     @Override

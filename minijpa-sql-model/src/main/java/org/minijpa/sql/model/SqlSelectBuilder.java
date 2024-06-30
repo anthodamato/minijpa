@@ -70,12 +70,12 @@ public class SqlSelectBuilder {
 
         sqlSelect.setValues(values);
         if (conditions != null && !conditions.isEmpty()) {
-            sqlSelect.setConditions(Optional.ofNullable(conditions));
+            sqlSelect.setConditions(Optional.of(conditions));
         }
 
         sqlSelect.setGroupBy(Optional.ofNullable(groupBy));
         if (orderByList != null && !orderByList.isEmpty()) {
-            sqlSelect.setOrderByList(Optional.ofNullable(orderByList));
+            sqlSelect.setOrderByList(Optional.of(orderByList));
         }
 
         sqlSelect.setResult(result);

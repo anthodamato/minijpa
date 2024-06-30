@@ -15,18 +15,12 @@
  */
 package org.minijpa.jpa;
 
-import java.util.List;
-import java.util.Optional;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.PersistenceException;
-import javax.persistence.TransactionRequiredException;
-
 import org.minijpa.jpa.db.JdbcEntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.persistence.*;
+import java.util.List;
 
 /**
  * @author adamato
@@ -36,11 +30,11 @@ public class MiniJpqlQuery extends AbstractQuery {
     private final Logger LOG = LoggerFactory.getLogger(MiniJpqlQuery.class);
 
     private final String jpqlString;
-    private final Optional<Class<?>> resultClass;
+    private final Class<?> resultClass;
     private final EntityManager entityManager;
 
     public MiniJpqlQuery(String jpqlString,
-                         Optional<Class<?>> resultClass,
+                         Class<?> resultClass,
                          EntityManager entityManager,
                          JdbcEntityManager jdbcEntityManager) {
         this.jpqlString = jpqlString;
@@ -53,7 +47,7 @@ public class MiniJpqlQuery extends AbstractQuery {
         return jpqlString;
     }
 
-    public Optional<Class<?>> getResultClass() {
+    public Class<?> getResultClass() {
         return resultClass;
     }
 
@@ -64,7 +58,10 @@ public class MiniJpqlQuery extends AbstractQuery {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
-            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints());
+            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints(), resultClass);
+        } catch (RuntimeException e) {
+            LOG.error(e.getMessage());
+            throw e;
         } catch (Exception e) {
             LOG.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
@@ -80,7 +77,10 @@ public class MiniJpqlQuery extends AbstractQuery {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
-            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints());
+            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints(), resultClass);
+        } catch (RuntimeException e) {
+            LOG.error(e.getMessage());
+            throw e;
         } catch (Exception e) {
             LOG.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
