@@ -20,6 +20,7 @@ import java.util.Map;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaQuery;
 
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniNativeQuery;
@@ -32,11 +33,12 @@ public interface JdbcEntityManager {
 
     public void flush() throws Exception;
 
-    public List<?> select(Query query) throws Exception;
+    public List<?> selectCriteriaQuery(Query query, CriteriaQuery criteriaQuery) throws Exception;
 
     public List<?> selectJpql(String jpqlStatement,
                               Map<Parameter<?>, Object> parameterMap,
-                              Map<String, Object> hints) throws Exception;
+                              Map<String, Object> hints,
+                              Class<?> resultClass) throws Exception;
 
     public List<?> selectNative(MiniNativeQuery query) throws Exception;
 

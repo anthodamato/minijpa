@@ -506,8 +506,8 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
     @Override
-    public List<?> select(Query query) throws Exception {
-        CriteriaQuery<?> criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
+    public List<?> selectCriteriaQuery(Query query, CriteriaQuery criteriaQuery) throws Exception {
+//        CriteriaQuery<?> criteriaQuery = ((MiniTypedQuery<?>) query).getCriteriaQuery();
         if (criteriaQuery.getResultType() == Tuple.class) {
             if (!(criteriaQuery.getSelection() instanceof CompoundSelection<?>)) {
                 throw new IllegalArgumentException(
@@ -535,8 +535,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         Map<String, Object> hints = query.getHints();
         log.debug("select: joins.size()={}", joins.size());
         log.debug("select: hints.get(QueryHints.SPLIT_MULTIPLE_JOINS)={}", hints.get(QueryHints.SPLIT_MULTIPLE_JOINS));
-        if (joins.size() > 1 &&
-                joins.size() == 2 &&
+        if (joins.size() == 2 &&
                 hints.get(QueryHints.SPLIT_MULTIPLE_JOINS) != null &&
                 ((Boolean) hints.get(QueryHints.SPLIT_MULTIPLE_JOINS))) {
             // split multiple joins case
@@ -900,17 +899,34 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     @Override
     public List<?> selectJpql(String jpqlStatement,
                               Map<Parameter<?>, Object> parameterMap,
-                              Map<String, Object> hints) throws Exception {
+                              Map<String, Object> hints,
+                              Class<?> resultClass) throws Exception {
         StatementParameters statementParameters;
         try {
             log.debug("selectJpql: start parsing");
             statementParameters = jpqlModule.parse(jpqlStatement, parameterMap, hints);
             log.debug("selectJpql: end parsing");
         } catch (Error e) {
-            throw new IllegalStateException("Internal Jpql Parser Error: " + e.getMessage());
+            throw new PersistenceException("Internal Jpql Parser Error: " + e.getMessage());
         }
 
-        return runQuery(statementParameters, hints);
+        SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
+        if (resultClass != null) {
+            Optional<MetaEntity> optionalEntity = persistenceUnitContext
+                    .findMetaEntityByTableName(sqlSelectData.getResult().getName());
+            if (optionalEntity.isEmpty())
+                throw new IllegalArgumentException("Expected result type '" + resultClass.getName() + "' but was null");
+
+            MetaEntity entity = optionalEntity.get();
+            if (resultClass != entity.getEntityClass())
+                throw new IllegalArgumentException("Expected result type '" + resultClass.getName() + "' but was '" + entity.getEntityClass().getName() + "'");
+        }
+
+        try {
+            return runQuery(statementParameters, hints);
+        } catch (Exception e) {
+            throw new PersistenceException(e.getMessage());
+        }
     }
 
     @Override
