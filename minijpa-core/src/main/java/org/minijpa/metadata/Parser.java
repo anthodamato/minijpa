@@ -17,7 +17,6 @@ package org.minijpa.metadata;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -91,7 +90,7 @@ public class Parser {
     private final ManyToOneHelper manyToOneHelper = new ManyToOneHelper();
     private final OneToManyHelper oneToManyHelper = new OneToManyHelper();
     private final ManyToManyHelper manyToManyHelper = new ManyToManyHelper();
-    private final JpaParser jpaParser = new JpaParser();
+    private final SqlResultSetMappingParser sqlResultSetMappingParser = new SqlResultSetMappingParser();
 
     public Parser(DbConfiguration dbConfiguration) {
         super();
@@ -120,7 +119,7 @@ public class Parser {
         Map<String, QueryResultMapping> map = new HashMap<>();
         for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
             MetaEntity metaEntity = entry.getValue();
-            Optional<Map<String, QueryResultMapping>> optional = jpaParser
+            Optional<Map<String, QueryResultMapping>> optional = sqlResultSetMappingParser
                     .parseQueryResultMappings(metaEntity.getEntityClass(), entities);
             if (optional.isPresent()) {
                 // checks for uniqueness
@@ -142,7 +141,9 @@ public class Parser {
         return Optional.of(map);
     }
 
-    public MetaEntity parse(EnhEntity enhEntity, Collection<MetaEntity> parsedEntities)
+    public MetaEntity parse(
+            EnhEntity enhEntity,
+            Collection<MetaEntity> parsedEntities)
             throws Exception {
         Optional<MetaEntity> optional = parsedEntities.stream()
                 .filter(e -> e.getEntityClass().getName().equals(enhEntity.getClassName())).findFirst();
@@ -163,7 +164,7 @@ public class Parser {
 
         String tableName = c.getSimpleName();
         Table table = c.getAnnotation(Table.class);
-        if (table != null && table.name() != null && table.name().trim().length() > 0) {
+        if (table != null && table.name() != null && !table.name().trim().isEmpty()) {
             tableName = table.name();
         }
 
@@ -178,13 +179,13 @@ public class Parser {
         }
 
         if (enhEntity.getMappedSuperclass() != null) {
-            optional = parsedEntities.stream().filter(e -> e.getMappedSuperclassEntity() != null)
+            Optional<MetaEntity> optionalEntity = parsedEntities.stream().filter(e -> e.getMappedSuperclassEntity() != null)
                     .filter(e -> e.getMappedSuperclassEntity().getEntityClass().getName()
                             .equals(enhEntity.getMappedSuperclass().getClassName()))
                     .findFirst();
 
-            if (optional.isPresent()) {
-                mappedSuperclassEntity = optional.get().getMappedSuperclassEntity();
+            if (optionalEntity.isPresent()) {
+                mappedSuperclassEntity = optionalEntity.get().getMappedSuperclassEntity();
             } else {
                 mappedSuperclassEntity = parseMappedSuperclass(enhEntity.getMappedSuperclass(),
                         parsedEntities);
@@ -194,7 +195,7 @@ public class Parser {
             entityAttributes.metaAttributes.addAll(msAttributes);
         }
 
-        LOG.debug("Getting '" + c.getName() + "' Id...");
+        LOG.debug("Getting '{}' Id...", c.getName());
         Pk id = null;
         if (mappedSuperclassEntity != null) {
             id = mappedSuperclassEntity.getId();
@@ -228,8 +229,7 @@ public class Parser {
         try {
             modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
         } catch (NoSuchMethodException e1) {
-            LOG.error("parse: special method '" + enhEntity.getModificationAttributeGetMethod()
-                    + "' not found");
+            LOG.error("parse: special method '{}' not found", enhEntity.getModificationAttributeGetMethod());
             throw e1;
         } catch (Exception e1) {
             LOG.error(e1.getMessage());
@@ -351,7 +351,7 @@ public class Parser {
             throw new Exception("@MappedSuperclass annotation not found: '" + c.getName() + "'");
         }
 
-        LOG.debug("Reading mapped superclass '" + enhEntity.getClassName() + "' attributes...");
+        LOG.debug("Reading mapped superclass '{}' attributes...", enhEntity.getClassName());
         EntityAttributes entityAttributes = parseAttributes(enhEntity, Optional.empty());
         List<MetaEntity> embeddables = parseEmbeddables(enhEntity, parsedEntities, Optional.empty());
 
@@ -644,7 +644,7 @@ public class Parser {
         }
 
         MetaAttribute attribute = builder.build();
-        LOG.debug("readAttribute: attribute: " + attribute);
+        LOG.debug("readAttribute: attribute: {}", attribute);
         return attribute;
     }
 
