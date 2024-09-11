@@ -18,50 +18,49 @@ package org.minijpa.jpa.db;
 import javax.persistence.LockModeType;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class LockTypeUtils {
 
     public static LockType toLockType(LockModeType lockModeType) {
-	if (lockModeType == null)
-	    return LockType.NONE;
+        if (lockModeType == null)
+            return LockType.NONE;
 
-	switch (lockModeType) {
-	    case OPTIMISTIC:
-	    case READ:
-		return LockType.OPTIMISTIC;
-	    case OPTIMISTIC_FORCE_INCREMENT:
-	    case WRITE:
-		return LockType.OPTIMISTIC;
-	    case PESSIMISTIC_READ:
-		return LockType.PESSIMISTIC_READ;
-	    case PESSIMISTIC_WRITE:
-		return LockType.PESSIMISTIC_WRITE;
-	    case PESSIMISTIC_FORCE_INCREMENT:
-		return LockType.PESSIMISTIC_FORCE_INCREMENT;
-	    default:
-		return LockType.NONE;
-	}
+        switch (lockModeType) {
+            case OPTIMISTIC:
+            case READ:
+                return LockType.OPTIMISTIC;
+            case OPTIMISTIC_FORCE_INCREMENT:
+            case WRITE:
+                return LockType.OPTIMISTIC;
+            case PESSIMISTIC_READ:
+                return LockType.PESSIMISTIC_READ;
+            case PESSIMISTIC_WRITE:
+                return LockType.PESSIMISTIC_WRITE;
+            case PESSIMISTIC_FORCE_INCREMENT:
+                return LockType.PESSIMISTIC_FORCE_INCREMENT;
+            default:
+                return LockType.NONE;
+        }
     }
 
     public static LockModeType toLockModeType(LockType lockType) {
-	if (lockType == null)
-	    return LockModeType.NONE;
+        if (lockType == null)
+            return LockModeType.NONE;
 
-	switch (lockType) {
-	    case OPTIMISTIC:
-		return LockModeType.OPTIMISTIC;
-	    case OPTIMISTIC_FORCE_INCREMENT:
-		return LockModeType.OPTIMISTIC;
-	    case PESSIMISTIC_READ:
-		return LockModeType.PESSIMISTIC_READ;
-	    case PESSIMISTIC_WRITE:
-		return LockModeType.PESSIMISTIC_WRITE;
-	    case PESSIMISTIC_FORCE_INCREMENT:
-		return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
-	    default:
-		return LockModeType.NONE;
-	}
+        switch (lockType) {
+            case OPTIMISTIC:
+                return LockModeType.OPTIMISTIC;
+            case OPTIMISTIC_FORCE_INCREMENT:
+                return LockModeType.OPTIMISTIC;
+            case PESSIMISTIC_READ:
+                return LockModeType.PESSIMISTIC_READ;
+            case PESSIMISTIC_WRITE:
+                return LockModeType.PESSIMISTIC_WRITE;
+            case PESSIMISTIC_FORCE_INCREMENT:
+                return LockModeType.PESSIMISTIC_FORCE_INCREMENT;
+            default:
+                return LockModeType.NONE;
+        }
     }
 }

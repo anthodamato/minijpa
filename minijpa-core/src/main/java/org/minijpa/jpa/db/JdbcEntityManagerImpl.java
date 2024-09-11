@@ -896,20 +896,33 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
 
-    @Override
-    public List<?> selectJpql(String jpqlStatement,
-                              Map<Parameter<?>, Object> parameterMap,
-                              Map<String, Object> hints,
-                              Class<?> resultClass) throws Exception {
-        StatementParameters statementParameters;
-        try {
-            log.debug("selectJpql: start parsing");
-            statementParameters = jpqlModule.parse(jpqlStatement, parameterMap, hints);
-            log.debug("selectJpql: end parsing");
-        } catch (Error e) {
-            throw new PersistenceException("Internal Jpql Parser Error: " + e.getMessage());
-        }
+    private void assignParameterValues(
+            List<QueryParameter> queryParameters,
+            Map<Parameter<?>, Object> parameterMap) {
+        if (queryParameters == null || queryParameters.isEmpty())
+            return;
 
+        queryParameters.forEach(qp -> {
+            String inputParameter = qp.getInputParameter();
+            Optional<Object> optional = ParameterUtils.findParameterValue(parameterMap, inputParameter);
+            if (optional.isEmpty())
+                throw new SemanticException("Input parameter '" + inputParameter + "' value not found");
+
+            Object value = optional.get();
+            qp.setValue(value);
+            qp.setSqlType(JdbcTypes.sqlTypeFromClass(optional.get().getClass()));
+        });
+    }
+
+
+    @Override
+    public List<?> selectJpql(
+            StatementParameters statementParameters,
+            Map<Parameter<?>, Object> parameterMap,
+            Map<String, Object> hints,
+            LockType lockType,
+            Class<?> resultClass) {
+        assignParameterValues(statementParameters.getParameters(), parameterMap);
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         if (resultClass != null) {
             Optional<MetaEntity> optionalEntity = persistenceUnitContext
@@ -929,6 +942,25 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         }
     }
 
+
+    @Override
+    public List<?> selectJpql(
+            String jpqlStatement,
+            Map<Parameter<?>, Object> parameterMap,
+            Map<String, Object> hints,
+            Class<?> resultClass) throws Exception {
+        StatementParameters statementParameters;
+        try {
+            log.debug("selectJpql: start parsing");
+            statementParameters = jpqlModule.parse(jpqlStatement, parameterMap, hints);
+            log.debug("selectJpql: end parsing");
+        } catch (Error e) {
+            throw new PersistenceException("Jpql Parser Error: " + e.getMessage());
+        }
+
+        return selectJpql(statementParameters, parameterMap, hints, LockType.NONE, resultClass);
+    }
+
     @Override
     public List<?> selectNative(MiniNativeQuery query) throws Exception {
         Optional<QueryResultMapping> queryResultMapping = Optional.empty();
@@ -943,13 +975,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         }
 
         if (query.getResultSetMapping().isPresent()) {
-            if (persistenceUnitContext.getQueryResultMappings().isEmpty()) {
+            if (persistenceUnitContext.getQueryResultMappings() == null) {
                 throw new IllegalArgumentException(
                         "Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
             }
 
             String resultSetMapping = query.getResultSetMapping().get();
-            QueryResultMapping qrm = persistenceUnitContext.getQueryResultMappings().get()
+            QueryResultMapping qrm = persistenceUnitContext.getQueryResultMappings()
                     .get(resultSetMapping);
             if (qrm == null) {
                 throw new IllegalArgumentException(

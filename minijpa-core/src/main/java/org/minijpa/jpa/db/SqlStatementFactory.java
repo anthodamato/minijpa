@@ -624,15 +624,15 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             AggregateFunctionExpression<?> aggregateFunctionExpression = (AggregateFunctionExpression<?>) selection;
             if (aggregateFunctionExpression.getAggregateFunctionType()
                     == org.minijpa.jpa.criteria.expression.AggregateFunctionType.COUNT) {
-                FetchParameter cnv = new BasicFetchParameter("count", null, Optional.empty());
+                FetchParameter cnv = new BasicFetchParameter("count", null);
                 return Optional.of(cnv);
             } else if (aggregateFunctionExpression.getAggregateFunctionType()
                     == org.minijpa.jpa.criteria.expression.AggregateFunctionType.SUM) {
-                FetchParameter cnv = new BasicFetchParameter("sum", null, Optional.empty());
+                FetchParameter cnv = new BasicFetchParameter("sum", null);
                 return Optional.of(cnv);
             } else if (aggregateFunctionExpression.getAggregateFunctionType()
                     == org.minijpa.jpa.criteria.expression.AggregateFunctionType.AVG) {
-                FetchParameter cnv = new BasicFetchParameter("avg", null, Optional.empty());
+                FetchParameter cnv = new BasicFetchParameter("avg", null);
                 return Optional.of(cnv);
             } else {
                 Expression<?> expr = aggregateFunctionExpression.getX();
@@ -648,36 +648,36 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             BinaryExpression binaryExpression = (BinaryExpression) selection;
             if (binaryExpression.getX().isPresent()) {
                 if (checkDataType((AttributePath<?>) binaryExpression.getX().get(), sqlType)) {
-                    return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+                    return Optional.of(new BasicFetchParameter("result", sqlType));
                 }
             }
 
             if (binaryExpression.getY().isPresent()) {
                 if (checkDataType((AttributePath<?>) binaryExpression.getY().get(), sqlType)) {
-                    return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+                    return Optional.of(new BasicFetchParameter("result", sqlType));
                 }
             }
 
             if (binaryExpression.getxValue().isPresent()) {
                 if (sqlType != null && sqlType != Types.OTHER
                         && binaryExpression.getxValue().get().getClass() == resultClass) {
-                    return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+                    return Optional.of(new BasicFetchParameter("result", sqlType));
                 }
             }
 
             if (binaryExpression.getyValue().isPresent()) {
                 if (sqlType != null && sqlType != Types.NULL
                         && binaryExpression.getyValue().get().getClass() == resultClass) {
-                    return Optional.of(new BasicFetchParameter("result", sqlType, Optional.empty()));
+                    return Optional.of(new BasicFetchParameter("result", sqlType));
                 }
             }
 
             sqlType = calculateSqlType(binaryExpression);
-            Optional<AttributeMapper> attributeMapper = Optional.empty();
+            AttributeMapper attributeMapper = null;
             if (sqlType == Types.FLOAT) {
                 // Postgres throws an exception: Persistence conversion to class java.lang.Float
                 // from numeric not supported
-                attributeMapper = Optional.of(AbstractDbTypeMapper.numberToFloatAttributeMapper);
+                attributeMapper = AbstractDbTypeMapper.numberToFloatAttributeMapper;
                 sqlType = Types.OTHER;
             }
 
@@ -686,55 +686,55 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         } else if (selection instanceof UnaryExpression<?>) {
             UnaryExpression<?> unaryExpression = (UnaryExpression<?>) selection;
             if (unaryExpression.getExpressionOperator() == ExpressionOperator.SQRT) {
-                return Optional.of(new BasicFetchParameter("result", Types.DOUBLE, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.DOUBLE));
             } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.LOWER) {
-                return Optional.of(new BasicFetchParameter("result", Types.VARCHAR, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.VARCHAR));
             } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.UPPER) {
-                return Optional.of(new BasicFetchParameter("result", Types.VARCHAR, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.VARCHAR));
             } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.ABS) {
-                return Optional.of(new BasicFetchParameter("result", null, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", null));
             } else if (unaryExpression.getExpressionOperator() == ExpressionOperator.MOD) {
-                return Optional.of(new BasicFetchParameter("result", Types.INTEGER, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.INTEGER));
             }
         } else if (selection instanceof TypecastExpression<?>) {
             ExpressionOperator expressionOperator = ((TypecastExpression<?>) selection).getExpressionOperator();
             if (expressionOperator == ExpressionOperator.TO_BIGDECIMAL) {
-                return Optional.of(new BasicFetchParameter("result", Types.DECIMAL, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.DECIMAL));
             } else if (expressionOperator == ExpressionOperator.TO_BIGINTEGER) {
                 return Optional.of(new BasicFetchParameter("result", Types.OTHER,
-                        Optional.of(AbstractDbTypeMapper.numberToBigIntegerAttributeMapper)));
+                        AbstractDbTypeMapper.numberToBigIntegerAttributeMapper));
             } else if (expressionOperator == ExpressionOperator.TO_DOUBLE) {
                 return Optional.of(new BasicFetchParameter("result", Types.OTHER,
-                        Optional.of(AbstractDbTypeMapper.numberToDoubleAttributeMapper)));
+                        AbstractDbTypeMapper.numberToDoubleAttributeMapper));
             } else if (expressionOperator == ExpressionOperator.TO_FLOAT) {
                 return Optional.of(new BasicFetchParameter("result", Types.OTHER,
-                        Optional.of(AbstractDbTypeMapper.numberToFloatAttributeMapper)));
+                        AbstractDbTypeMapper.numberToFloatAttributeMapper));
             } else if (expressionOperator == ExpressionOperator.TO_INTEGER) {
-                return Optional.of(new BasicFetchParameter("result", Types.INTEGER, Optional.empty()));
+                return Optional.of(new BasicFetchParameter("result", Types.INTEGER));
             } else if (expressionOperator == ExpressionOperator.TO_LONG) {
                 return Optional.of(new BasicFetchParameter("result", Types.OTHER,
-                        Optional.of(AbstractDbTypeMapper.numberToLongAttributeMapper)));
+                        AbstractDbTypeMapper.numberToLongAttributeMapper));
             }
         } else if (selection instanceof ConcatExpression) {
-            return Optional.of(new BasicFetchParameter("concat", Types.VARCHAR, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("concat", Types.VARCHAR));
         } else if (selection instanceof TrimExpression) {
-            return Optional.of(new BasicFetchParameter("trim", Types.VARCHAR, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("trim", Types.VARCHAR));
         } else if (selection instanceof LocateExpression) {
-            return Optional.of(new BasicFetchParameter("locate", Types.INTEGER, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("locate", Types.INTEGER));
         } else if (selection instanceof SubstringExpression) {
-            return Optional.of(new BasicFetchParameter("substring", Types.VARCHAR, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("substring", Types.VARCHAR));
         } else if (selection instanceof NullifExpression) {
-            return Optional.of(new BasicFetchParameter("nullif", Types.OTHER, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("nullif", Types.OTHER));
         } else if (selection instanceof CoalesceExpression) {
-            return Optional.of(new BasicFetchParameter("coalesce", Types.OTHER, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("coalesce", Types.OTHER));
         } else if (selection instanceof NegationExpression) {
-            return Optional.of(new BasicFetchParameter("negation", Types.OTHER, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("negation", Types.OTHER));
         } else if (selection instanceof CurrentDateExpression) {
-            return Optional.of(new BasicFetchParameter("date", Types.DATE, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("date", Types.DATE));
         } else if (selection instanceof CurrentTimeExpression) {
-            return Optional.of(new BasicFetchParameter("time", Types.TIME, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("time", Types.TIME));
         } else if (selection instanceof CurrentTimestampExpression) {
-            return Optional.of(new BasicFetchParameter("timestamp", Types.TIMESTAMP, Optional.empty()));
+            return Optional.of(new BasicFetchParameter("timestamp", Types.TIMESTAMP));
         }
 
         return Optional.empty();

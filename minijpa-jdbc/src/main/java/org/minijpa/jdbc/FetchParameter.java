@@ -5,11 +5,11 @@ import java.util.Optional;
 import org.minijpa.jdbc.mapper.AttributeMapper;
 
 public interface FetchParameter {
-	public String getColumnName();
+    public String getColumnName();
 
-	public Integer getSqlType();
+    public Integer getSqlType();
 
-	@SuppressWarnings("rawtypes")
-	public Optional<AttributeMapper> getAttributeMapper();
+    @SuppressWarnings("rawtypes")
+    public AttributeMapper getAttributeMapper();
 
 }

@@ -122,13 +122,13 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
                                        ResultSetMetaData metaData,
                                        ResultSet rs,
                                        int index) throws Exception {
-        Optional<AttributeMapper> optionalAM = fetchParameter.getAttributeMapper();
+//        Optional<AttributeMapper> optionalAM = fetchParameter.getAttributeMapper();
         Integer sqlType = fetchParameter.getSqlType();
         if (sqlType == null) {
             sqlType = metaData.getColumnType(index);
         }
 
-        return JdbcRunner.getValueByAttributeMapper(rs, index, sqlType, optionalAM);
+        return JdbcRunner.getValueByAttributeMapper(rs, index, sqlType, fetchParameter.getAttributeMapper());
     }
 
     private Optional<FetchParameter> findFetchParameter(String columnName, String columnAlias,
@@ -166,8 +166,7 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
             FetchParameter fetchParameter = new AttributeFetchParameterImpl(
                     joinColumnAttribute.getColumnName(),
                     joinColumnAttribute.getSqlType(),
-                    joinColumnAttribute.getAttribute(),
-                    Optional.empty());
+                    joinColumnAttribute.getAttribute());
             return Optional.of(fetchParameter);
         }
 

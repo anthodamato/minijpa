@@ -39,7 +39,7 @@ import org.minijpa.jpa.model.MetaEntity;
  */
 public class SqlResultSetMappingParser {
 
-    public Optional<Map<String, QueryResultMapping>> parseQueryResultMappings(
+    public Optional<Map<String, QueryResultMapping>> parse(
             Class<?> c,
             Map<String, MetaEntity> entities) {
         SqlResultSetMapping[] mapping = c.getAnnotationsByType(SqlResultSetMapping.class);
@@ -58,8 +58,9 @@ public class SqlResultSetMappingParser {
         return Optional.of(map);
     }
 
-    private QueryResultMapping parseQueryResultMapping(SqlResultSetMapping sqlResultSetMapping,
-                                                       Map<String, MetaEntity> entities) {
+    private QueryResultMapping parseQueryResultMapping(
+            SqlResultSetMapping sqlResultSetMapping,
+            Map<String, MetaEntity> entities) {
         if (sqlResultSetMapping.name() == null || "".equals(sqlResultSetMapping.name()))
             throw new IllegalArgumentException("@SqlResultSetMapping 'name' is null");
 

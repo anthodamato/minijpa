@@ -23,10 +23,11 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
+import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.metadata.EntityDelegate;
-import org.minijpa.metadata.Parser;
+import org.minijpa.metadata.JpaParser;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.minijpa.metadata.enhancer.EnhEntity;
@@ -34,67 +35,69 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class PersistenceUnitContextManager {
 
-	private static final Logger LOG = LoggerFactory.getLogger(PersistenceUnitContextManager.class);
-	private static final PersistenceUnitContextManager persistenceUnitContextManager = new PersistenceUnitContextManager();
+    private static final Logger LOG = LoggerFactory.getLogger(PersistenceUnitContextManager.class);
+    private static final PersistenceUnitContextManager persistenceUnitContextManager = new PersistenceUnitContextManager();
 
-	private PersistenceUnitContextManager() {
+    private PersistenceUnitContextManager() {
 
-	}
+    }
 
-	public static PersistenceUnitContextManager getInstance() {
-		return persistenceUnitContextManager;
-	}
+    public static PersistenceUnitContextManager getInstance() {
+        return persistenceUnitContextManager;
+    }
 
-	public synchronized PersistenceUnitContext get(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
-		// if the entities have been already parsed they are saved in the EntityContext.
-		// It must reuse them. Just one MetaEntity instance for each class name must
-		// exists.
-		Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
-				.getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
-		if (optional.isPresent()) {
-			LOG.debug("Persistence Unit Entities already parsed");
-			return optional.get();
-		}
+    public synchronized PersistenceUnitContext get(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
+        // if the entities have been already parsed they are saved in the EntityContext.
+        // It must reuse them. Just one MetaEntity instance for each class name must
+        // exists.
+        Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
+                .getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
+        if (optional.isPresent()) {
+            LOG.debug("Persistence Unit Entities already parsed");
+            return optional.get();
+        }
 
-		// collects existing meta entities
-		Map<String, MetaEntity> existingMetaEntities = new HashMap<>();
-		for (String className : persistenceUnitInfo.getManagedClassNames()) {
-			Optional<MetaEntity> optionalMetaEntity = EntityDelegate.getInstance().getMetaEntity(className);
-			if (optionalMetaEntity.isPresent())
-				existingMetaEntities.put(className, optionalMetaEntity.get());
-		}
+        // collects existing meta entities
+        Map<String, MetaEntity> existingMetaEntities = new HashMap<>();
+        for (String className : persistenceUnitInfo.getManagedClassNames()) {
+            Optional<MetaEntity> optionalMetaEntity = EntityDelegate.getInstance().getMetaEntity(className);
+            optionalMetaEntity.ifPresent(metaEntity -> existingMetaEntities.put(className, metaEntity));
+        }
 
-		LOG.info("Parsing entities...");
-		Map<String, MetaEntity> entityMap = new HashMap<>();
-		DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
-				.getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
-		Parser parser = new Parser(dbConfiguration);
-		for (String className : persistenceUnitInfo.getManagedClassNames()) {
-			EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
-			MetaEntity metaEntity = parser.parse(enhEntity, entityMap.values());
-			entityMap.put(enhEntity.getClassName(), metaEntity);
-		}
+        LOG.info("Parsing entities...");
+        Map<String, MetaEntity> entityMap = new HashMap<>();
+        DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
+                .getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
+        JpaParser jpaParser = new JpaParser(dbConfiguration);
+        for (String className : persistenceUnitInfo.getManagedClassNames()) {
+            EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
+            MetaEntity metaEntity = jpaParser.parse(enhEntity, entityMap.values());
+            entityMap.put(enhEntity.getClassName(), metaEntity);
+        }
 
-		// replaces the existing meta entities
-		entityMap.putAll(existingMetaEntities);
+        // replaces the existing meta entities
+        entityMap.putAll(existingMetaEntities);
 
-		parser.fillRelationships(entityMap);
-		Optional<Map<String, QueryResultMapping>> queryResultMappings = parser.parseSqlResultSetMappings(entityMap);
+        jpaParser.fillRelationships(entityMap);
+        Optional<Map<String, QueryResultMapping>> queryResultMappings = jpaParser.parseSqlResultSetMappings(entityMap);
+        Optional<Map<String, MiniNamedQueryMapping>> optionalNamedQueries = jpaParser.parseNamedQueries(entityMap);
 
-		PersistenceUnitContext puc = new PersistenceUnitContext(persistenceUnitInfo.getPersistenceUnitName(), entityMap,
-				queryResultMappings);
+        PersistenceUnitContext puc = new PersistenceUnitContext(
+                persistenceUnitInfo.getPersistenceUnitName(),
+                entityMap,
+                queryResultMappings.orElse(null),
+                optionalNamedQueries.orElse(null));
 
-		entityMap.forEach((k, v) -> {
-			LOG.debug("get: v.getName()={}", v.getName());
-			v.getBasicAttributes().forEach(a -> LOG.debug("get: ba a.getName()={}", a.getName()));
-		});
+        entityMap.forEach((k, v) -> {
+            LOG.debug("get: v.getName()={}", v.getName());
+            v.getBasicAttributes().forEach(a -> LOG.debug("get: ba a.getName()={}", a.getName()));
+        });
 
-		EntityDelegate.getInstance().addPersistenceUnitContext(puc);
-		return puc;
-	}
+        EntityDelegate.getInstance().addPersistenceUnitContext(puc);
+        return puc;
+    }
 }

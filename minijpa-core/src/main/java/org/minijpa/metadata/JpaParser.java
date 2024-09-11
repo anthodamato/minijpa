@@ -64,6 +64,7 @@ import org.minijpa.jpa.db.LockType;
 import org.minijpa.jpa.db.PkGeneration;
 import org.minijpa.jpa.db.PkGenerationType;
 import org.minijpa.jpa.db.PkStrategy;
+import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.BasicAttributePk;
@@ -82,17 +83,18 @@ import org.minijpa.metadata.enhancer.EnhEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Parser {
+public class JpaParser {
 
-    private final Logger LOG = LoggerFactory.getLogger(Parser.class);
+    private final Logger LOG = LoggerFactory.getLogger(JpaParser.class);
     private final DbConfiguration dbConfiguration;
     private final OneToOneHelper oneToOneHelper = new OneToOneHelper();
     private final ManyToOneHelper manyToOneHelper = new ManyToOneHelper();
     private final OneToManyHelper oneToManyHelper = new OneToManyHelper();
     private final ManyToManyHelper manyToManyHelper = new ManyToManyHelper();
     private final SqlResultSetMappingParser sqlResultSetMappingParser = new SqlResultSetMappingParser();
+    private final NamedQueryParser namedQueryParser = new NamedQueryParser();
 
-    public Parser(DbConfiguration dbConfiguration) {
+    public JpaParser(DbConfiguration dbConfiguration) {
         super();
         this.dbConfiguration = dbConfiguration;
     }
@@ -120,7 +122,7 @@ public class Parser {
         for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
             MetaEntity metaEntity = entry.getValue();
             Optional<Map<String, QueryResultMapping>> optional = sqlResultSetMappingParser
-                    .parseQueryResultMappings(metaEntity.getEntityClass(), entities);
+                    .parse(metaEntity.getEntityClass(), entities);
             if (optional.isPresent()) {
                 // checks for uniqueness
                 for (Map.Entry<String, QueryResultMapping> e : optional.get().entrySet()) {
@@ -132,6 +134,24 @@ public class Parser {
 
                 map.putAll(optional.get());
             }
+        }
+
+        if (map.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(map);
+    }
+
+    public Optional<Map<String, MiniNamedQueryMapping>> parseNamedQueries(
+            Map<String, MetaEntity> entities) {
+        Map<String, MiniNamedQueryMapping> map = new HashMap<>();
+        for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+            MetaEntity metaEntity = entry.getValue();
+            Optional<Map<String, MiniNamedQueryMapping>> optional = namedQueryParser
+                    .parse(metaEntity.getEntityClass());
+            // checks for uniqueness
+            optional.ifPresent(map::putAll);
         }
 
         if (map.isEmpty()) {
@@ -602,17 +622,19 @@ public class Parser {
                     .attributeMapper(attributeClass,
                             readWriteType);
             LOG.debug("readAttribute: id attributeMapper={}", attributeMapper);
-            Optional<AttributeMapper> optionalAM = Optional.empty();
-            if (attributeMapper != null) {
-                optionalAM = Optional.of(attributeMapper);
-            }
+//            Optional<AttributeMapper> optionalAM = Optional.empty();
+//            if (attributeMapper != null) {
+//                optionalAM = Optional.of(attributeMapper);
+//            }
 
             MetaAttribute.Builder builder = new MetaAttribute.Builder(
                     enhAttribute.getName()).withColumnName(columnName)
                     .withType(attributeClass).withReadWriteDbType(readWriteType).withReadMethod(readMethod)
                     .withWriteMethod(writeMethod).isId(true).withSqlType(sqlType).withJavaMember(field)
                     .isBasic(true)
-                    .withPath(path).withDDLData(ddlData).withAttributeMapper(optionalAM);
+                    .withPath(path)
+                    .withDDLData(ddlData)
+                    .withAttributeMapper(attributeMapper);
 
             return builder.build();
         }
@@ -631,9 +653,7 @@ public class Parser {
         AttributeMapper<?, ?> attributeMapper = dbConfiguration.getDbTypeMapper()
                 .attributeMapper(attributeClass,
                         readWriteType);
-        if (attributeMapper != null) {
-            builder.withAttributeMapper(Optional.of(attributeMapper));
-        }
+        builder.withAttributeMapper(attributeMapper);
 
         // Basic annotation
         Basic basic = field.getAnnotation(Basic.class);

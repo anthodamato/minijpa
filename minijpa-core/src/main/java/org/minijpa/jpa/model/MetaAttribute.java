@@ -31,7 +31,7 @@ public class MetaAttribute extends AbstractMetaAttribute {
     // it's a basic attribute
     private boolean basic;
     private Optional<DDLData> ddlData = Optional.empty();
-    protected Optional<AttributeMapper> attributeMapper = Optional.empty();
+    protected AttributeMapper attributeMapper;
 
     public boolean isId() {
         return id;
@@ -58,7 +58,7 @@ public class MetaAttribute extends AbstractMetaAttribute {
     }
 
     @Override
-    public Optional<AttributeMapper> getAttributeMapper() {
+    public AttributeMapper getAttributeMapper() {
         return attributeMapper;
     }
 
@@ -78,7 +78,7 @@ public class MetaAttribute extends AbstractMetaAttribute {
         private boolean id;
         private Integer sqlType;
         private Field javaMember;
-        private Optional<AttributeMapper> attributeMapper = Optional.empty();
+        private AttributeMapper attributeMapper;
         private boolean nullable = true;
         private boolean version = false;
         private boolean basic;
@@ -131,7 +131,7 @@ public class MetaAttribute extends AbstractMetaAttribute {
             return this;
         }
 
-        public Builder withAttributeMapper(Optional<AttributeMapper> attributeMapper) {
+        public Builder withAttributeMapper(AttributeMapper attributeMapper) {
             this.attributeMapper = attributeMapper;
             return this;
         }

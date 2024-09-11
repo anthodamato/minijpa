@@ -10,18 +10,22 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 import java.util.List;
 
-public class JpqlTypedQuery<T> extends AbstractTypedQuery<T> {
-    private final Logger LOG = LoggerFactory.getLogger(JpqlTypedQuery.class);
-    private String jpqlString;
-    private Class<T> resultClass;
+public class MiniJpqlTypedQuery<T> extends AbstractTypedQuery<T> {
+    private final Logger LOG = LoggerFactory.getLogger(MiniJpqlTypedQuery.class);
+    private final String jpqlString;
+    private final Class<T> resultClass;
 
-    public JpqlTypedQuery(
+    public MiniJpqlTypedQuery(
             JdbcEntityManager jdbcCriteriaEntityManager,
             String jpqlString,
             Class<T> resultClass) {
         super(jdbcCriteriaEntityManager);
         this.jpqlString = jpqlString;
         this.resultClass = resultClass;
+    }
+
+    public String getJpqlString() {
+        return jpqlString;
     }
 
     @Override

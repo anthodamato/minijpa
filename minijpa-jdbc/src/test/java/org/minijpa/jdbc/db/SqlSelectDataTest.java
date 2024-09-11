@@ -14,7 +14,7 @@ import org.minijpa.sql.model.FromTable;
 public class SqlSelectDataTest {
     @Test
     public void sqlSelectData() {
-        FetchParameter fetchParameter = new BasicFetchParameter("id", Types.BIGINT, Optional.empty());
+        FetchParameter fetchParameter = new BasicFetchParameter("id", Types.BIGINT);
         SqlSelectDataBuilder sqlSelectDataBuilder = new SqlSelectDataBuilder();
 
         List<FetchParameter> fetchParameters = Arrays.asList(fetchParameter);

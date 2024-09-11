@@ -32,6 +32,7 @@ public class JpqlModule {
         this.persistenceUnitContext = persistenceUnitContext;
     }
 
+    // TODO the 'parameterMap' should be removed
     public StatementParameters parse(
             String jpqlQuery,
             Map<Parameter<?>, Object> parameterMap,
