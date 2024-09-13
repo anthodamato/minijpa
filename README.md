@@ -126,7 +126,7 @@ the sql type returned by ResultSet is used
 
 ##### Jpql  
 Obtained from official JPA documentation the Jpql grammar is here '/minijpa-core/jpql/BNF2.txt'.  
-The Jpql jpaParser (not completed) is generated using [JavaCC v7.0.10](https://javacc.github.io/javacc/).  
+The Jpql parser (not completed) is generated using [JavaCC v7.0.10](https://javacc.github.io/javacc/).  
 The JJTree grammar file is '/minijpa-core/jpql/JpqlParser.jjt'.  
 Class generation is done using jjtree and javacc commands:  
 - jjtree JpqlParser.jjt  

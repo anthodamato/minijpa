@@ -14,8 +14,8 @@ package org.minijpa.jpa.jpql;
 
 public class JpqlParser {
 //  public static void main(String args[]) throws ParseException {
-//    JpqlParser jpaParser = new JpqlParser(System.in);
-//    jpaParser.QL_statement();
+//    JpqlParser parser = new JpqlParser(System.in);
+//    parser.QL_statement();
 //  }
 }
 
