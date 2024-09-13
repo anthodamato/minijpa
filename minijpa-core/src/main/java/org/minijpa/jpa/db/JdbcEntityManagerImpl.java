@@ -15,15 +15,6 @@
  */
 package org.minijpa.jpa.db;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.persistence.*;
-import javax.persistence.criteria.CompoundSelection;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-
 import org.minijpa.jdbc.*;
 import org.minijpa.jdbc.JdbcRunner.JdbcNativeRecordBuilder;
 import org.minijpa.jdbc.db.SqlSelectData;
@@ -42,9 +33,19 @@ import org.minijpa.metadata.PersistenceUnitContext;
 import org.minijpa.sql.model.*;
 import org.minijpa.sql.model.condition.*;
 import org.minijpa.sql.model.join.FromJoin;
-import org.minijpa.sql.model.join.FromJoinImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.persistence.Parameter;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.CompoundSelection;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
@@ -965,27 +966,27 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     public List<?> selectNative(MiniNativeQuery query) throws Exception {
         Optional<QueryResultMapping> queryResultMapping = Optional.empty();
         log.debug("selectNative: query.getResultClass()={}", query.getResultClass());
-        if (query.getResultClass().isPresent()) {
+        if (query.getResultClass() != null) {
             EntityMapping entityMapping = new EntityMapping(
-                    persistenceUnitContext.getEntities().get(query.getResultClass().get().getName()),
+                    persistenceUnitContext.getEntities().get(query.getResultClass().getName()),
                     Collections.emptyList());
             QueryResultMapping qrm = new QueryResultMapping("", List.of(entityMapping),
                     Collections.emptyList(), Collections.emptyList());
             return runNativeQuery(query, qrm);
         }
 
-        if (query.getResultSetMapping().isPresent()) {
+        if (query.getResultSetMapping() != null) {
             if (persistenceUnitContext.getQueryResultMappings() == null) {
                 throw new IllegalArgumentException(
-                        "Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
+                        "Result Set Mapping '" + query.getResultSetMapping() + "' not found");
             }
 
-            String resultSetMapping = query.getResultSetMapping().get();
+            String resultSetMapping = query.getResultSetMapping();
             QueryResultMapping qrm = persistenceUnitContext.getQueryResultMappings()
                     .get(resultSetMapping);
             if (qrm == null) {
                 throw new IllegalArgumentException(
-                        "Result Set Mapping '" + query.getResultSetMapping().get() + "' not found");
+                        "Result Set Mapping '" + query.getResultSetMapping() + "' not found");
             }
 
             return runNativeQuery(query, qrm);
