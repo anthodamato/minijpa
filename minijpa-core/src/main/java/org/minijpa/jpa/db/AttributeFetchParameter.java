@@ -17,7 +17,7 @@ public interface AttributeFetchParameter extends FetchParameter {
 
   public static AttributeFetchParameter build(RelationshipMetaAttribute attribute) {
     return new AttributeFetchParameterImpl(attribute.getColumnName(), attribute.getSqlType(),
-        attribute, Optional.empty());
+        attribute);
   }
 
   public static AttributeFetchParameter build(AbstractMetaAttribute attribute) {

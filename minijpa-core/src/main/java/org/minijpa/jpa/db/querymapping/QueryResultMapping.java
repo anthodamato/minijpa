@@ -28,8 +28,11 @@ public class QueryResultMapping {
     private final List<ConstructorMapping> constructorMappings;
     private final List<SingleColumnMapping> singleColumnMappings;
 
-    public QueryResultMapping(String name, List<EntityMapping> entityMappings,
-            List<ConstructorMapping> constructorMappings, List<SingleColumnMapping> singleColumnMappings) {
+    public QueryResultMapping(
+            String name,
+            List<EntityMapping> entityMappings,
+            List<ConstructorMapping> constructorMappings,
+            List<SingleColumnMapping> singleColumnMappings) {
         this.entityMappings = entityMappings;
         this.constructorMappings = constructorMappings;
         this.singleColumnMappings = singleColumnMappings;

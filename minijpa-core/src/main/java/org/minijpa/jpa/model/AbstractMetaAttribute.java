@@ -48,8 +48,8 @@ public abstract class AbstractMetaAttribute extends AbstractAttribute {
         return false;
     }
 
-    public Optional<AttributeMapper> getAttributeMapper() {
-        return Optional.empty();
+    public AttributeMapper getAttributeMapper() {
+        return null;
     }
 
     @Override

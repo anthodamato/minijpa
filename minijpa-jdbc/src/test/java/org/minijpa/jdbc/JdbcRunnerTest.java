@@ -67,27 +67,25 @@ public class JdbcRunnerTest {
                         new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
 
-        List<String> statements = Arrays.asList(createTableStmt);
+        List<String> statements = List.of(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
-        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT, Optional.empty());
-        QueryParameter qp2 = new QueryParameter("first_name", "William", Types.VARCHAR,
-                Optional.empty());
-        QueryParameter qp3 = new QueryParameter("last_name", "Shakespeare", Types.VARCHAR,
-                Optional.empty());
+        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT);
+        QueryParameter qp2 = new QueryParameter("first_name", "William", Types.VARCHAR);
+        QueryParameter qp3 = new QueryParameter("last_name", "Shakespeare", Types.VARCHAR);
         jdbcRunner.insert(connection, "insert into citizen (id,first_name,last_name) values (?,?,?)",
                 Arrays.asList(qp1, qp2, qp3));
 
         FetchParameter fp1 = new BasicFetchParameter("id", Types.BIGINT,
-                Optional.of(new ToLongAttributeMapper()));
-        FetchParameter fp2 = new BasicFetchParameter("first_name", Types.VARCHAR, Optional.empty());
-        FetchParameter fp3 = new BasicFetchParameter("last_name", Types.VARCHAR, Optional.empty());
+                new ToLongAttributeMapper());
+        FetchParameter fp2 = new BasicFetchParameter("first_name", Types.VARCHAR);
+        FetchParameter fp3 = new BasicFetchParameter("last_name", Types.VARCHAR);
         List<FetchParameter> fetchParameters = Arrays.asList(fp1, fp2, fp3);
 
         jdbcValueBuilderById.setFetchParameters(fetchParameters);
         Optional<?> optional = jdbcRunner.findById(
                 "select id,first_name,last_name from citizen where id=?", connection,
-                Arrays.asList(qp1), jdbcValueBuilderById);
+                List.of(qp1), jdbcValueBuilderById);
         ModelValueArray<FetchParameter> modelValueArray = (ModelValueArray<FetchParameter>) optional.get();
 
         Assertions.assertEquals(3, modelValueArray.size());
@@ -101,9 +99,9 @@ public class JdbcRunnerTest {
         jdbcValueBuilderById.setFetchParameters(fetchParameters);
         optional = jdbcRunner.findById("select id,first_name,last_name from citizen where id=?",
                 connection,
-                Arrays.asList(qp1), jdbcValueBuilderById);
+                List.of(qp1), jdbcValueBuilderById);
         Assertions.assertTrue(optional.isEmpty());
-        scriptRunner.runDDLStatements(Arrays.asList("drop table citizen"), connection);
+        scriptRunner.runDDLStatements(List.of("drop table citizen"), connection);
         connectionHolder.closeConnection();
     }
 
@@ -125,7 +123,7 @@ public class JdbcRunnerTest {
                 Arrays.asList(new ColumnDeclaration("user_account", String.class, Optional.of(jdbcDDLData)),
                         new ColumnDeclaration("expiry_date", java.sql.Date.class)));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
-        List<String> statements = Arrays.asList(createTableStmt);
+        List<String> statements = List.of(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
         FromTable fromTable = FromTable.of("account");
@@ -138,31 +136,30 @@ public class JdbcRunnerTest {
 
         LocalDate localDate = LocalDate.of(2022, 3, 3);
         java.sql.Date date = java.sql.Date.valueOf(localDate);
-        QueryParameter qp2 = new QueryParameter("user_account", "user1", Types.VARCHAR,
-                Optional.empty());
-        QueryParameter qp3 = new QueryParameter("expiry_date", date, Types.DATE, Optional.empty());
+        QueryParameter qp2 = new QueryParameter("user_account", "user1", Types.VARCHAR);
+        QueryParameter qp3 = new QueryParameter("expiry_date", date, Types.DATE);
         Object pkValue = jdbcRunner.insertReturnGeneratedKeys(connection,
                 sqlStatementGenerator.export(sqlInsert),
                 Arrays.asList(qp2, qp3), "id");
 
-        List<Value> values = Arrays.asList(new TableColumn(fromTable, expiryDateColumn));
+        List<Value> values = List.of(new TableColumn(fromTable, expiryDateColumn));
         BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, idColumn)).withRight("?").build();
-        List<Condition> conditions = Arrays.asList(binaryCondition);
+        List<Condition> conditions = List.of(binaryCondition);
         SqlSelect sqlSelect = new SqlSelectBuilder().withFromTable(fromTable).withValues(values)
                 .withConditions(conditions).build();
-        QueryParameter qp1 = new QueryParameter("id", pkValue, Types.BIGINT, Optional.empty());
-        FetchParameter edFp = new BasicFetchParameter("expiry_date", Types.DATE, Optional.empty());
+        QueryParameter qp1 = new QueryParameter("id", pkValue, Types.BIGINT);
+        FetchParameter edFp = new BasicFetchParameter("expiry_date", Types.DATE);
 
-        jdbcValueBuilderById.setFetchParameters(Arrays.asList(edFp));
+        jdbcValueBuilderById.setFetchParameters(List.of(edFp));
         Optional<?> optional = jdbcRunner.findById(sqlStatementGenerator.export(sqlSelect), connection,
-                Arrays.asList(qp1), jdbcValueBuilderById);
+                List.of(qp1), jdbcValueBuilderById);
         ModelValueArray<FetchParameter> modelValueArray = (ModelValueArray<FetchParameter>) optional.get();
 
         java.sql.Date d = (java.sql.Date) modelValueArray.getValue(0);
         Assertions.assertEquals(d, date);
         connectionHolder.commit();
-        scriptRunner.runDDLStatements(Arrays.asList("drop table account"), connection);
+        scriptRunner.runDDLStatements(List.of("drop table account"), connection);
         connectionHolder.closeConnection();
     }
 
@@ -183,14 +180,12 @@ public class JdbcRunnerTest {
                         new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
 
-        List<String> statements = Arrays.asList(createTableStmt);
+        List<String> statements = List.of(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
-        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT, Optional.empty());
-        QueryParameter qp2 = new QueryParameter("first_name", "William", Types.VARCHAR,
-                Optional.empty());
-        QueryParameter qp3 = new QueryParameter("last_name", "Shakespeare", Types.VARCHAR,
-                Optional.empty());
+        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT);
+        QueryParameter qp2 = new QueryParameter("first_name", "William", Types.VARCHAR);
+        QueryParameter qp3 = new QueryParameter("last_name", "Shakespeare", Types.VARCHAR);
         FromTable fromTable = new FromTableImpl("citizen", "c");
         Column idColumn = new Column("id");
         Column nameColumn = new Column("first_name");
@@ -202,15 +197,15 @@ public class JdbcRunnerTest {
         jdbcRunner.insert(connection, sqlStatementGenerator.export(sqlInsert),
                 Arrays.asList(qp1, qp2, qp3));
 
-        List<Value> values = Arrays.asList(
+        List<Value> values = List.of(
                 new Concat(new TableColumn(fromTable, nameColumn), "' '",
                         new TableColumn(fromTable, lastNameColumn)));
         SqlSelect sqlSelect = new SqlSelectBuilder().withFromTable(fromTable).withValues(values)
-                .withOrderBy(Arrays.asList(new OrderBy(new TableColumn(fromTable, nameColumn)))).build();
+                .withOrderBy(List.of(new OrderBy(new TableColumn(fromTable, nameColumn)))).build();
         String sql = sqlStatementGenerator.export(sqlSelect);
 
-        FetchParameter fp = new BasicFetchParameter("concat", Types.VARCHAR, Optional.empty());
-        List<FetchParameter> fetchParameters = Arrays.asList(fp);
+        FetchParameter fp = new BasicFetchParameter("concat", Types.VARCHAR);
+        List<FetchParameter> fetchParameters = List.of(fp);
 
         List<Object> collectionResult = new ArrayList<>();
         jdbcRecordBuilderValue.setFetchParameters(fetchParameters);
@@ -219,9 +214,9 @@ public class JdbcRunnerTest {
         Assertions.assertEquals(1, collectionResult.size());
         Assertions.assertEquals("William Shakespeare", collectionResult.get(0));
 
-        qp1 = new QueryParameter("id", 2L, Types.BIGINT, Optional.empty());
-        qp2 = new QueryParameter("first_name", "Robert Louis", Types.VARCHAR, Optional.empty());
-        qp3 = new QueryParameter("last_name", "Stevenson", Types.VARCHAR, Optional.empty());
+        qp1 = new QueryParameter("id", 2L, Types.BIGINT);
+        qp2 = new QueryParameter("first_name", "Robert Louis", Types.VARCHAR);
+        qp3 = new QueryParameter("last_name", "Stevenson", Types.VARCHAR);
         jdbcRunner.insert(connection, sqlStatementGenerator.export(sqlInsert),
                 Arrays.asList(qp1, qp2, qp3));
         collectionResult.clear();
@@ -236,9 +231,9 @@ public class JdbcRunnerTest {
         jdbcValueBuilderById.setFetchParameters(fetchParameters);
         Optional<?> optional = jdbcRunner.findById(
                 "select id,first_name,last_name from citizen where id=?", connection,
-                Arrays.asList(qp1), jdbcValueBuilderById);
+                List.of(qp1), jdbcValueBuilderById);
         Assertions.assertTrue(optional.isEmpty());
-        scriptRunner.runDDLStatements(Arrays.asList("drop table citizen"), connection);
+        scriptRunner.runDDLStatements(List.of("drop table citizen"), connection);
         connectionHolder.closeConnection();
     }
 
@@ -260,7 +255,7 @@ public class JdbcRunnerTest {
                 Arrays.asList(new ColumnDeclaration("user_account", String.class, Optional.of(jdbcDDLData)),
                         new ColumnDeclaration("expiry_date", java.sql.Date.class)));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
-        List<String> statements = Arrays.asList(createTableStmt);
+        List<String> statements = List.of(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
         FromTable fromTable = FromTable.of("account");
@@ -273,37 +268,36 @@ public class JdbcRunnerTest {
 
         LocalDate localDate = LocalDate.of(2022, 3, 3);
         java.sql.Date date = java.sql.Date.valueOf(localDate);
-        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT, Optional.empty());
-        QueryParameter qp2 = new QueryParameter("user_account", "user1", Types.VARCHAR,
-                Optional.empty());
-        QueryParameter qp3 = new QueryParameter("expiry_date", date, Types.DATE, Optional.empty());
+        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT);
+        QueryParameter qp2 = new QueryParameter("user_account", "user1", Types.VARCHAR);
+        QueryParameter qp3 = new QueryParameter("expiry_date", date, Types.DATE);
         jdbcRunner.insert(connection, sqlStatementGenerator.export(sqlInsert),
                 Arrays.asList(qp1, qp2, qp3));
 
         BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, idColumn)).withRight(1).build();
         SqlUpdate sqlUpdate = new SqlUpdate(fromTable,
-                Arrays.asList(new TableColumn(fromTable, expiryDateColumn)),
+                List.of(new TableColumn(fromTable, expiryDateColumn)),
                 Optional.of(binaryCondition));
         java.sql.Date date2 = java.sql.Date.valueOf(LocalDate.of(2022, 3, 5));
-        QueryParameter edQp = new QueryParameter("expiry_date", date2, Types.DATE, Optional.empty());
-        jdbcRunner.update(connection, sqlStatementGenerator.export(sqlUpdate), Arrays.asList(edQp));
+        QueryParameter edQp = new QueryParameter("expiry_date", date2, Types.DATE);
+        jdbcRunner.update(connection, sqlStatementGenerator.export(sqlUpdate), List.of(edQp));
 
-        List<Value> values = Arrays.asList(new TableColumn(fromTable, expiryDateColumn));
+        List<Value> values = List.of(new TableColumn(fromTable, expiryDateColumn));
         binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, idColumn)).withRight("?").build();
-        List<Condition> conditions = Arrays.asList(binaryCondition);
+        List<Condition> conditions = List.of(binaryCondition);
         SqlSelect sqlSelect = new SqlSelectBuilder().withFromTable(fromTable).withValues(values)
                 .withConditions(conditions).build();
-        FetchParameter edFp = new BasicFetchParameter("expiry_date", Types.DATE, Optional.empty());
-        jdbcValueBuilderById.setFetchParameters(Arrays.asList(edFp));
+        FetchParameter edFp = new BasicFetchParameter("expiry_date", Types.DATE);
+        jdbcValueBuilderById.setFetchParameters(List.of(edFp));
         Optional<?> optional = jdbcRunner.findById(sqlStatementGenerator.export(sqlSelect), connection,
-                Arrays.asList(qp1), jdbcValueBuilderById);
+                List.of(qp1), jdbcValueBuilderById);
         ModelValueArray<FetchParameter> modelValueArray = (ModelValueArray<FetchParameter>) optional.get();
         java.sql.Date d = (java.sql.Date) modelValueArray.getValue(0);
         Assertions.assertEquals(d, date2);
         connectionHolder.commit();
-        scriptRunner.runDDLStatements(Arrays.asList("drop table account"), connection);
+        scriptRunner.runDDLStatements(List.of("drop table account"), connection);
         connectionHolder.closeConnection();
     }
 
@@ -327,7 +321,7 @@ public class JdbcRunnerTest {
         sqlCreateSequence.setInitialValue(1);
 
         String createSeqStmt = sqlStatementGenerator.export(sqlCreateSequence);
-        List<String> statements = Arrays.asList(createSeqStmt);
+        List<String> statements = List.of(createSeqStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
         String seqStm = sqlStatementGenerator.sequenceNextValueStatement(Optional.empty(),
@@ -340,7 +334,7 @@ public class JdbcRunnerTest {
         sqlDropSequence.setSequenceName("citizen_seq");
         String dropSeqStmt = sqlStatementGenerator.export(sqlDropSequence);
 
-        scriptRunner.runDDLStatements(Arrays.asList(dropSeqStmt), connection);
+        scriptRunner.runDDLStatements(List.of(dropSeqStmt), connection);
         connectionHolder.closeConnection();
     }
 
@@ -361,7 +355,7 @@ public class JdbcRunnerTest {
                 Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
                         new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
-        List<String> statements = Arrays.asList(createTableStmt);
+        List<String> statements = List.of(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
         FromTable fromTable = FromTable.of("citizen");
@@ -371,11 +365,9 @@ public class JdbcRunnerTest {
         SqlInsert sqlInsert = new SqlInsert(fromTable,
                 Arrays.asList(idColumn, nameColumn, lastNameColumn), false,
                 false, Optional.empty());
-        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT, Optional.empty());
-        QueryParameter qp2 = new QueryParameter("first_name", "William", Types.VARCHAR,
-                Optional.empty());
-        QueryParameter qp3 = new QueryParameter("last_name", "Shakespeare", Types.VARCHAR,
-                Optional.empty());
+        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT);
+        QueryParameter qp2 = new QueryParameter("first_name", "William", Types.VARCHAR);
+        QueryParameter qp3 = new QueryParameter("last_name", "Shakespeare", Types.VARCHAR);
         jdbcRunner.insert(connection, sqlStatementGenerator.export(sqlInsert),
                 Arrays.asList(qp1, qp2, qp3));
 
@@ -384,14 +376,14 @@ public class JdbcRunnerTest {
                 new TableColumn(fromTable, lastNameColumn));
         BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, idColumn)).withRight("?").build();
-        List<Condition> conditions = Arrays.asList(binaryCondition);
+        List<Condition> conditions = List.of(binaryCondition);
         SqlSelect sqlSelect = new SqlSelectBuilder().withFromTable(fromTable).withValues(values)
                 .withConditions(conditions).build();
 
         List<Object> collection = new ArrayList<>();
         nativeRecordBuilder.setCollection(collection);
         jdbcRunner.runNativeQuery(connection, sqlStatementGenerator.export(sqlSelect),
-                Arrays.asList(1L),
+                List.of(1L),
                 nativeRecordBuilder);
 
         Assertions.assertEquals(1, collection.size());
@@ -408,7 +400,7 @@ public class JdbcRunnerTest {
         Assertions.assertEquals("Shakespeare", result[2]);
 
         connectionHolder.commit();
-        scriptRunner.runDDLStatements(Arrays.asList("drop table citizen"), connection);
+        scriptRunner.runDDLStatements(List.of("drop table citizen"), connection);
         connectionHolder.closeConnection();
     }
 
@@ -435,7 +427,7 @@ public class JdbcRunnerTest {
                         new ColumnDeclaration("time_value", Time.class),
                         new ColumnDeclaration("timestamp_value", Timestamp.class)));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
-        List<String> statements = Arrays.asList(createTableStmt);
+        List<String> statements = List.of(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
         FromTable fromTable = FromTable.of("data_types");
@@ -465,17 +457,13 @@ public class JdbcRunnerTest {
         long timestampMilliseconds = date.getTime() + timeMilliseconds;
         Timestamp timestamp = new Timestamp(timestampMilliseconds);
 
-        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT, Optional.empty());
-        QueryParameter qp2 = new QueryParameter("int_value", intValue, Types.INTEGER, Optional.empty());
-        QueryParameter qp3 = new QueryParameter("big_decimal_value", bigDecimal, Types.NUMERIC,
-                Optional.empty());
-        QueryParameter qp4 = new QueryParameter("float_value", floatValue, Types.FLOAT,
-                Optional.empty());
-        QueryParameter qp5 = new QueryParameter("double_value", doubleValue, Types.DOUBLE,
-                Optional.empty());
-        QueryParameter qp6 = new QueryParameter("time_value", time, Types.TIME, Optional.empty());
-        QueryParameter qp7 = new QueryParameter("timestamp_value", timestamp, Types.TIMESTAMP,
-                Optional.empty());
+        QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT);
+        QueryParameter qp2 = new QueryParameter("int_value", intValue, Types.INTEGER);
+        QueryParameter qp3 = new QueryParameter("big_decimal_value", bigDecimal, Types.NUMERIC);
+        QueryParameter qp4 = new QueryParameter("float_value", floatValue, Types.FLOAT);
+        QueryParameter qp5 = new QueryParameter("double_value", doubleValue, Types.DOUBLE);
+        QueryParameter qp6 = new QueryParameter("time_value", time, Types.TIME);
+        QueryParameter qp7 = new QueryParameter("timestamp_value", timestamp, Types.TIMESTAMP);
         jdbcRunner.insert(connection, sqlStatementGenerator.export(sqlInsert),
                 Arrays.asList(qp1, qp2, qp3, qp4, qp5, qp6, qp7));
 
@@ -487,14 +475,14 @@ public class JdbcRunnerTest {
                 new TableColumn(fromTable, timestampValueColumn));
         BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, idColumn)).withRight("?").build();
-        List<Condition> conditions = Arrays.asList(binaryCondition);
+        List<Condition> conditions = List.of(binaryCondition);
         SqlSelect sqlSelect = new SqlSelectBuilder().withFromTable(fromTable).withValues(values)
                 .withConditions(conditions).build();
 
         List<Object> collection = new ArrayList<>();
         nativeRecordBuilder.setCollection(collection);
         jdbcRunner.runNativeQuery(connection, sqlStatementGenerator.export(sqlSelect),
-                Arrays.asList(1L),
+                List.of(1L),
                 nativeRecordBuilder);
 
         assertEquals(1, collection.size());
@@ -540,7 +528,7 @@ public class JdbcRunnerTest {
         assertEquals(timestamp, result[6]);
 
         connectionHolder.commit();
-        scriptRunner.runDDLStatements(Arrays.asList("drop table data_types"), connection);
+        scriptRunner.runDDLStatements(List.of("drop table data_types"), connection);
         connectionHolder.closeConnection();
     }
 }

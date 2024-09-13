@@ -33,7 +33,7 @@ import java.util.*;
 
 public class CriteriaExpressionHelper {
 
-    private Logger LOG = LoggerFactory.getLogger(CriteriaExpressionHelper.class);
+    private final Logger log = LoggerFactory.getLogger(CriteriaExpressionHelper.class);
 
     private TableColumn createTableColumnFromPath(AttributePath<?> attributePath,
                                                   AliasGenerator tableAliasGenerator) {
@@ -90,7 +90,7 @@ public class CriteriaExpressionHelper {
             ParameterExpression<?> parameterExpression,
             String columnName,
             Integer sqlType,
-            Optional<AttributeMapper> attributeMapper) {
+            AttributeMapper attributeMapper) {
         if (parameterExpression.getName() != null) {
             Object value = ParameterUtils.findParameterValueByName(parameterExpression.getName(), parameterValues);
             return new QueryParameter(columnName, value, sqlType, attributeMapper);
@@ -114,7 +114,7 @@ public class CriteriaExpressionHelper {
             List<QueryParameter> parameters,
             String columnName,
             Integer sqlType,
-            Optional<AttributeMapper> attributeMapper) {
+            AttributeMapper attributeMapper) {
         if (expression instanceof AttributePath<?>) {
             AttributePath<?> attributePath = (AttributePath<?>) expression;
             return createTableColumnFromPath(attributePath, aliasGenerator);
@@ -141,7 +141,7 @@ public class CriteriaExpressionHelper {
             List<QueryParameter> parameters) {
         Object xParam = createParameterFromExpression(parameterValues, negationExpression.getExpression(),
                 aliasGenerator,
-                parameters, "negation", Types.OTHER, Optional.empty());
+                parameters, "negation", Types.OTHER, null);
         return Optional.of(new Negation(xParam));
     }
 
@@ -155,14 +155,14 @@ public class CriteriaExpressionHelper {
         if (coalesceExpression.getX().isPresent()) {
             Object xParam = createParameterFromExpression(parameterValues,
                     (Expression<?>) coalesceExpression.getX().get(),
-                    aliasGenerator, parameters, "coalesce", Types.OTHER, Optional.empty());
+                    aliasGenerator, parameters, "coalesce", Types.OTHER, null);
             arguments.add(xParam);
         }
 
         if (coalesceExpression.getY().isPresent()) {
             Object param = createParameterFromExpression(parameterValues,
                     (Expression<?>) coalesceExpression.getY().get(),
-                    aliasGenerator, parameters, "coalesce", Types.OTHER, Optional.empty());
+                    aliasGenerator, parameters, "coalesce", Types.OTHER, null);
             arguments.add(param);
         }
 
@@ -183,12 +183,12 @@ public class CriteriaExpressionHelper {
         Object xParam = createParameterFromExpression(
                 parameterValues, nullifExpression.getX(), aliasGenerator,
                 parameters,
-                "nullif", Types.OTHER, Optional.empty());
+                "nullif", Types.OTHER, null);
 
         if (nullifExpression.getY().isPresent()) {
             Object yParam = createParameterFromExpression(parameterValues,
                     (Expression<?>) nullifExpression.getY().get(),
-                    aliasGenerator, parameters, "nullif", Types.OTHER, Optional.empty());
+                    aliasGenerator, parameters, "nullif", Types.OTHER, null);
             return Optional.of(new Nullif(xParam, yParam));
         }
 
@@ -205,14 +205,17 @@ public class CriteriaExpressionHelper {
         Object xParam = createParameterFromExpression(parameterValues,
                 substringExpression.getX(), aliasGenerator,
                 parameters,
-                "locate", Types.VARCHAR, Optional.empty());
+                "locate", Types.VARCHAR, null);
         builder.withArgument(xParam);
 
         if (substringExpression.getFrom().isPresent()) {
             Object fromParam = createParameterFromExpression(parameterValues,
                     substringExpression.getFrom().get(),
                     aliasGenerator,
-                    parameters, "locate", Types.INTEGER, Optional.empty());
+                    parameters,
+                    "locate",
+                    Types.INTEGER,
+                    null);
             builder.withFrom(fromParam);
         }
 
@@ -224,7 +227,7 @@ public class CriteriaExpressionHelper {
             Object lenParam = createParameterFromExpression(parameterValues,
                     substringExpression.getLen().get(),
                     aliasGenerator,
-                    parameters, "len", Types.INTEGER, Optional.empty());
+                    parameters, "len", Types.INTEGER, null);
             builder.withLen(Optional.of(lenParam));
         }
 
@@ -245,13 +248,13 @@ public class CriteriaExpressionHelper {
         Object xParam = createParameterFromExpression(
                 parameterValues, locateExpression.getX(), aliasGenerator,
                 parameters,
-                "locate", Types.VARCHAR, Optional.empty());
+                "locate", Types.VARCHAR, null);
         builder.withInputString(xParam);
 
         if (locateExpression.getPattern().isPresent()) {
             Object patternParam = createParameterFromExpression(parameterValues,
                     locateExpression.getPattern().get(),
-                    aliasGenerator, parameters, "locate", Types.VARCHAR, Optional.empty());
+                    aliasGenerator, parameters, "locate", Types.VARCHAR, null);
             builder.withSearchString(patternParam);
         }
 
@@ -263,7 +266,7 @@ public class CriteriaExpressionHelper {
             Object fromParam = createParameterFromExpression(parameterValues,
                     locateExpression.getFrom().get(),
                     aliasGenerator,
-                    parameters, "from", Types.INTEGER, Optional.empty());
+                    parameters, "from", Types.INTEGER, null);
             builder.withPosition(Optional.of(fromParam));
         }
 
@@ -310,19 +313,19 @@ public class CriteriaExpressionHelper {
         builder.withArgument(
                 createParameterFromExpression(parameterValues,
                         trimExpression.getX(), aliasGenerator, parameters,
-                        "locate", Types.VARCHAR, Optional.empty()));
+                        "locate", Types.VARCHAR, null));
 
         if (trimExpression.getT().isPresent()) {
-            LOG.debug("createSelectionValue: trimExpression.getT().get()={}",
+            log.debug("createSelectionValue: trimExpression.getT().get()={}",
                     trimExpression.getT().get());
             builder.withTrimCharacter(
                     (String) createParameterFromExpression(parameterValues,
                             trimExpression.getT().get(),
-                            aliasGenerator, parameters, "trim", Types.VARCHAR, Optional.empty()));
+                            aliasGenerator, parameters, "trim", Types.VARCHAR, null));
         }
 
         if (trimExpression.gettChar().isPresent()) {
-            LOG.debug("createSelectionValue: trimExpression.gettChar().get()={}",
+            log.debug("createSelectionValue: trimExpression.gettChar().get()={}",
                     trimExpression.gettChar().get());
             builder.withTrimCharacter(CriteriaUtils.buildValue("" + trimExpression.gettChar().get()));
         }
@@ -377,7 +380,7 @@ public class CriteriaExpressionHelper {
             list.add(createParameterFromExpression(parameterValues,
                     binaryExpression.getX().get(), aliasGenerator,
                     parameters,
-                    "locate", sqlType, Optional.empty()));
+                    "locate", sqlType, null));
         }
 
         if (binaryExpression.getxValue().isPresent()) {
@@ -388,7 +391,7 @@ public class CriteriaExpressionHelper {
             list.add(createParameterFromExpression(parameterValues,
                     binaryExpression.getY().get(), aliasGenerator,
                     parameters,
-                    "locate", sqlType, Optional.empty()));
+                    "locate", sqlType, null));
         }
 
         if (binaryExpression.getyValue().isPresent()) {
@@ -440,7 +443,7 @@ public class CriteriaExpressionHelper {
         }
 
         SqlBinaryExpression sqlBinaryExpression = builder.build();
-        LOG.debug("createSelectionValue: sqlBinaryExpression={}", sqlBinaryExpression);
+        log.debug("createSelectionValue: sqlBinaryExpression={}", sqlBinaryExpression);
         return Optional.of((Value) sqlBinaryExpression);
     }
 
@@ -504,7 +507,7 @@ public class CriteriaExpressionHelper {
                     parameterValues, parameters);
         }
 
-        LOG.debug("createSelectionValue: selection={}", selection);
+        log.debug("createSelectionValue: selection={}", selection);
         if (selection instanceof AttributePath<?>) {
             AttributePath<?> attributePath = (AttributePath<?>) selection;
             AbstractMetaAttribute metaAttribute = attributePath.getMetaAttribute();

@@ -18,16 +18,16 @@ import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ParserTest {
+public class JpaParserTest {
 
-  private Logger LOG = LoggerFactory.getLogger(ParserTest.class);
-  private final Parser parser = new Parser(new ApacheDerbyConfiguration());
+  private Logger LOG = LoggerFactory.getLogger(JpaParserTest.class);
+  private final JpaParser jpaParser = new JpaParser(new ApacheDerbyConfiguration());
 
   @Test
   public void parse() throws Exception {
     String className = "org.minijpa.jpa.model.Citizen";
     List<MetaEntity> parsedEntities = new ArrayList<>();
-    MetaEntity entity = MetaEntityUtils.parse(className, parser, parsedEntities);
+    MetaEntity entity = MetaEntityUtils.parse(className, jpaParser, parsedEntities);
 
     Assertions.assertNotNull(entity);
     Assertions.assertNotNull(entity.getEntityClass());

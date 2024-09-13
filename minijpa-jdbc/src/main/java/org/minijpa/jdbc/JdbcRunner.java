@@ -25,6 +25,7 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
@@ -51,8 +52,8 @@ public class JdbcRunner {
                 index,
                 queryParameter.getSqlType());
         Object value = queryParameter.getValue();
-        if (queryParameter.getAttributeMapper().isPresent()) {
-            value = queryParameter.getAttributeMapper().get().attributeToDatabase(value);
+        if (queryParameter.getAttributeMapper() != null) {
+            value = queryParameter.getAttributeMapper().attributeToDatabase(value);
         }
 
         if (value == null) {
@@ -75,7 +76,13 @@ public class JdbcRunner {
         } else if (type == BigDecimal.class) {
             preparedStatement.setBigDecimal(index, (BigDecimal) value);
         } else if (type == java.sql.Date.class) {
-            preparedStatement.setDate(index, (java.sql.Date) value,
+            preparedStatement.setDate(index,
+                    (java.sql.Date) value,
+                    Calendar.getInstance(TimeZone.getDefault()));
+        } else if (type == LocalDate.class) {
+            preparedStatement.setDate(
+                    index,
+                    java.sql.Date.valueOf((LocalDate) value),
                     Calendar.getInstance(TimeZone.getDefault()));
         } else if (type == Timestamp.class) {
             Timestamp timestamp = (Timestamp) value;
@@ -294,13 +301,13 @@ public class JdbcRunner {
             ResultSet rs,
             int index,
             int sqlType,
-            Optional<AttributeMapper> attributeMapper) throws SQLException {
+            AttributeMapper attributeMapper) throws SQLException {
         LOG.debug("getValueByAttributeMapper: sqlType={}", sqlType);
         Object value = getValue(rs, index, sqlType);
         LOG.debug("getValueByAttributeMapper: value={}", value);
         LOG.debug("getValueByAttributeMapper: attributeMapper={}", attributeMapper);
-        if (attributeMapper.isPresent()) {
-            return attributeMapper.get().databaseToAttribute(value);
+        if (attributeMapper != null) {
+            return attributeMapper.databaseToAttribute(value);
         }
 
         return value;

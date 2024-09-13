@@ -15,62 +15,77 @@
  */
 package org.minijpa.metadata;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.MetaEntity;
 
 public class PersistenceUnitContext {
 
-	private final String persistenceUnitName;
-	private final Map<String, MetaEntity> entities;
-	private final Optional<Map<String, QueryResultMapping>> queryResultMappings;
-	private AliasGenerator aliasGenerator;
+    private final String persistenceUnitName;
+    private final Map<String, MetaEntity> entities;
+    private final Map<String, QueryResultMapping> queryResultMappings;
+    private Map<String, MiniNamedQueryMapping> namedQueries;
+    private AliasGenerator aliasGenerator;
 
-	public PersistenceUnitContext(String persistenceUnitName, Map<String, MetaEntity> entities,
-			Optional<Map<String, QueryResultMapping>> queryResultMappings) {
-		super();
-		this.persistenceUnitName = persistenceUnitName;
-		this.entities = entities;
-		this.queryResultMappings = queryResultMappings;
-	}
+    public PersistenceUnitContext(
+            String persistenceUnitName,
+            Map<String, MetaEntity> entities,
+            Map<String, QueryResultMapping> queryResultMappings,
+            Map<String, MiniNamedQueryMapping> namedQueries) {
+        super();
+        this.persistenceUnitName = persistenceUnitName;
+        this.entities = entities;
+        this.queryResultMappings = queryResultMappings;
+        this.namedQueries = namedQueries;
+    }
 
-	public MetaEntity getEntity(String entityClassName) {
-		return entities.get(entityClassName);
-	}
+    public MetaEntity getEntity(String entityClassName) {
+        return entities.get(entityClassName);
+    }
 
-	public String getPersistenceUnitName() {
-		return persistenceUnitName;
-	}
+    public String getPersistenceUnitName() {
+        return persistenceUnitName;
+    }
 
-	public Map<String, MetaEntity> getEntities() {
-		return entities;
-	}
+    public Map<String, MetaEntity> getEntities() {
+        return entities;
+    }
 
-	public Optional<Map<String, QueryResultMapping>> getQueryResultMappings() {
-		return queryResultMappings;
-	}
+    public Map<String, QueryResultMapping> getQueryResultMappings() {
+        return queryResultMappings;
+    }
 
-	public Optional<MetaEntity> findMetaEntityByName(String name) {
-		for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
-			if (e.getValue().getName().equals(name))
-				return Optional.of(e.getValue());
-		}
+    public Map<String, MiniNamedQueryMapping> getNamedQueries() {
+        return namedQueries;
+    }
 
-		return Optional.empty();
-	}
+    public void setNamedQueries(Map<String, MiniNamedQueryMapping> namedQueries) {
+        this.namedQueries = namedQueries;
+    }
 
-	public Optional<MetaEntity> findMetaEntityByTableName(String tableName) {
-		for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
-			if (e.getValue().getTableName().equals(tableName))
-				return Optional.of(e.getValue());
-		}
+    public Optional<MetaEntity> findMetaEntityByName(String name) {
+        for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
+            if (e.getValue().getName().equals(name))
+                return Optional.of(e.getValue());
+        }
 
-		return Optional.empty();
-	}
+        return Optional.empty();
+    }
 
-//	public Optional<MetaEntity> findMetaEntityByAlias(String alias) {
+    public Optional<MetaEntity> findMetaEntityByTableName(String tableName) {
+        for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
+            if (e.getValue().getTableName().equals(tableName))
+                return Optional.of(e.getValue());
+        }
+
+        return Optional.empty();
+    }
+
+    //	public Optional<MetaEntity> findMetaEntityByAlias(String alias) {
 //		for (Map.Entry<String, MetaEntity> e : entities.entrySet()) {
 //			if (e.getValue().getAlias().equals(alias))
 //				return Optional.of(e.getValue());
@@ -78,15 +93,15 @@ public class PersistenceUnitContext {
 //
 //		return Optional.empty();
 //	}
-	public AliasGenerator getAliasGenerator() {
-		if (aliasGenerator == null)
-			this.aliasGenerator = new TableAliasGeneratorImpl();
+    public AliasGenerator getAliasGenerator() {
+        if (aliasGenerator == null)
+            this.aliasGenerator = new TableAliasGeneratorImpl();
 
-		return aliasGenerator;
+        return aliasGenerator;
 
-	}
+    }
 
-	public AliasGenerator createTableAliasGenerator() {
-		return new TableAliasGeneratorImpl();
-	}
+    public AliasGenerator createTableAliasGenerator() {
+        return new TableAliasGeneratorImpl();
+    }
 }

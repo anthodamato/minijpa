@@ -30,25 +30,18 @@ public class MiniJpqlQuery extends AbstractQuery {
     private final Logger LOG = LoggerFactory.getLogger(MiniJpqlQuery.class);
 
     private final String jpqlString;
-    private final Class<?> resultClass;
     private final EntityManager entityManager;
 
     public MiniJpqlQuery(String jpqlString,
-                         Class<?> resultClass,
                          EntityManager entityManager,
                          JdbcEntityManager jdbcEntityManager) {
         this.jpqlString = jpqlString;
-        this.resultClass = resultClass;
         this.entityManager = entityManager;
         this.jdbcEntityManager = jdbcEntityManager;
     }
 
     public String getJpqlString() {
         return jpqlString;
-    }
-
-    public Class<?> getResultClass() {
-        return resultClass;
     }
 
     @Override
@@ -58,7 +51,7 @@ public class MiniJpqlQuery extends AbstractQuery {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
-            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints(), resultClass);
+            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints(), null);
         } catch (RuntimeException e) {
             LOG.error(e.getMessage());
             throw e;
@@ -70,6 +63,7 @@ public class MiniJpqlQuery extends AbstractQuery {
         return list;
     }
 
+
     @Override
     public Object getSingleResult() {
         List<?> list = null;
@@ -77,7 +71,7 @@ public class MiniJpqlQuery extends AbstractQuery {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
-            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints(), resultClass);
+            list = jdbcEntityManager.selectJpql(jpqlString, getParameterMap(), getHints(), null);
         } catch (RuntimeException e) {
             LOG.error(e.getMessage());
             throw e;
@@ -95,11 +89,13 @@ public class MiniJpqlQuery extends AbstractQuery {
         return list.get(0);
     }
 
+
     @Override
     public int executeUpdate() {
         if (!entityManager.getTransaction().isActive())
             throw new TransactionRequiredException("Update requires an active transaction");
 
+        // TODO implementation missing
         try {
             return jdbcEntityManager.update(jpqlString, this);
         } catch (Exception e) {

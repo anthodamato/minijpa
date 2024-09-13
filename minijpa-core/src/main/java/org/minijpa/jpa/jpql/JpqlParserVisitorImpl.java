@@ -59,7 +59,6 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     public Object visit(ASTSelectStatement node, Object data) {
         this.tableAliasGenerator = persistenceUnitContext.createTableAliasGenerator();
         JpqlVisitorParameters jpqlVisitorParameters = new JpqlVisitorParameters();
-        jpqlVisitorParameters.parameterMap = ((JpqlParserInputData) data).getParameterMap();
         jpqlVisitorParameters.hints = ((JpqlParserInputData) data).getHints();
         node.childrenAccept(this, jpqlVisitorParameters);
         LOG.debug("visit: ASTSelectStatement - ");
@@ -498,11 +497,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         LOG.debug("visit: ASTStateValuedPathExpression n0_0_0={}", n0_0_0);
         if (n0_0_0 instanceof ASTStateFieldPathExpression) {
             ASTStateFieldPathExpression stateFieldPathExpression = (ASTStateFieldPathExpression) n0_0_0;
-            ASTGeneralSubpath generalSubpath = (ASTGeneralSubpath) stateFieldPathExpression.jjtGetChild(
+            ASTGeneralSubpath generalSubPath = (ASTGeneralSubpath) stateFieldPathExpression.jjtGetChild(
                     0);
             String stateField = stateFieldPathExpression.getStateField();
             LOG.debug("visit: ASTStateValuedPathExpression stateField={}", stateField);
-            Node n0_0_0_0 = generalSubpath.jjtGetChild(0);
+            Node n0_0_0_0 = generalSubPath.jjtGetChild(0);
             LOG.debug("visit: ASTStateValuedPathExpression n0_0_0_0={}", n0_0_0_0);
             if (n0_0_0_0 instanceof ASTSimpleSubpath) {
                 ASTSimpleSubpath simpleSubpath = (ASTSimpleSubpath) n0_0_0_0;
@@ -727,7 +726,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         if (expression.getInputParameter() != null) {
             QueryParameter queryParameter = buildQueryParameter(
                     queryParameterAttribute,
-                    jpqlVisitorParameters.parameterMap,
+//                    jpqlVisitorParameters.parameterMap,
                     expression.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
             return CriteriaUtils.QM;
@@ -739,10 +738,6 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         }
 
         if (result instanceof SqlSelect) {
-            return result;
-        }
-
-        if (result instanceof SqlSelectData) {
             return result;
         }
 
@@ -853,7 +848,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         if (expression.getInputParameter() != null) {
             QueryParameter queryParameter = buildQueryParameter(
                     queryParameterAttribute,
-                    jpqlVisitorParameters.parameterMap,
+//                    jpqlVisitorParameters.parameterMap,
                     expression.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
             return CriteriaUtils.QM;
@@ -885,7 +880,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         if (expression.getInputParameter() != null) {
             QueryParameter queryParameter = buildQueryParameter(
                     queryParameterAttribute,
-                    jpqlVisitorParameters.parameterMap,
+//                    jpqlVisitorParameters.parameterMap,
                     expression.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
             return CriteriaUtils.QM;
@@ -909,7 +904,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         if (expression.getInputParameter() != null) {
             QueryParameter queryParameter = buildQueryParameter(
                     queryParameterAttribute,
-                    jpqlVisitorParameters.parameterMap,
+//                    jpqlVisitorParameters.parameterMap,
                     expression.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
             return CriteriaUtils.QM;
@@ -1165,19 +1160,19 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         Value value = scalarExpression.getValue();
 
         if (node0 instanceof ASTArithmeticExpression) {
-            return new BasicFetchParameter("arithmeticExpression", null, Optional.empty());
+            return new BasicFetchParameter("arithmeticExpression", null);
         } else if (node0 instanceof ASTDatetimeExpression) {
             SqlExpressionImpl sqlExpressionImpl = (SqlExpressionImpl) value;
             if (sqlExpressionImpl.getExpression() instanceof Function) {
                 Function function = (Function) sqlExpressionImpl.getExpression();
                 if (function instanceof CurrentDate) {
-                    return new BasicFetchParameter("datetimeExpression", Types.DATE, Optional.empty());
+                    return new BasicFetchParameter("datetimeExpression", Types.DATE);
                 }
                 if (function instanceof CurrentTime) {
-                    return new BasicFetchParameter("datetimeExpression", Types.TIME, Optional.empty());
+                    return new BasicFetchParameter("datetimeExpression", Types.TIME);
                 }
                 if (function instanceof CurrentTimestamp) {
-                    return new BasicFetchParameter("datetimeExpression", Types.TIMESTAMP, Optional.empty());
+                    return new BasicFetchParameter("datetimeExpression", Types.TIMESTAMP);
                 }
                 // switch (sqlFunction) {
                 // case CURRENT_DATE:
@@ -1191,13 +1186,13 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                 // java.sql.Timestamp.class, Types.TIMESTAMP, null, null, false);
                 // }
             } else {
-                return new BasicFetchParameter("datetimeExpression", -1, Optional.empty());
+                return new BasicFetchParameter("datetimeExpression", -1);
             }
         } else if (node0 instanceof ASTBooleanExpression) {
-            return new BasicFetchParameter("booleanExpression", Types.BOOLEAN, Optional.empty());
+            return new BasicFetchParameter("booleanExpression", Types.BOOLEAN);
         }
 
-        return new BasicFetchParameter("scalarExpression", Types.VARCHAR, Optional.empty());
+        return new BasicFetchParameter("scalarExpression", Types.VARCHAR);
     }
 
     @Override
@@ -1252,7 +1247,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
             right = CriteriaUtils.buildValue(node.getPatternValue());
         } else if (node.getInputParameter() != null) {
             right = CriteriaUtils.QM;
-            QueryParameter queryParameter = buildQueryParameter(left, jpqlVisitorParameters.parameterMap, node.getInputParameter());
+//            QueryParameter queryParameter = buildQueryParameter(left, jpqlVisitorParameters.parameterMap, node.getInputParameter());
+            QueryParameter queryParameter = buildQueryParameter(left, node.getInputParameter());
             jpqlVisitorParameters.parameters.add(queryParameter);
         }
 
@@ -1261,19 +1257,31 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         return object;
     }
 
+//    private QueryParameter buildQueryParameter(
+//            Object column,
+//            Map<Parameter<?>, Object> parameterMap,
+//            String inputParameter) {
+//        Optional<Object> optional = ParameterUtils.findParameterValue(parameterMap, inputParameter);
+//        if (optional.isEmpty())
+//            throw new SemanticException("Input parameter '" + inputParameter + "' not found");
+//
+//        QueryParameter queryParameter = new QueryParameter(
+//                column,
+//                optional.get(),
+//                JdbcTypes.sqlTypeFromClass(optional.get().getClass()));
+//        queryParameter.setInputParameter(inputParameter);
+//        return queryParameter;
+//    }
+
     private QueryParameter buildQueryParameter(
             Object column,
-            Map<Parameter<?>, Object> parameterMap,
             String inputParameter) {
-        Optional<Object> optional = ParameterUtils.findParameterValue(parameterMap, inputParameter);
-        if (optional.isEmpty())
-            throw new SemanticException("Input parameter '" + inputParameter + "' not found");
-
-        return new QueryParameter(
+        QueryParameter queryParameter = new QueryParameter(
                 column,
-                optional.get(),
-                JdbcTypes.sqlTypeFromClass(optional.get().getClass()),
-                Optional.empty());
+                null,
+                null);
+        queryParameter.setInputParameter(inputParameter);
+        return queryParameter;
     }
 
     @Override
@@ -1658,7 +1666,6 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
         JpqlVisitorParameters jvp = new JpqlVisitorParameters();
         jvp.aliases.putAll(jpqlVisitorParameters.aliases);
-        jvp.parameterMap = jpqlVisitorParameters.parameterMap;
         Object object = node.childrenAccept(this, jvp);
 
         StatementParameters statementParameters = (StatementParameters) createSelectFromParameters(jvp);
@@ -1708,15 +1715,15 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
             ASTAggregateExpression aggregateExpression) {
         AggregateFunctionType aggregateFunctionType = aggregateExpression.getAggregateFunctionType();
         if (aggregateFunctionType == AggregateFunctionType.AVG) {
-            return new BasicFetchParameter("aggregateExpression", null, Optional.empty());
+            return new BasicFetchParameter("aggregateExpression", null);
         }
 
         if (aggregateFunctionType == AggregateFunctionType.COUNT) {
-            return new BasicFetchParameter("aggregateExpression", null, Optional.empty());
+            return new BasicFetchParameter("aggregateExpression", null);
         }
 
         if (aggregateFunctionType == AggregateFunctionType.SUM) {
-            return new BasicFetchParameter("aggregateExpression", null, Optional.empty());
+            return new BasicFetchParameter("aggregateExpression", null);
         }
 
         return null;

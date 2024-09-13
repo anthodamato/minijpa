@@ -26,18 +26,28 @@ public class AttributeFetchParameterImpl implements AttributeFetchParameter {
     private final String columnName;
     private final Integer sqlType;
     private final AbstractMetaAttribute attribute;
-    private final Optional<AttributeMapper> attributeMapper;
+    private AttributeMapper attributeMapper;
 
     public AttributeFetchParameterImpl(
             String columnName,
             Integer sqlType,
             AbstractMetaAttribute attribute,
-            Optional<AttributeMapper> attributeMapper) {
+            AttributeMapper attributeMapper) {
         super();
         this.columnName = columnName;
         this.sqlType = sqlType;
         this.attribute = attribute;
         this.attributeMapper = attributeMapper;
+    }
+
+    public AttributeFetchParameterImpl(
+            String columnName,
+            Integer sqlType,
+            AbstractMetaAttribute attribute) {
+        super();
+        this.columnName = columnName;
+        this.sqlType = sqlType;
+        this.attribute = attribute;
     }
 
     @Override
@@ -56,7 +66,7 @@ public class AttributeFetchParameterImpl implements AttributeFetchParameter {
     }
 
     @Override
-    public Optional<AttributeMapper> getAttributeMapper() {
+    public AttributeMapper getAttributeMapper() {
         return attributeMapper;
     }
 

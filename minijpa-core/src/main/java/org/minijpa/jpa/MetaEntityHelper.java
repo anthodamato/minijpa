@@ -88,9 +88,10 @@ public final class MetaEntityHelper {
         List<QueryParameter> list = new ArrayList<>();
         for (int i = 0; i < attributeValueArray.size(); ++i) {
             AbstractAttribute a = attributeValueArray.getModel(i);
-            QueryParameter queryParameter = new QueryParameter(a.getColumnName(),
+            QueryParameter queryParameter = new QueryParameter(
+                    a.getColumnName(),
                     attributeValueArray.getValue(i),
-                    a.getSqlType(), Optional.empty());
+                    a.getSqlType());
             list.add(queryParameter);
         }
 

@@ -7,19 +7,14 @@ package org.minijpa.jpa.model;
 
 import java.sql.Date;
 import java.util.Collection;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 @Entity
+@NamedQuery(name = "notShippedOrders", query = "SELECT DISTINCT o FROM SimpleOrder AS o JOIN o.lineItems AS l WHERE l.shipped = :shipped")
 @Table(name = "simple_order")
 public class SimpleOrder {
 

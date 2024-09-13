@@ -1,13 +1,5 @@
 package org.minijpa.jpa.criteria.expression;
 
-import java.sql.Types;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.metadata.AliasGenerator;
 import org.minijpa.sql.model.FromTable;
@@ -19,6 +11,12 @@ import org.minijpa.sql.model.function.Coalesce;
 import org.minijpa.sql.model.function.Locate;
 import org.minijpa.sql.model.function.Nullif;
 import org.minijpa.sql.model.function.Substring;
+
+import javax.persistence.Parameter;
+import java.sql.Types;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class PostgresCriteriaExpressionHelper extends CriteriaExpressionHelper {
 
@@ -47,9 +45,14 @@ public class PostgresCriteriaExpressionHelper extends CriteriaExpressionHelper {
                 if (locateExpression.getFrom().isPresent()) {
                     // one more QueryParameter in case of ParameterExpression as it is used twice,
                     // in the substring and sum
-                    createParameterFromExpression(parameterValues,
-                            locateExpression.getFrom().get(), aliasGenerator, parameters,
-                            "from", Types.INTEGER, Optional.empty());
+                    createParameterFromExpression(
+                            parameterValues,
+                            locateExpression.getFrom().get(),
+                            aliasGenerator,
+                            parameters,
+                            "from",
+                            Types.INTEGER,
+                            null);
                 }
 
                 return Optional.of(value);

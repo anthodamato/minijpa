@@ -15,70 +15,63 @@
  */
 package org.minijpa.jpa;
 
-import java.util.List;
-import java.util.Optional;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.PersistenceException;
-import javax.persistence.TransactionRequiredException;
-
 import org.minijpa.jpa.db.JdbcEntityManager;
+import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.persistence.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author adamato
  */
-public class MiniNativeQuery extends AbstractQuery {
+public class MiniNamedQuery extends AbstractQuery {
 
-    private final Logger LOG = LoggerFactory.getLogger(MiniNativeQuery.class);
+    private final Logger log = LoggerFactory.getLogger(MiniNamedQuery.class);
 
-    private final String sqlString;
-    private final Class<?> resultClass;
-    private final String resultSetMapping;
+    private final MiniNamedQueryMapping miniNamedQueryMapping;
     private final EntityManager entityManager;
 
-    public MiniNativeQuery(
-            String sqlString,
-            Class<?> resultClass,
-            String resultSetMapping,
-            EntityManager entityManager,
-            JdbcEntityManager jdbcEntityManager) {
-        this.sqlString = sqlString;
-        this.resultClass = resultClass;
-        this.resultSetMapping = resultSetMapping;
+    public MiniNamedQuery(MiniNamedQueryMapping miniNamedQueryMapping,
+                          EntityManager entityManager,
+                          JdbcEntityManager jdbcEntityManager) {
+        this.miniNamedQueryMapping = miniNamedQueryMapping;
         this.entityManager = entityManager;
         this.jdbcEntityManager = jdbcEntityManager;
     }
 
-    public String getSqlString() {
-        return sqlString;
-    }
 
-    public Class<?> getResultClass() {
-        return resultClass;
-    }
+    private Map<String, Object> buildHints() {
+        if (miniNamedQueryMapping.getHints() == null)
+            return getHints();
 
-    public String getResultSetMapping() {
-        return resultSetMapping;
+        Map<String, Object> map = new HashMap<>(getHints());
+        map.putAll(miniNamedQueryMapping.getHints());
+        return map;
     }
 
     @Override
     public List getResultList() {
-        List<?> list;
         try {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
-            list = jdbcEntityManager.selectNative(this);
+            return jdbcEntityManager.selectJpql(
+                    miniNamedQueryMapping.getStatementParameters(),
+                    getParameterMap(),
+                    buildHints(),
+                    miniNamedQueryMapping.getLockType(),
+                    null);
+        } catch (RuntimeException e) {
+            log.error(e.getMessage());
+            throw e;
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
         }
-
-        return list;
     }
 
     @Override
@@ -88,9 +81,17 @@ public class MiniNativeQuery extends AbstractQuery {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
-            list = jdbcEntityManager.selectNative(this);
+            list = jdbcEntityManager.selectJpql(
+                    miniNamedQueryMapping.getStatementParameters(),
+                    getParameterMap(),
+                    buildHints(),
+                    miniNamedQueryMapping.getLockType(),
+                    null);
+        } catch (RuntimeException e) {
+            log.error(e.getMessage());
+            throw e;
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
         }
 
@@ -109,9 +110,11 @@ public class MiniNativeQuery extends AbstractQuery {
             throw new TransactionRequiredException("Update requires an active transaction");
 
         try {
-            return jdbcEntityManager.update(sqlString, this);
+            // TODO implementation missing
+            return 0;
+//            return jdbcEntityManager.update(jpqlString, this);
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
         }
     }

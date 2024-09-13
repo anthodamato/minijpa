@@ -6,18 +6,18 @@ import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.sql.model.SqlSelect;
 
 public class SqlSelectData extends SqlSelect {
-	private List<FetchParameter> fetchParameters;
+    private List<FetchParameter> fetchParameters;
 
-	public SqlSelectData() {
-		super();
-	}
+    public SqlSelectData() {
+        super();
+    }
 
-	public List<FetchParameter> getFetchParameters() {
-		return fetchParameters;
-	}
+    public List<FetchParameter> getFetchParameters() {
+        return fetchParameters;
+    }
 
-	public void setFetchParameters(List<FetchParameter> fetchParameters) {
-		this.fetchParameters = fetchParameters;
-	}
+    public void setFetchParameters(List<FetchParameter> fetchParameters) {
+        this.fetchParameters = fetchParameters;
+    }
 
 }

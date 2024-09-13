@@ -35,6 +35,13 @@ public interface JdbcEntityManager {
 
     public List<?> selectCriteriaQuery(Query query, CriteriaQuery criteriaQuery) throws Exception;
 
+    public List<?> selectJpql(
+            StatementParameters statementParameters,
+            Map<Parameter<?>, Object> parameterMap,
+            Map<String, Object> hints,
+            LockType lockType,
+            Class<?> resultClass);
+
     public List<?> selectJpql(String jpqlStatement,
                               Map<Parameter<?>, Object> parameterMap,
                               Map<String, Object> hints,

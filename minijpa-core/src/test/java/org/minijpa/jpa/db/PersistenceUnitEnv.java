@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author adamato
  */
 public class PersistenceUnitEnv {
@@ -82,9 +81,9 @@ public class PersistenceUnitEnv {
     public static PersistenceUnitContext build(String persistenceUnitName) throws Exception {
         PersistenceUnitInfo persistenceUnitInfo = new PersistenceProviderHelper().parseXml("/META-INF/persistence.xml",
                 persistenceUnitName, PersistenceUnitProperties.getProperties());
-        LOG.debug("build: persistenceUnitInfo=" + persistenceUnitInfo);
+        LOG.debug("build: persistenceUnitInfo={}", persistenceUnitInfo);
         List<String> classNames = persistenceUnitInfo.getManagedClassNames();
-        LOG.debug("build: classNames=" + classNames);
+        LOG.debug("build: classNames={}", classNames);
         return MetaEntityUtils.parsePersistenceUnitContext(persistenceUnitName, classNames);
     }
 
@@ -93,9 +92,8 @@ public class PersistenceUnitEnv {
         DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitName, dbConfiguration);
         PersistenceUnitInfo persistenceUnitInfo = new PersistenceProviderHelper().parseXml("/META-INF/persistence.xml",
                 persistenceUnitName, PersistenceUnitProperties.getProperties());
-        LOG.debug("build: persistenceUnitInfo=" + persistenceUnitInfo);
         PersistenceUnitContext persistenceUnitContext = build(persistenceUnitName);
-        LOG.debug("build: persistenceUnitContext=" + persistenceUnitContext);
+        LOG.debug("build: persistenceUnitContext={}", persistenceUnitContext);
         MiniPersistenceContext miniPersistenceContext = new MiniPersistenceContext(
                 persistenceUnitContext.getEntities());
 
@@ -113,7 +111,7 @@ public class PersistenceUnitEnv {
         JdbcEntityManagerImpl jdbcEntityManagerImpl = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext,
                 miniPersistenceContext, connectionHolder);
 
-        LOG.debug("build: jdbcEntityManagerImpl=" + jdbcEntityManagerImpl);
+        LOG.debug("build: jdbcEntityManagerImpl={}", jdbcEntityManagerImpl);
 
         new PersistenceUnitPropertyActions().analyzeCreateScripts(persistenceUnitInfo, connectionProvider);
         EntityDelegate.getInstance().addPersistenceUnitContext(persistenceUnitContext);

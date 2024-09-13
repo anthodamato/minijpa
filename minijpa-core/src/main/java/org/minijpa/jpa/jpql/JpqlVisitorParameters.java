@@ -46,7 +46,6 @@ public class JpqlVisitorParameters {
     public GroupBy groupBy;
     public List<OrderBy> orderByList = new ArrayList<>();
     public List<QueryParameter> parameters = new ArrayList<>();
-    Map<Parameter<?>, Object> parameterMap = Map.of();
     Map<String, Object> hints;
     public StatementType statementType = StatementType.PLAIN;
     public List<MetaEntity> fetchJoinMetaEntities = new ArrayList<>();
