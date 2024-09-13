@@ -952,7 +952,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         StatementParameters statementParameters;
         try {
             log.debug("selectJpql: start parsing");
-            statementParameters = jpqlModule.parse(jpqlStatement, parameterMap, hints);
+            statementParameters = jpqlModule.parse(jpqlStatement, hints);
             log.debug("selectJpql: end parsing");
         } catch (Error e) {
             throw new PersistenceException("Jpql Parser Error: " + e.getMessage());

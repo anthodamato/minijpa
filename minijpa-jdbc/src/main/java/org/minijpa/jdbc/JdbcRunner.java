@@ -25,6 +25,7 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
@@ -75,7 +76,13 @@ public class JdbcRunner {
         } else if (type == BigDecimal.class) {
             preparedStatement.setBigDecimal(index, (BigDecimal) value);
         } else if (type == java.sql.Date.class) {
-            preparedStatement.setDate(index, (java.sql.Date) value,
+            preparedStatement.setDate(index,
+                    (java.sql.Date) value,
+                    Calendar.getInstance(TimeZone.getDefault()));
+        } else if (type == LocalDate.class) {
+            preparedStatement.setDate(
+                    index,
+                    java.sql.Date.valueOf((LocalDate) value),
                     Calendar.getInstance(TimeZone.getDefault()));
         } else if (type == Timestamp.class) {
             Timestamp timestamp = (Timestamp) value;

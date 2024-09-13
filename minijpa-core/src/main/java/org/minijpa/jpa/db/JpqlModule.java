@@ -35,7 +35,6 @@ public class JpqlModule {
     // TODO the 'parameterMap' should be removed
     public StatementParameters parse(
             String jpqlQuery,
-            Map<Parameter<?>, Object> parameterMap,
             Map<String, Object> hints) throws ParseException, Error, IllegalStateException {
         StringReader reader = new StringReader(jpqlQuery);
         if (parser == null) {
@@ -48,7 +47,7 @@ public class JpqlModule {
             visitor = new JpqlParserVisitorImpl(persistenceUnitContext, dbConfiguration);
         }
 
-        JpqlParserInputData jpqlParserInputData = new JpqlParserInputData(parameterMap, hints);
+        JpqlParserInputData jpqlParserInputData = new JpqlParserInputData(hints);
         StatementParameters statementParameters = (StatementParameters) qlStatement.jjtAccept(visitor, jpqlParserInputData);
         if (statementParameters == null)
             throw new IllegalStateException("Jpql Parsing failed: '" + jpqlQuery + "'");

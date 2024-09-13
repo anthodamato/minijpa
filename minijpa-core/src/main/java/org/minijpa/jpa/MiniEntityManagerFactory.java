@@ -116,7 +116,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
             persistenceUnitContext.getNamedQueries().forEach((k, v) -> {
                 StatementParameters statementParameters = null;
                 try {
-                    statementParameters = jpqlModule.parse(v.getQuery(), null, v.getHints());
+                    statementParameters = jpqlModule.parse(v.getQuery(), v.getHints());
                 } catch (ParseException e) {
                     throw new PersistenceException("Jpql Parser Error: " + e.getMessage());
                 }
@@ -218,7 +218,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 
         StatementParameters statementParameters;
         try {
-            statementParameters = jpqlModule.parse(jpqlQuery, null, null);
+            statementParameters = jpqlModule.parse(jpqlQuery, null);
         } catch (ParseException e) {
             throw new PersistenceException("Jpql Parser Error: " + e.getMessage());
         }

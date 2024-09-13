@@ -59,7 +59,6 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
     public Object visit(ASTSelectStatement node, Object data) {
         this.tableAliasGenerator = persistenceUnitContext.createTableAliasGenerator();
         JpqlVisitorParameters jpqlVisitorParameters = new JpqlVisitorParameters();
-        jpqlVisitorParameters.parameterMap = ((JpqlParserInputData) data).getParameterMap();
         jpqlVisitorParameters.hints = ((JpqlParserInputData) data).getHints();
         node.childrenAccept(this, jpqlVisitorParameters);
         LOG.debug("visit: ASTSelectStatement - ");
@@ -1667,7 +1666,6 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         JpqlVisitorParameters jpqlVisitorParameters = (JpqlVisitorParameters) data;
         JpqlVisitorParameters jvp = new JpqlVisitorParameters();
         jvp.aliases.putAll(jpqlVisitorParameters.aliases);
-        jvp.parameterMap = jpqlVisitorParameters.parameterMap;
         Object object = node.childrenAccept(this, jvp);
 
         StatementParameters statementParameters = (StatementParameters) createSelectFromParameters(jvp);
