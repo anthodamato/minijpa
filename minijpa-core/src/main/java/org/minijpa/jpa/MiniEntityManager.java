@@ -39,11 +39,10 @@ import java.util.Map;
 
 public class MiniEntityManager extends AbstractEntityManager {
 
-    private final Logger LOG = LoggerFactory.getLogger(MiniEntityManager.class);
+    private final Logger log = LoggerFactory.getLogger(MiniEntityManager.class);
     private final EntityManagerType entityManagerType;
     private final EntityManagerFactory entityManagerFactory;
     private EntityTransaction entityTransaction;
-    private final DbConfiguration dbConfiguration;
     private final JdbcEntityManagerImpl jdbcEntityManager;
     private FlushModeType flushModeType = FlushModeType.AUTO;
     private boolean open = true;
@@ -56,7 +55,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         this.persistenceUnitContext = persistenceUnitContext;
         this.entityManagerType = ((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType();
         this.persistenceContext = new MiniPersistenceContext(persistenceUnitContext.getEntities());
-        this.dbConfiguration = DbConfigurationList.getInstance()
+        DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
                 .getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
         this.connectionHolder = new ConnectionHolderImpl(connectionProvider);
         this.jdbcEntityManager = new JdbcEntityManagerImpl(dbConfiguration, persistenceUnitContext, persistenceContext,
@@ -100,7 +99,7 @@ public class MiniEntityManager extends AbstractEntityManager {
             if (!persistenceContext.isManaged(entity))
                 return;
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             return;
         }
 
@@ -119,7 +118,7 @@ public class MiniEntityManager extends AbstractEntityManager {
             if (MetaEntityHelper.isDetached(e, entity))
                 throw new IllegalArgumentException("Entity '" + entity + "' is detached");
         } catch (Exception ex) {
-            LOG.error(ex.getMessage());
+            log.error(ex.getMessage());
             return;
         }
 
@@ -128,8 +127,8 @@ public class MiniEntityManager extends AbstractEntityManager {
                     : MiniFlushMode.COMMIT;
             jdbcEntityManager.remove(entity, miniFlushMode);
         } catch (Exception ex) {
-            LOG.error(ex.getClass().getName());
-            LOG.error(ex.getMessage());
+            log.error(ex.getClass().getName());
+            log.error(ex.getMessage());
             entityTransaction.setRollbackOnly();
             throw new PersistenceException(ex.getMessage());
         }
@@ -138,7 +137,7 @@ public class MiniEntityManager extends AbstractEntityManager {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey) {
-        LOG.debug("find: primaryKey={}", primaryKey);
+        log.debug("find: primaryKey={}", primaryKey);
         try {
             Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
             if (entityObject == null)
@@ -146,7 +145,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
             return (T) entityObject;
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             entityTransaction.setRollbackOnly();
             throw new PersistenceException(e.getMessage());
         }
@@ -154,8 +153,8 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-        LOG.debug("find: this={}", this);
-        LOG.debug("find: primaryKey={}", primaryKey);
+        log.debug("find: this={}", this);
+        log.debug("find: primaryKey={}", primaryKey);
         try {
             Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
             if (entityObject == null)
@@ -163,15 +162,15 @@ public class MiniEntityManager extends AbstractEntityManager {
 
             return (T) entityObject;
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
         }
     }
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
-        LOG.debug("find: this={}", this);
-        LOG.debug("find: primaryKey={}", primaryKey);
+        log.debug("find: this={}", this);
+        log.debug("find: primaryKey={}", primaryKey);
         try {
             Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
                     LockTypeUtils.toLockType(lockMode));
@@ -180,15 +179,15 @@ public class MiniEntityManager extends AbstractEntityManager {
 
             return (T) entityObject;
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
         }
     }
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
-        LOG.debug("find: this={}", this);
-        LOG.debug("find: primaryKey={}", primaryKey);
+        log.debug("find: this={}", this);
+        log.debug("find: primaryKey={}", primaryKey);
         try {
             Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
                     LockTypeUtils.toLockType(lockMode));
@@ -197,7 +196,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
             return (T) entityObject;
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
         }
     }
@@ -215,7 +214,7 @@ public class MiniEntityManager extends AbstractEntityManager {
             if (e instanceof IllegalArgumentException)
                 throw new IllegalArgumentException(e.getMessage());
 
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
         }
     }
@@ -225,7 +224,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             jdbcEntityManager.flush();
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof OptimisticLockException)
                 throw (OptimisticLockException) e;
 
@@ -251,7 +250,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             jdbcEntityManager.lock(entity, LockTypeUtils.toLockType(lockMode));
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -267,7 +266,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             jdbcEntityManager.lock(entity, LockTypeUtils.toLockType(lockMode));
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -280,7 +279,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             jdbcEntityManager.refresh(entity, LockType.NONE);
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -293,7 +292,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             jdbcEntityManager.refresh(entity, LockType.NONE);
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -306,7 +305,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             jdbcEntityManager.refresh(entity, LockTypeUtils.toLockType(lockMode));
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -319,7 +318,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             jdbcEntityManager.refresh(entity, LockTypeUtils.toLockType(lockMode));
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -332,7 +331,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             persistenceContext.detachAll();
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -344,9 +343,9 @@ public class MiniEntityManager extends AbstractEntityManager {
     public void detach(Object entity) {
         try {
             jdbcEntityManager.detach(entity);
-            LOG.debug("Entity " + entity + " detached");
+            log.debug("Entity {} detached", entity);
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -363,7 +362,7 @@ public class MiniEntityManager extends AbstractEntityManager {
         try {
             return persistenceContext.isManaged(entity);
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -380,7 +379,7 @@ public class MiniEntityManager extends AbstractEntityManager {
             LockType lockType = jdbcEntityManager.getLockType(entity);
             return LockTypeUtils.toLockModeType(lockType);
         } catch (Exception e) {
-            LOG.error(e.getMessage());
+            log.error(e.getMessage());
             if (e instanceof PersistenceException)
                 throw (PersistenceException) e;
 
@@ -405,25 +404,12 @@ public class MiniEntityManager extends AbstractEntityManager {
         return new MiniJpqlQuery(qlString, this, jdbcEntityManager);
     }
 
-    @Override
-    public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-        return new MiniTypedCriteriaQuery<>(criteriaQuery, jdbcEntityManager);
-    }
-
-    @Override
-    public Query createQuery(CriteriaUpdate updateQuery) {
-        return new UpdateQuery(updateQuery, this, jdbcEntityManager);
-    }
-
-    @Override
-    public Query createQuery(CriteriaDelete deleteQuery) {
-        return new DeleteQuery(deleteQuery, this, jdbcEntityManager);
-    }
 
     @Override
     public <T> TypedQuery<T> createQuery(String qlString, Class<T> resultClass) {
         return new MiniJpqlTypedQuery<>(jdbcEntityManager, qlString, resultClass);
     }
+
 
     @Override
     public Query createNamedQuery(String name) {
@@ -448,8 +434,25 @@ public class MiniEntityManager extends AbstractEntityManager {
         if (miniNamedQueryMapping == null)
             throw new IllegalArgumentException("Named Query '" + name + "' not found");
 
-        return new MiniNamedTypedQuery(jdbcEntityManager, miniNamedQueryMapping, resultClass);
+        return new MiniNamedTypedQuery<>(jdbcEntityManager, miniNamedQueryMapping, resultClass);
     }
+
+
+    @Override
+    public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+        return new MiniTypedCriteriaQuery<>(criteriaQuery, jdbcEntityManager);
+    }
+
+    @Override
+    public Query createQuery(CriteriaUpdate updateQuery) {
+        return new UpdateQuery(updateQuery, this, jdbcEntityManager);
+    }
+
+    @Override
+    public Query createQuery(CriteriaDelete deleteQuery) {
+        return new DeleteQuery(deleteQuery, this, jdbcEntityManager);
+    }
+
 
     @Override
     public Query createNativeQuery(String sqlString) {
@@ -515,9 +518,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public void close() {
-//		if (((MiniEntityManagerFactory) entityManagerFactory).getEntityManagerType() == EntityManagerType.CONTAINER_MANAGED)
-//			throw new IllegalStateException("Can't close a Container Managed Entity Manager");
-
         this.open = false;
     }
 

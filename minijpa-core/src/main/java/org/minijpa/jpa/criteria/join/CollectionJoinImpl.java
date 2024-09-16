@@ -1,22 +1,17 @@
 package org.minijpa.jpa.criteria.join;
 
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.CollectionAttribute;
-
 import org.minijpa.jpa.criteria.AbstractFrom;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
+
+import javax.persistence.criteria.*;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.CollectionAttribute;
 
 public class CollectionJoinImpl<Z, E> extends AbstractFrom<Z, E> implements CollectionJoin<Z, E>,
         FetchJoinSpec {
 
-    private RelationshipMetaAttribute metaAttribute;
+    private final RelationshipMetaAttribute metaAttribute;
     private final Attribute<? super Z, E> attribute;
     private final JoinType joinType;
     private final FetchJoinType fetchJoinType;

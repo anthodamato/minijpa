@@ -444,7 +444,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     public void remove(Object entity, MiniFlushMode miniFlushMode) throws Exception {
         MetaEntity e = persistenceUnitContext.getEntities().get(entity.getClass().getName());
         if (entityContainer.isManaged(entity)) {
-            log.debug("Instance " + entity + " is in the persistence context");
+            log.debug("Instance {} is in the persistence context", entity);
             entityContainer.markForRemoval(entity);
             log.debug("remove: entity={}", entity);
             // cascades
@@ -467,7 +467,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             }
 
         } else {
-            log.debug("Instance " + entity + " not found in the persistence context");
+            log.debug("Instance {} not found in the persistence context", entity);
             EntityStatus entityStatus = MetaEntityHelper.getEntityStatus(e, entity);
             if (entityStatus == EntityStatus.DETACHED) {
                 throw new IllegalArgumentException("Entity '" + entity + "' is detached");
@@ -496,9 +496,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         }
     }
 
-    private class StatementParametersMetaEntity {
-        private StatementParameters statementParameters;
-        private MetaEntity metaEntity;
+    private static class StatementParametersMetaEntity {
+        private final StatementParameters statementParameters;
+        private final MetaEntity metaEntity;
 
         public StatementParametersMetaEntity(StatementParameters statementParameters, MetaEntity metaEntity) {
             this.statementParameters = statementParameters;
@@ -532,7 +532,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             return collectionResult;
         }
 
-        List<Join> joins = dbConfiguration.getSqlStatementFactory().getJoins(criteriaQuery.getRoots());
+        List<Join<?, ?>> joins = dbConfiguration.getSqlStatementFactory().getJoins(criteriaQuery.getRoots());
         Map<String, Object> hints = query.getHints();
         log.debug("select: joins.size()={}", joins.size());
         log.debug("select: hints.get(QueryHints.SPLIT_MULTIPLE_JOINS)={}", hints.get(QueryHints.SPLIT_MULTIPLE_JOINS));
@@ -551,7 +551,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             List<StatementParametersMetaEntity> statementParametersList = new ArrayList<>();
             Map<Parameter<?>, Object> parameterMap = ((AbstractQuery) query).getParameterMap();
             joinMetaEntityList.forEach(metaEntity -> {
-                CriteriaQuery cq = dbConfiguration.getSqlStatementFactory().filterCriteriaQuery(criteriaQuery, metaEntity);
+                CriteriaQuery<?> cq = dbConfiguration.getSqlStatementFactory().filterCriteriaQuery(criteriaQuery, metaEntity);
                 StatementParameters statementParameters = dbConfiguration.getSqlStatementFactory().select(
                         cq, query.getLockMode(), parameterMap,
                         persistenceUnitContext.getAliasGenerator());
@@ -569,12 +569,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 persistenceUnitContext.getAliasGenerator());
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-        sqlSelectData.getFetchParameters().forEach(f -> log.debug("select: f={}", f));
-        log.debug("select: sql={}", sql);
-        log.debug("select: sqlSelectData.getResult()={}", sqlSelectData.getResult());
-        log.debug("select: statementParameters.getStatementType()={}",
-                statementParameters.getStatementType());
-
         return runQuery(statementParameters, hints);
     }
 
@@ -585,7 +579,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 CollectionUtils.findCollectionImplementationClass(List.class));
         for (StatementParametersMetaEntity statementParametersMetaEntity : statementParametersList) {
             StatementParameters statementParameters = statementParametersMetaEntity.statementParameters;
-            log.debug("runQueryMultipleFetchJoins: ############ statementParameters.getStatementType()={}", statementParameters.getStatementType());
+            log.debug("runQueryMergeMultipleFetchJoins: statementParameters.getStatementType()={}", statementParameters.getStatementType());
             // TODO what about normal join
             if (statementParameters.getStatementType() == StatementType.FETCH_JOIN) {
                 Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
@@ -600,7 +594,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
                 dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql,
                         statementParameters.getParameters(), jdbcFetchJoinRecordBuilder);
-                log.debug("runQueryMultipleFetchJoins: ############ collectionResult.size()={}", collectionResult.size());
+                log.debug("runQueryMergeMultipleFetchJoins: collectionResult.size()={}", collectionResult.size());
 
                 // merge the collection with the final one
                 for (Object entityInstance : collectionResult) {
@@ -790,9 +784,9 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     /**
      * With multiple joins it has to extract two FromJoin. They are the main table and the join table.
      *
-     * @param fetchJoinMetaEntity
-     * @param fromJoins
-     * @return
+     * @param fetchJoinMetaEntity meta entity
+     * @param fromJoins           join list
+     * @return the related joins
      */
     private List<FromJoin> extractRelatedFromJoins(
             MetaEntity fetchJoinMetaEntity,
@@ -839,16 +833,15 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
         sqlSelectData.getFetchParameters().forEach(f -> log.debug("select: f={}", f));
-        log.debug("select: sql={}", sql);
-        log.debug("select: sqlSelectData.getResult()={}", sqlSelectData.getResult());
-        log.debug("select: statementParameters.getStatementType()={}",
+        log.debug("runQuery: sql={}", sql);
+        log.debug("runQuery: sqlSelectData.getResult()={}", sqlSelectData.getResult());
+        log.debug("runQuery: statementParameters.getStatementType()={}",
                 statementParameters.getStatementType());
 
         if (statementParameters.getStatementType() == StatementType.FETCH_JOIN) {
             if (hints != null &&
                     hints.get(QueryHints.SPLIT_MULTIPLE_JOINS) != null &&
                     ((Boolean) hints.get(QueryHints.SPLIT_MULTIPLE_JOINS)) &&
-                    statementParameters.getStatementType() == StatementType.FETCH_JOIN &&
                     statementParameters.getFetchJoinMetaEntities().size() > 1) {
                 List<StatementParametersMetaEntity> parametersMetaEntityList = splitMultipleFetchJoinQuery(statementParameters);
                 return runQueryMergeMultipleFetchJoins(parametersMetaEntityList);
@@ -857,7 +850,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
                     null,
                     CollectionUtils.findCollectionImplementationClass(List.class));
-            log.debug("select: collectionResult={}", collectionResult);
+            log.debug("runQuery: collectionResult={}", collectionResult);
             Optional<MetaEntity> optionalEntity = persistenceUnitContext
                     .findMetaEntityByTableName(sqlSelectData.getResult().getName());
             MetaEntity entity = optionalEntity.get();
@@ -871,7 +864,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(
                     null,
                     CollectionUtils.findCollectionImplementationClass(List.class));
-            log.debug("select: collectionResult={}", collectionResult);
+            log.debug("runQuery: collectionResult={}", collectionResult);
 
             Optional<MetaEntity> optionalEntity = persistenceUnitContext
                     .findMetaEntityByTableName(sqlSelectData.getResult().getName());
@@ -964,7 +957,6 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
     @Override
     public List<?> selectNative(MiniNativeQuery query) throws Exception {
-        Optional<QueryResultMapping> queryResultMapping = Optional.empty();
         log.debug("selectNative: query.getResultClass()={}", query.getResultClass());
         if (query.getResultClass() != null) {
             EntityMapping entityMapping = new EntityMapping(
