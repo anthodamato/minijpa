@@ -85,13 +85,17 @@ public class EmbedManyToOneTest {
         em.close();
     }
 
-    @Test
-    public void nativeQuery() throws Exception {
-        final EntityManager em = emf.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
 
-        tx.begin();
+    private static class Entities {
+        ProgramManager pm1;
+        ProgramManager pm2;
+        JobEmployee e1;
+        JobEmployee e2;
+        JobEmployee e3;
+    }
 
+
+    private Entities persistEntities(EntityManager em) {
         ProgramManager pm1 = new ProgramManager();
         pm1.setName("Wells");
         pm1.setId(1);
@@ -131,6 +135,24 @@ public class EmbedManyToOneTest {
         e3.setName("Kate");
         e3.setJobInfo(ji3);
         em.persist(e3);
+
+        Entities entities = new Entities();
+        entities.pm1 = pm1;
+        entities.pm2 = pm2;
+        entities.e1 = e1;
+        entities.e2 = e2;
+        entities.e3 = e3;
+        return entities;
+    }
+
+
+    @Test
+    public void nativeQuery() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+        Entities entities = persistEntities(em);
 
         tx.commit();
 
@@ -167,11 +189,11 @@ public class EmbedManyToOneTest {
         Assertions.assertEquals("Developer", oo1[2]);
         Assertions.assertEquals("Paul", oo1[3]);
 
-        em.detach(e1);
-        em.detach(e2);
-        em.detach(e3);
-        em.detach(pm1);
-        em.detach(pm2);
+        em.detach(entities.e1);
+        em.detach(entities.e2);
+        em.detach(entities.e3);
+        em.detach(entities.pm1);
+        em.detach(entities.pm2);
 
         Query query = em.createNativeQuery(
                 "select e.id as e_id, e.name as e_name, e.jd as jd, e.pm_id, p.id as p_id, p.name as p_name"
@@ -200,11 +222,11 @@ public class EmbedManyToOneTest {
         Assertions.assertTrue(r1[1] instanceof ProgramManager);
         Assertions.assertEquals("Wells", ((ProgramManager) r1[1]).getName());
 
-        e1 = em.find(JobEmployee.class, 1);
-        e2 = em.find(JobEmployee.class, 2);
-        e3 = em.find(JobEmployee.class, 3);
-        pm1 = em.find(ProgramManager.class, 1);
-        pm2 = em.find(ProgramManager.class, 2);
+        JobEmployee e1 = em.find(JobEmployee.class, 1);
+        JobEmployee e2 = em.find(JobEmployee.class, 2);
+        JobEmployee e3 = em.find(JobEmployee.class, 3);
+        ProgramManager pm1 = em.find(ProgramManager.class, 1);
+        ProgramManager pm2 = em.find(ProgramManager.class, 2);
 
         em.remove(e1);
         em.remove(e2);
@@ -216,52 +238,14 @@ public class EmbedManyToOneTest {
         em.close();
     }
 
+
     @Test
     public void nativeQueryConstructor() throws Exception {
         final EntityManager em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
 
         tx.begin();
-
-        ProgramManager pm1 = new ProgramManager();
-        pm1.setName("Wells");
-        pm1.setId(1);
-        em.persist(pm1);
-
-        ProgramManager pm2 = new ProgramManager();
-        pm2.setName("Hogan");
-        pm2.setId(2);
-        em.persist(pm2);
-
-        JobInfo ji1 = new JobInfo();
-        ji1.setJobDescription("Analyst");
-        ji1.setPm(pm1);
-
-        JobInfo ji2 = new JobInfo();
-        ji2.setJobDescription("Developer");
-        ji2.setPm(pm1);
-
-        JobInfo ji3 = new JobInfo();
-        ji3.setJobDescription("Developer");
-        ji3.setPm(pm2);
-
-        JobEmployee e1 = new JobEmployee();
-        e1.setId(1);
-        e1.setName("Abraham");
-        e1.setJobInfo(ji1);
-        em.persist(e1);
-
-        JobEmployee e2 = new JobEmployee();
-        e2.setId(2);
-        e2.setName("Paul");
-        e2.setJobInfo(ji2);
-        em.persist(e2);
-
-        JobEmployee e3 = new JobEmployee();
-        e3.setId(3);
-        e3.setName("Kate");
-        e3.setJobInfo(ji3);
-        em.persist(e3);
+        Entities entities = persistEntities(em);
 
         tx.commit();
 
@@ -272,11 +256,11 @@ public class EmbedManyToOneTest {
         List idList = q.getResultList();
         Assertions.assertEquals(2, idList.size());
 
-        em.detach(e1);
-        em.detach(e2);
-        em.detach(e3);
-        em.detach(pm1);
-        em.detach(pm2);
+        em.detach(entities.e1);
+        em.detach(entities.e2);
+        em.detach(entities.e3);
+        em.detach(entities.pm1);
+        em.detach(entities.pm2);
 
         Query query = em.createNativeQuery(
                 "select e.id as e_id, e.name as e_name, e.jd as jd, e.pm_id, p.id as p_id, p.name as p_name"
@@ -301,11 +285,11 @@ public class EmbedManyToOneTest {
         Assertions.assertEquals("Paul", ((JobEmployeeDetails) r2).getEmployeeName());
         Assertions.assertEquals("Wells", ((JobEmployeeDetails) r2).getManagerName());
 
-        e1 = em.find(JobEmployee.class, 1);
-        e2 = em.find(JobEmployee.class, 2);
-        e3 = em.find(JobEmployee.class, 3);
-        pm1 = em.find(ProgramManager.class, 1);
-        pm2 = em.find(ProgramManager.class, 2);
+        JobEmployee e1 = em.find(JobEmployee.class, 1);
+        JobEmployee e2 = em.find(JobEmployee.class, 2);
+        JobEmployee e3 = em.find(JobEmployee.class, 3);
+        ProgramManager pm1 = em.find(ProgramManager.class, 1);
+        ProgramManager pm2 = em.find(ProgramManager.class, 2);
 
         em.remove(e1);
         em.remove(e2);
@@ -317,13 +301,8 @@ public class EmbedManyToOneTest {
         em.close();
     }
 
-    @Test
-    public void nativeQueryConstructorAndScalars() throws Exception {
-        final EntityManager em = emf.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
 
-        tx.begin();
-
+    private Entities persistEntitiesWithDates(EntityManager em) {
         ProgramManager pm1 = new ProgramManager();
         pm1.setName("Wells");
         pm1.setId(1);
@@ -367,6 +346,24 @@ public class EmbedManyToOneTest {
         e3.setJobInfo(ji3);
         em.persist(e3);
 
+        Entities entities = new Entities();
+        entities.pm1 = pm1;
+        entities.pm2 = pm2;
+        entities.e1 = e1;
+        entities.e2 = e2;
+        entities.e3 = e3;
+        return entities;
+    }
+
+
+    @Test
+    public void nativeQueryConstructorAndScalars() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+        Entities entities = persistEntitiesWithDates(em);
+
         tx.commit();
 
         tx.begin();
@@ -376,11 +373,11 @@ public class EmbedManyToOneTest {
         List idList = q.getResultList();
         Assertions.assertEquals(2, idList.size());
 
-        em.detach(e1);
-        em.detach(e2);
-        em.detach(e3);
-        em.detach(pm1);
-        em.detach(pm2);
+        em.detach(entities.e1);
+        em.detach(entities.e2);
+        em.detach(entities.e3);
+        em.detach(entities.pm1);
+        em.detach(entities.pm2);
 
         Query query = em.createNativeQuery(
                 "select e.id as e_id, e.name as e_name, e.jd as jd, e.pm_id, e.start_date as start_date, p.id as p_id, p.name as p_name"
@@ -417,11 +414,11 @@ public class EmbedManyToOneTest {
         java.util.Date date2 = java.util.Date.from(LocalDate.of(2020, 6, 10).atStartOfDay(ZoneId.systemDefault()).toInstant());
         Assertions.assertEquals(date2, array1[2]);
 
-        e1 = em.find(JobEmployee.class, 1);
-        e2 = em.find(JobEmployee.class, 2);
-        e3 = em.find(JobEmployee.class, 3);
-        pm1 = em.find(ProgramManager.class, 1);
-        pm2 = em.find(ProgramManager.class, 2);
+        JobEmployee e1 = em.find(JobEmployee.class, 1);
+        JobEmployee e2 = em.find(JobEmployee.class, 2);
+        JobEmployee e3 = em.find(JobEmployee.class, 3);
+        ProgramManager pm1 = em.find(ProgramManager.class, 1);
+        ProgramManager pm2 = em.find(ProgramManager.class, 2);
 
         em.remove(e1);
         em.remove(e2);
@@ -433,4 +430,184 @@ public class EmbedManyToOneTest {
         em.close();
     }
 
+
+    @Test
+    public void namedNativeQuery() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+        Entities entities = persistEntities(em);
+
+        tx.commit();
+
+        tx.begin();
+
+        em.detach(entities.e1);
+        em.detach(entities.e2);
+        em.detach(entities.e3);
+        em.detach(entities.pm1);
+        em.detach(entities.pm2);
+
+        Query query = em.createNamedQuery("Named_JobEmployeeResult");
+        List result = query.getResultList();
+        Assertions.assertFalse(result.isEmpty());
+        Assertions.assertEquals(2, result.size());
+
+        Object[] r0 = (Object[]) result.get(0);
+        Assertions.assertEquals(2, r0.length);
+        Assertions.assertTrue(r0[0] instanceof JobEmployee);
+        Assertions.assertEquals("Kate", ((JobEmployee) r0[0]).getName());
+        Assertions.assertNotNull(((JobEmployee) r0[0]).getJobInfo());
+        Assertions.assertNotNull(((JobEmployee) r0[0]).getJobInfo().getPm());
+        Assertions.assertEquals("Developer", ((JobEmployee) r0[0]).getJobInfo().getJobDescription());
+        Assertions.assertEquals("Hogan", ((JobEmployee) r0[0]).getJobInfo().getPm().getName());
+        Assertions.assertTrue(r0[1] instanceof ProgramManager);
+        Assertions.assertEquals("Hogan", ((ProgramManager) r0[1]).getName());
+
+        Object[] r1 = (Object[]) result.get(1);
+        Assertions.assertTrue(r1[0] instanceof JobEmployee);
+        Assertions.assertEquals("Paul", ((JobEmployee) r1[0]).getName());
+        Assertions.assertEquals("Developer", ((JobEmployee) r1[0]).getJobInfo().getJobDescription());
+        Assertions.assertEquals("Wells", ((JobEmployee) r1[0]).getJobInfo().getPm().getName());
+        Assertions.assertTrue(r1[1] instanceof ProgramManager);
+        Assertions.assertEquals("Wells", ((ProgramManager) r1[1]).getName());
+
+        JobEmployee e1 = em.find(JobEmployee.class, 1);
+        JobEmployee e2 = em.find(JobEmployee.class, 2);
+        JobEmployee e3 = em.find(JobEmployee.class, 3);
+        ProgramManager pm1 = em.find(ProgramManager.class, 1);
+        ProgramManager pm2 = em.find(ProgramManager.class, 2);
+
+        em.remove(e1);
+        em.remove(e2);
+        em.remove(e3);
+        em.remove(pm1);
+        em.remove(pm2);
+
+        tx.commit();
+        em.close();
+    }
+
+
+    @Test
+    public void namedNativeQueryConstructor() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+        Entities entities = persistEntities(em);
+
+        tx.commit();
+
+        tx.begin();
+
+        em.detach(entities.e1);
+        em.detach(entities.e2);
+        em.detach(entities.e3);
+        em.detach(entities.pm1);
+        em.detach(entities.pm2);
+
+        Query query = em.createNamedQuery("Named_JobEmployeeResultConstructor");
+        List result = query.getResultList();
+        Assertions.assertFalse(result.isEmpty());
+        Assertions.assertEquals(3, result.size());
+
+        Object r0 = (Object) result.get(0);
+        Assertions.assertTrue(r0 instanceof JobEmployeeDetails);
+        Assertions.assertEquals("Abraham", ((JobEmployeeDetails) r0).getEmployeeName());
+        Assertions.assertEquals("Wells", ((JobEmployeeDetails) r0).getManagerName());
+
+        Object r1 = (Object) result.get(1);
+        Assertions.assertTrue(r1 instanceof JobEmployeeDetails);
+        Assertions.assertEquals("Kate", ((JobEmployeeDetails) r1).getEmployeeName());
+        Assertions.assertEquals("Hogan", ((JobEmployeeDetails) r1).getManagerName());
+
+        Object r2 = (Object) result.get(2);
+        Assertions.assertTrue(r2 instanceof JobEmployeeDetails);
+        Assertions.assertEquals("Paul", ((JobEmployeeDetails) r2).getEmployeeName());
+        Assertions.assertEquals("Wells", ((JobEmployeeDetails) r2).getManagerName());
+
+        JobEmployee e1 = em.find(JobEmployee.class, 1);
+        JobEmployee e2 = em.find(JobEmployee.class, 2);
+        JobEmployee e3 = em.find(JobEmployee.class, 3);
+        ProgramManager pm1 = em.find(ProgramManager.class, 1);
+        ProgramManager pm2 = em.find(ProgramManager.class, 2);
+
+        em.remove(e1);
+        em.remove(e2);
+        em.remove(e3);
+        em.remove(pm1);
+        em.remove(pm2);
+
+        tx.commit();
+        em.close();
+    }
+
+
+    @Test
+    public void namedNativeQueryConstructorAndScalars() throws Exception {
+        final EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+        Entities entities = persistEntitiesWithDates(em);
+
+        tx.commit();
+
+        tx.begin();
+
+        em.detach(entities.e1);
+        em.detach(entities.e2);
+        em.detach(entities.e3);
+        em.detach(entities.pm1);
+        em.detach(entities.pm2);
+
+        Query query = em.createNamedQuery("Named_JobEmployeeResultConstructorAndScalars");
+        List result = query.getResultList();
+        Assertions.assertFalse(result.isEmpty());
+        Assertions.assertEquals(3, result.size());
+
+        Object r0 = result.get(0);
+        LOG.debug("nativeQueryConstructorAndScalars: r0={}", r0);
+        Assertions.assertNotNull(r0);
+        Assertions.assertTrue(r0 instanceof Object[]);
+        Object[] array = (Object[]) r0;
+        Assertions.assertTrue(array[0] instanceof JobEmployeeDetails);
+        Assertions.assertEquals("Abraham", ((JobEmployeeDetails) array[0]).getEmployeeName());
+        Assertions.assertEquals("Wells", array[1]);
+        java.util.Date date0 = java.util.Date.from(LocalDate.of(2020, 4, 10).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Assertions.assertEquals(date0, array[2]);
+
+        Object r1 = result.get(1);
+        Object[] array1 = (Object[]) r1;
+        Assertions.assertTrue(array1[0] instanceof JobEmployeeDetails);
+        Assertions.assertEquals("Kate", ((JobEmployeeDetails) array1[0]).getEmployeeName());
+        Assertions.assertEquals("Hogan", array1[1]);
+        java.util.Date date1 = java.util.Date.from(LocalDate.of(2020, 6, 10).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Assertions.assertEquals(date1, array1[2]);
+
+        Object r2 = result.get(2);
+        Object[] array2 = (Object[]) r2;
+        Assertions.assertTrue(array2[0] instanceof JobEmployeeDetails);
+        Assertions.assertEquals("Paul", ((JobEmployeeDetails) array2[0]).getEmployeeName());
+        Assertions.assertEquals("Wells", array2[1]);
+        java.util.Date date2 = java.util.Date.from(LocalDate.of(2020, 6, 10).atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Assertions.assertEquals(date2, array1[2]);
+
+        JobEmployee e1 = em.find(JobEmployee.class, 1);
+        JobEmployee e2 = em.find(JobEmployee.class, 2);
+        JobEmployee e3 = em.find(JobEmployee.class, 3);
+        ProgramManager pm1 = em.find(ProgramManager.class, 1);
+        ProgramManager pm2 = em.find(ProgramManager.class, 2);
+
+        em.remove(e1);
+        em.remove(e2);
+        em.remove(e3);
+        em.remove(pm1);
+        em.remove(pm2);
+
+        tx.commit();
+        em.close();
+    }
 }
