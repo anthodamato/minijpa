@@ -5,12 +5,6 @@
  */
 package org.minijpa.jpa;
 
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import javax.persistence.*;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -20,6 +14,12 @@ import org.minijpa.jpa.model.SimpleOrder;
 import org.minijpa.jpa.model.SimpleProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.persistence.*;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Antonio Damato <anto.damato@gmail.com>
@@ -305,7 +305,7 @@ public class JpqlOrderTest {
         Long id = ((Number) so[0]).longValue();
         Assertions.assertEquals(id, simpleOrder.getId());
         Assertions.assertNotNull(so[1]);
-        Assertions.assertTrue(so[1] instanceof Date);
+        Assertions.assertInstanceOf(Date.class, so[1]);
         tx.commit();
 
         tx.begin();

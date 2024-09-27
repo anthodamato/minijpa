@@ -955,18 +955,11 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         return selectJpql(statementParameters, parameterMap, hints, LockType.NONE, resultClass);
     }
 
-    @Override
-    public List<?> selectNative(MiniNativeQuery query) throws Exception {
-        log.debug("selectNative: query.getResultClass()={}", query.getResultClass());
-        if (query.getResultClass() != null) {
-            EntityMapping entityMapping = new EntityMapping(
-                    persistenceUnitContext.getEntities().get(query.getResultClass().getName()),
-                    Collections.emptyList());
-            QueryResultMapping qrm = new QueryResultMapping("", List.of(entityMapping),
-                    Collections.emptyList(), Collections.emptyList());
-            return runNativeQuery(query, qrm);
-        }
 
+    @Override
+    public List<?> selectNative(
+            NativeQuery query) throws Exception {
+        log.debug("selectNative: query.getResultClass()={}", query.getResultClass());
         if (query.getResultSetMapping() != null) {
             if (persistenceUnitContext.getQueryResultMappings() == null) {
                 throw new IllegalArgumentException(
@@ -984,21 +977,29 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             return runNativeQuery(query, qrm);
         }
 
-        String sqlString = query.getSqlString();
-        List<Object> parameterValues = new ArrayList<>();
-        Set<Parameter<?>> parameters = query.getParameters();
+        if (query.getResultClass() != null) {
+            EntityMapping entityMapping = new EntityMapping(
+                    persistenceUnitContext.getEntities().get(query.getResultClass().getName()),
+                    Collections.emptyList());
+            QueryResultMapping qrm = new QueryResultMapping("", List.of(entityMapping),
+                    Collections.emptyList(), Collections.emptyList());
+            return runNativeQuery(query, qrm);
+        }
+
+        String sqlString = query.getSql();
+        Set<Parameter<?>> parameters = ((Query) query).getParameters();
         if (parameters.isEmpty()) {
             List<Object> objects = new ArrayList<>();
             nativeRecordBuilder.setCollection(objects);
             dbConfiguration.getJdbcRunner().runNativeQuery(connectionHolder.getConnection(), sqlString,
-                    parameterValues, nativeRecordBuilder);
+                    null, nativeRecordBuilder);
             return objects;
         }
 
-        List<ParameterUtils.IndexParameter> indexParameters = ParameterUtils.findIndexParameters(
-                query, sqlString);
-        String sql = ParameterUtils.replaceParameterPlaceholders(query, sqlString, indexParameters);
-        parameterValues = ParameterUtils.sortParameterValues(query, indexParameters);
+        List<QueryParameterData> indexParameters = ParameterUtils.findIndexParameters(
+                parameters, sqlString);
+        String sql = ParameterUtils.replaceParameterPlaceholders(sqlString, indexParameters);
+        List<Object> parameterValues = ParameterUtils.sortParameterValues((Query) query, indexParameters);
         List<Object> objects = new ArrayList<>();
         nativeRecordBuilder.setCollection(objects);
         dbConfiguration.getJdbcRunner()
@@ -1007,28 +1008,29 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         return objects;
     }
 
+
     private List<Object> runNativeQuery(
-            MiniNativeQuery query,
+            NativeQuery query,
             QueryResultMapping queryResultMapping) throws Exception {
-        String sqlString = query.getSqlString();
+        String sqlString = query.getSql();
         entityHandler.setLockType(LockType.NONE);
-        List<Object> parameterValues = new ArrayList<>();
-        Set<Parameter<?>> parameters = query.getParameters();
+        Set<Parameter<?>> parameters = ((Query) query).getParameters();
         if (parameters.isEmpty()) {
             qrmRecordBuilder.setQueryResultMapping(queryResultMapping);
             List<Object> objects = new ArrayList<>();
             qrmRecordBuilder.setCollection(objects);
             qrmRecordBuilder.setEntityContainer(entityContainer);
             dbConfiguration.getJdbcRunner()
-                    .runNativeQuery(connectionHolder.getConnection(), sqlString, parameterValues,
+                    .runNativeQuery(connectionHolder.getConnection(), sqlString, null,
                             qrmRecordBuilder);
             return objects;
         }
 
-        List<ParameterUtils.IndexParameter> indexParameters = ParameterUtils.findIndexParameters(query,
+        List<QueryParameterData> indexParameters = ParameterUtils.findIndexParameters(
+                parameters,
                 sqlString);
-        String sql = ParameterUtils.replaceParameterPlaceholders(query, sqlString, indexParameters);
-        parameterValues = ParameterUtils.sortParameterValues(query, indexParameters);
+        String sql = ParameterUtils.replaceParameterPlaceholders(sqlString, indexParameters);
+        List<Object> parameterValues = ParameterUtils.sortParameterValues((Query) query, indexParameters);
 
         qrmRecordBuilder.setLockType(LockType.NONE);
         qrmRecordBuilder.setQueryResultMapping(queryResultMapping);
@@ -1041,11 +1043,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         return objects;
     }
 
+
     @Override
     public int update(String sqlString, Query query) throws Exception {
         return dbConfiguration.getJdbcRunner().update(connectionHolder.getConnection(), sqlString,
                 Collections.emptyList());
     }
+
 
     @Override
     public int update(UpdateQuery updateQuery) throws Exception {

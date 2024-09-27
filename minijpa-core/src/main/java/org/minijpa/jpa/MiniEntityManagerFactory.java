@@ -213,7 +213,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
         if (query instanceof MiniJpqlQuery)
             jpqlQuery = ((MiniJpqlQuery) query).getJpqlString();
         else if (query instanceof MiniJpqlTypedQuery)
-            jpqlQuery = ((MiniJpqlTypedQuery) query).getJpqlString();
+            jpqlQuery = ((MiniJpqlTypedQuery<?>) query).getJpqlString();
         else throw new IllegalArgumentException("Unknown query: " + query);
 
         StatementParameters statementParameters;

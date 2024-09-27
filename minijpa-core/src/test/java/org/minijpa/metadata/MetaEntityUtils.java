@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
+import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
 import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
@@ -63,11 +64,14 @@ public class MetaEntityUtils {
         Optional<Map<String, QueryResultMapping>> optional = jpaParser.parseSqlResultSetMappings(map);
         Optional<Map<String, MiniNamedQueryMapping>> optionalNamedQueries = jpaParser.parseNamedQueries(map);
         LOG.debug("parsePersistenceUnitContext: namedQueries={}", optionalNamedQueries.orElse(null));
+        Optional<Map<String, MiniNamedNativeQueryMapping>> optionalNamedNativeQueries = jpaParser.parseNamedNativeQueries(map);
+        LOG.debug("parsePersistenceUnitContext: namedNativeQueries={}", optionalNamedNativeQueries.orElse(null));
         return new PersistenceUnitContext(
                 persistenceUnitName,
                 map,
                 optional.orElse(null),
-                optionalNamedQueries.orElse(null));
+                optionalNamedQueries.orElse(null),
+                optionalNamedNativeQueries.orElse(null));
     }
 
     //    private static void printEmbeddedAttribute(MetaAttribute m) {

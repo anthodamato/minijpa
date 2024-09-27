@@ -19,6 +19,7 @@ import org.minijpa.jdbc.ConnectionHolderImpl;
 import org.minijpa.jdbc.ConnectionProvider;
 import org.minijpa.jpa.criteria.MiniCriteriaBuilder;
 import org.minijpa.jpa.db.*;
+import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
 import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.metadata.EntityContainerContext;
@@ -186,8 +187,6 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
-        log.debug("find: this={}", this);
-        log.debug("find: primaryKey={}", primaryKey);
         try {
             Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
                     LockTypeUtils.toLockType(lockMode));
@@ -414,27 +413,56 @@ public class MiniEntityManager extends AbstractEntityManager {
     @Override
     public Query createNamedQuery(String name) {
         Map<String, MiniNamedQueryMapping> namedQueryMappingMap = persistenceUnitContext.getNamedQueries();
-        if (namedQueryMappingMap == null)
-            throw new IllegalArgumentException("Named Query '" + name + "' not found");
+        if (namedQueryMappingMap != null) {
+            MiniNamedQueryMapping miniNamedQueryMapping = namedQueryMappingMap.get(name);
+            if (miniNamedQueryMapping != null) {
+                return new MiniNamedQuery(miniNamedQueryMapping, this, jdbcEntityManager);
+            }
+        }
 
-        MiniNamedQueryMapping miniNamedQueryMapping = namedQueryMappingMap.get(name);
-        if (miniNamedQueryMapping == null)
-            throw new IllegalArgumentException("Named Query '" + name + "' not found");
+        Map<String, MiniNamedNativeQueryMapping> namedNativeQueryMappingMap = persistenceUnitContext.getNamedNativeQueries();
+        if (namedNativeQueryMappingMap != null) {
+            MiniNamedNativeQueryMapping miniNamedNativeQueryMapping = namedNativeQueryMappingMap.get(name);
+            if (miniNamedNativeQueryMapping != null) {
+                return new MiniNativeQuery(
+                        miniNamedNativeQueryMapping.getQuery(),
+                        null,
+                        miniNamedNativeQueryMapping.getResultSetMapping(),
+                        miniNamedNativeQueryMapping.getHints(),
+                        this,
+                        jdbcEntityManager);
+            }
+        }
 
-        return new MiniNamedQuery(miniNamedQueryMapping, this, jdbcEntityManager);
+        throw new IllegalArgumentException("Named Query '" + name + "' not found");
     }
+
 
     @Override
     public <T> TypedQuery<T> createNamedQuery(String name, Class<T> resultClass) {
         Map<String, MiniNamedQueryMapping> namedQueryMappingMap = persistenceUnitContext.getNamedQueries();
-        if (namedQueryMappingMap == null)
-            throw new IllegalArgumentException("Named Query '" + name + "' not found");
+        if (namedQueryMappingMap != null) {
+            MiniNamedQueryMapping miniNamedQueryMapping = namedQueryMappingMap.get(name);
+            if (miniNamedQueryMapping != null) {
+                return new MiniNamedTypedQuery<>(jdbcEntityManager, miniNamedQueryMapping, resultClass);
+            }
+        }
 
-        MiniNamedQueryMapping miniNamedQueryMapping = namedQueryMappingMap.get(name);
-        if (miniNamedQueryMapping == null)
-            throw new IllegalArgumentException("Named Query '" + name + "' not found");
+        Map<String, MiniNamedNativeQueryMapping> namedNativeQueryMappingMap = persistenceUnitContext.getNamedNativeQueries();
+        if (namedNativeQueryMappingMap != null) {
+            MiniNamedNativeQueryMapping miniNamedNativeQueryMapping = namedNativeQueryMappingMap.get(name);
+            if (miniNamedNativeQueryMapping != null) {
+                return new MiniNativeTypedQuery(
+                        miniNamedNativeQueryMapping.getQuery(),
+                        resultClass,
+                        miniNamedNativeQueryMapping.getResultSetMapping(),
+                        miniNamedNativeQueryMapping.getHints(),
+                        this,
+                        jdbcEntityManager);
+            }
+        }
 
-        return new MiniNamedTypedQuery<>(jdbcEntityManager, miniNamedQueryMapping, resultClass);
+        throw new IllegalArgumentException("Named Query '" + name + "' not found");
     }
 
 
@@ -456,17 +484,17 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public Query createNativeQuery(String sqlString) {
-        return new MiniNativeQuery(sqlString, null, null, this, jdbcEntityManager);
+        return new MiniNativeQuery(sqlString, null, null, null, this, jdbcEntityManager);
     }
 
     @Override
     public Query createNativeQuery(String sqlString, Class resultClass) {
-        return new MiniNativeQuery(sqlString, resultClass, null, this, jdbcEntityManager);
+        return new MiniNativeQuery(sqlString, resultClass, null, null, this, jdbcEntityManager);
     }
 
     @Override
     public Query createNativeQuery(String sqlString, String resultSetMapping) {
-        return new MiniNativeQuery(sqlString, null, resultSetMapping, this, jdbcEntityManager);
+        return new MiniNativeQuery(sqlString, null, resultSetMapping, null, this, jdbcEntityManager);
     }
 
     @Override

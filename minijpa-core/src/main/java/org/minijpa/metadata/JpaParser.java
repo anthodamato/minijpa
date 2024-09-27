@@ -64,6 +64,7 @@ import org.minijpa.jpa.db.LockType;
 import org.minijpa.jpa.db.PkGeneration;
 import org.minijpa.jpa.db.PkGenerationType;
 import org.minijpa.jpa.db.PkStrategy;
+import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
 import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
@@ -93,6 +94,7 @@ public class JpaParser {
     private final ManyToManyHelper manyToManyHelper = new ManyToManyHelper();
     private final SqlResultSetMappingParser sqlResultSetMappingParser = new SqlResultSetMappingParser();
     private final NamedQueryParser namedQueryParser = new NamedQueryParser();
+    private final NamedNativeQueryParser namedNativeQueryParser = new NamedNativeQueryParser();
 
     public JpaParser(DbConfiguration dbConfiguration) {
         super();
@@ -143,6 +145,7 @@ public class JpaParser {
         return Optional.of(map);
     }
 
+
     public Optional<Map<String, MiniNamedQueryMapping>> parseNamedQueries(
             Map<String, MetaEntity> entities) {
         Map<String, MiniNamedQueryMapping> map = new HashMap<>();
@@ -160,6 +163,26 @@ public class JpaParser {
 
         return Optional.of(map);
     }
+
+
+    public Optional<Map<String, MiniNamedNativeQueryMapping>> parseNamedNativeQueries(
+            Map<String, MetaEntity> entities) {
+        Map<String, MiniNamedNativeQueryMapping> map = new HashMap<>();
+        for (Map.Entry<String, MetaEntity> entry : entities.entrySet()) {
+            MetaEntity metaEntity = entry.getValue();
+            Optional<Map<String, MiniNamedNativeQueryMapping>> optional = namedNativeQueryParser
+                    .parse(metaEntity.getEntityClass());
+            // checks for uniqueness
+            optional.ifPresent(map::putAll);
+        }
+
+        if (map.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(map);
+    }
+
 
     public MetaEntity parse(
             EnhEntity enhEntity,
