@@ -1,21 +1,7 @@
-/*
- * Copyright 2021 Antonio Damato <anto.damato@gmail.com>.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.minijpa.jpa;
 
 import org.minijpa.jpa.db.JdbcEntityManager;
+import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,32 +10,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author adamato
- */
-public class MiniNativeQuery extends AbstractQuery implements NativeQuery {
-
-    private final Logger log = LoggerFactory.getLogger(MiniNativeQuery.class);
-
+public class MiniNativeTypedQuery<T> extends AbstractTypedQuery<T> implements NativeQuery {
+    private final Logger log = LoggerFactory.getLogger(MiniNativeTypedQuery.class);
     private final String sqlString;
     private final Class<?> resultClass;
     private final String resultSetMapping;
-    private final Map<String, Object> additionalHints;
     private final EntityManager entityManager;
+    private final Map<String, Object> additionalHints;
 
-    public MiniNativeQuery(
+    public MiniNativeTypedQuery(
             String sqlString,
             Class<?> resultClass,
             String resultSetMapping,
             Map<String, Object> additionalHints,
             EntityManager entityManager,
             JdbcEntityManager jdbcEntityManager) {
+        super(jdbcEntityManager);
         this.sqlString = sqlString;
         this.resultClass = resultClass;
-        this.resultSetMapping = resultSetMapping;
         this.additionalHints = additionalHints;
+        this.resultSetMapping = resultSetMapping;
         this.entityManager = entityManager;
-        this.jdbcEntityManager = jdbcEntityManager;
     }
 
     @Override
@@ -81,30 +62,37 @@ public class MiniNativeQuery extends AbstractQuery implements NativeQuery {
         return map;
     }
 
+
     @Override
-    public List getResultList() {
+    public List<T> getResultList() {
         List<?> list;
         try {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
             list = jdbcEntityManager.selectNative(this);
+        } catch (RuntimeException e) {
+            log.error(e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
         }
 
-        return list;
+        return (List<T>) list;
     }
 
     @Override
-    public Object getSingleResult() {
+    public T getSingleResult() {
         List<?> list = null;
         try {
             if (flushModeType == FlushModeType.AUTO)
                 jdbcEntityManager.flush();
 
             list = jdbcEntityManager.selectNative(this);
+        } catch (RuntimeException e) {
+            log.error(e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new PersistenceException(e.getMessage());
@@ -116,20 +104,6 @@ public class MiniNativeQuery extends AbstractQuery implements NativeQuery {
         if (list.size() > 1)
             throw new NonUniqueResultException("More than one result to return");
 
-        return list.get(0);
+        return (T) list.get(0);
     }
-
-    @Override
-    public int executeUpdate() {
-        if (!entityManager.getTransaction().isActive())
-            throw new TransactionRequiredException("Update requires an active transaction");
-
-        try {
-            return jdbcEntityManager.update(sqlString, this);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new PersistenceException(e.getMessage());
-        }
-    }
-
 }

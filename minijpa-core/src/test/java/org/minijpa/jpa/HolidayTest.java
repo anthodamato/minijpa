@@ -331,4 +331,32 @@ public class HolidayTest {
 
         em.close();
     }
+
+
+    @Test
+    public void betweenDatesNamedNativeQuery() {
+        final EntityManager em = emf.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
+
+        Holiday h1 = holiday1();
+        Holiday h2 = holiday2();
+
+        em.persist(h1);
+        em.persist(h2);
+        tx.commit();
+
+        tx.begin();
+        TypedQuery<Holiday> query = em.createNamedQuery("nativeCheckInPeriod", Holiday.class);
+        query.setParameter("dateStart", LocalDate.of(2020, 1, 9));
+        query.setParameter("dateEnd", LocalDate.of(2020, 1, 11));
+        List<Holiday> holidays = query.getResultList();
+        Assertions.assertEquals(1, holidays.size());
+
+        em.remove(h1);
+        em.remove(h2);
+        tx.commit();
+
+        em.close();
+    }
 }

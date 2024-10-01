@@ -23,6 +23,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
+import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
 import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.MetaEntity;
@@ -39,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PersistenceUnitContextManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PersistenceUnitContextManager.class);
+    private static final Logger log = LoggerFactory.getLogger(PersistenceUnitContextManager.class);
     private static final PersistenceUnitContextManager persistenceUnitContextManager = new PersistenceUnitContextManager();
 
     private PersistenceUnitContextManager() {
@@ -57,7 +58,7 @@ public class PersistenceUnitContextManager {
         Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
                 .getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
         if (optional.isPresent()) {
-            LOG.debug("Persistence Unit Entities already parsed");
+            log.debug("Persistence Unit Entities already parsed");
             return optional.get();
         }
 
@@ -68,7 +69,7 @@ public class PersistenceUnitContextManager {
             optionalMetaEntity.ifPresent(metaEntity -> existingMetaEntities.put(className, metaEntity));
         }
 
-        LOG.info("Parsing entities...");
+        log.info("Parsing entities...");
         Map<String, MetaEntity> entityMap = new HashMap<>();
         DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
                 .getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
@@ -85,16 +86,18 @@ public class PersistenceUnitContextManager {
         jpaParser.fillRelationships(entityMap);
         Optional<Map<String, QueryResultMapping>> queryResultMappings = jpaParser.parseSqlResultSetMappings(entityMap);
         Optional<Map<String, MiniNamedQueryMapping>> optionalNamedQueries = jpaParser.parseNamedQueries(entityMap);
+        Optional<Map<String, MiniNamedNativeQueryMapping>> optionalNamedNativeQueries = jpaParser.parseNamedNativeQueries(entityMap);
 
         PersistenceUnitContext puc = new PersistenceUnitContext(
                 persistenceUnitInfo.getPersistenceUnitName(),
                 entityMap,
                 queryResultMappings.orElse(null),
-                optionalNamedQueries.orElse(null));
+                optionalNamedQueries.orElse(null),
+                optionalNamedNativeQueries.orElse(null));
 
         entityMap.forEach((k, v) -> {
-            LOG.debug("get: v.getName()={}", v.getName());
-            v.getBasicAttributes().forEach(a -> LOG.debug("get: ba a.getName()={}", a.getName()));
+            log.debug("get: v.getName()={}", v.getName());
+            v.getBasicAttributes().forEach(a -> log.debug("get: ba a.getName()={}", a.getName()));
         });
 
         EntityDelegate.getInstance().addPersistenceUnitContext(puc);

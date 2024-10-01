@@ -5,15 +5,7 @@
  */
 package org.minijpa.jpa.model;
 
-import javax.persistence.ColumnResult;
-import javax.persistence.ConstructorResult;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.Id;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author adamato
@@ -46,6 +38,25 @@ import javax.persistence.Table;
                 @ColumnResult(name = "p_name"),
                 @ColumnResult(name = "start_date", type = java.util.Date.class)
         }
+)
+
+@NamedNativeQueries(value = {
+        @NamedNativeQuery(
+                name = "Named_JobEmployeeResult",
+                query = "select e.id as e_id, e.name as e_name, e.jd as jd, e.pm_id, p.id as p_id, p.name as p_name" +
+                        " from job_employee e, program_manager p where e.pm_id=p.id and e.jd='Developer' order by e.name",
+                resultSetMapping = "JobEmployeeResult"),
+        @NamedNativeQuery(
+                name = "Named_JobEmployeeResultConstructor",
+                query = "select e.id as e_id, e.name as e_name, e.jd as jd, e.pm_id, p.id as p_id, p.name as p_name" +
+                        " from job_employee e, program_manager p where e.pm_id=p.id order by e.name",
+                resultSetMapping = "JobEmployeeResultConstructor"),
+        @NamedNativeQuery(
+                name = "Named_JobEmployeeResultConstructorAndScalars",
+                query = "select e.id as e_id, e.name as e_name, e.jd as jd, e.pm_id, e.start_date as start_date, p.id as p_id, p.name as p_name" +
+                        " from job_employee e, program_manager p where e.pm_id=p.id order by e.name",
+                resultSetMapping = "JobEmployeeResultConstructorAndScalars")
+}
 )
 @Entity
 @Table(name = "job_employee")

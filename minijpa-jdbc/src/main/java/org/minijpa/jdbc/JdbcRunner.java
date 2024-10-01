@@ -43,21 +43,23 @@ public class JdbcRunner {
     public JdbcRunner() {
     }
 
+
     private void setPreparedStatementQM(
             PreparedStatement preparedStatement,
-            QueryParameter queryParameter,
-            int index)
+            int index,
+            Object value,
+            Integer sqlType,
+            AttributeMapper attributeMapper)
             throws SQLException {
-        LOG.debug("setPreparedStatementQM: value={}; index={}; sqlType={}", queryParameter.getValue(),
+        LOG.debug("setPreparedStatementQM: value={}; index={}; sqlType={}", value,
                 index,
-                queryParameter.getSqlType());
-        Object value = queryParameter.getValue();
-        if (queryParameter.getAttributeMapper() != null) {
-            value = queryParameter.getAttributeMapper().attributeToDatabase(value);
+                sqlType);
+        if (attributeMapper != null) {
+            value = attributeMapper.attributeToDatabase(value);
         }
 
         if (value == null) {
-            preparedStatement.setNull(index, queryParameter.getSqlType());
+            preparedStatement.setNull(index, sqlType);
             return;
         }
 
@@ -102,15 +104,22 @@ public class JdbcRunner {
         }
     }
 
-    protected void setPreparedStatementParameters(PreparedStatement preparedStatement,
-                                                  List<QueryParameter> queryParameters) throws SQLException {
+
+    protected void setPreparedStatementParameters(
+            PreparedStatement preparedStatement,
+            List<QueryParameter> queryParameters) throws SQLException {
         if (queryParameters.isEmpty()) {
             return;
         }
 
         int index = 1;
         for (QueryParameter queryParameter : queryParameters) {
-            setPreparedStatementQM(preparedStatement, queryParameter, index);
+            setPreparedStatementQM(
+                    preparedStatement,
+                    index,
+                    queryParameter.getValue(),
+                    queryParameter.getSqlType(),
+                    queryParameter.getAttributeMapper());
             ++index;
         }
     }
@@ -325,7 +334,9 @@ public class JdbcRunner {
     }
 
     public static Optional<ModelValueArray<FetchParameter>> createModelValueArrayFromResultSetAM(
-            List<FetchParameter> fetchParameters, ResultSet rs, ResultSetMetaData metaData)
+            List<FetchParameter> fetchParameters,
+            ResultSet rs,
+            ResultSetMetaData metaData)
             throws Exception {
         if (fetchParameters.isEmpty()) {
             return Optional.empty();
@@ -343,8 +354,11 @@ public class JdbcRunner {
         return Optional.of(modelValueArray);
     }
 
-    public void runQuery(Connection connection, String sql, List<QueryParameter> parameters,
-                         JdbcRecordBuilder jdbcRecordBuilder) throws Exception {
+    public void runQuery(
+            Connection connection,
+            String sql,
+            List<QueryParameter> parameters,
+            JdbcRecordBuilder jdbcRecordBuilder) throws Exception {
         PreparedStatement preparedStatement = null;
         ResultSet rs = null;
         try {
@@ -364,15 +378,31 @@ public class JdbcRunner {
         }
     }
 
-    public void runNativeQuery(Connection connection, String sql, List<Object> parameterValues,
-                               JdbcRecordBuilder recordBuilder) throws Exception {
+
+    public void runNativeQuery(
+            Connection connection,
+            String sql,
+            List<Object> parameterValues,
+            JdbcRecordBuilder recordBuilder) throws Exception {
         PreparedStatement preparedStatement = null;
         ResultSet rs = null;
         LOG.info("Running `{}`", sql);
         try {
             preparedStatement = connection.prepareStatement(sql);
-            for (int i = 0; i < parameterValues.size(); ++i) {
-                preparedStatement.setObject(i + 1, parameterValues.get(i));
+            if (parameterValues != null) {
+                for (int i = 0; i < parameterValues.size(); ++i) {
+                    Object value = parameterValues.get(i);
+                    if (value == null) {
+                        preparedStatement.setObject(i + 1, parameterValues.get(i));
+                    } else {
+                        setPreparedStatementQM(
+                                preparedStatement,
+                                i + 1,
+                                value,
+                                null,
+                                null);
+                    }
+                }
             }
 
             rs = preparedStatement.executeQuery();
@@ -387,6 +417,7 @@ public class JdbcRunner {
             }
         }
     }
+
 
     public Long generateNextSequenceValue(Connection connection, String sql) throws SQLException {
         LOG.info("Running `{}`", sql);

@@ -5,11 +5,6 @@
  */
 package org.minijpa.jpa;
 
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import javax.persistence.*;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,6 +14,12 @@ import org.minijpa.jpa.model.SimpleOrder;
 import org.minijpa.jpa.model.SimpleProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.persistence.*;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author Antonio Damato <anto.damato@gmail.com>
@@ -280,6 +281,78 @@ public class JpqlOrderTest {
 
         tx.begin();
         removeEntities(so, em);
+        tx.commit();
+
+        em.close();
+    }
+
+
+    @Test
+    public void simpleOrderNamedNativeQuery() {
+        EntityManager em = emf.createEntityManager();
+
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
+        SimpleOrder simpleOrder = persistEntities(em);
+        tx.commit();
+
+        tx.begin();
+        Query query = em.createNamedQuery("nativeNotShippedOrdersNoType").setParameter("shipped", false);
+        List<?> list = query.getResultList();
+        Assertions.assertFalse(list.isEmpty());
+        Assertions.assertEquals(1, list.size());
+        Object[] so = (Object[]) list.get(0);
+        Long id = ((Number) so[0]).longValue();
+        Assertions.assertEquals(id, simpleOrder.getId());
+        Assertions.assertNotNull(so[1]);
+        Assertions.assertInstanceOf(Date.class, so[1]);
+        tx.commit();
+
+        tx.begin();
+        removeEntities(simpleOrder, em);
+        tx.commit();
+
+        em.close();
+    }
+
+
+    @Test
+    public void simpleOrderTypedAndNamedNativeQuery() {
+        EntityManager em = emf.createEntityManager();
+
+        EntityTransaction tx = em.getTransaction();
+        tx.begin();
+        SimpleOrder simpleOrder = persistEntities(em);
+        tx.commit();
+
+        tx.begin();
+        TypedQuery<SimpleOrder> query = em.createNamedQuery("nativeNotShippedOrders", SimpleOrder.class)
+                .setParameter("shipped", false);
+        List<SimpleOrder> list = query.getResultList();
+        Assertions.assertFalse(list.isEmpty());
+        Assertions.assertEquals(1, list.size());
+        SimpleOrder so = list.get(0);
+        Assertions.assertEquals(so.getId(), simpleOrder.getId());
+        tx.commit();
+
+        tx.begin();
+        removeEntities(so, em);
+        tx.commit();
+
+        em.close();
+    }
+
+
+    @Test
+    public void notExistingNamedNativeQuery() {
+        EntityManager em = emf.createEntityManager();
+
+        EntityTransaction tx = em.getTransaction();
+
+        tx.begin();
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            em.createNamedQuery("notExistingNamedNativeQuery").setParameter("shipped", false);
+        });
         tx.commit();
 
         em.close();

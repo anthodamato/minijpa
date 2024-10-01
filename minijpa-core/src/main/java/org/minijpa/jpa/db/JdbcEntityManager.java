@@ -24,6 +24,7 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import org.minijpa.jpa.DeleteQuery;
 import org.minijpa.jpa.MiniNativeQuery;
+import org.minijpa.jpa.NativeQuery;
 import org.minijpa.jpa.UpdateQuery;
 import org.minijpa.jpa.model.MetaEntity;
 
@@ -47,7 +48,7 @@ public interface JdbcEntityManager {
                               Map<String, Object> hints,
                               Class<?> resultClass) throws Exception;
 
-    public List<?> selectNative(MiniNativeQuery query) throws Exception;
+    public List<?> selectNative(NativeQuery query) throws Exception;
 
     public int update(String sqlString, Query query) throws Exception;
 

@@ -15,13 +15,13 @@
  */
 package org.minijpa.metadata;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
+import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
 import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.model.MetaEntity;
+
+import java.util.Map;
+import java.util.Optional;
 
 public class PersistenceUnitContext {
 
@@ -29,18 +29,21 @@ public class PersistenceUnitContext {
     private final Map<String, MetaEntity> entities;
     private final Map<String, QueryResultMapping> queryResultMappings;
     private Map<String, MiniNamedQueryMapping> namedQueries;
+    private Map<String, MiniNamedNativeQueryMapping> namedNativeQueries;
     private AliasGenerator aliasGenerator;
 
     public PersistenceUnitContext(
             String persistenceUnitName,
             Map<String, MetaEntity> entities,
             Map<String, QueryResultMapping> queryResultMappings,
-            Map<String, MiniNamedQueryMapping> namedQueries) {
+            Map<String, MiniNamedQueryMapping> namedQueries,
+            Map<String, MiniNamedNativeQueryMapping> namedNativeQueries) {
         super();
         this.persistenceUnitName = persistenceUnitName;
         this.entities = entities;
         this.queryResultMappings = queryResultMappings;
         this.namedQueries = namedQueries;
+        this.namedNativeQueries = namedNativeQueries;
     }
 
     public MetaEntity getEntity(String entityClassName) {
@@ -65,6 +68,14 @@ public class PersistenceUnitContext {
 
     public void setNamedQueries(Map<String, MiniNamedQueryMapping> namedQueries) {
         this.namedQueries = namedQueries;
+    }
+
+    public Map<String, MiniNamedNativeQueryMapping> getNamedNativeQueries() {
+        return namedNativeQueries;
+    }
+
+    public void setNamedNativeQueries(Map<String, MiniNamedNativeQueryMapping> namedNativeQueries) {
+        this.namedNativeQueries = namedNativeQueries;
     }
 
     public Optional<MetaEntity> findMetaEntityByName(String name) {

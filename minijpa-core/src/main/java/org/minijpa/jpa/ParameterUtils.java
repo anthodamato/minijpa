@@ -60,22 +60,24 @@ public class ParameterUtils {
         throw new IllegalArgumentException("Parameter at position '" + position + "' not found");
     }
 
+
     public static Object findParameterValueByPosition(
             int position,
             Map<Parameter<?>, Object> parameterValues) {
         return parameterValues.get(findParameterByPosition(position, parameterValues));
     }
 
-    private static List<IndexParameter> findIndexParameters(
+
+    private static List<QueryParameterData> findIndexParameters(
             String sqlString,
             String ph,
             Parameter<?> p) {
         int index = 0;
-        List<IndexParameter> indexParameters = new ArrayList<>();
+        List<QueryParameterData> indexParameters = new ArrayList<>();
         while (index != -1) {
             index = sqlString.indexOf(ph, index);
             if (index != -1) {
-                IndexParameter indexParameter = new IndexParameter(index, p, ph);
+                QueryParameterData indexParameter = new QueryParameterData(index, p, ph);
                 indexParameters.add(indexParameter);
                 ++index;
             }
@@ -84,22 +86,22 @@ public class ParameterUtils {
         return indexParameters;
     }
 
-    public static List<IndexParameter> findIndexParameters(
-            Query query,
+
+    public static List<QueryParameterData> findIndexParameters(
+            Set<Parameter<?>> parameters,
             String sqlString) {
-        Set<Parameter<?>> parameters = query.getParameters();
-        List<IndexParameter> indexParameters = new ArrayList<>();
+        List<QueryParameterData> indexParameters = new ArrayList<>();
         for (Parameter<?> p : parameters) {
             if (p.getName() != null) {
                 String s = ":" + p.getName();
-                List<IndexParameter> ips = findIndexParameters(sqlString, s, p);
+                List<QueryParameterData> ips = findIndexParameters(sqlString, s, p);
                 if (ips.isEmpty())
                     throw new IllegalArgumentException("Named parameter '" + p.getName() + "' not bound");
 
                 indexParameters.addAll(ips);
             } else if (p.getPosition() != null) {
                 String s = "?" + p.getPosition();
-                List<IndexParameter> ips = findIndexParameters(sqlString, s, p);
+                List<QueryParameterData> ips = findIndexParameters(sqlString, s, p);
                 if (ips.isEmpty())
                     throw new IllegalArgumentException("Parameter at position '" + p.getPosition() + "' not bound");
 
@@ -107,30 +109,34 @@ public class ParameterUtils {
             }
         }
 
-        indexParameters.sort(Comparator.comparing(IndexParameter::getIndex));
+        indexParameters.sort(Comparator.comparing(QueryParameterData::getIndex));
         return indexParameters;
     }
 
+
     public static String replaceParameterPlaceholders(
-            Query query,
             String sqlString,
-            List<IndexParameter> indexParameters) {
+            List<QueryParameterData> indexParameters) {
         String sql = sqlString;
-        for (IndexParameter ip : indexParameters) {
-            sql = sql.replace(ip.placeholder, "?");
+        for (QueryParameterData ip : indexParameters) {
+            sql = sql.replace(ip.getPlaceholder(), "?");
         }
 
         return sql;
     }
 
-    public static List<Object> sortParameterValues(Query query, List<IndexParameter> indexParameters) {
+
+    public static List<Object> sortParameterValues(
+            Query query,
+            List<QueryParameterData> indexParameters) {
         List<Object> values = new ArrayList<>();
-        for (IndexParameter ip : indexParameters) {
-            values.add(query.getParameterValue(ip.parameter));
+        for (QueryParameterData ip : indexParameters) {
+            values.add(query.getParameterValue(ip.getParameter()));
         }
 
         return values;
     }
+
 
     public static Optional<Object> findParameterValue(
             Map<Parameter<?>, Object> map,
@@ -162,24 +168,6 @@ public class ParameterUtils {
         }
 
         return Optional.empty();
-    }
-
-    public static class IndexParameter {
-
-        private final int index;
-        private Parameter<?> parameter;
-        private String placeholder;
-
-        public IndexParameter(int index, Parameter<?> parameter, String placeholder) {
-            this.index = index;
-            this.parameter = parameter;
-            this.placeholder = placeholder;
-        }
-
-        public int getIndex() {
-            return index;
-        }
-
     }
 
 }
