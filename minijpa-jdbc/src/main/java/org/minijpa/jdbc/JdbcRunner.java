@@ -105,66 +105,6 @@ public class JdbcRunner {
     }
 
 
-//    private void setPreparedStatementQM(
-//            PreparedStatement preparedStatement,
-//            QueryParameter queryParameter,
-//            int index)
-//            throws SQLException {
-//        LOG.debug("setPreparedStatementQM: value={}; index={}; sqlType={}", queryParameter.getValue(),
-//                index,
-//                queryParameter.getSqlType());
-//        Object value = queryParameter.getValue();
-//        if (queryParameter.getAttributeMapper() != null) {
-//            value = queryParameter.getAttributeMapper().attributeToDatabase(value);
-//        }
-//
-//        if (value == null) {
-//            preparedStatement.setNull(index, queryParameter.getSqlType());
-//            return;
-//        }
-//
-//        Class<?> type = value.getClass();
-//        LOG.debug("setPreparedStatementQM: type={}", type);
-//        if (type == String.class) {
-//            preparedStatement.setString(index, (String) value);
-//        } else if (type == Integer.class) {
-//            preparedStatement.setInt(index, (Integer) value);
-//        } else if (type == Long.class) {
-//            preparedStatement.setLong(index, (Long) value);
-//        } else if (type == Float.class) {
-//            preparedStatement.setFloat(index, (Float) value);
-//        } else if (type == Double.class) {
-//            preparedStatement.setDouble(index, (Double) value);
-//        } else if (type == BigDecimal.class) {
-//            preparedStatement.setBigDecimal(index, (BigDecimal) value);
-//        } else if (type == java.sql.Date.class) {
-//            preparedStatement.setDate(index,
-//                    (java.sql.Date) value,
-//                    Calendar.getInstance(TimeZone.getDefault()));
-//        } else if (type == LocalDate.class) {
-//            preparedStatement.setDate(
-//                    index,
-//                    java.sql.Date.valueOf((LocalDate) value),
-//                    Calendar.getInstance(TimeZone.getDefault()));
-//        } else if (type == Timestamp.class) {
-//            Timestamp timestamp = (Timestamp) value;
-//            preparedStatement.setTimestamp(index, timestamp, Calendar.getInstance(TimeZone.getDefault()));
-//        } else if (type == Time.class) {
-//            Time time = (Time) value;
-//            Calendar calendar = Calendar.getInstance();
-//            calendar.setTimeZone(TimeZone.getDefault());
-//            preparedStatement.setTime(index, time, calendar);
-//        } else if (type == Boolean.class) {
-//            preparedStatement.setBoolean(index, (Boolean) value);
-//        } else if (type == Character.class) {
-//            Character c = (Character) value;
-//            preparedStatement.setString(index, String.valueOf(c));
-//        } else {
-//            preparedStatement.setObject(index, value);
-//        }
-//    }
-
-
     protected void setPreparedStatementParameters(
             PreparedStatement preparedStatement,
             List<QueryParameter> queryParameters) throws SQLException {
@@ -174,7 +114,6 @@ public class JdbcRunner {
 
         int index = 1;
         for (QueryParameter queryParameter : queryParameters) {
-//            setPreparedStatementQM(preparedStatement, queryParameter, index);
             setPreparedStatementQM(
                     preparedStatement,
                     index,
@@ -439,7 +378,7 @@ public class JdbcRunner {
         }
     }
 
-    
+
     public void runNativeQuery(
             Connection connection,
             String sql,
