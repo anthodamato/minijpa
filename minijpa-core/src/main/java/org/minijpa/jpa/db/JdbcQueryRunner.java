@@ -65,6 +65,7 @@ public class JdbcQueryRunner {
                         jdbcValueBuilderById);
     }
 
+
     /**
      * Executes a query like: 'select (Entity fields) from table where pk=foreignkey' <br> The
      * attribute 'foreignKeyAttribute' type can be one of 'java.util.Collection', 'java.util.List' or
@@ -79,6 +80,7 @@ public class JdbcQueryRunner {
             MetaEntity entity,
             RelationshipMetaAttribute foreignKeyAttribute,
             Object foreignKey,
+            Class<?> collectionClass,
             LockType lockType,
             EntityHandler entityLoader) throws Exception {
         List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute,
@@ -92,8 +94,9 @@ public class JdbcQueryRunner {
         SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
                 .generateSelectByForeignKey(entity, columns, aliasGenerator);
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+        log.debug("selectByForeignKey: foreignKeyAttribute={}", foreignKeyAttribute);
         Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
-                CollectionUtils.findCollectionImplementationClass(List.class));
+                CollectionUtils.findCollectionImplementationClass(collectionClass));
         entityLoader.setLockType(lockType);
 
         jdbcFetchParameterRecordBuilder.setCollectionResult(collectionResult);
@@ -102,8 +105,9 @@ public class JdbcQueryRunner {
         jdbcFetchParameterRecordBuilder.setFetchParameters(sqlSelectData.getFetchParameters());
         dbConfiguration.getJdbcRunner().runQuery(connectionHolder.getConnection(), sql, parameters,
                 jdbcFetchParameterRecordBuilder);
-        return (List<Object>) collectionResult;
+        return collectionResult;
     }
+
 
     public Object selectByJoinTable(Object primaryKey, Pk id, Relationship relationship,
                                     RelationshipMetaAttribute metaAttribute,

@@ -211,7 +211,7 @@ public class JpaParser {
             tableName = table.name();
         }
 
-        LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
+        LOG.debug("Reading '{}' attributes...", enhEntity.getClassName());
         EntityAttributes entityAttributes = parseAttributes(enhEntity, Optional.empty());
         List<MetaEntity> embeddables = parseEmbeddables(enhEntity, parsedEntities, Optional.empty());
         MetaEntity mappedSuperclassEntity = null;
@@ -337,7 +337,7 @@ public class JpaParser {
             throw new Exception("@Embeddable annotation not found: '" + c.getName() + "'");
         }
 
-        LOG.debug("Reading '" + enhEntity.getClassName() + "' attributes...");
+        LOG.debug("Reading '{}' attributes...", enhEntity.getClassName());
         String path = parentPath.isEmpty() ? enhAttribute.getName()
                 : parentPath.get() + "." + enhAttribute.getName();
         EntityAttributes entityAttributes = parseAttributes(enhEntity, Optional.of(path));
@@ -471,7 +471,7 @@ public class JpaParser {
 
             String columnName = enhAttribute.getName();
             Class<?> c = Class.forName(enhEntity.getClassName());
-            LOG.debug("Reading attribute '" + columnName + "'");
+            LOG.debug("Reading attribute '{}'", columnName);
             Field field = c.getDeclaredField(enhAttribute.getName());
             Id idAnnotation = field.getAnnotation(Id.class);
             Optional<Relationship> relationship = buildRelationship(field);
@@ -798,7 +798,8 @@ public class JpaParser {
         }
 
         if (oneToMany != null) {
-            Class<?> collectionClass = null;
+            Class<?> collectionClass = field.getType();
+            LOG.debug("buildRelationship: field.getType()={}", field.getType());
             Class<?> targetEntity = oneToMany.targetEntity();
             if (targetEntity == null || targetEntity == Void.TYPE) {
                 targetEntity = ReflectionUtil.findTargetEntity(field);
@@ -811,7 +812,7 @@ public class JpaParser {
         }
 
         if (manyToMany != null) {
-            Class<?> collectionClass = null;
+            Class<?> collectionClass = field.getType();
             Class<?> targetEntity = manyToMany.targetEntity();
             if (targetEntity == null || targetEntity == Void.TYPE) {
                 targetEntity = ReflectionUtil.findTargetEntity(field);

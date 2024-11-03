@@ -24,7 +24,7 @@ import org.minijpa.jpa.model.MetaEntity;
  */
 public interface EntityLoader {
 
-  public Object build(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity)
+  Object build(ModelValueArray<FetchParameter> modelValueArray, MetaEntity entity)
       throws Exception;
 
   /**

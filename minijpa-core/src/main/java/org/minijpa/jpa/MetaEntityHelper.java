@@ -539,8 +539,10 @@ public final class MetaEntityHelper {
 
     // TODO the MetaEntity.getLazyLoadedAttributeReadMethod() method could be empty.
     // If there ara not lazy attributes it's empty
-    public static boolean isLazyAttributeLoaded(MetaEntity entity, AbstractMetaAttribute a,
-                                                Object entityInstance)
+    public static boolean isLazyAttributeLoaded(
+            MetaEntity entity,
+            AbstractMetaAttribute a,
+            Object entityInstance)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         // TODO condition added to avoid that 'entity.getLazyLoadedAttributeReadMethod().get()'
         // throws an exception 'No value present'
@@ -553,9 +555,11 @@ public final class MetaEntityHelper {
         return list.contains(a.getName());
     }
 
-    public static void lazyAttributeLoaded(MetaEntity entity, AbstractMetaAttribute a,
-                                           Object entityInstance,
-                                           boolean loaded)
+    public static void lazyAttributeLoaded(
+            MetaEntity entity,
+            AbstractMetaAttribute a,
+            Object entityInstance,
+            boolean loaded)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Method m = entity.getLazyLoadedAttributeReadMethod().get();
         List list = (List) m.invoke(entityInstance);

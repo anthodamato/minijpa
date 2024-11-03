@@ -24,17 +24,10 @@ import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
-public final class ManyToManyRelationship extends Relationship {
-
-    private Class<?> collectionClass;
+public final class ManyToManyRelationship extends ToManyRelationship {
 
     public ManyToManyRelationship() {
         super();
-    }
-
-    @Override
-    public boolean toMany() {
-        return true;
     }
 
     @Override

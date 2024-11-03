@@ -30,82 +30,81 @@ import org.slf4j.LoggerFactory;
 
 public final class EntityDelegate implements EntityListener {
 
-  protected Logger LOG = LoggerFactory.getLogger(EntityDelegate.class);
+    protected Logger LOG = LoggerFactory.getLogger(EntityDelegate.class);
 
-  private static final EntityDelegate entityDelegate = new EntityDelegate();
+    private static final EntityDelegate entityDelegate = new EntityDelegate();
 
-  private final PersistenceUnitContextManager persistenceUnitContextManager = new PersistenceUnitContextManager();
-  private final EntityContainerContextManager entityContainerContextManager = new EntityContainerContextManager();
+    private final PersistenceUnitContextManager persistenceUnitContextManager = new PersistenceUnitContextManager();
+    private final EntityContainerContextManager entityContainerContextManager = new EntityContainerContextManager();
 
-  public static EntityDelegate getInstance() {
-    return entityDelegate;
-  }
+    public static EntityDelegate getInstance() {
+        return entityDelegate;
+    }
 
-  @Override
-  public Object get(Object value, String attributeName, Object entityInstance) {
+    @Override
+    public Object get(Object value, String attributeName, Object entityInstance) {
 //		LOG.debug("get: entityInstance={}; attributeName={}; value={}", entityInstance, attributeName, value);
 //	LOG.info("get: entityContainerContextManager.isEmpty()=" + entityContainerContextManager.isEmpty());
 //	LOG.info("get: entityContainerContextManager.isLoadedFromDb(entityInstance)=" + entityContainerContextManager.isLoadedFromDb(entityInstance));
-    if (entityContainerContextManager.isEmpty()) {
-      return value;
-    }
+        if (entityContainerContextManager.isEmpty()) {
+            return value;
+        }
 
-    MetaEntity entity = persistenceUnitContextManager.getEntity(
-        entityInstance.getClass().getName());
-    if (entity == null) {
-      return value;
-    }
+        MetaEntity entity = persistenceUnitContextManager.getEntity(
+                entityInstance.getClass().getName());
+        if (entity == null) {
+            return value;
+        }
 
-    try {
+        try {
 //      LOG.debug("get: entity={}", entity);
 //      LOG.debug("get: MetaEntityHelper.getEntityStatus(entity, entityInstance)={}", MetaEntityHelper.getEntityStatus(entity, entityInstance));
-      if (MetaEntityHelper.getEntityStatus(entity, entityInstance)
-          != EntityStatus.FLUSHED_LOADED_FROM_DB) {
-        return value;
-      }
+            if (MetaEntityHelper.getEntityStatus(entity, entityInstance)
+                    != EntityStatus.FLUSHED_LOADED_FROM_DB) {
+                return value;
+            }
 
-      LOG.debug("get: attributeName={}", attributeName);
-      AbstractMetaAttribute a = entity.getAttribute(attributeName);
-      LOG.debug("get: a={}", a);
-//      LOG.debug("get: a.isLazy()={}", a.isLazy());
-//      LOG.debug("get: MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)={}", MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance));
-//      LOG.info("get: a={}",
-//          a + "; a.isLazy()=" + a.isLazy() + "; isLazyAttributeLoaded(entity, a, entityInstance)="
-//              + MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance));
-      if (a.isLazy() && !MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)) {
-        EntityHandler entityLoader = entityContainerContextManager.findByEntityContainer(
-            entityInstance);
-        value = entityLoader.loadAttribute(entityInstance, a, value);
-        MetaEntityHelper.lazyAttributeLoaded(entity, a, entityInstance, true);
-      }
-    } catch (Exception e) {
-      LOG.error(e.getMessage());
-      throw new IllegalStateException(e.getMessage());
-    }
-
-    return value;
-  }
-
-  private class PersistenceUnitContextManager {
-
-    private final List<PersistenceUnitContext> entityContexts = new ArrayList<>();
-
-    public void add(PersistenceUnitContext persistenceUnitContext) {
-      entityContexts.add(persistenceUnitContext);
-    }
-
-    public MetaEntity getEntity(String entityClassName) {
-      for (PersistenceUnitContext entityContext : entityContexts) {
-        MetaEntity entity = entityContext.getEntity(entityClassName);
-        if (entity != null) {
-          return entity;
+            LOG.debug("get: attributeName={}", attributeName);
+            AbstractMetaAttribute a = entity.getAttribute(attributeName);
+            LOG.debug("get: a={}", a);
+//            LOG.debug("get: a.isLazy()={}", a.isLazy());
+//            LOG.debug("get: MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)={}", MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance));
+            if (a.isLazy() && !MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)) {
+                EntityHandler entityHandler = entityContainerContextManager.findByEntityContainer(
+                        entityInstance);
+                Object loadedValue = entityHandler.loadAttribute(entityInstance, a, value);
+                MetaEntityHelper.lazyAttributeLoaded(entity, a, entityInstance, true);
+                LOG.debug("get: loadedValue={}", loadedValue);
+                return loadedValue;
+            }
+        } catch (Exception e) {
+            LOG.error(e.getMessage());
+            throw new IllegalStateException(e.getMessage());
         }
-      }
 
-      return null;
+        return value;
     }
 
-    //	public MetaAttribute findEmbeddedAttribute(String className) {
+    private class PersistenceUnitContextManager {
+
+        private final List<PersistenceUnitContext> entityContexts = new ArrayList<>();
+
+        public void add(PersistenceUnitContext persistenceUnitContext) {
+            entityContexts.add(persistenceUnitContext);
+        }
+
+        public MetaEntity getEntity(String entityClassName) {
+            for (PersistenceUnitContext entityContext : entityContexts) {
+                MetaEntity entity = entityContext.getEntity(entityClassName);
+                if (entity != null) {
+                    return entity;
+                }
+            }
+
+            return null;
+        }
+
+        //	public MetaAttribute findEmbeddedAttribute(String className) {
 //	    for (PersistenceUnitContext entityContext : entityContexts) {
 //		MetaAttribute attribute = entityContext.findEmbeddedAttribute(className);
 //		if (attribute != null)
@@ -114,39 +113,39 @@ public final class EntityDelegate implements EntityListener {
 //
 //	    return null;
 //	}
+        public Optional<PersistenceUnitContext> getEntityContext(String persistenceUnitName) {
+            return entityContexts.stream()
+                    .filter(e -> e.getPersistenceUnitName().equals(persistenceUnitName))
+                    .findFirst();
+        }
+    }
+
+    public void addPersistenceUnitContext(PersistenceUnitContext persistenceUnitContext) {
+        persistenceUnitContextManager.add(persistenceUnitContext);
+    }
+
+    public Optional<MetaEntity> getMetaEntity(String className) {
+        MetaEntity metaEntity = persistenceUnitContextManager.getEntity(className);
+        if (metaEntity == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(metaEntity);
+    }
+
     public Optional<PersistenceUnitContext> getEntityContext(String persistenceUnitName) {
-      return entityContexts.stream()
-          .filter(e -> e.getPersistenceUnitName().equals(persistenceUnitName))
-          .findFirst();
-    }
-  }
-
-  public void addPersistenceUnitContext(PersistenceUnitContext persistenceUnitContext) {
-    persistenceUnitContextManager.add(persistenceUnitContext);
-  }
-
-  public Optional<MetaEntity> getMetaEntity(String className) {
-    MetaEntity metaEntity = persistenceUnitContextManager.getEntity(className);
-    if (metaEntity == null) {
-      return Optional.empty();
+        return persistenceUnitContextManager.getEntityContext(persistenceUnitName);
     }
 
-    return Optional.of(metaEntity);
-  }
+    private class EntityContainerContextManager {
 
-  public Optional<PersistenceUnitContext> getEntityContext(String persistenceUnitName) {
-    return persistenceUnitContextManager.getEntityContext(persistenceUnitName);
-  }
+        private final List<EntityContainerContext> entityContainerContexts = new ArrayList<>();
 
-  private class EntityContainerContextManager {
+        public void add(EntityContainerContext entityManagerContext) {
+            entityContainerContexts.add(entityManagerContext);
+        }
 
-    private final List<EntityContainerContext> entityContainerContexts = new ArrayList<>();
-
-    public void add(EntityContainerContext entityManagerContext) {
-      entityContainerContexts.add(entityManagerContext);
-    }
-
-    //	public AttributeLoader findByEntity(String className) {
+        //	public AttributeLoader findByEntity(String className) {
 //	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
 //		MetaEntity entity = entityContainerContext.getEntity(className);
 //		if (entity != null)
@@ -164,19 +163,19 @@ public final class EntityDelegate implements EntityListener {
 //
 //	    return null;
 //	}
-    public EntityHandler findByEntityContainer(Object entityInstance) throws Exception {
-      for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-        if (entityContainerContext.isManaged(entityInstance)) {
-          return entityContainerContext.getEntityLoader();
+        public EntityHandler findByEntityContainer(Object entityInstance) throws Exception {
+            for (EntityContainerContext entityContainerContext : entityContainerContexts) {
+                if (entityContainerContext.isManaged(entityInstance)) {
+                    return entityContainerContext.getEntityLoader();
+                }
+            }
+
+            return null;
         }
-      }
 
-      return null;
-    }
-
-    public boolean isEmpty() {
-      return entityContainerContexts.isEmpty();
-    }
+        public boolean isEmpty() {
+            return entityContainerContexts.isEmpty();
+        }
 
 //	public boolean isLoadedFromDb(Object entityInstance) {
 //	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
@@ -194,9 +193,9 @@ public final class EntityDelegate implements EntityListener {
 //
 //	    return false;
 //	}
-  }
+    }
 
-  public void addEntityManagerContext(EntityContainerContext entityManagerContext) {
-    entityContainerContextManager.add(entityManagerContext);
-  }
+    public void addEntityManagerContext(EntityContainerContext entityManagerContext) {
+        entityContainerContextManager.add(entityManagerContext);
+    }
 }

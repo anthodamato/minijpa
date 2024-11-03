@@ -55,7 +55,7 @@ public class CollectionUtils {
 
     public static Object createInstance(Object currentValue, Class<?> collectionClass) throws Exception {
         if (currentValue != null)
-            return (Collection<Object>) currentValue;
+            return currentValue;
 
         Constructor<?>[] cs = collectionClass.getConstructors();
         for (Constructor<?> c : cs) {

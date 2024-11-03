@@ -62,6 +62,8 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
                 ", type=" + type +
                 ", sqlType=" + sqlType +
                 ", databaseType=" + databaseType +
+                ", collectionImplementationClass=" + collectionImplementationClass +
+                ", relationship=" + relationship +
                 '}';
     }
 
