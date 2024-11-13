@@ -36,6 +36,7 @@ import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.relationship.Relationship;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
+import org.minijpa.jpa.model.relationship.ToManyRelationship;
 import org.minijpa.metadata.PersistenceUnitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,7 +139,9 @@ public class EntityHandlerImpl implements EntityHandler {
         MetaEntityHelper.clearLazyAttributeLoaded(metaEntity, entityInstance);
     }
 
-    private void fillCircularRelationships(MetaEntity entity, Object entityInstance)
+    private void fillCircularRelationships(
+            MetaEntity entity,
+            Object entityInstance)
             throws Exception {
         LOG.debug("fillCircularRelationships: entity={}", entity);
         LOG.debug("fillCircularRelationships: entityInstance={}", entityInstance);
@@ -171,6 +174,7 @@ public class EntityHandlerImpl implements EntityHandler {
                 }
 
                 // it's bidirectional
+                LOG.debug("fillCircularRelationships: attribute.getRelationship().toOne()={}", attribute.getRelationship().toOne());
                 if (attribute.getRelationship().toOne()) {
                     Object v = MetaEntityHelper.getAttributeValue(value, attribute);
                     LOG.debug("fillCircularRelationships: v={}", v);
@@ -198,15 +202,15 @@ public class EntityHandlerImpl implements EntityHandler {
             return entityInstance;
         }
 
-        entityInstance = MetaEntityHelper.build(entity, primaryKey);
-        LOG.debug("build: entityInstance={}", entityInstance);
-        buildAttributeValuesLoadFK(entityInstance, entity, entity.getBasicAttributes(),
+        Object entityInstanceNew = MetaEntityHelper.build(entity, primaryKey);
+        LOG.debug("build: entityInstanceNew={}", entityInstanceNew);
+        buildAttributeValuesLoadFK(entityInstanceNew, entity, entity.getBasicAttributes(),
                 entity.getRelationshipAttributes(), modelValueArray,
                 lockType);
-        entityContainer.addManaged(entityInstance, primaryKey);
-        MetaEntityHelper.setEntityStatus(entity, entityInstance, EntityStatus.FLUSHED_LOADED_FROM_DB);
-        fillCircularRelationships(entity, entityInstance);
-        return entityInstance;
+        entityContainer.addManaged(entityInstanceNew, primaryKey);
+        MetaEntityHelper.setEntityStatus(entity, entityInstanceNew, EntityStatus.FLUSHED_LOADED_FROM_DB);
+        fillCircularRelationships(entity, entityInstanceNew);
+        return entityInstanceNew;
     }
 
     private void buildAttributeValuesLoadFK(
@@ -418,7 +422,7 @@ public class EntityHandlerImpl implements EntityHandler {
     public Object loadAttribute(
             Object parentInstance,
             AbstractMetaAttribute a,
-            Object value)
+            Object currentValue)
             throws Exception {
         if (a instanceof MetaAttribute)
             return null;
@@ -426,11 +430,11 @@ public class EntityHandlerImpl implements EntityHandler {
         RelationshipMetaAttribute relationshipMetaAttribute = (RelationshipMetaAttribute) a;
         Relationship relationship = relationshipMetaAttribute.getRelationship();
         LOG.debug("loadAttribute: a={}", a);
-        LOG.debug("loadAttribute: value={}", value);
+        LOG.debug("loadAttribute: currentValue={}", currentValue);
         LOG.debug("loadAttribute: parentInstance={}", parentInstance);
         LOG.debug("loadAttribute: relationship={}", relationship);
 
-        LOG.debug("loadAttribute: targetAttribute={}", relationship.getTargetAttribute());
+        LOG.debug("loadAttribute: relationship.getTargetAttribute()={}", relationship.getTargetAttribute());
         if (!relationship.toMany()) {
             MetaEntity entity = persistenceUnitContext.getEntities()
                     .get(parentInstance.getClass().getName());
@@ -440,8 +444,7 @@ public class EntityHandlerImpl implements EntityHandler {
                     LockType.NONE);
         }
 
-        LOG.debug("loadAttribute: to Many targetAttribute={}; relationship.getJoinTable()={}",
-                relationship.getTargetAttribute(),
+        LOG.debug("loadAttribute: to Many relationship.getJoinTable()={}",
                 relationship.getJoinTable());
         if (relationship.getJoinTable() == null) {
             MetaEntity entity = persistenceUnitContext.getEntities()
@@ -454,9 +457,13 @@ public class EntityHandlerImpl implements EntityHandler {
 
             LOG.debug("loadAttribute: relationship.getOwningAttribute()={}",
                     relationship.getOwningAttribute());
-            return jdbcQueryRunner.selectByForeignKey(entity, relationship.getOwningAttribute(),
+            return jdbcQueryRunner.selectByForeignKey(
+                    entity,
+                    relationship.getOwningAttribute(),
                     parentInstance,
-                    LockType.NONE, this);
+                    ((ToManyRelationship) relationship).getCollectionClass(),
+                    LockType.NONE,
+                    this);
         }
 
         MetaEntity e = persistenceUnitContext.getEntities().get(parentInstance.getClass().getName());
@@ -548,9 +555,9 @@ public class EntityHandlerImpl implements EntityHandler {
             Object pkId = jdbcQueryRunner.insertWithIdentityColumn(entity, entityInstance, parameters,
                     isIdentityColumnNull);
 
-            LOG.info("persist: pk={}", pkId);
+            LOG.debug("persist: pk={}", pkId);
             if (pkId != null) {
-                LOG.info("persist: pkId.getClass()={}", pkId.getClass());
+                LOG.debug("persist: pkId.getClass()={}", pkId.getClass());
             }
 
             Object idv = entity.getId().convertGeneratedKey(pkId);
