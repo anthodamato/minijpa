@@ -16,6 +16,10 @@ List of implemented (or partially implemented) annotations:
 @ManyToMany  
 @ManyToOne  
 @MappedSuperclass  
+@NamedQueries  
+@NamedQuery  
+@NamedNativeQueries  
+@NamedNativeQuery  
 @OneToMany  
 @OneToOne  
 @SequenceGenerator  
