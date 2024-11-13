@@ -555,9 +555,9 @@ public class EntityHandlerImpl implements EntityHandler {
             Object pkId = jdbcQueryRunner.insertWithIdentityColumn(entity, entityInstance, parameters,
                     isIdentityColumnNull);
 
-            LOG.info("persist: pk={}", pkId);
+            LOG.debug("persist: pk={}", pkId);
             if (pkId != null) {
-                LOG.info("persist: pkId.getClass()={}", pkId.getClass());
+                LOG.debug("persist: pkId.getClass()={}", pkId.getClass());
             }
 
             Object idv = entity.getId().convertGeneratedKey(pkId);
