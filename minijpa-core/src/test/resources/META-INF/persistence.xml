@@ -633,4 +633,23 @@
         </properties>
     </persistence-unit>
 
+    <persistence-unit name="idclass">
+        <description>IdClass Test</description>
+        <class>org.minijpa.jpa.model.Clinician</class>
+        <class>org.minijpa.jpa.model.Doctor</class>
+        <class>org.minijpa.jpa.model.Patient</class>
+        <properties>
+            <property name="javax.persistence.jdbc.url"
+                      value="jdbc:derby:memory:idclass;create=true"/>
+            <property name="javax.persistence.jdbc.driver"
+                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+            <property
+                    name="javax.persistence.schema-generation.database.action"
+                    value="create"/>
+            <property
+                    name="javax.persistence.schema-generation.create-source"
+                    value="metadata"/>
+        </properties>
+    </persistence-unit>
+
 </persistence>
