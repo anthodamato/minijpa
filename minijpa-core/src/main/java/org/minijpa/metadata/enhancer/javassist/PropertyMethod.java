@@ -21,7 +21,7 @@ import javassist.CtMethod;
 
 public class PropertyMethod {
 
-    Optional<CtMethod> method = Optional.empty();
+    CtMethod method;
     boolean enhance = true;
     /**
      * true if the method must be created.
@@ -31,9 +31,9 @@ public class PropertyMethod {
     public PropertyMethod() {
     }
 
-    public PropertyMethod(Optional<CtMethod> method, boolean enhance) {
-	this.method = method;
-	this.enhance = enhance;
+    public PropertyMethod(CtMethod method, boolean enhance) {
+        this.method = method;
+        this.enhance = enhance;
     }
 
 }

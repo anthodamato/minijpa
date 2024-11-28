@@ -371,8 +371,9 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
         }
 
         MetaEntity metaEntity = optional.get();
-        AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
-                metaEntity);
+//        AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
+//                metaEntity);
+        AbstractMetaAttribute metaAttribute = metaEntity.findAttributeFromPath(attributePath);
         if (metaAttribute == null) {
             throw new SemanticException(
                     "Attribute path '" + attributePath + "' on '" + metaEntity.getName()
@@ -1360,12 +1361,12 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                 node.setMetaEntity(metaEntity);
                 node.setAttributePath(attributePath);
 
-                if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
+//                if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
+                if (metaEntity.getId().getName().equals(attributePath)) {
                     node.setMetaAttributes(metaEntity.getId().getAttributes());
                 } else {
-                    MetaAttribute metaAttribute = (MetaAttribute) AttributeUtil.findAttributeFromPath(
-                            attributePath,
-                            metaEntity);
+                    MetaAttribute metaAttribute = (MetaAttribute) metaEntity.findAttributeFromPath(
+                            attributePath);
                     if (metaAttribute == null) {
                         throw new SemanticException(
                                 "Attribute path '" + attributePath + "' on '" + metaEntity.getName()
@@ -1403,7 +1404,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
                 MetaEntity metaEntity = optional.get();
                 String attributePath = singleValuedPathExpression.getAttributePath();
-                if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
+                if (metaEntity.getId().getName().equals(attributePath)) {
+//                if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
                     List<TableColumn> values = MetaEntityHelper.toValues(metaEntity.getId().getAttributes(),
                             FromTable.of(metaEntity.getTableName(), sqlTableAlias));
                     jpqlVisitorParameters.values.addAll(values);
@@ -1414,8 +1416,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                     });
                     jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
                 } else {
-                    AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
-                            metaEntity);
+                    AbstractMetaAttribute metaAttribute = metaEntity.findAttributeFromPath(attributePath);
                     if (metaAttribute == null) {
                         throw new SemanticException(
                                 "Attribute path '" + attributePath + "' on '" + metaEntity.getName()
@@ -1500,7 +1501,8 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                                     + stateFieldPathExpression.getStateField();
                         }
 
-                        if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
+//                        if (AttributeUtil.isAttributePathPk(attributePath, metaEntity)) {
+                        if (metaEntity.getId().getName().equals(attributePath)) {
                             List<TableColumn> values = MetaEntityHelper.toValues(
                                     metaEntity.getId().getAttributes(),
                                     FromTable.of(metaEntity.getTableName(), sqlTableAlias));
@@ -1509,8 +1511,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                                 jpqlVisitorParameters.orderByList.add(orderBy);
                             });
                         } else {
-                            AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
-                                    metaEntity);
+                            AbstractMetaAttribute metaAttribute = metaEntity.findAttributeFromPath(attributePath);
                             if (metaAttribute == null) {
                                 throw new SemanticException("Attribute path '" + attributePath + "' on '"
                                         + metaEntity.getName() + "' entity not found");
@@ -1606,8 +1607,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                 MetaEntity metaEntity = optional.get();
 
                 String attributePath = simpleDerivedPath.getpath();
-                AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath,
-                        metaEntity);
+                AbstractMetaAttribute metaAttribute = metaEntity.findAttributeFromPath(attributePath);
                 if (metaAttribute == null) {
                     throw new SemanticException(
                             "Attribute path '" + attributePath + "' on '" + metaEntity.getName()
@@ -1762,7 +1762,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
             MetaEntity metaEntity = optional.get();
 
-            AbstractMetaAttribute metaAttribute = AttributeUtil.findAttributeFromPath(attributePath, metaEntity);
+            AbstractMetaAttribute metaAttribute = metaEntity.findAttributeFromPath(attributePath);
             if (metaAttribute == null) {
                 throw new SemanticException(
                         "Attribute path '" + attributePath + "' on '" + metaEntity.getName()

@@ -111,7 +111,7 @@ public class JdbcFetchJoinRecordBuilder implements JdbcRecordBuilder {
                 Object value = entityLoader.buildEntityNoRelationshipAttributeLoading(optional.get(),
                         fetchJoinMetaEntities.get(i));
                 log.debug("collectRecords: Relationship Attribute Values value={}", value);
-                Object id = AttributeUtil.getIdValue(fetchJoinMetaEntities.get(i), value);
+                Object id = fetchJoinMetaEntities.get(i).getId().getValue(value);
                 if (!isRelationshipEntityIdPresent(fetchJoinMetaAttributes.get(i), id)) {
                     MetaEntityHelper.addElementToCollectionAttribute(instance, metaEntity,
                             fetchJoinMetaAttributes.get(i), value);

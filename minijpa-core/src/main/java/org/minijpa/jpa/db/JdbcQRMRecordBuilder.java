@@ -1,7 +1,6 @@
 package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.*;
-import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.querymapping.ConstructorMapping;
 import org.minijpa.jpa.db.querymapping.EntityMapping;
@@ -74,7 +73,8 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
             Object v = buildObjectByConstructorParameters(constructorMapping.getTargetClass(), values);
             Optional<MetaEntity> optionalMetaEntity = entityContainer.isManagedClass(constructorMapping.getTargetClass());
             if (optionalMetaEntity.isPresent()) {
-                Object pk = AttributeUtil.getIdValue(optionalMetaEntity.get().getId(), v);
+//                Object pk = AttributeUtil.getIdValue(optionalMetaEntity.get().getId(), v);
+                Object pk = optionalMetaEntity.get().getId().getValue(v);
                 if (pk != null) {
                     MetaEntityHelper.setEntityStatus(optionalMetaEntity.get(), v, EntityStatus.DETACHED);
                 }
@@ -279,7 +279,7 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
                 ModelValueArray<FetchParameter> modelValueArray,
                 MetaEntity entity,
                 LockType lockType) throws Exception {
-            Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
+            Object primaryKey = entity.getId().buildValue(modelValueArray);
             log.debug("buildEntityByValues: primaryKey={}", primaryKey);
             log.debug("buildEntityByValues: entity={}", entity);
             Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);

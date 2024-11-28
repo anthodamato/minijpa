@@ -107,7 +107,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             throw new IllegalArgumentException("Entity '" + entityInstance + "' is not managed");
         }
 
-        Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
+        Object primaryKey = entity.getId().getValue(entityInstance);
         entityHandler.refresh(entity, entityInstance, primaryKey, lockType);
 
         // cascades
@@ -139,7 +139,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         }
 
         MetaEntityHelper.setLockType(entity, entityInstance, lockType);
-        Object primaryKey = AttributeUtil.getIdValue(entity, entityInstance);
+        Object primaryKey = entity.getId().getValue(entityInstance);
         entityHandler.refresh(entity, entityInstance, primaryKey, lockType);
     }
 
@@ -187,7 +187,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 persistEarlyInsertEntityInstance(entity, modelValueArray, managedEntityList);
                 entityHandler.persist(entity, entityInstance, modelValueArray);
                 MetaEntityHelper.setEntityStatus(entity, entityInstance, EntityStatus.FLUSHED);
-                idValue = AttributeUtil.getIdValue(entity, entityInstance);
+                idValue = entity.getId().getValue(entityInstance);
                 addInfoForPostponedUpdateEntities(idValue, entity, modelValueArray);
                 MetaEntityHelper.removeChanges(entity, entityInstance);
             }

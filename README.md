@@ -11,6 +11,7 @@ List of implemented (or partially implemented) annotations:
 @Enumerated  
 @GeneratedValue  
 @Id  
+@IdClass  
 @JoinColumn  
 @JoinColumns  
 @ManyToMany  

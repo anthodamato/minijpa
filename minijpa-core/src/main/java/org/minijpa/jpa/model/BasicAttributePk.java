@@ -15,71 +15,101 @@
  */
 package org.minijpa.jpa.model;
 
+import org.minijpa.jdbc.FetchParameter;
+import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jpa.db.AttributeFetchParameter;
+import org.minijpa.jpa.db.PkGeneration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import org.minijpa.jpa.db.PkGeneration;
-
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class BasicAttributePk implements Pk {
+    private static final Logger LOG = LoggerFactory.getLogger(BasicAttributePk.class);
 
-	private final MetaAttribute attribute;
-	private final PkGeneration pkGeneration;
-	private final List<MetaAttribute> attributes;
+    private final MetaAttribute attribute;
+    private final PkGeneration pkGeneration;
+    private final List<MetaAttribute> attributes;
 
-	public BasicAttributePk(MetaAttribute attribute, PkGeneration pkGeneration) {
-		this.attribute = attribute;
-		this.pkGeneration = pkGeneration;
-		this.attributes = Arrays.asList(attribute);
-	}
+    public BasicAttributePk(MetaAttribute attribute, PkGeneration pkGeneration) {
+        this.attribute = attribute;
+        this.pkGeneration = pkGeneration;
+        this.attributes = Arrays.asList(attribute);
+    }
 
-	@Override
-	public PkGeneration getPkGeneration() {
-		return pkGeneration;
-	}
+    @Override
+    public PkGeneration getPkGeneration() {
+        return pkGeneration;
+    }
 
-	@Override
-	public boolean isEmbedded() {
-		return false;
-	}
+    @Override
+    public boolean isEmbedded() {
+        return false;
+    }
 
-	@Override
-	public boolean isComposite() {
-		return false;
-	}
+    @Override
+    public boolean isComposite() {
+        return false;
+    }
 
-	@Override
-	public MetaAttribute getAttribute() {
-		return attribute;
-	}
+    @Override
+    public MetaAttribute getAttribute() {
+        return attribute;
+    }
 
-	@Override
-	public List<MetaAttribute> getAttributes() {
-		return attributes;
-	}
+    @Override
+    public List<MetaAttribute> getAttributes() {
+        return attributes;
+    }
 
-	@Override
-	public Class<?> getType() {
-		return attribute.getType();
-	}
+    @Override
+    public Class<?> getType() {
+        return attribute.getType();
+    }
 
-	@Override
-	public String getName() {
-		return attribute.getName();
-	}
+    @Override
+    public String getName() {
+        return attribute.getName();
+    }
 
-	@Override
-	public Method getReadMethod() {
-		return attribute.getReadMethod();
-	}
+    @Override
+    public Method getReadMethod() {
+        return attribute.getReadMethod();
+    }
 
-	@Override
-	public Method getWriteMethod() {
-		return attribute.getWriteMethod();
-	}
+    @Override
+    public Method getWriteMethod() {
+        return attribute.getWriteMethod();
+    }
+
+    @Override
+    public Object buildValue(ModelValueArray<FetchParameter> modelValueArray) throws Exception {
+        int index = indexOfAttribute(modelValueArray, getAttribute());
+        if (index == -1) {
+            throw new IllegalArgumentException(
+                    "Column '" + getAttribute().getColumnName() + "' not found");
+        }
+
+        return modelValueArray.getValue(index);
+    }
+
+    private int indexOfAttribute(
+            ModelValueArray<FetchParameter> modelValueArray,
+            MetaAttribute attribute) {
+        LOG.debug("indexOfAttribute: attribute={}", attribute);
+        for (int i = 0; i < modelValueArray.size(); ++i) {
+            LOG.debug("indexOfAttribute: ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute()={}", ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute());
+            if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
 
 }

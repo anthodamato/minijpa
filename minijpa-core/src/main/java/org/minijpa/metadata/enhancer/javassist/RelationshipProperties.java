@@ -16,11 +16,11 @@
 package org.minijpa.metadata.enhancer.javassist;
 
 import java.util.Optional;
+
 import javassist.CtClass;
 import javassist.CtMethod;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class RelationshipProperties {

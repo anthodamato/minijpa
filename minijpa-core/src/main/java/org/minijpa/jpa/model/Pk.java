@@ -18,6 +18,8 @@ package org.minijpa.jpa.model;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.minijpa.jdbc.FetchParameter;
+import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jpa.db.PkGeneration;
 
 /**
@@ -25,35 +27,41 @@ import org.minijpa.jpa.db.PkGeneration;
  */
 public interface Pk {
 
-  public PkGeneration getPkGeneration();
+    PkGeneration getPkGeneration();
 
-  public boolean isComposite();
+    boolean isComposite();
 
-  public boolean isEmbedded();
+    boolean isEmbedded();
 
-  public MetaAttribute getAttribute();
+    MetaAttribute getAttribute();
 
-  public List<MetaAttribute> getAttributes();
+    List<MetaAttribute> getAttributes();
 
-  public Class<?> getType();
+    Class<?> getType();
 
-  public String getName();
+    String getName();
 
-  public Method getReadMethod();
+    Method getReadMethod();
 
-  public Method getWriteMethod();
+    Method getWriteMethod();
 
-  /**
-   * Converts the 'value' read from a resultSet to an object of class returned by
-   * <code>getType</code>.
-   * <p>
-   * This method is called only to convert the generated key of an identity column.
-   *
-   * @param value returned by the result set
-   * @return the primary key value
-   */
-  public default Object convertGeneratedKey(Object value) {
-    return ((Number) value).longValue();
-  }
+    Object buildValue(ModelValueArray<FetchParameter> modelValueArray) throws Exception;
+
+    default Object getValue(Object entityInstance) throws Exception {
+        return getReadMethod().invoke(entityInstance);
+    }
+
+    /**
+     * Converts the 'value' read from a resultSet to an object of class returned by
+     * <code>getType</code>.
+     * <p>
+     * This method is called only to convert the generated key of an identity column.
+     *
+     * @param value returned by the result set
+     * @return the primary key value
+     */
+    default Object convertGeneratedKey(Object value) {
+        return ((Number) value).longValue();
+    }
 
 }

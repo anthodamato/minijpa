@@ -15,16 +15,15 @@
  */
 package org.minijpa.jpa;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-
-import org.minijpa.jpa.db.AttributeUtil;
 import org.minijpa.jpa.db.EntityContainer;
 import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.db.LockType;
 import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 public class MiniPersistenceContext implements EntityContainer {
 
@@ -63,7 +62,7 @@ public class MiniPersistenceContext implements EntityContainer {
     @Override
     public void removeManaged(Object entityInstance) throws Exception {
         MetaEntity e = entities.get(entityInstance.getClass().getName());
-        Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+        Object idValue = e.getId().getValue(entityInstance);
         Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
         mapEntities.remove(idValue);
         managedEntityList.remove(entityInstance);
@@ -104,7 +103,7 @@ public class MiniPersistenceContext implements EntityContainer {
             return false;
 
         MetaEntity e = entities.get(entityInstance.getClass().getName());
-        Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+        Object idValue = e.getId().getValue(entityInstance);
         if (idValue == null)
             return false;
 
@@ -131,7 +130,7 @@ public class MiniPersistenceContext implements EntityContainer {
         if (e == null)
             throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
-        Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+        Object idValue = e.getId().getValue(entityInstance);
         if (MetaEntityHelper.isDetached(e, entityInstance))
             return;
 

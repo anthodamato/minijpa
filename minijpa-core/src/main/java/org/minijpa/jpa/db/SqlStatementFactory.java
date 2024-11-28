@@ -192,7 +192,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
             LockType lockType,
             AliasGenerator tableAliasGenerator) throws Exception {
         FetchParameter fetchParameter = MetaEntityHelper.toFetchParameter(
-                entity.getVersionAttribute().get());
+                entity.getVersionMetaAttribute());
 
         FromTable fromTable = FromTable.of(entity.getTableName(),
                 tableAliasGenerator.getDefault(entity.getTableName()));
@@ -211,7 +211,7 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
         }
 
         sqlSelectBuilder.withValues(
-                        List.of(MetaEntityHelper.toValue(entity.getVersionAttribute().get(), fromTable)))
+                        List.of(MetaEntityHelper.toValue(entity.getVersionMetaAttribute(), fromTable)))
                 .withConditions(List.of(condition));
         sqlSelectBuilder.withFetchParameters(List.of(fetchParameter));
         return (SqlSelectData) sqlSelectBuilder.build();
@@ -538,12 +538,12 @@ public class SqlStatementFactory extends JdbcSqlStatementFactory {
                 .forEach(a -> log.debug("createRelationshipJoinTableParameters: a={}", a));
         parameters.addAll(MetaEntityHelper.createJoinColumnAVSToQP(
                 relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes(), owningId,
-                AttributeUtil.getIdValue(owningId, owningInstance)));
+                owningId.getValue(owningInstance)));
 
         Pk targetId = relationshipJoinTable.getTargetAttribute();
         parameters.addAll(MetaEntityHelper.createJoinColumnAVSToQP(
                 relationshipJoinTable.getTargetJoinColumnMapping().getJoinColumnAttributes(), targetId,
-                AttributeUtil.getIdValue(targetId, targetInstance)));
+                targetId.getValue(targetInstance)));
         return parameters;
     }
 

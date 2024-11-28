@@ -50,11 +50,13 @@ import javassist.expr.Instanceof;
 import javassist.expr.MethodCall;
 import javassist.expr.NewArray;
 import javassist.expr.NewExpr;
+
 import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+
 import org.minijpa.metadata.RelationshipHelper;
 
 public class ClassInspector {
@@ -70,7 +72,7 @@ public class ClassInspector {
     public ManagedData inspect(String className) throws Exception {
         // already inspected
         for (ManagedData managedData : inspectedClasses) {
-            LOG.debug("inspect: managedData={}; managedData.getClassName()={}; attrs=", managedData,
+            LOG.debug("inspect: managedData={}; managedData.getClassName()={}; attrs={}", managedData,
                     managedData.getClassName(), managedData.getAttributeDataList().stream()
                             .map(a -> a.getProperty().getCtField().getName()).collect(Collectors.toList()));
             if (managedData.getClassName().equals(className))
@@ -79,7 +81,7 @@ public class ClassInspector {
 
         LOG.debug("Inspecting {}", className);
         ClassPool pool = ClassPool.getDefault();
-        CtClass ct = null;
+        CtClass ct;
         try {
             ct = pool.get(className);
         } catch (NotFoundException e) {
@@ -105,20 +107,28 @@ public class ClassInspector {
         managedData.setClassName(className);
 
         Optional<ManagedData> optional = findMappedSuperclass(ct);
-        if (optional.isPresent())
-            managedData.mappedSuperclass = optional.get();
+        optional.ifPresent(data -> managedData.mappedSuperclass = data);
 
         List<Property> properties = findProperties(ct);
         LOG.debug("Found {} attributes in '{}'", properties.size(), ct.getName());
 
         // modification attribute
         Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties, ct);
+        if (modificationAttribute.isEmpty())
+            throw new Exception("Internal error. Next available attribute '" + modificationAttributePrefix + "' not found");
+
         removeAttributeFromProperties(modificationAttribute.get(), properties);
         // lock type attribute
         Optional<String> lockTypeAttribute = findAvailableAttribute(lockTypeAttributePrefix, properties, ct);
+        if (lockTypeAttribute.isEmpty())
+            throw new Exception("Internal error. Next available attribute '" + lockTypeAttributePrefix + "' not found");
+
         removeAttributeFromProperties(lockTypeAttribute.get(), properties);
         // entity status attribute
         Optional<String> entityStatusAttribute = findAvailableAttribute(entityStatusAttributePrefix, properties, ct);
+        if (entityStatusAttribute.isEmpty())
+            throw new Exception("Internal error. Next available attribute '" + entityStatusAttributePrefix + "' not found");
+
         removeAttributeFromProperties(entityStatusAttribute.get(), properties);
 
         // lazy loaded attribute tracker
@@ -163,22 +173,31 @@ public class ClassInspector {
         return managedData;
     }
 
-    private Optional<String> createLazyLoadedAttribute(List<Property> properties, CtClass ct) {
-        Optional<String> lazyLoadedAttribute = Optional.empty();
+    private Optional<String> createLazyLoadedAttribute(
+            List<Property> properties,
+            CtClass ct) throws Exception {
         Optional<Property> optionalLazy = properties.stream()
-                .filter(p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().isLazy())
+                .filter(p -> p.getRelationshipProperties() != null && p.getRelationshipProperties().isLazy())
                 .findFirst();
-        if (optionalLazy.isPresent()) {
-            lazyLoadedAttribute = findAvailableAttribute(lazyLoadedAttributePrefix, properties, ct);
-            removeAttributeFromProperties(lazyLoadedAttribute.get(), properties);
-        }
+        if (optionalLazy.isEmpty())
+            return Optional.empty();
 
+        Optional<String> lazyLoadedAttribute = findAvailableAttribute(lazyLoadedAttributePrefix, properties, ct);
+        if (lazyLoadedAttribute.isEmpty())
+            throw new Exception("Internal error. Next available attribute '" + lazyLoadedAttributePrefix + "' not found");
+
+        removeAttributeFromProperties(lazyLoadedAttribute.get(), properties);
         return lazyLoadedAttribute;
     }
 
-    private Optional<String> createJoinColumnPostponedUpdateAttribute(List<Property> properties, CtClass ct) {
+    private Optional<String> createJoinColumnPostponedUpdateAttribute(
+            List<Property> properties,
+            CtClass ct) throws Exception {
         Optional<String> optionalName = findAvailableAttribute(joinColumnPostponedUpdateAttributePrefix, properties,
                 ct);
+        if (optionalName.isEmpty())
+            throw new Exception("Internal error. Next available attribute '" + joinColumnPostponedUpdateAttributePrefix + "' not found");
+
         removeAttributeFromProperties(optionalName.get(), properties);
         return optionalName;
     }
@@ -186,7 +205,7 @@ public class ClassInspector {
     private void createJoinColumnPostponedUpdateAttributeOnDest(List<Property> properties, CtClass ct)
             throws Exception {
         List<Property> list = properties.stream().filter(
-                p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().hasJoinColumn())
+                        p -> p.getRelationshipProperties() != null && p.getRelationshipProperties().hasJoinColumn())
                 .collect(Collectors.toList());
         for (Property p : list) {
             Optional<ManagedData> o = Optional.empty();
@@ -230,15 +249,18 @@ public class ClassInspector {
         }
     }
 
-    private void findJoinColumnAttributeFields(List<Property> properties, CtClass ct) {
+    private void findJoinColumnAttributeFields(List<Property> properties, CtClass ct) throws Exception {
         List<String> fieldNames = new ArrayList<>();
         for (Property property : properties) {
-            Optional<RelationshipProperties> optional = property.getRelationshipProperties();
-            if (optional.isPresent()) {
-                RelationshipProperties relationshipProperties = optional.get();
+            RelationshipProperties rp = property.getRelationshipProperties();
+            if (rp != null) {
+                RelationshipProperties relationshipProperties = rp;
                 if (relationshipProperties.hasJoinColumn() && relationshipProperties.isLazy()) {
                     String prefix = property.getCtField().getName() + "_jcv";
                     Optional<String> o = findAvailableAttribute(prefix, properties, ct);
+                    if (o.isEmpty())
+                        throw new Exception("Internal error. Next available attribute '" + prefix + "' not found");
+
                     relationshipProperties.setJoinColumnFieldName(o);
                     fieldNames.add(o.get());
                 }
@@ -250,10 +272,12 @@ public class ClassInspector {
         }
     }
 
-    private Optional<String> findAvailableAttribute(String attributePrefix, List<Property> properties,
+    private Optional<String> findAvailableAttribute(
+            String attributePrefix,
+            List<Property> properties,
             CtClass ctClass) {
         for (int i = 0; i < 100; ++i) {
-            String name = attributePrefix + Integer.toString(i);
+            String name = attributePrefix + i;
             Optional<Property> optional = properties.stream().filter(p -> p.getCtField().getName().equals(name))
                     .findFirst();
             if (optional.isEmpty())
@@ -270,14 +294,15 @@ public class ClassInspector {
     /**
      * If the class is written it has to remove the attribute property.
      *
-     * @param attributeName
-     * @param properties
+     * @param attributeName attribute name
+     * @param properties    list of properties
      */
-    private void removeAttributeFromProperties(String attributeName, List<Property> properties) {
+    private void removeAttributeFromProperties(
+            String attributeName,
+            List<Property> properties) throws Exception {
         Optional<Property> optionalMA = properties.stream().filter(p -> p.getCtField().getName().equals(attributeName))
                 .findFirst();
-        if (optionalMA.isPresent())
-            properties.remove(optionalMA.get());
+        optionalMA.ifPresent(properties::remove);
     }
 
     private Optional<ManagedData> findMappedSuperclass(CtClass ct) throws Exception {
@@ -302,6 +327,9 @@ public class ClassInspector {
         List<Property> properties = findProperties(superClass);
         Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties,
                 superClass);
+        if (modificationAttribute.isEmpty())
+            throw new Exception("Internal error. Next available attribute '" + modificationAttributePrefix + "' not found");
+
         removeAttributeFromProperties(modificationAttribute.get(), properties);
 
         // lazy loaded attribute tracker
@@ -349,7 +377,9 @@ public class ClassInspector {
         return null;
     }
 
-    private void createEmbeddables(List<AttributeData> dataAttributes, List<ManagedData> embeddables) {
+    private void createEmbeddables(
+            List<AttributeData> dataAttributes,
+            List<ManagedData> embeddables) {
         for (AttributeData dataAttribute : dataAttributes) {
             if (!dataAttribute.getProperty().isEmbedded())
                 continue;
@@ -361,7 +391,9 @@ public class ClassInspector {
         }
     }
 
-    private ManagedData findInspectedEmbeddable(List<ManagedData> inspectedClasses, String className) {
+    private ManagedData findInspectedEmbeddable(
+            List<ManagedData> inspectedClasses,
+            String className) {
         for (ManagedData managedData : inspectedClasses) {
             for (ManagedData embeddable : managedData.getEmbeddables()) {
                 if (embeddable.getClassName().equals(className))
@@ -378,7 +410,9 @@ public class ClassInspector {
         return null;
     }
 
-    private List<AttributeData> createDataAttributes(List<Property> properties, boolean embeddedId) throws Exception {
+    private List<AttributeData> createDataAttributes(
+            List<Property> properties,
+            boolean embeddedId) throws Exception {
         List<AttributeData> attributes = new ArrayList<>();
         // nothing to do if there are no persistent attributes
         if (properties.isEmpty())
@@ -430,6 +464,9 @@ public class ClassInspector {
         if (property.isEmbedded()) {
             Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix,
                     property.getEmbeddedProperties(), property.getCtField().getType());
+            if (modificationAttribute.isEmpty())
+                throw new Exception("Internal error. Next available attribute '" + modificationAttributePrefix + "' not found");
+
             removeAttributeFromProperties(modificationAttribute.get(), property.getEmbeddedProperties());
 
             // lazy loaded attribute tracker
@@ -457,8 +494,7 @@ public class ClassInspector {
             embeddedData.setJoinColumnPostponedUpdateAttribute(joinColumnPostponedUpdateAttribute);
         }
 
-        AttributeData attributeData = new AttributeData(property, parentIsEmbeddedId, embeddedData);
-        return attributeData;
+        return new AttributeData(property, parentIsEmbeddedId, embeddedData);
     }
 
     private List<Property> findProperties(CtClass ctClass) throws Exception {
@@ -471,8 +507,7 @@ public class ClassInspector {
         List<Property> attrs = new ArrayList<>();
         for (CtField ctField : ctFields) {
             Optional<Property> optional = readProperty(ctField, ctClass);
-            if (optional.isPresent())
-                attrs.add(optional.get());
+            optional.ifPresent(attrs::add);
         }
 
         return attrs;
@@ -521,16 +556,16 @@ public class ClassInspector {
         boolean id = idAnnotation != null || embeddedIdAnnotation != null;
 
         PropertyMethod getPropertyMethod = findGetMethod(ctClass, ctField);
-        if (!getPropertyMethod.method.isPresent())
+        if (getPropertyMethod.method == null)
             return Optional.empty();
 
         PropertyMethod setPropertyMethod = findSetMethod(ctClass, ctField);
-        if (!setPropertyMethod.method.isPresent())
+        if (setPropertyMethod.method == null)
             setPropertyMethod.add = true;
 
         Optional<RelationshipProperties> optional = findRelationshipProperties(ctField);
         Property property = new Property(id, getPropertyMethod, setPropertyMethod, ctField, embedded,
-                embeddedProperties, optional);
+                embeddedProperties, optional.orElse(null));
         return Optional.of(property);
     }
 
@@ -610,7 +645,7 @@ public class ClassInspector {
         if (!getMethod.getReturnType().subtypeOf(ctField.getType()))
             return new PropertyMethod();
 
-        return new PropertyMethod(Optional.of(getMethod), true);
+        return new PropertyMethod(getMethod, true);
     }
 
     private PropertyMethod findSetMethod(CtClass ctClass, CtField ctField) throws Exception {
@@ -631,7 +666,7 @@ public class ClassInspector {
         if (!setMethod.getReturnType().getName().equals(Void.TYPE.getName())) // void type
             return new PropertyMethod();
 
-        return new PropertyMethod(Optional.of(setMethod), true);
+        return new PropertyMethod(setMethod, true);
     }
 
     private class ExprEditorExt extends ExprEditor {

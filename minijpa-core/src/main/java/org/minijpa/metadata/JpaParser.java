@@ -67,13 +67,7 @@ import org.minijpa.jpa.db.PkStrategy;
 import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
 import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
-import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.BasicAttributePk;
-import org.minijpa.jpa.model.EmbeddedPk;
-import org.minijpa.jpa.model.MetaAttribute;
-import org.minijpa.jpa.model.MetaEntity;
-import org.minijpa.jpa.model.Pk;
-import org.minijpa.jpa.model.RelationshipMetaAttribute;
+import org.minijpa.jpa.model.*;
 import org.minijpa.jpa.model.relationship.ManyToManyRelationship;
 import org.minijpa.jpa.model.relationship.ManyToOneRelationship;
 import org.minijpa.jpa.model.relationship.OneToManyRelationship;
@@ -311,6 +305,7 @@ public class JpaParser {
                 .withRelationshipAttributes(entityAttributes.relationshipMetaAttributes)
                 .withEmbeddables(embeddables)
                 .withMappedSuperclassEntity(mappedSuperclassEntity)
+                .withVersionMetaAttribute(entityAttributes.versionMetaAttribute)
                 .withModificationAttributeReadMethod(modificationAttributeReadMethod)
                 .withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
                 .withJoinColumnPostponedUpdateAttributeReadMethod(
@@ -372,7 +367,9 @@ public class JpaParser {
                 .filter(a -> a instanceof MetaAttribute).map(a -> (MetaAttribute) a)
                 .filter(MetaAttribute::isBasic)
                 .collect(Collectors.toList());
-        return new MetaEntity.Builder().withEntityClass(c).withName(enhAttribute.getName())
+        return new MetaEntity.Builder()
+                .withEntityClass(c)
+                .withName(enhAttribute.getName())
                 .isEmbeddedId(id)
                 .withAttributes(entityAttributes.metaAttributes)
                 .withBasicAttributes(Collections.unmodifiableList(basicAttributes))
@@ -382,7 +379,9 @@ public class JpaParser {
                 .withModificationAttributeReadMethod(modificationAttributeReadMethod)
                 .withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
                 .withJoinColumnPostponedUpdateAttributeReadMethod(
-                        joinColumnPostponedUpdateAttributeReadMethod).build();
+                        joinColumnPostponedUpdateAttributeReadMethod)
+                .withVersionMetaAttribute(entityAttributes.versionMetaAttribute)
+                .build();
     }
 
     private MetaEntity parseMappedSuperclass(EnhEntity enhEntity,
@@ -442,7 +441,9 @@ public class JpaParser {
                 .filter(a -> a instanceof MetaAttribute).map(a -> (MetaAttribute) a)
                 .filter(MetaAttribute::isBasic)
                 .collect(Collectors.toList());
-        return new MetaEntity.Builder().withEntityClass(c).withId(pk)
+        return new MetaEntity.Builder()
+                .withEntityClass(c)
+                .withId(pk)
                 .withAttributes(entityAttributes.metaAttributes)
                 .withBasicAttributes(Collections.unmodifiableList(basicAttributes))
                 .withRelationshipAttributes(entityAttributes.relationshipMetaAttributes)
@@ -450,21 +451,23 @@ public class JpaParser {
                 .withModificationAttributeReadMethod(modificationAttributeReadMethod)
                 .withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
                 .withJoinColumnPostponedUpdateAttributeReadMethod(
-                        joinColumnPostponedUpdateAttributeReadMethod).build();
+                        joinColumnPostponedUpdateAttributeReadMethod)
+                .withVersionMetaAttribute(entityAttributes.versionMetaAttribute)
+                .build();
     }
 
     private static class EntityAttributes {
-
-        List<AbstractMetaAttribute> metaAttributes;
-        List<RelationshipMetaAttribute> relationshipMetaAttributes;
-    }
-
-    private EntityAttributes parseAttributes(EnhEntity enhEntity, Optional<String> parentPath)
-            throws Exception {
         List<AbstractMetaAttribute> metaAttributes = new ArrayList<>();
         List<RelationshipMetaAttribute> relationshipMetaAttributes = new ArrayList<>();
+        VersionMetaAttribute versionMetaAttribute;
+    }
+
+    private EntityAttributes parseAttributes(
+            EnhEntity enhEntity,
+            Optional<String> parentPath) throws Exception {
+        EntityAttributes entityAttributes = new EntityAttributes();
         for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
-            LOG.debug("readAttributes: enhAttribute.getName()={}", enhAttribute.getName());
+            LOG.debug("parseAttributes: enhAttribute.getName()={}", enhAttribute.getName());
             if (enhAttribute.isEmbedded()) {
                 continue;
             }
@@ -480,22 +483,22 @@ public class JpaParser {
                         "Id annotation and relationship annotation at '" + field.getName() + "'");
             }
 
-            Class<?> attributeClass = null;
+            Class<?> attributeClass;
             if (enhAttribute.isPrimitiveType()) {
                 attributeClass = JavaTypes.getClass(enhAttribute.getClassName());
             } else {
                 attributeClass = Class.forName(enhAttribute.getClassName());
             }
 
-            LOG.debug("readAttribute: attributeClass={}", attributeClass);
+            LOG.debug("parseAttributes: attributeClass={}", attributeClass);
             Method readMethod = c.getMethod(enhAttribute.getGetMethod());
             Method writeMethod = c.getMethod(enhAttribute.getSetMethod(), attributeClass);
             if (relationship.isPresent()) {
                 RelationshipMetaAttribute relationshipMetaAttribute = buildRelationshipMetaAttribute(c,
                         enhAttribute, attributeClass, readMethod, writeMethod,
                         relationship.get());
-                relationshipMetaAttributes.add(relationshipMetaAttribute);
-                metaAttributes.add(relationshipMetaAttribute);
+                entityAttributes.relationshipMetaAttributes.add(relationshipMetaAttribute);
+                entityAttributes.metaAttributes.add(relationshipMetaAttribute);
             } else {
                 MetaAttribute attribute = parseAttribute(
                         field,
@@ -505,15 +508,15 @@ public class JpaParser {
                         enhEntity.getClassName(),
                         enhAttribute,
                         parentPath);
-                metaAttributes.add(attribute);
+                entityAttributes.metaAttributes.add(attribute);
+                if (attribute.isVersion())
+                    entityAttributes.versionMetaAttribute = (VersionMetaAttribute) attribute;
             }
         }
 
-        EntityAttributes entityAttributes = new EntityAttributes();
-        entityAttributes.metaAttributes = metaAttributes;
-        entityAttributes.relationshipMetaAttributes = relationshipMetaAttributes;
         return entityAttributes;
     }
+
 
     private RelationshipMetaAttribute buildRelationshipMetaAttribute(
             Class<?> parentClass,
@@ -550,9 +553,10 @@ public class JpaParser {
         return builder.build();
     }
 
-    private List<MetaEntity> parseEmbeddables(EnhEntity enhEntity,
-                                              Collection<MetaEntity> parsedEntities,
-                                              Optional<String> parentPath) throws Exception {
+    private List<MetaEntity> parseEmbeddables(
+            EnhEntity enhEntity,
+            Collection<MetaEntity> parsedEntities,
+            Optional<String> parentPath) throws Exception {
         List<MetaEntity> metaEntities = new ArrayList<>();
         for (EnhAttribute enhAttribute : enhEntity.getEnhAttributes()) {
             if (!enhAttribute.isEmbedded()) {
@@ -616,7 +620,7 @@ public class JpaParser {
         Optional<DDLData> ddlData;
         if (column != null) {
             String cn = column.name();
-            if (cn != null && cn.trim().length() > 0) {
+            if (cn != null && !cn.trim().isEmpty()) {
                 columnName = cn;
             }
 
@@ -636,8 +640,7 @@ public class JpaParser {
         Integer sqlType = findSqlType(readWriteType, enumerated);
         LOG.debug("readAttribute: sqlType={}", sqlType);
         LOG.debug("readAttribute: parentPath.isEmpty() ={}", parentPath.isEmpty());
-        String path = parentPath.isEmpty() ? enhAttribute.getName()
-                : parentPath.get() + "." + enhAttribute.getName();
+        String path = parentPath.map(s -> s + "." + enhAttribute.getName()).orElseGet(enhAttribute::getName);
         LOG.debug("readAttribute: path={}", path);
         LOG.debug("readAttribute: idAnnotation={}", idAnnotation);
         if (idAnnotation != null) {
@@ -651,31 +654,57 @@ public class JpaParser {
 //            }
 
             MetaAttribute.Builder builder = new MetaAttribute.Builder(
-                    enhAttribute.getName()).withColumnName(columnName)
-                    .withType(attributeClass).withReadWriteDbType(readWriteType).withReadMethod(readMethod)
-                    .withWriteMethod(writeMethod).isId(true).withSqlType(sqlType).withJavaMember(field)
+                    enhAttribute.getName())
+                    .withColumnName(columnName)
+                    .withType(attributeClass)
+                    .withReadWriteDbType(readWriteType)
+                    .withReadMethod(readMethod)
+                    .withWriteMethod(writeMethod)
+                    .isId(true)
+                    .withSqlType(sqlType)
+                    .withJavaMember(field)
                     .isBasic(true)
                     .withPath(path)
                     .withDDLData(ddlData)
                     .withAttributeMapper(attributeMapper);
-
             return builder.build();
         }
 
         boolean version = field.getAnnotation(Version.class) != null;
+        if (version) {
+            VersionMetaAttribute.VersionMetaAttributeBuilder builder =
+                    (VersionMetaAttribute.VersionMetaAttributeBuilder) new VersionMetaAttribute.VersionMetaAttributeBuilder(
+                            enhAttribute.getName())
+                            .withColumnName(columnName)
+                            .withType(attributeClass)
+                            .withReadWriteDbType(readWriteType)
+                            .withReadMethod(readMethod)
+                            .withWriteMethod(writeMethod)
+                            .withSqlType(sqlType)
+                            .withJavaMember(field)
+                            .isVersion(true)
+                            .isBasic(AttributeUtil.isBasicAttribute(attributeClass))
+                            .withPath(path)
+                            .withDDLData(ddlData);
+            return builder.build();
+        }
 
         MetaAttribute.Builder builder = new MetaAttribute.Builder(
-                enhAttribute.getName()).withColumnName(columnName)
-                .withType(attributeClass).withReadWriteDbType(readWriteType).withReadMethod(readMethod)
-                .withWriteMethod(writeMethod).withSqlType(sqlType)
+                enhAttribute.getName())
+                .withColumnName(columnName)
+                .withType(attributeClass)
+                .withReadWriteDbType(readWriteType)
+                .withReadMethod(readMethod)
+                .withWriteMethod(writeMethod)
+                .withSqlType(sqlType)
                 .withJavaMember(field)
                 .isVersion(version)
-                .isBasic(AttributeUtil.isBasicAttribute(attributeClass)).withPath(path)
+                .isBasic(AttributeUtil.isBasicAttribute(attributeClass))
+                .withPath(path)
                 .withDDLData(ddlData);
 
         AttributeMapper<?, ?> attributeMapper = dbConfiguration.getDbTypeMapper()
-                .attributeMapper(attributeClass,
-                        readWriteType);
+                .attributeMapper(attributeClass, readWriteType);
         builder.withAttributeMapper(attributeMapper);
 
         // Basic annotation

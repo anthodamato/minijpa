@@ -191,11 +191,11 @@ public class EntityHandlerImpl implements EntityHandler {
     @Override
     public Object build(
             ModelValueArray<FetchParameter> modelValueArray,
-            MetaEntity entity)
-            throws Exception {
+            MetaEntity entity) throws Exception {
         LOG.debug("build: entity={}", entity);
 
-        Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
+//        Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
+        Object primaryKey = entity.getId().buildValue(modelValueArray);
         LOG.debug("build: primaryKey={}", primaryKey);
         Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
         if (entityInstance != null) {
@@ -248,7 +248,8 @@ public class EntityHandlerImpl implements EntityHandler {
         for (JoinColumnMapping joinColumnMapping : metaEntity.getJoinColumnMappings()) {
 //			LOG.info("buildAttributeValuesLoadFK: joinColumnMapping.getAttribute()={}", joinColumnMapping.getAttribute());
 //	    LOG.debug("buildAttributeValuesLoadFK: joinColumnMapping.getForeignKey()={}", joinColumnMapping.getForeignKey());
-            Object fk = AttributeUtil.buildPK(joinColumnMapping.getForeignKey(), modelValueArray);
+//            Object fk = AttributeUtil.buildPK(joinColumnMapping.getForeignKey(), modelValueArray);
+            Object fk = joinColumnMapping.getForeignKey().buildValue(modelValueArray);
             if (joinColumnMapping.isLazy()) {
                 MetaEntityHelper.setForeignKeyValue(joinColumnMapping.getAttribute(), parentInstance, fk);
                 continue;
@@ -310,7 +311,7 @@ public class EntityHandlerImpl implements EntityHandler {
         for (JoinColumnMapping joinColumnMapping : metaEntity.getJoinColumnMappings()) {
 //	    LOG.debug("buildAttributeValues: joinColumnMapping.getAttribute()={}", joinColumnMapping.getAttribute());
 //	    LOG.debug("buildAttributeValues: joinColumnMapping.getForeignKey()={}", joinColumnMapping.getForeignKey());
-            Object fk = AttributeUtil.buildPK(joinColumnMapping.getForeignKey(), modelValueArray);
+            Object fk = joinColumnMapping.getForeignKey().buildValue(modelValueArray);
             if (joinColumnMapping.isLazy()) {
                 MetaEntityHelper.setForeignKeyValue(joinColumnMapping.getAttribute(), parentInstance, fk);
                 continue;
@@ -318,7 +319,9 @@ public class EntityHandlerImpl implements EntityHandler {
 
             MetaEntity toEntity = joinColumnMapping.getAttribute().getRelationship().getAttributeType();
 //	    LOG.debug("buildAttributeValues: toEntity={}", toEntity);
-            Object parent = buildEntityByValuesNoRelationshipAttributeLoading(modelValueArray, toEntity,
+            Object parent = buildEntityByValuesNoRelationshipAttributeLoading(
+                    modelValueArray,
+                    toEntity,
                     lockType);
             MetaEntityHelper.writeMetaAttributeValue(parentInstance, parentInstance.getClass(),
                     joinColumnMapping.getAttribute(), parent, metaEntity);
@@ -329,7 +332,7 @@ public class EntityHandlerImpl implements EntityHandler {
             ModelValueArray<FetchParameter> modelValueArray,
             MetaEntity entity,
             LockType lockType) throws Exception {
-        Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
+        Object primaryKey = entity.getId().buildValue(modelValueArray);
         LOG.debug("buildEntityByValuesNoRelationshipAttributeLoading: primaryKey={}", primaryKey);
         LOG.debug("buildEntityByValuesNoRelationshipAttributeLoading: entity={}", entity);
         Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
@@ -369,7 +372,7 @@ public class EntityHandlerImpl implements EntityHandler {
         }
 
         if (attribute.getRelationship().isOwner()) {
-            Object pk = AttributeUtil.getIdValue(entity, parentInstance);
+            Object pk = entity.getId().getValue(parentInstance);
             Object result = jdbcQueryRunner.selectByJoinTable(pk, entity.getId(),
                     attribute.getRelationship(),
                     attribute, this);
@@ -467,7 +470,7 @@ public class EntityHandlerImpl implements EntityHandler {
         }
 
         MetaEntity e = persistenceUnitContext.getEntities().get(parentInstance.getClass().getName());
-        Object pk = AttributeUtil.getIdValue(e, parentInstance);
+        Object pk = e.getId().getValue(parentInstance);
         LOG.debug("loadAttribute: pk={}", pk);
         return jdbcQueryRunner.selectByJoinTable(pk, e.getId(), relationship, relationshipMetaAttribute, this);
     }
@@ -502,27 +505,27 @@ public class EntityHandlerImpl implements EntityHandler {
         List<String> columns = parameters.stream().map(p -> (String) p.getColumn())
                 .collect(Collectors.toList());
 
-        Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
+        Object idValue = entity.getId().getValue(entityInstance);
         LOG.debug("update: idValue={}", idValue);
         List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(entity.getId(), idValue);
         List<String> idColumns = idParameters.stream().map(p -> (String) p.getColumn())
                 .collect(Collectors.toList());
         if (MetaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
-            idColumns.add(entity.getVersionAttribute().get().getColumnName());
+            idColumns.add(entity.getVersionMetaAttribute().getColumnName());
         }
 
         parameters.addAll(MetaEntityHelper.convertAVToQP(entity.getId().getAttribute(), idValue));
         if (MetaEntityHelper.hasOptimisticLock(entity, entityInstance)) {
-            Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod()
+            Object currentVersionValue = entity.getVersionMetaAttribute().getReadMethod()
                     .invoke(entityInstance);
             parameters.addAll(
-                    MetaEntityHelper.convertAVToQP(entity.getVersionAttribute().get(), currentVersionValue));
+                    MetaEntityHelper.convertAVToQP(entity.getVersionMetaAttribute(), currentVersionValue));
         }
 
         int updateCount = jdbcQueryRunner.update(entity, parameters, columns, idColumns);
         if (updateCount == 0) {
-            if (entity.getVersionAttribute().isPresent()) {
-                Object currentVersionValue = entity.getVersionAttribute().get().getReadMethod()
+            if (entity.getVersionMetaAttribute() != null) {
+                Object currentVersionValue = entity.getVersionMetaAttribute().getReadMethod()
                         .invoke(entityInstance);
                 throw new OptimisticLockException(
                         "Entity was written by another transaction, version: " + currentVersionValue);
@@ -563,7 +566,7 @@ public class EntityHandlerImpl implements EntityHandler {
             Object idv = entity.getId().convertGeneratedKey(pkId);
             entity.getId().getWriteMethod().invoke(entityInstance, idv);
             if (optVersion.isPresent()) {
-                entity.getVersionAttribute().get().getWriteMethod()
+                entity.getVersionMetaAttribute().getWriteMethod()
                         .invoke(entityInstance, optVersion.get().getValue());
             }
 
@@ -575,13 +578,11 @@ public class EntityHandlerImpl implements EntityHandler {
             parameters.addAll(0, idParameters);
             // version attribute
             Optional<QueryParameter> optVersion = MetaEntityHelper.generateVersionParameter(entity);
-            if (optVersion.isPresent()) {
-                parameters.add(optVersion.get());
-            }
+            optVersion.ifPresent(parameters::add);
 
             jdbcQueryRunner.insert(entity, entityInstance, parameters);
             if (optVersion.isPresent()) {
-                entity.getVersionAttribute().get().getWriteMethod()
+                entity.getVersionMetaAttribute().getWriteMethod()
                         .invoke(entityInstance, optVersion.get().getValue());
             }
         }
@@ -629,7 +630,7 @@ public class EntityHandlerImpl implements EntityHandler {
     @Override
     public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance)
             throws Exception {
-        Object idValue = AttributeUtil.getIdValue(entity, entityInstance);
+        Object idValue = entity.getId().getValue(entityInstance);
         List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(entity.getId(), idValue);
 
         for (RelationshipMetaAttribute a : entity.getRelationshipAttributes()) {
@@ -668,7 +669,7 @@ public class EntityHandlerImpl implements EntityHandler {
         if (e.getRelationshipAttributes().isEmpty())
             return;
 
-        Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+        Object idValue = e.getId().getValue(entityInstance);
         List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(e.getId(), idValue);
         Set<RelationshipJoinTable> relationshipJoinTables = e.getRelationshipAttributes().stream()
                 .map(RelationshipMetaAttribute::getRelationship)
@@ -683,15 +684,15 @@ public class EntityHandlerImpl implements EntityHandler {
 
     @Override
     public void delete(Object entityInstance, MetaEntity e) throws Exception {
-        Object idValue = AttributeUtil.getIdValue(e, entityInstance);
+        Object idValue = e.getId().getValue(entityInstance);
         LOG.debug("delete: idValue={}", idValue);
 
         List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(e.getId(), idValue);
         if (MetaEntityHelper.hasOptimisticLock(e, entityInstance)) {
-            Object currentVersionValue = e.getVersionAttribute().get().getReadMethod()
+            Object currentVersionValue = e.getVersionMetaAttribute().getReadMethod()
                     .invoke(entityInstance);
             idParameters.addAll(
-                    MetaEntityHelper.convertAVToQP(e.getVersionAttribute().get(), currentVersionValue));
+                    MetaEntityHelper.convertAVToQP(e.getVersionMetaAttribute(), currentVersionValue));
         }
 
         jdbcQueryRunner.deleteById(e, idParameters);

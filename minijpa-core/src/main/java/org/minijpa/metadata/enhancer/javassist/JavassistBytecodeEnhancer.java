@@ -93,7 +93,7 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 			parsedEntities.add(enhEntity);
 			return optionalEnhEntity.get();
 		} else {
-			ManagedData managedData = null;
+			ManagedData managedData;
 			Optional<ManagedData> optionalMD = enhancedClasses.stream()
 					.filter(e -> e.getCtClass().getName().equals(className)).findFirst();
 			LOG.debug("enhance: className={}; optionalMD.isPresent()=", className, optionalMD.isPresent());
