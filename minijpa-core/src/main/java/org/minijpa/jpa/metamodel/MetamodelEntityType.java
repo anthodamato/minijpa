@@ -55,6 +55,8 @@ public final class MetamodelEntityType<X> extends AbstractIdentifiableType<X> im
         private Class bindableJavaType;
         private String name;
         private Set<SingularAttribute> singularAttributes;
+        private boolean singleIdAttribute;
+        private Set<SingularAttribute> idClassAttributes;
 
         public Builder() {
             super();
@@ -110,6 +112,16 @@ public final class MetamodelEntityType<X> extends AbstractIdentifiableType<X> im
             return this;
         }
 
+        public Builder withSingleIdAttribute(boolean singleIdAttribute) {
+            this.singleIdAttribute = singleIdAttribute;
+            return this;
+        }
+
+        public Builder withIdClassAttributes(Set<SingularAttribute> idClassAttributes) {
+            this.idClassAttributes = idClassAttributes;
+            return this;
+        }
+
         public EntityType<?> build() {
             MetamodelEntityType entityType = new MetamodelEntityType();
             entityType.id = id;
@@ -122,8 +134,11 @@ public final class MetamodelEntityType<X> extends AbstractIdentifiableType<X> im
             entityType.bindableType = bindableType;
             entityType.bindableJavaType = bindableJavaType;
             entityType.name = name;
+            entityType.singleIdAttribute = singleIdAttribute;
+            entityType.idClassAttributes = idClassAttributes;
 
-            ((IdSingularAttribute) id).setDeclaringType(entityType);
+            if (id != null)
+                ((IdSingularAttribute) id).setDeclaringType(entityType);
 
             return entityType;
         }

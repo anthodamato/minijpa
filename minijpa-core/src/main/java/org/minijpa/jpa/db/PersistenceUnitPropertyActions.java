@@ -81,7 +81,9 @@ public class PersistenceUnitPropertyActions {
         }
     }
 
-    public void analyzeCreateScripts(PersistenceUnitInfo persistenceUnitInfo, ConnectionProvider connectionProvider)
+    public void analyzeCreateScripts(
+            PersistenceUnitInfo persistenceUnitInfo,
+            ConnectionProvider connectionProvider)
             throws IOException, SQLException, URISyntaxException {
         Properties properties = persistenceUnitInfo.getProperties();
         LOG.debug("properties={}", properties);

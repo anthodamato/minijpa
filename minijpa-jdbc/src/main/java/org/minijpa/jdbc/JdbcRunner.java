@@ -322,9 +322,11 @@ public class JdbcRunner {
         return value;
     }
 
-    protected static Object getValueFromFetchParameter(ResultSet rs, ResultSetMetaData metaData,
-                                                       int index,
-                                                       FetchParameter fetchParameter) throws SQLException {
+    protected static Object getValueFromFetchParameter(
+            ResultSet rs,
+            ResultSetMetaData metaData,
+            int index,
+            FetchParameter fetchParameter) throws SQLException {
         Integer sqlType = fetchParameter.getSqlType();
         if (sqlType == null) {
             sqlType = metaData.getColumnType(index);

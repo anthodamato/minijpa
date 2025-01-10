@@ -20,70 +20,91 @@ public class EntityEnhancerTest {
 
     @Test
     public void mappedSuperclassEnhancement() throws Exception {
-	Set<EnhEntity> parsedEntities = new HashSet<>();
-	String className = "org.minijpa.metadata.MappedSuperclassEntity";
-	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className);
-	Assertions.assertNotNull(managedData);
-	Assertions.assertNotNull(managedData.getModificationAttribute());
-	Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
+        Set<EnhEntity> parsedEntities = new HashSet<>();
+        String className = "org.minijpa.metadata.MappedSuperclassEntity";
+        ClassInspector classInspector = new ClassInspector();
+        ManagedData managedData = classInspector.inspect(className);
+        Assertions.assertNotNull(managedData);
+        Assertions.assertNotNull(managedData.getModificationAttribute());
+        Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
 
-	EntityEnhancer entityEnhancer = new EntityEnhancer();
-	EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-	parsedEntities.add(enhEntity);
+        EntityEnhancer entityEnhancer = new EntityEnhancer();
+        EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
+        parsedEntities.add(enhEntity);
 
-	List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
-	Assertions.assertEquals(4, enhAttributes.size());
-	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
-		Matchers.containsInAnyOrder("prop1", "eS1", "N", "Ns"));
+        List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
+        Assertions.assertEquals(4, enhAttributes.size());
+        MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
+                Matchers.containsInAnyOrder("prop1", "eS1", "N", "Ns"));
 
-	checkMappedSuperclass(enhEntity);
+        checkMappedSuperclass(enhEntity);
 
-	className = "org.minijpa.metadata.MappedSuperclassSecondEntity";
-	managedData = classInspector.inspect(className);
-	Assertions.assertNotNull(managedData);
-	enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-	parsedEntities.add(enhEntity);
+        className = "org.minijpa.metadata.MappedSuperclassSecondEntity";
+        managedData = classInspector.inspect(className);
+        Assertions.assertNotNull(managedData);
+        enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
+        parsedEntities.add(enhEntity);
 
-	enhAttributes = enhEntity.getEnhAttributes();
-	Assertions.assertEquals(3, enhAttributes.size());
-	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
-		Matchers.containsInAnyOrder("attribute", "eS", "URL"));
+        enhAttributes = enhEntity.getEnhAttributes();
+        Assertions.assertEquals(3, enhAttributes.size());
+        MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
+                Matchers.containsInAnyOrder("attribute", "eS", "URL"));
 
-	checkMappedSuperclass(enhEntity);
+        checkMappedSuperclass(enhEntity);
     }
 
     private void checkMappedSuperclass(EnhEntity enhEntity) {
-	Assertions.assertNotNull(enhEntity.getMappedSuperclass());
-	EnhEntity mappedSuperclass = enhEntity.getMappedSuperclass();
-	List<EnhAttribute> enhAttributes = mappedSuperclass.getEnhAttributes();
-	Assertions.assertEquals(2, enhAttributes.size());
-	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
-		Matchers.containsInAnyOrder("id", "superProperty1"));
+        Assertions.assertNotNull(enhEntity.getMappedSuperclass());
+        EnhEntity mappedSuperclass = enhEntity.getMappedSuperclass();
+        List<EnhAttribute> enhAttributes = mappedSuperclass.getEnhAttributes();
+        Assertions.assertEquals(2, enhAttributes.size());
+        MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
+                Matchers.containsInAnyOrder("id", "superProperty1"));
     }
 
     @Test
     public void bookingSaleEnhancement() throws Exception {
-	Set<EnhEntity> parsedEntities = new HashSet<>();
-	String className = "org.minijpa.jpa.model.BookingSale";
-	ClassInspector classInspector = new ClassInspector();
-	ManagedData managedData = classInspector.inspect(className);
-	Assertions.assertNotNull(managedData);
-	Assertions.assertNotNull(managedData.getModificationAttribute());
-	Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
+        String className = "org.minijpa.jpa.model.BookingSale";
+        ClassInspector classInspector = new ClassInspector();
+        ManagedData managedData = classInspector.inspect(className);
+        Assertions.assertNotNull(managedData);
+        Assertions.assertNotNull(managedData.getModificationAttribute());
+        Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
 
-	EntityEnhancer entityEnhancer = new EntityEnhancer();
-	EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-	parsedEntities.add(enhEntity);
+        EntityEnhancer entityEnhancer = new EntityEnhancer();
+        Set<EnhEntity> parsedEntities = new HashSet<>();
+        EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
+        parsedEntities.add(enhEntity);
 
-	List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
-	Assertions.assertEquals(3, enhAttributes.size());
-	MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
-		Matchers.containsInAnyOrder("id", "booking", "perc"));
+        List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
+        Assertions.assertEquals(3, enhAttributes.size());
+        MatcherAssert.assertThat(enhAttributes.stream().map(a -> a.getName()).collect(Collectors.toList()),
+                Matchers.containsInAnyOrder("id", "booking", "perc"));
 
-	Optional<EnhAttribute> optional = enhEntity.getAttribute("booking");
-	EnhAttribute enhAttribute = optional.get();
-	Assertions.assertTrue(enhAttribute.getJoinColumnGetMethod().isPresent());
-	Assertions.assertTrue(enhAttribute.getJoinColumnSetMethod().isPresent());
+        Optional<EnhAttribute> optional = enhEntity.getAttribute("booking");
+        EnhAttribute enhAttribute = optional.get();
+        Assertions.assertTrue(enhAttribute.getJoinColumnGetMethod().isPresent());
+        Assertions.assertTrue(enhAttribute.getJoinColumnSetMethod().isPresent());
     }
+
+
+//    @Test
+//    public void wrongPatientEnhancement() throws Exception {
+//        String className = "org.minijpa.jpa.model.WrongPatient";
+//        ClassInspector classInspector = new ClassInspector();
+//        ManagedData managedData = classInspector.inspect(className);
+//        Assertions.assertNotNull(managedData);
+//        Assertions.assertNotNull(managedData.getModificationAttribute());
+//        Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
+//
+//        EntityEnhancer entityEnhancer = new EntityEnhancer();
+//        Set<EnhEntity> parsedEntities = new HashSet<>();
+//        EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
+//        parsedEntities.add(enhEntity);
+//        List<EnhAttribute> enhAttributes = enhEntity.getEnhAttributes();
+//        Assertions.assertEquals(3, enhAttributes.size());
+//        EnhAttribute enhAttribute1 = enhAttributes.get(0);
+//        Assertions.assertEquals("id", enhAttribute1.getName());
+//
+//    }
 }

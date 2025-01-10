@@ -15,9 +15,7 @@
  */
 package org.minijpa.jpa;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import javax.persistence.spi.PersistenceUnitInfo;
 
@@ -54,7 +52,7 @@ public class PersistenceUnitContextManager {
     public synchronized PersistenceUnitContext get(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
         // if the entities have been already parsed they are saved in the EntityContext.
         // It must reuse them. Just one MetaEntity instance for each class name must
-        // exists.
+        // exist.
         Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
                 .getEntityContext(persistenceUnitInfo.getPersistenceUnitName());
         if (optional.isPresent()) {
@@ -73,14 +71,23 @@ public class PersistenceUnitContextManager {
         Map<String, MetaEntity> entityMap = new HashMap<>();
         DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
                 .getDbConfiguration(persistenceUnitInfo.getPersistenceUnitName());
-        JpaParser jpaParser = new JpaParser(dbConfiguration);
+        Set<EnhEntity> enhEntities = new HashSet<>();
         for (String className : persistenceUnitInfo.getManagedClassNames()) {
             EnhEntity enhEntity = BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().enhance(className);
+            enhEntities.add(enhEntity);
+        }
+
+        // before parsing, it has to add missing methods in the IdClass value classes as
+        // they can be nested in case of reference to entities with composite primary key
+        BytecodeEnhancerProvider.getInstance().getBytecodeEnhancer().finalizeEnhancement();
+
+        JpaParser jpaParser = new JpaParser(dbConfiguration);
+        for (EnhEntity enhEntity : enhEntities) {
             MetaEntity metaEntity = jpaParser.parse(enhEntity, entityMap.values());
             entityMap.put(enhEntity.getClassName(), metaEntity);
         }
 
-        // replaces the existing meta entities
+        // adds the existing meta entities
         entityMap.putAll(existingMetaEntities);
 
         jpaParser.fillRelationships(entityMap);

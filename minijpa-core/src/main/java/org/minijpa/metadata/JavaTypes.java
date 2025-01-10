@@ -72,4 +72,22 @@ public class JavaTypes {
 
         return Class.forName(className);
     }
+
+
+    public static boolean isPkType(String className) {
+        switch (className) {
+            case "short":
+            case "long":
+            case "int":
+            case "java.lang.Short":
+            case "java.lang.Long":
+            case "java.lang.Integer":
+            case "java.util.Date":
+            case "java.sql.Date":
+            case "java.time.LocalDate":
+                return true;
+        }
+
+        return false;
+    }
 }

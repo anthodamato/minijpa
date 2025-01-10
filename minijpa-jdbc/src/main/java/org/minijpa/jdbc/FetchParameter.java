@@ -1,15 +1,13 @@
 package org.minijpa.jdbc;
 
-import java.util.Optional;
-
 import org.minijpa.jdbc.mapper.AttributeMapper;
 
 public interface FetchParameter {
-    public String getColumnName();
+    String getColumnName();
 
-    public Integer getSqlType();
+    Integer getSqlType();
 
     @SuppressWarnings("rawtypes")
-    public AttributeMapper getAttributeMapper();
+    AttributeMapper getAttributeMapper();
 
 }

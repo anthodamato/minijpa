@@ -15,24 +15,21 @@
  */
 package org.minijpa.metadata;
 
-import java.util.Optional;
-
-import javax.persistence.FetchType;
-import javax.persistence.JoinTable;
-import javax.persistence.OneToMany;
-
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
-import org.minijpa.jpa.db.AttributeUtil;
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.relationship.OneToManyRelationship;
 import org.minijpa.jpa.model.relationship.Relationship;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
+
+import javax.persistence.FetchType;
+import javax.persistence.JoinTable;
+import javax.persistence.OneToMany;
+import java.util.Optional;
 
 /**
  * @author adamato
@@ -48,7 +45,8 @@ public class OneToManyHelper extends RelationshipHelper {
             Class<?> collectionClass,
             Class<?> targetEntity,
             JoinTable joinTable,
-            Optional<JoinColumnDataList> joinColumnDataList) {
+            Optional<JoinColumnDataList> joinColumnDataList,
+            boolean id) {
         OneToManyRelationship.Builder builder = new OneToManyRelationship.Builder();
         builder = builder.withJoinColumnDataList(joinColumnDataList);
 
@@ -71,6 +69,7 @@ public class OneToManyHelper extends RelationshipHelper {
 
         builder.withCollectionClass(collectionClass);
         builder.withTargetEntityClass(targetEntity);
+        builder.withId(id);
         return builder.build();
     }
 
@@ -126,8 +125,8 @@ public class OneToManyHelper extends RelationshipHelper {
             }
         } else {
             builder = builder.withOwningEntity(toEntity);
-            AbstractMetaAttribute owningAttribute = AttributeUtil
-                    .findAttributeFromPath(oneToManyRelationship.getMappedBy().get(), toEntity);
+            AbstractMetaAttribute owningAttribute = toEntity
+                    .findAttributeFromPath(oneToManyRelationship.getMappedBy().get());
             builder = builder.withOwningAttribute((RelationshipMetaAttribute) owningAttribute);
             builder = builder.withTargetAttribute((RelationshipMetaAttribute) owningAttribute);
         }

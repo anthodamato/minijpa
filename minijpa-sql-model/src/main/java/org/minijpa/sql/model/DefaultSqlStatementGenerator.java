@@ -186,9 +186,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
                 sqlUpdate.getFromTable().getName()));
         sb.append(" set ");
 
-        String sv = sqlUpdate.getTableColumns().stream().map(c -> {
-            return exportTableColumn(c, nameTranslator) + " = ?";
-        }).collect(Collectors.joining(", "));
+        String sv = sqlUpdate.getTableColumns().stream().map(c -> exportTableColumn(c, nameTranslator) + " = ?").collect(Collectors.joining(", "));
         sb.append(sv);
 
         if (sqlUpdate.getCondition().isPresent()) {
@@ -436,8 +434,8 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     protected String exportExpression(Object expression, NameTranslator nameTranslator) {
-        LOG.debug("exportExpression: expression={}", expression);
-        LOG.debug("exportExpression: nameTranslator={}", nameTranslator);
+        LOG.trace("exportExpression: expression={}", expression);
+        LOG.trace("exportExpression: nameTranslator={}", nameTranslator);
         if (expression instanceof TableColumn) {
             return exportTableColumn((TableColumn) expression, nameTranslator);
         }
@@ -507,15 +505,15 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         }
 
         Object left = likeCondition.getLeft();
-        LOG.debug("exportCondition: left={}", left);
+        LOG.trace("exportCondition: left={}", left);
         sb.append(exportExpression(left, nameTranslator));
 
         sb.append(" ");
         sb.append(getOperator(likeCondition.getConditionType()));
         sb.append(" ");
         Object right = likeCondition.getRight();
-        LOG.debug("exportCondition: right={}", right);
-        LOG.debug("exportCondition: likeCondition.getEscapeChar()={}", likeCondition.getEscapeChar());
+        LOG.trace("exportCondition: right={}", right);
+        LOG.trace("exportCondition: likeCondition.getEscapeChar()={}", likeCondition.getEscapeChar());
         sb.append(exportExpression(right, nameTranslator));
 //        if (likeCondition.getEscapeChar() != null && !likeCondition.getEscapeChar().equals("'\\'")) {
         if (likeCondition.getEscapeChar() != null) {
@@ -527,7 +525,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     protected String exportCondition(Condition condition, NameTranslator nameTranslator) {
-        LOG.debug("exportCondition: condition={}", condition);
+        LOG.trace("exportCondition: condition={}", condition);
         if (condition instanceof BinaryLogicCondition) {
             BinaryLogicCondition binaryLogicCondition = (BinaryLogicCondition) condition;
             StringBuilder sb = new StringBuilder();
@@ -535,7 +533,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
                 sb.append("(");
             }
 
-//	    LOG.debug("exportCondition: binaryLogicCondition.getConditions().size="
+//	    LOG.trace("exportCondition: binaryLogicCondition.getConditions().size="
 //		    + binaryLogicCondition.getConditions().size());
             String operator = " " + getOperator(condition.getConditionType()) + " ";
             String cc = binaryLogicCondition.getConditions().stream().map(c -> {
@@ -599,14 +597,14 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             }
 
             Object left = binaryCondition.getLeft();
-            LOG.debug("exportCondition: left={}", left);
+            LOG.trace("exportCondition: left={}", left);
             sb.append(exportExpression(left, nameTranslator));
 
             sb.append(" ");
             sb.append(getOperator(condition.getConditionType()));
             sb.append(" ");
             Object right = binaryCondition.getRight();
-            LOG.debug("exportCondition: right={}", right);
+            LOG.trace("exportCondition: right={}", right);
             sb.append(exportExpression(right, nameTranslator));
 
             return sb.toString();
@@ -760,11 +758,11 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
     protected String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
         Optional<FromTable> optionalFromTable = tableColumn.getTable();
-        LOG.debug("exportTableColumn: optionalFromTable={}", optionalFromTable);
+        LOG.trace("exportTableColumn: optionalFromTable={}", optionalFromTable);
         Column column = tableColumn.getColumn();
-        LOG.debug("exportTableColumn: column={}", column);
-        LOG.debug("exportTableColumn: nameTranslator={}", nameTranslator);
-        LOG.debug("exportTableColumn: column.getName()={}", column.getName());
+        LOG.trace("exportTableColumn: column={}", column);
+        LOG.trace("exportTableColumn: nameTranslator={}", nameTranslator);
+        LOG.trace("exportTableColumn: column.getName()={}", column.getName());
 
         if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias()
                 .isPresent()) {
@@ -808,21 +806,15 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
     @Override
     public String export(SqlSelect sqlSelect) {
-        LOG.debug("export: SqlSelect sqlSelect={}", sqlSelect);
         StringBuilder sb = new StringBuilder("select ");
         if (sqlSelect.isDistinct()) {
             sb.append("distinct ");
         }
 
-//		LOG.debug("export: SqlSelect sqlSelect.getValues()={}", sqlSelect.getValues());
-//        LOG.debug("export: 2 sqlSelect.getValues()={}", sqlSelect.getValues());
-
         String cc = sqlSelect.getValues().stream().map(c -> {
-            LOG.debug("export: SqlSelect c={}", c);
             return exportItem(c);
         }).collect(Collectors.joining(", "));
 
-        LOG.debug("export: SqlSelect cc={}", cc);
         sb.append(cc);
         sb.append(" from ");
         sb.append(exportFrom(sqlSelect.getFrom()));
@@ -833,7 +825,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
                     .map(c -> exportCondition(c, nameTranslator))
                     .collect(Collectors.joining(" "));
             sb.append(ccs);
-            LOG.debug("export: ccs={}", ccs);
         }
 
         if (sqlSelect.getGroupBy().isPresent()) {
@@ -849,8 +840,6 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             sb.append(s);
         }
 
-        LOG.debug("export: SqlSelect sqlSelect.getOptionalForUpdate()={}",
-                sqlSelect.getOptionalForUpdate());
         if (sqlSelect.getOptionalForUpdate().isPresent()) {
             String forUpdate = forUpdateClause(sqlSelect.getOptionalForUpdate().get());
             if (forUpdate != null && !forUpdate.isEmpty()) {
@@ -966,41 +955,39 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
     @Override
     public String export(SqlCreateTable sqlCreateTable) {
-        LOG.debug("export: SqlCreateTable sqlCreateTable={}", sqlCreateTable);
         StringBuilder sb = new StringBuilder();
         sb.append("create table ");
         sb.append(nameTranslator.adjustName(sqlCreateTable.getTableName()));
         sb.append(" (");
         String cols = buildPkDeclaration(sqlCreateTable.getJdbcPk());
-        LOG.debug("export: SqlCreateTable pk cols={}", cols);
         sb.append(cols);
 
         if (!sqlCreateTable.getColumnDeclarations().isEmpty()) {
             sb.append(", ");
-            cols = sqlCreateTable.getColumnDeclarations().stream().map(a -> buildAttributeDeclaration(a))
+            cols = sqlCreateTable.getColumnDeclarations().stream().map(this::buildAttributeDeclaration)
                     .collect(Collectors.joining(", "));
             sb.append(cols);
         }
 
-        LOG.debug("export: SqlCreateTable pk Columns cols={}", cols);
+        LOG.trace("export: SqlCreateTable pk Columns cols={}", cols);
         for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
             sb.append(", ");
-            LOG.debug(
+            LOG.trace(
                     "export: SqlCreateTable pk JoinColumns foreignKeyDeclaration.getJdbcJoinColumnMapping()={}",
                     foreignKeyDeclaration.getJdbcJoinColumnMapping());
-            LOG.debug(
+            LOG.trace(
                     "export: SqlCreateTable pk JoinColumns foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns()={}",
                     foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns());
             cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
-                    .map(a -> buildDeclaration(a)).collect(Collectors.joining(", "));
+                    .map(this::buildDeclaration).collect(Collectors.joining(", "));
             sb.append(cols);
         }
 
-        LOG.debug("export: SqlCreateTable pk JoinColumns cols={}", cols);
+        LOG.trace("export: SqlCreateTable pk JoinColumns cols={}", cols);
         sb.append(", primary key ");
         if (sqlCreateTable.getJdbcPk().isComposite()) {
             sb.append("(");
-            cols = sqlCreateTable.getJdbcPk().getColumns().stream()
+            cols = sqlCreateTable.getJdbcPk().getConstraintColumns().stream()
                     .map(a -> nameTranslator.adjustName(a.getName()))
                     .collect(Collectors.joining(", "));
             sb.append(cols);

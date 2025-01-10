@@ -15,51 +15,31 @@
  */
 package org.minijpa.jpa.model;
 
+import org.minijpa.jdbc.DDLData;
+import org.minijpa.jdbc.mapper.AttributeMapper;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
-import org.minijpa.jdbc.DDLData;
-import org.minijpa.jdbc.mapper.AttributeMapper;
-
 public class MetaAttribute extends AbstractMetaAttribute {
 
-    private boolean id;
-    private Field javaMember;
+    protected boolean id;
     // it's a version attribute
-    private boolean version = false;
+    protected boolean version = false;
     // it's a basic attribute
-    private boolean basic;
-    private Optional<DDLData> ddlData = Optional.empty();
-    protected AttributeMapper attributeMapper;
+    protected boolean basic;
 
     public boolean isId() {
         return id;
-    }
-
-    public Field getJavaMember() {
-        return javaMember;
     }
 
     public boolean isVersion() {
         return version;
     }
 
-    public void setVersion(boolean version) {
-        this.version = version;
-    }
-
     public boolean isBasic() {
         return basic;
-    }
-
-    public Optional<DDLData> getDdlData() {
-        return ddlData;
-    }
-
-    @Override
-    public AttributeMapper getAttributeMapper() {
-        return attributeMapper;
     }
 
     @Override
@@ -69,21 +49,21 @@ public class MetaAttribute extends AbstractMetaAttribute {
 
     public static class Builder {
 
-        private final String name;
-        private String columnName;
-        private Class<?> type;
-        private Class<?> readWriteDbType;
-        private Method readMethod;
-        private Method writeMethod;
-        private boolean id;
-        private Integer sqlType;
-        private Field javaMember;
-        private AttributeMapper attributeMapper;
-        private boolean nullable = true;
-        private boolean version = false;
-        private boolean basic;
-        private String path;
-        private Optional<DDLData> ddlData = Optional.empty();
+        protected final String name;
+        protected String columnName;
+        protected Class<?> type;
+        protected Class<?> readWriteDbType;
+        protected Method readMethod;
+        protected Method writeMethod;
+        protected boolean id;
+        protected Integer sqlType;
+        protected Field javaMember;
+        protected AttributeMapper attributeMapper;
+        protected boolean nullable = true;
+        protected boolean version = false;
+        protected boolean basic;
+        protected String path;
+        protected Optional<DDLData> ddlData = Optional.empty();
 
         public Builder(String name) {
             super();

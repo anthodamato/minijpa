@@ -3,18 +3,20 @@ package org.minijpa.sql.model;
 import java.util.List;
 
 public interface SqlPk {
-	public default boolean isComposite() {
-		return false;
-	}
+    default boolean isComposite() {
+        return false;
+    }
 
-	public default boolean isIdentityColumn() {
-		return false;
-	}
+    default boolean isIdentityColumn() {
+        return false;
+    }
 
-	public ColumnDeclaration getColumn();
+    ColumnDeclaration getColumn();
 
-	public default List<ColumnDeclaration> getColumns() {
-		return null;
-	}
+    default List<ColumnDeclaration> getColumns() {
+        return null;
+    }
+
+    List<ColumnDeclaration> getConstraintColumns();
 
 }

@@ -26,116 +26,121 @@ import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 public abstract class Relationship {
 
-	protected FetchType fetchType = FetchType.EAGER;
-	protected String joinColumnTable;
-	protected MetaEntity owningEntity;
-	// for bidirectional relationships
-	protected RelationshipMetaAttribute owningAttribute;
+    protected FetchType fetchType = FetchType.EAGER;
+    protected String joinColumnTable;
+    protected MetaEntity owningEntity;
+    // for bidirectional relationships
+    protected RelationshipMetaAttribute owningAttribute;
 
-	/**
-	 * This is the target entity.
-	 */
-	protected MetaEntity attributeType;
-	// for bidirectional relationships
-	protected RelationshipMetaAttribute targetAttribute;
-	protected Optional<String> mappedBy;
-	protected Set<Cascade> cascades;
-	protected RelationshipJoinTable joinTable;
-	protected Class<?> targetEntityClass;
-	protected JoinTableAttributes joinTableAttributes;
-	protected Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
-	protected Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
+    /**
+     * This is the target entity.
+     */
+    protected MetaEntity attributeType;
+    // for bidirectional relationships
+    protected RelationshipMetaAttribute targetAttribute;
+    protected Optional<String> mappedBy;
+    protected Set<Cascade> cascades;
+    protected RelationshipJoinTable joinTable;
+    protected Class<?> targetEntityClass;
+    protected JoinTableAttributes joinTableAttributes;
+    protected Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
+    protected Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
+    protected boolean id;
 
-	public Relationship() {
-		super();
-	}
+    public Relationship() {
+        super();
+    }
 
-	public FetchType getFetchType() {
-		return fetchType;
-	}
+    public FetchType getFetchType() {
+        return fetchType;
+    }
 
-	public String getJoinColumnTable() {
-		return joinColumnTable;
-	}
+    public String getJoinColumnTable() {
+        return joinColumnTable;
+    }
 
-	public MetaEntity getOwningEntity() {
-		return owningEntity;
-	}
+    public MetaEntity getOwningEntity() {
+        return owningEntity;
+    }
 
-	public RelationshipMetaAttribute getOwningAttribute() {
-		return owningAttribute;
-	}
+    public RelationshipMetaAttribute getOwningAttribute() {
+        return owningAttribute;
+    }
 
-	public MetaEntity getAttributeType() {
-		return attributeType;
-	}
+    public MetaEntity getAttributeType() {
+        return attributeType;
+    }
 
-	public RelationshipMetaAttribute getTargetAttribute() {
-		return targetAttribute;
-	}
+    public RelationshipMetaAttribute getTargetAttribute() {
+        return targetAttribute;
+    }
 
-	public Optional<String> getMappedBy() {
-		return mappedBy;
-	}
+    public Optional<String> getMappedBy() {
+        return mappedBy;
+    }
 
-	public Set<Cascade> getCascades() {
-		return cascades;
-	}
+    public Set<Cascade> getCascades() {
+        return cascades;
+    }
 
-	public boolean isOwner() {
-		return mappedBy.isEmpty();
-	}
+    public boolean isOwner() {
+        return mappedBy.isEmpty();
+    }
 
-	public RelationshipJoinTable getJoinTable() {
-		return joinTable;
-	}
+    public RelationshipJoinTable getJoinTable() {
+        return joinTable;
+    }
 
-	public boolean toMany() {
-		return false;
-	}
+    public boolean toMany() {
+        return false;
+    }
 
-	public boolean toOne() {
-		return false;
-	}
+    public boolean toOne() {
+        return false;
+    }
 
-	public boolean fromOne() {
-		return false;
-	}
+    public boolean fromOne() {
+        return false;
+    }
 
-	public Class<?> getTargetEntityClass() {
-		return targetEntityClass;
-	}
+    public Class<?> getTargetEntityClass() {
+        return targetEntityClass;
+    }
 
-	public JoinTableAttributes getJoinTableAttributes() {
-		return joinTableAttributes;
-	}
+    public JoinTableAttributes getJoinTableAttributes() {
+        return joinTableAttributes;
+    }
 
-	public Optional<JoinColumnDataList> getJoinColumnDataList() {
-		return joinColumnDataList;
-	}
+    public Optional<JoinColumnDataList> getJoinColumnDataList() {
+        return joinColumnDataList;
+    }
 
-	public boolean isLazy() {
-		return getFetchType() == FetchType.LAZY;
-	}
+    public boolean isLazy() {
+        return getFetchType() == FetchType.LAZY;
+    }
 
-	public Optional<JoinColumnMapping> getJoinColumnMapping() {
-		return joinColumnMapping;
-	}
+    public Optional<JoinColumnMapping> getJoinColumnMapping() {
+        return joinColumnMapping;
+    }
 
-	@Override
-	public String toString() {
-		return Relationship.class.getName() + ": fetchType=" + fetchType;
-	}
+    public boolean isId() {
+        return id;
+    }
 
-	public boolean hasAnyCascades(Cascade... csds) {
-		if (cascades == null || cascades.isEmpty())
-			return false;
+    @Override
+    public String toString() {
+        return Relationship.class.getName() + ": fetchType=" + fetchType;
+    }
 
-		for (Cascade c : csds) {
-			if (cascades.contains(c))
-				return true;
-		}
+    public boolean hasAnyCascades(Cascade... csds) {
+        if (cascades == null || cascades.isEmpty())
+            return false;
 
-		return false;
-	}
+        for (Cascade c : csds) {
+            if (cascades.contains(c))
+                return true;
+        }
+
+        return false;
+    }
 }

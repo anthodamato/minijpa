@@ -15,10 +15,9 @@
  */
 package org.minijpa.metadata.enhancer.javassist;
 
-import java.util.List;
-import java.util.Optional;
-
 import javassist.CtField;
+
+import java.util.List;
 
 public class Property {
 
@@ -28,12 +27,17 @@ public class Property {
     private CtField ctField;
     private boolean embedded;
     private List<Property> embeddedProperties;
-    private final Optional<RelationshipProperties> relationshipProperties;
+    private final RelationshipProperties relationshipProperties;
     private boolean embeddedIdParent = false;
 
-    public Property(boolean id, PropertyMethod getPropertyMethod, PropertyMethod setPropertyMethod, CtField ctField,
-            boolean embedded, List<Property> embeddedProperties,
-            Optional<RelationshipProperties> relationshipProperties) {
+    public Property(
+            boolean id,
+            PropertyMethod getPropertyMethod,
+            PropertyMethod setPropertyMethod,
+            CtField ctField,
+            boolean embedded,
+            List<Property> embeddedProperties,
+            RelationshipProperties relationshipProperties) {
         super();
         this.id = id;
         this.getPropertyMethod = getPropertyMethod;
@@ -68,7 +72,7 @@ public class Property {
         return embeddedProperties;
     }
 
-    public Optional<RelationshipProperties> getRelationshipProperties() {
+    public RelationshipProperties getRelationshipProperties() {
         return relationshipProperties;
     }
 
@@ -80,4 +84,17 @@ public class Property {
         this.embeddedIdParent = embeddedIdParent;
     }
 
+    @Override
+    public String toString() {
+        return "Property{" +
+                "id=" + id +
+                ", getPropertyMethod=" + getPropertyMethod +
+                ", setPropertyMethod=" + setPropertyMethod +
+                ", ctField=" + ctField +
+                ", embedded=" + embedded +
+                ", embeddedProperties=" + embeddedProperties +
+                ", relationshipProperties=" + relationshipProperties +
+                ", embeddedIdParent=" + embeddedIdParent +
+                '}';
+    }
 }

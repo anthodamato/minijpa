@@ -58,9 +58,9 @@ public abstract class AbstractEntityBuilderByValues extends AbstractEntityBuilde
         }
 
         for (JoinColumnMapping joinColumnMapping : metaEntity.getJoinColumnMappings()) {
-            LOG.debug("buildJoinColumns: joinColumnMapping.getAttribute()={}", joinColumnMapping.getAttribute());
-            LOG.debug("buildJoinColumns: joinColumnMapping.getForeignKey()={}", joinColumnMapping.getForeignKey());
-            Object fk = AttributeUtil.buildPK(joinColumnMapping.getForeignKey(), modelValueArray);
+            LOG.debug("buildAttributes: joinColumnMapping.getAttribute()={}", joinColumnMapping.getAttribute());
+            LOG.debug("buildAttributes: joinColumnMapping.getForeignKey()={}", joinColumnMapping.getForeignKey());
+            Object fk = joinColumnMapping.getForeignKey().buildValue(modelValueArray);
             if (joinColumnMapping.isLazy()) {
                 MetaEntityHelper.setForeignKeyValue(joinColumnMapping.getAttribute(), parentInstance, fk);
                 continue;

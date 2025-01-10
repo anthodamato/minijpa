@@ -15,71 +15,114 @@
  */
 package org.minijpa.jpa.model;
 
-import java.lang.reflect.Method;
+import org.minijpa.jdbc.FetchParameter;
+import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jpa.db.AttributeFetchParameter;
+import org.minijpa.jpa.db.PkGeneration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.minijpa.jpa.db.PkGeneration;
-
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class BasicAttributePk implements Pk {
+    private static final Logger LOG = LoggerFactory.getLogger(BasicAttributePk.class);
 
-	private final MetaAttribute attribute;
-	private final PkGeneration pkGeneration;
-	private final List<MetaAttribute> attributes;
+    private final MetaAttribute attribute;
+    private final PkGeneration pkGeneration;
+    private final List<MetaAttribute> attributes;
 
-	public BasicAttributePk(MetaAttribute attribute, PkGeneration pkGeneration) {
-		this.attribute = attribute;
-		this.pkGeneration = pkGeneration;
-		this.attributes = Arrays.asList(attribute);
-	}
+    public BasicAttributePk(MetaAttribute attribute, PkGeneration pkGeneration) {
+        this.attribute = attribute;
+        this.pkGeneration = pkGeneration;
+        this.attributes = Arrays.asList(attribute);
+    }
 
-	@Override
-	public PkGeneration getPkGeneration() {
-		return pkGeneration;
-	}
+    @Override
+    public PkGeneration getPkGeneration() {
+        return pkGeneration;
+    }
 
-	@Override
-	public boolean isEmbedded() {
-		return false;
-	}
+    @Override
+    public boolean isEmbedded() {
+        return false;
+    }
 
-	@Override
-	public boolean isComposite() {
-		return false;
-	}
+    @Override
+    public boolean isComposite() {
+        return false;
+    }
 
-	@Override
-	public MetaAttribute getAttribute() {
-		return attribute;
-	}
+    @Override
+    public MetaAttribute getAttribute() {
+        return attribute;
+    }
 
-	@Override
-	public List<MetaAttribute> getAttributes() {
-		return attributes;
-	}
+    @Override
+    public List<MetaAttribute> getAttributes() {
+        return attributes;
+    }
 
-	@Override
-	public Class<?> getType() {
-		return attribute.getType();
-	}
+    @Override
+    public Class<?> getType() {
+        return attribute.getType();
+    }
 
-	@Override
-	public String getName() {
-		return attribute.getName();
-	}
+    @Override
+    public String getName() {
+        return attribute.getName();
+    }
 
-	@Override
-	public Method getReadMethod() {
-		return attribute.getReadMethod();
-	}
+    @Override
+    public Object readValue(Object entityInstance) throws Exception {
+        return attribute.getReadMethod().invoke(entityInstance);
+    }
 
-	@Override
-	public Method getWriteMethod() {
-		return attribute.getWriteMethod();
-	}
+    @Override
+    public void writeValue(Object entityInstance, Object value) throws Exception {
+        attribute.getWriteMethod().invoke(entityInstance, value);
+    }
+
+    @Override
+    public Object buildValue(ModelValueArray<FetchParameter> modelValueArray) throws Exception {
+        int index = indexOfAttribute(modelValueArray, getAttribute());
+        if (index == -1) {
+            throw new IllegalArgumentException(
+                    "Column '" + getAttribute().getColumnName() + "' not found");
+        }
+
+        return modelValueArray.getValue(index);
+    }
+
+    @Override
+    public void expand(Object value, ModelValueArray<AbstractMetaAttribute> modelValueArray) throws Exception {
+        modelValueArray.add(getAttribute(), value);
+    }
+
+    @Override
+    public List<QueryParameter> queryParameters(Object value) throws Exception {
+        List<QueryParameter> list = new ArrayList<>();
+        list.add(getAttribute().queryParameter(value));
+        return list;
+    }
+
+    private int indexOfAttribute(
+            ModelValueArray<FetchParameter> modelValueArray,
+            AbstractMetaAttribute attribute) {
+        LOG.debug("indexOfAttribute: attribute={}", attribute);
+        for (int i = 0; i < modelValueArray.size(); ++i) {
+            LOG.debug("indexOfAttribute: ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute()={}", ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute());
+            if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
 
 }

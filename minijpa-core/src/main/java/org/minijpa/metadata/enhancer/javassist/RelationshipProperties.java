@@ -16,11 +16,11 @@
 package org.minijpa.metadata.enhancer.javassist;
 
 import java.util.Optional;
+
 import javassist.CtClass;
 import javassist.CtMethod;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class RelationshipProperties {
@@ -80,4 +80,13 @@ public class RelationshipProperties {
         this.ctMethodSetter = ctMethodSetter;
     }
 
+    @Override
+    public String toString() {
+        return "RelationshipProperties{" +
+                "fieldName='" + fieldName + '\'' +
+                ", lazy=" + lazy +
+                ", joinColumn=" + joinColumn +
+                ", joinColumnFieldName=" + joinColumnFieldName +
+                '}';
+    }
 }

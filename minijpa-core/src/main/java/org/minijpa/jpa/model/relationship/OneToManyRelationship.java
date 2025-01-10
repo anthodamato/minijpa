@@ -15,14 +15,13 @@
  */
 package org.minijpa.jpa.model.relationship;
 
-import java.util.Optional;
-import java.util.Set;
-
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
+
+import java.util.Optional;
+import java.util.Set;
 
 public final class OneToManyRelationship extends ToManyRelationship {
 
@@ -59,6 +58,7 @@ public final class OneToManyRelationship extends ToManyRelationship {
         private JoinTableAttributes joinTableAttributes;
         private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
         private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
+        private boolean id;
 
         public Builder() {
         }
@@ -133,6 +133,11 @@ public final class OneToManyRelationship extends ToManyRelationship {
             return this;
         }
 
+        public Builder withId(boolean id) {
+            this.id = id;
+            return this;
+        }
+
         public Builder with(OneToManyRelationship r) {
             this.joinColumnTable = r.joinColumnTable;
             this.mappedBy = r.mappedBy;
@@ -148,6 +153,7 @@ public final class OneToManyRelationship extends ToManyRelationship {
             this.joinTableAttributes = r.joinTableAttributes;
             this.joinColumnDataList = r.joinColumnDataList;
             this.joinColumnMapping = r.joinColumnMapping;
+            this.id = id;
             return this;
         }
 
@@ -167,6 +173,7 @@ public final class OneToManyRelationship extends ToManyRelationship {
             r.joinTableAttributes = joinTableAttributes;
             r.joinColumnDataList = joinColumnDataList;
             r.joinColumnMapping = joinColumnMapping;
+            r.id = id;
             return r;
         }
     }

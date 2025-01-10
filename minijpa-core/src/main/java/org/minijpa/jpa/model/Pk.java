@@ -18,6 +18,9 @@ package org.minijpa.jpa.model;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.minijpa.jdbc.FetchParameter;
+import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jpa.db.PkGeneration;
 
 /**
@@ -25,35 +28,53 @@ import org.minijpa.jpa.db.PkGeneration;
  */
 public interface Pk {
 
-  public PkGeneration getPkGeneration();
+    PkGeneration getPkGeneration();
 
-  public boolean isComposite();
+    boolean isComposite();
 
-  public boolean isEmbedded();
+    boolean isEmbedded();
 
-  public MetaAttribute getAttribute();
+    default boolean isIdClass() {
+        return false;
+    }
 
-  public List<MetaAttribute> getAttributes();
+    MetaAttribute getAttribute();
 
-  public Class<?> getType();
+    List<MetaAttribute> getAttributes();
 
-  public String getName();
+    Class<?> getType();
 
-  public Method getReadMethod();
+    String getName();
 
-  public Method getWriteMethod();
+    Object buildValue(ModelValueArray<FetchParameter> modelValueArray) throws Exception;
 
-  /**
-   * Converts the 'value' read from a resultSet to an object of class returned by
-   * <code>getType</code>.
-   * <p>
-   * This method is called only to convert the generated key of an identity column.
-   *
-   * @param value returned by the result set
-   * @return the primary key value
-   */
-  public default Object convertGeneratedKey(Object value) {
-    return ((Number) value).longValue();
-  }
+    List<QueryParameter> queryParameters(Object value) throws Exception;
 
+    void expand(
+            Object value,
+            ModelValueArray<AbstractMetaAttribute> modelValueArray) throws Exception;
+
+
+    Object readValue(Object entityInstance) throws Exception;
+
+
+    void writeValue(Object entityInstance, Object value) throws Exception;
+
+
+    /**
+     * Converts the 'value' read from a resultSet to an object of class returned by
+     * <code>getType</code>.
+     * <p>
+     * This method is called only to convert the generated key of an identity column.
+     *
+     * @param value returned by the result set
+     * @return the primary key value
+     */
+    default Object convertGeneratedKey(Object value) {
+        return ((Number) value).longValue();
+    }
+
+    default Object checkClass(Object pkValue) throws Exception {
+        return pkValue;
+    }
 }

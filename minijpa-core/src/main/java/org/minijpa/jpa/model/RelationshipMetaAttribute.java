@@ -1,11 +1,20 @@
 package org.minijpa.jpa.model;
 
+import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jpa.MetaEntityHelper;
+import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.relationship.Relationship;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class RelationshipMetaAttribute extends AbstractMetaAttribute {
+    private static final Logger log = LoggerFactory.getLogger(RelationshipMetaAttribute.class);
 
     private Relationship relationship;
     private boolean collection = false;
@@ -15,6 +24,7 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
     private Class<?> collectionImplementationClass;
     private Optional<Method> joinColumnReadMethod = Optional.empty();
     private Optional<Method> joinColumnWriteMethod = Optional.empty();
+    private boolean id;
 
     public Relationship getRelationship() {
         return relationship;
@@ -50,6 +60,27 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
         return relationship.isLazy();
     }
 
+    public boolean isId() {
+        return id;
+    }
+
+    public List<QueryParameter> queryParameters(
+            Object value) throws Exception {
+        List<QueryParameter> list = new ArrayList<>();
+        if (getRelationship().getJoinColumnMapping().isEmpty())
+            return list;
+
+        JoinColumnMapping joinColumnMapping = getRelationship().getJoinColumnMapping().get();
+        log.debug("queryParameters: value={}", value);
+        Object v = joinColumnMapping.isComposite()
+                ? joinColumnMapping.getForeignKey().readValue(value)
+                : value;
+        log.debug("queryParameters: v={}", v);
+        list.addAll(getRelationship().getJoinColumnMapping().get().queryParameters(v));
+        log.debug("queryParameters: 2 v={}", v);
+        return list;
+    }
+
     @Override
     public String toString() {
         return "RelationshipMetaAttribute{" +
@@ -80,6 +111,8 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
         private boolean nullable = true;
         private Optional<Method> joinColumnReadMethod;
         private Optional<Method> joinColumnWriteMethod;
+        private boolean id;
+        protected Field javaMember;
 
         public Builder withName(String name) {
             this.name = name;
@@ -131,6 +164,16 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
             return this;
         }
 
+        public Builder isId(boolean id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder withJavaMember(Field field) {
+            this.javaMember = field;
+            return this;
+        }
+
         public RelationshipMetaAttribute build() {
             RelationshipMetaAttribute attribute = new RelationshipMetaAttribute();
             attribute.name = name;
@@ -144,6 +187,8 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
             attribute.nullable = nullable;
             attribute.joinColumnReadMethod = joinColumnReadMethod;
             attribute.joinColumnWriteMethod = joinColumnWriteMethod;
+            attribute.id = id;
+            attribute.javaMember = javaMember;
             return attribute;
         }
 

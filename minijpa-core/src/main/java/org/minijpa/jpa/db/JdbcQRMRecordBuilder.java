@@ -1,12 +1,12 @@
 package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.*;
-import org.minijpa.jdbc.mapper.AttributeMapper;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.querymapping.ConstructorMapping;
 import org.minijpa.jpa.db.querymapping.EntityMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
 import org.minijpa.jpa.db.querymapping.SingleColumnMapping;
+import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
@@ -74,7 +74,8 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
             Object v = buildObjectByConstructorParameters(constructorMapping.getTargetClass(), values);
             Optional<MetaEntity> optionalMetaEntity = entityContainer.isManagedClass(constructorMapping.getTargetClass());
             if (optionalMetaEntity.isPresent()) {
-                Object pk = AttributeUtil.getIdValue(optionalMetaEntity.get().getId(), v);
+//                Object pk = AttributeUtil.getIdValue(optionalMetaEntity.get().getId(), v);
+                Object pk = optionalMetaEntity.get().getId().readValue(v);
                 if (pk != null) {
                     MetaEntityHelper.setEntityStatus(optionalMetaEntity.get(), v, EntityStatus.DETACHED);
                 }
@@ -150,13 +151,8 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
             EntityMapping entityMapping) {
         Optional<MetaAttribute> optional = entityMapping.getAttribute(columnAlias);
         if (optional.isPresent()) {
-            MetaAttribute metaAttribute = optional.get();
-            FetchParameter fetchParameter = new AttributeFetchParameterImpl(
-                    metaAttribute.getColumnName(),
-                    metaAttribute.getSqlType(),
-                    metaAttribute,
-                    metaAttribute.getAttributeMapper());
-            return Optional.of(fetchParameter);
+            AbstractMetaAttribute metaAttribute = optional.get();
+            return Optional.of(metaAttribute);
         }
 
         Optional<JoinColumnAttribute> optionalJoinColumn = entityMapping.getJoinColumnAttribute(
@@ -279,13 +275,12 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
                 ModelValueArray<FetchParameter> modelValueArray,
                 MetaEntity entity,
                 LockType lockType) throws Exception {
-            Object primaryKey = AttributeUtil.buildPK(entity.getId(), modelValueArray);
-            log.debug("buildEntityByValues: primaryKey={}", primaryKey);
-            log.debug("buildEntityByValues: entity={}", entity);
+            Object primaryKey = entity.getId().buildValue(modelValueArray);
+            log.debug("build: primaryKey={}", primaryKey);
+            log.debug("build: entity={}", entity);
             Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
-            if (entityInstance != null) {
+            if (entityInstance != null)
                 return entityInstance;
-            }
 
             entityInstance = buildInstance(entity, primaryKey);
             buildAttributes(entityInstance, entity, entity.getBasicAttributes(),

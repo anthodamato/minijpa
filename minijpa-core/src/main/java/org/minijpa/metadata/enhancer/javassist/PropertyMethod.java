@@ -15,25 +15,34 @@
  */
 package org.minijpa.metadata.enhancer.javassist;
 
-import java.util.Optional;
-
 import javassist.CtMethod;
 
 public class PropertyMethod {
 
-    Optional<CtMethod> method = Optional.empty();
+    CtMethod method;
     boolean enhance = true;
     /**
      * true if the method must be created.
      */
     boolean add = false;
+    boolean exists = false;
+    boolean create = false;
 
     public PropertyMethod() {
     }
 
-    public PropertyMethod(Optional<CtMethod> method, boolean enhance) {
-	this.method = method;
-	this.enhance = enhance;
+    public PropertyMethod(CtMethod method, boolean enhance) {
+        this.method = method;
+        this.enhance = enhance;
     }
 
+    @Override
+    public String toString() {
+        return "PropertyMethod{" +
+                "method=" + method +
+                ", enhance=" + enhance +
+                ", add=" + add +
+                ", create=" + create +
+                '}';
+    }
 }

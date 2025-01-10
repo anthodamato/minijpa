@@ -9,12 +9,12 @@ import org.junit.jupiter.api.Test;
 
 public class EntityManagerFactoryTest {
 
-	@Test
-	public void entityManagerFactory() throws Exception {
-		EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("citizens",
-				PersistenceUnitProperties.getProperties());
-		Assertions.assertNotNull(entityManagerFactory);
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		Assertions.assertNotNull(entityManager);
-	}
+    @Test
+    public void entityManagerFactory() throws Exception {
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("citizens",
+                PersistenceUnitProperties.getProperties());
+        Assertions.assertNotNull(entityManagerFactory);
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        Assertions.assertNotNull(entityManager);
+    }
 }

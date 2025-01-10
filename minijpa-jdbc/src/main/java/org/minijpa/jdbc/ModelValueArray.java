@@ -23,9 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * @author adamato
  * @param <T>
+ * @author adamato
  */
 public class ModelValueArray<T> {
 
@@ -94,4 +93,11 @@ public class ModelValueArray<T> {
         return models.size();
     }
 
+    @Override
+    public String toString() {
+        return "ModelValueArray{" +
+                "models=" + models +
+                ", values=" + values +
+                '}';
+    }
 }

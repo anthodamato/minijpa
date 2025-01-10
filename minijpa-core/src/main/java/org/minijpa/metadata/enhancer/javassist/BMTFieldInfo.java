@@ -26,10 +26,10 @@ public class BMTFieldInfo {
     String implementation;
 
     public BMTFieldInfo(int opType, String name, String implementation) {
-	super();
-	this.opType = opType;
-	this.name = name;
-	this.implementation = implementation;
+        super();
+        this.opType = opType;
+        this.name = name;
+        this.implementation = implementation;
     }
 
 }

@@ -15,71 +15,79 @@
  */
 package org.minijpa.jpa.model.relationship;
 
+import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jpa.model.AbstractAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 public class JoinColumnAttribute extends AbstractAttribute {
 
-	private RelationshipMetaAttribute attribute;
-	private MetaAttribute foreignKeyAttribute;
+    private RelationshipMetaAttribute attribute;
+    private MetaAttribute foreignKeyAttribute;
 
-	public RelationshipMetaAttribute getAttribute() {
-		return attribute;
-	}
+    public RelationshipMetaAttribute getAttribute() {
+        return attribute;
+    }
 
-	public MetaAttribute getForeignKeyAttribute() {
-		return foreignKeyAttribute;
-	}
+    public MetaAttribute getForeignKeyAttribute() {
+        return foreignKeyAttribute;
+    }
 
-	public static class Builder {
+    @Override
+    public QueryParameter queryParameter(Object value) {
+        MetaAttribute attribute = getForeignKeyAttribute();
+        return new QueryParameter(getColumnName(),
+                value, attribute.getSqlType(), attribute.getAttributeMapper());
+    }
 
-		private String columnName;
-		private Class<?> type;
-		private Class<?> databaseType;
-		private Integer sqlType;
-		private RelationshipMetaAttribute attribute;
-		private MetaAttribute foreignKeyAttribute;
+    public static class Builder {
 
-		public Builder withColumnName(String columnName) {
-			this.columnName = columnName;
-			return this;
-		}
+        private String columnName;
+        private Class<?> type;
+        private Class<?> databaseType;
+        private Integer sqlType;
+        private RelationshipMetaAttribute attribute;
+        private MetaAttribute foreignKeyAttribute;
 
-		public Builder withType(Class<?> type) {
-			this.type = type;
-			return this;
-		}
+        public Builder withColumnName(String columnName) {
+            this.columnName = columnName;
+            return this;
+        }
 
-		public Builder withDatabaseType(Class<?> databaseType) {
-			this.databaseType = databaseType;
-			return this;
-		}
+        public Builder withType(Class<?> type) {
+            this.type = type;
+            return this;
+        }
 
-		public Builder withSqlType(Integer sqlType) {
-			this.sqlType = sqlType;
-			return this;
-		}
+        public Builder withDatabaseType(Class<?> databaseType) {
+            this.databaseType = databaseType;
+            return this;
+        }
 
-		public Builder withAttribute(RelationshipMetaAttribute attribute) {
-			this.attribute = attribute;
-			return this;
-		}
+        public Builder withSqlType(Integer sqlType) {
+            this.sqlType = sqlType;
+            return this;
+        }
 
-		public Builder withForeignKeyAttribute(MetaAttribute foreignKeyAttribute) {
-			this.foreignKeyAttribute = foreignKeyAttribute;
-			return this;
-		}
+        public Builder withAttribute(RelationshipMetaAttribute attribute) {
+            this.attribute = attribute;
+            return this;
+        }
 
-		public JoinColumnAttribute build() {
-			JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute();
-			joinColumnAttribute.columnName = columnName;
-			joinColumnAttribute.type = type;
-			joinColumnAttribute.databaseType = databaseType;
-			joinColumnAttribute.sqlType = sqlType;
-			joinColumnAttribute.attribute = attribute;
-			joinColumnAttribute.foreignKeyAttribute = foreignKeyAttribute;
-			return joinColumnAttribute;
-		}
-	}
+        public Builder withForeignKeyAttribute(MetaAttribute foreignKeyAttribute) {
+            this.foreignKeyAttribute = foreignKeyAttribute;
+            return this;
+        }
+
+        public JoinColumnAttribute build() {
+            JoinColumnAttribute joinColumnAttribute = new JoinColumnAttribute();
+            joinColumnAttribute.columnName = columnName;
+            joinColumnAttribute.type = type;
+            joinColumnAttribute.databaseType = databaseType;
+            joinColumnAttribute.sqlType = sqlType;
+            joinColumnAttribute.attribute = attribute;
+            joinColumnAttribute.foreignKeyAttribute = foreignKeyAttribute;
+            return joinColumnAttribute;
+        }
+    }
 }

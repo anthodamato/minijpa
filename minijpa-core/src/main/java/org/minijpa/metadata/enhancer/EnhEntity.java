@@ -23,6 +23,7 @@ import java.util.Set;
 public class EnhEntity {
 
     private String className;
+    private Class<?> classType;
     private List<EnhAttribute> enhAttributes = new ArrayList<>();
     private EnhEntity mappedSuperclass;
     private String modificationAttributeGetMethod;
@@ -32,7 +33,11 @@ public class EnhEntity {
     private Optional<String> lockTypeAttributeSetMethod = Optional.empty();
     private Optional<String> entityStatusAttributeGetMethod = Optional.empty();
     private Optional<String> entityStatusAttributeSetMethod = Optional.empty();
-//    private boolean embeddedId = false;
+    private IdClassPropertyData idClassPropertyData;
+//    private EnhEntity idClassType;
+//    // it's used to finalize the idclass value class
+//    private ManagedData idClassManagedData;
+//    private CtClass idCtClass;
 
     public String getClassName() {
         return className;
@@ -40,6 +45,14 @@ public class EnhEntity {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public Class<?> getClassType() {
+        return classType;
+    }
+
+    public void setClassType(Class<?> classType) {
+        this.classType = classType;
     }
 
     public List<EnhAttribute> getEnhAttributes() {
@@ -115,13 +128,14 @@ public class EnhEntity {
         this.entityStatusAttributeSetMethod = entityStatusAttributeSetMethod;
     }
 
-//    public boolean isEmbeddedId() {
-//	return embeddedId;
-//    }
-//
-//    public void setEmbeddedId(boolean embeddedId) {
-//	this.embeddedId = embeddedId;
-//    }
+    public IdClassPropertyData getIdClassPropertyData() {
+        return idClassPropertyData;
+    }
+
+    public void setIdClassPropertyData(IdClassPropertyData idClassPropertyData) {
+        this.idClassPropertyData = idClassPropertyData;
+    }
+
     public void findEmbeddables(Set<EnhEntity> embeddables) {
         for (EnhAttribute enhAttribute : enhAttributes) {
             if (enhAttribute.isEmbedded()) {

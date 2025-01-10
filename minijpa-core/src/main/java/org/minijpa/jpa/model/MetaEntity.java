@@ -15,15 +15,6 @@
  */
 package org.minijpa.jpa.model;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.minijpa.jpa.model.relationship.Cascade;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
@@ -31,8 +22,12 @@ import org.minijpa.jpa.model.relationship.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Collectors;
+
 public class MetaEntity {
-    private Logger log = LoggerFactory.getLogger(MetaEntity.class);
+    private final Logger log = LoggerFactory.getLogger(MetaEntity.class);
 
     private Class<?> entityClass;
     private String name;
@@ -56,6 +51,7 @@ public class MetaEntity {
     // used to build the metamodel. The 'attributes' field contains the
     // MappedSuperclass attributes
     private MetaEntity mappedSuperclassEntity;
+    private VersionMetaAttribute versionMetaAttribute;
     private Method modificationAttributeReadMethod;
     private Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
     private Optional<Method> lockTypeAttributeReadMethod = Optional.empty();
@@ -117,6 +113,10 @@ public class MetaEntity {
 
     public List<JoinColumnMapping> getJoinColumnMappings() {
         return joinColumnMappings;
+    }
+
+    public VersionMetaAttribute getVersionMetaAttribute() {
+        return versionMetaAttribute;
     }
 
     public MetaEntity getMappedSuperclassEntity() {
@@ -189,6 +189,24 @@ public class MetaEntity {
         return list;
     }
 
+//    public List<AbstractMetaAttribute> expandAllAttributes() {
+//        List<AbstractMetaAttribute> list = new ArrayList<>();
+//        if (id != null) {
+//            for (AbstractMetaAttribute abstractMetaAttribute : id.getAttributes()) {
+//                if (abstractMetaAttribute instanceof RelationshipMetaAttribute)
+//                    continue;
+//
+//                list.add(abstractMetaAttribute);
+//            }
+//        }
+//
+//        list.addAll(basicAttributes);
+//
+//        list.addAll(expandEmbeddables());
+//
+//        return list;
+//    }
+
     public List<MetaAttribute> expandEmbeddables() {
         List<MetaAttribute> list = new ArrayList<>();
         embeddables.forEach(e -> {
@@ -197,6 +215,18 @@ public class MetaEntity {
 
         return list;
     }
+
+//    public List<MetaAttribute> expandEmbeddables() {
+//        List<MetaAttribute> list = new ArrayList<>();
+//        // embeddables can't have IdClass
+//        embeddables.forEach(e -> {
+//            List<AbstractMetaAttribute> abstractMetaAttributes = e.expandAllAttributes();
+//            abstractMetaAttributes.forEach(a -> list.add((MetaAttribute) a));
+////            list.addAll(e.expandAllAttributes());
+//        });
+//
+//        return list;
+//    }
 
     public List<JoinColumnAttribute> expandJoinColumnAttributes() {
         List<JoinColumnAttribute> jcas = new ArrayList<>();
@@ -282,13 +312,6 @@ public class MetaEntity {
         return embeddableSet;
     }
 
-    public boolean hasVersionAttribute() {
-        return basicAttributes.stream().anyMatch(a -> a.isVersion() && !a.isId());
-    }
-
-    public Optional<MetaAttribute> getVersionAttribute() {
-        return basicAttributes.stream().filter(a -> a.isVersion() && !a.isId()).findFirst();
-    }
 
     public List<RelationshipMetaAttribute> getCascadeAttributes(Cascade... cascades) {
         List<RelationshipMetaAttribute> attrs = new ArrayList<>();
@@ -301,6 +324,55 @@ public class MetaEntity {
 
         return attrs;
     }
+
+
+    public AbstractMetaAttribute findAttributeFromPath(String path) {
+        String[] ss = path.split("\\.");
+        if (ss.length == 0) {
+            return null;
+        }
+
+        if (ss.length == 1) {
+            return getAttribute(path);
+        }
+
+        Optional<MetaEntity> optional = getEmbeddable(ss[0]);
+        if (optional.isEmpty()) {
+            return null;
+        }
+
+        // it's an embedded
+        MetaEntity embeddable = optional.get();
+        for (int i = 1; i < ss.length; ++i) {
+            Optional<MetaEntity> opt = embeddable.getEmbeddable(ss[i]);
+            if (opt.isPresent()) {
+                embeddable = opt.get();
+            } else {
+                AbstractMetaAttribute attribute = embeddable.getAttribute(ss[i]);
+                if (attribute == null) {
+                    return null;
+                }
+
+                if (i == ss.length - 1) {
+                    return attribute;
+                }
+
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+
+    public Object nextVersionValue(Object entityInstance) throws Exception {
+        if (versionMetaAttribute == null)
+            return null;
+
+        Object currentValue = versionMetaAttribute.getReadMethod().invoke(entityInstance);
+        return versionMetaAttribute.nextValue(currentValue);
+    }
+
 
     public static class Builder {
 
@@ -317,6 +389,7 @@ public class MetaEntity {
         private Method writeMethod; // used for embeddables
         private String path; // used for embeddables
         private MetaEntity mappedSuperclassEntity;
+        private VersionMetaAttribute versionMetaAttribute;
         private Method modificationAttributeReadMethod;
         private Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
         private Optional<Method> lockTypeAttributeReadMethod = Optional.empty();
@@ -390,6 +463,11 @@ public class MetaEntity {
             return this;
         }
 
+        public Builder withVersionMetaAttribute(VersionMetaAttribute versionMetaAttribute) {
+            this.versionMetaAttribute = versionMetaAttribute;
+            return this;
+        }
+
         public Builder withModificationAttributeReadMethod(Method modificationAttributeReadMethod) {
             this.modificationAttributeReadMethod = modificationAttributeReadMethod;
             return this;
@@ -444,6 +522,7 @@ public class MetaEntity {
             metaEntity.writeMethod = writeMethod;
             metaEntity.path = path;
             metaEntity.mappedSuperclassEntity = mappedSuperclassEntity;
+            metaEntity.versionMetaAttribute = versionMetaAttribute;
             metaEntity.modificationAttributeReadMethod = modificationAttributeReadMethod;
             metaEntity.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
             metaEntity.joinColumnPostponedUpdateAttributeReadMethod = joinColumnPostponedUpdateAttributeReadMethod;

@@ -1,22 +1,5 @@
 package org.minijpa.jpa.db;
 
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,14 +9,7 @@ import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.AbstractQuery;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.PersistenceUnitProperties;
-import org.minijpa.jpa.model.Address;
-import org.minijpa.jpa.model.Department;
-import org.minijpa.jpa.model.Employee;
-import org.minijpa.jpa.model.Item;
-import org.minijpa.jpa.model.MetaEntity;
-import org.minijpa.jpa.model.Pk;
-import org.minijpa.jpa.model.RelationshipMetaAttribute;
-import org.minijpa.jpa.model.Store;
+import org.minijpa.jpa.model.*;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.RelationshipJoinTable;
 import org.minijpa.metadata.EntityDelegate;
@@ -45,6 +21,18 @@ import org.minijpa.sql.model.condition.BinaryCondition;
 import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.condition.UnaryCondition;
+
+import javax.persistence.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class SqlStatementFactoryTest {
 
@@ -86,8 +74,7 @@ public class SqlStatementFactoryTest {
         MetaEntity employeeEntity = map.get(Employee.class.getName());
         RelationshipMetaAttribute foreignKeyAttribute = (RelationshipMetaAttribute) employeeEntity.getAttribute(
                 "department");
-        List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute,
-                department);
+        List<QueryParameter> parameters = foreignKeyAttribute.queryParameters(department);
         List<String> columns = parameters.stream().map(p -> {
                     if (p.getColumn() instanceof String) return (String) p.getColumn();
 

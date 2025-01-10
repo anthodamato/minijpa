@@ -17,7 +17,9 @@ package org.minijpa.metadata.enhancer;
 
 public interface BytecodeEnhancer {
 
-    public byte[] toBytecode(String className) throws Exception;
+    byte[] toBytecode(String className) throws Exception;
 
-    public EnhEntity enhance(String className) throws Exception;
+    EnhEntity enhance(String className) throws Exception;
+
+    void finalizeEnhancement() throws Exception;
 }

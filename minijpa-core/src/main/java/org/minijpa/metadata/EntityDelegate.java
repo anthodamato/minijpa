@@ -66,12 +66,13 @@ public final class EntityDelegate implements EntityListener {
 
             LOG.debug("get: attributeName={}", attributeName);
             AbstractMetaAttribute a = entity.getAttribute(attributeName);
-            LOG.debug("get: a={}", a);
+//            LOG.debug("get: a={}", a);
 //            LOG.debug("get: a.isLazy()={}", a.isLazy());
 //            LOG.debug("get: MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)={}", MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance));
             if (a.isLazy() && !MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)) {
                 EntityHandler entityHandler = entityContainerContextManager.findByEntityContainer(
                         entityInstance);
+//                LOG.debug("get: entityHandler={}", entityHandler);
                 Object loadedValue = entityHandler.loadAttribute(entityInstance, a, value);
                 MetaEntityHelper.lazyAttributeLoaded(entity, a, entityInstance, true);
                 LOG.debug("get: loadedValue={}", loadedValue);
