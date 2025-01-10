@@ -40,6 +40,8 @@ public class ManagedData {
     // superclass or embedded
     private Optional<String> lockTypeAttribute = Optional.empty();
     private Optional<String> entityStatusAttribute = Optional.empty();
+    // in case of IdClass
+    private ManagedData primaryKeyClass;
 
     public ManagedData() {
         super();
@@ -126,6 +128,14 @@ public class ManagedData {
         this.entityStatusAttribute = entityStatusAttribute;
     }
 
+    public ManagedData getPrimaryKeyClass() {
+        return primaryKeyClass;
+    }
+
+    public void setPrimaryKeyClass(ManagedData primaryKeyClass) {
+        this.primaryKeyClass = primaryKeyClass;
+    }
+
     public Optional<AttributeData> findAttribute(String name) {
         Optional<AttributeData> optional = attributeDatas.stream()
                 .filter(a -> a.getProperty().getCtField().getName().equals(name)).findFirst();
@@ -163,5 +173,13 @@ public class ManagedData {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public String toString() {
+        return "ManagedData{" +
+                "className='" + className + '\'' +
+                ", attributeDatas=" + attributeDatas +
+                '}';
     }
 }

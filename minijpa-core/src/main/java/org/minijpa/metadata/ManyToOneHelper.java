@@ -15,57 +15,58 @@
  */
 package org.minijpa.metadata;
 
-import java.util.Optional;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jpa.db.DbConfiguration;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.relationship.ManyToOneRelationship;
 
+import javax.persistence.FetchType;
+import javax.persistence.ManyToOne;
+import java.util.Optional;
+
 /**
- *
  * @author adamato
  */
 public class ManyToOneHelper extends RelationshipHelper {
 
-	private final JoinColumnMappingFactory joinColumnMappingFactory = new OwningJoinColumnMappingFactory();
+    private final JoinColumnMappingFactory joinColumnMappingFactory = new OwningJoinColumnMappingFactory();
 
-	public ManyToOneRelationship createManyToOne(
-			ManyToOne manyToOne,
-			Optional<JoinColumnDataList> joinColumnDataList) {
-		ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder();
-		builder.withJoinColumnDataList(joinColumnDataList);
+    public ManyToOneRelationship createManyToOne(
+            ManyToOne manyToOne,
+            Optional<JoinColumnDataList> joinColumnDataList,
+            boolean id) {
+        ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder();
+        builder.withJoinColumnDataList(joinColumnDataList);
 
-		builder.withCascades(getCascades(manyToOne.cascade()));
-		if (manyToOne.fetch() != null)
-			if (manyToOne.fetch() == FetchType.EAGER)
-				builder = builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.EAGER);
-			else if (manyToOne.fetch() == FetchType.LAZY)
-				builder = builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.LAZY);
+        builder.withCascades(getCascades(manyToOne.cascade()));
+        if (manyToOne.fetch() != null)
+            if (manyToOne.fetch() == FetchType.EAGER)
+                builder = builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.EAGER);
+            else if (manyToOne.fetch() == FetchType.LAZY)
+                builder = builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.LAZY);
 
-		return builder.build();
-	}
+        builder.withId(id);
+        return builder.build();
+    }
 
-	public ManyToOneRelationship finalizeRelationship(
-			ManyToOneRelationship manyToOneRelationship,
-			RelationshipMetaAttribute a,
-			MetaEntity entity,
-			MetaEntity toEntity,
-			DbConfiguration dbConfiguration) {
-		ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder().with(manyToOneRelationship);
-		if (manyToOneRelationship.isOwner()) {
-			JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(
-					dbConfiguration, a, toEntity, manyToOneRelationship.getJoinColumnDataList());
-			entity.getJoinColumnMappings().add(joinColumnMapping);
-			builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
-		}
+    public ManyToOneRelationship finalizeRelationship(
+            ManyToOneRelationship manyToOneRelationship,
+            RelationshipMetaAttribute a,
+            MetaEntity entity,
+            MetaEntity toEntity,
+            DbConfiguration dbConfiguration) {
+        ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder().with(manyToOneRelationship);
+        if (manyToOneRelationship.isOwner()) {
+            JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(
+                    dbConfiguration, a, toEntity, manyToOneRelationship.getJoinColumnDataList());
+            entity.getJoinColumnMappings().add(joinColumnMapping);
+            builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
+            builder.withOwningEntity(entity);
+        }
 
-		builder.withAttributeType(toEntity);
-		return builder.build();
-	}
+        builder.withAttributeType(toEntity);
+        return builder.build();
+    }
 }

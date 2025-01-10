@@ -37,4 +37,12 @@ public class PatientPk implements Serializable {
     public int hashCode() {
         return Objects.hash(id, doctor);
     }
+
+    @Override
+    public String toString() {
+        return "PatientPk{" +
+                "id=" + id +
+                ", doctor=" + doctor +
+                '}';
+    }
 }

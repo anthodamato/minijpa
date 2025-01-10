@@ -15,9 +15,7 @@
  */
 package org.minijpa.jpa.model;
 
-import java.util.Optional;
-
-import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jdbc.QueryParameter;
 
 /**
  * Base class to represent an entity attribute and a join column attribute.
@@ -57,6 +55,8 @@ public abstract class AbstractAttribute {
     public Class<?> getDatabaseType() {
         return databaseType;
     }
+
+    public abstract QueryParameter queryParameter(Object value);
 
     @Override
     public String toString() {

@@ -45,7 +45,8 @@ public class OneToManyHelper extends RelationshipHelper {
             Class<?> collectionClass,
             Class<?> targetEntity,
             JoinTable joinTable,
-            Optional<JoinColumnDataList> joinColumnDataList) {
+            Optional<JoinColumnDataList> joinColumnDataList,
+            boolean id) {
         OneToManyRelationship.Builder builder = new OneToManyRelationship.Builder();
         builder = builder.withJoinColumnDataList(joinColumnDataList);
 
@@ -68,6 +69,7 @@ public class OneToManyHelper extends RelationshipHelper {
 
         builder.withCollectionClass(collectionClass);
         builder.withTargetEntityClass(targetEntity);
+        builder.withId(id);
         return builder.build();
     }
 

@@ -23,11 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 public class MiniPersistenceContext implements EntityContainer {
 
-    private final Logger LOG = LoggerFactory.getLogger(MiniPersistenceContext.class);
+    private final Logger log = LoggerFactory.getLogger(MiniPersistenceContext.class);
     private final Map<String, MetaEntity> entities;
 
     /**
@@ -62,7 +63,7 @@ public class MiniPersistenceContext implements EntityContainer {
     @Override
     public void removeManaged(Object entityInstance) throws Exception {
         MetaEntity e = entities.get(entityInstance.getClass().getName());
-        Object idValue = e.getId().getValue(entityInstance);
+        Object idValue = e.getId().readValue(entityInstance);
         Map<Object, Object> mapEntities = getEntityMap(entityInstance.getClass(), managedEntities);
         mapEntities.remove(idValue);
         managedEntityList.remove(entityInstance);
@@ -92,7 +93,7 @@ public class MiniPersistenceContext implements EntityContainer {
 
         Map<Object, Object> map = getEntityMap(entityClass, managedEntities);
         Object entityInstance = map.get(primaryKey);
-        LOG.debug("find: managed entityInstance={}", entityInstance);
+        log.debug("find: managed entityInstance={}", entityInstance);
         return entityInstance;
     }
 
@@ -103,7 +104,7 @@ public class MiniPersistenceContext implements EntityContainer {
             return false;
 
         MetaEntity e = entities.get(entityInstance.getClass().getName());
-        Object idValue = e.getId().getValue(entityInstance);
+        Object idValue = e.getId().readValue(entityInstance);
         if (idValue == null)
             return false;
 
@@ -130,7 +131,7 @@ public class MiniPersistenceContext implements EntityContainer {
         if (e == null)
             throw new IllegalArgumentException("Instance '" + entityInstance + "' is not an entity");
 
-        Object idValue = e.getId().getValue(entityInstance);
+        Object idValue = e.getId().readValue(entityInstance);
         if (MetaEntityHelper.isDetached(e, entityInstance))
             return;
 
@@ -168,7 +169,7 @@ public class MiniPersistenceContext implements EntityContainer {
                 try {
                     e.getLockTypeAttributeWriteMethod().get().invoke(v, LockType.NONE);
                 } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                    LOG.error(ex.getMessage());
+                    log.error(ex.getMessage());
                 }
             });
         }

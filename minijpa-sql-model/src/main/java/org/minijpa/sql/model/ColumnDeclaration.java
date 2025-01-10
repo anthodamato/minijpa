@@ -18,37 +18,44 @@ package org.minijpa.sql.model;
 import java.util.Optional;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class ColumnDeclaration {
 
-	private final String name;
-	private final Class<?> databaseType;
-	private Optional<JdbcDDLData> optionalJdbcDDLData = Optional.empty();
+    private final String name;
+    private final Class<?> databaseType;
+    private Optional<JdbcDDLData> optionalJdbcDDLData = Optional.empty();
 
-	public ColumnDeclaration(String name, Class<?> databaseType) {
-		this.name = name;
-		this.databaseType = databaseType;
-	}
+    public ColumnDeclaration(String name, Class<?> databaseType) {
+        this.name = name;
+        this.databaseType = databaseType;
+    }
 
-	public ColumnDeclaration(String name, Class<?> databaseType, Optional<JdbcDDLData> optionalJdbcDDLData) {
-		super();
-		this.name = name;
-		this.databaseType = databaseType;
-		this.optionalJdbcDDLData = optionalJdbcDDLData;
-	}
+    public ColumnDeclaration(String name, Class<?> databaseType, Optional<JdbcDDLData> optionalJdbcDDLData) {
+        super();
+        this.name = name;
+        this.databaseType = databaseType;
+        this.optionalJdbcDDLData = optionalJdbcDDLData;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public Class<?> getDatabaseType() {
-		return databaseType;
-	}
+    public Class<?> getDatabaseType() {
+        return databaseType;
+    }
 
-	public Optional<JdbcDDLData> getOptionalJdbcDDLData() {
-		return optionalJdbcDDLData;
-	}
+    public Optional<JdbcDDLData> getOptionalJdbcDDLData() {
+        return optionalJdbcDDLData;
+    }
 
+    @Override
+    public String toString() {
+        return "ColumnDeclaration{" +
+                "name='" + name + '\'' +
+                ", databaseType=" + databaseType +
+                ", optionalJdbcDDLData=" + optionalJdbcDDLData +
+                '}';
+    }
 }

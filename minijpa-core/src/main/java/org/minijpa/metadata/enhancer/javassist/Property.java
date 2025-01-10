@@ -84,4 +84,17 @@ public class Property {
         this.embeddedIdParent = embeddedIdParent;
     }
 
+    @Override
+    public String toString() {
+        return "Property{" +
+                "id=" + id +
+                ", getPropertyMethod=" + getPropertyMethod +
+                ", setPropertyMethod=" + setPropertyMethod +
+                ", ctField=" + ctField +
+                ", embedded=" + embedded +
+                ", embeddedProperties=" + embeddedProperties +
+                ", relationshipProperties=" + relationshipProperties +
+                ", embeddedIdParent=" + embeddedIdParent +
+                '}';
+    }
 }

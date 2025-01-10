@@ -32,49 +32,51 @@ import org.minijpa.jpa.model.relationship.OneToOneRelationship;
  */
 public class OneToOneHelper extends RelationshipHelper {
 
-  private final JoinColumnMappingFactory joinColumnMappingFactory = new OwningJoinColumnMappingFactory();
+    private final JoinColumnMappingFactory joinColumnMappingFactory = new OwningJoinColumnMappingFactory();
 
-  public OneToOneRelationship createOneToOne(
-      OneToOne oneToOne,
-      Optional<JoinColumnDataList> joinColumnDataList) {
-    OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder();
-    builder.withJoinColumnDataList(joinColumnDataList);
+    public OneToOneRelationship createOneToOne(
+            OneToOne oneToOne,
+            Optional<JoinColumnDataList> joinColumnDataList,
+            boolean id) {
+        OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder();
+        builder.withJoinColumnDataList(joinColumnDataList);
 
-    builder.withMappedBy(getMappedBy(oneToOne));
-    builder.withCascades(getCascades(oneToOne.cascade()));
+        builder.withMappedBy(getMappedBy(oneToOne));
+        builder.withCascades(getCascades(oneToOne.cascade()));
 
-    if (oneToOne.fetch() != null) {
-      if (oneToOne.fetch() == FetchType.EAGER) {
-        builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.EAGER);
-      } else if (oneToOne.fetch() == FetchType.LAZY) {
-        builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.LAZY);
-      }
+        if (oneToOne.fetch() != null) {
+            if (oneToOne.fetch() == FetchType.EAGER) {
+                builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.EAGER);
+            } else if (oneToOne.fetch() == FetchType.LAZY) {
+                builder.withFetchType(org.minijpa.jpa.model.relationship.FetchType.LAZY);
+            }
+        }
+
+        builder.withId(id);
+        return builder.build();
     }
 
-    return builder.build();
-  }
+    public OneToOneRelationship finalizeRelationship(
+            OneToOneRelationship oneToOneRelationship,
+            RelationshipMetaAttribute a,
+            MetaEntity entity,
+            MetaEntity toEntity,
+            DbConfiguration dbConfiguration) {
+        OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder().with(
+                oneToOneRelationship);
+        if (oneToOneRelationship.isOwner()) {
+            JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(
+                    dbConfiguration, a, toEntity, oneToOneRelationship.getJoinColumnDataList());
+            entity.getJoinColumnMappings().add(joinColumnMapping);
+            builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
+            builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
+        } else {
+            builder.withOwningEntity(toEntity);
+            builder.withOwningAttribute((RelationshipMetaAttribute) toEntity.getAttribute(
+                    oneToOneRelationship.getMappedBy().get()));
+        }
 
-  public OneToOneRelationship finalizeRelationship(
-      OneToOneRelationship oneToOneRelationship,
-      RelationshipMetaAttribute a,
-      MetaEntity entity,
-      MetaEntity toEntity,
-      DbConfiguration dbConfiguration) {
-    OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder().with(
-        oneToOneRelationship);
-    if (oneToOneRelationship.isOwner()) {
-      JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(
-          dbConfiguration, a, toEntity, oneToOneRelationship.getJoinColumnDataList());
-      entity.getJoinColumnMappings().add(joinColumnMapping);
-      builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
-      builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
-    } else {
-      builder.withOwningEntity(toEntity);
-      builder.withOwningAttribute((RelationshipMetaAttribute) toEntity.getAttribute(
-          oneToOneRelationship.getMappedBy().get()));
+        builder.withAttributeType(toEntity);
+        return builder.build();
     }
-
-    builder.withAttributeType(toEntity);
-    return builder.build();
-  }
 }

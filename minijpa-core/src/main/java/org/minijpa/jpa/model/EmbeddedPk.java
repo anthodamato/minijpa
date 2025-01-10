@@ -15,27 +15,31 @@
  */
 package org.minijpa.jpa.model;
 
-import java.lang.reflect.Method;
-import java.util.List;
-
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jdbc.QueryParameter;
+import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.db.AttributeFetchParameter;
 import org.minijpa.jpa.db.PkGeneration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class EmbeddedPk implements Pk {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EmbeddedPk.class);
+    private static final Logger log = LoggerFactory.getLogger(EmbeddedPk.class);
     private final MetaEntity entity;
     private final PkGeneration pkGeneration = new PkGeneration();
+    private final List<MetaAttribute> attributes;
 
     public EmbeddedPk(MetaEntity entity) {
         this.entity = entity;
+        attributes = new ArrayList<>(entity.getBasicAttributes());
     }
 
     @Override
@@ -60,7 +64,7 @@ public class EmbeddedPk implements Pk {
 
     @Override
     public List<MetaAttribute> getAttributes() {
-        return entity.getBasicAttributes();
+        return attributes;
     }
 
     @Override
@@ -74,13 +78,13 @@ public class EmbeddedPk implements Pk {
     }
 
     @Override
-    public Method getReadMethod() {
-        return entity.getReadMethod();
+    public Object readValue(Object entityInstance) throws Exception {
+        return entity.getReadMethod().invoke(entityInstance);
     }
 
     @Override
-    public Method getWriteMethod() {
-        return entity.getWriteMethod();
+    public void writeValue(Object entityInstance, Object value) throws Exception {
+        entity.getWriteMethod().invoke(entityInstance, value);
     }
 
     @Override
@@ -94,9 +98,9 @@ public class EmbeddedPk implements Pk {
             ModelValueArray<FetchParameter> modelValueArray,
             List<MetaAttribute> attributes,
             Object pkObject) throws Exception {
-        for (MetaAttribute a : attributes) {
+        for (AbstractMetaAttribute a : attributes) {
             int index = indexOfAttribute(modelValueArray, a);
-            LOG.debug("buildPK: index={}", index);
+            log.debug("buildPK: index={}", index);
             if (index == -1) {
                 throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
             }
@@ -105,13 +109,25 @@ public class EmbeddedPk implements Pk {
         }
     }
 
+    @Override
+    public void expand(Object value, ModelValueArray<AbstractMetaAttribute> modelValueArray) throws Exception {
+        for (AbstractMetaAttribute a : getAttributes()) {
+            Object v = a.getReadMethod().invoke(value);
+            modelValueArray.add(a, v);
+        }
+    }
+
+    @Override
+    public List<QueryParameter> queryParameters(Object value) throws Exception {
+        ModelValueArray<AbstractMetaAttribute> modelValueArray = new ModelValueArray<>();
+        expand(value, modelValueArray);
+        return new ArrayList<>(MetaEntityHelper.convertAVToQP(modelValueArray));
+    }
 
     private int indexOfAttribute(
             ModelValueArray<FetchParameter> modelValueArray,
-            MetaAttribute attribute) {
-        LOG.debug("indexOfAttribute: attribute={}", attribute);
+            AbstractMetaAttribute attribute) {
         for (int i = 0; i < modelValueArray.size(); ++i) {
-            LOG.debug("indexOfAttribute: ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute()={}", ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute());
             if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute) {
                 return i;
             }

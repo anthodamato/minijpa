@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jpa.db.PkGeneration;
 
 /**
@@ -33,6 +34,10 @@ public interface Pk {
 
     boolean isEmbedded();
 
+    default boolean isIdClass() {
+        return false;
+    }
+
     MetaAttribute getAttribute();
 
     List<MetaAttribute> getAttributes();
@@ -41,15 +46,20 @@ public interface Pk {
 
     String getName();
 
-    Method getReadMethod();
-
-    Method getWriteMethod();
-
     Object buildValue(ModelValueArray<FetchParameter> modelValueArray) throws Exception;
 
-    default Object getValue(Object entityInstance) throws Exception {
-        return getReadMethod().invoke(entityInstance);
-    }
+    List<QueryParameter> queryParameters(Object value) throws Exception;
+
+    void expand(
+            Object value,
+            ModelValueArray<AbstractMetaAttribute> modelValueArray) throws Exception;
+
+
+    Object readValue(Object entityInstance) throws Exception;
+
+
+    void writeValue(Object entityInstance, Object value) throws Exception;
+
 
     /**
      * Converts the 'value' read from a resultSet to an object of class returned by
@@ -64,4 +74,7 @@ public interface Pk {
         return ((Number) value).longValue();
     }
 
+    default Object checkClass(Object pkValue) throws Exception {
+        return pkValue;
+    }
 }

@@ -159,17 +159,19 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
 
     @Override
     public Metamodel getMetamodel() {
-        log.debug("getMetamodel: metamodel={}", metamodel);
         synchronized (persistenceUnitInfo) {
             buildPersistenceUnitContext();
             if (metamodel == null) {
                 try {
                     metamodel = new MetamodelFactory(persistenceUnitContext.getEntities()).build();
                 } catch (Exception e) {
-                    log.error(e.getMessage());
+                    log.error("Error during building the Metamodel: {}", e.getMessage());
                 }
             }
         }
+
+        if (metamodel == null)
+            throw new PersistenceException("Error during building the Metamodel");
 
         return metamodel;
     }
@@ -209,7 +211,7 @@ public class MiniEntityManagerFactory implements EntityManagerFactory {
             buildPersistenceUnitContext();
         }
 
-        String jpqlQuery = null;
+        String jpqlQuery;
         if (query instanceof MiniJpqlQuery)
             jpqlQuery = ((MiniJpqlQuery) query).getJpqlString();
         else if (query instanceof MiniJpqlTypedQuery)

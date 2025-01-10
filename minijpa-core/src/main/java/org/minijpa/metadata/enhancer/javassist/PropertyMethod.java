@@ -15,8 +15,6 @@
  */
 package org.minijpa.metadata.enhancer.javassist;
 
-import java.util.Optional;
-
 import javassist.CtMethod;
 
 public class PropertyMethod {
@@ -27,6 +25,8 @@ public class PropertyMethod {
      * true if the method must be created.
      */
     boolean add = false;
+    boolean exists = false;
+    boolean create = false;
 
     public PropertyMethod() {
     }
@@ -36,4 +36,13 @@ public class PropertyMethod {
         this.enhance = enhance;
     }
 
+    @Override
+    public String toString() {
+        return "PropertyMethod{" +
+                "method=" + method +
+                ", enhance=" + enhance +
+                ", add=" + add +
+                ", create=" + create +
+                '}';
+    }
 }

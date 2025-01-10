@@ -51,6 +51,7 @@ public final class ManyToManyRelationship extends ToManyRelationship {
         private JoinTableAttributes joinTableAttributes;
         private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
         private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
+        private boolean id;
 
         public Builder() {
         }
@@ -125,6 +126,11 @@ public final class ManyToManyRelationship extends ToManyRelationship {
             return this;
         }
 
+        public Builder withId(boolean id) {
+            this.id = id;
+            return this;
+        }
+
         public Builder with(ManyToManyRelationship r) {
             this.joinColumnTable = r.joinColumnTable;
             this.mappedBy = r.mappedBy;
@@ -140,6 +146,7 @@ public final class ManyToManyRelationship extends ToManyRelationship {
             this.joinTableAttributes = r.joinTableAttributes;
             this.joinColumnDataList = r.joinColumnDataList;
             this.joinColumnMapping = r.joinColumnMapping;
+            this.id = id;
             return this;
         }
 
@@ -159,6 +166,7 @@ public final class ManyToManyRelationship extends ToManyRelationship {
             r.joinTableAttributes = joinTableAttributes;
             r.joinColumnDataList = joinColumnDataList;
             r.joinColumnMapping = joinColumnMapping;
+            r.id = id;
             return r;
         }
     }

@@ -72,7 +72,7 @@ public class PatientIdClassTest {
         em.detach(patient2);
 
         tx.begin();
-        Doctor doctor_1 = em.find(Doctor.class, Long.valueOf(4));
+        Doctor doctor_1 = em.find(Doctor.class, 4L);
 
         List<Patient> patients = doctor_1.getPatients();
         Assertions.assertNotNull(patients);

@@ -9,7 +9,6 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class RoomBookingId implements Serializable {
 
-	private static final long serialVersionUID = 1453073604263556318L;
 	private Date dateof;
 	@Column(name = "room_number")
 	private Integer roomNumber;
@@ -44,7 +43,7 @@ public class RoomBookingId implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null || !(obj instanceof RoomBookingId))
+		if (!(obj instanceof RoomBookingId))
 			return false;
 
 		RoomBookingId roomBookingId = (RoomBookingId) obj;

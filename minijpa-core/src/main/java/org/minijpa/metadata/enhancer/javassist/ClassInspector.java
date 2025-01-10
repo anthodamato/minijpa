@@ -21,13 +21,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
 import org.minijpa.metadata.BeanUtil;
 import org.slf4j.Logger;
@@ -50,12 +44,6 @@ import javassist.expr.Instanceof;
 import javassist.expr.MethodCall;
 import javassist.expr.NewArray;
 import javassist.expr.NewExpr;
-
-import javax.persistence.FetchType;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 
 import org.minijpa.metadata.RelationshipHelper;
 
@@ -99,17 +87,16 @@ public class ClassInspector {
             throw new IllegalArgumentException("Found @Embeddable annotation. Class '" + className + "'");
 
         Object entityAnnotation = ct.getAnnotation(Entity.class);
-        if (entityAnnotation == null) {
+        if (entityAnnotation == null)
             throw new IllegalArgumentException("@Entity annotation not found. Class '" + className + "'");
-        }
 
         ManagedData managedData = new ManagedData();
         managedData.setClassName(className);
 
-        Optional<ManagedData> optional = findMappedSuperclass(ct);
-        optional.ifPresent(data -> managedData.mappedSuperclass = data);
+        Optional<ManagedData> mappedSuperclass = findMappedSuperclass(ct, pool, false);
+        mappedSuperclass.ifPresent(data -> managedData.mappedSuperclass = data);
 
-        List<Property> properties = findProperties(ct);
+        List<Property> properties = findProperties(ct, false);
         LOG.debug("Found {} attributes in '{}'", properties.size(), ct.getName());
 
         // modification attribute
@@ -150,6 +137,13 @@ public class ClassInspector {
         findJoinColumnAttributeFields(properties, ct);
 
         List<AttributeData> attrs = createDataAttributes(properties, false);
+
+        Optional<ManagedData> primaryKeyClassManagedData = findPrimaryKeyClass(ct, pool);
+        if (mappedSuperclass.isPresent() && primaryKeyClassManagedData.isPresent())
+            throw new IllegalArgumentException("IdClass annotation found on Entity and MappedSuperclass: '" + className + "'");
+
+        managedData.setPrimaryKeyClass(primaryKeyClassManagedData.orElse(null));
+
         managedData.addAttributeDatas(attrs);
         managedData.setCtClass(ct);
         managedData.setModificationAttribute(modificationAttribute.get());
@@ -172,6 +166,42 @@ public class ClassInspector {
         inspectedClasses.add(managedData);
         return managedData;
     }
+
+
+    private Optional<ManagedData> findPrimaryKeyClass(
+            CtClass ct,
+            ClassPool pool) throws Exception {
+        IdClass idClass = (IdClass) ct.getAnnotation(IdClass.class);
+        if (idClass == null)
+            return Optional.empty();
+
+        ManagedData primaryKeyClassManagedData = new ManagedData();
+        String primaryKeyClassName = idClass.value().getName();
+        primaryKeyClassManagedData.setClassName(primaryKeyClassName);
+        CtClass ctClassPrimaryKey;
+        try {
+            ctClassPrimaryKey = pool.get(primaryKeyClassName);
+        } catch (NotFoundException e) {
+            throw new IllegalArgumentException("Primary key Class '" + primaryKeyClassName + "' not found");
+        }
+
+        List<Property> primaryKeyClassProperties = findProperties(ctClassPrimaryKey, true);
+        primaryKeyClassProperties.forEach(p -> {
+            p.getGetPropertyMethod().enhance = false;
+            p.getSetPropertyMethod().enhance = false;
+            if (!p.getSetPropertyMethod().exists)
+                p.getSetPropertyMethod().create = true;
+
+            if (!p.getGetPropertyMethod().exists)
+                p.getGetPropertyMethod().create = true;
+        });
+
+        List<AttributeData> primaryKeyAttrs = createDataAttributes(primaryKeyClassProperties, false);
+        primaryKeyClassManagedData.addAttributeDatas(primaryKeyAttrs);
+        primaryKeyClassManagedData.setCtClass(ctClassPrimaryKey);
+        return Optional.of(primaryKeyClassManagedData);
+    }
+
 
     private Optional<String> createLazyLoadedAttribute(
             List<Property> properties,
@@ -254,14 +284,13 @@ public class ClassInspector {
         for (Property property : properties) {
             RelationshipProperties rp = property.getRelationshipProperties();
             if (rp != null) {
-                RelationshipProperties relationshipProperties = rp;
-                if (relationshipProperties.hasJoinColumn() && relationshipProperties.isLazy()) {
+                if (rp.hasJoinColumn() && rp.isLazy()) {
                     String prefix = property.getCtField().getName() + "_jcv";
                     Optional<String> o = findAvailableAttribute(prefix, properties, ct);
                     if (o.isEmpty())
                         throw new Exception("Internal error. Next available attribute '" + prefix + "' not found");
 
-                    relationshipProperties.setJoinColumnFieldName(o);
+                    rp.setJoinColumnFieldName(o);
                     fieldNames.add(o.get());
                 }
             }
@@ -305,7 +334,11 @@ public class ClassInspector {
         optionalMA.ifPresent(properties::remove);
     }
 
-    private Optional<ManagedData> findMappedSuperclass(CtClass ct) throws Exception {
+
+    private Optional<ManagedData> findMappedSuperclass(
+            CtClass ct,
+            ClassPool pool,
+            boolean createGetMethod) throws Exception {
         CtClass superClass = ct.getSuperclass();
         if (superClass == null)
             return Optional.empty();
@@ -324,7 +357,7 @@ public class ClassInspector {
         if (mappedSuperclassEnhEntity != null)
             return Optional.of(mappedSuperclassEnhEntity);
 
-        List<Property> properties = findProperties(superClass);
+        List<Property> properties = findProperties(superClass, createGetMethod);
         Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties,
                 superClass);
         if (modificationAttribute.isEmpty())
@@ -334,16 +367,8 @@ public class ClassInspector {
 
         // lazy loaded attribute tracker
         Optional<String> lazyLoadedAttribute = createLazyLoadedAttribute(properties, ct);
-//	Optional<Property> optionalLazy = properties.stream()
-//		.filter(p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().isLazy())
-//		.findFirst();
-//	if (optionalLazy.isPresent()) {
-//	    lazyLoadedAttribute = findAvailableAttribute(lazyLoadedAttributePrefix, properties, ct);
-//	    removeAttributeFromProperties(lazyLoadedAttribute.get(), properties);
-//	}
 
         // join column postponed update attribute
-//	createJoinColumnPostponedUpdateAttributeOnDest(properties, ct);
         Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(properties, ct);
 
         LOG.debug("Found {} attributes in '{}'", properties.size(), superClass.getName());
@@ -352,20 +377,25 @@ public class ClassInspector {
         if (attrs.isEmpty())
             return Optional.empty();
 
-        ManagedData mappedSuperclass = new ManagedData();
-        mappedSuperclass.setClassName(superClass.getName());
-        mappedSuperclass.addAttributeDatas(attrs);
-        mappedSuperclass.setCtClass(superClass);
-        mappedSuperclass.setModificationAttribute(modificationAttribute.get());
-        mappedSuperclass.setLazyLoadedAttribute(lazyLoadedAttribute);
-        mappedSuperclass.setJoinColumnPostponedUpdateAttribute(joinColumnPostponedUpdateAttribute);
+        ManagedData managedData = new ManagedData();
+
+        Optional<ManagedData> primaryKeyClassManagedData = findPrimaryKeyClass(ct, pool);
+        managedData.setPrimaryKeyClass(primaryKeyClassManagedData.orElse(null));
+
+        managedData.setClassName(superClass.getName());
+        managedData.addAttributeDatas(attrs);
+        managedData.setCtClass(superClass);
+        managedData.setModificationAttribute(modificationAttribute.get());
+        managedData.setLazyLoadedAttribute(lazyLoadedAttribute);
+        managedData.setJoinColumnPostponedUpdateAttribute(joinColumnPostponedUpdateAttribute);
 
         List<ManagedData> embeddables = new ArrayList<>();
         createEmbeddables(attrs, embeddables);
-        mappedSuperclass.getEmbeddables().addAll(embeddables);
+        managedData.getEmbeddables().addAll(embeddables);
 
-        return Optional.of(mappedSuperclass);
+        return Optional.of(managedData);
     }
+
 
     private ManagedData findInspectedMappedSuperclass(String superclassName) {
         for (ManagedData enhEntity : inspectedClasses) {
@@ -416,9 +446,6 @@ public class ClassInspector {
         List<AttributeData> attributes = new ArrayList<>();
         // nothing to do if there are no persistent attributes
         if (properties.isEmpty())
-            return attributes;
-
-        if (countAttributesToEnhance(properties) == 0)
             return attributes;
 
         for (Property property : properties) {
@@ -497,7 +524,9 @@ public class ClassInspector {
         return new AttributeData(property, parentIsEmbeddedId, embeddedData);
     }
 
-    private List<Property> findProperties(CtClass ctClass) throws Exception {
+    private List<Property> findProperties(
+            CtClass ctClass,
+            boolean createGetMethod) throws Exception {
 //		CtBehavior[] ctBehaviors = ctClass.getDeclaredBehaviors();
 //		for(CtBehavior ctBehavior:ctBehaviors) {
 //			LOG.info("findAttributes: ctField.getName()=" + ctBehavior.);
@@ -506,14 +535,18 @@ public class ClassInspector {
         CtField[] ctFields = ctClass.getDeclaredFields();
         List<Property> attrs = new ArrayList<>();
         for (CtField ctField : ctFields) {
-            Optional<Property> optional = readProperty(ctField, ctClass);
+            LOG.debug("findProperties: ctField.getName()={}", ctField.getName());
+            Optional<Property> optional = readProperty(ctField, ctClass, createGetMethod);
             optional.ifPresent(attrs::add);
         }
 
         return attrs;
     }
 
-    private Optional<Property> readProperty(CtField ctField, CtClass ctClass) throws Exception {
+    private Optional<Property> readProperty(
+            CtField ctField,
+            CtClass ctClass,
+            boolean createGetMethod) throws Exception {
         LOG.debug("readProperty: ctField.getName()={}", ctField.getName());
         LOG.debug("readProperty: ctField.getModifiers()={}", ctField.getModifiers());
         LOG.debug("readProperty: ctField.getType().getName()={}", ctField.getType().getName());
@@ -529,6 +562,7 @@ public class ClassInspector {
             return Optional.empty();
 
         Object idAnnotation = ctField.getAnnotation(Id.class);
+        LOG.debug("readProperty: idAnnotation={}", idAnnotation);
         Object embeddedIdAnnotation = ctField.getAnnotation(EmbeddedId.class);
 
         boolean embedded = false;
@@ -540,7 +574,7 @@ public class ClassInspector {
                 throw new Exception("@Embeddable annotation missing on '" + ctField.getType().getName() + "'");
 
             embedded = true;
-            embeddedProperties = findProperties(ctField.getType());
+            embeddedProperties = findProperties(ctField.getType(), createGetMethod);
             if (embeddedIdAnnotation != null) {
                 for (Property p : embeddedProperties) {
                     p.setEmbeddedIdParent(true);
@@ -556,8 +590,12 @@ public class ClassInspector {
         boolean id = idAnnotation != null || embeddedIdAnnotation != null;
 
         PropertyMethod getPropertyMethod = findGetMethod(ctClass, ctField);
-        if (getPropertyMethod.method == null)
-            return Optional.empty();
+        if (getPropertyMethod.method == null) {
+            if (createGetMethod)
+                getPropertyMethod.add = true;
+            else
+                return Optional.empty();
+        }
 
         PropertyMethod setPropertyMethod = findSetMethod(ctClass, ctField);
         if (setPropertyMethod.method == null)
@@ -628,7 +666,7 @@ public class ClassInspector {
     }
 
     private PropertyMethod findGetMethod(CtClass ctClass, CtField ctField) throws Exception {
-        CtMethod getMethod = null;
+        CtMethod getMethod;
         try {
             getMethod = findIsGetMethod(ctClass, ctField);
         } catch (NotFoundException e) {
@@ -645,11 +683,13 @@ public class ClassInspector {
         if (!getMethod.getReturnType().subtypeOf(ctField.getType()))
             return new PropertyMethod();
 
-        return new PropertyMethod(getMethod, true);
+        PropertyMethod propertyMethod = new PropertyMethod(getMethod, true);
+        propertyMethod.exists = true;
+        return propertyMethod;
     }
 
     private PropertyMethod findSetMethod(CtClass ctClass, CtField ctField) throws Exception {
-        CtMethod setMethod = null;
+        CtMethod setMethod;
         try {
             setMethod = ctClass.getDeclaredMethod(BeanUtil.getSetterMethodName(ctField.getName()));
         } catch (NotFoundException e) {
@@ -666,7 +706,9 @@ public class ClassInspector {
         if (!setMethod.getReturnType().getName().equals(Void.TYPE.getName())) // void type
             return new PropertyMethod();
 
-        return new PropertyMethod(setMethod, true);
+        PropertyMethod propertyMethod = new PropertyMethod(setMethod, true);
+        propertyMethod.exists = true;
+        return propertyMethod;
     }
 
     private class ExprEditorExt extends ExprEditor {

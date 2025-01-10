@@ -93,4 +93,11 @@ public class ModelValueArray<T> {
         return models.size();
     }
 
+    @Override
+    public String toString() {
+        return "ModelValueArray{" +
+                "models=" + models +
+                ", values=" + values +
+                '}';
+    }
 }

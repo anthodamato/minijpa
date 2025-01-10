@@ -26,57 +26,57 @@ import org.minijpa.jpa.model.RelationshipMetaAttribute;
  */
 public class CompositeJoinColumnMapping implements JoinColumnMapping {
 
-  private final List<JoinColumnAttribute> joinColumnAttributes;
-  private final RelationshipMetaAttribute attribute;
-  private final Pk pk;
+    private final List<JoinColumnAttribute> joinColumnAttributes;
+    private final RelationshipMetaAttribute attribute;
+    private final Pk pk;
 
-  public CompositeJoinColumnMapping(
-      List<JoinColumnAttribute> joinColumnAttributes,
-      RelationshipMetaAttribute attribute,
-      Pk pk) {
-    this.joinColumnAttributes = joinColumnAttributes;
-    this.attribute = attribute;
-    this.pk = pk;
-  }
+    public CompositeJoinColumnMapping(
+            List<JoinColumnAttribute> joinColumnAttributes,
+            RelationshipMetaAttribute attribute,
+            Pk pk) {
+        this.joinColumnAttributes = joinColumnAttributes;
+        this.attribute = attribute;
+        this.pk = pk;
+    }
 
-  @Override
-  public RelationshipMetaAttribute getAttribute() {
-    return attribute;
-  }
+    @Override
+    public RelationshipMetaAttribute getAttribute() {
+        return attribute;
+    }
 
-  @Override
-  public boolean isComposite() {
-    return true;
-  }
+    @Override
+    public boolean isComposite() {
+        return true;
+    }
 
-  @Override
-  public int size() {
-    return joinColumnAttributes.size();
-  }
+    @Override
+    public int size() {
+        return joinColumnAttributes.size();
+    }
 
-  @Override
-  public JoinColumnAttribute get(int index) {
-    return joinColumnAttributes.get(index);
-  }
+    @Override
+    public JoinColumnAttribute get(int index) {
+        return joinColumnAttributes.get(index);
+    }
 
-  @Override
-  public JoinColumnAttribute get() {
-    return null;
-  }
+    @Override
+    public JoinColumnAttribute get() {
+        return null;
+    }
 
-  @Override
-  public Pk getForeignKey() {
-    return pk;
-  }
+    @Override
+    public Pk getForeignKey() {
+        return pk;
+    }
 
-  @Override
-  public boolean isLazy() {
-    return joinColumnAttributes.get(0).getAttribute().isLazy();
-  }
+    @Override
+    public boolean isLazy() {
+        return joinColumnAttributes.get(0).getAttribute().isLazy();
+    }
 
-  @Override
-  public List<JoinColumnAttribute> getJoinColumnAttributes() {
-    return joinColumnAttributes;
-  }
+    @Override
+    public List<JoinColumnAttribute> getJoinColumnAttributes() {
+        return joinColumnAttributes;
+    }
 
 }

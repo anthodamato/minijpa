@@ -80,4 +80,13 @@ public class RelationshipProperties {
         this.ctMethodSetter = ctMethodSetter;
     }
 
+    @Override
+    public String toString() {
+        return "RelationshipProperties{" +
+                "fieldName='" + fieldName + '\'' +
+                ", lazy=" + lazy +
+                ", joinColumn=" + joinColumn +
+                ", joinColumnFieldName=" + joinColumnFieldName +
+                '}';
+    }
 }

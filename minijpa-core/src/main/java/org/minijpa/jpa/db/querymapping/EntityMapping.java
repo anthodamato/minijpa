@@ -15,60 +15,61 @@
  */
 package org.minijpa.jpa.db.querymapping;
 
-import java.util.List;
-import java.util.Optional;
-
 import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 
+import java.util.List;
+import java.util.Optional;
+
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class EntityMapping {
 
-	private final MetaEntity metaEntity;
-	private final List<AttributeNameMapping> attributeNameMappings;
+    private final MetaEntity metaEntity;
+    private final List<AttributeNameMapping> attributeNameMappings;
 
-	public EntityMapping(MetaEntity metaEntity, List<AttributeNameMapping> attributeNameMappings) {
-		this.metaEntity = metaEntity;
-		this.attributeNameMappings = attributeNameMappings;
-	}
+    public EntityMapping(MetaEntity metaEntity, List<AttributeNameMapping> attributeNameMappings) {
+        this.metaEntity = metaEntity;
+        this.attributeNameMappings = attributeNameMappings;
+    }
 
-	public MetaEntity getMetaEntity() {
-		return metaEntity;
-	}
+    public MetaEntity getMetaEntity() {
+        return metaEntity;
+    }
 
-	public List<AttributeNameMapping> getAttributeNameMappings() {
-		return attributeNameMappings;
-	}
+    public List<AttributeNameMapping> getAttributeNameMappings() {
+        return attributeNameMappings;
+    }
 
-	public Optional<MetaAttribute> getAttribute(String columnName) {
-		List<MetaAttribute> attributes = metaEntity.expandAllAttributes();
-		Optional<AttributeNameMapping> optional = attributeNameMappings.stream().
-				filter(m -> m.getAlias().equalsIgnoreCase(columnName)).findFirst();
-		if (optional.isPresent()) {
-			Optional<MetaAttribute> oa = attributes.stream().
-					filter(a -> a.getPath().equalsIgnoreCase(optional.get().getName())).findFirst();
-			if (oa.isPresent())
-				return oa;
-		}
+    public Optional<MetaAttribute> getAttribute(String columnName) {
+        List<MetaAttribute> attributes = metaEntity.expandAllAttributes();
+        Optional<AttributeNameMapping> optional = attributeNameMappings.stream().
+                filter(m -> m.getAlias().equalsIgnoreCase(columnName)).findFirst();
+        if (optional.isPresent()) {
+            Optional<MetaAttribute> oa = attributes.stream().
+                    filter(a -> a.getPath().equalsIgnoreCase(optional.get().getName())).findFirst();
+            if (oa.isPresent())
+                return oa;
+        }
 
-		return attributes.stream().filter(a -> a.getColumnName().equalsIgnoreCase(columnName)).findFirst();
-	}
+        return attributes.stream()
+                .filter(a -> a.getColumnName().equalsIgnoreCase(columnName))
+                .findFirst();
+    }
 
-	public Optional<JoinColumnAttribute> getJoinColumnAttribute(String columnName) {
-		List<JoinColumnAttribute> joinColumnAttributes = metaEntity.expandJoinColumnAttributes();
-		Optional<AttributeNameMapping> optional = attributeNameMappings.stream().
-				filter(m -> m.getAlias().equalsIgnoreCase(columnName)).findFirst();
-		if (optional.isPresent()) {
-			Optional<JoinColumnAttribute> o = joinColumnAttributes.stream().filter(
-					j -> j.getColumnName().equalsIgnoreCase(optional.get().getName())).findFirst();
-			if (o.isPresent())
-				return o;
-		}
+    public Optional<JoinColumnAttribute> getJoinColumnAttribute(String columnName) {
+        List<JoinColumnAttribute> joinColumnAttributes = metaEntity.expandJoinColumnAttributes();
+        Optional<AttributeNameMapping> optional = attributeNameMappings.stream().
+                filter(m -> m.getAlias().equalsIgnoreCase(columnName)).findFirst();
+        if (optional.isPresent()) {
+            Optional<JoinColumnAttribute> o = joinColumnAttributes.stream().filter(
+                    j -> j.getColumnName().equalsIgnoreCase(optional.get().getName())).findFirst();
+            if (o.isPresent())
+                return o;
+        }
 
-		return joinColumnAttributes.stream().filter(a -> a.getColumnName().equalsIgnoreCase(columnName)).findFirst();
-	}
+        return joinColumnAttributes.stream().filter(a -> a.getColumnName().equalsIgnoreCase(columnName)).findFirst();
+    }
 }

@@ -23,12 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class MetaEntity {
-    private Logger log = LoggerFactory.getLogger(MetaEntity.class);
+    private final Logger log = LoggerFactory.getLogger(MetaEntity.class);
 
     private Class<?> entityClass;
     private String name;
@@ -190,6 +189,24 @@ public class MetaEntity {
         return list;
     }
 
+//    public List<AbstractMetaAttribute> expandAllAttributes() {
+//        List<AbstractMetaAttribute> list = new ArrayList<>();
+//        if (id != null) {
+//            for (AbstractMetaAttribute abstractMetaAttribute : id.getAttributes()) {
+//                if (abstractMetaAttribute instanceof RelationshipMetaAttribute)
+//                    continue;
+//
+//                list.add(abstractMetaAttribute);
+//            }
+//        }
+//
+//        list.addAll(basicAttributes);
+//
+//        list.addAll(expandEmbeddables());
+//
+//        return list;
+//    }
+
     public List<MetaAttribute> expandEmbeddables() {
         List<MetaAttribute> list = new ArrayList<>();
         embeddables.forEach(e -> {
@@ -198,6 +215,18 @@ public class MetaEntity {
 
         return list;
     }
+
+//    public List<MetaAttribute> expandEmbeddables() {
+//        List<MetaAttribute> list = new ArrayList<>();
+//        // embeddables can't have IdClass
+//        embeddables.forEach(e -> {
+//            List<AbstractMetaAttribute> abstractMetaAttributes = e.expandAllAttributes();
+//            abstractMetaAttributes.forEach(a -> list.add((MetaAttribute) a));
+////            list.addAll(e.expandAllAttributes());
+//        });
+//
+//        return list;
+//    }
 
     public List<JoinColumnAttribute> expandJoinColumnAttributes() {
         List<JoinColumnAttribute> jcas = new ArrayList<>();

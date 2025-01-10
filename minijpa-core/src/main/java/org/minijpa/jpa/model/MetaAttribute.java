@@ -25,20 +25,13 @@ import java.util.Optional;
 public class MetaAttribute extends AbstractMetaAttribute {
 
     protected boolean id;
-    protected Field javaMember;
     // it's a version attribute
     protected boolean version = false;
     // it's a basic attribute
     protected boolean basic;
-    protected Optional<DDLData> ddlData = Optional.empty();
-    protected AttributeMapper attributeMapper;
 
     public boolean isId() {
         return id;
-    }
-
-    public Field getJavaMember() {
-        return javaMember;
     }
 
     public boolean isVersion() {
@@ -48,16 +41,6 @@ public class MetaAttribute extends AbstractMetaAttribute {
     public boolean isBasic() {
         return basic;
     }
-
-    public Optional<DDLData> getDdlData() {
-        return ddlData;
-    }
-
-    @Override
-    public AttributeMapper getAttributeMapper() {
-        return attributeMapper;
-    }
-
 
     @Override
     public String toString() {

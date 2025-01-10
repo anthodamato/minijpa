@@ -97,7 +97,8 @@ public class MiniEntityManager extends AbstractEntityManager {
         }
 
         try {
-            if (!persistenceContext.isManaged(entity))
+            boolean managed = persistenceContext.isManaged(entity);
+            if (!managed)
                 return;
         } catch (Exception e) {
             log.error(e.getMessage());

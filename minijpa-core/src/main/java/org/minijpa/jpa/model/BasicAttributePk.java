@@ -17,12 +17,13 @@ package org.minijpa.jpa.model;
 
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jpa.db.AttributeFetchParameter;
 import org.minijpa.jpa.db.PkGeneration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -78,13 +79,13 @@ public class BasicAttributePk implements Pk {
     }
 
     @Override
-    public Method getReadMethod() {
-        return attribute.getReadMethod();
+    public Object readValue(Object entityInstance) throws Exception {
+        return attribute.getReadMethod().invoke(entityInstance);
     }
 
     @Override
-    public Method getWriteMethod() {
-        return attribute.getWriteMethod();
+    public void writeValue(Object entityInstance, Object value) throws Exception {
+        attribute.getWriteMethod().invoke(entityInstance, value);
     }
 
     @Override
@@ -98,9 +99,21 @@ public class BasicAttributePk implements Pk {
         return modelValueArray.getValue(index);
     }
 
+    @Override
+    public void expand(Object value, ModelValueArray<AbstractMetaAttribute> modelValueArray) throws Exception {
+        modelValueArray.add(getAttribute(), value);
+    }
+
+    @Override
+    public List<QueryParameter> queryParameters(Object value) throws Exception {
+        List<QueryParameter> list = new ArrayList<>();
+        list.add(getAttribute().queryParameter(value));
+        return list;
+    }
+
     private int indexOfAttribute(
             ModelValueArray<FetchParameter> modelValueArray,
-            MetaAttribute attribute) {
+            AbstractMetaAttribute attribute) {
         LOG.debug("indexOfAttribute: attribute={}", attribute);
         for (int i = 0; i < modelValueArray.size(); ++i) {
             LOG.debug("indexOfAttribute: ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute()={}", ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute());

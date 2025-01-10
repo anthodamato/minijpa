@@ -43,7 +43,8 @@ public class JdbcQueryRunner {
         SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
                 .generateSelectById(entity, lockType,
                         aliasGenerator);
-        List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
+        List<QueryParameter> parameters = entity.getId().queryParameters(primaryKey);
+
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
         jdbcValueBuilderById.setFetchParameters(sqlSelectData.getFetchParameters());
         return dbConfiguration.getJdbcRunner()
@@ -57,7 +58,8 @@ public class JdbcQueryRunner {
         SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
                 .generateSelectVersion(entity, lockType,
                         aliasGenerator);
-        List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(entity.getId(), primaryKey);
+        List<QueryParameter> parameters = entity.getId().queryParameters(primaryKey);
+
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
         jdbcValueBuilderById.setFetchParameters(sqlSelectData.getFetchParameters());
         return dbConfiguration.getJdbcRunner()
@@ -83,8 +85,7 @@ public class JdbcQueryRunner {
             Class<?> collectionClass,
             LockType lockType,
             EntityHandler entityLoader) throws Exception {
-        List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(foreignKeyAttribute,
-                foreignKey);
+        List<QueryParameter> parameters = foreignKeyAttribute.queryParameters(foreignKey);
         List<String> columns = parameters.stream().map(p -> {
                     if (p.getColumn() instanceof String) return (String) p.getColumn();
 
@@ -171,7 +172,8 @@ public class JdbcQueryRunner {
             List<QueryParameter> parameters)
             throws Exception {
         List<String> columns = parameters.stream().map(p -> {
-                    if (p.getColumn() instanceof String) return (String) p.getColumn();
+                    if (p.getColumn() instanceof String)
+                        return (String) p.getColumn();
 
                     return ((TableColumn) p.getColumn()).getColumn().getName();
                 })
