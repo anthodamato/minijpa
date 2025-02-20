@@ -23,21 +23,16 @@ import java.util.Set;
 public class EnhEntity {
 
     private String className;
-    private Class<?> classType;
     private List<EnhAttribute> enhAttributes = new ArrayList<>();
     private EnhEntity mappedSuperclass;
     private String modificationAttributeGetMethod;
-    private Optional<String> lazyLoadedAttributeGetMethod = Optional.empty();
-    private Optional<String> joinColumnPostponedUpdateAttributeGetMethod = Optional.empty();
-    private Optional<String> lockTypeAttributeGetMethod = Optional.empty();
-    private Optional<String> lockTypeAttributeSetMethod = Optional.empty();
-    private Optional<String> entityStatusAttributeGetMethod = Optional.empty();
-    private Optional<String> entityStatusAttributeSetMethod = Optional.empty();
+    private String lazyLoadedAttributeGetMethod;
+    private String joinColumnPostponedUpdateAttributeGetMethod;
+    private String lockTypeAttributeGetMethod;
+    private String lockTypeAttributeSetMethod;
+    private String entityStatusAttributeGetMethod;
+    private String entityStatusAttributeSetMethod;
     private IdClassPropertyData idClassPropertyData;
-//    private EnhEntity idClassType;
-//    // it's used to finalize the idclass value class
-//    private ManagedData idClassManagedData;
-//    private CtClass idCtClass;
 
     public String getClassName() {
         return className;
@@ -45,14 +40,6 @@ public class EnhEntity {
 
     public void setClassName(String className) {
         this.className = className;
-    }
-
-    public Class<?> getClassType() {
-        return classType;
-    }
-
-    public void setClassType(Class<?> classType) {
-        this.classType = classType;
     }
 
     public List<EnhAttribute> getEnhAttributes() {
@@ -79,52 +66,52 @@ public class EnhEntity {
         this.modificationAttributeGetMethod = modificationAttributeGetMethod;
     }
 
-    public Optional<String> getLazyLoadedAttributeGetMethod() {
+    public String getLazyLoadedAttributeGetMethod() {
         return lazyLoadedAttributeGetMethod;
     }
 
-    public void setLazyLoadedAttributeGetMethod(Optional<String> lazyLoadedAttributeGetMethod) {
+    public void setLazyLoadedAttributeGetMethod(String lazyLoadedAttributeGetMethod) {
         this.lazyLoadedAttributeGetMethod = lazyLoadedAttributeGetMethod;
     }
 
-    public Optional<String> getJoinColumnPostponedUpdateAttributeGetMethod() {
+    public String getJoinColumnPostponedUpdateAttributeGetMethod() {
         return joinColumnPostponedUpdateAttributeGetMethod;
     }
 
     public void setJoinColumnPostponedUpdateAttributeGetMethod(
-            Optional<String> joinColumnPostponedUpdateAttributeGetMethod) {
+            String joinColumnPostponedUpdateAttributeGetMethod) {
         this.joinColumnPostponedUpdateAttributeGetMethod = joinColumnPostponedUpdateAttributeGetMethod;
     }
 
-    public Optional<String> getLockTypeAttributeGetMethod() {
+    public String getLockTypeAttributeGetMethod() {
         return lockTypeAttributeGetMethod;
     }
 
-    public void setLockTypeAttributeGetMethod(Optional<String> lockTypeAttributeGetMethod) {
+    public void setLockTypeAttributeGetMethod(String lockTypeAttributeGetMethod) {
         this.lockTypeAttributeGetMethod = lockTypeAttributeGetMethod;
     }
 
-    public Optional<String> getLockTypeAttributeSetMethod() {
+    public String getLockTypeAttributeSetMethod() {
         return lockTypeAttributeSetMethod;
     }
 
-    public void setLockTypeAttributeSetMethod(Optional<String> lockTypeAttributeSetMethod) {
+    public void setLockTypeAttributeSetMethod(String lockTypeAttributeSetMethod) {
         this.lockTypeAttributeSetMethod = lockTypeAttributeSetMethod;
     }
 
-    public Optional<String> getEntityStatusAttributeGetMethod() {
+    public String getEntityStatusAttributeGetMethod() {
         return entityStatusAttributeGetMethod;
     }
 
-    public void setEntityStatusAttributeGetMethod(Optional<String> entityStatusAttributeGetMethod) {
+    public void setEntityStatusAttributeGetMethod(String entityStatusAttributeGetMethod) {
         this.entityStatusAttributeGetMethod = entityStatusAttributeGetMethod;
     }
 
-    public Optional<String> getEntityStatusAttributeSetMethod() {
+    public String getEntityStatusAttributeSetMethod() {
         return entityStatusAttributeSetMethod;
     }
 
-    public void setEntityStatusAttributeSetMethod(Optional<String> entityStatusAttributeSetMethod) {
+    public void setEntityStatusAttributeSetMethod(String entityStatusAttributeSetMethod) {
         this.entityStatusAttributeSetMethod = entityStatusAttributeSetMethod;
     }
 

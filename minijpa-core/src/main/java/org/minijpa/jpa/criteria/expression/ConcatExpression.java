@@ -1,21 +1,22 @@
 package org.minijpa.jpa.criteria.expression;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
+import java.util.Collection;
+import java.util.List;
 
 public class ConcatExpression implements Expression<String> {
-    private Optional<Expression<String>> x;
-    private Optional<String> xValue;
-    private Optional<Expression<String>> y;
-    private Optional<String> yValue;
+    private Expression<String> x;
+    private String xValue;
+    private Expression<String> y;
+    private String yValue;
 
-    public ConcatExpression(Optional<Expression<String>> x, Optional<String> xValue, Optional<Expression<String>> y,
-            Optional<String> yValue) {
+    public ConcatExpression(
+            Expression<String> x,
+            String xValue,
+            Expression<String> y,
+            String yValue) {
         super();
         this.x = x;
         this.xValue = xValue;
@@ -23,19 +24,19 @@ public class ConcatExpression implements Expression<String> {
         this.yValue = yValue;
     }
 
-    public Optional<Expression<String>> getX() {
+    public Expression<String> getX() {
         return x;
     }
 
-    public Optional<String> getxValue() {
+    public String getxValue() {
         return xValue;
     }
 
-    public Optional<Expression<String>> getY() {
+    public Expression<String> getY() {
         return y;
     }
 
-    public Optional<String> getyValue() {
+    public String getyValue() {
         return yValue;
     }
 

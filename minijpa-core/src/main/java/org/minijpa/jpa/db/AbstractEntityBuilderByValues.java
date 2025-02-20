@@ -22,9 +22,8 @@ public abstract class AbstractEntityBuilderByValues extends AbstractEntityBuilde
             MetaEntity metaEntity,
             ModelValueArray<FetchParameter> modelValueArray) throws Exception {
         int index = AttributeUtil.indexOfAttribute(modelValueArray, attribute);
-        if (index == -1) {
+        if (index == -1)
             return;
-        }
 
         MetaEntityHelper.writeMetaAttributeValue(
                 parentInstance,

@@ -29,16 +29,20 @@ public class JdbcQueryRunner {
     private final JdbcRunner.JdbcValueBuilderById jdbcValueBuilderById = new JdbcRunner.JdbcValueBuilderById();
     private final JdbcFetchParameterRecordBuilder jdbcFetchParameterRecordBuilder = new JdbcFetchParameterRecordBuilder();
 
-    public JdbcQueryRunner(ConnectionHolder connectionHolder, DbConfiguration dbConfiguration,
-                           AliasGenerator tableAliasGenerator) {
+    public JdbcQueryRunner(
+            ConnectionHolder connectionHolder,
+            DbConfiguration dbConfiguration,
+            AliasGenerator tableAliasGenerator) {
         super();
         this.connectionHolder = connectionHolder;
         this.dbConfiguration = dbConfiguration;
         this.aliasGenerator = tableAliasGenerator;
     }
 
-    public Optional<ModelValueArray<FetchParameter>> findById(MetaEntity entity, Object primaryKey,
-                                                              LockType lockType)
+    public Optional<ModelValueArray<FetchParameter>> findById(
+            MetaEntity entity,
+            Object primaryKey,
+            LockType lockType)
             throws Exception {
         SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
                 .generateSelectById(entity, lockType,
@@ -52,20 +56,21 @@ public class JdbcQueryRunner {
                         jdbcValueBuilderById);
     }
 
-    public Optional<ModelValueArray<FetchParameter>> runVersionQuery(MetaEntity entity,
-                                                                     Object primaryKey,
-                                                                     LockType lockType) throws Exception {
-        SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
-                .generateSelectVersion(entity, lockType,
-                        aliasGenerator);
-        List<QueryParameter> parameters = entity.getId().queryParameters(primaryKey);
-
-        String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-        jdbcValueBuilderById.setFetchParameters(sqlSelectData.getFetchParameters());
-        return dbConfiguration.getJdbcRunner()
-                .findById(sql, connectionHolder.getConnection(), parameters,
-                        jdbcValueBuilderById);
-    }
+//    public Optional<ModelValueArray<FetchParameter>> runVersionQuery(
+//            MetaEntity entity,
+//            Object primaryKey,
+//            LockType lockType) throws Exception {
+//        SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
+//                .generateSelectVersion(entity, lockType,
+//                        aliasGenerator);
+//        List<QueryParameter> parameters = entity.getId().queryParameters(primaryKey);
+//
+//        String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
+//        jdbcValueBuilderById.setFetchParameters(sqlSelectData.getFetchParameters());
+//        return dbConfiguration.getJdbcRunner()
+//                .findById(sql, connectionHolder.getConnection(), parameters,
+//                        jdbcValueBuilderById);
+//    }
 
 
     /**
@@ -159,7 +164,7 @@ public class JdbcQueryRunner {
         Pk pk = entity.getId();
         SqlInsert sqlInsert = dbConfiguration.getSqlStatementFactory()
                 .generateInsert(entity, columns, true,
-                        isIdentityColumnNull, Optional.of(entity), aliasGenerator);
+                        isIdentityColumnNull, entity, aliasGenerator);
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlInsert);
         return dbConfiguration.getJdbcRunner()
                 .insertReturnGeneratedKeys(connectionHolder.getConnection(), sql,
@@ -180,12 +185,14 @@ public class JdbcQueryRunner {
                 .collect(Collectors.toList());
         SqlInsert sqlInsert = dbConfiguration.getSqlStatementFactory()
                 .generateInsert(entity, columns, false, false,
-                        Optional.empty(), aliasGenerator);
+                        null, aliasGenerator);
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlInsert);
         dbConfiguration.getJdbcRunner().insert(connectionHolder.getConnection(), sql, parameters);
     }
 
-    public void deleteById(MetaEntity e, List<QueryParameter> idParameters) throws Exception {
+    public void deleteById(
+            MetaEntity e,
+            List<QueryParameter> idParameters) throws Exception {
         List<String> idColumns = idParameters.stream().map(p -> {
                     if (p.getColumn() instanceof String) return (String) p.getColumn();
 

@@ -74,7 +74,6 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
             Object v = buildObjectByConstructorParameters(constructorMapping.getTargetClass(), values);
             Optional<MetaEntity> optionalMetaEntity = entityContainer.isManagedClass(constructorMapping.getTargetClass());
             if (optionalMetaEntity.isPresent()) {
-//                Object pk = AttributeUtil.getIdValue(optionalMetaEntity.get().getId(), v);
                 Object pk = optionalMetaEntity.get().getId().readValue(v);
                 if (pk != null) {
                     MetaEntityHelper.setEntityStatus(optionalMetaEntity.get(), v, EntityStatus.DETACHED);
@@ -119,21 +118,23 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
         return modelValueArray;
     }
 
-    private Object buildAttributeValue(FetchParameter fetchParameter,
-                                       ResultSetMetaData metaData,
-                                       ResultSet rs,
-                                       int index) throws Exception {
-//        Optional<AttributeMapper> optionalAM = fetchParameter.getAttributeMapper();
+    private Object buildAttributeValue(
+            FetchParameter fetchParameter,
+            ResultSetMetaData metaData,
+            ResultSet rs,
+            int index) throws Exception {
         Integer sqlType = fetchParameter.getSqlType();
         if (sqlType == null) {
             sqlType = metaData.getColumnType(index);
         }
 
-        return JdbcRunner.getValueByAttributeMapper(rs, index, sqlType, fetchParameter.getAttributeMapper());
+        return JdbcRunner.getValueFromResultSet(rs, index, sqlType, fetchParameter.getObjectConverter());
     }
 
-    private Optional<FetchParameter> findFetchParameter(String columnName, String columnAlias,
-                                                        List<EntityMapping> entityMappings) {
+    private Optional<FetchParameter> findFetchParameter(
+            String columnName,
+            String columnAlias,
+            List<EntityMapping> entityMappings) {
         for (EntityMapping entityMapping : entityMappings) {
             Optional<FetchParameter> optional = buildFetchParameter(columnName, columnAlias,
                     entityMapping);
@@ -185,7 +186,7 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
                 if (sqlType == Types.OTHER)
                     sqlType = metaData.getColumnType(i + 1);
 
-                Object v = JdbcRunner.getValue(rs, i + 1, sqlType);
+                Object v = JdbcRunner.getValueFromResultSet(rs, i + 1, sqlType);
                 constructorValues.add(v);
             }
         }
@@ -260,7 +261,7 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
                     if (sqlType == Types.NULL)
                         sqlType = metaData.getColumnType(i + 1);
 
-                    Object v = JdbcRunner.getValue(rs, i + 1, sqlType);
+                    Object v = JdbcRunner.getValueFromResultSet(rs, i + 1, sqlType);
                     values.add(v);
                 }
             }

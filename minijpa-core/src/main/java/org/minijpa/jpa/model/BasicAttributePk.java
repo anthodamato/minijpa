@@ -40,7 +40,7 @@ public class BasicAttributePk implements Pk {
     public BasicAttributePk(MetaAttribute attribute, PkGeneration pkGeneration) {
         this.attribute = attribute;
         this.pkGeneration = pkGeneration;
-        this.attributes = Arrays.asList(attribute);
+        this.attributes = List.of(attribute);
     }
 
     @Override

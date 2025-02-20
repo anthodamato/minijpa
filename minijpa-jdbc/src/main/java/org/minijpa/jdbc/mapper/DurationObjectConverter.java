@@ -15,26 +15,22 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Date;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.time.Duration;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class CalendarToSqlDateAttributeMapper implements AttributeMapper<Calendar, Date> {
+public class DurationObjectConverter implements ObjectConverter<Duration, Long> {
 
     @Override
-    public Date attributeToDatabase(Calendar k) {
-        return new Date(k.getTimeInMillis());
+    public Long convertTo(Duration k) {
+	return k.toMillis();
     }
 
     @Override
-    public Calendar databaseToAttribute(Date v) {
-        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
-        calendar.setTimeInMillis(v.getTime());
-        return calendar;
+    public Duration convertFrom(Long v) {
+	return Duration.ofMillis(v);
     }
 
 }

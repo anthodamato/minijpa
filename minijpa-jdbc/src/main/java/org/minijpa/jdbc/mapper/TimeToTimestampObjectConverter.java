@@ -15,22 +15,24 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.math.BigDecimal;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDate;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class BigDecimalToDoubleAttributeMapper implements AttributeMapper<Double, BigDecimal> {
+public class TimeToTimestampObjectConverter implements ObjectConverter<Time, Timestamp> {
 
-	@Override
-	public BigDecimal attributeToDatabase(Double k) {
-		return new BigDecimal(k);
-	}
+    @Override
+    public Timestamp convertTo(Time k) {
+	return Timestamp.valueOf(k.toLocalTime().atDate(LocalDate.now()));
+    }
 
-	@Override
-	public Double databaseToAttribute(BigDecimal v) {
-		return v.doubleValue();
-	}
+    @Override
+    public Time convertFrom(Timestamp v) {
+	return new Time(v.getTime());
+    }
 
 }

@@ -15,17 +15,6 @@
  */
 package org.minijpa.sql.model;
 
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.minijpa.sql.model.condition.LikeCondition;
 import org.minijpa.sql.model.function.Concat;
 import org.minijpa.sql.model.function.CurrentDate;
@@ -34,8 +23,17 @@ import org.minijpa.sql.model.function.CurrentTimestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
@@ -51,7 +49,7 @@ public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
     }
 
     @Override
-    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+    public String buildColumnDefinition(Class<?> type, JdbcDDLData ddlData) {
         if (type == Timestamp.class || type == Calendar.class || type == LocalDateTime.class || type == Instant.class
                 || type == ZonedDateTime.class)
             return "datetime(6)";
@@ -65,7 +63,7 @@ public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
         }
 
         if (pk.isComposite())
-            return pk.getColumns().stream().map(a -> buildAttributeDeclaration(a)).collect(Collectors.joining(", "));
+            return pk.getColumns().stream().map(this::buildAttributeDeclaration).collect(Collectors.joining(", "));
 
         return buildAttributeDeclaration(pk.getColumn());
     }
@@ -81,7 +79,7 @@ public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
         if (!sqlCreateTable.getColumnDeclarations().isEmpty()) {
             sb.append(", ");
-            cols = sqlCreateTable.getColumnDeclarations().stream().map(a -> buildAttributeDeclaration(a))
+            cols = sqlCreateTable.getColumnDeclarations().stream().map(this::buildAttributeDeclaration)
                     .collect(Collectors.joining(", "));
             sb.append(cols);
         }
@@ -89,7 +87,7 @@ public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
         for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
             sb.append(", ");
             cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
-                    .map(a -> buildDeclaration(a)).collect(Collectors.joining(", "));
+                    .map(this::buildDeclaration).collect(Collectors.joining(", "));
             sb.append(cols);
         }
 
@@ -134,7 +132,7 @@ public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
         List<ColumnDeclaration> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations().stream()
                 .map(d -> d.getJdbcJoinColumnMapping().getJoinColumns()).flatMap(List::stream)
                 .collect(Collectors.toList());
-        String cols = joinColumnAttributes.stream().map(a -> buildJoinTableColumnDeclaration(a))
+        String cols = joinColumnAttributes.stream().map(this::buildJoinTableColumnDeclaration)
                 .collect(Collectors.joining(", "));
         sb.append(cols);
 
@@ -159,14 +157,14 @@ public class MySQLSqlStatementGenerator extends DefaultSqlStatementGenerator {
         List<SqlCreateTable> createTables = sqlDDLStatement.stream().filter(c -> c instanceof SqlCreateTable)
                 .map(c -> (SqlCreateTable) c).collect(Collectors.toList());
 
-        List<String> createTableStrs = createTables.stream().map(c -> export(c)).collect(Collectors.toList());
+        List<String> createTableStrs = createTables.stream().map(this::export).collect(Collectors.toList());
         result.addAll(createTableStrs);
 
         List<SqlCreateJoinTable> createJoinTables = sqlDDLStatement.stream()
                 .filter(c -> c instanceof SqlCreateJoinTable).map(c -> (SqlCreateJoinTable) c)
                 .collect(Collectors.toList());
 
-        List<String> createJoinTableStrs = createJoinTables.stream().map(c -> export(c)).collect(Collectors.toList());
+        List<String> createJoinTableStrs = createJoinTables.stream().map(this::export).collect(Collectors.toList());
         result.addAll(createJoinTableStrs);
         return result;
     }

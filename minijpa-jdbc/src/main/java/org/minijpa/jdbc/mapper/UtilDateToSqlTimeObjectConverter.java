@@ -15,19 +15,22 @@
  */
 package org.minijpa.jdbc.mapper;
 
+import java.sql.Time;
+import java.util.Date;
+
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class UtilDateToSqlTimeAttributeMapper implements AttributeMapper<java.util.Date, java.sql.Time> {
+public class UtilDateToSqlTimeObjectConverter implements ObjectConverter<Date, Time> {
 
     @Override
-    public java.sql.Time attributeToDatabase(java.util.Date k) {
+    public java.sql.Time convertTo(java.util.Date k) {
 	return new java.sql.Time(k.getTime());
     }
 
     @Override
-    public java.util.Date databaseToAttribute(java.sql.Time v) {
+    public java.util.Date convertFrom(java.sql.Time v) {
 	return v;
     }
 

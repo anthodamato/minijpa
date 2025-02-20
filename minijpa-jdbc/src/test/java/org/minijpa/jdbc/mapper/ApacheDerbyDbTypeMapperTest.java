@@ -3,6 +3,7 @@ package org.minijpa.jdbc.mapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Optional;
 import java.util.TimeZone;
 
@@ -20,89 +22,89 @@ public class ApacheDerbyDbTypeMapperTest {
 
     @Test
     public void utilDateMapper() {
-        AttributeMapper<java.util.Date, java.sql.Date> attributeMapper = apacheDerbyDbTypeMapper
+        ObjectConverter<Date, java.sql.Date> objectConverter = apacheDerbyDbTypeMapper
                 .attributeMapper(java.util.Date.class, java.sql.Date.class);
-        assertNotNull(attributeMapper);
+        assertNotNull(objectConverter);
         java.util.Date utilDate = new java.util.Date();
-        java.sql.Date sqlDate = attributeMapper.attributeToDatabase(utilDate);
+        java.sql.Date sqlDate = objectConverter.convertTo(utilDate);
         assertNotNull(sqlDate);
         assertEquals(utilDate, sqlDate);
 
-        java.util.Date utilDateConv = attributeMapper.databaseToAttribute(sqlDate);
+        java.util.Date utilDateConv = objectConverter.convertFrom(sqlDate);
         assertNotNull(utilDateConv);
         assertEquals(utilDate, utilDateConv);
     }
 
     @Test
     public void localDateMapper() {
-        AttributeMapper<LocalDate, java.sql.Date> attributeMapper = apacheDerbyDbTypeMapper
+        ObjectConverter<LocalDate, java.sql.Date> objectConverter = apacheDerbyDbTypeMapper
                 .attributeMapper(LocalDate.class, Object.class);
-        assertNotNull(attributeMapper);
+        assertNotNull(objectConverter);
         LocalDate localDate = LocalDate.of(2022, 10, 1);
-        java.sql.Date date = attributeMapper.attributeToDatabase(localDate);
+        java.sql.Date date = objectConverter.convertTo(localDate);
         assertNotNull(date);
         assertEquals(localDate, date.toLocalDate());
 
-        LocalDate ld = attributeMapper.databaseToAttribute(date);
+        LocalDate ld = objectConverter.convertFrom(date);
         assertNotNull(ld);
         assertEquals(localDate, ld);
     }
 
     @Test
     public void localDateTimeMapper() {
-        AttributeMapper<LocalDateTime, java.sql.Timestamp> attributeMapper = apacheDerbyDbTypeMapper
+        ObjectConverter<LocalDateTime, Timestamp> objectConverter = apacheDerbyDbTypeMapper
                 .attributeMapper(LocalDateTime.class, Object.class);
-        assertNotNull(attributeMapper);
+        assertNotNull(objectConverter);
         LocalDateTime localDateTime = LocalDateTime.of(2022, 10, 1, 12, 35, 44);
-        java.sql.Timestamp timestamp = attributeMapper.attributeToDatabase(localDateTime);
+        java.sql.Timestamp timestamp = objectConverter.convertTo(localDateTime);
         assertNotNull(timestamp);
         assertEquals(localDateTime, timestamp.toLocalDateTime());
 
-        LocalDateTime ldt = attributeMapper.databaseToAttribute(timestamp);
+        LocalDateTime ldt = objectConverter.convertFrom(timestamp);
         assertNotNull(ldt);
         assertEquals(localDateTime, ldt);
     }
 
     @Test
     public void localTimeMapper() {
-        AttributeMapper<LocalTime, java.sql.Time> attributeMapper = apacheDerbyDbTypeMapper
+        ObjectConverter<LocalTime, Time> objectConverter = apacheDerbyDbTypeMapper
                 .attributeMapper(LocalTime.class, Object.class);
-        assertNotNull(attributeMapper);
+        assertNotNull(objectConverter);
         LocalTime localTime = LocalTime.of(12, 35, 44);
-        java.sql.Time time = attributeMapper.attributeToDatabase(localTime);
+        java.sql.Time time = objectConverter.convertTo(localTime);
         assertNotNull(time);
         assertEquals(localTime, time.toLocalTime());
 
-        LocalTime lt = attributeMapper.databaseToAttribute(time);
+        LocalTime lt = objectConverter.convertFrom(time);
         assertNotNull(lt);
         assertEquals(localTime, lt);
     }
 
     @Test
     public void calendarToSqlDateMapper() {
-        AttributeMapper<java.util.Calendar, java.sql.Date> attributeMapper = apacheDerbyDbTypeMapper
+        ObjectConverter<Calendar, java.sql.Date> objectConverter = apacheDerbyDbTypeMapper
                 .attributeMapper(java.util.Calendar.class, java.sql.Date.class);
-        assertNotNull(attributeMapper);
+        assertNotNull(objectConverter);
         java.util.Calendar calendar = Calendar.getInstance();
         LocalDate localDate = LocalDate.of(2022, 10, 10);
         java.util.Date utilDate = java.util.Date
                 .from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
         calendar.setTime(utilDate);
 
-        java.sql.Date sqlDate = attributeMapper.attributeToDatabase(calendar);
+        java.sql.Date sqlDate = objectConverter.convertTo(calendar);
         assertNotNull(sqlDate);
         assertEquals(utilDate, sqlDate);
 
-        java.util.Calendar calendarConv = attributeMapper.databaseToAttribute(sqlDate);
+        java.util.Calendar calendarConv = objectConverter.convertFrom(sqlDate);
         assertNotNull(calendarConv);
         assertEquals(calendar, calendarConv);
     }
 
     @Test
     public void calendarToTimestampMapper() {
-        AttributeMapper<java.util.Calendar, java.sql.Timestamp> attributeMapper = apacheDerbyDbTypeMapper
+        ObjectConverter<Calendar, Timestamp> objectConverter = apacheDerbyDbTypeMapper
                 .attributeMapper(java.util.Calendar.class, java.sql.Timestamp.class);
-        assertNotNull(attributeMapper);
+        assertNotNull(objectConverter);
         Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
         LocalDateTime localDateTime = LocalDateTime.of(2022, 10, 10, 20, 32, 10);
 
@@ -111,11 +113,11 @@ public class ApacheDerbyDbTypeMapperTest {
 
         calendar.setTime(utilDate);
 
-        java.sql.Timestamp timestamp = attributeMapper.attributeToDatabase(calendar);
+        java.sql.Timestamp timestamp = objectConverter.convertTo(calendar);
         assertNotNull(timestamp);
         assertEquals(Timestamp.valueOf(localDateTime), timestamp);
 
-        java.util.Calendar calendarConv = attributeMapper.databaseToAttribute(timestamp);
+        java.util.Calendar calendarConv = objectConverter.convertFrom(timestamp);
         assertNotNull(calendarConv);
         assertEquals(calendar, calendarConv);
     }
@@ -131,30 +133,30 @@ public class ApacheDerbyDbTypeMapperTest {
 
     @Test
     public void stringEnumMapper() {
-        AttributeMapper<Enum, String> attributeMapper = apacheDerbyDbTypeMapper.attributeMapper(StringEnum.class,
+        ObjectConverter<Enum, String> objectConverter = apacheDerbyDbTypeMapper.attributeMapper(StringEnum.class,
                 String.class);
-        assertNotNull(attributeMapper);
+        assertNotNull(objectConverter);
         StringEnum en = StringEnum.V1;
-        String sv1 = attributeMapper.attributeToDatabase(en);
+        String sv1 = objectConverter.convertTo(en);
         assertNotNull(sv1);
         assertEquals("V1", sv1);
 
-        StringEnum se1 = (StringEnum) attributeMapper.databaseToAttribute("V1");
+        StringEnum se1 = (StringEnum) objectConverter.convertFrom("V1");
         assertNotNull(se1);
         assertEquals(StringEnum.V1, se1);
     }
 
     @Test
     public void ordinalEnumMapper() {
-        AttributeMapper<Enum, Integer> attributeMapper = apacheDerbyDbTypeMapper.attributeMapper(OrdinalEnum.class,
+        ObjectConverter<Enum, Integer> objectConverter = apacheDerbyDbTypeMapper.attributeMapper(OrdinalEnum.class,
                 Integer.class);
-        assertNotNull(attributeMapper);
+        assertNotNull(objectConverter);
         OrdinalEnum oe = OrdinalEnum.N2;
-        Integer iv1 = attributeMapper.attributeToDatabase(oe);
+        Integer iv1 = objectConverter.convertTo(oe);
         assertNotNull(iv1);
         assertEquals(Integer.valueOf(1), iv1);
 
-        OrdinalEnum oe1 = (OrdinalEnum) attributeMapper.databaseToAttribute(Integer.valueOf(1));
+        OrdinalEnum oe1 = (OrdinalEnum) objectConverter.convertFrom(Integer.valueOf(1));
         assertNotNull(oe1);
         assertEquals(OrdinalEnum.N2, oe1);
     }

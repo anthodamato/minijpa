@@ -15,8 +15,6 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 /**
  * @author Antonio Damato <anto.damato@gmail.com>
  */
@@ -24,14 +22,14 @@ public class ColumnDeclaration {
 
     private final String name;
     private final Class<?> databaseType;
-    private Optional<JdbcDDLData> optionalJdbcDDLData = Optional.empty();
+    private JdbcDDLData optionalJdbcDDLData;
 
     public ColumnDeclaration(String name, Class<?> databaseType) {
         this.name = name;
         this.databaseType = databaseType;
     }
 
-    public ColumnDeclaration(String name, Class<?> databaseType, Optional<JdbcDDLData> optionalJdbcDDLData) {
+    public ColumnDeclaration(String name, Class<?> databaseType, JdbcDDLData optionalJdbcDDLData) {
         super();
         this.name = name;
         this.databaseType = databaseType;
@@ -46,7 +44,7 @@ public class ColumnDeclaration {
         return databaseType;
     }
 
-    public Optional<JdbcDDLData> getOptionalJdbcDDLData() {
+    public JdbcDDLData getOptionalJdbcDDLData() {
         return optionalJdbcDDLData;
     }
 

@@ -15,23 +15,20 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class LocalDateToTimestampAttributeMapper implements AttributeMapper<LocalDate, Timestamp> {
+public class NumberToDoubleObjectConverter implements ObjectConverter<Double, Number> {
 
-	@Override
-	public Timestamp attributeToDatabase(LocalDate k) {
-		return Timestamp.valueOf(k.atStartOfDay());
-	}
+    @Override
+    public Number convertTo(Double k) {
+        return k;
+    }
 
-	@Override
-	public LocalDate databaseToAttribute(Timestamp v) {
-		return v.toLocalDateTime().toLocalDate();
-	}
+    @Override
+    public Double convertFrom(Number v) {
+        return v.doubleValue();
+    }
 
 }

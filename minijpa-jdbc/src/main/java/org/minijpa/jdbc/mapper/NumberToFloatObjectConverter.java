@@ -19,16 +19,16 @@ package org.minijpa.jdbc.mapper;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class UtilDateToSqlDateAttributeMapper implements AttributeMapper<java.util.Date, java.sql.Date> {
+public class NumberToFloatObjectConverter implements ObjectConverter<Float, Number> {
 
     @Override
-    public java.sql.Date attributeToDatabase(java.util.Date k) {
-        return new java.sql.Date(k.getTime());
+    public Number convertTo(Float k) {
+        return k;
     }
 
     @Override
-    public java.util.Date databaseToAttribute(java.sql.Date v) {
-        return v;
+    public Float convertFrom(Number v) {
+        return v.floatValue();
     }
 
 }

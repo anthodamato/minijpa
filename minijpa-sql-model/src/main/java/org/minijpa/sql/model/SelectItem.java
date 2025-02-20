@@ -1,12 +1,10 @@
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 public class SelectItem implements Value {
     private Object item;
-    private Optional<String> alias;
+    private String alias;
 
-    public SelectItem(Object item, Optional<String> alias) {
+    public SelectItem(Object item, String alias) {
         super();
         this.item = item;
         this.alias = alias;
@@ -16,7 +14,7 @@ public class SelectItem implements Value {
         return item;
     }
 
-    public Optional<String> getAlias() {
+    public String getAlias() {
         return alias;
     }
 

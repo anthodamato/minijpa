@@ -15,14 +15,12 @@
  */
 package org.minijpa.jpa.model.relationship;
 
-import java.util.Optional;
-import java.util.Set;
-
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jdbc.relationship.JoinTableAttributes;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
+
+import java.util.Set;
 
 public abstract class Relationship {
 
@@ -38,13 +36,13 @@ public abstract class Relationship {
     protected MetaEntity attributeType;
     // for bidirectional relationships
     protected RelationshipMetaAttribute targetAttribute;
-    protected Optional<String> mappedBy;
+    protected String mappedBy;
     protected Set<Cascade> cascades;
     protected RelationshipJoinTable joinTable;
     protected Class<?> targetEntityClass;
     protected JoinTableAttributes joinTableAttributes;
-    protected Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
-    protected Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
+    protected JoinColumnDataList joinColumnDataList;
+    protected JoinColumnMapping joinColumnMapping;
     protected boolean id;
 
     public Relationship() {
@@ -75,7 +73,7 @@ public abstract class Relationship {
         return targetAttribute;
     }
 
-    public Optional<String> getMappedBy() {
+    public String getMappedBy() {
         return mappedBy;
     }
 
@@ -84,7 +82,7 @@ public abstract class Relationship {
     }
 
     public boolean isOwner() {
-        return mappedBy.isEmpty();
+        return mappedBy == null;
     }
 
     public RelationshipJoinTable getJoinTable() {
@@ -111,7 +109,7 @@ public abstract class Relationship {
         return joinTableAttributes;
     }
 
-    public Optional<JoinColumnDataList> getJoinColumnDataList() {
+    public JoinColumnDataList getJoinColumnDataList() {
         return joinColumnDataList;
     }
 
@@ -119,7 +117,7 @@ public abstract class Relationship {
         return getFetchType() == FetchType.LAZY;
     }
 
-    public Optional<JoinColumnMapping> getJoinColumnMapping() {
+    public JoinColumnMapping getJoinColumnMapping() {
         return joinColumnMapping;
     }
 

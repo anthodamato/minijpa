@@ -15,17 +15,16 @@
  */
 package org.minijpa.metadata;
 
-import java.util.Optional;
-import javax.persistence.FetchType;
-import javax.persistence.OneToOne;
-
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jpa.db.DbConfiguration;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.relationship.OneToOneRelationship;
+
+import javax.persistence.FetchType;
+import javax.persistence.OneToOne;
+import java.util.Optional;
 
 /**
  * @author adamato
@@ -36,12 +35,13 @@ public class OneToOneHelper extends RelationshipHelper {
 
     public OneToOneRelationship createOneToOne(
             OneToOne oneToOne,
-            Optional<JoinColumnDataList> joinColumnDataList,
+            JoinColumnDataList joinColumnDataList,
             boolean id) {
         OneToOneRelationship.Builder builder = new OneToOneRelationship.Builder();
         builder.withJoinColumnDataList(joinColumnDataList);
 
-        builder.withMappedBy(getMappedBy(oneToOne));
+        Optional<String> mappedBy = getMappedBy(oneToOne);
+        mappedBy.ifPresent(builder::withMappedBy);
         builder.withCascades(getCascades(oneToOne.cascade()));
 
         if (oneToOne.fetch() != null) {
@@ -69,11 +69,11 @@ public class OneToOneHelper extends RelationshipHelper {
                     dbConfiguration, a, toEntity, oneToOneRelationship.getJoinColumnDataList());
             entity.getJoinColumnMappings().add(joinColumnMapping);
             builder.withTargetAttribute(toEntity.findAttributeByMappedBy(a.getName()));
-            builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
+            builder.withJoinColumnMapping(joinColumnMapping);
         } else {
             builder.withOwningEntity(toEntity);
             builder.withOwningAttribute((RelationshipMetaAttribute) toEntity.getAttribute(
-                    oneToOneRelationship.getMappedBy().get()));
+                    oneToOneRelationship.getMappedBy()));
         }
 
         builder.withAttributeType(toEntity);

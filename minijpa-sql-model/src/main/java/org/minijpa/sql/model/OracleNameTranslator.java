@@ -15,20 +15,17 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class OracleNameTranslator extends DefaultNameTranslator {
 
-	@Override
-	public String toTableName(Optional<String> tableAlias, String tableName) {
-		if (tableAlias.isPresent())
-			return tableName + " " + tableAlias.get();
+    @Override
+    public String toTableName(String tableAlias, String tableName) {
+        if (tableAlias != null)
+            return tableName + " " + tableAlias;
 
-		return tableName;
-	}
+        return tableName;
+    }
 
 }

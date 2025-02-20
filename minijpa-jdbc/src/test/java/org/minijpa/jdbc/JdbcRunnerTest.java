@@ -1,45 +1,37 @@
 package org.minijpa.jdbc;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.ChronoField;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.minijpa.jdbc.mapper.ToLongAttributeMapper;
+import org.minijpa.jdbc.mapper.ToLongObjectConverter;
 import org.minijpa.sql.model.*;
 import org.minijpa.sql.model.condition.BinaryCondition;
 import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.function.Concat;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoField;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class JdbcRunnerTest {
 
     private static JdbcRunner jdbcRunner;
-    private ScriptRunner scriptRunner = new ScriptRunner();
-    private static ConnectionProperties connectionProperties = new ConnectionProperties();
+    private final ScriptRunner scriptRunner = new ScriptRunner();
+    private static final ConnectionProperties connectionProperties = new ConnectionProperties();
     private static SqlStatementGenerator sqlStatementGenerator;
-    private JdbcRunner.JdbcValueBuilderById jdbcValueBuilderById = new JdbcRunner.JdbcValueBuilderById();
-    private JdbcRunner.JdbcRecordBuilderValue jdbcRecordBuilderValue = new JdbcRunner.JdbcRecordBuilderValue();
-    private JdbcRunner.JdbcNativeRecordBuilder nativeRecordBuilder = new JdbcRunner.JdbcNativeRecordBuilder();
+    private final JdbcRunner.JdbcValueBuilderById jdbcValueBuilderById = new JdbcRunner.JdbcValueBuilderById();
+    private final JdbcRunner.JdbcRecordBuilderValue jdbcRecordBuilderValue = new JdbcRunner.JdbcRecordBuilderValue();
+    private final JdbcRunner.JdbcNativeRecordBuilder nativeRecordBuilder = new JdbcRunner.JdbcNativeRecordBuilder();
 
     @BeforeAll
     public static void init() {
@@ -59,12 +51,12 @@ public class JdbcRunnerTest {
         ConnectionHolder connectionHolder = new ConnectionHolderImpl(connectionProvider);
         Connection connection = connectionHolder.getConnection();
 
-        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(255), Optional.empty(),
-                Optional.empty(), Optional.empty(), Optional.empty());
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(null, 255, null,
+                null, null, null);
         SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
                 new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
-                Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
-                        new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
+                Arrays.asList(new ColumnDeclaration("first_name", String.class, jdbcDDLData),
+                        new ColumnDeclaration("last_name", String.class, jdbcDDLData)));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
 
         List<String> statements = List.of(createTableStmt);
@@ -77,7 +69,7 @@ public class JdbcRunnerTest {
                 Arrays.asList(qp1, qp2, qp3));
 
         FetchParameter fp1 = new BasicFetchParameter("id", Types.BIGINT,
-                new ToLongAttributeMapper());
+                new ToLongObjectConverter());
         FetchParameter fp2 = new BasicFetchParameter("first_name", Types.VARCHAR);
         FetchParameter fp3 = new BasicFetchParameter("last_name", Types.VARCHAR);
         List<FetchParameter> fetchParameters = Arrays.asList(fp1, fp2, fp3);
@@ -93,7 +85,7 @@ public class JdbcRunnerTest {
         Assertions.assertEquals("William", modelValueArray.getValue(1));
         Assertions.assertEquals("Shakespeare", modelValueArray.getValue(2));
 
-        jdbcRunner.delete("delete from citizen where id=?", connection, Arrays.asList(qp1));
+        jdbcRunner.delete("delete from citizen where id=?", connection, List.of(qp1));
         connectionHolder.commit();
 
         jdbcValueBuilderById.setFetchParameters(fetchParameters);
@@ -115,12 +107,12 @@ public class JdbcRunnerTest {
         ConnectionHolder connectionHolder = new ConnectionHolderImpl(connectionProvider);
         Connection connection = connectionHolder.getConnection();
 
-        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(),
-                Optional.empty(),
-                Optional.empty(), Optional.empty());
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(null, 50, null,
+                null,
+                null, null);
         SqlCreateTable sqlCreateTable = new SqlCreateTable("account",
                 new SimpleSqlPk(new ColumnDeclaration("id", Long.class), true),
-                Arrays.asList(new ColumnDeclaration("user_account", String.class, Optional.of(jdbcDDLData)),
+                Arrays.asList(new ColumnDeclaration("user_account", String.class, jdbcDDLData),
                         new ColumnDeclaration("expiry_date", java.sql.Date.class)));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
         List<String> statements = List.of(createTableStmt);
@@ -132,7 +124,7 @@ public class JdbcRunnerTest {
         Column expiryDateColumn = new Column("expiry_date");
         SqlInsert sqlInsert = new SqlInsert(fromTable, Arrays.asList(nameColumn, expiryDateColumn),
                 true, false,
-                Optional.of("id"));
+                "id");
 
         LocalDate localDate = LocalDate.of(2022, 3, 3);
         java.sql.Date date = java.sql.Date.valueOf(localDate);
@@ -172,12 +164,12 @@ public class JdbcRunnerTest {
         connectionProvider.init();
         ConnectionHolder connectionHolder = new ConnectionHolderImpl(connectionProvider);
         Connection connection = connectionHolder.getConnection();
-        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(255), Optional.empty(),
-                Optional.empty(), Optional.empty(), Optional.empty());
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(null, 255, null,
+                null, null, null);
         SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
                 new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
-                Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
-                        new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
+                Arrays.asList(new ColumnDeclaration("first_name", String.class, jdbcDDLData),
+                        new ColumnDeclaration("last_name", String.class, jdbcDDLData)));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
 
         List<String> statements = List.of(createTableStmt);
@@ -192,7 +184,7 @@ public class JdbcRunnerTest {
         Column lastNameColumn = new Column("last_name");
         SqlInsert sqlInsert = new SqlInsert(fromTable,
                 Arrays.asList(idColumn, nameColumn, lastNameColumn), false,
-                false, Optional.empty());
+                false, null);
 
         jdbcRunner.insert(connection, sqlStatementGenerator.export(sqlInsert),
                 Arrays.asList(qp1, qp2, qp3));
@@ -247,12 +239,12 @@ public class JdbcRunnerTest {
         ConnectionHolder connectionHolder = new ConnectionHolderImpl(connectionProvider);
         Connection connection = connectionHolder.getConnection();
 
-        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(50), Optional.empty(),
-                Optional.empty(),
-                Optional.empty(), Optional.empty());
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(null, 50, null,
+                null,
+                null, null);
         SqlCreateTable sqlCreateTable = new SqlCreateTable("account",
                 new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
-                Arrays.asList(new ColumnDeclaration("user_account", String.class, Optional.of(jdbcDDLData)),
+                Arrays.asList(new ColumnDeclaration("user_account", String.class, jdbcDDLData),
                         new ColumnDeclaration("expiry_date", java.sql.Date.class)));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
         List<String> statements = List.of(createTableStmt);
@@ -264,7 +256,7 @@ public class JdbcRunnerTest {
         Column expiryDateColumn = new Column("expiry_date");
         SqlInsert sqlInsert = new SqlInsert(fromTable,
                 Arrays.asList(idColumn, nameColumn, expiryDateColumn), false,
-                false, Optional.empty());
+                false, null);
 
         LocalDate localDate = LocalDate.of(2022, 3, 3);
         java.sql.Date date = java.sql.Date.valueOf(localDate);
@@ -278,7 +270,7 @@ public class JdbcRunnerTest {
                 .withLeft(new TableColumn(fromTable, idColumn)).withRight(1).build();
         SqlUpdate sqlUpdate = new SqlUpdate(fromTable,
                 List.of(new TableColumn(fromTable, expiryDateColumn)),
-                Optional.of(binaryCondition));
+                binaryCondition);
         java.sql.Date date2 = java.sql.Date.valueOf(LocalDate.of(2022, 3, 5));
         QueryParameter edQp = new QueryParameter("expiry_date", date2, Types.DATE);
         jdbcRunner.update(connection, sqlStatementGenerator.export(sqlUpdate), List.of(edQp));
@@ -324,7 +316,7 @@ public class JdbcRunnerTest {
         List<String> statements = List.of(createSeqStmt);
         scriptRunner.runDDLStatements(statements, connection);
 
-        String seqStm = sqlStatementGenerator.sequenceNextValueStatement(Optional.empty(),
+        String seqStm = sqlStatementGenerator.sequenceNextValueStatement(null,
                 "citizen_seq");
 
         Long nextValue = jdbcRunner.generateNextSequenceValue(connection, seqStm);
@@ -348,12 +340,12 @@ public class JdbcRunnerTest {
         ConnectionHolder connectionHolder = new ConnectionHolderImpl(connectionProvider);
         Connection connection = connectionHolder.getConnection();
 
-        JdbcDDLData jdbcDDLData = new JdbcDDLData(Optional.empty(), Optional.of(255), Optional.empty(),
-                Optional.empty(), Optional.empty(), Optional.empty());
+        JdbcDDLData jdbcDDLData = new JdbcDDLData(null, 255, null,
+                null, null, null);
         SqlCreateTable sqlCreateTable = new SqlCreateTable("citizen",
                 new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
-                Arrays.asList(new ColumnDeclaration("first_name", String.class, Optional.of(jdbcDDLData)),
-                        new ColumnDeclaration("last_name", String.class, Optional.of(jdbcDDLData))));
+                Arrays.asList(new ColumnDeclaration("first_name", String.class, jdbcDDLData),
+                        new ColumnDeclaration("last_name", String.class, jdbcDDLData)));
         String createTableStmt = sqlStatementGenerator.export(sqlCreateTable);
         List<String> statements = List.of(createTableStmt);
         scriptRunner.runDDLStatements(statements, connection);
@@ -364,7 +356,7 @@ public class JdbcRunnerTest {
         Column lastNameColumn = new Column("last_name");
         SqlInsert sqlInsert = new SqlInsert(fromTable,
                 Arrays.asList(idColumn, nameColumn, lastNameColumn), false,
-                false, Optional.empty());
+                false, null);
         QueryParameter qp1 = new QueryParameter("id", 1L, Types.BIGINT);
         QueryParameter qp2 = new QueryParameter("first_name", "William", Types.VARCHAR);
         QueryParameter qp3 = new QueryParameter("last_name", "Shakespeare", Types.VARCHAR);
@@ -414,14 +406,14 @@ public class JdbcRunnerTest {
         ConnectionHolder connectionHolder = new ConnectionHolderImpl(connectionProvider);
         Connection connection = connectionHolder.getConnection();
 
-        JdbcDDLData bigDecimalDDLData = new JdbcDDLData(Optional.empty(), Optional.of(255),
-                Optional.of(10),
-                Optional.of(2), Optional.empty(), Optional.empty());
+        JdbcDDLData bigDecimalDDLData = new JdbcDDLData(null, 255,
+                10,
+                2, null, null);
         SqlCreateTable sqlCreateTable = new SqlCreateTable("data_types",
                 new SimpleSqlPk(new ColumnDeclaration("id", Long.class)),
                 Arrays.asList(new ColumnDeclaration("int_value", Integer.class),
                         new ColumnDeclaration("big_decimal_value", BigDecimal.class,
-                                Optional.of(bigDecimalDDLData)),
+                                bigDecimalDDLData),
                         new ColumnDeclaration("float_value", Float.class),
                         new ColumnDeclaration("double_value", Double.class),
                         new ColumnDeclaration("time_value", Time.class),
@@ -442,7 +434,7 @@ public class JdbcRunnerTest {
                 Arrays.asList(idColumn, intValueColumn, bigDecimalValueColumn,
                         floatValueColumn, doubleValueColumn, timeValueColumn, timestampValueColumn), false,
                 false,
-                Optional.empty());
+                null);
 
         Integer intValue = 2;
         Float floatValue = 2.5f;

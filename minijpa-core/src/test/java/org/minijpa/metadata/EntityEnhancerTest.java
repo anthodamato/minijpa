@@ -26,7 +26,7 @@ public class EntityEnhancerTest {
         ManagedData managedData = classInspector.inspect(className);
         Assertions.assertNotNull(managedData);
         Assertions.assertNotNull(managedData.getModificationAttribute());
-        Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
+        Assertions.assertNotNull(managedData.getLockTypeAttribute());
 
         EntityEnhancer entityEnhancer = new EntityEnhancer();
         EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
@@ -69,7 +69,7 @@ public class EntityEnhancerTest {
         ManagedData managedData = classInspector.inspect(className);
         Assertions.assertNotNull(managedData);
         Assertions.assertNotNull(managedData.getModificationAttribute());
-        Assertions.assertTrue(managedData.getLockTypeAttribute().isPresent());
+        Assertions.assertNotNull(managedData.getLockTypeAttribute());
 
         EntityEnhancer entityEnhancer = new EntityEnhancer();
         Set<EnhEntity> parsedEntities = new HashSet<>();
@@ -83,8 +83,8 @@ public class EntityEnhancerTest {
 
         Optional<EnhAttribute> optional = enhEntity.getAttribute("booking");
         EnhAttribute enhAttribute = optional.get();
-        Assertions.assertTrue(enhAttribute.getJoinColumnGetMethod().isPresent());
-        Assertions.assertTrue(enhAttribute.getJoinColumnSetMethod().isPresent());
+        Assertions.assertNotNull(enhAttribute.getJoinColumnGetMethod());
+        Assertions.assertNotNull(enhAttribute.getJoinColumnSetMethod());
     }
 
 

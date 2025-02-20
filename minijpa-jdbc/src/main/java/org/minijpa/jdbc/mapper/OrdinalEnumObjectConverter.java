@@ -15,24 +15,32 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Timestamp;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class ZonedDateTimeAttributeMapper implements AttributeMapper<ZonedDateTime, Timestamp> {
+public class OrdinalEnumObjectConverter implements ObjectConverter<Enum, Integer> {
 
-    @Override
-    public Timestamp attributeToDatabase(ZonedDateTime k) {
-	return Timestamp.from(k.toInstant());
+    private final Class<?> attributeType;
+
+    public OrdinalEnumObjectConverter(Class<?> attributeType) {
+        this.attributeType = attributeType;
     }
 
     @Override
-    public ZonedDateTime databaseToAttribute(Timestamp v) {
-	return ZonedDateTime.ofInstant(v.toInstant(), ZoneId.systemDefault());
+    public Integer convertTo(Enum k) {
+        return k.ordinal();
+    }
+
+    @Override
+    public Enum convertFrom(Integer v) {
+        Object[] enums = attributeType.getEnumConstants();
+        for (Object o : enums) {
+            if (((Enum) o).ordinal() == v)
+                return (Enum) o;
+        }
+
+        return null;
     }
 
 }

@@ -4,15 +4,15 @@ import java.util.List;
 
 public interface JdbcJoinColumnMapping {
 
-  public SqlPk getForeignKey();
+    SqlPk getForeignKey();
 
-  public List<ColumnDeclaration> getJoinColumns();
+    List<ColumnDeclaration> getJoinColumns();
 
-  public ColumnDeclaration getJoinColumn();
+    ColumnDeclaration getJoinColumn();
 
-  public default boolean isComposite() {
-    return false;
-  }
+    default boolean isComposite() {
+        return false;
+    }
 
-  public boolean unique();
+    boolean unique();
 }

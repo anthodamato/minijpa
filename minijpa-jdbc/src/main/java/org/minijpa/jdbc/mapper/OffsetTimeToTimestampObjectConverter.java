@@ -16,22 +16,23 @@
 package org.minijpa.jdbc.mapper;
 
 import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetTime;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class InstantAttributeMapper implements AttributeMapper<Instant, Timestamp> {
-
+public class OffsetTimeToTimestampObjectConverter implements ObjectConverter<OffsetTime, Timestamp> {
+    
     @Override
-    public Timestamp attributeToDatabase(Instant k) {
-        return Timestamp.from(k);
+    public Timestamp convertTo(OffsetTime k) {
+	return Timestamp.valueOf(k.atDate(LocalDate.now()).toLocalDateTime());
     }
-
+    
     @Override
-    public Instant databaseToAttribute(Timestamp v) {
-        return v.toInstant();
+    public OffsetTime convertFrom(Timestamp v) {
+	return v.toLocalDateTime().toLocalTime().atOffset(OffsetTime.now().getOffset());
     }
-
+    
 }

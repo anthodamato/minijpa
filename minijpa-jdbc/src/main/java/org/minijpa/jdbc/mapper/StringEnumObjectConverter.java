@@ -15,24 +15,26 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalTime;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class LocalTimeToTimestampAttributeMapper implements AttributeMapper<LocalTime, Timestamp> {
+public class StringEnumObjectConverter implements ObjectConverter<Enum, String> {
 
-    @Override
-    public Timestamp attributeToDatabase(LocalTime k) {
-	return Timestamp.valueOf(k.atDate(LocalDate.now()));
+    private final Class<?> attributeType;
+
+    public StringEnumObjectConverter(Class<?> attributeType) {
+        this.attributeType = attributeType;
     }
 
     @Override
-    public LocalTime databaseToAttribute(Timestamp v) {
-	return v.toLocalDateTime().toLocalTime();
+    public String convertTo(Enum k) {
+        return k.name();
+    }
+
+    @Override
+    public Enum convertFrom(String v) {
+        return Enum.valueOf((Class<Enum>) attributeType, v);
     }
 
 }

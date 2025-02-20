@@ -15,24 +15,21 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.List;
-import java.util.Optional;
-
 import org.minijpa.sql.model.aggregate.GroupBy;
 import org.minijpa.sql.model.condition.Condition;
-import org.minijpa.sql.model.join.FromJoin;
+
+import java.util.List;
 
 public class SqlSelect implements SqlStatement {
 
     private List<From> fromTables;
-    //  private Optional<List<FromJoin>> fromJoins = Optional.empty();
     private FromTable result;
     private List<Value> values;
-    private Optional<List<Condition>> conditions = Optional.empty();
-    private Optional<GroupBy> groupBy = Optional.empty();
-    private Optional<List<OrderBy>> orderByList = Optional.empty();
+    private List<Condition> conditions;
+    private GroupBy groupBy;
+    private List<OrderBy> orderByList;
     private boolean distinct = false;
-    private Optional<ForUpdate> optionalForUpdate = Optional.empty();
+    private ForUpdate forUpdate;
 
     public SqlSelect() {
     }
@@ -41,19 +38,15 @@ public class SqlSelect implements SqlStatement {
         return fromTables;
     }
 
-//  public Optional<List<FromJoin>> getJoins() {
-//    return fromJoins;
-//  }
-
     public List<Value> getValues() {
         return values;
     }
 
-    public Optional<List<Condition>> getConditions() {
+    public List<Condition> getConditions() {
         return conditions;
     }
 
-    public Optional<GroupBy> getGroupBy() {
+    public GroupBy getGroupBy() {
         return groupBy;
     }
 
@@ -61,7 +54,7 @@ public class SqlSelect implements SqlStatement {
         return result;
     }
 
-    public Optional<List<OrderBy>> getOrderByList() {
+    public List<OrderBy> getOrderByList() {
         return orderByList;
     }
 
@@ -69,8 +62,8 @@ public class SqlSelect implements SqlStatement {
         return distinct;
     }
 
-    public Optional<ForUpdate> getOptionalForUpdate() {
-        return optionalForUpdate;
+    public ForUpdate getForUpdate() {
+        return forUpdate;
     }
 
     @Override
@@ -82,10 +75,6 @@ public class SqlSelect implements SqlStatement {
         this.fromTables = fromTables;
     }
 
-//  public void setFromJoins(Optional<List<FromJoin>> fromJoins) {
-//    this.fromJoins = fromJoins;
-//  }
-
     public void setResult(FromTable result) {
         this.result = result;
     }
@@ -94,15 +83,15 @@ public class SqlSelect implements SqlStatement {
         this.values = values;
     }
 
-    public void setConditions(Optional<List<Condition>> conditions) {
+    public void setConditions(List<Condition> conditions) {
         this.conditions = conditions;
     }
 
-    public void setGroupBy(Optional<GroupBy> groupBy) {
+    public void setGroupBy(GroupBy groupBy) {
         this.groupBy = groupBy;
     }
 
-    public void setOrderByList(Optional<List<OrderBy>> orderByList) {
+    public void setOrderByList(List<OrderBy> orderByList) {
         this.orderByList = orderByList;
     }
 
@@ -110,102 +99,9 @@ public class SqlSelect implements SqlStatement {
         this.distinct = distinct;
     }
 
-    public void setOptionalForUpdate(Optional<ForUpdate> optionalForUpdate) {
-        this.optionalForUpdate = optionalForUpdate;
+    public void setForUpdate(ForUpdate optionalForUpdate) {
+        this.forUpdate = optionalForUpdate;
     }
 
-//	public static class SqlSelectBuilder {
-//
-//		private List<FromTable> fromTables = new ArrayList<>();
-//		private List<FromJoin> fromJoins;
-//		private List<Value> values;
-//		private List<Condition> conditions;
-//		private GroupBy groupBy;
-//		private FromTable result;
-//		private List<OrderBy> orderByList;
-//		private boolean distinct = false;
-//		private Optional<ForUpdate> optionalForUpdate = Optional.empty();
-//
-//		public SqlSelectBuilder() {
-//			super();
-//		}
-//
-//		public SqlSelectBuilder(FromTable fromTable) {
-//			super();
-//			this.fromTables.add(fromTable);
-//		}
-//
-//		public SqlSelectBuilder withFromTable(FromTable fromTable) {
-//			this.fromTables.add(fromTable);
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder withJoin(FromJoin fromJoin) {
-//			if (this.fromJoins == null)
-//				this.fromJoins = new ArrayList<>();
-//
-//			this.fromJoins.add(fromJoin);
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder withJoins(List<FromJoin> fromJoins) {
-//			this.fromJoins = fromJoins;
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder withValues(List<Value> values) {
-//			this.values = Collections.unmodifiableList(values);
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder withConditions(List<Condition> conditions) {
-//			this.conditions = conditions;
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder withGroupBy(GroupBy groupBy) {
-//			this.groupBy = groupBy;
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder withOrderBy(List<OrderBy> orderByList) {
-//			this.orderByList = orderByList;
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder withResult(FromTable result) {
-//			this.result = result;
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder distinct() {
-//			this.distinct = true;
-//			return this;
-//		}
-//
-//		public SqlSelectBuilder withForUpdate(Optional<ForUpdate> optionalForUpdate) {
-//			this.optionalForUpdate = optionalForUpdate;
-//			return this;
-//		}
-//
-//		public SqlSelect build() {
-//			SqlSelect sqlSelect = new SqlSelect();
-//			sqlSelect.fromTables = fromTables;
-//			if (fromJoins != null && !fromJoins.isEmpty())
-//				sqlSelect.fromJoins = Optional.of(fromJoins);
-//
-//			sqlSelect.values = values;
-//			if (conditions != null && !conditions.isEmpty())
-//				sqlSelect.conditions = Optional.ofNullable(conditions);
-//
-//			sqlSelect.groupBy = Optional.ofNullable(groupBy);
-//			if (orderByList != null && !orderByList.isEmpty())
-//				sqlSelect.orderByList = Optional.ofNullable(orderByList);
-//
-//			sqlSelect.result = result;
-//			sqlSelect.distinct = distinct;
-//			sqlSelect.optionalForUpdate = optionalForUpdate;
-//			return sqlSelect;
-//		}
-//	}
+
 }

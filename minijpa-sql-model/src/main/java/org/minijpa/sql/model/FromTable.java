@@ -15,19 +15,17 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 public interface FromTable extends From {
 
-  public String getName();
+    String getName();
 
-  public Optional<String> getAlias();
+    String getAlias();
 
-  public static FromTable of(String tableName) {
-    return new FromTableImpl(tableName);
-  }
+    static FromTable of(String tableName) {
+        return new FromTableImpl(tableName);
+    }
 
-  public static FromTable of(String tableName, String alias) {
-    return new FromTableImpl(tableName, alias);
-  }
+    static FromTable of(String tableName, String alias) {
+        return new FromTableImpl(tableName, alias);
+    }
 }

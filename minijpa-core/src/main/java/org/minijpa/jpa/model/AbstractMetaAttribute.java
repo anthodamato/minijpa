@@ -2,7 +2,7 @@ package org.minijpa.jpa.model;
 
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jdbc.mapper.ObjectConverter;
 import org.minijpa.jpa.db.AttributeFetchParameter;
 
 import java.lang.reflect.Field;
@@ -24,8 +24,8 @@ public abstract class AbstractMetaAttribute extends AbstractAttribute implements
     // calculated fields
     protected boolean nullable = true;
     protected Field javaMember;
-    protected AttributeMapper attributeMapper;
-    protected Optional<DDLData> ddlData = Optional.empty();
+    protected ObjectConverter objectConverter;
+    protected DDLData ddlData;
 
     public String getName() {
         return name;
@@ -55,11 +55,11 @@ public abstract class AbstractMetaAttribute extends AbstractAttribute implements
         return false;
     }
 
-    public AttributeMapper getAttributeMapper() {
-        return attributeMapper;
+    public ObjectConverter getObjectConverter() {
+        return objectConverter;
     }
 
-    public Optional<DDLData> getDdlData() {
+    public DDLData getDdlData() {
         return ddlData;
     }
 
@@ -74,7 +74,7 @@ public abstract class AbstractMetaAttribute extends AbstractAttribute implements
 
     @Override
     public QueryParameter queryParameter(Object value) {
-        return new QueryParameter(columnName, value, sqlType, getAttributeMapper());
+        return new QueryParameter(columnName, value, sqlType, getObjectConverter());
     }
 
     @Override

@@ -15,12 +15,10 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 public class FromTableImpl implements FromTable {
 
     private String name;
-    private Optional<String> alias = Optional.empty();
+    private String alias;
 
     public FromTableImpl(String name) {
         super();
@@ -30,7 +28,7 @@ public class FromTableImpl implements FromTable {
     public FromTableImpl(String name, String alias) {
         super();
         this.name = name;
-        this.alias = Optional.of(alias);
+        this.alias = alias;
     }
 
     @Override
@@ -39,7 +37,7 @@ public class FromTableImpl implements FromTable {
     }
 
     @Override
-    public Optional<String> getAlias() {
+    public String getAlias() {
         return alias;
     }
 

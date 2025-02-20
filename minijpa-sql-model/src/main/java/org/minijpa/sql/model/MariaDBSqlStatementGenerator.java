@@ -15,12 +15,6 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.minijpa.sql.model.condition.LikeCondition;
 import org.minijpa.sql.model.function.Concat;
 import org.minijpa.sql.model.function.CurrentDate;
@@ -29,8 +23,12 @@ import org.minijpa.sql.model.function.CurrentTimestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
@@ -42,17 +40,13 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
         super();
     }
 
-    @Override
-    public NameTranslator createNameTranslator() {
-        return new DefaultNameTranslator();
-    }
 
     @Override
-    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-        if (optionalSchema.isEmpty())
+    public String sequenceNextValueStatement(String optionalSchema, String sequenceName) {
+        if (optionalSchema == null)
             return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
 
-        return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
+        return "VALUES (NEXT VALUE FOR " + optionalSchema + "." + sequenceName + ")";
     }
 
     @Override
@@ -66,7 +60,7 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
         }
 
         if (pk.isComposite())
-            return pk.getColumns().stream().map(a -> buildAttributeDeclaration(a)).collect(Collectors.joining(", "));
+            return pk.getColumns().stream().map(this::buildAttributeDeclaration).collect(Collectors.joining(", "));
 
         return buildAttributeDeclaration(pk.getColumn());
     }
@@ -82,7 +76,7 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
         if (!sqlCreateTable.getColumnDeclarations().isEmpty()) {
             sb.append(", ");
-            cols = sqlCreateTable.getColumnDeclarations().stream().map(a -> buildAttributeDeclaration(a))
+            cols = sqlCreateTable.getColumnDeclarations().stream().map(this::buildAttributeDeclaration)
                     .collect(Collectors.joining(", "));
             sb.append(cols);
         }
@@ -90,7 +84,7 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
         for (ForeignKeyDeclaration foreignKeyDeclaration : sqlCreateTable.getForeignKeyDeclarations()) {
             sb.append(", ");
             cols = foreignKeyDeclaration.getJdbcJoinColumnMapping().getJoinColumns().stream()
-                    .map(a -> buildDeclaration(a)).collect(Collectors.joining(", "));
+                    .map(this::buildDeclaration).collect(Collectors.joining(", "));
             sb.append(cols);
         }
 
@@ -135,11 +129,11 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
     protected String export(SqlDelete sqlDelete, NameTranslator nameTranslator) {
         StringBuilder sb = new StringBuilder();
         sb.append("delete from ");
-        sb.append(nameTranslator.toTableName(Optional.empty(), sqlDelete.getFromTable().getName()));
+        sb.append(nameTranslator.toTableName(null, sqlDelete.getFromTable().getName()));
 
-        if (sqlDelete.getCondition().isPresent()) {
+        if (sqlDelete.getCondition() != null) {
             sb.append(" where ");
-            sb.append(exportCondition(sqlDelete.getCondition().get(), nameTranslator));
+            sb.append(exportCondition(sqlDelete.getCondition(), nameTranslator));
         }
 
         return sb.toString();
@@ -154,7 +148,7 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
         List<ColumnDeclaration> joinColumnAttributes = sqlCreateJoinTable.getForeignKeyDeclarations().stream()
                 .map(d -> d.getJdbcJoinColumnMapping().getJoinColumns()).flatMap(List::stream)
                 .collect(Collectors.toList());
-        String cols = joinColumnAttributes.stream().map(a -> buildJoinTableColumnDeclaration(a))
+        String cols = joinColumnAttributes.stream().map(this::buildJoinTableColumnDeclaration)
                 .collect(Collectors.joining(", "));
         sb.append(cols);
 
@@ -179,14 +173,14 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
         List<SqlCreateTable> createTables = sqlDDLStatement.stream().filter(c -> c instanceof SqlCreateTable)
                 .map(c -> (SqlCreateTable) c).collect(Collectors.toList());
 
-        List<String> createTableStrs = createTables.stream().map(c -> export(c)).collect(Collectors.toList());
+        List<String> createTableStrs = createTables.stream().map(this::export).collect(Collectors.toList());
         result.addAll(createTableStrs);
 
         List<SqlCreateJoinTable> createJoinTables = sqlDDLStatement.stream()
                 .filter(c -> c instanceof SqlCreateJoinTable).map(c -> (SqlCreateJoinTable) c)
                 .collect(Collectors.toList());
 
-        List<String> createJoinTableStrs = createJoinTables.stream().map(c -> export(c)).collect(Collectors.toList());
+        List<String> createJoinTableStrs = createJoinTables.stream().map(this::export).collect(Collectors.toList());
         result.addAll(createJoinTableStrs);
 
         return result;
@@ -201,10 +195,10 @@ public class MariaDBSqlStatementGenerator extends DefaultSqlStatementGenerator {
         return sb.toString();
     }
 
-    private class DeleteNameTranslator extends DefaultNameTranslator {
+    private static class DeleteNameTranslator extends DefaultNameTranslator {
 
         @Override
-        public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias) {
+        public String toColumnName(String tableAlias, String columnName, String columnAlias) {
             return columnName;
         }
     }

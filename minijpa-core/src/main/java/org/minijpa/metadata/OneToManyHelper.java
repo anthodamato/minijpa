@@ -45,12 +45,13 @@ public class OneToManyHelper extends RelationshipHelper {
             Class<?> collectionClass,
             Class<?> targetEntity,
             JoinTable joinTable,
-            Optional<JoinColumnDataList> joinColumnDataList,
+            JoinColumnDataList joinColumnDataList,
             boolean id) {
         OneToManyRelationship.Builder builder = new OneToManyRelationship.Builder();
         builder = builder.withJoinColumnDataList(joinColumnDataList);
 
-        builder.withMappedBy(getMappedBy(oneToMany));
+        Optional<String> mappedBy = getMappedBy(oneToMany);
+        mappedBy.ifPresent(builder::withMappedBy);
         builder.withCascades(getCascades(oneToMany.cascade()));
 
         if (oneToMany.fetch() != null) {
@@ -99,7 +100,7 @@ public class OneToManyHelper extends RelationshipHelper {
                 oneToManyRelationship);
         builder = builder.withAttributeType(toEntity);
         if (oneToManyRelationship.isOwner()) {
-            if (oneToManyRelationship.getJoinColumnDataList().isPresent()) {
+            if (oneToManyRelationship.getJoinColumnDataList() != null) {
                 // Unidirectional One-to-Many association using a foreign key mapping
                 JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(
                         dbConfiguration,
@@ -126,7 +127,7 @@ public class OneToManyHelper extends RelationshipHelper {
         } else {
             builder = builder.withOwningEntity(toEntity);
             AbstractMetaAttribute owningAttribute = toEntity
-                    .findAttributeFromPath(oneToManyRelationship.getMappedBy().get());
+                    .findAttributeFromPath(oneToManyRelationship.getMappedBy());
             builder = builder.withOwningAttribute((RelationshipMetaAttribute) owningAttribute);
             builder = builder.withTargetAttribute((RelationshipMetaAttribute) owningAttribute);
         }

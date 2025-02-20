@@ -15,12 +15,9 @@
  */
 package org.minijpa.metadata;
 
-import java.util.Optional;
-
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
@@ -30,23 +27,27 @@ import org.minijpa.jpa.model.relationship.JoinColumnMapping;
  */
 public interface JoinColumnMappingFactory {
 
-  public default String createDefaultJoinColumnName(MetaEntity owningEntity,
-      RelationshipMetaAttribute owningAttribute,
-      AbstractMetaAttribute foreignKeyAttribute) {
-    return owningAttribute.getName() + "_" + foreignKeyAttribute.getColumnName();
-  }
+    default String createDefaultJoinColumnName(MetaEntity owningEntity,
+                                               RelationshipMetaAttribute owningAttribute,
+                                               AbstractMetaAttribute foreignKeyAttribute) {
+        return owningAttribute.getName() + "_" + foreignKeyAttribute.getColumnName();
+    }
 
-  public JoinColumnMapping buildSingleJoinColumnMapping(DbConfiguration dbConfiguration,
-      RelationshipMetaAttribute a,
-      MetaEntity toEntity, Optional<JoinColumnDataList> joinColumnDataList);
+    JoinColumnMapping buildSingleJoinColumnMapping(
+            DbConfiguration dbConfiguration,
+            RelationshipMetaAttribute a,
+            MetaEntity toEntity,
+            JoinColumnDataList joinColumnDataList);
 
-  public JoinColumnMapping buildCompositeJoinColumnMapping(DbConfiguration dbConfiguration,
-      RelationshipMetaAttribute a,
-      MetaEntity toEntity, Optional<JoinColumnDataList> joinColumnDataList);
+    JoinColumnMapping buildCompositeJoinColumnMapping(
+            DbConfiguration dbConfiguration,
+            RelationshipMetaAttribute a,
+            MetaEntity toEntity,
+            JoinColumnDataList joinColumnDataList);
 
-  public JoinColumnMapping buildJoinColumnMapping(
-      DbConfiguration dbConfiguration,
-      RelationshipMetaAttribute a,
-      MetaEntity toEntity,
-      Optional<JoinColumnDataList> joinColumnDataList);
+    JoinColumnMapping buildJoinColumnMapping(
+            DbConfiguration dbConfiguration,
+            RelationshipMetaAttribute a,
+            MetaEntity toEntity,
+            JoinColumnDataList joinColumnDataList);
 }

@@ -16,22 +16,23 @@
 package org.minijpa.jdbc.mapper;
 
 import java.sql.Timestamp;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class UtilDateAttributeMapper implements AttributeMapper<Date, Timestamp> {
+public class LocalTimeToTimestampObjectConverter implements ObjectConverter<LocalTime, Timestamp> {
 
     @Override
-    public Timestamp attributeToDatabase(Date k) {
-	return new Timestamp(k.getTime());
+    public Timestamp convertTo(LocalTime k) {
+	return Timestamp.valueOf(k.atDate(LocalDate.now()));
     }
 
     @Override
-    public Date databaseToAttribute(Timestamp v) {
-	return v;
+    public LocalTime convertFrom(Timestamp v) {
+	return v.toLocalDateTime().toLocalTime();
     }
 
 }

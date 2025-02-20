@@ -1,23 +1,21 @@
 package org.minijpa.jdbc;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class DDLDataTest {
 
-  @Test
-  public void ddlDataColumnDefinition() {
-    DDLData ddlData = new DDLData(Optional.of("number(14,1)"), Optional.empty(), Optional.empty(),
-        Optional.empty(),
-        Optional.of(true), Optional.empty());
+    @Test
+    public void ddlDataColumnDefinition() {
+        DDLData ddlData = new DDLData("number(14,1)", null, null,
+                null,
+                true, null);
 
-    Assertions.assertEquals("number(14,1)", ddlData.getColumnDefinition().get());
-    Assertions.assertEquals(Optional.empty(), ddlData.getLength());
-    Assertions.assertEquals(Optional.empty(), ddlData.getPrecision());
-    Assertions.assertEquals(Optional.empty(), ddlData.getScale());
-    Assertions.assertTrue(ddlData.getNullable().get());
-  }
+        Assertions.assertEquals("number(14,1)", ddlData.getColumnDefinition());
+        Assertions.assertEquals(null, ddlData.getLength());
+        Assertions.assertEquals(null, ddlData.getPrecision());
+        Assertions.assertEquals(null, ddlData.getScale());
+        Assertions.assertTrue(ddlData.getNullable());
+    }
 
 }

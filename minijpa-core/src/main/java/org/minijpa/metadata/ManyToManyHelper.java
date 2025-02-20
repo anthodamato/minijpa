@@ -47,12 +47,13 @@ public class ManyToManyHelper extends RelationshipHelper {
             Class<?> collectionClass,
             Class<?> targetEntity,
             JoinTable joinTable,
-            Optional<JoinColumnDataList> joinColumnDataList,
+            JoinColumnDataList joinColumnDataList,
             boolean id) {
         ManyToManyRelationship.Builder builder = new ManyToManyRelationship.Builder();
         builder.withJoinColumnDataList(joinColumnDataList);
 
-        builder.withMappedBy(getMappedBy(manyToMany));
+        Optional<String> mappedBy = getMappedBy(manyToMany);
+        mappedBy.ifPresent(builder::withMappedBy);
         builder.withCascades(getCascades(manyToMany.cascade()));
 
         if (manyToMany.fetch() != null) {
@@ -92,14 +93,14 @@ public class ManyToManyHelper extends RelationshipHelper {
         return new JoinTableAttributes(null, joinTableName);
     }
 
-    private Optional<RelationshipMetaAttribute> findBidirectionalAttribute(String owningAttributeName,
-                                                                           MetaEntity toEntity) {
+    private Optional<RelationshipMetaAttribute> findBidirectionalAttribute(
+            String owningAttributeName,
+            MetaEntity toEntity) {
         List<RelationshipMetaAttribute> attributes = toEntity.getRelationshipAttributes();
         return attributes.stream().filter(
                         a -> (a.getRelationship() instanceof ManyToManyRelationship)
-                                && ((ManyToManyRelationship) a.getRelationship()).getMappedBy().isPresent()
-                                && ((ManyToManyRelationship) a.getRelationship()).getMappedBy().get()
-                                .equals(owningAttributeName))
+                                && a.getRelationship().getMappedBy() != null
+                                && a.getRelationship().getMappedBy().equals(owningAttributeName))
                 .findFirst();
     }
 
@@ -185,9 +186,9 @@ public class ManyToManyHelper extends RelationshipHelper {
             builder = builder.withOwningEntity(toEntity);
             builder = builder.withOwningAttribute(
                     (RelationshipMetaAttribute) toEntity.getAttribute(
-                            manyToManyRelationship.getMappedBy().get()));
+                            manyToManyRelationship.getMappedBy()));
             RelationshipMetaAttribute attribute = toEntity.getRelationshipAttribute(
-                    manyToManyRelationship.getMappedBy().get());
+                    manyToManyRelationship.getMappedBy());
             builder = builder.withTargetAttribute(attribute);
 
             RelationshipJoinTable relationshipJoinTable = createBidirectionalJoinTable(

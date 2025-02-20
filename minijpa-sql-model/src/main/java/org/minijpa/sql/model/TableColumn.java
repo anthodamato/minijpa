@@ -15,27 +15,25 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 public class TableColumn implements Value {
 
-    private Optional<FromTable> table = Optional.empty();
+    private FromTable table;
     private final Column column;
-    private Optional<SubQuery> subQuery = Optional.empty();
+    private SubQuery subQuery;
 
     public TableColumn(FromTable table, Column column) {
         super();
-        this.table = Optional.of(table);
+        this.table = table;
         this.column = column;
     }
 
     public TableColumn(SubQuery subQuery, Column column) {
         super();
-        this.subQuery = Optional.of(subQuery);
+        this.subQuery = subQuery;
         this.column = column;
     }
 
-    public Optional<FromTable> getTable() {
+    public FromTable getTable() {
         return table;
     }
 
@@ -43,7 +41,7 @@ public class TableColumn implements Value {
         return column;
     }
 
-    public Optional<SubQuery> getSubQuery() {
+    public SubQuery getSubQuery() {
         return subQuery;
     }
 

@@ -15,26 +15,26 @@
  */
 package org.minijpa.jdbc;
 
-import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jdbc.mapper.ObjectConverter;
 
 public class QueryParameter {
 
     private final Object column;
     private Object value;
     private Integer sqlType;
-    protected AttributeMapper attributeMapper;
+    protected ObjectConverter objectConverter;
     private String inputParameter;
 
     public QueryParameter(
             Object column,
             Object value,
             Integer sqlType,
-            AttributeMapper attributeMapper) {
+            ObjectConverter objectConverter) {
         super();
         this.column = column;
         this.value = value;
         this.sqlType = sqlType;
-        this.attributeMapper = attributeMapper;
+        this.objectConverter = objectConverter;
     }
 
     public QueryParameter(
@@ -67,8 +67,8 @@ public class QueryParameter {
         this.sqlType = sqlType;
     }
 
-    public AttributeMapper getAttributeMapper() {
-        return attributeMapper;
+    public ObjectConverter getAttributeMapper() {
+        return objectConverter;
     }
 
     public String getInputParameter() {
@@ -85,7 +85,7 @@ public class QueryParameter {
                 "columnName='" + column + '\'' +
                 ", value=" + value +
                 ", sqlType=" + sqlType +
-                ", attributeMapper=" + attributeMapper +
+                ", attributeMapper=" + objectConverter +
                 '}';
     }
 }

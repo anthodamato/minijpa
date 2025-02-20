@@ -1,22 +1,21 @@
 package org.minijpa.jpa.criteria.expression;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
+import java.util.Collection;
+import java.util.List;
 
 public class SubstringExpression implements Expression<String> {
     private Expression<String> x;
-    private Optional<Expression<Integer>> from;
-    private Optional<Integer> fromInteger;
-    private Optional<Expression<Integer>> len;
-    private Optional<Integer> lenInteger;
+    private Expression<Integer> from;
+    private Integer fromInteger;
+    private Expression<Integer> len;
+    private Integer lenInteger;
 
-    public SubstringExpression(Expression<String> x, Optional<Expression<Integer>> from, Optional<Integer> fromInteger,
-            Optional<Expression<Integer>> len, Optional<Integer> lenInteger) {
+    public SubstringExpression(
+            Expression<String> x, Expression<Integer> from, Integer fromInteger,
+            Expression<Integer> len, Integer lenInteger) {
         super();
         this.x = x;
         this.from = from;
@@ -29,19 +28,19 @@ public class SubstringExpression implements Expression<String> {
         return x;
     }
 
-    public Optional<Expression<Integer>> getFrom() {
+    public Expression<Integer> getFrom() {
         return from;
     }
 
-    public Optional<Integer> getFromInteger() {
+    public Integer getFromInteger() {
         return fromInteger;
     }
 
-    public Optional<Expression<Integer>> getLen() {
+    public Expression<Integer> getLen() {
         return len;
     }
 
-    public Optional<Integer> getLenInteger() {
+    public Integer getLenInteger() {
         return lenInteger;
     }
 

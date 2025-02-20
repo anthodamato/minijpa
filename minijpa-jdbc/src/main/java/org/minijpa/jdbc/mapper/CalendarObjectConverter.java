@@ -16,22 +16,25 @@
 package org.minijpa.jdbc.mapper;
 
 import java.sql.Timestamp;
-import java.time.OffsetDateTime;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class OffsetDateTimeAttributeMapper implements AttributeMapper<OffsetDateTime, Timestamp> {
+public class CalendarObjectConverter implements ObjectConverter<Calendar, Timestamp> {
 
-    @Override
-    public Timestamp attributeToDatabase(OffsetDateTime k) {
-	return Timestamp.from(k.toInstant());
-    }
+	@Override
+	public Timestamp convertTo(Calendar k) {
+		return new Timestamp(k.getTimeInMillis());
+	}
 
-    @Override
-    public OffsetDateTime databaseToAttribute(Timestamp v) {
-	return OffsetDateTime.of(v.toLocalDateTime(), OffsetDateTime.now().getOffset());
-    }
+	@Override
+	public Calendar convertFrom(Timestamp v) {
+		Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+		calendar.setTimeInMillis(v.getTime());
+		return calendar;
+	}
 
 }

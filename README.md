@@ -50,6 +50,9 @@ Built using Java SE 11
 5. mvn clean install -Dmaven.test.skip  
 6. mvn test  
 
+Running Jacoco Report  
+- mvn test jacoco:report  
+
 ## Running the unit tests  
 - **Apache Derby**:  
      - mvn test  

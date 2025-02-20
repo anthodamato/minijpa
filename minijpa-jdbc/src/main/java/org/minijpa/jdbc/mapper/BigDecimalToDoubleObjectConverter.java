@@ -15,22 +15,22 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.time.Duration;
+import java.math.BigDecimal;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class DurationAttributeMapper implements AttributeMapper<Duration, Long> {
+public class BigDecimalToDoubleObjectConverter implements ObjectConverter<Double, BigDecimal> {
 
-    @Override
-    public Long attributeToDatabase(Duration k) {
-	return k.toMillis();
-    }
+	@Override
+	public BigDecimal convertTo(Double k) {
+		return new BigDecimal(k);
+	}
 
-    @Override
-    public Duration databaseToAttribute(Long v) {
-	return Duration.ofMillis(v);
-    }
+	@Override
+	public Double convertFrom(BigDecimal v) {
+		return v.doubleValue();
+	}
 
 }

@@ -15,26 +15,23 @@
  */
 package org.minijpa.jdbc.mapper;
 
+import java.sql.Timestamp;
+import java.util.Date;
+
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class StringEnumAttributeMapper implements AttributeMapper<Enum, String> {
+public class UtilDateObjectConverter implements ObjectConverter<Date, Timestamp> {
 
-    private final Class<?> attributeType;
-
-    public StringEnumAttributeMapper(Class<?> attributeType) {
-        this.attributeType = attributeType;
+    @Override
+    public Timestamp convertTo(Date k) {
+	return new Timestamp(k.getTime());
     }
 
     @Override
-    public String attributeToDatabase(Enum k) {
-        return k.name();
-    }
-
-    @Override
-    public Enum databaseToAttribute(String v) {
-        return Enum.valueOf((Class<Enum>) attributeType, v);
+    public Date convertFrom(Timestamp v) {
+	return v;
     }
 
 }

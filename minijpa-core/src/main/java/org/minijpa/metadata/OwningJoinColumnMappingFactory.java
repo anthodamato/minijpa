@@ -52,12 +52,14 @@ public class OwningJoinColumnMappingFactory implements JoinColumnMappingFactory 
 
     @Override
     public JoinColumnMapping buildSingleJoinColumnMapping(
-            DbConfiguration dbConfiguration, RelationshipMetaAttribute a,
-            MetaEntity toEntity, Optional<JoinColumnDataList> joinColumnDataList) {
+            DbConfiguration dbConfiguration,
+            RelationshipMetaAttribute a,
+            MetaEntity toEntity,
+            JoinColumnDataList joinColumnDataList) {
         String joinColumnName = null;
-        if (joinColumnDataList.isPresent()) {
-            if (joinColumnDataList.get().getJoinColumnDataList().get(0).getName().isPresent()) {
-                joinColumnName = joinColumnDataList.get().getJoinColumnDataList().get(0).getName().get();
+        if (joinColumnDataList != null) {
+            if (joinColumnDataList.getJoinColumnDataList().get(0).getName().isPresent()) {
+                joinColumnName = joinColumnDataList.getJoinColumnDataList().get(0).getName().get();
             }
         } else {
             joinColumnName = createDefaultJoinColumnName(toEntity, a, toEntity.getId().getAttribute());
@@ -73,18 +75,18 @@ public class OwningJoinColumnMappingFactory implements JoinColumnMappingFactory 
             DbConfiguration dbConfiguration,
             RelationshipMetaAttribute a,
             MetaEntity toEntity,
-            Optional<JoinColumnDataList> joinColumnDataList) {
+            JoinColumnDataList joinColumnDataList) {
         List<JoinColumnAttribute> joinColumnAttributes = new ArrayList<>();
-        for (AbstractMetaAttribute metaAttribute : toEntity.getId().getAttributes()) {
-            Optional<String> joinColumnName = joinColumnDataList.isPresent()
-                    ? joinColumnDataList.get().getNameByReferenced(metaAttribute.getColumnName())
+        for (MetaAttribute metaAttribute : toEntity.getId().getAttributes()) {
+            Optional<String> joinColumnName = joinColumnDataList != null
+                    ? joinColumnDataList.getNameByReferenced(metaAttribute.getColumnName())
                     : Optional.empty();
             if (joinColumnName.isEmpty()) {
                 joinColumnName = Optional.of(createDefaultJoinColumnName(toEntity, a, metaAttribute));
             }
 
             JoinColumnAttribute joinColumnAttribute = buildJoinColumnAttribute(
-                    joinColumnName.get(), dbConfiguration, a, (MetaAttribute) metaAttribute);
+                    joinColumnName.get(), dbConfiguration, a, metaAttribute);
             joinColumnAttributes.add(joinColumnAttribute);
         }
 
@@ -97,7 +99,7 @@ public class OwningJoinColumnMappingFactory implements JoinColumnMappingFactory 
             DbConfiguration dbConfiguration,
             RelationshipMetaAttribute a,
             MetaEntity toEntity,
-            Optional<JoinColumnDataList> joinColumnDataList) {
+            JoinColumnDataList joinColumnDataList) {
         if (toEntity.getId().isComposite()) {
             return buildCompositeJoinColumnMapping(dbConfiguration, a, toEntity, joinColumnDataList);
         }

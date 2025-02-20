@@ -15,21 +15,9 @@
  */
 package org.minijpa.metadata;
 
-import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
-import org.minijpa.jpa.model.MetaEntity;
-import org.minijpa.jpa.model.RelationshipMetaAttribute;
-
 /**
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class OneToManyTargetJoinColumnMappingFactory extends OwningJoinColumnMappingFactory {
-
-  @Override
-  public String createDefaultJoinColumnName(MetaEntity owningEntity,
-      RelationshipMetaAttribute owningAttribute,
-      AbstractMetaAttribute foreignKeyAttribute) {
-    return owningAttribute.getName() + "_" + foreignKeyAttribute.getColumnName();
-  }
 
 }

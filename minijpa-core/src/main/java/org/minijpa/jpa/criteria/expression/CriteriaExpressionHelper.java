@@ -1,7 +1,7 @@
 package org.minijpa.jpa.criteria.expression;
 
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jdbc.mapper.ObjectConverter;
 import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.criteria.AttributePath;
 import org.minijpa.jpa.criteria.CriteriaUtils;
@@ -90,21 +90,21 @@ public class CriteriaExpressionHelper {
             ParameterExpression<?> parameterExpression,
             String columnName,
             Integer sqlType,
-            AttributeMapper attributeMapper) {
+            ObjectConverter objectConverter) {
         if (parameterExpression.getName() != null) {
             Object value = ParameterUtils.findParameterValueByName(parameterExpression.getName(), parameterValues);
-            return new QueryParameter(columnName, value, sqlType, attributeMapper);
+            return new QueryParameter(columnName, value, sqlType, objectConverter);
         }
 
         if (parameterExpression.getPosition() != null) {
             Object value = ParameterUtils.findParameterValueByPosition(
                     parameterExpression.getPosition(), parameterValues);
-            return new QueryParameter(columnName, value, sqlType, attributeMapper);
+            return new QueryParameter(columnName, value, sqlType, objectConverter);
         }
 
         // Can the parameter value be set to null!?
         Object value = parameterValues.get(parameterExpression);
-        return new QueryParameter(columnName, value, sqlType, attributeMapper);
+        return new QueryParameter(columnName, value, sqlType, objectConverter);
     }
 
     public Object createParameterFromExpression(
@@ -114,7 +114,7 @@ public class CriteriaExpressionHelper {
             List<QueryParameter> parameters,
             String columnName,
             Integer sqlType,
-            AttributeMapper attributeMapper) {
+            ObjectConverter objectConverter) {
         if (expression instanceof AttributePath<?>) {
             AttributePath<?> attributePath = (AttributePath<?>) expression;
             return createTableColumnFromPath(attributePath, aliasGenerator);
@@ -126,7 +126,7 @@ public class CriteriaExpressionHelper {
                     createQueryParameterForParameterExpression(parameterValues,
                             parameterExpression, columnName,
                             sqlType,
-                            attributeMapper));
+                            objectConverter));
             return CriteriaUtils.QM;
         }
 
@@ -152,22 +152,22 @@ public class CriteriaExpressionHelper {
             Map<Parameter<?>, Object> parameterValues,
             List<QueryParameter> parameters) {
         List<Object> arguments = new ArrayList<>();
-        if (coalesceExpression.getX().isPresent()) {
+        if (coalesceExpression.getX() != null) {
             Object xParam = createParameterFromExpression(parameterValues,
-                    (Expression<?>) coalesceExpression.getX().get(),
+                    (Expression<?>) coalesceExpression.getX(),
                     aliasGenerator, parameters, "coalesce", Types.OTHER, null);
             arguments.add(xParam);
         }
 
-        if (coalesceExpression.getY().isPresent()) {
+        if (coalesceExpression.getY() != null) {
             Object param = createParameterFromExpression(parameterValues,
-                    (Expression<?>) coalesceExpression.getY().get(),
+                    (Expression<?>) coalesceExpression.getY(),
                     aliasGenerator, parameters, "coalesce", Types.OTHER, null);
             arguments.add(param);
         }
 
-        if (coalesceExpression.getyValue().isPresent()) {
-            arguments.add(CriteriaUtils.buildValue(coalesceExpression.getyValue().get()));
+        if (coalesceExpression.getyValue() != null) {
+            arguments.add(CriteriaUtils.buildValue(coalesceExpression.getyValue()));
         }
 
         arguments.addAll(coalesceExpression.getArguments());
@@ -185,14 +185,14 @@ public class CriteriaExpressionHelper {
                 parameters,
                 "nullif", Types.OTHER, null);
 
-        if (nullifExpression.getY().isPresent()) {
+        if (nullifExpression.getY() != null) {
             Object yParam = createParameterFromExpression(parameterValues,
-                    (Expression<?>) nullifExpression.getY().get(),
+                    (Expression<?>) nullifExpression.getY(),
                     aliasGenerator, parameters, "nullif", Types.OTHER, null);
             return Optional.of(new Nullif(xParam, yParam));
         }
 
-        return Optional.of(new Nullif(xParam, nullifExpression.getyValue().get()));
+        return Optional.of(new Nullif(xParam, nullifExpression.getyValue()));
     }
 
     protected Optional<Value> createSelectionValue(
@@ -208,9 +208,9 @@ public class CriteriaExpressionHelper {
                 "locate", Types.VARCHAR, null);
         builder.withArgument(xParam);
 
-        if (substringExpression.getFrom().isPresent()) {
+        if (substringExpression.getFrom() != null) {
             Object fromParam = createParameterFromExpression(parameterValues,
-                    substringExpression.getFrom().get(),
+                    substringExpression.getFrom(),
                     aliasGenerator,
                     parameters,
                     "locate",
@@ -219,20 +219,20 @@ public class CriteriaExpressionHelper {
             builder.withFrom(fromParam);
         }
 
-        if (substringExpression.getFromInteger().isPresent()) {
-            builder.withFrom(CriteriaUtils.buildValue(substringExpression.getFromInteger().get()));
+        if (substringExpression.getFromInteger() != null) {
+            builder.withFrom(CriteriaUtils.buildValue(substringExpression.getFromInteger()));
         }
 
-        if (substringExpression.getLen().isPresent()) {
+        if (substringExpression.getLen() != null) {
             Object lenParam = createParameterFromExpression(parameterValues,
-                    substringExpression.getLen().get(),
+                    substringExpression.getLen(),
                     aliasGenerator,
                     parameters, "len", Types.INTEGER, null);
             builder.withLen(Optional.of(lenParam));
         }
 
-        if (substringExpression.getLenInteger().isPresent()) {
-            builder.withLen(Optional.of(substringExpression.getLenInteger().get()));
+        if (substringExpression.getLenInteger() != null) {
+            builder.withLen(Optional.of(substringExpression.getLenInteger()));
         }
 
         return Optional.of(builder.build());
@@ -251,27 +251,27 @@ public class CriteriaExpressionHelper {
                 "locate", Types.VARCHAR, null);
         builder.withInputString(xParam);
 
-        if (locateExpression.getPattern().isPresent()) {
+        if (locateExpression.getPattern() != null) {
             Object patternParam = createParameterFromExpression(parameterValues,
-                    locateExpression.getPattern().get(),
+                    locateExpression.getPattern(),
                     aliasGenerator, parameters, "locate", Types.VARCHAR, null);
             builder.withSearchString(patternParam);
         }
 
-        if (locateExpression.getPatternString().isPresent()) {
-            builder.withSearchString(CriteriaUtils.buildValue(locateExpression.getPatternString().get()));
+        if (locateExpression.getPatternString() != null) {
+            builder.withSearchString(CriteriaUtils.buildValue(locateExpression.getPatternString()));
         }
 
-        if (locateExpression.getFrom().isPresent()) {
+        if (locateExpression.getFrom() != null) {
             Object fromParam = createParameterFromExpression(parameterValues,
-                    locateExpression.getFrom().get(),
+                    locateExpression.getFrom(),
                     aliasGenerator,
                     parameters, "from", Types.INTEGER, null);
             builder.withPosition(Optional.of(fromParam));
         }
 
-        if (locateExpression.getFromInteger().isPresent()) {
-            builder.withPosition(Optional.of(locateExpression.getFromInteger().get()));
+        if (locateExpression.getFromInteger() != null) {
+            builder.withPosition(Optional.of(locateExpression.getFromInteger()));
         }
 
         return Optional.of(builder.build());
@@ -282,22 +282,22 @@ public class CriteriaExpressionHelper {
             AliasGenerator aliasGenerator,
             ConcatExpression concatExpression) {
         List<Object> values = new ArrayList<>();
-        if (concatExpression.getX().isPresent()) {
-            AttributePath<?> attributePath = (AttributePath<?>) concatExpression.getX().get();
+        if (concatExpression.getX() != null) {
+            AttributePath<?> attributePath = (AttributePath<?>) concatExpression.getX();
             values.add(createTableColumnFromPath(attributePath, aliasGenerator));
         }
 
-        if (concatExpression.getxValue().isPresent()) {
-            values.add(CriteriaUtils.buildValue(concatExpression.getxValue().get()));
+        if (concatExpression.getxValue() != null) {
+            values.add(CriteriaUtils.buildValue(concatExpression.getxValue()));
         }
 
-        if (concatExpression.getY().isPresent()) {
-            AttributePath<?> attributePath = (AttributePath<?>) concatExpression.getY().get();
+        if (concatExpression.getY() != null) {
+            AttributePath<?> attributePath = (AttributePath<?>) concatExpression.getY();
             values.add(createTableColumnFromPath(attributePath, aliasGenerator));
         }
 
-        if (concatExpression.getyValue().isPresent()) {
-            values.add(CriteriaUtils.buildValue(concatExpression.getyValue().get()));
+        if (concatExpression.getyValue() != null) {
+            values.add(CriteriaUtils.buildValue(concatExpression.getyValue()));
         }
 
         return Optional.of(new Concat(values.toArray()));
@@ -315,23 +315,23 @@ public class CriteriaExpressionHelper {
                         trimExpression.getX(), aliasGenerator, parameters,
                         "locate", Types.VARCHAR, null));
 
-        if (trimExpression.getT().isPresent()) {
+        if (trimExpression.getT() != null) {
             log.debug("createSelectionValue: trimExpression.getT().get()={}",
-                    trimExpression.getT().get());
+                    trimExpression.getT());
             builder.withTrimCharacter(
                     (String) createParameterFromExpression(parameterValues,
-                            trimExpression.getT().get(),
+                            trimExpression.getT(),
                             aliasGenerator, parameters, "trim", Types.VARCHAR, null));
         }
 
-        if (trimExpression.gettChar().isPresent()) {
+        if (trimExpression.gettChar() != null) {
             log.debug("createSelectionValue: trimExpression.gettChar().get()={}",
-                    trimExpression.gettChar().get());
-            builder.withTrimCharacter(CriteriaUtils.buildValue("" + trimExpression.gettChar().get()));
+                    trimExpression.gettChar());
+            builder.withTrimCharacter(CriteriaUtils.buildValue("" + trimExpression.gettChar()));
         }
 
-        if (trimExpression.getTs().isPresent()) {
-            Trimspec trimspec = trimExpression.getTs().get();
+        if (trimExpression.getTs() != null) {
+            Trimspec trimspec = trimExpression.getTs();
             if (trimspec == Trimspec.TRAILING) {
                 builder.withTrimType(Optional.of(TrimType.TRAILING));
             } else if (trimspec == Trimspec.LEADING) {
@@ -376,26 +376,26 @@ public class CriteriaExpressionHelper {
             Map<Parameter<?>, Object> parameterValues,
             List<QueryParameter> parameters) {
         List<Object> list = new ArrayList<>();
-        if (binaryExpression.getX().isPresent()) {
+        if (binaryExpression.getX() != null) {
             list.add(createParameterFromExpression(parameterValues,
-                    binaryExpression.getX().get(), aliasGenerator,
+                    binaryExpression.getX(), aliasGenerator,
                     parameters,
                     "locate", sqlType, null));
         }
 
-        if (binaryExpression.getxValue().isPresent()) {
-            list.add(CriteriaUtils.buildValue(binaryExpression.getxValue().get()));
+        if (binaryExpression.getxValue() != null) {
+            list.add(CriteriaUtils.buildValue(binaryExpression.getxValue()));
         }
 
-        if (binaryExpression.getY().isPresent()) {
+        if (binaryExpression.getY() != null) {
             list.add(createParameterFromExpression(parameterValues,
-                    binaryExpression.getY().get(), aliasGenerator,
+                    binaryExpression.getY(), aliasGenerator,
                     parameters,
                     "locate", sqlType, null));
         }
 
-        if (binaryExpression.getyValue().isPresent()) {
-            list.add(CriteriaUtils.buildValue(binaryExpression.getyValue().get()));
+        if (binaryExpression.getyValue() != null) {
+            list.add(CriteriaUtils.buildValue(binaryExpression.getyValue()));
         }
 
         return list;
@@ -416,29 +416,29 @@ public class CriteriaExpressionHelper {
 
         SqlBinaryExpressionBuilder builder = new SqlBinaryExpressionBuilder(
                 getSqlExpressionOperator(binaryExpression.getExpressionOperator()));
-        if (binaryExpression.getX().isPresent()) {
-            AttributePath<?> attributePath = (AttributePath<?>) binaryExpression.getX().get();
+        if (binaryExpression.getX() != null) {
+            AttributePath<?> attributePath = (AttributePath<?>) binaryExpression.getX();
             builder.setLeftExpression(createTableColumnFromPath(attributePath, aliasGenerator));
         }
 
-        if (binaryExpression.getxValue().isPresent()) {
-            if (CriteriaUtils.requireQM(binaryExpression.getxValue().get())) {
+        if (binaryExpression.getxValue() != null) {
+            if (CriteriaUtils.requireQM(binaryExpression.getxValue())) {
                 builder.setLeftExpression(CriteriaUtils.QM);
             } else {
-                builder.setLeftExpression(CriteriaUtils.buildValue(binaryExpression.getxValue().get()));
+                builder.setLeftExpression(CriteriaUtils.buildValue(binaryExpression.getxValue()));
             }
         }
 
-        if (binaryExpression.getY().isPresent()) {
-            AttributePath<?> attributePath = (AttributePath<?>) binaryExpression.getY().get();
+        if (binaryExpression.getY() != null) {
+            AttributePath<?> attributePath = (AttributePath<?>) binaryExpression.getY();
             builder.setRightExpression(createTableColumnFromPath(attributePath, aliasGenerator));
         }
 
-        if (binaryExpression.getyValue().isPresent()) {
-            if (CriteriaUtils.requireQM(binaryExpression.getyValue().get())) {
+        if (binaryExpression.getyValue() != null) {
+            if (CriteriaUtils.requireQM(binaryExpression.getyValue())) {
                 builder.setRightExpression(CriteriaUtils.QM);
             } else {
-                builder.setRightExpression(CriteriaUtils.buildValue(binaryExpression.getyValue().get()));
+                builder.setRightExpression(CriteriaUtils.buildValue(binaryExpression.getyValue()));
             }
         }
 

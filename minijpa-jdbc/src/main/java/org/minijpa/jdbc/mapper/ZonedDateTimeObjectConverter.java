@@ -16,25 +16,23 @@
 package org.minijpa.jdbc.mapper;
 
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class CalendarAttributeMapper implements AttributeMapper<Calendar, Timestamp> {
+public class ZonedDateTimeObjectConverter implements ObjectConverter<ZonedDateTime, Timestamp> {
 
-	@Override
-	public Timestamp attributeToDatabase(Calendar k) {
-		return new Timestamp(k.getTimeInMillis());
-	}
+    @Override
+    public Timestamp convertTo(ZonedDateTime k) {
+	return Timestamp.from(k.toInstant());
+    }
 
-	@Override
-	public Calendar databaseToAttribute(Timestamp v) {
-		Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
-		calendar.setTimeInMillis(v.getTime());
-		return calendar;
-	}
+    @Override
+    public ZonedDateTime convertFrom(Timestamp v) {
+	return ZonedDateTime.ofInstant(v.toInstant(), ZoneId.systemDefault());
+    }
 
 }

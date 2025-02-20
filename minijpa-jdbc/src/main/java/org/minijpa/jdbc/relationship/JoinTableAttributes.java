@@ -21,8 +21,8 @@ package org.minijpa.jdbc.relationship;
  */
 public class JoinTableAttributes {
 
-    private String schema;
-    private String name;
+    private final String schema;
+    private final String name;
 
     public JoinTableAttributes(String schema, String name) {
         this.schema = schema;

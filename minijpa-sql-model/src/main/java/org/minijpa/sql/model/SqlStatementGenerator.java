@@ -23,19 +23,19 @@ import java.util.Optional;
  */
 public interface SqlStatementGenerator {
 
-    public void init();
+    void init();
 
-    public NameTranslator getNameTranslator();
+    NameTranslator getNameTranslator();
 
-    public default NameTranslator createNameTranslator() {
+    default NameTranslator createNameTranslator() {
         return new DefaultNameTranslator();
     }
 
-    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData);
+    String buildColumnDefinition(Class<?> type, JdbcDDLData ddlData);
 
-    public String buildIdentityColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData);
+    String buildIdentityColumnDefinition(Class<?> type, JdbcDDLData ddlData);
 
-    public default String export(SqlStatement sqlStatement) {
+    default String export(SqlStatement sqlStatement) {
         if (sqlStatement instanceof SqlSelect)
             return export((SqlSelect) sqlStatement);
         else if (sqlStatement instanceof SqlUpdate)
@@ -48,23 +48,23 @@ public interface SqlStatementGenerator {
         throw new IllegalArgumentException("Unknown Sql Statement: " + sqlStatement);
     }
 
-    public String export(SqlInsert sqlInsert);
+    String export(SqlInsert sqlInsert);
 
-    public String export(SqlUpdate sqlUpdate);
+    String export(SqlUpdate sqlUpdate);
 
-    public String export(SqlDelete sqlDelete);
+    String export(SqlDelete sqlDelete);
 
-    public String export(SqlSelect sqlSelect);
+    String export(SqlSelect sqlSelect);
 
-    public String export(SqlCreateTable sqlCreateTable);
+    String export(SqlCreateTable sqlCreateTable);
 
-    public String export(SqlCreateSequence sqlCreateSequence);
+    String export(SqlCreateSequence sqlCreateSequence);
 
-    public String export(SqlDropSequence sqlDropSequence);
+    String export(SqlDropSequence sqlDropSequence);
 
-    public List<String> export(List<SqlDDLStatement> sqlDDLStatement);
+    List<String> export(List<SqlDDLStatement> sqlDDLStatement);
 
-    public String export(SqlCreateJoinTable sqlCreateJoinTable);
+    String export(SqlCreateJoinTable sqlCreateJoinTable);
 
     /**
      * Returns the statement to generate the next sequence value.
@@ -73,102 +73,102 @@ public interface SqlStatementGenerator {
      * @param sequenceName   the sequence name
      * @return the statement to generate the next sequence value
      */
-    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName);
+    String sequenceNextValueStatement(String optionalSchema, String sequenceName);
 
-    public String forUpdateClause(ForUpdate forUpdate);
+    String forUpdateClause(ForUpdate forUpdate);
 
-    public default int getDefaultPrecision() {
+    default int getDefaultPrecision() {
         return 19;
     }
 
-    public default int getDefaultScale() {
+    default int getDefaultScale() {
         return 2;
     }
 
-    public default String notEqualOperator() {
+    default String notEqualOperator() {
         return "<>";
     }
 
-    public default String equalOperator() {
+    default String equalOperator() {
         return "=";
     }
 
-    public default String orOperator() {
+    default String orOperator() {
         return "or";
     }
 
-    public default String andOperator() {
+    default String andOperator() {
         return "and";
     }
 
-    public default String notOperator() {
+    default String notOperator() {
         return "not";
     }
 
-    public default String isNullOperator() {
+    default String isNullOperator() {
         return "is null";
     }
 
-    public default String notNullOperator() {
+    default String notNullOperator() {
         return "is not null";
     }
 
-    public default String booleanValue(Boolean value) {
+    default String booleanValue(Boolean value) {
         if (value == false)
             return falseValue();
 
         return trueValue();
     }
 
-    public default String trueValue() {
+    default String trueValue() {
         return "TRUE";
     }
 
-    public default String falseValue() {
+    default String falseValue() {
         return "FALSE";
     }
 
-    public default String equalsTrueOperator() {
+    default String equalsTrueOperator() {
         return "= " + trueValue();
     }
 
-    public default String equalsFalseOperator() {
+    default String equalsFalseOperator() {
         return "= " + falseValue();
     }
 
-    public default String emptyConjunctionOperator() {
+    default String emptyConjunctionOperator() {
         return "1=1";
     }
 
-    public default String emptyDisjunctionOperator() {
+    default String emptyDisjunctionOperator() {
         return "1=2";
     }
 
-    public default String greaterThanOperator() {
+    default String greaterThanOperator() {
         return ">";
     }
 
-    public default String greaterThanOrEqualToOperator() {
+    default String greaterThanOrEqualToOperator() {
         return ">=";
     }
 
-    public default String lessThanOperator() {
+    default String lessThanOperator() {
         return "<";
     }
 
-    public default String lessThanOrEqualToOperator() {
+    default String lessThanOrEqualToOperator() {
         return "<=";
     }
 
-    public default String betweenOperator() {
+    default String betweenOperator() {
         return "between";
     }
 
-    public default String likeOperator() {
+    default String likeOperator() {
         return "like";
     }
 
-    public default String inOperator() {
+    default String inOperator() {
         return "in";
     }
 

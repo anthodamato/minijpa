@@ -15,26 +15,23 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 public class SubQuery {
 
-	private SqlSelect query;
-	private Optional<String> alias = Optional.empty();
+    private final SqlSelect query;
+    private final String alias;
 
-	public SubQuery(SqlSelect query, String alias) {
-		super();
-		this.query = query;
-		if (alias != null)
-			this.alias = Optional.of(alias);
-	}
+    public SubQuery(SqlSelect query, String alias) {
+        super();
+        this.query = query;
+        this.alias = alias;
+    }
 
-	public Optional<String> getAlias() {
-		return alias;
-	}
+    public String getAlias() {
+        return alias;
+    }
 
-	public SqlSelect getQuery() {
-		return query;
-	}
+    public SqlSelect getQuery() {
+        return query;
+    }
 
 }

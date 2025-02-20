@@ -20,7 +20,7 @@ import java.sql.SQLException;
 
 public interface ConnectionProvider {
 
-    public Connection getConnection() throws SQLException;
+    Connection getConnection() throws SQLException;
 
-    public void init() throws Exception;
+    void init() throws Exception;
 }

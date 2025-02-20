@@ -1,19 +1,17 @@
 package org.minijpa.jdbc;
 
-import java.util.Optional;
-
-import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jdbc.mapper.ObjectConverter;
 
 public class BasicFetchParameter implements FetchParameter {
     private final String columnName;
     private final Integer sqlType;
-    private AttributeMapper attributeMapper;
+    private ObjectConverter objectConverter;
 
-    public BasicFetchParameter(String columnName, Integer sqlType, AttributeMapper attributeMapper) {
+    public BasicFetchParameter(String columnName, Integer sqlType, ObjectConverter objectConverter) {
         super();
         this.columnName = columnName;
         this.sqlType = sqlType;
-        this.attributeMapper = attributeMapper;
+        this.objectConverter = objectConverter;
     }
 
     public BasicFetchParameter(String columnName, Integer sqlType) {
@@ -33,8 +31,8 @@ public class BasicFetchParameter implements FetchParameter {
     }
 
     @Override
-    public AttributeMapper getAttributeMapper() {
-        return attributeMapper;
+    public ObjectConverter getObjectConverter() {
+        return objectConverter;
     }
 
 }

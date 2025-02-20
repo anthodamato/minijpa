@@ -15,12 +15,11 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 import org.minijpa.sql.model.function.Locate;
 
+import java.util.Optional;
+
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator {
@@ -31,11 +30,11 @@ public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator 
     }
 
     @Override
-    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-        if (optionalSchema.isEmpty())
+    public String sequenceNextValueStatement(String optionalSchema, String sequenceName) {
+        if (optionalSchema == null)
             return "select nextval('" + sequenceName + "')";
 
-        return "select nextval(" + optionalSchema.get() + "." + sequenceName + "')";
+        return "select nextval(" + optionalSchema + "." + sequenceName + "')";
     }
 
     @Override
@@ -44,7 +43,7 @@ public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator 
     }
 
     @Override
-    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+    public String buildColumnDefinition(Class<?> type, JdbcDDLData ddlData) {
         if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
             return "double precision";
 
@@ -72,12 +71,12 @@ public class PostgresSqlStatementGenerator extends DefaultSqlStatementGenerator 
     private class UpdateNameTranslator extends DefaultNameTranslator {
 
         @Override
-        public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias) {
+        public String toColumnName(String tableAlias, String columnName, String columnAlias) {
             return columnName;
         }
 
         @Override
-        public String toTableName(Optional<String> tableAlias, String tableName) {
+        public String toTableName(String tableAlias, String tableName) {
             return tableName;
         }
     }

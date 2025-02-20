@@ -28,8 +28,8 @@ public class EnhAttribute {
     private final boolean embedded;
     private final EnhEntity embeddedEnhEntity;
     private final boolean parentEmbeddedId;
-    private Optional<String> joinColumnSetMethod = Optional.empty();
-    private Optional<String> joinColumnGetMethod = Optional.empty();
+    private String joinColumnSetMethod;
+    private String joinColumnGetMethod;
 
     public EnhAttribute(
             String name,
@@ -84,19 +84,19 @@ public class EnhAttribute {
         return parentEmbeddedId;
     }
 
-    public Optional<String> getJoinColumnSetMethod() {
+    public String getJoinColumnSetMethod() {
         return joinColumnSetMethod;
     }
 
-    public void setJoinColumnSetMethod(Optional<String> joinColumnSetMethod) {
+    public void setJoinColumnSetMethod(String joinColumnSetMethod) {
         this.joinColumnSetMethod = joinColumnSetMethod;
     }
 
-    public Optional<String> getJoinColumnGetMethod() {
+    public String getJoinColumnGetMethod() {
         return joinColumnGetMethod;
     }
 
-    public void setJoinColumnGetMethod(Optional<String> joinColumnGetMethod) {
+    public void setJoinColumnGetMethod(String joinColumnGetMethod) {
         this.joinColumnGetMethod = joinColumnGetMethod;
     }
 

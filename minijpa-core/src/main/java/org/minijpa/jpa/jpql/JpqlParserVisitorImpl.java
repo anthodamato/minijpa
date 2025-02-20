@@ -407,7 +407,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                     relationshipMetaAttribute, joinType, tableAliasGenerator);
             jpqlVisitorParameters.fromJoins.addAll(fromJoins);
             jpqlVisitorParameters.fetchJoinMetaEntities.add(relationshipMetaAttribute.getRelationship().getJoinTable().getTargetEntity());
-        } else if (relationshipMetaAttribute.getRelationship().getJoinColumnMapping().isPresent()) {
+        } else if (relationshipMetaAttribute.getRelationship().getJoinColumnMapping() != null) {
             String tableAlias = tableAliasGenerator
                     .getDefault(relationshipMetaAttribute.getRelationship().getAttributeType().getTableName());
             jpqlVisitorParameters.aliases.put(entityAlias, tableAlias);

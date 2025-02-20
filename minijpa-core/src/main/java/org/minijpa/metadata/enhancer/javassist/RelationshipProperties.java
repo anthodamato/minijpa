@@ -15,8 +15,6 @@
  */
 package org.minijpa.metadata.enhancer.javassist;
 
-import java.util.Optional;
-
 import javassist.CtClass;
 import javassist.CtMethod;
 
@@ -29,11 +27,15 @@ public class RelationshipProperties {
     private final CtClass type;
     private final boolean lazy;
     private final boolean joinColumn;
-    private Optional<String> joinColumnFieldName = Optional.empty();
-    private Optional<CtMethod> ctMethodGetter;
-    private Optional<CtMethod> ctMethodSetter;
+    private String joinColumnFieldName;
+    private CtMethod ctMethodGetter;
+    private CtMethod ctMethodSetter;
 
-    public RelationshipProperties(String fieldName, CtClass type, boolean lazy, boolean joinColumn) {
+    public RelationshipProperties(
+            String fieldName,
+            CtClass type,
+            boolean lazy,
+            boolean joinColumn) {
         this.fieldName = fieldName;
         this.type = type;
         this.lazy = lazy;
@@ -56,27 +58,27 @@ public class RelationshipProperties {
         return type;
     }
 
-    public Optional<String> getJoinColumnFieldName() {
+    public String getJoinColumnFieldName() {
         return joinColumnFieldName;
     }
 
-    public void setJoinColumnFieldName(Optional<String> joinColumnFieldName) {
+    public void setJoinColumnFieldName(String joinColumnFieldName) {
         this.joinColumnFieldName = joinColumnFieldName;
     }
 
-    public Optional<CtMethod> getCtMethodGetter() {
+    public CtMethod getCtMethodGetter() {
         return ctMethodGetter;
     }
 
-    public void setCtMethodGetter(Optional<CtMethod> ctMethodGetter) {
+    public void setCtMethodGetter(CtMethod ctMethodGetter) {
         this.ctMethodGetter = ctMethodGetter;
     }
 
-    public Optional<CtMethod> getCtMethodSetter() {
+    public CtMethod getCtMethodSetter() {
         return ctMethodSetter;
     }
 
-    public void setCtMethodSetter(Optional<CtMethod> ctMethodSetter) {
+    public void setCtMethodSetter(CtMethod ctMethodSetter) {
         this.ctMethodSetter = ctMethodSetter;
     }
 

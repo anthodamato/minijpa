@@ -16,7 +16,8 @@
 package org.minijpa.jdbc;
 
 import java.util.Optional;
-import org.minijpa.jdbc.mapper.AttributeMapper;
+
+import org.minijpa.jdbc.mapper.ObjectConverter;
 
 public interface DbTypeMapper {
 
@@ -25,12 +26,11 @@ public interface DbTypeMapper {
      * <code>attributeType</code> to a value of type <code>databaseType</code> and
      * vice-versa.
      *
-     *
      * @param attributeType
      * @param databaseType
      * @return
      */
-    public AttributeMapper<?, ?> attributeMapper(Class<?> attributeType, Class<?> databaseType);
+    ObjectConverter<?, ?> attributeMapper(Class<?> attributeType, Class<?> databaseType);
 
     /**
      * Maps the attribute type to the db type. For example, on Apache Derby if a
@@ -41,6 +41,6 @@ public interface DbTypeMapper {
      * @param enumerationType
      * @return
      */
-    public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType);
+    Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType);
 
 }

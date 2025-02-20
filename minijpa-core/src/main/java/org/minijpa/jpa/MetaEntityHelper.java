@@ -62,7 +62,7 @@ public final class MetaEntityHelper {
             FetchParameter columnNameValue = new AttributeFetchParameterImpl(a.getColumnName(),
                     a.getSqlType(),
                     a.getForeignKeyAttribute(),
-                    a.getForeignKeyAttribute().getAttributeMapper());
+                    a.getForeignKeyAttribute().getObjectConverter());
             list.add(columnNameValue);
         }
 
@@ -194,7 +194,7 @@ public final class MetaEntityHelper {
             MetaAttribute metaAttribute = joinColumnAttributes.get(index).getForeignKeyAttribute();
             QueryParameter qp = new QueryParameter(joinColumnAttributes.get(index).getColumnName(),
                     modelValueArray.getValue(i), metaAttribute.getSqlType(),
-                    metaAttribute.getAttributeMapper());
+                    metaAttribute.getObjectConverter());
             queryParameters.add(qp);
         }
 
@@ -255,7 +255,7 @@ public final class MetaEntityHelper {
 
     public static boolean hasOptimisticLock(MetaEntity entity, Object entityInstance)
             throws IllegalAccessException, InvocationTargetException {
-        LockType lockType = (LockType) entity.getLockTypeAttributeReadMethod().get()
+        LockType lockType = (LockType) entity.getLockTypeAttributeReadMethod()
                 .invoke(entityInstance);
         if (lockType == LockType.OPTIMISTIC || lockType == LockType.OPTIMISTIC_FORCE_INCREMENT) {
             return true;
@@ -306,12 +306,12 @@ public final class MetaEntityHelper {
 //    }
 
     public static LockType getLockType(MetaEntity entity, Object entityInstance) throws Exception {
-        return (LockType) entity.getLockTypeAttributeReadMethod().get().invoke(entityInstance);
+        return (LockType) entity.getLockTypeAttributeReadMethod().invoke(entityInstance);
     }
 
     public static void setLockType(MetaEntity entity, Object entityInstance, LockType lockType)
             throws Exception {
-        entity.getLockTypeAttributeWriteMethod().get().invoke(entityInstance, lockType);
+        entity.getLockTypeAttributeWriteMethod().invoke(entityInstance, lockType);
     }
 
     public static Optional<QueryParameter> generateVersionParameter(MetaEntity metaEntity) {
@@ -326,26 +326,26 @@ public final class MetaEntityHelper {
 
     public static EntityStatus getEntityStatus(MetaEntity entity, Object entityInstance)
             throws Exception {
-        return (EntityStatus) entity.getEntityStatusAttributeReadMethod().get().invoke(entityInstance);
+        return (EntityStatus) entity.getEntityStatusAttributeReadMethod().invoke(entityInstance);
     }
 
     public static void setEntityStatus(MetaEntity entity, Object entityInstance,
                                        EntityStatus entityStatus)
             throws Exception {
-        entity.getEntityStatusAttributeWriteMethod().get().invoke(entityInstance, entityStatus);
+        entity.getEntityStatusAttributeWriteMethod().invoke(entityInstance, entityStatus);
     }
 
     public static void setForeignKeyValue(
             RelationshipMetaAttribute attribute,
             Object entityInstance,
             Object value) throws IllegalAccessException, InvocationTargetException {
-        attribute.getJoinColumnWriteMethod().get().invoke(entityInstance, value);
+        attribute.getJoinColumnWriteMethod().invoke(entityInstance, value);
     }
 
     public static Object getForeignKeyValue(
             RelationshipMetaAttribute attribute,
             Object entityInstance) throws IllegalAccessException, InvocationTargetException {
-        return attribute.getJoinColumnReadMethod().get().invoke(entityInstance);
+        return attribute.getJoinColumnReadMethod().invoke(entityInstance);
     }
 
     public static boolean isFlushed(
@@ -421,7 +421,7 @@ public final class MetaEntityHelper {
     public static List getJoinColumnPostponedUpdateAttributeList(MetaEntity entity,
                                                                  Object parentInstance)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        Method m = entity.getJoinColumnPostponedUpdateAttributeReadMethod().get();
+        Method m = entity.getJoinColumnPostponedUpdateAttributeReadMethod();
         return (List) m.invoke(parentInstance);
     }
 
@@ -550,7 +550,7 @@ public final class MetaEntityHelper {
             return true;
         }
 
-        Method m = entity.getLazyLoadedAttributeReadMethod().get();
+        Method m = entity.getLazyLoadedAttributeReadMethod();
         List list = (List) m.invoke(entityInstance);
         return list.contains(a.getName());
     }
@@ -561,7 +561,7 @@ public final class MetaEntityHelper {
             Object entityInstance,
             boolean loaded)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        Method m = entity.getLazyLoadedAttributeReadMethod().get();
+        Method m = entity.getLazyLoadedAttributeReadMethod();
         List list = (List) m.invoke(entityInstance);
         if (loaded) {
             if (!list.contains(a.getName())) {
@@ -574,11 +574,10 @@ public final class MetaEntityHelper {
 
     public static void clearLazyAttributeLoaded(MetaEntity entity, Object entityInstance)
             throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        if (entity.getLazyLoadedAttributeReadMethod().isEmpty()) {
+        if (entity.getLazyLoadedAttributeReadMethod() == null)
             return;
-        }
 
-        Method m = entity.getLazyLoadedAttributeReadMethod().get();
+        Method m = entity.getLazyLoadedAttributeReadMethod();
         List list = (List) m.invoke(entityInstance);
         list.clear();
     }

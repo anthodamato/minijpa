@@ -120,16 +120,8 @@ public class ClassInspector {
 
         // lazy loaded attribute tracker
         Optional<String> lazyLoadedAttribute = createLazyLoadedAttribute(properties, ct);
-//	Optional<Property> optionalLazy = properties.stream()
-//		.filter(p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().isLazy())
-//		.findFirst();
-//	if (optionalLazy.isPresent()) {
-//	    lazyLoadedAttribute = findAvailableAttribute(lazyLoadedAttributePrefix, properties, ct);
-//	    removeAttributeFromProperties(lazyLoadedAttribute.get(), properties);
-//	}
 
         // join column postponed update attribute
-//	createJoinColumnPostponedUpdateAttributeOnDest(properties, ct);
         Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(properties, ct);
         LOG.debug("inspect: joinColumnPostponedUpdateAttribute.isPresent()={}",
                 joinColumnPostponedUpdateAttribute.isPresent());
@@ -147,10 +139,10 @@ public class ClassInspector {
         managedData.addAttributeDatas(attrs);
         managedData.setCtClass(ct);
         managedData.setModificationAttribute(modificationAttribute.get());
-        managedData.setLockTypeAttribute(lockTypeAttribute);
-        managedData.setEntityStatusAttribute(entityStatusAttribute);
-        managedData.setLazyLoadedAttribute(lazyLoadedAttribute);
-        managedData.setJoinColumnPostponedUpdateAttribute(joinColumnPostponedUpdateAttribute);
+        managedData.setLockTypeAttribute(lockTypeAttribute.get());
+        managedData.setEntityStatusAttribute(entityStatusAttribute.get());
+        lazyLoadedAttribute.ifPresent(managedData::setLazyLoadedAttribute);
+        joinColumnPostponedUpdateAttribute.ifPresent(managedData::setJoinColumnPostponedUpdateAttribute);
 
         // looks for embeddables
         LOG.debug("Inspects embeddables...");
@@ -232,36 +224,6 @@ public class ClassInspector {
         return optionalName;
     }
 
-    private void createJoinColumnPostponedUpdateAttributeOnDest(List<Property> properties, CtClass ct)
-            throws Exception {
-        List<Property> list = properties.stream().filter(
-                        p -> p.getRelationshipProperties() != null && p.getRelationshipProperties().hasJoinColumn())
-                .collect(Collectors.toList());
-        for (Property p : list) {
-            Optional<ManagedData> o = Optional.empty();
-            for (ManagedData managedData : inspectedClasses) {
-                if (managedData.getClassName().equals(p.getCtField().getType().getName())) {
-                    o = Optional.of(managedData);
-                    break;
-                }
-            }
-
-            LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: p.getCtField().getName()={}",
-                    p.getCtField().getName());
-            LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: o.isEmpty()={}", o.isEmpty());
-            if (o.isEmpty()) {
-                ManagedData managedData = inspect(p.getCtField().getType().getName());
-                o = Optional.of(managedData);
-            }
-
-            if (o.get().getJoinColumnPostponedUpdateAttribute().isEmpty()) {
-                Optional<String> optionalName = findAvailableAttribute(joinColumnPostponedUpdateAttributePrefix,
-                        properties, o.get().getCtClass());
-                LOG.debug("createJoinColumnPostponedUpdateAttributeOnDest: optionalName.get()={}", optionalName.get());
-                o.get().setJoinColumnPostponedUpdateAttribute(optionalName);
-            }
-        }
-    }
 
     private void addPrimitiveAttributesToInitialization(List<Property> properties, List<BMTMethodInfo> methodInfos)
             throws NotFoundException {
@@ -290,7 +252,7 @@ public class ClassInspector {
                     if (o.isEmpty())
                         throw new Exception("Internal error. Next available attribute '" + prefix + "' not found");
 
-                    rp.setJoinColumnFieldName(o);
+                    rp.setJoinColumnFieldName(o.get());
                     fieldNames.add(o.get());
                 }
             }
@@ -386,8 +348,8 @@ public class ClassInspector {
         managedData.addAttributeDatas(attrs);
         managedData.setCtClass(superClass);
         managedData.setModificationAttribute(modificationAttribute.get());
-        managedData.setLazyLoadedAttribute(lazyLoadedAttribute);
-        managedData.setJoinColumnPostponedUpdateAttribute(joinColumnPostponedUpdateAttribute);
+        lazyLoadedAttribute.ifPresent(managedData::setLazyLoadedAttribute);
+        joinColumnPostponedUpdateAttribute.ifPresent(managedData::setJoinColumnPostponedUpdateAttribute);
 
         List<ManagedData> embeddables = new ArrayList<>();
         createEmbeddables(attrs, embeddables);
@@ -499,16 +461,8 @@ public class ClassInspector {
             // lazy loaded attribute tracker
             Optional<String> lazyLoadedAttribute = createLazyLoadedAttribute(property.getEmbeddedProperties(),
                     property.getCtField().getType());
-//	    Optional<Property> optionalLazy = property.embeddedProperties.stream()
-//		    .filter(p -> p.getRelationshipProperties().isPresent() && p.getRelationshipProperties().get().isLazy())
-//		    .findFirst();
-//	    if (optionalLazy.isPresent()) {
-//		lazyLoadedAttribute = findAvailableAttribute(lazyLoadedAttributePrefix, property.embeddedProperties, property.ctField.getType());
-//		removeAttributeFromProperties(lazyLoadedAttribute.get(), property.embeddedProperties);
-//	    }
 
             // join column postponed update attribute
-//	    createJoinColumnPostponedUpdateAttributeOnDest(property.embeddedProperties, property.ctField.getType());
             Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(
                     property.getEmbeddedProperties(), property.getCtField().getType());
 
@@ -517,8 +471,8 @@ public class ClassInspector {
             embeddedData.setCtClass(property.getCtField().getType());
             embeddedData.setClassName(property.getCtField().getType().getName());
             embeddedData.setModificationAttribute(modificationAttribute.get());
-            embeddedData.setLazyLoadedAttribute(lazyLoadedAttribute);
-            embeddedData.setJoinColumnPostponedUpdateAttribute(joinColumnPostponedUpdateAttribute);
+            lazyLoadedAttribute.ifPresent(embeddedData::setLazyLoadedAttribute);
+            joinColumnPostponedUpdateAttribute.ifPresent(embeddedData::setJoinColumnPostponedUpdateAttribute);
         }
 
         return new AttributeData(property, parentIsEmbeddedId, embeddedData);

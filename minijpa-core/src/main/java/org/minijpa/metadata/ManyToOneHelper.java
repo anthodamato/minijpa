@@ -24,7 +24,6 @@ import org.minijpa.jpa.model.relationship.ManyToOneRelationship;
 
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
-import java.util.Optional;
 
 /**
  * @author adamato
@@ -35,7 +34,7 @@ public class ManyToOneHelper extends RelationshipHelper {
 
     public ManyToOneRelationship createManyToOne(
             ManyToOne manyToOne,
-            Optional<JoinColumnDataList> joinColumnDataList,
+            JoinColumnDataList joinColumnDataList,
             boolean id) {
         ManyToOneRelationship.Builder builder = new ManyToOneRelationship.Builder();
         builder.withJoinColumnDataList(joinColumnDataList);
@@ -62,7 +61,7 @@ public class ManyToOneHelper extends RelationshipHelper {
             JoinColumnMapping joinColumnMapping = joinColumnMappingFactory.buildJoinColumnMapping(
                     dbConfiguration, a, toEntity, manyToOneRelationship.getJoinColumnDataList());
             entity.getJoinColumnMappings().add(joinColumnMapping);
-            builder.withJoinColumnMapping(Optional.of(joinColumnMapping));
+            builder.withJoinColumnMapping(joinColumnMapping);
             builder.withOwningEntity(entity);
         }
 

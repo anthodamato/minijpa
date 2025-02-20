@@ -15,32 +15,21 @@
  */
 package org.minijpa.jdbc.mapper;
 
+import java.math.BigInteger;
+
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class OrdinalEnumAttributeMapper implements AttributeMapper<Enum, Integer> {
+public class NumberToBigIntegerObjectConverter implements ObjectConverter<BigInteger, Number> {
 
-    private final Class<?> attributeType;
-
-    public OrdinalEnumAttributeMapper(Class<?> attributeType) {
-        this.attributeType = attributeType;
+    @Override
+    public Number convertTo(BigInteger k) {
+        return k;
     }
 
     @Override
-    public Integer attributeToDatabase(Enum k) {
-        return k.ordinal();
-    }
-
-    @Override
-    public Enum databaseToAttribute(Integer v) {
-        Object[] enums = attributeType.getEnumConstants();
-        for (Object o : enums) {
-            if (((Enum) o).ordinal() == v)
-                return (Enum) o;
-        }
-
-        return null;
+    public BigInteger convertFrom(Number v) {
+        return BigInteger.valueOf(v.longValue());
     }
 
 }

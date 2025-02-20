@@ -15,40 +15,29 @@
  */
 package org.minijpa.metadata;
 
+import org.minijpa.jdbc.DDLData;
+import org.minijpa.jdbc.JdbcTypes;
+import org.minijpa.jdbc.PkSequenceGenerator;
+import org.minijpa.jdbc.mapper.ObjectConverter;
+import org.minijpa.jdbc.relationship.JoinColumnDataList;
+import org.minijpa.jpa.db.*;
+import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
+import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
+import org.minijpa.jpa.db.querymapping.QueryResultMapping;
+import org.minijpa.jpa.model.*;
+import org.minijpa.jpa.model.relationship.*;
+import org.minijpa.metadata.enhancer.EnhAttribute;
+import org.minijpa.metadata.enhancer.EnhEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.persistence.*;
-
-import org.minijpa.jdbc.DDLData;
-import org.minijpa.jdbc.JdbcTypes;
-import org.minijpa.jdbc.PkSequenceGenerator;
-import org.minijpa.jdbc.mapper.AttributeMapper;
-import org.minijpa.jdbc.relationship.JoinColumnDataList;
-import org.minijpa.jpa.db.AttributeUtil;
-import org.minijpa.jpa.db.CollectionUtils;
-import org.minijpa.jpa.db.DbConfiguration;
-import org.minijpa.jpa.db.EntityStatus;
-import org.minijpa.jpa.db.LockType;
-import org.minijpa.jpa.db.PkGeneration;
-import org.minijpa.jpa.db.PkGenerationType;
-import org.minijpa.jpa.db.PkStrategy;
-import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
-import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
-import org.minijpa.jpa.db.querymapping.QueryResultMapping;
-import org.minijpa.jpa.model.*;
-import org.minijpa.jpa.model.relationship.ManyToManyRelationship;
-import org.minijpa.jpa.model.relationship.ManyToOneRelationship;
-import org.minijpa.jpa.model.relationship.OneToManyRelationship;
-import org.minijpa.jpa.model.relationship.OneToOneRelationship;
-import org.minijpa.jpa.model.relationship.Relationship;
-import org.minijpa.metadata.enhancer.EnhAttribute;
-import org.minijpa.metadata.enhancer.EnhEntity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JpaParser {
 
@@ -223,27 +212,26 @@ public class JpaParser {
             throw e1;
         }
 
-        Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
-        if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent()) {
-            lazyLoadedAttributeReadMethod = Optional.of(
-                    c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
+        Method lazyLoadedAttributeReadMethod = null;
+        if (enhEntity.getLazyLoadedAttributeGetMethod() != null) {
+            lazyLoadedAttributeReadMethod =
+                    c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod());
         }
 
-        Optional<Method> joinColumnPostponedUpdateAttributeReadMethod = Optional.empty();
-        if (enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod().isPresent()) {
-            joinColumnPostponedUpdateAttributeReadMethod = Optional
-                    .of(c.getMethod(enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod().get()));
+        Method joinColumnPostponedUpdateAttributeReadMethod = null;
+        if (enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod() != null) {
+            joinColumnPostponedUpdateAttributeReadMethod = c.getMethod(enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod());
         }
 
         Method lockTypeAttributeReadMethod = c.getMethod(
-                enhEntity.getLockTypeAttributeGetMethod().get());
+                enhEntity.getLockTypeAttributeGetMethod());
         Method lockTypeAttributeWriteMethod = c.getMethod(
-                enhEntity.getLockTypeAttributeSetMethod().get(),
+                enhEntity.getLockTypeAttributeSetMethod(),
                 LockType.class);
         Method entityStatusAttributeReadMethod = c.getMethod(
-                enhEntity.getEntityStatusAttributeGetMethod().get());
+                enhEntity.getEntityStatusAttributeGetMethod());
         Method entityStatusAttributeWriteMethod = c.getMethod(
-                enhEntity.getEntityStatusAttributeSetMethod().get(),
+                enhEntity.getEntityStatusAttributeSetMethod(),
                 EntityStatus.class);
 
         List<MetaEntity> embeddablesNoId = embeddables.stream().filter(me -> !me.isEmbeddedId()).
@@ -280,10 +268,10 @@ public class JpaParser {
                 .withLazyLoadedAttributeReadMethod(lazyLoadedAttributeReadMethod)
                 .withJoinColumnPostponedUpdateAttributeReadMethod(
                         joinColumnPostponedUpdateAttributeReadMethod)
-                .withLockTypeAttributeReadMethod(Optional.of(lockTypeAttributeReadMethod))
-                .withLockTypeAttributeWriteMethod(Optional.of(lockTypeAttributeWriteMethod))
-                .withEntityStatusAttributeReadMethod(Optional.of(entityStatusAttributeReadMethod))
-                .withEntityStatusAttributeWriteMethod(Optional.of(entityStatusAttributeWriteMethod))
+                .withLockTypeAttributeReadMethod(lockTypeAttributeReadMethod)
+                .withLockTypeAttributeWriteMethod(lockTypeAttributeWriteMethod)
+                .withEntityStatusAttributeReadMethod(entityStatusAttributeReadMethod)
+                .withEntityStatusAttributeWriteMethod(entityStatusAttributeWriteMethod)
                 .build();
     }
 
@@ -347,16 +335,15 @@ public class JpaParser {
             modificationAttributeReadMethod = c.getMethod(enhEntity.getModificationAttributeGetMethod());
         }
 
-        Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
-        if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent()) {
-            lazyLoadedAttributeReadMethod = Optional.of(
-                    c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
+        Method lazyLoadedAttributeReadMethod = null;
+        if (enhEntity.getLazyLoadedAttributeGetMethod() != null) {
+            lazyLoadedAttributeReadMethod =
+                    c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod());
         }
 
-        Optional<Method> joinColumnPostponedUpdateAttributeReadMethod = Optional.empty();
-        if (enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod().isPresent()) {
-            joinColumnPostponedUpdateAttributeReadMethod = Optional
-                    .of(c.getMethod(enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod().get()));
+        Method joinColumnPostponedUpdateAttributeReadMethod = null;
+        if (enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod() != null) {
+            joinColumnPostponedUpdateAttributeReadMethod = c.getMethod(enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod());
         }
 
         Class<?> attributeClass = Class.forName(enhAttribute.getClassName());
@@ -411,16 +398,16 @@ public class JpaParser {
 
         Method modificationAttributeReadMethod = c.getMethod(
                 enhEntity.getModificationAttributeGetMethod());
-        Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
-        if (enhEntity.getLazyLoadedAttributeGetMethod().isPresent()) {
-            lazyLoadedAttributeReadMethod = Optional.of(
-                    c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod().get()));
+        Method lazyLoadedAttributeReadMethod = null;
+        if (enhEntity.getLazyLoadedAttributeGetMethod() != null) {
+            lazyLoadedAttributeReadMethod =
+                    c.getMethod(enhEntity.getLazyLoadedAttributeGetMethod());
         }
 
-        Optional<Method> joinColumnPostponedUpdateAttributeReadMethod = Optional.empty();
-        if (enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod().isPresent()) {
-            joinColumnPostponedUpdateAttributeReadMethod = Optional
-                    .of(c.getMethod(enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod().get()));
+        Method joinColumnPostponedUpdateAttributeReadMethod = null;
+        if (enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod() != null) {
+            joinColumnPostponedUpdateAttributeReadMethod =
+                    c.getMethod(enhEntity.getJoinColumnPostponedUpdateAttributeGetMethod());
         }
 
         List<MetaEntity> embeddablesNoId = embeddables.stream().filter(me -> !me.isEmbeddedId()).
@@ -534,13 +521,12 @@ public class JpaParser {
                     attributeClass);
         }
 
-        Optional<Method> joinColumnReadMethod = enhAttribute.getJoinColumnGetMethod().isPresent()
-                ? Optional.of(parentClass.getMethod(enhAttribute.getJoinColumnGetMethod().get()))
-                : Optional.empty();
-        Optional<Method> joinColumnWriteMethod = enhAttribute.getJoinColumnSetMethod().isPresent()
-                ? Optional.of(
-                parentClass.getMethod(enhAttribute.getJoinColumnSetMethod().get(), Object.class))
-                : Optional.empty();
+        Method joinColumnReadMethod = enhAttribute.getJoinColumnGetMethod() != null
+                ? parentClass.getMethod(enhAttribute.getJoinColumnGetMethod())
+                : null;
+        Method joinColumnWriteMethod = enhAttribute.getJoinColumnSetMethod() != null
+                ? parentClass.getMethod(enhAttribute.getJoinColumnSetMethod(), Object.class)
+                : null;
 
         RelationshipMetaAttribute.Builder builder = new RelationshipMetaAttribute.Builder()
                 .withName(enhAttribute.getName())
@@ -616,7 +602,7 @@ public class JpaParser {
         Id idAnnotation = field.getAnnotation(Id.class);
         boolean nullableColumn = !attributeClass.isPrimitive() && !enhAttribute.isParentEmbeddedId()
                 && (idAnnotation == null);
-        Optional<DDLData> ddlData;
+        DDLData ddlData;
         if (column != null) {
             String cn = column.name();
             if (cn != null && !cn.trim().isEmpty()) {
@@ -625,9 +611,8 @@ public class JpaParser {
 
             ddlData = buildDDLData(column, nullableColumn);
         } else {
-            ddlData = Optional.of(
-                    new DDLData(Optional.empty(), Optional.of(255), Optional.of(0), Optional.of(0),
-                            Optional.of(nullableColumn), Optional.of(false)));
+            ddlData = new DDLData(null, 255, 0, 0,
+                    nullableColumn, false);
         }
 
         Enumerated enumerated = field.getAnnotation(Enumerated.class);
@@ -643,15 +628,10 @@ public class JpaParser {
         log.debug("readAttribute: path={}", path);
         log.debug("readAttribute: idAnnotation={}", idAnnotation);
         if (idAnnotation != null) {
-            AttributeMapper<?, ?> attributeMapper = dbConfiguration.getDbTypeMapper()
+            ObjectConverter<?, ?> objectConverter = dbConfiguration.getDbTypeMapper()
                     .attributeMapper(attributeClass,
                             readWriteType);
-            log.debug("readAttribute: id attributeMapper={}", attributeMapper);
-//            Optional<AttributeMapper> optionalAM = Optional.empty();
-//            if (attributeMapper != null) {
-//                optionalAM = Optional.of(attributeMapper);
-//            }
-
+            log.debug("readAttribute: id attributeMapper={}", objectConverter);
             MetaAttribute.Builder builder = new MetaAttribute.Builder(
                     enhAttribute.getName())
                     .withColumnName(columnName)
@@ -665,7 +645,7 @@ public class JpaParser {
                     .isBasic(true)
                     .withPath(path)
                     .withDDLData(ddlData)
-                    .withAttributeMapper(attributeMapper);
+                    .withAttributeMapper(objectConverter);
             return builder.build();
         }
 
@@ -702,9 +682,9 @@ public class JpaParser {
                 .withPath(path)
                 .withDDLData(ddlData);
 
-        AttributeMapper<?, ?> attributeMapper = dbConfiguration.getDbTypeMapper()
+        ObjectConverter<?, ?> objectConverter = dbConfiguration.getDbTypeMapper()
                 .attributeMapper(attributeClass, readWriteType);
-        builder.withAttributeMapper(attributeMapper);
+        builder.withAttributeMapper(objectConverter);
 
         // Basic annotation
         Basic basic = field.getAnnotation(Basic.class);
@@ -758,36 +738,36 @@ public class JpaParser {
         return Optional.of(Timestamp.class);
     }
 
-    private Optional<DDLData> buildDDLData(Column column, boolean nullableColumn) {
-        Optional<String> columnDefinition = Optional.empty();
+    private DDLData buildDDLData(Column column, boolean nullableColumn) {
+        String columnDefinition = null;
         String cd = column.columnDefinition();
         if (cd != null && !cd.trim().isEmpty()) {
-            columnDefinition = Optional.of(cd.trim());
+            columnDefinition = cd.trim();
         }
 
-        Optional<Integer> length = Optional.of(column.length());
+        Integer length = column.length();
 
-        Optional<Integer> precision = Optional.empty();
+        Integer precision = null;
         int p = column.precision();
         if (p != 0) {
-            precision = Optional.of(p);
+            precision = p;
         }
 
-        Optional<Integer> scale = Optional.empty();
+        Integer scale = null;
         int s = column.scale();
         if (s != 0) {
-            scale = Optional.of(s);
+            scale = s;
         }
 
 //    if (columnDefinition.isEmpty() && length.isEmpty() && precision.isEmpty() && scale.isEmpty()) {
 //      return Optional.empty();
 //    }
 
-        Optional<Boolean> nullable =
-                !nullableColumn ? Optional.of(Boolean.FALSE) : Optional.of(column.nullable());
-        Optional<Boolean> unique = Optional.of(column.unique());
+        Boolean nullable =
+                !nullableColumn ? Boolean.FALSE : column.nullable();
+        Boolean unique = column.unique();
 
-        return Optional.of(new DDLData(columnDefinition, length, precision, scale, nullable, unique));
+        return new DDLData(columnDefinition, length, precision, scale, nullable, unique);
     }
 
 
@@ -818,7 +798,7 @@ public class JpaParser {
 
         JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
         JoinColumns joinColumns = field.getAnnotation(JoinColumns.class);
-        Optional<JoinColumnDataList> joinColumnDataList = RelationshipUtils.buildJoinColumnDataList(
+        JoinColumnDataList joinColumnDataList = RelationshipUtils.buildJoinColumnDataList(
                 joinColumn,
                 joinColumns);
         if (oneToOne != null) {

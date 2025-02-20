@@ -15,20 +15,23 @@
  */
 package org.minijpa.jdbc.mapper;
 
+import java.sql.Timestamp;
+import java.time.OffsetDateTime;
+
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class NumberToFloatAttributeMapper implements AttributeMapper<Float, Number> {
+public class OffsetDateTimeObjectConverter implements ObjectConverter<OffsetDateTime, Timestamp> {
 
     @Override
-    public Number attributeToDatabase(Float k) {
-        return k;
+    public Timestamp convertTo(OffsetDateTime k) {
+	return Timestamp.from(k.toInstant());
     }
 
     @Override
-    public Float databaseToAttribute(Number v) {
-        return v.floatValue();
+    public OffsetDateTime convertFrom(Timestamp v) {
+	return OffsetDateTime.of(v.toLocalDateTime(), OffsetDateTime.now().getOffset());
     }
 
 }

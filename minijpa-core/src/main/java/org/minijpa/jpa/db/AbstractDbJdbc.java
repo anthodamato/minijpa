@@ -15,29 +15,18 @@
  */
 package org.minijpa.jpa.db;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.minijpa.jdbc.DDLData;
 import org.minijpa.jdbc.PkSequenceGenerator;
 import org.minijpa.jpa.model.*;
 import org.minijpa.jpa.model.relationship.*;
-import org.minijpa.sql.model.ColumnDeclaration;
-import org.minijpa.sql.model.CompositeSqlPk;
-import org.minijpa.sql.model.ForeignKeyDeclaration;
-import org.minijpa.sql.model.JdbcDDLData;
-import org.minijpa.sql.model.JdbcJoinColumnMapping;
-import org.minijpa.sql.model.SimpleSqlPk;
-import org.minijpa.sql.model.SqlCreateJoinTable;
-import org.minijpa.sql.model.SqlCreateSequence;
-import org.minijpa.sql.model.SqlCreateTable;
-import org.minijpa.sql.model.SqlDDLStatement;
-import org.minijpa.sql.model.SqlPk;
+import org.minijpa.sql.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class AbstractDbJdbc implements DbJdbc {
 
@@ -91,16 +80,14 @@ public abstract class AbstractDbJdbc implements DbJdbc {
     }
 
     private ColumnDeclaration toColumnDeclaration(AbstractMetaAttribute a) {
-        Optional<JdbcDDLData> optional = Optional.empty();
-        log.debug("toColumnDeclaration: a={}", a);
-        if (a.getDdlData().isPresent()) {
-            DDLData ddlData = a.getDdlData().get();
+        if (a.getDdlData() != null) {
+            DDLData ddlData = a.getDdlData();
             JdbcDDLData jdbcDDLData = new JdbcDDLData(ddlData.getColumnDefinition(), ddlData.getLength(),
                     ddlData.getPrecision(), ddlData.getScale(), ddlData.getNullable(), ddlData.getUnique());
-            optional = Optional.of(jdbcDDLData);
+            return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), jdbcDDLData);
         }
 
-        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), optional);
+        return new ColumnDeclaration(a.getColumnName(), a.getDatabaseType(), null);
     }
 
 
@@ -114,8 +101,8 @@ public abstract class AbstractDbJdbc implements DbJdbc {
             IdClassPk idClassPk = (IdClassPk) pk;
             List<ColumnDeclaration> constraintColumnDeclarations = new ArrayList<>(columnDeclarations);
             if (idClassPk.getRelationshipMetaAttribute() != null) {
-                if (idClassPk.getRelationshipMetaAttribute().getRelationship().getJoinColumnMapping().isPresent()) {
-                    List<JoinColumnAttribute> joinColumnAttributes = idClassPk.getRelationshipMetaAttribute().getRelationship().getJoinColumnMapping().get().getJoinColumnAttributes();
+                if (idClassPk.getRelationshipMetaAttribute().getRelationship().getJoinColumnMapping() != null) {
+                    List<JoinColumnAttribute> joinColumnAttributes = idClassPk.getRelationshipMetaAttribute().getRelationship().getJoinColumnMapping().getJoinColumnAttributes();
                     for (JoinColumnAttribute joinColumnAttribute : joinColumnAttributes) {
                         constraintColumnDeclarations.add(new ColumnDeclaration(joinColumnAttribute.getColumnName(), joinColumnAttribute.getDatabaseType()));
                     }
@@ -159,12 +146,12 @@ public abstract class AbstractDbJdbc implements DbJdbc {
                         new ForeignKeyDeclaration(jdbcJoinColumnMapping, toEntity.getTableName()));
             }
 
-            log.debug("buildDDLStatementsCreateTables: v.getTableName()={}", v.getTableName());
             List<ColumnDeclaration> columnDeclarations = attributes.stream()
                     .map(this::toColumnDeclaration).collect(Collectors.toList());
 
             SqlCreateTable sqlCreateTable = new SqlCreateTable(v.getTableName(), buildJdbcPk(v.getId()),
                     columnDeclarations, foreignKeyDeclarations);
+            log.debug("Built Create Table Statement: {}", sqlCreateTable);
             sqlStatements.add(sqlCreateTable);
         });
         return sqlStatements;

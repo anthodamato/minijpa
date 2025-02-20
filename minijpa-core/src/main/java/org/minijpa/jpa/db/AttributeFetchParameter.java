@@ -1,7 +1,5 @@
 package org.minijpa.jpa.db;
 
-import java.util.Optional;
-
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaAttribute;
@@ -13,7 +11,7 @@ public interface AttributeFetchParameter extends FetchParameter {
 
     static AttributeFetchParameter build(MetaAttribute attribute) {
         return new AttributeFetchParameterImpl(attribute.getColumnName(), attribute.getSqlType(),
-                attribute, attribute.getAttributeMapper());
+                attribute, attribute.getObjectConverter());
     }
 
     static AttributeFetchParameter build(RelationshipMetaAttribute attribute) {
