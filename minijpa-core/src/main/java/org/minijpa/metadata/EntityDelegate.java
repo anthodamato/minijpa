@@ -105,15 +105,6 @@ public final class EntityDelegate implements EntityListener {
             return null;
         }
 
-        //	public MetaAttribute findEmbeddedAttribute(String className) {
-//	    for (PersistenceUnitContext entityContext : entityContexts) {
-//		MetaAttribute attribute = entityContext.findEmbeddedAttribute(className);
-//		if (attribute != null)
-//		    return attribute;
-//	    }
-//
-//	    return null;
-//	}
         public Optional<PersistenceUnitContext> getEntityContext(String persistenceUnitName) {
             return entityContexts.stream()
                     .filter(e -> e.getPersistenceUnitName().equals(persistenceUnitName))
@@ -146,24 +137,6 @@ public final class EntityDelegate implements EntityListener {
             entityContainerContexts.add(entityManagerContext);
         }
 
-        //	public AttributeLoader findByEntity(String className) {
-//	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-//		MetaEntity entity = entityContainerContext.getEntity(className);
-//		if (entity != null)
-//		    return entityContainerContext.getAttributeLoader();
-//	    }
-//
-//	    return null;
-//	}
-//	public EntityLoader findByEntity(String className) {
-//	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-//		MetaEntity entity = entityContainerContext.getEntity(className);
-//		if (entity != null)
-//		    return entityContainerContext.getEntityLoader();
-//	    }
-//
-//	    return null;
-//	}
         public EntityHandler findByEntityContainer(Object entityInstance) throws Exception {
             for (EntityContainerContext entityContainerContext : entityContainerContexts) {
                 if (entityContainerContext.isManaged(entityInstance)) {
@@ -177,23 +150,6 @@ public final class EntityDelegate implements EntityListener {
         public boolean isEmpty() {
             return entityContainerContexts.isEmpty();
         }
-
-//	public boolean isLoadedFromDb(Object entityInstance) {
-//	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-//		if (entityContainerContext.getEntityContainer().isLoadedFromDb(entityInstance))
-//		    return true;
-//	    }
-//
-//	    return false;
-//	}
-//	public boolean isFlushedPersist(Object entityInstance) throws Exception {
-//	    for (EntityContainerContext entityContainerContext : entityContainerContexts) {
-//		if (entityContainerContext.getEntityContainer().isFlushedPersist(entityInstance))
-//		    return true;
-//	    }
-//
-//	    return false;
-//	}
     }
 
     public void addEntityManagerContext(EntityContainerContext entityManagerContext) {

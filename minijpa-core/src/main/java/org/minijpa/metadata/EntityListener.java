@@ -17,5 +17,5 @@ package org.minijpa.metadata;
 
 public interface EntityListener {
 
-    public Object get(Object value, String attributeName, Object entityInstance);
+    Object get(Object value, String attributeName, Object entityInstance);
 }

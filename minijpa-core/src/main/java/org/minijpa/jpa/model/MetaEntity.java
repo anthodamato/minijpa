@@ -53,12 +53,12 @@ public class MetaEntity {
     private MetaEntity mappedSuperclassEntity;
     private VersionMetaAttribute versionMetaAttribute;
     private Method modificationAttributeReadMethod;
-    private Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
-    private Optional<Method> lockTypeAttributeReadMethod = Optional.empty();
-    private Optional<Method> lockTypeAttributeWriteMethod = Optional.empty();
-    private Optional<Method> entityStatusAttributeReadMethod = Optional.empty();
-    private Optional<Method> entityStatusAttributeWriteMethod = Optional.empty();
-    private Optional<Method> joinColumnPostponedUpdateAttributeReadMethod = Optional.empty();
+    private Method lazyLoadedAttributeReadMethod;
+    private Method lockTypeAttributeReadMethod = null;
+    private Method lockTypeAttributeWriteMethod = null;
+    private Method entityStatusAttributeReadMethod = null;
+    private Method entityStatusAttributeWriteMethod = null;
+    private Method joinColumnPostponedUpdateAttributeReadMethod = null;
 
     private MetaEntity() {
     }
@@ -127,27 +127,27 @@ public class MetaEntity {
         return modificationAttributeReadMethod;
     }
 
-    public Optional<Method> getLazyLoadedAttributeReadMethod() {
+    public Method getLazyLoadedAttributeReadMethod() {
         return lazyLoadedAttributeReadMethod;
     }
 
-    public Optional<Method> getJoinColumnPostponedUpdateAttributeReadMethod() {
+    public Method getJoinColumnPostponedUpdateAttributeReadMethod() {
         return joinColumnPostponedUpdateAttributeReadMethod;
     }
 
-    public Optional<Method> getLockTypeAttributeReadMethod() {
+    public Method getLockTypeAttributeReadMethod() {
         return lockTypeAttributeReadMethod;
     }
 
-    public Optional<Method> getLockTypeAttributeWriteMethod() {
+    public Method getLockTypeAttributeWriteMethod() {
         return lockTypeAttributeWriteMethod;
     }
 
-    public Optional<Method> getEntityStatusAttributeReadMethod() {
+    public Method getEntityStatusAttributeReadMethod() {
         return entityStatusAttributeReadMethod;
     }
 
-    public Optional<Method> getEntityStatusAttributeWriteMethod() {
+    public Method getEntityStatusAttributeWriteMethod() {
         return entityStatusAttributeWriteMethod;
     }
 
@@ -189,23 +189,6 @@ public class MetaEntity {
         return list;
     }
 
-//    public List<AbstractMetaAttribute> expandAllAttributes() {
-//        List<AbstractMetaAttribute> list = new ArrayList<>();
-//        if (id != null) {
-//            for (AbstractMetaAttribute abstractMetaAttribute : id.getAttributes()) {
-//                if (abstractMetaAttribute instanceof RelationshipMetaAttribute)
-//                    continue;
-//
-//                list.add(abstractMetaAttribute);
-//            }
-//        }
-//
-//        list.addAll(basicAttributes);
-//
-//        list.addAll(expandEmbeddables());
-//
-//        return list;
-//    }
 
     public List<MetaAttribute> expandEmbeddables() {
         List<MetaAttribute> list = new ArrayList<>();
@@ -216,17 +199,6 @@ public class MetaEntity {
         return list;
     }
 
-//    public List<MetaAttribute> expandEmbeddables() {
-//        List<MetaAttribute> list = new ArrayList<>();
-//        // embeddables can't have IdClass
-//        embeddables.forEach(e -> {
-//            List<AbstractMetaAttribute> abstractMetaAttributes = e.expandAllAttributes();
-//            abstractMetaAttributes.forEach(a -> list.add((MetaAttribute) a));
-////            list.addAll(e.expandAllAttributes());
-//        });
-//
-//        return list;
-//    }
 
     public List<JoinColumnAttribute> expandJoinColumnAttributes() {
         List<JoinColumnAttribute> jcas = new ArrayList<>();
@@ -282,7 +254,7 @@ public class MetaEntity {
 
     public RelationshipMetaAttribute findAttributeByMappedBy(String mappedBy) {
         for (RelationshipMetaAttribute attribute : relationshipAttributes) {
-            if (mappedBy.equals(attribute.getRelationship().getMappedBy().get())) {
+            if (mappedBy.equals(attribute.getRelationship().getMappedBy())) {
                 return attribute;
             }
         }
@@ -391,12 +363,12 @@ public class MetaEntity {
         private MetaEntity mappedSuperclassEntity;
         private VersionMetaAttribute versionMetaAttribute;
         private Method modificationAttributeReadMethod;
-        private Optional<Method> lazyLoadedAttributeReadMethod = Optional.empty();
-        private Optional<Method> lockTypeAttributeReadMethod = Optional.empty();
-        private Optional<Method> lockTypeAttributeWriteMethod = Optional.empty();
-        private Optional<Method> entityStatusAttributeReadMethod = Optional.empty();
-        private Optional<Method> entityStatusAttributeWriteMethod = Optional.empty();
-        private Optional<Method> joinColumnPostponedUpdateAttributeReadMethod = Optional.empty();
+        private Method lazyLoadedAttributeReadMethod;
+        private Method lockTypeAttributeReadMethod;
+        private Method lockTypeAttributeWriteMethod;
+        private Method entityStatusAttributeReadMethod;
+        private Method entityStatusAttributeWriteMethod;
+        private Method joinColumnPostponedUpdateAttributeReadMethod;
 
         public Builder withEntityClass(Class<?> entityClass) {
             this.entityClass = entityClass;
@@ -474,35 +446,35 @@ public class MetaEntity {
         }
 
         public Builder withLazyLoadedAttributeReadMethod(
-                Optional<Method> lazyLoadedAttributeReadMethod) {
+                Method lazyLoadedAttributeReadMethod) {
             this.lazyLoadedAttributeReadMethod = lazyLoadedAttributeReadMethod;
             return this;
         }
 
         public Builder withJoinColumnPostponedUpdateAttributeReadMethod(
-                Optional<Method> joinColumnPostponedUpdateAttributeReadMethod) {
+                Method joinColumnPostponedUpdateAttributeReadMethod) {
             this.joinColumnPostponedUpdateAttributeReadMethod = joinColumnPostponedUpdateAttributeReadMethod;
             return this;
         }
 
-        public Builder withLockTypeAttributeReadMethod(Optional<Method> lockTypeAttributeReadMethod) {
+        public Builder withLockTypeAttributeReadMethod(Method lockTypeAttributeReadMethod) {
             this.lockTypeAttributeReadMethod = lockTypeAttributeReadMethod;
             return this;
         }
 
-        public Builder withLockTypeAttributeWriteMethod(Optional<Method> lockTypeAttributeWriteMethod) {
+        public Builder withLockTypeAttributeWriteMethod(Method lockTypeAttributeWriteMethod) {
             this.lockTypeAttributeWriteMethod = lockTypeAttributeWriteMethod;
             return this;
         }
 
         public Builder withEntityStatusAttributeReadMethod(
-                Optional<Method> entityStatusAttributeReadMethod) {
+                Method entityStatusAttributeReadMethod) {
             this.entityStatusAttributeReadMethod = entityStatusAttributeReadMethod;
             return this;
         }
 
         public Builder withEntityStatusAttributeWriteMethod(
-                Optional<Method> entityStatusAttributeWriteMethod) {
+                Method entityStatusAttributeWriteMethod) {
             this.entityStatusAttributeWriteMethod = entityStatusAttributeWriteMethod;
             return this;
         }

@@ -42,12 +42,12 @@ public class PostgresCriteriaExpressionHelper extends CriteriaExpressionHelper {
             Locate locate = (Locate) optional.get();
             if (locate.getPosition().isPresent()) {
                 Value value = createLocateReplacement(locate);
-                if (locateExpression.getFrom().isPresent()) {
+                if (locateExpression.getFrom() != null) {
                     // one more QueryParameter in case of ParameterExpression as it is used twice,
                     // in the substring and sum
                     createParameterFromExpression(
                             parameterValues,
-                            locateExpression.getFrom().get(),
+                            locateExpression.getFrom(),
                             aliasGenerator,
                             parameters,
                             "from",

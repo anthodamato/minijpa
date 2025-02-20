@@ -35,7 +35,7 @@ public class JdbcTupleRecordBuilder implements JdbcRecordBuilder {
         Object[] values = new Object[nc];
         for (int i = 0; i < nc; ++i) {
             int columnType = metaData.getColumnType(i + 1);
-            Object v = JdbcRunner.getValue(rs, i + 1, columnType);
+            Object v = JdbcRunner.getValueFromResultSet(rs, i + 1, columnType);
             values[i] = v;
         }
 

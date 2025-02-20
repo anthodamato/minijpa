@@ -15,11 +15,11 @@
  */
 package org.minijpa.metadata.enhancer.javassist;
 
+import javassist.CtClass;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import javassist.CtClass;
 
 public class ManagedData {
 
@@ -34,12 +34,12 @@ public class ManagedData {
     int type = ENTITY;
     private final List<BMTMethodInfo> methodInfos = new ArrayList<>();
     private String modificationAttribute;
-    private Optional<String> lazyLoadedAttribute = Optional.empty();
-    private Optional<String> joinColumnPostponedUpdateAttribute = Optional.empty();
+    private String lazyLoadedAttribute;
+    private String joinColumnPostponedUpdateAttribute;
     // the lock type attribute is created only in entity classes, neither mapped
     // superclass or embedded
-    private Optional<String> lockTypeAttribute = Optional.empty();
-    private Optional<String> entityStatusAttribute = Optional.empty();
+    private String lockTypeAttribute;
+    private String entityStatusAttribute;
     // in case of IdClass
     private ManagedData primaryKeyClass;
 
@@ -96,35 +96,35 @@ public class ManagedData {
         this.modificationAttribute = modificationAttribute;
     }
 
-    public Optional<String> getLazyLoadedAttribute() {
+    public String getLazyLoadedAttribute() {
         return lazyLoadedAttribute;
     }
 
-    public void setLazyLoadedAttribute(Optional<String> lazyLoadedAttribute) {
+    public void setLazyLoadedAttribute(String lazyLoadedAttribute) {
         this.lazyLoadedAttribute = lazyLoadedAttribute;
     }
 
-    public Optional<String> getJoinColumnPostponedUpdateAttribute() {
+    public String getJoinColumnPostponedUpdateAttribute() {
         return joinColumnPostponedUpdateAttribute;
     }
 
-    public void setJoinColumnPostponedUpdateAttribute(Optional<String> joinColumnPostponedUpdateAttribute) {
+    public void setJoinColumnPostponedUpdateAttribute(String joinColumnPostponedUpdateAttribute) {
         this.joinColumnPostponedUpdateAttribute = joinColumnPostponedUpdateAttribute;
     }
 
-    public Optional<String> getLockTypeAttribute() {
+    public String getLockTypeAttribute() {
         return lockTypeAttribute;
     }
 
-    public void setLockTypeAttribute(Optional<String> lockTypeAttribute) {
+    public void setLockTypeAttribute(String lockTypeAttribute) {
         this.lockTypeAttribute = lockTypeAttribute;
     }
 
-    public Optional<String> getEntityStatusAttribute() {
+    public String getEntityStatusAttribute() {
         return entityStatusAttribute;
     }
 
-    public void setEntityStatusAttribute(Optional<String> entityStatusAttribute) {
+    public void setEntityStatusAttribute(String entityStatusAttribute) {
         this.entityStatusAttribute = entityStatusAttribute;
     }
 
@@ -151,29 +151,6 @@ public class ManagedData {
         return Optional.empty();
     }
 
-    public Optional<ManagedData> findParentManagedData(String attributeName) {
-        Optional<AttributeData> optional = attributeDatas.stream()
-                .filter(a -> a.getProperty().getCtField().getName().equals(attributeName)).findFirst();
-        if (optional.isPresent())
-            return Optional.of(this);
-
-        // look inside embeddables
-        for (AttributeData attributeData : attributeDatas) {
-            if (attributeData.getProperty().isEmbedded() && !attributeData.getProperty().isId()) {
-                Optional<ManagedData> o = attributeData.getEmbeddedData().findParentManagedData(attributeName);
-                if (o.isPresent())
-                    return o;
-            }
-        }
-
-        if (mappedSuperclass != null) {
-            Optional<ManagedData> opt = mappedSuperclass.findParentManagedData(attributeName);
-            if (opt.isPresent())
-                return opt;
-        }
-
-        return Optional.empty();
-    }
 
     @Override
     public String toString() {

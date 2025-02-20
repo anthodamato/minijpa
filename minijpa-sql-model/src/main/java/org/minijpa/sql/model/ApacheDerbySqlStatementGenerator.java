@@ -28,11 +28,11 @@ public class ApacheDerbySqlStatementGenerator extends DefaultSqlStatementGenerat
     }
 
     @Override
-    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-        if (optionalSchema.isEmpty())
+    public String sequenceNextValueStatement(String schema, String sequenceName) {
+        if (schema==null)
             return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
 
-        return "VALUES (NEXT VALUE FOR " + optionalSchema.get() + "." + sequenceName + ")";
+        return "VALUES (NEXT VALUE FOR " + schema + "." + sequenceName + ")";
     }
 
     @Override
@@ -41,7 +41,7 @@ public class ApacheDerbySqlStatementGenerator extends DefaultSqlStatementGenerat
     }
 
     @Override
-    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+    public String buildColumnDefinition(Class<?> type, JdbcDDLData ddlData) {
         if (type == Double.class || (type.isPrimitive() && type.getName().equals("double")))
             return "double precision";
 
@@ -53,13 +53,13 @@ public class ApacheDerbySqlStatementGenerator extends DefaultSqlStatementGenerat
 
     @Override
     public String export(SqlInsert sqlInsert) {
-        String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
+        String cols = sqlInsert.getColumns().stream().map(Column::getName).collect(Collectors.joining(","));
         StringBuilder sb = new StringBuilder();
         sb.append("insert into ");
         sb.append(sqlInsert.getFromTable().getName());
         sb.append(" (");
         if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-            sb.append(sqlInsert.getIdentityColumn().get());
+            sb.append(sqlInsert.getIdentityColumn());
             if (!cols.isEmpty())
                 sb.append(",");
         }

@@ -1,42 +1,40 @@
 package org.minijpa.jpa.criteria.expression;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaBuilder.Coalesce;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class CoalesceExpression<Object> implements CriteriaBuilder.Coalesce<Object> {
-    private Optional<Expression<Object>> x = Optional.empty();
-    private Optional<Expression<?>> y = Optional.empty();
-    private Optional<?> yValue = Optional.empty();
+    private Expression<Object> x;
+    private Expression<?> y;
+    private Object yValue;
     private List<Object> arguments = new ArrayList<>();
 
     public CoalesceExpression() {
         super();
     }
 
-    public CoalesceExpression(Optional<Expression<Object>> x, Optional<Expression<?>> y, Optional<?> yValue) {
+    public CoalesceExpression(Expression<Object> x, Expression<?> y, Object yValue) {
         super();
         this.x = x;
         this.y = y;
         this.yValue = yValue;
     }
 
-    public Optional<Expression<Object>> getX() {
+    public Expression<Object> getX() {
         return x;
     }
 
-    public Optional<Expression<?>> getY() {
+    public Expression<?> getY() {
         return y;
     }
 
-    public Optional<?> getyValue() {
+    public Object getyValue() {
         return yValue;
     }
 

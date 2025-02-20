@@ -56,7 +56,7 @@ public class VersionMetaAttribute extends MetaAttribute {
             attribute.id = id;
             attribute.sqlType = sqlType;
             attribute.javaMember = javaMember;
-            attribute.attributeMapper = attributeMapper;
+            attribute.objectConverter = objectConverter;
             attribute.nullable = nullable;
             attribute.version = version;
             attribute.basic = basic;

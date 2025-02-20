@@ -15,15 +15,13 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 public interface NameTranslator {
 
-    public String toColumnName(Optional<String> tableAlias, String columnName, Optional<String> columnAlias);
+    String toColumnName(String tableAlias, String columnName, String columnAlias);
 
-    public String toTableName(Optional<String> tableAlias, String tableName);
+    String toTableName(String tableAlias, String tableName);
 
-    public default String adjustName(String name) {
+    default String adjustName(String name) {
         return name;
     }
 }

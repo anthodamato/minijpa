@@ -16,7 +16,6 @@
 package org.minijpa.sql.model;
 
 import java.util.List;
-import java.util.Optional;
 
 public class SqlInsert implements SqlStatement {
 
@@ -24,10 +23,14 @@ public class SqlInsert implements SqlStatement {
     private final List<Column> columns;
     private final boolean hasIdentityColumn;
     private final boolean identityColumnNull;
-    private final Optional<String> identityColumn;
+    private final String identityColumn;
 
-    public SqlInsert(FromTable fromTable, List<Column> columns, boolean hasIdentityColumn,
-            boolean identityColumnNull, Optional<String> identityColumn) {
+    public SqlInsert(
+            FromTable fromTable,
+            List<Column> columns,
+            boolean hasIdentityColumn,
+            boolean identityColumnNull,
+            String identityColumn) {
         super();
         this.fromTable = fromTable;
         this.columns = columns;
@@ -52,7 +55,7 @@ public class SqlInsert implements SqlStatement {
         return identityColumnNull;
     }
 
-    public Optional<String> getIdentityColumn() {
+    public String getIdentityColumn() {
         return identityColumn;
     }
 

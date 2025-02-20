@@ -103,19 +103,19 @@ public class EntityHandlerImpl implements EntityHandler {
         return entityInstance;
     }
 
-    @Override
-    public Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType)
-            throws Exception {
-        Optional<ModelValueArray<FetchParameter>> optional = jdbcQueryRunner.runVersionQuery(metaEntity,
-                primaryKey,
-                lockType);
-        if (optional.isEmpty()) {
-            return null;
-        }
-
-        ModelValueArray<FetchParameter> modelValueArray = optional.get();
-        return modelValueArray.getValue(0);
-    }
+//    @Override
+//    public Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType)
+//            throws Exception {
+//        Optional<ModelValueArray<FetchParameter>> optional = jdbcQueryRunner.runVersionQuery(metaEntity,
+//                primaryKey,
+//                lockType);
+//        if (optional.isEmpty()) {
+//            return null;
+//        }
+//
+//        ModelValueArray<FetchParameter> modelValueArray = optional.get();
+//        return modelValueArray.getValue(0);
+//    }
 
     @Override
     public void refresh(
@@ -332,7 +332,7 @@ public class EntityHandlerImpl implements EntityHandler {
             MetaEntity entity,
             LockType lockType) throws Exception {
         Object primaryKey = entity.getId().buildValue(modelValueArray);
-        log.info("buildEntityByValuesNoRelationshipAttributeLoading: primaryKey={}", primaryKey);
+        log.debug("buildEntityByValuesNoRelationshipAttributeLoading: primaryKey={}", primaryKey);
         log.debug("buildEntityByValuesNoRelationshipAttributeLoading: entity={}", entity);
         Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
         log.debug("buildEntityByValuesNoRelationshipAttributeLoading: entityInstance={}", entityInstance);
@@ -382,6 +382,7 @@ public class EntityHandlerImpl implements EntityHandler {
                     entity);
         }
     }
+
 
     private Object loadRelationshipByForeignKey(
             Object parentInstance,
@@ -544,9 +545,7 @@ public class EntityHandlerImpl implements EntityHandler {
             ModelValueArray<AbstractMetaAttribute> modelValueArray)
             throws Exception {
         Pk pk = entity.getId();
-//  LOG.info("persist: id.getPkGeneration()={}", id.getPkGeneration());
         PkStrategy pkStrategy = pk.getPkGeneration().getPkStrategy();
-//  LOG.info("Primary Key Generation Strategy: " + pkStrategy);
         if (pkStrategy == PkStrategy.IDENTITY) {
             int pkIndex = modelValueArray.indexOfModel(pk.getAttribute());
             boolean isIdentityColumnNull = pkIndex == -1;
@@ -555,7 +554,10 @@ public class EntityHandlerImpl implements EntityHandler {
             Optional<QueryParameter> optVersion = MetaEntityHelper.generateVersionParameter(entity);
             optVersion.ifPresent(parameters::add);
 
-            Object pkId = jdbcQueryRunner.insertWithIdentityColumn(entity, entityInstance, parameters,
+            Object pkId = jdbcQueryRunner.insertWithIdentityColumn(
+                    entity,
+                    entityInstance,
+                    parameters,
                     isIdentityColumnNull);
 
             log.debug("insert: pk={}", pkId);
@@ -573,7 +575,6 @@ public class EntityHandlerImpl implements EntityHandler {
             updatePostponedJoinColumnUpdate(entity, entityInstance);
         } else {
             Object idValue = pk.readValue(entityInstance);
-//            List<QueryParameter> idParameters = MetaEntityHelper.convertAVToQP(pk, idValue);
             List<QueryParameter> idParameters = pk.queryParameters(idValue);
             log.debug("insert: idParameters={}", idParameters);
             List<QueryParameter> parameters = MetaEntityHelper.convertAVToQP(modelValueArray);
@@ -595,8 +596,8 @@ public class EntityHandlerImpl implements EntityHandler {
             throws Exception {
         log.debug("updatePostponedJoinColumnUpdate: entity.getName()={}", entity.getName());
         log.debug(
-                "updatePostponedJoinColumnUpdate: entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty()={}",
-                entity.getJoinColumnPostponedUpdateAttributeReadMethod().isEmpty());
+                "updatePostponedJoinColumnUpdate: entity.getJoinColumnPostponedUpdateAttributeReadMethod()={}",
+                entity.getJoinColumnPostponedUpdateAttributeReadMethod());
 
         List list = MetaEntityHelper.getJoinColumnPostponedUpdateAttributeList(entity, entityInstance);
         log.debug("updatePostponedJoinColumnUpdate: list.isEmpty()={}", list.isEmpty());

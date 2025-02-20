@@ -15,29 +15,27 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 public class Column {
 
     private String name;
-    private Optional<String> alias = Optional.empty();
+    private String alias;
 
     public Column(String name) {
         super();
         this.name = name;
     }
-	
+
     public String getName() {
         return name;
     }
 
-    public Optional<String> getAlias() {
+    public String getAlias() {
         return alias;
     }
 
     @Override
     public String toString() {
-        return "Column: " + name + (alias.isPresent() ? alias.get() : "");
+        return "Column: " + name + (alias != null ? alias : "");
     }
 
 }

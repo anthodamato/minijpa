@@ -15,23 +15,28 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-
 /**
+ * Converts objects of class K to objects of class V and vice versa.
  *
+ * @param <K>
+ * @param <V>
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class LocalDateTimeAttributeMapper implements AttributeMapper<LocalDateTime, Timestamp> {
+public interface ObjectConverter<K, V> {
 
-    @Override
-    public Timestamp attributeToDatabase(LocalDateTime k) {
-        return Timestamp.valueOf(k);
-    }
+    /**
+     * Convert an object of class K to an object of class V.
+     *
+     * @param k
+     * @return
+     */
+    V convertTo(K k);
 
-    @Override
-    public LocalDateTime databaseToAttribute(Timestamp v) {
-        return v.toLocalDateTime();
-    }
-
+    /**
+     * Convert an object of class V to an object of class K.
+     *
+     * @param v
+     * @return
+     */
+    K convertFrom(V v);
 }

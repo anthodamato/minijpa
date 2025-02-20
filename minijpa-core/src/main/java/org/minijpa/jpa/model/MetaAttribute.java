@@ -16,11 +16,10 @@
 package org.minijpa.jpa.model;
 
 import org.minijpa.jdbc.DDLData;
-import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jdbc.mapper.ObjectConverter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Optional;
 
 public class MetaAttribute extends AbstractMetaAttribute {
 
@@ -58,12 +57,12 @@ public class MetaAttribute extends AbstractMetaAttribute {
         protected boolean id;
         protected Integer sqlType;
         protected Field javaMember;
-        protected AttributeMapper attributeMapper;
+        protected ObjectConverter objectConverter;
         protected boolean nullable = true;
         protected boolean version = false;
         protected boolean basic;
         protected String path;
-        protected Optional<DDLData> ddlData = Optional.empty();
+        protected DDLData ddlData;
 
         public Builder(String name) {
             super();
@@ -111,8 +110,8 @@ public class MetaAttribute extends AbstractMetaAttribute {
             return this;
         }
 
-        public Builder withAttributeMapper(AttributeMapper attributeMapper) {
-            this.attributeMapper = attributeMapper;
+        public Builder withAttributeMapper(ObjectConverter objectConverter) {
+            this.objectConverter = objectConverter;
             return this;
         }
 
@@ -136,7 +135,7 @@ public class MetaAttribute extends AbstractMetaAttribute {
             return this;
         }
 
-        public Builder withDDLData(Optional<DDLData> ddlData) {
+        public Builder withDDLData(DDLData ddlData) {
             this.ddlData = ddlData;
             return this;
         }
@@ -152,7 +151,7 @@ public class MetaAttribute extends AbstractMetaAttribute {
             attribute.id = id;
             attribute.sqlType = sqlType;
             attribute.javaMember = javaMember;
-            attribute.attributeMapper = attributeMapper;
+            attribute.objectConverter = objectConverter;
             attribute.nullable = nullable;
             attribute.version = version;
             attribute.basic = basic;

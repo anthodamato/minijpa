@@ -1,19 +1,17 @@
 package org.minijpa.jpa.criteria.expression;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
+import java.util.Collection;
+import java.util.List;
 
 public class NullifExpression<Object> implements Expression<Object> {
     private Expression<Object> x;
-    private Optional<Expression<?>> y = Optional.empty();
-    private Optional<?> yValue = Optional.empty();
+    private Expression<?> y;
+    private Object yValue;
 
-    public NullifExpression(Expression<Object> x, Optional<Expression<?>> y, Optional<?> yValue) {
+    public NullifExpression(Expression<Object> x, Expression<?> y, Object yValue) {
         super();
         this.x = x;
         this.y = y;
@@ -24,11 +22,11 @@ public class NullifExpression<Object> implements Expression<Object> {
         return x;
     }
 
-    public Optional<Expression<?>> getY() {
+    public Expression<?> getY() {
         return y;
     }
 
-    public Optional<?> getyValue() {
+    public Object getyValue() {
         return yValue;
     }
 

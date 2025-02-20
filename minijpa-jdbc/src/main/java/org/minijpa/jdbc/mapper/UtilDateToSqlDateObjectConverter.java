@@ -15,21 +15,22 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.math.BigInteger;
+import java.util.Date;
 
 /**
+ *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class NumberToBigIntegerAttributeMapper implements AttributeMapper<BigInteger, Number> {
+public class UtilDateToSqlDateObjectConverter implements ObjectConverter<Date, java.sql.Date> {
 
     @Override
-    public Number attributeToDatabase(BigInteger k) {
-        return k;
+    public java.sql.Date convertTo(java.util.Date k) {
+        return new java.sql.Date(k.getTime());
     }
 
     @Override
-    public BigInteger databaseToAttribute(Number v) {
-        return BigInteger.valueOf(v.longValue());
+    public java.util.Date convertFrom(java.sql.Date v) {
+        return v;
     }
 
 }

@@ -20,11 +20,11 @@ import java.sql.SQLException;
 
 public interface ConnectionHolder {
 
-    public Connection getConnection() throws SQLException;
+    Connection getConnection() throws SQLException;
 
-    public void closeConnection() throws SQLException;
+    void closeConnection() throws SQLException;
 
-    public void commit() throws SQLException;
+    void commit() throws SQLException;
 
-    public void rollback() throws SQLException;
+    void rollback() throws SQLException;
 }

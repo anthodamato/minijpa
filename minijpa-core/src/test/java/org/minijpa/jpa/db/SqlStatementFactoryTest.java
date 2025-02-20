@@ -7,7 +7,6 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jdbc.QueryParameter;
 import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jpa.AbstractQuery;
-import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.*;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
@@ -50,12 +49,10 @@ public class SqlStatementFactoryTest {
         emf.createEntityManager();
         Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
                 .getEntityContext("manytoone_bid");
-        if (!optional.isPresent()) {
+        if (optional.isEmpty()) {
             Assertions.fail("Meta entities not found");
         }
 
-        DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
-                .getDbConfiguration("manytoone_bid");
         Map<String, MetaEntity> map = optional.get().getEntities();
 
         Department department = new Department();
@@ -86,12 +83,11 @@ public class SqlStatementFactoryTest {
         sqlStatementFactory.init();
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByForeignKey(employeeEntity,
                 columns, optional.get().getAliasGenerator());
-        Optional<List<Condition>> opt = sqlSelectData.getConditions();
-        Assertions.assertTrue(opt.isPresent());
-        List<Condition> conditions = opt.get();
+        List<Condition> conditions = sqlSelectData.getConditions();
+        Assertions.assertNotNull(conditions);
         Assertions.assertEquals(1, conditions.size());
         Condition condition = conditions.get(0);
-        Assertions.assertTrue(condition instanceof BinaryCondition);
+        Assertions.assertInstanceOf(BinaryCondition.class, condition);
         BinaryCondition equalColumnExprCondition = (BinaryCondition) condition;
         Assertions.assertEquals("department_id",
                 ((TableColumn) equalColumnExprCondition.getLeft()).getColumn().getName());
@@ -112,12 +108,10 @@ public class SqlStatementFactoryTest {
 
         Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
                 .getEntityContext("onetomany_uni");
-        if (!optional.isPresent()) {
+        if (optional.isEmpty()) {
             Assertions.fail("Meta entities not found");
         }
 
-        DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
-                .getDbConfiguration("onetomany_uni");
         Map<String, MetaEntity> map = optional.get().getEntities();
         Store store = new Store();
         store.setName("Upton Store");
@@ -156,13 +150,12 @@ public class SqlStatementFactoryTest {
                 store.getId(),
                 relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
         List<JoinColumnAttribute> attributes = modelValueArray.getModels();
-        List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
                 relationshipJoinTable,
                 attributes, optional.get().getAliasGenerator());
 
-        Optional<List<Condition>> opt = sqlSelectData.getConditions();
-        Assertions.assertTrue(opt.isPresent());
+        List<Condition> conditions = sqlSelectData.getConditions();
+        Assertions.assertNotNull(conditions);
 
         String sql = sqlStatementGenerator.export(sqlSelectData);
         Assertions.assertEquals(
@@ -187,12 +180,10 @@ public class SqlStatementFactoryTest {
 
         Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
                 .getEntityContext("onetomany_uni");
-        if (!optional.isPresent()) {
+        if (optional.isEmpty()) {
             Assertions.fail("Meta entities not found");
         }
 
-        DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
-                .getDbConfiguration("onetomany_uni");
         Map<String, MetaEntity> map = optional.get().getEntities();
 
         MetaEntity storeEntity = map.get(Store.class.getName());
@@ -209,13 +200,12 @@ public class SqlStatementFactoryTest {
                 pk, 1L,
                 relationshipJoinTable.getOwningJoinColumnMapping().getJoinColumnAttributes());
         List<JoinColumnAttribute> attributes = modelValueArray.getModels();
-        List<QueryParameter> parameters = MetaEntityHelper.convertAbstractAVToQP(modelValueArray);
         SqlSelectData sqlSelectData = sqlStatementFactory.generateSelectByJoinTable(itemEntity,
                 relationshipJoinTable,
                 attributes, optional.get().getAliasGenerator());
 
-        Optional<List<Condition>> opt = sqlSelectData.getConditions();
-        Assertions.assertTrue(opt.isPresent());
+        List<Condition> conditions = sqlSelectData.getConditions();
+        Assertions.assertNotNull(conditions);
 
         String sql = sqlStatementGenerator.export(sqlSelectData);
         Assertions.assertEquals(
@@ -234,12 +224,10 @@ public class SqlStatementFactoryTest {
 
         Optional<PersistenceUnitContext> optional = EntityDelegate.getInstance()
                 .getEntityContext("citizens");
-        if (!optional.isPresent()) {
+        if (optional.isEmpty()) {
             Assertions.fail("Meta entities not found");
         }
 
-        DbConfiguration dbConfiguration = DbConfigurationList.getInstance()
-                .getDbConfiguration("citizens");
         EntityTransaction tx = em.getTransaction();
         tx.begin();
 
@@ -265,12 +253,11 @@ public class SqlStatementFactoryTest {
                 optional.get().getAliasGenerator());
         SqlSelectData sqlSelectData = (SqlSelectData) statementParameters.getSqlStatement();
         Assertions.assertNotNull(sqlSelectData.getValues());
-        Optional<List<Condition>> opt = sqlSelectData.getConditions();
-        Assertions.assertTrue(opt.isPresent());
-        List<Condition> conditions = opt.get();
+        List<Condition> conditions = sqlSelectData.getConditions();
+        Assertions.assertNotNull(conditions);
         Assertions.assertEquals(1, conditions.size());
         Condition condition = conditions.get(0);
-        Assertions.assertTrue(condition instanceof UnaryCondition);
+        Assertions.assertInstanceOf(UnaryCondition.class, condition);
         Assertions.assertEquals(ConditionType.IS_NULL, condition.getConditionType());
         UnaryCondition unaryCondition = (UnaryCondition) condition;
         Assertions.assertNotNull(unaryCondition.getOperand());

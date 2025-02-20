@@ -17,40 +17,38 @@ package org.minijpa.jpa.db;
 
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
-import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
 /**
  * @author adamato
  */
 public interface EntityHandler extends EntityLoader {
 
-  public void setLockType(LockType lockType);
+    void setLockType(LockType lockType);
 
-  public LockType getLockType();
+    LockType getLockType();
 
-  public Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType)
-      throws Exception;
+    Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType)
+            throws Exception;
 
-  public Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType)
-      throws Exception;
+//    Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType)
+//            throws Exception;
 
-  public void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey,
-      LockType lockType)
-      throws Exception;
+    void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey,
+                 LockType lockType)
+            throws Exception;
 
-  public Object loadAttribute(Object parentInstance, AbstractMetaAttribute a, Object value)
-      throws Exception;
+    Object loadAttribute(Object parentInstance, AbstractMetaAttribute a, Object value)
+            throws Exception;
 
-  public void persist(MetaEntity entity, Object entityInstance,
-      ModelValueArray<AbstractMetaAttribute> modelValueArray)
-      throws Exception;
+    void persist(MetaEntity entity, Object entityInstance,
+                 ModelValueArray<AbstractMetaAttribute> modelValueArray)
+            throws Exception;
 
-  public void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception;
+    void persistJoinTableAttributes(MetaEntity entity, Object entityInstance) throws Exception;
 
-  public void delete(Object entityInstance, MetaEntity e) throws Exception;
+    void delete(Object entityInstance, MetaEntity e) throws Exception;
 
-  public void removeJoinTableRecords(Object entityInstance, MetaEntity e) throws Exception;
+    void removeJoinTableRecords(Object entityInstance, MetaEntity e) throws Exception;
 
 }

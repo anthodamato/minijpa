@@ -15,21 +15,20 @@
  */
 package org.minijpa.sql.model;
 
-import java.sql.Time;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.minijpa.sql.model.function.CurrentTime;
 import org.minijpa.sql.model.function.Locate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Time;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
-    private Logger LOG = LoggerFactory.getLogger(OracleSqlStatementGenerator.class);
+    private final Logger log = LoggerFactory.getLogger(OracleSqlStatementGenerator.class);
     private final NameTranslator localNameTranslator = new LocalNameTranslator();
 
     public OracleSqlStatementGenerator() {
@@ -42,11 +41,11 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
     }
 
     @Override
-    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-        if (optionalSchema.isEmpty())
+    public String sequenceNextValueStatement(String optionalSchema, String sequenceName) {
+        if (optionalSchema == null)
             return "select " + sequenceName + ".nextval from dual";
 
-        return "select " + optionalSchema.get() + "." + sequenceName + ".nextval from dual";
+        return "select " + optionalSchema + "." + sequenceName + ".nextval from dual";
     }
 
     @Override
@@ -55,7 +54,7 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
     }
 
     @Override
-    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+    public String buildColumnDefinition(Class<?> type, JdbcDDLData ddlData) {
         if (type == Long.class || (type.isPrimitive() && type.getName().equals("long")))
             return "number(19)";
 
@@ -98,9 +97,9 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
         sb.append("delete from ");
         sb.append(nameTranslator.toTableName(sqlDelete.getFromTable().getAlias(), sqlDelete.getFromTable().getName()));
 
-        if (sqlDelete.getCondition().isPresent()) {
+        if (sqlDelete.getCondition() != null) {
             sb.append(" where ");
-            sb.append(exportCondition(sqlDelete.getCondition().get(), nameTranslator));
+            sb.append(exportCondition(sqlDelete.getCondition(), nameTranslator));
         }
 
         return sb.toString();
@@ -108,13 +107,13 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
 
     @Override
     public String export(SqlInsert sqlInsert) {
-        String cols = sqlInsert.getColumns().stream().map(a -> a.getName()).collect(Collectors.joining(","));
+        String cols = sqlInsert.getColumns().stream().map(Column::getName).collect(Collectors.joining(","));
         StringBuilder sb = new StringBuilder();
         sb.append("insert into ");
         sb.append(sqlInsert.getFromTable().getName());
         sb.append(" (");
         if (sqlInsert.hasIdentityColumn() && sqlInsert.isIdentityColumnNull()) {
-            sb.append(sqlInsert.getIdentityColumn().get());
+            sb.append(sqlInsert.getIdentityColumn());
             if (!cols.isEmpty())
                 sb.append(",");
         }
@@ -160,12 +159,12 @@ public class OracleSqlStatementGenerator extends DefaultSqlStatementGenerator {
         return "CURRENT_TIMESTAMP";
     }
 
-    private class LocalNameTranslator extends DefaultNameTranslator {
+    private static class LocalNameTranslator extends DefaultNameTranslator {
 
         @Override
-        public String toTableName(Optional<String> tableAlias, String tableName) {
-            if (tableAlias.isPresent())
-                return tableName + " " + tableAlias.get();
+        public String toTableName(String tableAlias, String tableName) {
+            if (tableAlias != null)
+                return tableName + " " + tableAlias;
 
             return tableName;
         }

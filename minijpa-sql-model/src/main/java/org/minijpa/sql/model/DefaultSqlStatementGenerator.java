@@ -15,54 +15,24 @@
  */
 package org.minijpa.sql.model;
 
+import org.minijpa.sql.model.aggregate.GroupBy;
+import org.minijpa.sql.model.condition.*;
+import org.minijpa.sql.model.expression.SqlBinaryExpression;
+import org.minijpa.sql.model.expression.SqlExpression;
+import org.minijpa.sql.model.expression.SqlExpressionOperator;
+import org.minijpa.sql.model.function.*;
+import org.minijpa.sql.model.join.FromJoin;
+import org.minijpa.sql.model.join.JoinType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
-import org.minijpa.sql.model.aggregate.GroupBy;
-import org.minijpa.sql.model.condition.BetweenCondition;
-import org.minijpa.sql.model.condition.BinaryCondition;
-import org.minijpa.sql.model.condition.BinaryLogicCondition;
-import org.minijpa.sql.model.condition.Condition;
-import org.minijpa.sql.model.condition.ConditionType;
-import org.minijpa.sql.model.condition.InCondition;
-import org.minijpa.sql.model.condition.LikeCondition;
-import org.minijpa.sql.model.condition.UnaryCondition;
-import org.minijpa.sql.model.condition.UnaryLogicCondition;
-import org.minijpa.sql.model.expression.SqlBinaryExpression;
-import org.minijpa.sql.model.expression.SqlExpression;
-import org.minijpa.sql.model.expression.SqlExpressionOperator;
-import org.minijpa.sql.model.function.Abs;
-import org.minijpa.sql.model.function.Avg;
-import org.minijpa.sql.model.function.Coalesce;
-import org.minijpa.sql.model.function.Concat;
-import org.minijpa.sql.model.function.Count;
-import org.minijpa.sql.model.function.CurrentDate;
-import org.minijpa.sql.model.function.CurrentTime;
-import org.minijpa.sql.model.function.CurrentTimestamp;
-import org.minijpa.sql.model.function.Function;
-import org.minijpa.sql.model.function.Length;
-import org.minijpa.sql.model.function.Locate;
-import org.minijpa.sql.model.function.Lower;
-import org.minijpa.sql.model.function.Max;
-import org.minijpa.sql.model.function.Min;
-import org.minijpa.sql.model.function.Mod;
-import org.minijpa.sql.model.function.Negation;
-import org.minijpa.sql.model.function.Nullif;
-import org.minijpa.sql.model.function.Sqrt;
-import org.minijpa.sql.model.function.Substring;
-import org.minijpa.sql.model.function.Sum;
-import org.minijpa.sql.model.function.Trim;
-import org.minijpa.sql.model.function.Upper;
-import org.minijpa.sql.model.join.FromJoin;
-import org.minijpa.sql.model.join.JoinType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class DefaultSqlStatementGenerator implements SqlStatementGenerator {
 
@@ -81,7 +51,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     @Override
-    public String buildColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+    public String buildColumnDefinition(Class<?> type, JdbcDDLData ddlData) {
         if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int"))) {
             return "integer";
         }
@@ -91,11 +61,11 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         }
 
         if (type == String.class) {
-            if (ddlData.isEmpty() || ddlData.get().getLength().isEmpty()) {
+            if (ddlData == null || ddlData.getLength() == null) {
                 throw new IllegalArgumentException("Varchar length not specified");
             }
 
-            return "varchar(" + ddlData.get().getLength().get() + ")";
+            return "varchar(" + ddlData.getLength() + ")";
         }
 
         if (type == Float.class || (type.isPrimitive() && type.getName().equals("float"))) {
@@ -109,14 +79,14 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         if (type == BigDecimal.class) {
             int precision = getDefaultPrecision();
             int scale = getDefaultScale();
-            if (ddlData.isPresent() && ddlData.get().getPrecision().isPresent()
-                    && ddlData.get().getPrecision().get() != 0) {
-                precision = ddlData.get().getPrecision().get();
+            if (ddlData != null && ddlData.getPrecision() != null
+                    && ddlData.getPrecision() != 0) {
+                precision = ddlData.getPrecision();
             }
 
-            if (ddlData.isPresent() && ddlData.get().getScale().isPresent()
-                    && ddlData.get().getScale().get() != 0) {
-                scale = ddlData.get().getScale().get();
+            if (ddlData != null && ddlData.getScale() != null
+                    && ddlData.getScale() != 0) {
+                scale = ddlData.getScale();
             }
 
             return "decimal(" + precision + "," + scale + ")";
@@ -142,7 +112,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     @Override
-    public String buildIdentityColumnDefinition(Class<?> type, Optional<JdbcDDLData> ddlData) {
+    public String buildIdentityColumnDefinition(Class<?> type, JdbcDDLData ddlData) {
         return buildColumnDefinition(type, ddlData) + " generated by default as identity";
     }
 
@@ -152,7 +122,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         sb.append("insert into ");
         sb.append(sqlInsert.getFromTable().getName());
         sb.append(" (");
-        String cols = sqlInsert.getColumns().stream().map(a -> a.getName())
+        String cols = sqlInsert.getColumns().stream().map(Column::getName)
                 .collect(Collectors.joining(","));
         sb.append(cols);
         sb.append(") values (");
@@ -189,9 +159,9 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         String sv = sqlUpdate.getTableColumns().stream().map(c -> exportTableColumn(c, nameTranslator) + " = ?").collect(Collectors.joining(", "));
         sb.append(sv);
 
-        if (sqlUpdate.getCondition().isPresent()) {
+        if (sqlUpdate.getCondition() != null) {
             sb.append(" where ");
-            sb.append(exportCondition(sqlUpdate.getCondition().get(), nameTranslator));
+            sb.append(exportCondition(sqlUpdate.getCondition(), nameTranslator));
         }
 
         return sb.toString();
@@ -207,9 +177,9 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         sb.append("delete from ");
         sb.append(sqlDelete.getFromTable().getName());
 
-        if (sqlDelete.getCondition().isPresent()) {
+        if (sqlDelete.getCondition() != null) {
             sb.append(" where ");
-            sb.append(exportCondition(sqlDelete.getCondition().get(), nameTranslator));
+            sb.append(exportCondition(sqlDelete.getCondition(), nameTranslator));
         }
 
         return sb.toString();
@@ -449,11 +419,10 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         }
 
         if (expression instanceof SqlSelect) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("(");
-            sb.append(export((SqlSelect) expression));
-            sb.append(")");
-            return sb.toString();
+            String sb = "(" +
+                    export((SqlSelect) expression) +
+                    ")";
+            return sb;
         }
 
         if (expression instanceof List) {
@@ -674,8 +643,8 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
             sb.append(fromColumns.get(i).getName());
             sb.append(" = ");
-            if (toTable.getAlias().isPresent()) {
-                sb.append(toTable.getAlias().get());
+            if (toTable.getAlias() != null) {
+                sb.append(toTable.getAlias());
                 sb.append(".");
             }
 
@@ -708,9 +677,9 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     protected String exportFromTable(List<FromTable> fromTables) {
-        return fromTables.stream().map(t -> {
-            return nameTranslator.toTableName(t.getAlias(), t.getName());
-        }).collect(Collectors.joining(", "));
+        return fromTables.stream()
+                .map(t -> nameTranslator.toTableName(t.getAlias(), t.getName()))
+                .collect(Collectors.joining(", "));
     }
 
     protected String exportFrom(List<From> fromTables) {
@@ -751,27 +720,28 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     @Override
-    public String sequenceNextValueStatement(Optional<String> optionalSchema, String sequenceName) {
-        return optionalSchema.map(s -> "VALUES (NEXT VALUE FOR " + s + "." + sequenceName + ")")
-                .orElseGet(() -> "VALUES (NEXT VALUE FOR " + sequenceName + ")");
+    public String sequenceNextValueStatement(String schema, String sequenceName) {
+        if (schema == null)
+            return "VALUES (NEXT VALUE FOR " + sequenceName + ")";
+
+        return "VALUES (NEXT VALUE FOR " + schema + "." + sequenceName + ")";
     }
 
     protected String exportTableColumn(TableColumn tableColumn, NameTranslator nameTranslator) {
-        Optional<FromTable> optionalFromTable = tableColumn.getTable();
-        LOG.trace("exportTableColumn: optionalFromTable={}", optionalFromTable);
+        FromTable fromTable = tableColumn.getTable();
+        LOG.trace("exportTableColumn: optionalFromTable={}", fromTable);
         Column column = tableColumn.getColumn();
         LOG.trace("exportTableColumn: column={}", column);
         LOG.trace("exportTableColumn: nameTranslator={}", nameTranslator);
         LOG.trace("exportTableColumn: column.getName()={}", column.getName());
 
-        if (tableColumn.getSubQuery().isPresent() && tableColumn.getSubQuery().get().getAlias()
-                .isPresent()) {
-            return nameTranslator.toColumnName(tableColumn.getSubQuery().get().getAlias(),
+        if (tableColumn.getSubQuery() != null && tableColumn.getSubQuery().getAlias() != null) {
+            return nameTranslator.toColumnName(tableColumn.getSubQuery().getAlias(),
                     column.getName(),
                     column.getAlias());
         }
 
-        return nameTranslator.toColumnName(optionalFromTable.get().getAlias(), column.getName(),
+        return nameTranslator.toColumnName(fromTable.getAlias(), column.getName(),
                 column.getAlias());
     }
 
@@ -796,8 +766,8 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     protected String exportSelectItem(SelectItem selectItem) {
-        if (selectItem.getAlias().isPresent()) {
-            return nameTranslator.toColumnName(Optional.empty(), exportItem(selectItem.getItem()),
+        if (selectItem.getAlias() != null) {
+            return nameTranslator.toColumnName(null, exportItem(selectItem.getItem()),
                     selectItem.getAlias());
         }
 
@@ -811,37 +781,35 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
             sb.append("distinct ");
         }
 
-        String cc = sqlSelect.getValues().stream().map(c -> {
-            return exportItem(c);
-        }).collect(Collectors.joining(", "));
+        String cc = sqlSelect.getValues().stream().map(this::exportItem).collect(Collectors.joining(", "));
 
         sb.append(cc);
         sb.append(" from ");
         sb.append(exportFrom(sqlSelect.getFrom()));
 
-        if (sqlSelect.getConditions().isPresent()) {
+        if (sqlSelect.getConditions() != null) {
             sb.append(" where ");
-            String ccs = sqlSelect.getConditions().get().stream()
+            String ccs = sqlSelect.getConditions().stream()
                     .map(c -> exportCondition(c, nameTranslator))
                     .collect(Collectors.joining(" "));
             sb.append(ccs);
         }
 
-        if (sqlSelect.getGroupBy().isPresent()) {
+        if (sqlSelect.getGroupBy() != null) {
             sb.append(" ");
-            sb.append(exportGroupBy(sqlSelect.getGroupBy().get()));
+            sb.append(exportGroupBy(sqlSelect.getGroupBy()));
         }
 
-        if (sqlSelect.getOrderByList().isPresent()) {
+        if (sqlSelect.getOrderByList() != null) {
             sb.append(" order by ");
-            String s = sqlSelect.getOrderByList().get().stream().map(o -> {
-                return exportOrderBy(o);
-            }).collect(Collectors.joining(", "));
+            String s = sqlSelect.getOrderByList().stream()
+                    .map(this::exportOrderBy)
+                    .collect(Collectors.joining(", "));
             sb.append(s);
         }
 
-        if (sqlSelect.getOptionalForUpdate().isPresent()) {
-            String forUpdate = forUpdateClause(sqlSelect.getOptionalForUpdate().get());
+        if (sqlSelect.getForUpdate() != null) {
+            String forUpdate = forUpdateClause(sqlSelect.getForUpdate());
             if (forUpdate != null && !forUpdate.isEmpty()) {
                 sb.append(" ");
                 sb.append(forUpdate);
@@ -897,17 +865,17 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
     }
 
     private String buildColumnDefinition(ColumnDeclaration columnDeclaration) {
-        Optional<JdbcDDLData> ddlData = columnDeclaration.getOptionalJdbcDDLData();
-        if (ddlData.isPresent()) {
-            if (ddlData.get().getColumnDefinition().isPresent()) {
-                return ddlData.get().getColumnDefinition().get();
+        JdbcDDLData ddlData = columnDeclaration.getOptionalJdbcDDLData();
+        if (ddlData != null) {
+            if (ddlData.getColumnDefinition() != null) {
+                return ddlData.getColumnDefinition();
             }
         }
 
         String s = buildColumnDefinition(columnDeclaration.getDatabaseType(),
                 columnDeclaration.getOptionalJdbcDDLData());
-        if (ddlData.isPresent() && ddlData.get().getNullable().isPresent()
-                && ddlData.get().getNullable().get() == false) {
+        if (ddlData != null && ddlData.getNullable() != null
+                && ddlData.getNullable() == false) {
             return s + " not null";
         }
 
@@ -927,7 +895,7 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
         }
 
         if (jdbcPk.isComposite()) {
-            return jdbcPk.getColumns().stream().map(a -> buildAttributeDeclaration(a))
+            return jdbcPk.getColumns().stream().map(this::buildAttributeDeclaration)
                     .collect(Collectors.joining(", "));
         }
 
@@ -936,21 +904,21 @@ public abstract class DefaultSqlStatementGenerator implements SqlStatementGenera
 
     protected String buildJoinTableColumnDeclaration(ColumnDeclaration columnDeclaration) {
         return nameTranslator.adjustName(columnDeclaration.getName()) + " "
-                + buildColumnDefinition(columnDeclaration.getDatabaseType(), Optional.empty())
+                + buildColumnDefinition(columnDeclaration.getDatabaseType(), null)
                 + " not null";
     }
 
     protected String buildJoinTableColumnDeclaration(JdbcJoinColumnMapping jdbcJoinColumnMapping) {
         return jdbcJoinColumnMapping.getJoinColumns().stream()
                 .map(c -> nameTranslator.adjustName(c.getName()) + " "
-                        + buildColumnDefinition(c.getDatabaseType(), Optional.empty()) + (
+                        + buildColumnDefinition(c.getDatabaseType(), null) + (
                         jdbcJoinColumnMapping.unique() ? "" : " not null"))
                 .collect(Collectors.joining(", "));
     }
 
     protected String buildDeclaration(ColumnDeclaration columnDeclaration) {
         return nameTranslator.adjustName(columnDeclaration.getName()) + " "
-                + buildColumnDefinition(columnDeclaration.getDatabaseType(), Optional.empty());
+                + buildColumnDefinition(columnDeclaration.getDatabaseType(), null);
     }
 
     @Override

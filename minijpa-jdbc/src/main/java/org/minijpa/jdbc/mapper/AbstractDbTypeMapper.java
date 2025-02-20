@@ -37,77 +37,77 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
     private Logger LOG = LoggerFactory.getLogger(AbstractDbTypeMapper.class);
 
     // attribute converters
-    private final AttributeMapper offsetTimeAttributeMapper = new OffsetTimeAttributeMapper();
-    private final AttributeMapper offsetDateTimeAttributeMapper = new OffsetDateTimeAttributeMapper();
-    private final AttributeMapper durationAttributeMapper = new DurationAttributeMapper();
-    private final AttributeMapper instantAttributeMapper = new InstantAttributeMapper();
-    private final AttributeMapper localDateAttributeMapper = new LocalDateAttributeMapper();
-    protected final AttributeMapper localDateToTimestampAttributeMapper = new LocalDateToTimestampAttributeMapper();
-    protected final AttributeMapper localTimeToTimestampAttributeMapper = new LocalTimeToTimestampAttributeMapper();
-    protected final AttributeMapper offsetTimeToTimestampAttributeMapper = new OffsetTimeToTimestampAttributeMapper();
-    protected final AttributeMapper durationToBigDecimalAttributeMapper = new DurationToBigDecimalAttributeMapper();
-    protected final AttributeMapper timeToTimestampAttributeMapper = new TimeToTimestampAttributeMapper();
-    private final AttributeMapper localDateTimeAttributeMapper = new LocalDateTimeAttributeMapper();
-    private final AttributeMapper localTimeAttributeMapper = new LocalTimeAttributeMapper();
-    private final AttributeMapper utilDateAttributeMapper = new UtilDateAttributeMapper();
-    private final AttributeMapper utilDateToSqlDateAttributeMapper = new UtilDateToSqlDateAttributeMapper();
-    private final AttributeMapper utilDateToSqlTimeAttributeMapper = new UtilDateToSqlTimeAttributeMapper();
-    private final AttributeMapper calendarToSqlDateAttributeMapper = new CalendarToSqlDateAttributeMapper();
-    private final AttributeMapper zonedDateTimeAttributeMapper = new ZonedDateTimeAttributeMapper();
-    private final AttributeMapper calendarAttributeMapper = new CalendarAttributeMapper();
-    protected final AttributeMapper bigDecimalToDoubleAttributeMapper = new BigDecimalToDoubleAttributeMapper();
-    protected final AttributeMapper integerToDoubleAttributeMapper = new IntegerToDoubleAttributeMapper();
-    public static final AttributeMapper numberToLongAttributeMapper = new NumberToLongAttributeMapper();
-    public static final AttributeMapper numberToBigIntegerAttributeMapper = new NumberToBigIntegerAttributeMapper();
-    public static final AttributeMapper numberToDoubleAttributeMapper = new NumberToDoubleAttributeMapper();
-    public static final AttributeMapper numberToFloatAttributeMapper = new NumberToFloatAttributeMapper();
+    private final ObjectConverter offsetTimeObjectConverter = new OffsetTimeObjectConverter();
+    private final ObjectConverter offsetDateTimeObjectConverter = new OffsetDateTimeObjectConverter();
+    private final ObjectConverter durationObjectConverter = new DurationObjectConverter();
+    private final ObjectConverter instantObjectConverter = new InstantObjectConverter();
+    private final ObjectConverter localDateObjectConverter = new LocalDateObjectConverter();
+    protected final ObjectConverter localDateToTimestampObjectConverter = new LocalDateToTimestampObjectConverter();
+    protected final ObjectConverter localTimeToTimestampObjectConverter = new LocalTimeToTimestampObjectConverter();
+    protected final ObjectConverter offsetTimeToTimestampObjectConverter = new OffsetTimeToTimestampObjectConverter();
+    protected final ObjectConverter durationToBigDecimalObjectConverter = new DurationToBigDecimalObjectConverter();
+    protected final ObjectConverter timeToTimestampObjectConverter = new TimeToTimestampObjectConverter();
+    private final ObjectConverter localDateTimeObjectConverter = new LocalDateTimeObjectConverter();
+    private final ObjectConverter localTimeObjectConverter = new LocalTimeObjectConverter();
+    private final ObjectConverter utilDateObjectConverter = new UtilDateObjectConverter();
+    private final ObjectConverter utilDateToSqlDateObjectConverter = new UtilDateToSqlDateObjectConverter();
+    private final ObjectConverter utilDateToSqlTimeObjectConverter = new UtilDateToSqlTimeObjectConverter();
+    private final ObjectConverter calendarToSqlDateObjectConverter = new CalendarToSqlDateObjectConverter();
+    private final ObjectConverter zonedDateTimeObjectConverter = new ZonedDateTimeObjectConverter();
+    private final ObjectConverter calendarObjectConverter = new CalendarObjectConverter();
+    protected final ObjectConverter bigDecimalToDoubleObjectConverter = new BigDecimalToDoubleObjectConverter();
+    protected final ObjectConverter integerToDoubleObjectConverter = new IntegerToDoubleObjectConverter();
+    public static final ObjectConverter NUMBER_TO_LONG_OBJECT_CONVERTER = new NumberToLongObjectConverter();
+    public static final ObjectConverter NUMBER_TO_BIG_INTEGER_OBJECT_CONVERTER = new NumberToBigIntegerObjectConverter();
+    public static final ObjectConverter NUMBER_TO_DOUBLE_OBJECT_CONVERTER = new NumberToDoubleObjectConverter();
+    public static final ObjectConverter NUMBER_TO_FLOAT_OBJECT_CONVERTER = new NumberToFloatObjectConverter();
 
     @Override
-    public AttributeMapper attributeMapper(Class<?> attributeType, Class<?> databaseType) {
+    public ObjectConverter attributeMapper(Class<?> attributeType, Class<?> databaseType) {
         if (attributeType.isEnum() && databaseType == String.class)
-            return new StringEnumAttributeMapper(attributeType);
+            return new StringEnumObjectConverter(attributeType);
 
         if (attributeType.isEnum() && databaseType == Integer.class)
-            return new OrdinalEnumAttributeMapper(attributeType);
+            return new OrdinalEnumObjectConverter(attributeType);
 
         if (attributeType == LocalDate.class)
-            return localDateAttributeMapper;
+            return localDateObjectConverter;
 
         if (attributeType == LocalDateTime.class)
-            return localDateTimeAttributeMapper;
+            return localDateTimeObjectConverter;
 
         if (attributeType == LocalTime.class)
-            return localTimeAttributeMapper;
+            return localTimeObjectConverter;
 
         if (attributeType == java.util.Date.class && databaseType == java.sql.Date.class)
-            return utilDateToSqlDateAttributeMapper;
+            return utilDateToSqlDateObjectConverter;
 
         if (attributeType == java.util.Date.class && databaseType == java.sql.Time.class)
-            return utilDateToSqlTimeAttributeMapper;
+            return utilDateToSqlTimeObjectConverter;
 
         if (attributeType == Calendar.class && databaseType == java.sql.Date.class)
-            return calendarToSqlDateAttributeMapper;
+            return calendarToSqlDateObjectConverter;
 
         if (attributeType == java.util.Date.class)
-            return utilDateAttributeMapper;
+            return utilDateObjectConverter;
 
         if (attributeType == ZonedDateTime.class)
-            return zonedDateTimeAttributeMapper;
+            return zonedDateTimeObjectConverter;
 
         if (attributeType == Calendar.class)
-            return calendarAttributeMapper;
+            return calendarObjectConverter;
 
         if (attributeType == Duration.class)
-            return durationAttributeMapper;
+            return durationObjectConverter;
 
         if (attributeType == Instant.class)
-            return instantAttributeMapper;
+            return instantObjectConverter;
 
         if (attributeType == OffsetTime.class)
-            return offsetTimeAttributeMapper;
+            return offsetTimeObjectConverter;
 
         if (attributeType == OffsetDateTime.class)
-            return offsetDateTimeAttributeMapper;
+            return offsetDateTimeObjectConverter;
 
         return null;
     }

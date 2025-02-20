@@ -17,29 +17,18 @@ package org.minijpa.jdbc.mapper;
 
 /**
  *
- * Converts objects of class K to objects of class V and viceversa.
- * 
  * @author Antonio Damato <anto.damato@gmail.com>
- * @param <K>
- * @param <V>
  */
-public interface AttributeMapper<K, V> {
+public class ToLongObjectConverter implements ObjectConverter<Long, Number> {
 
-    /**
-     * Convert an object of class K to an object of class V. The object of class V
-     * should fit a database type.
-     * 
-     * @param k
-     * @return
-     */
-    public V attributeToDatabase(K k);
+	@Override
+	public Number convertTo(Long n) {
+		return n;
+	}
 
-    /**
-     * Convert an object of class V to an object of class K. The class K should be
-     * the same as the attribute class.
-     * 
-     * @param v
-     * @return
-     */
-    public K databaseToAttribute(V v);
+	@Override
+	public Long convertFrom(Number n) {
+		return n.longValue();
+	}
+
 }

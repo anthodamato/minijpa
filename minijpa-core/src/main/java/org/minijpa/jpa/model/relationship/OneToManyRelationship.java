@@ -20,7 +20,6 @@ import org.minijpa.jdbc.relationship.JoinTableAttributes;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 
-import java.util.Optional;
 import java.util.Set;
 
 public final class OneToManyRelationship extends ToManyRelationship {
@@ -45,7 +44,7 @@ public final class OneToManyRelationship extends ToManyRelationship {
     public static class Builder {
 
         private String joinColumnTable;
-        private Optional<String> mappedBy = Optional.empty();
+        private String mappedBy;
         private FetchType fetchType = FetchType.LAZY;
         private Set<Cascade> cascades;
         private MetaEntity owningEntity;
@@ -56,8 +55,8 @@ public final class OneToManyRelationship extends ToManyRelationship {
         private RelationshipJoinTable joinTable;
         private MetaEntity attributeType;
         private JoinTableAttributes joinTableAttributes;
-        private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
-        private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
+        private JoinColumnDataList joinColumnDataList;
+        private JoinColumnMapping joinColumnMapping;
         private boolean id;
 
         public Builder() {
@@ -68,7 +67,7 @@ public final class OneToManyRelationship extends ToManyRelationship {
             return this;
         }
 
-        public Builder withMappedBy(Optional<String> mappedBy) {
+        public Builder withMappedBy(String mappedBy) {
             this.mappedBy = mappedBy;
             return this;
         }
@@ -123,12 +122,12 @@ public final class OneToManyRelationship extends ToManyRelationship {
             return this;
         }
 
-        public OneToManyRelationship.Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
+        public OneToManyRelationship.Builder withJoinColumnDataList(JoinColumnDataList joinColumnDataList) {
             this.joinColumnDataList = joinColumnDataList;
             return this;
         }
 
-        public OneToManyRelationship.Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
+        public OneToManyRelationship.Builder withJoinColumnMapping(JoinColumnMapping joinColumnMapping) {
             this.joinColumnMapping = joinColumnMapping;
             return this;
         }
@@ -153,7 +152,7 @@ public final class OneToManyRelationship extends ToManyRelationship {
             this.joinTableAttributes = r.joinTableAttributes;
             this.joinColumnDataList = r.joinColumnDataList;
             this.joinColumnMapping = r.joinColumnMapping;
-            this.id = id;
+            this.id = r.id;
             return this;
         }
 

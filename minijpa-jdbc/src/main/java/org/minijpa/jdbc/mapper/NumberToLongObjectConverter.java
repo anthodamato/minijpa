@@ -19,15 +19,15 @@ package org.minijpa.jdbc.mapper;
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class NumberToLongAttributeMapper implements AttributeMapper<Long, Number> {
+public class NumberToLongObjectConverter implements ObjectConverter<Long, Number> {
 
     @Override
-    public Number attributeToDatabase(Long k) {
+    public Number convertTo(Long k) {
         return k;
     }
 
     @Override
-    public Long databaseToAttribute(Number v) {
+    public Long convertFrom(Number v) {
         return v.longValue();
     }
 

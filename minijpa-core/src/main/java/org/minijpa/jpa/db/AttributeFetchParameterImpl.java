@@ -15,29 +15,26 @@
  */
 package org.minijpa.jpa.db;
 
-import java.util.Optional;
-
-import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jdbc.mapper.ObjectConverter;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
 
 public class AttributeFetchParameterImpl implements AttributeFetchParameter {
 
     private final String columnName;
     private final Integer sqlType;
     private final AbstractMetaAttribute attribute;
-    private AttributeMapper attributeMapper;
+    private ObjectConverter objectConverter;
 
     public AttributeFetchParameterImpl(
             String columnName,
             Integer sqlType,
             AbstractMetaAttribute attribute,
-            AttributeMapper attributeMapper) {
+            ObjectConverter objectConverter) {
         super();
         this.columnName = columnName;
         this.sqlType = sqlType;
         this.attribute = attribute;
-        this.attributeMapper = attributeMapper;
+        this.objectConverter = objectConverter;
     }
 
     public AttributeFetchParameterImpl(
@@ -66,8 +63,8 @@ public class AttributeFetchParameterImpl implements AttributeFetchParameter {
     }
 
     @Override
-    public AttributeMapper getAttributeMapper() {
-        return attributeMapper;
+    public ObjectConverter getObjectConverter() {
+        return objectConverter;
     }
 
     @Override
@@ -76,7 +73,7 @@ public class AttributeFetchParameterImpl implements AttributeFetchParameter {
                 "columnName='" + columnName + '\'' +
                 ", sqlType=" + sqlType +
                 ", attribute=" + attribute +
-                ", attributeMapper=" + attributeMapper +
+                ", attributeMapper=" + objectConverter +
                 '}';
     }
 }

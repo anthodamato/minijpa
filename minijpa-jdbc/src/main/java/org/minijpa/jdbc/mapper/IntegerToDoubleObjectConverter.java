@@ -15,23 +15,20 @@
  */
 package org.minijpa.jdbc.mapper;
 
-import java.sql.Time;
-import java.time.OffsetTime;
-
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class OffsetTimeAttributeMapper implements AttributeMapper<OffsetTime, Time> {
+public class IntegerToDoubleObjectConverter implements ObjectConverter<Double, Integer> {
 
-    @Override
-    public Time attributeToDatabase(OffsetTime k) {
-	return Time.valueOf(k.toLocalTime());
-    }
+	@Override
+	public Integer convertTo(Double k) {
+		return k.intValue();
+	}
 
-    @Override
-    public OffsetTime databaseToAttribute(Time v) {
-	return OffsetTime.of(v.toLocalTime(), OffsetTime.now().getOffset());
-    }
+	@Override
+	public Double convertFrom(Integer v) {
+		return v.doubleValue();
+	}
 
 }

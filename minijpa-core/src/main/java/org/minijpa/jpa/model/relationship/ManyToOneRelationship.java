@@ -15,13 +15,11 @@
  */
 package org.minijpa.jpa.model.relationship;
 
-import java.util.Optional;
-import java.util.Set;
-
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
+
+import java.util.Set;
 
 public final class ManyToOneRelationship extends Relationship {
 
@@ -52,8 +50,8 @@ public final class ManyToOneRelationship extends Relationship {
         private MetaEntity owningEntity;
         private RelationshipMetaAttribute owningAttribute;
         private MetaEntity attributeType;
-        private Optional<JoinColumnDataList> joinColumnDataList = Optional.empty();
-        private Optional<JoinColumnMapping> joinColumnMapping = Optional.empty();
+        private JoinColumnDataList joinColumnDataList;
+        private JoinColumnMapping joinColumnMapping;
         private boolean id;
 
         public Builder() {
@@ -89,12 +87,12 @@ public final class ManyToOneRelationship extends Relationship {
             return this;
         }
 
-        public ManyToOneRelationship.Builder withJoinColumnDataList(Optional<JoinColumnDataList> joinColumnDataList) {
+        public ManyToOneRelationship.Builder withJoinColumnDataList(JoinColumnDataList joinColumnDataList) {
             this.joinColumnDataList = joinColumnDataList;
             return this;
         }
 
-        public ManyToOneRelationship.Builder withJoinColumnMapping(Optional<JoinColumnMapping> joinColumnMapping) {
+        public ManyToOneRelationship.Builder withJoinColumnMapping(JoinColumnMapping joinColumnMapping) {
             this.joinColumnMapping = joinColumnMapping;
             return this;
         }

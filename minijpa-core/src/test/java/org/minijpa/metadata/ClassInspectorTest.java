@@ -20,6 +20,7 @@ package org.minijpa.metadata;
 
 import java.util.List;
 import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.minijpa.metadata.enhancer.javassist.AttributeData;
 import org.minijpa.metadata.enhancer.javassist.ClassInspector;
@@ -29,10 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+
 import org.minijpa.metadata.enhancer.javassist.Property;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class ClassInspectorTest {
@@ -47,7 +48,7 @@ public class ClassInspectorTest {
         assertEquals(className, managedData.getCtClass().getName());
         assertEquals(ManagedData.ENTITY, managedData.getType());
         assertEquals("mds0", managedData.getModificationAttribute());
-        assertEquals("lta0", managedData.getLockTypeAttribute().get());
+        assertEquals("lta0", managedData.getLockTypeAttribute());
 
         List<AttributeData> attributeDatas = managedData.getAttributeDataList();
         assertNotNull(attributeDatas);

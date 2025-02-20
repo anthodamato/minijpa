@@ -1,9 +1,5 @@
 package org.minijpa.sql.model;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,6 +9,10 @@ import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.function.Locate;
 import org.minijpa.sql.model.function.Trim;
 import org.minijpa.sql.model.function.TrimType;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 public class OracleSqlStatementGeneratorTest {
     private static final SqlStatementGenerator sqlStatementGenerator = new OracleSqlStatementGenerator();
@@ -28,7 +28,7 @@ public class OracleSqlStatementGeneratorTest {
         Column idColumn = new Column("id");
         Column nameColumn = new Column("first_name");
 
-        List<Value> values = Arrays.asList(new TableColumn(fromTable, idColumn));
+        List<Value> values = List.of(new TableColumn(fromTable, idColumn));
         BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
         List<Condition> conditions = Arrays.asList(binaryCondition);
@@ -46,7 +46,7 @@ public class OracleSqlStatementGeneratorTest {
         Column surnameColumn = new Column("last_name");
 
         SqlInsert sqlInsert = new SqlInsert(FromTable.of("citizen"), Arrays.asList(idColumn, nameColumn, surnameColumn),
-                false, false, Optional.empty());
+                false, false, null);
         Assertions.assertEquals("insert into citizen (id,first_name,last_name) values (?,?,?)",
                 sqlStatementGenerator.export(sqlInsert));
     }
@@ -57,7 +57,7 @@ public class OracleSqlStatementGeneratorTest {
         Column nameColumn = new Column("first_name");
         BinaryCondition binaryCondition = new BinaryCondition.Builder(ConditionType.EQUAL)
                 .withLeft(new TableColumn(fromTable, nameColumn)).withRight("'Sam'").build();
-        SqlDelete sqlDelete = new SqlDelete(fromTable, Optional.of(binaryCondition));
+        SqlDelete sqlDelete = new SqlDelete(fromTable, binaryCondition);
         Assertions.assertEquals("delete from citizen c where c.first_name = 'Sam'",
                 sqlStatementGenerator.export(sqlDelete));
     }
@@ -68,9 +68,9 @@ public class OracleSqlStatementGeneratorTest {
         Column nameColumn = new Column("first_name");
 
         SelectItem selectItem = new SelectItem(new Locate("'a'", new TableColumn(fromTable, nameColumn)),
-                Optional.of("position"));
+                "position");
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(List.of(selectItem)).build();
         Assertions.assertEquals("select INSTR(c.first_name, 'a') AS position from citizen c",
                 sqlStatementGenerator.export(sqlSelect));
     }
@@ -82,9 +82,9 @@ public class OracleSqlStatementGeneratorTest {
 
         SelectItem selectItem = new SelectItem(
                 new Trim(new TableColumn(fromTable, nameColumn), Optional.of(TrimType.BOTH), "'\"'"),
-                Optional.of("name"));
+                "name");
         SqlSelectBuilder sqlSelectBuilder = new SqlSelectBuilder();
-        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(Arrays.asList(selectItem)).build();
+        SqlSelect sqlSelect = sqlSelectBuilder.withFromTable(fromTable).withValues(List.of(selectItem)).build();
         Assertions.assertEquals("select TRIM(BOTH '\"' FROM c.first_name) AS name from citizen c",
                 sqlStatementGenerator.export(sqlSelect));
     }

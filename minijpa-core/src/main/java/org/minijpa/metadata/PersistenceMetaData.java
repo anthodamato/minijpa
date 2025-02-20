@@ -28,10 +28,6 @@ public class PersistenceMetaData {
         this.persistenceUnitMetaDatas = persistenceUnitMetaDatas;
     }
 
-    public Map<String, PersistenceUnitInfo> getPersistenceUnitMetaDatas() {
-        return persistenceUnitMetaDatas;
-    }
-
     public PersistenceUnitInfo getPersistenceUnitMetaData(String name) {
         return persistenceUnitMetaDatas.get(name);
     }

@@ -21,12 +21,12 @@ import java.util.List;
 
 public class Property {
 
-    private boolean id;
-    private PropertyMethod getPropertyMethod;
-    private PropertyMethod setPropertyMethod;
-    private CtField ctField;
-    private boolean embedded;
-    private List<Property> embeddedProperties;
+    private final boolean id;
+    private final PropertyMethod getPropertyMethod;
+    private final PropertyMethod setPropertyMethod;
+    private final CtField ctField;
+    private final boolean embedded;
+    private final List<Property> embeddedProperties;
     private final RelationshipProperties relationshipProperties;
     private boolean embeddedIdParent = false;
 

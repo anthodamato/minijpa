@@ -1,22 +1,20 @@
 package org.minijpa.jpa.criteria.expression;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-
 import javax.persistence.criteria.CriteriaBuilder.Trimspec;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
+import java.util.Collection;
+import java.util.List;
 
 public class TrimExpression implements Expression<String> {
     private Expression<String> x;
-    private Optional<Expression<Character>> t;
-    private Optional<Character> tChar;
-    private Optional<Trimspec> ts;
+    private Expression<Character> t;
+    private Character tChar;
+    private Trimspec ts;
 
-    public TrimExpression(Expression<String> x, Optional<Expression<Character>> t, Optional<Character> tChar,
-            Optional<Trimspec> ts) {
+    public TrimExpression(Expression<String> x, Expression<Character> t, Character tChar,
+                          Trimspec ts) {
         super();
         this.x = x;
         this.t = t;
@@ -28,15 +26,15 @@ public class TrimExpression implements Expression<String> {
         return x;
     }
 
-    public Optional<Expression<Character>> getT() {
+    public Expression<Character> getT() {
         return t;
     }
 
-    public Optional<Character> gettChar() {
+    public Character gettChar() {
         return tChar;
     }
 
-    public Optional<Trimspec> getTs() {
+    public Trimspec getTs() {
         return ts;
     }
 

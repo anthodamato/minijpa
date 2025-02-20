@@ -15,6 +15,15 @@
  */
 package org.minijpa.jpa.criteria;
 
+import org.minijpa.jpa.criteria.expression.*;
+import org.minijpa.jpa.criteria.predicate.*;
+import org.minijpa.metadata.PersistenceUnitContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.Tuple;
+import javax.persistence.criteria.*;
+import javax.persistence.metamodel.Metamodel;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -22,62 +31,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.CompoundSelection;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.SetJoin;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.Metamodel;
-
-import org.minijpa.jpa.criteria.expression.AggregateFunctionExpression;
-import org.minijpa.jpa.criteria.expression.AggregateFunctionType;
-import org.minijpa.jpa.criteria.expression.BinaryExpression;
-import org.minijpa.jpa.criteria.expression.CoalesceExpression;
-import org.minijpa.jpa.criteria.expression.ConcatExpression;
-import org.minijpa.jpa.criteria.expression.CurrentDateExpression;
-import org.minijpa.jpa.criteria.expression.CurrentTimeExpression;
-import org.minijpa.jpa.criteria.expression.CurrentTimestampExpression;
-import org.minijpa.jpa.criteria.expression.ExpressionOperator;
-import org.minijpa.jpa.criteria.expression.LocateExpression;
-import org.minijpa.jpa.criteria.expression.MiniParameterExpression;
-import org.minijpa.jpa.criteria.expression.NegationExpression;
-import org.minijpa.jpa.criteria.expression.NullifExpression;
-import org.minijpa.jpa.criteria.expression.SubstringExpression;
-import org.minijpa.jpa.criteria.expression.TrimExpression;
-import org.minijpa.jpa.criteria.expression.TypecastExpression;
-import org.minijpa.jpa.criteria.expression.UnaryExpression;
-import org.minijpa.jpa.criteria.predicate.AbstractPredicate;
-import org.minijpa.jpa.criteria.predicate.BetweenExpressionsPredicate;
-import org.minijpa.jpa.criteria.predicate.BetweenValuesPredicate;
-import org.minijpa.jpa.criteria.predicate.BinaryBooleanExprPredicate;
-import org.minijpa.jpa.criteria.predicate.BooleanExprPredicate;
-import org.minijpa.jpa.criteria.predicate.ComparisonPredicate;
-import org.minijpa.jpa.criteria.predicate.EmptyPredicate;
-import org.minijpa.jpa.criteria.predicate.ExprPredicate;
-import org.minijpa.jpa.criteria.predicate.InPredicate;
-import org.minijpa.jpa.criteria.predicate.LikePredicate;
-import org.minijpa.jpa.criteria.predicate.MultiplePredicate;
-import org.minijpa.jpa.criteria.predicate.PredicateType;
-import org.minijpa.metadata.PersistenceUnitContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MiniCriteriaBuilder implements CriteriaBuilder {
 
@@ -304,7 +258,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate greaterThan(Expression<? extends Y> x,
-            Expression<? extends Y> y) {
+                                                                   Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.GREATER_THAN, x, y, null);
     }
 
@@ -315,7 +269,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate greaterThanOrEqualTo(Expression<? extends Y> x,
-            Expression<? extends Y> y) {
+                                                                            Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.GREATER_THAN_OR_EQUAL_TO, x, y, null);
     }
 
@@ -336,7 +290,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate lessThanOrEqualTo(Expression<? extends Y> x,
-            Expression<? extends Y> y) {
+                                                                         Expression<? extends Y> y) {
         return new ComparisonPredicate(PredicateType.LESS_THAN_OR_EQUAL_TO, x, y, null);
     }
 
@@ -347,7 +301,7 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y extends Comparable<? super Y>> Predicate between(Expression<? extends Y> v, Expression<? extends Y> x,
-            Expression<? extends Y> y) {
+                                                               Expression<? extends Y> y) {
         return new BetweenExpressionsPredicate(v, x, y);
     }
 
@@ -605,139 +559,139 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern) {
-        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty(), false,
+        return new LikePredicate(x, null, pattern, null, null, false,
                 false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern) {
-        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty(), false,
+        return new LikePredicate(x, pattern, null, null, null, false,
                 false);
     }
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(escapeChar),
+        return new LikePredicate(x, null, pattern, null, escapeChar,
                 false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, Expression<String> pattern, char escapeChar) {
-        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.of(escapeChar), Optional.empty(),
+        return new LikePredicate(x, null, pattern, escapeChar, null,
                 false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.of(escapeChar),
+        return new LikePredicate(x, pattern, null, null, escapeChar,
                 false, false);
     }
 
     @Override
     public Predicate like(Expression<String> x, String pattern, char escapeChar) {
-        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.of(escapeChar), Optional.empty(),
+        return new LikePredicate(x, pattern, null, escapeChar, null,
                 false, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern) {
-        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty(), true,
+        return new LikePredicate(x, null, pattern, null, null, true,
                 false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern) {
-        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty(), true,
+        return new LikePredicate(x, pattern, null, null, null, true,
                 false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
-        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(escapeChar),
+        return new LikePredicate(x, null, pattern, null, escapeChar,
                 true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, Expression<String> pattern, char escapeChar) {
-        return new LikePredicate(x, Optional.empty(), Optional.of(pattern), Optional.of(escapeChar), Optional.empty(),
+        return new LikePredicate(x, null, pattern, escapeChar, null,
                 true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern, Expression<Character> escapeChar) {
-        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.of(escapeChar),
+        return new LikePredicate(x, pattern, null, null, escapeChar,
                 true, false);
     }
 
     @Override
     public Predicate notLike(Expression<String> x, String pattern, char escapeChar) {
-        return new LikePredicate(x, Optional.of(pattern), Optional.empty(), Optional.of(escapeChar), Optional.empty(),
+        return new LikePredicate(x, pattern, null, escapeChar, null,
                 true, false);
     }
 
     @Override
     public Expression<String> concat(Expression<String> x, Expression<String> y) {
-        return new ConcatExpression(Optional.of(x), Optional.empty(), Optional.of(y), Optional.empty());
+        return new ConcatExpression(x, null, y, null);
     }
 
     @Override
     public Expression<String> concat(Expression<String> x, String y) {
-        return new ConcatExpression(Optional.of(x), Optional.empty(), Optional.empty(), Optional.of(y));
+        return new ConcatExpression(x, null, null, y);
     }
 
     @Override
     public Expression<String> concat(String x, Expression<String> y) {
-        return new ConcatExpression(Optional.empty(), Optional.of(x), Optional.of(y), Optional.empty());
+        return new ConcatExpression(null, x, y, null);
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, Expression<Integer> from) {
-        return new SubstringExpression(x, Optional.of(from), Optional.empty(), Optional.empty(), Optional.empty());
+        return new SubstringExpression(x, from, null, null, null);
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, int from) {
-        return new SubstringExpression(x, Optional.empty(), Optional.of(from), Optional.empty(), Optional.empty());
+        return new SubstringExpression(x, null, from, null, null);
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, Expression<Integer> from, Expression<Integer> len) {
-        return new SubstringExpression(x, Optional.of(from), Optional.empty(), Optional.of(len), Optional.empty());
+        return new SubstringExpression(x, from, null, len, null);
     }
 
     @Override
     public Expression<String> substring(Expression<String> x, int from, int len) {
-        return new SubstringExpression(x, Optional.empty(), Optional.of(from), Optional.empty(), Optional.of(len));
+        return new SubstringExpression(x, null, from, null, len);
     }
 
     @Override
     public Expression<String> trim(Expression<String> x) {
-        return new TrimExpression(x, Optional.empty(), Optional.empty(), Optional.empty());
+        return new TrimExpression(x, null, null, null);
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, Expression<String> x) {
-        return new TrimExpression(x, Optional.empty(), Optional.empty(), Optional.of(ts));
+        return new TrimExpression(x, null, null, ts);
     }
 
     @Override
     public Expression<String> trim(Expression<Character> t, Expression<String> x) {
-        return new TrimExpression(x, Optional.of(t), Optional.empty(), Optional.empty());
+        return new TrimExpression(x, t, null, null);
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, Expression<Character> t, Expression<String> x) {
-        return new TrimExpression(x, Optional.of(t), Optional.empty(), Optional.of(ts));
+        return new TrimExpression(x, t, null, ts);
     }
 
     @Override
     public Expression<String> trim(char t, Expression<String> x) {
-        return new TrimExpression(x, Optional.empty(), Optional.of(t), Optional.empty());
+        return new TrimExpression(x, null, t, null);
     }
 
     @Override
     public Expression<String> trim(Trimspec ts, char t, Expression<String> x) {
-        return new TrimExpression(x, Optional.empty(), Optional.of(t), Optional.of(ts));
+        return new TrimExpression(x, null, t, ts);
     }
 
     @Override
@@ -758,22 +712,22 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public Expression<Integer> locate(Expression<String> x, Expression<String> pattern) {
-        return new LocateExpression(x, Optional.of(pattern), Optional.empty(), Optional.empty(), Optional.empty());
+        return new LocateExpression(x, pattern, null, null, null);
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, String pattern) {
-        return new LocateExpression(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.empty());
+        return new LocateExpression(x, null, pattern, null, null);
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, Expression<String> pattern, Expression<Integer> from) {
-        return new LocateExpression(x, Optional.of(pattern), Optional.empty(), Optional.of(from), Optional.empty());
+        return new LocateExpression(x, pattern, null, from, null);
     }
 
     @Override
     public Expression<Integer> locate(Expression<String> x, String pattern, int from) {
-        return new LocateExpression(x, Optional.empty(), Optional.of(pattern), Optional.empty(), Optional.of(from));
+        return new LocateExpression(x, null, pattern, null, from);
     }
 
     @Override
@@ -798,22 +752,22 @@ public class MiniCriteriaBuilder implements CriteriaBuilder {
 
     @Override
     public <Y> Expression<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
-        return new CoalesceExpression(Optional.of(x), Optional.of(y), Optional.empty());
+        return new CoalesceExpression(x, y, null);
     }
 
     @Override
     public <Y> Expression<Y> coalesce(Expression<? extends Y> x, Y y) {
-        return new CoalesceExpression(Optional.of(x), Optional.empty(), Optional.of(y));
+        return new CoalesceExpression(x, null, y);
     }
 
     @Override
     public <Y> Expression<Y> nullif(Expression<Y> x, Expression<?> y) {
-        return new NullifExpression<>(x, Optional.of(y), Optional.empty());
+        return new NullifExpression<>(x, y, null);
     }
 
     @Override
     public <Y> Expression<Y> nullif(Expression<Y> x, Y y) {
-        return new NullifExpression<>(x, Optional.empty(), Optional.of(y));
+        return new NullifExpression<>(x, null, y);
     }
 
     @Override

@@ -37,7 +37,7 @@ public class JoinColumnAttribute extends AbstractAttribute {
     public QueryParameter queryParameter(Object value) {
         MetaAttribute attribute = getForeignKeyAttribute();
         return new QueryParameter(getColumnName(),
-                value, attribute.getSqlType(), attribute.getAttributeMapper());
+                value, attribute.getSqlType(), attribute.getObjectConverter());
     }
 
     public static class Builder {

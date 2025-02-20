@@ -15,20 +15,23 @@
  */
 package org.minijpa.jdbc.mapper;
 
+import java.sql.Time;
+import java.time.LocalTime;
+
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class NumberToDoubleAttributeMapper implements AttributeMapper<Double, Number> {
+public class LocalTimeObjectConverter implements ObjectConverter<LocalTime, Time> {
 
     @Override
-    public Number attributeToDatabase(Double k) {
-        return k;
+    public Time convertTo(LocalTime k) {
+        return Time.valueOf(k);
     }
 
     @Override
-    public Double databaseToAttribute(Number v) {
-        return v.doubleValue();
+    public LocalTime convertFrom(Time v) {
+        return v.toLocalTime();
     }
 
 }

@@ -15,32 +15,30 @@
  */
 package org.minijpa.sql.model;
 
-import java.util.Optional;
-
 import org.minijpa.sql.model.condition.Condition;
 
 public class SqlDelete implements SqlStatement {
 
-	private FromTable fromTable;
-	private Optional<Condition> condition;
+    private FromTable fromTable;
+    private Condition condition;
 
-	public SqlDelete(FromTable fromTable, Optional<Condition> condition) {
-		super();
-		this.fromTable = fromTable;
-		this.condition = condition;
-	}
+    public SqlDelete(FromTable fromTable, Condition condition) {
+        super();
+        this.fromTable = fromTable;
+        this.condition = condition;
+    }
 
-	public FromTable getFromTable() {
-		return fromTable;
-	}
+    public FromTable getFromTable() {
+        return fromTable;
+    }
 
-	public Optional<Condition> getCondition() {
-		return condition;
-	}
+    public Condition getCondition() {
+        return condition;
+    }
 
-	@Override
-	public StatementType getType() {
-		return StatementType.DELETE;
-	}
+    @Override
+    public StatementType getType() {
+        return StatementType.DELETE;
+    }
 
 }

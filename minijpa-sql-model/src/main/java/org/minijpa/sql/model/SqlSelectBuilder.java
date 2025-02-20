@@ -6,19 +6,17 @@ import org.minijpa.sql.model.condition.Condition;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class SqlSelectBuilder {
 
     private List<From> fromTables = new ArrayList<>();
-    //  private List<FromJoin> fromJoins;
     private List<Value> values;
     private List<Condition> conditions;
     private GroupBy groupBy;
     private FromTable result;
     private List<OrderBy> orderByList;
     private boolean distinct = false;
-    private Optional<ForUpdate> optionalForUpdate = Optional.empty();
+    private ForUpdate optionalForUpdate;
 
     public SqlSelectBuilder() {
         super();
@@ -60,7 +58,7 @@ public class SqlSelectBuilder {
         return this;
     }
 
-    public SqlSelectBuilder withForUpdate(Optional<ForUpdate> optionalForUpdate) {
+    public SqlSelectBuilder withForUpdate(ForUpdate optionalForUpdate) {
         this.optionalForUpdate = optionalForUpdate;
         return this;
     }
@@ -70,17 +68,17 @@ public class SqlSelectBuilder {
 
         sqlSelect.setValues(values);
         if (conditions != null && !conditions.isEmpty()) {
-            sqlSelect.setConditions(Optional.of(conditions));
+            sqlSelect.setConditions(conditions);
         }
 
-        sqlSelect.setGroupBy(Optional.ofNullable(groupBy));
+        sqlSelect.setGroupBy(groupBy);
         if (orderByList != null && !orderByList.isEmpty()) {
-            sqlSelect.setOrderByList(Optional.of(orderByList));
+            sqlSelect.setOrderByList(orderByList);
         }
 
         sqlSelect.setResult(result);
         sqlSelect.setDistinct(distinct);
-        sqlSelect.setOptionalForUpdate(optionalForUpdate);
+        sqlSelect.setForUpdate(optionalForUpdate);
     }
 
     public SqlSelect build() {

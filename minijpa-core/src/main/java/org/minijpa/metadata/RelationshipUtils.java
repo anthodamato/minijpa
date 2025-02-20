@@ -22,11 +22,11 @@ import java.util.List;
 import java.util.Optional;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
+
 import org.minijpa.jdbc.relationship.JoinColumnData;
 import org.minijpa.jdbc.relationship.JoinColumnDataList;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class RelationshipUtils {
@@ -36,29 +36,27 @@ public class RelationshipUtils {
                 Optional.ofNullable(joinColumn.referencedColumnName()));
     }
 
-    private static Optional<JoinColumnDataList> buildJoinColumnDataList(JoinColumn joinColumn) {
+    private static JoinColumnDataList buildJoinColumnDataList(JoinColumn joinColumn) {
         if (joinColumn == null)
-            return Optional.empty();
+            return null;
 
         JoinColumnData joinColumnData = buildJoinColumnData(joinColumn);
-        JoinColumnDataList joinColumnDataList = new JoinColumnDataList(Arrays.asList(joinColumnData));
-        return Optional.of(joinColumnDataList);
+        return new JoinColumnDataList(List.of(joinColumnData));
     }
 
-    private static Optional<JoinColumnDataList> buildJoinColumnDataList(JoinColumns joinColumns) {
+    private static JoinColumnDataList buildJoinColumnDataList(JoinColumns joinColumns) {
         if (joinColumns == null)
-            return Optional.empty();
+            return null;
 
         List<JoinColumnData> joinColumnDatas = new ArrayList<>();
         for (JoinColumn joinColumn : joinColumns.value()) {
             joinColumnDatas.add(buildJoinColumnData(joinColumn));
         }
 
-        return Optional
-                .of(new JoinColumnDataList((List<JoinColumnData>) Collections.unmodifiableList(joinColumnDatas)));
+        return new JoinColumnDataList((List<JoinColumnData>) Collections.unmodifiableList(joinColumnDatas));
     }
 
-    public static Optional<JoinColumnDataList> buildJoinColumnDataList(JoinColumn joinColumn, JoinColumns joinColumns) {
+    public static JoinColumnDataList buildJoinColumnDataList(JoinColumn joinColumn, JoinColumns joinColumns) {
         if (joinColumn != null && joinColumns != null)
             throw new IllegalArgumentException("@JoinColumn and @JoinColumns both declared");
 

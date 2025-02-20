@@ -167,7 +167,7 @@ public class MiniPersistenceContext implements EntityContainer {
             Map<Object, Object> m = new HashMap<>(map);
             m.forEach((k, v) -> {
                 try {
-                    e.getLockTypeAttributeWriteMethod().get().invoke(v, LockType.NONE);
+                    e.getLockTypeAttributeWriteMethod().invoke(v, LockType.NONE);
                 } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                     log.error(ex.getMessage());
                 }

@@ -15,52 +15,54 @@
  */
 package org.minijpa.jdbc;
 
-import java.util.Optional;
-
 /**
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class DDLData {
 
-  private final Optional<String> columnDefinition;
-  private final Optional<Integer> length;
-  private final Optional<Integer> precision;
-  private final Optional<Integer> scale;
-  private final Optional<Boolean> nullable;
-  private final Optional<Boolean> unique;
+    private final String columnDefinition;
+    private final Integer length;
+    private final Integer precision;
+    private final Integer scale;
+    private final Boolean nullable;
+    private final Boolean unique;
 
-  public DDLData(Optional<String> columnDefinition, Optional<Integer> length,
-      Optional<Integer> precision,
-      Optional<Integer> scale, Optional<Boolean> nullable, Optional<Boolean> unique) {
-    this.columnDefinition = columnDefinition;
-    this.length = length;
-    this.precision = precision;
-    this.scale = scale;
-    this.nullable = nullable;
-    this.unique = unique;
-  }
+    public DDLData(
+            String columnDefinition,
+            Integer length,
+            Integer precision,
+            Integer scale,
+            Boolean nullable,
+            Boolean unique) {
+        this.columnDefinition = columnDefinition;
+        this.length = length;
+        this.precision = precision;
+        this.scale = scale;
+        this.nullable = nullable;
+        this.unique = unique;
+    }
 
-  public Optional<String> getColumnDefinition() {
-    return columnDefinition;
-  }
+    public String getColumnDefinition() {
+        return columnDefinition;
+    }
 
-  public Optional<Integer> getLength() {
-    return length;
-  }
+    public Integer getLength() {
+        return length;
+    }
 
-  public Optional<Integer> getPrecision() {
-    return precision;
-  }
+    public Integer getPrecision() {
+        return precision;
+    }
 
-  public Optional<Integer> getScale() {
-    return scale;
-  }
+    public Integer getScale() {
+        return scale;
+    }
 
-  public Optional<Boolean> getNullable() {
-    return nullable;
-  }
+    public Boolean getNullable() {
+        return nullable;
+    }
 
-  public Optional<Boolean> getUnique() {
-    return unique;
-  }
+    public Boolean getUnique() {
+        return unique;
+    }
 }

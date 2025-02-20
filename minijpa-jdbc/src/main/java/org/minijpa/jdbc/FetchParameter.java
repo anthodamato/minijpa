@@ -1,6 +1,6 @@
 package org.minijpa.jdbc;
 
-import org.minijpa.jdbc.mapper.AttributeMapper;
+import org.minijpa.jdbc.mapper.ObjectConverter;
 
 public interface FetchParameter {
     String getColumnName();
@@ -8,6 +8,6 @@ public interface FetchParameter {
     Integer getSqlType();
 
     @SuppressWarnings("rawtypes")
-    AttributeMapper getAttributeMapper();
+    ObjectConverter getObjectConverter();
 
 }

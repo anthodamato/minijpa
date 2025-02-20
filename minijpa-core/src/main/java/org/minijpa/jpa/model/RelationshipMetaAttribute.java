@@ -1,7 +1,6 @@
 package org.minijpa.jpa.model;
 
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
 import org.minijpa.jpa.model.relationship.Relationship;
 import org.slf4j.Logger;
@@ -11,7 +10,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class RelationshipMetaAttribute extends AbstractMetaAttribute {
     private static final Logger log = LoggerFactory.getLogger(RelationshipMetaAttribute.class);
@@ -22,8 +20,8 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
      * If an attribute type is a collection this is the chosen implementation.
      */
     private Class<?> collectionImplementationClass;
-    private Optional<Method> joinColumnReadMethod = Optional.empty();
-    private Optional<Method> joinColumnWriteMethod = Optional.empty();
+    private Method joinColumnReadMethod;
+    private Method joinColumnWriteMethod;
     private boolean id;
 
     public Relationship getRelationship() {
@@ -42,11 +40,11 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
         return collectionImplementationClass;
     }
 
-    public Optional<Method> getJoinColumnReadMethod() {
+    public Method getJoinColumnReadMethod() {
         return joinColumnReadMethod;
     }
 
-    public Optional<Method> getJoinColumnWriteMethod() {
+    public Method getJoinColumnWriteMethod() {
         return joinColumnWriteMethod;
     }
 
@@ -67,16 +65,16 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
     public List<QueryParameter> queryParameters(
             Object value) throws Exception {
         List<QueryParameter> list = new ArrayList<>();
-        if (getRelationship().getJoinColumnMapping().isEmpty())
+        if (getRelationship().getJoinColumnMapping() == null)
             return list;
 
-        JoinColumnMapping joinColumnMapping = getRelationship().getJoinColumnMapping().get();
+        JoinColumnMapping joinColumnMapping = getRelationship().getJoinColumnMapping();
         log.debug("queryParameters: value={}", value);
         Object v = joinColumnMapping.isComposite()
                 ? joinColumnMapping.getForeignKey().readValue(value)
                 : value;
         log.debug("queryParameters: v={}", v);
-        list.addAll(getRelationship().getJoinColumnMapping().get().queryParameters(v));
+        list.addAll(getRelationship().getJoinColumnMapping().queryParameters(v));
         log.debug("queryParameters: 2 v={}", v);
         return list;
     }
@@ -109,8 +107,8 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
         private boolean collection = false;
         private Class<?> collectionImplementationClass;
         private boolean nullable = true;
-        private Optional<Method> joinColumnReadMethod;
-        private Optional<Method> joinColumnWriteMethod;
+        private Method joinColumnReadMethod;
+        private Method joinColumnWriteMethod;
         private boolean id;
         protected Field javaMember;
 
@@ -154,12 +152,12 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
             return this;
         }
 
-        public Builder withJoinColumnReadMethod(Optional<Method> joinColumnReadMethod) {
+        public Builder withJoinColumnReadMethod(Method joinColumnReadMethod) {
             this.joinColumnReadMethod = joinColumnReadMethod;
             return this;
         }
 
-        public Builder withJoinColumnWriteMethod(Optional<Method> joinColumnWriteMethod) {
+        public Builder withJoinColumnWriteMethod(Method joinColumnWriteMethod) {
             this.joinColumnWriteMethod = joinColumnWriteMethod;
             return this;
         }

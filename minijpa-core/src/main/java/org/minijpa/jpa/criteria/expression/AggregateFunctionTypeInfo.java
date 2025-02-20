@@ -17,5 +17,5 @@ package org.minijpa.jpa.criteria.expression;
 
 public interface AggregateFunctionTypeInfo {
 
-    public AggregateFunctionType getAggregateFunctionType();
+    AggregateFunctionType getAggregateFunctionType();
 }

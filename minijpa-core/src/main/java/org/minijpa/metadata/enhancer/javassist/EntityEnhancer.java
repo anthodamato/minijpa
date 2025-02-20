@@ -121,53 +121,54 @@ public class EntityEnhancer {
         CtMethod ctMethod = createGetMethod(ct, managedData.getModificationAttribute(), "java.util.List");
         enhEntity.setModificationAttributeGetMethod(ctMethod.getName());
         // lazy loaded attribute tracking
-        if (managedData.getLazyLoadedAttribute().isPresent()) {
-            addListField(ct, managedData.getLazyLoadedAttribute().get());
-            ctMethod = createGetMethod(ct, managedData.getLazyLoadedAttribute().get(), "java.util.List");
-            enhEntity.setLazyLoadedAttributeGetMethod(Optional.of(ctMethod.getName()));
+        if (managedData.getLazyLoadedAttribute() != null) {
+            addListField(ct, managedData.getLazyLoadedAttribute());
+            ctMethod = createGetMethod(ct, managedData.getLazyLoadedAttribute(), "java.util.List");
+            enhEntity.setLazyLoadedAttributeGetMethod(ctMethod.getName());
         }
+
         // join column postponed update attribute
-        if (managedData.getJoinColumnPostponedUpdateAttribute().isPresent()) {
-            addListField(ct, managedData.getJoinColumnPostponedUpdateAttribute().get());
-            ctMethod = createGetMethod(ct, managedData.getJoinColumnPostponedUpdateAttribute().get(), "java.util.List");
-            enhEntity.setJoinColumnPostponedUpdateAttributeGetMethod(Optional.of(ctMethod.getName()));
+        if (managedData.getJoinColumnPostponedUpdateAttribute() != null) {
+            addListField(ct, managedData.getJoinColumnPostponedUpdateAttribute());
+            ctMethod = createGetMethod(ct, managedData.getJoinColumnPostponedUpdateAttribute(), "java.util.List");
+            enhEntity.setJoinColumnPostponedUpdateAttributeGetMethod(ctMethod.getName());
         }
         // lock type field
-        if (managedData.getLockTypeAttribute().isPresent()) {
-            addLockTypeField(ct, managedData.getLockTypeAttribute().get());
+        if (managedData.getLockTypeAttribute() != null) {
+            addLockTypeField(ct, managedData.getLockTypeAttribute());
             // get method
-            ctMethod = createGetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jpa.db.LockType");
-            enhEntity.setLockTypeAttributeGetMethod(Optional.of(ctMethod.getName()));
+            ctMethod = createGetMethod(ct, managedData.getLockTypeAttribute(), "org.minijpa.jpa.db.LockType");
+            enhEntity.setLockTypeAttributeGetMethod(ctMethod.getName());
             // set method
-            ctMethod = createSetMethod(ct, managedData.getLockTypeAttribute().get(), "org.minijpa.jpa.db.LockType");
-            enhEntity.setLockTypeAttributeSetMethod(Optional.of(ctMethod.getName()));
+            ctMethod = createSetMethod(ct, managedData.getLockTypeAttribute(), "org.minijpa.jpa.db.LockType");
+            enhEntity.setLockTypeAttributeSetMethod(ctMethod.getName());
         }
         // entity status field
-        if (managedData.getEntityStatusAttribute().isPresent()) {
-            addEntityStatusField(ct, managedData.getEntityStatusAttribute().get());
+        if (managedData.getEntityStatusAttribute() != null) {
+            addEntityStatusField(ct, managedData.getEntityStatusAttribute());
             // get method
-            ctMethod = createGetMethod(ct, managedData.getEntityStatusAttribute().get(),
+            ctMethod = createGetMethod(ct, managedData.getEntityStatusAttribute(),
                     "org.minijpa.jpa.db.EntityStatus");
-            enhEntity.setEntityStatusAttributeGetMethod(Optional.of(ctMethod.getName()));
+            enhEntity.setEntityStatusAttributeGetMethod(ctMethod.getName());
             // set method
-            ctMethod = createSetMethod(ct, managedData.getEntityStatusAttribute().get(),
+            ctMethod = createSetMethod(ct, managedData.getEntityStatusAttribute(),
                     "org.minijpa.jpa.db.EntityStatus");
-            enhEntity.setEntityStatusAttributeSetMethod(Optional.of(ctMethod.getName()));
+            enhEntity.setEntityStatusAttributeSetMethod(ctMethod.getName());
         }
 
         // creates the join column support fields
         List<AttributeData> attributeDataList = managedData.getAttributeDataList();
         for (AttributeData attributeData : attributeDataList) {
             RelationshipProperties relationshipProperties = attributeData.getProperty().getRelationshipProperties();
-            if (relationshipProperties != null && relationshipProperties.getJoinColumnFieldName().isPresent()) {
-                String fieldName = relationshipProperties.getJoinColumnFieldName().get();
+            if (relationshipProperties != null && relationshipProperties.getJoinColumnFieldName() != null) {
+                String fieldName = relationshipProperties.getJoinColumnFieldName();
                 addJoinColumnField(ct, fieldName);
                 // get method
                 ctMethod = createGetMethod(ct, fieldName, "java.lang.Object");
-                relationshipProperties.setCtMethodGetter(Optional.of(ctMethod));
+                relationshipProperties.setCtMethodGetter(ctMethod);
                 // set method
                 ctMethod = createSetMethod(ct, fieldName, "java.lang.Object");
-                relationshipProperties.setCtMethodSetter(Optional.of(ctMethod));
+                relationshipProperties.setCtMethodSetter(ctMethod);
             }
         }
     }
@@ -175,15 +176,15 @@ public class EntityEnhancer {
     private void fillJoinColumnMethods(ManagedData managedData, EnhEntity enhEntity) {
         List<AttributeData> attributeDataList = managedData.getAttributeDataList();
         for (AttributeData attributeData : attributeDataList) {
-            RelationshipProperties optional = attributeData.getProperty().getRelationshipProperties();
-            if (optional != null && optional.getJoinColumnFieldName().isPresent()) {
-                String fieldName = optional.getFieldName();
+            RelationshipProperties relationshipProperties = attributeData.getProperty().getRelationshipProperties();
+            if (relationshipProperties != null && relationshipProperties.getJoinColumnFieldName() != null) {
+                String fieldName = relationshipProperties.getFieldName();
                 Optional<EnhAttribute> o = enhEntity.getAttribute(fieldName);
                 if (o.isEmpty())
                     throw new IllegalStateException("Field name not found: " + fieldName);
 
-                o.get().setJoinColumnGetMethod(Optional.of(optional.getCtMethodGetter().get().getName()));
-                o.get().setJoinColumnSetMethod(Optional.of(optional.getCtMethodSetter().get().getName()));
+                o.get().setJoinColumnGetMethod(relationshipProperties.getCtMethodGetter().getName());
+                o.get().setJoinColumnSetMethod(relationshipProperties.getCtMethodSetter().getName());
             }
         }
     }

@@ -16,22 +16,25 @@
 package org.minijpa.jdbc.mapper;
 
 import java.sql.Date;
-import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
-public class LocalDateAttributeMapper implements AttributeMapper<LocalDate, Date> {
+public class CalendarToSqlDateObjectConverter implements ObjectConverter<Calendar, Date> {
 
-	@Override
-	public Date attributeToDatabase(LocalDate k) {
-		return Date.valueOf((LocalDate) k);
-	}
+    @Override
+    public Date convertTo(Calendar k) {
+        return new Date(k.getTimeInMillis());
+    }
 
-	@Override
-	public LocalDate databaseToAttribute(Date v) {
-		return v.toLocalDate();
-	}
+    @Override
+    public Calendar convertFrom(Date v) {
+        Calendar calendar = Calendar.getInstance(TimeZone.getDefault());
+        calendar.setTimeInMillis(v.getTime());
+        return calendar;
+    }
 
 }

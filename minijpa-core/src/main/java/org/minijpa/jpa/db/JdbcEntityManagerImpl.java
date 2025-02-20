@@ -186,7 +186,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 PkSequenceGenerator pkSequenceGenerator = entity.getId().getPkGeneration()
                         .getPkSequenceGenerator();
                 String seqStm = dbConfiguration.getSqlStatementGenerator()
-                        .sequenceNextValueStatement(Optional.empty(),
+                        .sequenceNextValueStatement(null,
                                 pkSequenceGenerator.getSequenceName());
 
                 idValue = dbConfiguration.getJdbcRunner()
@@ -517,7 +517,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         }
     }
 
-    
+
     private static class StatementParametersMetaEntity {
         private final StatementParameters statementParameters;
         private final MetaEntity metaEntity;
@@ -656,19 +656,26 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             // Values
             List<Value> values = sqlSelect.getValues().stream()
                     .filter(v -> (v instanceof TableColumn)).map(v -> (TableColumn) v)
-                    .filter(t -> t.getTable().isPresent() &&
-                            (t.getTable().get().getAlias().get().equals(optionalFromTable.get().getAlias().get()) ||
-                                    t.getTable().get().getAlias().get().equals(optionalFromJoin.get().getToTable().getAlias().get())))
+                    .filter(t -> t.getTable() != null &&
+                            (t.getTable().getAlias().equals(optionalFromTable.get().getAlias()) ||
+                                    t.getTable().getAlias().equals(optionalFromJoin.get().getToTable().getAlias())))
                     .collect(Collectors.toList());
             selectBuilder.withValues(values);
             List<Integer> valueIndexes = findMatchingIndexes(sqlSelect.getValues(), values);
 
             // filter conditions
             List<Condition> conditions = new ArrayList<>();
-            optionalFromTable.flatMap(FromTable::getAlias).ifPresent(a -> filterConditions(sqlSelect, a, conditions));
+//            optionalFromTable.flatMap(FromTable::getAlias).ifPresent(a -> filterConditions(sqlSelect, a, conditions));
+            if (optionalFromTable.isPresent() && optionalFromTable.get().getAlias() != null) {
+                filterConditions(sqlSelect, optionalFromTable.get().getAlias(), conditions);
+            }
+
             relatedFromJoins.forEach(j -> {
-                j.getToTable().getAlias().ifPresent(a -> filterConditions(sqlSelect, a, conditions));
+//                j.getToTable().getAlias().ifPresent(a -> filterConditions(sqlSelect, a, conditions));
+                if (j.getToTable().getAlias() != null)
+                    filterConditions(sqlSelect, j.getToTable().getAlias(), conditions);
             });
+
             selectBuilder.withConditions(conditions);
 
             SqlSelectData sqlSelectData = (SqlSelectData) sqlSelect;
@@ -685,9 +692,15 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
 
             // Query Parameters
             List<QueryParameter> queryParameters = new ArrayList<>();
-            optionalFromTable.flatMap(FromTable::getAlias).ifPresent(a -> filterQueryParameterByAlias(statementParameters.getParameters(), a, queryParameters));
+//            optionalFromTable.flatMap(FromTable::getAlias).ifPresent(a -> filterQueryParameterByAlias(statementParameters.getParameters(), a, queryParameters));
+            if (optionalFromTable.isPresent() && optionalFromTable.get().getAlias() != null) {
+                filterQueryParameterByAlias(statementParameters.getParameters(), optionalFromTable.get().getAlias(), queryParameters);
+            }
+
             relatedFromJoins.forEach(j -> {
-                j.getToTable().getAlias().ifPresent(a -> filterQueryParameterByAlias(statementParameters.getParameters(), a, queryParameters));
+//                j.getToTable().getAlias().ifPresent(a -> filterQueryParameterByAlias(statementParameters.getParameters(), a, queryParameters));
+                if (j.getToTable().getAlias() != null)
+                    filterQueryParameterByAlias(statementParameters.getParameters(), j.getToTable().getAlias(), queryParameters);
             });
 
             StatementParameters sp = new StatementParameters(
@@ -716,13 +729,13 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
     }
 
     private boolean hasTableColumnTheAlias(TableColumn tableColumn, String alias) {
-        if (tableColumn.getTable().isEmpty())
+        if (tableColumn.getTable() == null)
             return false;
 
-        if (tableColumn.getTable().get().getAlias().isEmpty())
+        if (tableColumn.getTable().getAlias().isEmpty())
             return false;
 
-        return tableColumn.getTable().get().getAlias().get().equals(alias);
+        return tableColumn.getTable().getAlias().equals(alias);
     }
 
 
@@ -743,10 +756,10 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
             SqlSelect sqlSelect,
             String alias,
             List<Condition> conditionList) {
-        if (sqlSelect.getConditions().isEmpty())
+        if (sqlSelect.getConditions() == null)
             return;
 
-        List<Condition> conditions = sqlSelect.getConditions().get();
+        List<Condition> conditions = sqlSelect.getConditions();
         conditions.forEach(c -> {
                     filterCondition(c, alias, conditionList);
                 }
@@ -819,7 +832,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
         }
 
         FromJoin fromJoin = optional.get();
-        Optional<FromJoin> optionalJoinTable = fromJoins.stream().filter(fj -> fj.getToTable().getAlias().get().equals(fromJoin.getFromAlias())).findFirst();
+        Optional<FromJoin> optionalJoinTable = fromJoins.stream().filter(fj -> fj.getToTable().getAlias().equals(fromJoin.getFromAlias())).findFirst();
         if (optionalJoinTable.isEmpty()) {
             throw new SemanticException("Join table not found for " + fetchJoinMetaEntity.getTableName());
         }

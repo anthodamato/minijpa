@@ -18,7 +18,6 @@ package org.minijpa.jpa.db;
 import org.minijpa.jdbc.FetchParameter;
 import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jpa.model.MetaAttribute;
-import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import java.time.*;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 public class AttributeUtil {
 
@@ -196,32 +194,5 @@ public class AttributeUtil {
 
         return false;
     }
-
-//    public static Object increaseVersionValue(MetaEntity metaEntity, Object currentValue) {
-//        if (!metaEntity.hasVersionAttribute())
-//            return null;
-//
-//        Optional<MetaAttribute> optionalMetaAttribute = metaEntity.getVersionAttribute();
-//        if (optionalMetaAttribute.isEmpty())
-//            return null;
-//
-//        MetaAttribute attribute = optionalMetaAttribute.get();
-//        Class<?> type = attribute.getType();
-//        if (type == Integer.class || (type.isPrimitive() && type.getName().equals("int"))) {
-//            Integer v = (Integer) currentValue;
-//            return v + 1;
-//        } else if (type == Short.class || (type.isPrimitive() && type.getName().equals("short"))) {
-//            Short v = (Short) currentValue;
-//            return v + 1;
-//        } else if (type == Long.class || (type.isPrimitive() && type.getName().equals("long"))) {
-//            Long v = (Long) currentValue;
-//            return v + 1;
-//        } else if (type == Timestamp.class) {
-//            Timestamp v = (Timestamp) currentValue;
-//            return new Timestamp(v.getTime() + 100);
-//        }
-//
-//        return null;
-//    }
 
 }

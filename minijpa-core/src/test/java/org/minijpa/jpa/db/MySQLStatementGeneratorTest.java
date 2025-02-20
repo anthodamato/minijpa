@@ -40,9 +40,6 @@ public class MySQLStatementGeneratorTest {
         List<SqlDDLStatement> sqlStatements = dbConfiguration.getDbJdbc()
                 .buildDDLStatements(persistenceUnitContext.getEntities());
         Assertions.assertEquals(2, sqlStatements.size());
-//	List<String> ddlStatements = sqlStatements.stream()
-//		.map(d -> dbConfiguration.getSqlStatementGenerator().export(d))
-//		.flatMap(List::stream).collect(Collectors.toList());
         List<String> ddlStatements = dbConfiguration.getSqlStatementGenerator().export(sqlStatements);
         Assertions.assertFalse(ddlStatements.isEmpty());
         Assertions.assertEquals(2, ddlStatements.size());

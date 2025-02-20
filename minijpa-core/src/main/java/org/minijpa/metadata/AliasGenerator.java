@@ -21,40 +21,39 @@ package org.minijpa.metadata;
 import java.util.Optional;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public interface AliasGenerator {
 
-	/**
-	 * Returns the default alias for the given table.
-	 *
-	 * @param objectName database object name, can be a table name or column name
-	 * @return the current alias
-	 */
-	public String getDefault(String objectName);
+    /**
+     * Returns the default alias for the given table.
+     *
+     * @param objectName database object name, can be a table name or column name
+     * @return the current alias
+     */
+    String getDefault(String objectName);
 
-	/**
-	 * Calculate the next alias.
-	 *
-	 * @param objectName database object name, can be a table name or column name
-	 * @return the next alias
-	 */
-	public String next(String objectName);
+    /**
+     * Calculate the next alias.
+     *
+     * @param objectName database object name, can be a table name or column name
+     * @return the next alias
+     */
+    String next(String objectName);
 
-	/**
-	 * Restarts the next counter. If the 'next' method is called this method set to zero the counter so the next alias
-	 * will be the second one.
-	 */
-	public void reset();
+    /**
+     * Restarts the next counter. If the 'next' method is called this method set to zero the counter so the next alias
+     * will be the second one.
+     */
+    void reset();
 
-	/**
-	 * Finds the table or column name by its associated alias.
-	 *
-	 * @param alias the alias to find by
-	 * @return the table or column name associated
-	 */
-	public Optional<String> findObjectNameByAlias(String alias);
+    /**
+     * Finds the table or column name by its associated alias.
+     *
+     * @param alias the alias to find by
+     * @return the table or column name associated
+     */
+    Optional<String> findObjectNameByAlias(String alias);
 
-	public Optional<String> findAliasByObjectName(String objectName);
+    Optional<String> findAliasByObjectName(String objectName);
 }

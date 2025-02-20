@@ -173,7 +173,7 @@ public class IdClassPkImpl implements IdClassPk {
     private void buildPK(
             ModelValueArray<FetchParameter> modelValueArray,
             Object pkObject) throws Exception {
-        log.info("buildPK: modelValueArray={}", modelValueArray);
+        log.debug("buildPK: modelValueArray={}", modelValueArray);
         modelValueArray.getValues().forEach(v -> log.debug("buildPk: v={}", v));
         modelValueArray.getModels().forEach(f -> log.debug("buildPk: f={}", f));
         if (relationshipMetaAttribute != null) {
@@ -183,10 +183,10 @@ public class IdClassPkImpl implements IdClassPk {
             Pk foreignPk = relationshipMetaAttribute.getRelationship().getAttributeType().getId();
             if (foreignPk.isComposite()) {
                 Object foreignKeyValue = foreignPk.buildValue(modelValueArray);
-                log.info("buildPK: foreignKeyValue={}", foreignKeyValue);
-                log.info("buildPK: relationshipMetaAttribute.getWriteMethod().getName()={}", relationshipMetaAttribute.getWriteMethod().getName());
+                log.debug("buildPK: foreignKeyValue={}", foreignKeyValue);
+                log.debug("buildPK: relationshipMetaAttribute.getWriteMethod().getName()={}", relationshipMetaAttribute.getWriteMethod().getName());
                 Method method = pkObject.getClass().getMethod(relationshipMetaAttribute.getWriteMethod().getName(), foreignKeyValue.getClass());
-                log.info("buildPK: method={}", method);
+                log.debug("buildPK: method={}", method);
                 method.invoke(pkObject, foreignKeyValue);
             } else {
                 AbstractMetaAttribute key = foreignPk.getAttribute();
@@ -338,7 +338,6 @@ public class IdClassPkImpl implements IdClassPk {
     private Object findAndGetPropertyValue(
             String propertyName,
             Object pkInstance) throws Exception {
-//        Method method = pkClass.getDeclaredMethod(BeanUtil.getGetterMethodName(propertyName));
         Method method = pkInstance.getClass().getDeclaredMethod(BeanUtil.getGetterMethodName(propertyName));
         return method.invoke(pkInstance);
     }
@@ -349,15 +348,7 @@ public class IdClassPkImpl implements IdClassPk {
         if (pkValue.getClass() == pkClass)
             return pkValue;
 
-//        try {
         Object pkObject = pkClass.getConstructor().newInstance();
-//        } catch (Exception e) {
-//            log.debug("readValue: e={}", e.getMessage());
-//            log.debug("readValue: e.getClass()={}", e.getClass());
-//            log.debug("readValue: pkClass.getConstructor()={}", pkClass.getConstructor());
-//            throw e;
-//        }
-
         assignAttributes(pkObject, pkValue, idClassPropertyData);
         return pkObject;
     }
@@ -374,8 +365,6 @@ public class IdClassPkImpl implements IdClassPk {
         }
 
         for (EnhAttribute enhAttribute : idClassPropertyData.getEnhAttributes()) {
-//            Method getMethod=oldPkValue.getClass().getDeclaredMethod(enhAttribute.getGetMethod(),enhAttribute.);
-//            Object value=
             Method getMethod = oldPkValue.getClass().getDeclaredMethod(enhAttribute.getGetMethod());
             Object value = getMethod.invoke(oldPkValue);
             log.debug("assignAttributes: value={}", value);
