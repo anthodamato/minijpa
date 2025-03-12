@@ -79,7 +79,7 @@ public class EmbeddedPk implements Pk {
 
     @Override
     public Object readValue(Object entityInstance) throws Exception {
-        return entity.getReadMethod().invoke(entityInstance);
+        return entity.getValue(entityInstance);
     }
 
     @Override

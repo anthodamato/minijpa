@@ -69,13 +69,10 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
             return list;
 
         JoinColumnMapping joinColumnMapping = getRelationship().getJoinColumnMapping();
-        log.debug("queryParameters: value={}", value);
         Object v = joinColumnMapping.isComposite()
                 ? joinColumnMapping.getForeignKey().readValue(value)
                 : value;
-        log.debug("queryParameters: v={}", v);
         list.addAll(getRelationship().getJoinColumnMapping().queryParameters(v));
-        log.debug("queryParameters: 2 v={}", v);
         return list;
     }
 

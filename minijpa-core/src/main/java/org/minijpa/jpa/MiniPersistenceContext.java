@@ -93,7 +93,6 @@ public class MiniPersistenceContext implements EntityContainer {
 
         Map<Object, Object> map = getEntityMap(entityClass, managedEntities);
         Object entityInstance = map.get(primaryKey);
-        log.debug("find: managed entityInstance={}", entityInstance);
         return entityInstance;
     }
 

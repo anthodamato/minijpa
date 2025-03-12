@@ -57,8 +57,8 @@ public abstract class AbstractEntityBuilderByValues extends AbstractEntityBuilde
         }
 
         for (JoinColumnMapping joinColumnMapping : metaEntity.getJoinColumnMappings()) {
-            LOG.debug("buildAttributes: joinColumnMapping.getAttribute()={}", joinColumnMapping.getAttribute());
-            LOG.debug("buildAttributes: joinColumnMapping.getForeignKey()={}", joinColumnMapping.getForeignKey());
+            LOG.debug("Build Attributes -> Join Column Mapping Attribute = {}", joinColumnMapping.getAttribute());
+            LOG.debug("Build Attributes -> Join Column Mapping Foreign Key = {}", joinColumnMapping.getForeignKey());
             Object fk = joinColumnMapping.getForeignKey().buildValue(modelValueArray);
             if (joinColumnMapping.isLazy()) {
                 MetaEntityHelper.setForeignKeyValue(joinColumnMapping.getAttribute(), parentInstance, fk);
@@ -66,7 +66,6 @@ public abstract class AbstractEntityBuilderByValues extends AbstractEntityBuilde
             }
 
             MetaEntity toEntity = joinColumnMapping.getAttribute().getRelationship().getAttributeType();
-            // LOG.debug("buildJoinColumns: toEntity={}", toEntity);
             Object parent = build(modelValueArray, toEntity, lockType);
             MetaEntityHelper.writeMetaAttributeValue(parentInstance, parentInstance.getClass(),
                     joinColumnMapping.getAttribute(), parent, metaEntity);

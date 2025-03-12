@@ -40,7 +40,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
     private void processConfiguration(PersistenceUnitInfo persistenceUnitInfo, ConnectionProvider connectionProvider) {
         try {
             LOG.info("Processing Db Configuration...");
-            LOG.debug("processConfiguration: persistenceUnitInfo={}", persistenceUnitInfo);
+            LOG.debug("Processing Configuration -> Persistence Unit Info {}", persistenceUnitInfo);
             Connection connection = connectionProvider.getConnection();
             DbConfiguration dbConfiguration = DbConfigurationFactory.create(connection);
             DbConfigurationList.getInstance().setDbConfiguration(persistenceUnitInfo.getPersistenceUnitName(),
@@ -61,7 +61,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
     private EntityManagerFactory createEntityManagerFactory(String path, String emName,
             @SuppressWarnings("rawtypes") Map map) {
         PersistenceUnitInfo persistenceUnitInfo = null;
-        LOG.debug("createEntityManagerFactory: emName={}, path={}", emName, path);
+        LOG.debug("Create Entity Manager Factory -> name '{}', path '{}'", emName, path);
         try {
             persistenceUnitInfo = new PersistenceProviderHelper().parseXml(path, emName, map);
             if (persistenceUnitInfo == null) {
@@ -82,8 +82,6 @@ public class MiniPersistenceProvider implements PersistenceProvider {
         }
 
         processConfiguration(persistenceUnitInfo, connectionProvider);
-
-        LOG.debug("createEntityManagerFactory: EntityManagerType.APPLICATION_MANAGED");
         return new MiniEntityManagerFactory(EntityManagerType.APPLICATION_MANAGED, persistenceUnitInfo, map,
                 connectionProvider);
     }
@@ -103,8 +101,6 @@ public class MiniPersistenceProvider implements PersistenceProvider {
         }
 
         processConfiguration(persistenceUnitInfo, connectionProvider);
-
-        LOG.debug("createEntityManagerFactory: EntityManagerType.CONTAINER_MANAGED");
         return new MiniEntityManagerFactory(EntityManagerType.CONTAINER_MANAGED, persistenceUnitInfo, map,
                 connectionProvider);
     }
@@ -126,7 +122,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
             persistenceUnitPropertyActions.runScript(script, info, connectionProvider);
         } catch (Exception e) {
             LOG.error(e.getMessage());
-            LOG.error("generateSchema: e.getClass()={}", e.getClass());
+            LOG.error("Generate Schema -> Error Class() {}", e.getClass());
         }
     }
 
@@ -141,7 +137,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
             processConfiguration(persistenceUnitInfo, connectionProvider);
         } catch (Exception e) {
             LOG.error(e.getMessage());
-            LOG.error("generateSchema: e.getClass()={}", e.getClass());
+            LOG.error("Generate Schema -> Error Class() {}", e.getClass());
             return false;
         }
 
@@ -152,7 +148,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
             persistenceUnitPropertyActions.runScript(script, persistenceUnitInfo, connectionProvider);
         } catch (Exception e) {
             LOG.error(e.getMessage());
-            LOG.error("generateSchema: e.getClass()={}", e.getClass());
+            LOG.error("Generate Schema -> Error Class() {}", e.getClass());
             return false;
         }
 

@@ -93,8 +93,7 @@ public class PkFactory {
 
         PkGenerationType pkGenerationType = decodePkGenerationType(generatedValue.strategy());
         PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(pkGenerationType);
-        log.debug("buildPkGeneration: dbConfiguration.getDbJdbc()={}", dbConfiguration.getDbJdbc());
-        log.debug("buildPkGeneration: pkStrategy={}", pkStrategy);
+        log.trace("Pk Generation Strategy {}", pkStrategy);
         PkGeneration pkGeneration = new PkGeneration();
         pkGeneration.setPkStrategy(pkStrategy);
         pkGeneration.setGenerator(generatedValue.generator());

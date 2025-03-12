@@ -41,6 +41,6 @@ public interface DbTypeMapper {
      * @param enumerationType
      * @return
      */
-    Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType);
+    Class<?> databaseType(Class<?> attributeType, Class<?> enumerationType);
 
 }

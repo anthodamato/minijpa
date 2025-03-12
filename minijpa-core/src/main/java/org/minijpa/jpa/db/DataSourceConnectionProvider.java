@@ -26,25 +26,22 @@ import org.slf4j.LoggerFactory;
 
 public class DataSourceConnectionProvider implements ConnectionProvider {
 
-	private final Logger LOG = LoggerFactory.getLogger(DataSourceConnectionProvider.class);
+    private final DataSource dataSource;
 
-	private final DataSource dataSource;
+    public DataSourceConnectionProvider(DataSource dataSource) {
+        super();
+        this.dataSource = dataSource;
+    }
 
-	public DataSourceConnectionProvider(DataSource dataSource) {
-		super();
-		this.dataSource = dataSource;
-	}
+    @Override
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
 
-	@Override
-	public Connection getConnection() throws SQLException {
-		return dataSource.getConnection();
-	}
-
-	/**
-	 *
-	 * @throws Exception
-	 */
-	@Override
-	public void init() throws Exception {
-	}
+    /**
+     * @throws Exception
+     */
+    @Override
+    public void init() throws Exception {
+    }
 }

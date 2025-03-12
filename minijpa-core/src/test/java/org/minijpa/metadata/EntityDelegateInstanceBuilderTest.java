@@ -18,10 +18,6 @@
  */
 package org.minijpa.metadata;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -30,80 +26,78 @@ import org.minijpa.jdbc.ModelValueArray;
 import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniEntityManager;
 import org.minijpa.jpa.PersistenceUnitProperties;
-import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.JobEmployee;
-import org.minijpa.jpa.model.JobInfo;
-import org.minijpa.jpa.model.MetaAttribute;
-import org.minijpa.jpa.model.MetaEntity;
-import org.minijpa.jpa.model.ProgramManager;
+import org.minijpa.jpa.model.*;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class EntityDelegateInstanceBuilderTest {
 
-	private static EntityManagerFactory emf;
+    private static EntityManagerFactory emf;
 
-	@BeforeAll
-	public static void beforeAll() throws Exception {
-		emf = Persistence.createEntityManagerFactory("embed_many_to_one", PersistenceUnitProperties.getProperties());
-	}
+    @BeforeAll
+    public static void beforeAll() throws Exception {
+        emf = Persistence.createEntityManagerFactory("embed_many_to_one", PersistenceUnitProperties.getProperties());
+    }
 
-	@AfterAll
-	public static void afterAll() {
-		emf.close();
-	}
+    @AfterAll
+    public static void afterAll() {
+        emf.close();
+    }
 
-	@Test
-	public void modifications() throws Exception {
-		EntityManager em = emf.createEntityManager();
-		PersistenceUnitContext persistenceUnitContext = ((MiniEntityManager) em).getPersistenceUnitContext();
-		MetaEntity metaEntityJE = persistenceUnitContext.getEntities().get("org.minijpa.jpa.model.JobEmployee");
-		MetaEntity metaEntityPM = persistenceUnitContext.getEntities().get("org.minijpa.jpa.model.ProgramManager");
-		em.close();
+    @Test
+    public void modifications() throws Exception {
+        EntityManager em = emf.createEntityManager();
+        PersistenceUnitContext persistenceUnitContext = ((MiniEntityManager) em).getPersistenceUnitContext();
+        MetaEntity metaEntityJE = persistenceUnitContext.getEntities().get("org.minijpa.jpa.model.JobEmployee");
+        MetaEntity metaEntityPM = persistenceUnitContext.getEntities().get("org.minijpa.jpa.model.ProgramManager");
+        em.close();
 
-		ProgramManager programManager = new ProgramManager();
-		programManager.setId(2);
+        ProgramManager programManager = new ProgramManager();
+        programManager.setId(2);
 
-		JobInfo jobInfo = new JobInfo();
-		jobInfo.setJobDescription("Analyst");
-		jobInfo.setPm(programManager);
+        JobInfo jobInfo = new JobInfo();
+        jobInfo.setJobDescription("Analyst");
+        jobInfo.setPm(programManager);
 
-		JobEmployee e1 = new JobEmployee();
-		e1.setId(1);
-		e1.setName("Abraham");
-		e1.setJobInfo(jobInfo);
+        JobEmployee e1 = new JobEmployee();
+        e1.setId(1);
+        e1.setName("Abraham");
+        e1.setJobInfo(jobInfo);
 
-		ModelValueArray<AbstractMetaAttribute> modelValueArray = MetaEntityHelper.getModifications(metaEntityPM,
-				programManager);
-		Assertions.assertTrue(modelValueArray.isEmpty());
+        ModelValueArray<AbstractMetaAttribute> modelValueArray = MetaEntityHelper.getModifications(metaEntityPM,
+                programManager);
+        Assertions.assertTrue(modelValueArray.isEmpty());
 
-		modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
-		Assertions.assertEquals(3, modelValueArray.size());
-		AbstractMetaAttribute a0 = modelValueArray.getModel(0);
-		AbstractMetaAttribute a1 = modelValueArray.getModel(1);
-		AbstractMetaAttribute a2 = modelValueArray.getModel(2);
+        modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
+        Assertions.assertEquals(3, modelValueArray.size());
+        AbstractMetaAttribute a0 = modelValueArray.getModel(0);
+        AbstractMetaAttribute a1 = modelValueArray.getModel(1);
+        AbstractMetaAttribute a2 = modelValueArray.getModel(2);
 
-		MetaAttributeFolder metaAttributeFolder = new MetaAttributeFolder(a0, a1, a2);
-		Assertions.assertTrue(metaAttributeFolder.findByName("name").isPresent());
-		Assertions.assertTrue(metaAttributeFolder.findByName("jobDescription").isPresent());
-		Assertions.assertTrue(metaAttributeFolder.findByName("pm").isPresent());
+        MetaAttributeFolder metaAttributeFolder = new MetaAttributeFolder(a0, a1, a2);
+        Assertions.assertTrue(metaAttributeFolder.findByName("name").isPresent());
+        Assertions.assertTrue(metaAttributeFolder.findByName("jobDescription").isPresent());
+        Assertions.assertTrue(metaAttributeFolder.findByName("pm").isPresent());
 
-		int index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("name").get());
-		Assertions.assertTrue(index != -1);
-		Assertions.assertEquals("Abraham", modelValueArray.getValue(index));
+        int index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("name").get());
+        Assertions.assertTrue(index != -1);
+        Assertions.assertEquals("Abraham", modelValueArray.getValue(index));
 
-		index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("jobDescription").get());
-		Assertions.assertTrue(index != -1);
-		Assertions.assertEquals("Analyst", modelValueArray.getValue(index));
+        index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("jobDescription").get());
+        Assertions.assertTrue(index != -1);
+        Assertions.assertEquals("Analyst", modelValueArray.getValue(index));
 
-		index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("pm").get());
-		Assertions.assertTrue(index != -1);
-		Assertions.assertEquals(programManager, modelValueArray.getValue(index));
+        index = modelValueArray.indexOfModel(metaAttributeFolder.findByName("pm").get());
+        Assertions.assertTrue(index != -1);
+        Assertions.assertEquals(programManager, modelValueArray.getValue(index));
 
-		MetaEntityHelper.removeChanges(metaEntityJE, e1);
-		modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
-		Assertions.assertEquals(0, modelValueArray.size());
-	}
+        metaEntityJE.clearModificationAttributes(e1);
+        modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
+        Assertions.assertEquals(0, modelValueArray.size());
+    }
 }

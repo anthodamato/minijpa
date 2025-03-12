@@ -34,15 +34,15 @@ import java.util.List;
 public class AttributeUtil {
 
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(AttributeUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(AttributeUtil.class);
 
 
     public static int indexOfAttribute(
             ModelValueArray<FetchParameter> modelValueArray,
             MetaAttribute attribute) {
-        LOG.debug("indexOfAttribute: attribute={}", attribute);
+        log.debug("Index Of Attribute -> Attribute = {}", attribute);
         for (int i = 0; i < modelValueArray.size(); ++i) {
-            LOG.debug("indexOfAttribute: ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute()={}", ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute());
+            log.debug("Index Of Attribute -> Scanning Attributes = {}", ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute());
             if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute) {
                 return i;
             }

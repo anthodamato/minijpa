@@ -103,8 +103,8 @@ public class PersistenceUnitContextManager {
                 optionalNamedNativeQueries.orElse(null));
 
         entityMap.forEach((k, v) -> {
-            log.debug("get: v.getName()={}", v.getName());
-            v.getBasicAttributes().forEach(a -> log.debug("get: ba a.getName()={}", a.getName()));
+            log.debug("Building Persistence Unit Context -> Entity Name = {}", v.getName());
+            v.getBasicAttributes().forEach(a -> log.debug("Building Persistence Unit Context -> Attribute Name = {}", a.getName()));
         });
 
         EntityDelegate.getInstance().addPersistenceUnitContext(puc);

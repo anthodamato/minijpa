@@ -60,14 +60,15 @@ public class ClassInspector {
     public ManagedData inspect(String className) throws Exception {
         // already inspected
         for (ManagedData managedData : inspectedClasses) {
-            LOG.debug("inspect: managedData={}; managedData.getClassName()={}; attrs={}", managedData,
-                    managedData.getClassName(), managedData.getAttributeDataList().stream()
-                            .map(a -> a.getProperty().getCtField().getName()).collect(Collectors.toList()));
+            LOG.trace("Class Inspector -> Managed Data {}", managedData);
+            LOG.trace("Class Inspector -> Class Name {}", managedData.getClassName());
+            LOG.trace("Class Inspector -> Attributes {}", managedData.getAttributeDataList().stream()
+                    .map(a -> a.getProperty().getCtField().getName()).collect(Collectors.toList()));
             if (managedData.getClassName().equals(className))
                 return managedData;
         }
 
-        LOG.debug("Inspecting {}", className);
+        LOG.trace("Inspecting {}", className);
         ClassPool pool = ClassPool.getDefault();
         CtClass ct;
         try {
@@ -97,7 +98,7 @@ public class ClassInspector {
         mappedSuperclass.ifPresent(data -> managedData.mappedSuperclass = data);
 
         List<Property> properties = findProperties(ct, false);
-        LOG.debug("Found {} attributes in '{}'", properties.size(), ct.getName());
+        LOG.trace("Class Inspector -> Found {} attributes in '{}'", properties.size(), ct.getName());
 
         // modification attribute
         Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix, properties, ct);
@@ -123,7 +124,7 @@ public class ClassInspector {
 
         // join column postponed update attribute
         Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(properties, ct);
-        LOG.debug("inspect: joinColumnPostponedUpdateAttribute.isPresent()={}",
+        LOG.trace("Class Inspector -> Join Column Postponed Update Attribute {}",
                 joinColumnPostponedUpdateAttribute.isPresent());
         // join column fields
         findJoinColumnAttributeFields(properties, ct);
@@ -145,11 +146,11 @@ public class ClassInspector {
         joinColumnPostponedUpdateAttribute.ifPresent(managedData::setJoinColumnPostponedUpdateAttribute);
 
         // looks for embeddables
-        LOG.debug("Inspects embeddables...");
+        LOG.trace("Class Inspector -> Inspects embeddables...");
         List<ManagedData> embeddables = new ArrayList<>();
         createEmbeddables(attrs, embeddables);
         managedData.getEmbeddables().addAll(embeddables);
-        LOG.debug("Found {} embeddables in '{}'", embeddables.size(), ct.getName());
+        LOG.trace("Class Inspector -> Found {} embeddables in '{}'", embeddables.size(), ct.getName());
 
         List<BMTMethodInfo> methodInfos = inspectConstructorsAndMethods(ct);
         addPrimitiveAttributesToInitialization(properties, methodInfos);
@@ -308,14 +309,14 @@ public class ClassInspector {
         if (superClass.getName().equals("java.lang.Object"))
             return Optional.empty();
 
-        LOG.debug("findMappedSuperclass: superClass.getName()={}", superClass.getName());
+        LOG.trace("Class Inspector -> Mapped Super Class '{}'", superClass.getName());
         Object mappedSuperclassAnnotation = superClass.getAnnotation(MappedSuperclass.class);
         if (mappedSuperclassAnnotation == null)
             return Optional.empty();
 
         // checks if the mapped superclass id already inspected
         ManagedData mappedSuperclassEnhEntity = findInspectedMappedSuperclass(superClass.getName());
-        LOG.debug("findMappedSuperclass: mappedSuperclassEnhEntity={}", mappedSuperclassEnhEntity);
+        LOG.trace("Class Inspector -> Mapped Super Class Entity {}", mappedSuperclassEnhEntity);
         if (mappedSuperclassEnhEntity != null)
             return Optional.of(mappedSuperclassEnhEntity);
 
@@ -333,9 +334,9 @@ public class ClassInspector {
         // join column postponed update attribute
         Optional<String> joinColumnPostponedUpdateAttribute = createJoinColumnPostponedUpdateAttribute(properties, ct);
 
-        LOG.debug("Found {} attributes in '{}'", properties.size(), superClass.getName());
+        LOG.trace("Class Inspector -> Found {} attributes in '{}'", properties.size(), superClass.getName());
         List<AttributeData> attrs = createDataAttributes(properties, false);
-        LOG.debug("findMappedSuperclass: attrs.size()={}", attrs.size());
+        LOG.trace("Class Inspector -> Attributes {}", attrs.size());
         if (attrs.isEmpty())
             return Optional.empty();
 
@@ -428,9 +429,9 @@ public class ClassInspector {
         for (CtConstructor ctConstructor : ctConstructors) {
             ctConstructor.instrument(exprEditorExt);
             List<BMTFieldInfo> fieldInfos = exprEditorExt.getFieldInfos();
-            LOG.debug("inspectConstructorsAndMethods: fieldInfos.size()={}", fieldInfos.size());
+            LOG.trace("Class Inspector -> Field Infos {}", fieldInfos.size());
             BMTMethodInfo methodInfo = new BMTMethodInfo();
-            LOG.debug("inspectConstructorsAndMethods: methodInfo={}", methodInfo);
+            LOG.trace("Class Inspector -> Method Info {}", methodInfo);
             methodInfo.setCtConstructor(ctConstructor);
             methodInfo.addFieldInfos(fieldInfos);
             methodInfos.add(methodInfo);
@@ -446,9 +447,9 @@ public class ClassInspector {
     }
 
     private AttributeData createAttributeFromProperty(Property property, boolean parentIsEmbeddedId) throws Exception {
-        LOG.debug(
-                "createAttributeFromProperty: property.ctField.getName()={}; property.embedded={}; property.ctField.getType().getName()={}",
-                property.getCtField().getName(), property.isEmbedded(), property.getCtField().getType().getName());
+        LOG.trace("Class Inspector -> Property Name '{}'", property.getCtField().getName());
+        LOG.trace("Class Inspector -> Property Embedded={}", property.isEmbedded());
+        LOG.trace("Class Inspector -> Property Type '{}'", property.getCtField().getType().getName());
         ManagedData embeddedData = null;
         if (property.isEmbedded()) {
             Optional<String> modificationAttribute = findAvailableAttribute(modificationAttributePrefix,
@@ -489,7 +490,7 @@ public class ClassInspector {
         CtField[] ctFields = ctClass.getDeclaredFields();
         List<Property> attrs = new ArrayList<>();
         for (CtField ctField : ctFields) {
-            LOG.debug("findProperties: ctField.getName()={}", ctField.getName());
+            LOG.trace("Class Inspector -> Property '{}'", ctField.getName());
             Optional<Property> optional = readProperty(ctField, ctClass, createGetMethod);
             optional.ifPresent(attrs::add);
         }
@@ -501,9 +502,9 @@ public class ClassInspector {
             CtField ctField,
             CtClass ctClass,
             boolean createGetMethod) throws Exception {
-        LOG.debug("readProperty: ctField.getName()={}", ctField.getName());
-        LOG.debug("readProperty: ctField.getModifiers()={}", ctField.getModifiers());
-        LOG.debug("readProperty: ctField.getType().getName()={}", ctField.getType().getName());
+        LOG.trace("Class Inspector -> Property '{}'", ctField.getName());
+        LOG.trace("Class Inspector -> Property Modifiers {}", ctField.getModifiers());
+        LOG.trace("Class Inspector -> Property Type '{}'", ctField.getType().getName());
 //		LOG.info("readAttribute: ctField.getSignature()={}", ctField.getSignature());
 //		LOG.info("readAttribute: ctField.getFieldInfo()={}", ctField.getFieldInfo());
 //		LOG.info("readAttribute: ctField.getFieldInfo2()={}", ctField.getFieldInfo2());
@@ -516,7 +517,7 @@ public class ClassInspector {
             return Optional.empty();
 
         Object idAnnotation = ctField.getAnnotation(Id.class);
-        LOG.debug("readProperty: idAnnotation={}", idAnnotation);
+        LOG.trace("Class Inspector -> Id Annotation {}", idAnnotation);
         Object embeddedIdAnnotation = ctField.getAnnotation(EmbeddedId.class);
 
         boolean embedded = false;
@@ -717,24 +718,24 @@ public class ClassInspector {
 
         @Override
         public void edit(FieldAccess f) throws CannotCompileException {
-            LOG.debug("ExprEditorExt: f.getFieldName()={}", f.getFieldName());
-            LOG.debug("ExprEditorExt: f.getSignature()={}", f.getSignature());
-            LOG.debug("ExprEditorExt: f.getClassName()={}", f.getClassName());
-            LOG.debug("ExprEditorExt: newExprClassName={}", newExprClassName);
+            LOG.trace("Class Inspector -> Expression Editor -> Field '{}'", f.getFieldName());
+            LOG.trace("Class Inspector -> Expression Editor -> Signature '{}'", f.getSignature());
+            LOG.trace("Class Inspector -> Expression Editor -> Class Name '{}'", f.getClassName());
+            LOG.trace("Class Inspector -> Expression Editor -> Expr Class Name '{}'", newExprClassName);
             try {
                 CtField ctField = f.getField();
-                LOG.debug("ExprEditorExt: ctField.getName()={}", ctField.getName());
+                LOG.trace("Class Inspector -> Expression Editor -> Field '{}'", ctField.getName());
                 CtClass ctClass = ctField.getType();
-                LOG.debug("ExprEditorExt: ctClass.getName()={}", ctClass.getName());
-                LOG.debug("ExprEditorExt: ctClass.getGenericSignature()={}", ctClass.getGenericSignature());
+                LOG.trace("Class Inspector -> Expression Editor -> Class Name '{}'", ctClass.getName());
+                LOG.trace("Class Inspector -> Expression Editor -> Class Generic Signature '{}'", ctClass.getGenericSignature());
                 boolean isEnum = ctClass.isEnum();
-                LOG.debug("ExprEditorExt: isEnum={}", isEnum);
+                LOG.trace("Class Inspector -> Expression Editor -> Is Enum {}", isEnum);
             } catch (NotFoundException ex) {
                 java.util.logging.Logger.getLogger(ClassInspector.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            LOG.debug("ExprEditorExt: fieldInfos.size()={}", fieldInfos.size());
-            LOG.debug("ExprEditorExt: latestOpType={}", latestOpType);
+            LOG.trace("Class Inspector -> Expression Editor -> Field Infos {}", fieldInfos.size());
+            LOG.trace("Class Inspector -> Expression Editor -> Latest Op Type {}", latestOpType);
             if (f.getClassName().equals(className)) {
                 BMTFieldInfo fieldInfo = new BMTFieldInfo(BMTFieldInfo.ASSIGNMENT, f.getFieldName(), newExprClassName);
                 fieldInfos.add(fieldInfo);
@@ -742,14 +743,13 @@ public class ClassInspector {
 
             latestOpType = NO_OP;
             newExprClassName = null;
-            LOG.debug("ExprEditorExt: edit **********************");
         }
 
         @Override
         public void edit(Instanceof i) throws CannotCompileException {
             latestOpType = INSTANCEOF_OP;
             try {
-                LOG.debug("ExprEditorExt: Instanceof i.getType()={}", i.getType());
+                LOG.trace("Class Inspector -> Expression Editor -> Instanceof Type {}", i.getType());
             } catch (NotFoundException e) {
                 java.util.logging.Logger.getLogger(ClassInspector.class.getName()).log(Level.SEVERE, null, e);
             }

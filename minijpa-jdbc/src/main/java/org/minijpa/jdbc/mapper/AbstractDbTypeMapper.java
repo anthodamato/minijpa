@@ -113,7 +113,7 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
     }
 
     @Override
-    public Class<?> databaseType(Class<?> attributeType, Optional<Class<?>> enumerationType) {
+    public Class<?> databaseType(Class<?> attributeType, Class<?> enumerationType) {
         if (attributeType == LocalDate.class)
             return java.sql.Date.class;
 
@@ -122,10 +122,10 @@ public abstract class AbstractDbTypeMapper implements DbTypeMapper {
                 || attributeType == Instant.class || attributeType == ZonedDateTime.class)
             return Timestamp.class;
 
-        if (attributeType.isEnum() && enumerationType.get() == String.class)
+        if (attributeType.isEnum() && enumerationType == String.class)
             return String.class;
 
-        if (attributeType.isEnum() && enumerationType.get() == Integer.class)
+        if (attributeType.isEnum() && enumerationType == Integer.class)
             return Integer.class;
 
         String typeName = attributeType.getName();

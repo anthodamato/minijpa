@@ -100,7 +100,7 @@ public class JdbcQueryRunner {
         SqlSelectData sqlSelectData = dbConfiguration.getSqlStatementFactory()
                 .generateSelectByForeignKey(entity, columns, aliasGenerator);
         String sql = dbConfiguration.getSqlStatementGenerator().export(sqlSelectData);
-        log.debug("selectByForeignKey: foreignKeyAttribute={}", foreignKeyAttribute);
+        log.debug("Select By ForeignKey -> Foreign Key Attribute = {}", foreignKeyAttribute);
         Collection<Object> collectionResult = (Collection<Object>) CollectionUtils.createInstance(null,
                 CollectionUtils.findCollectionImplementationClass(collectionClass));
         entityLoader.setLockType(lockType);

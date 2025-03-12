@@ -30,10 +30,7 @@ public interface EntityHandler extends EntityLoader {
 
     Object findById(MetaEntity metaEntityJE, Object primaryKey, LockType lockType)
             throws Exception;
-
-//    Object queryVersionValue(MetaEntity metaEntity, Object primaryKey, LockType lockType)
-//            throws Exception;
-
+    
     void refresh(MetaEntity metaEntity, Object entityInstance, Object primaryKey,
                  LockType lockType)
             throws Exception;

@@ -22,6 +22,7 @@ import org.minijpa.jpa.model.relationship.Relationship;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -163,7 +164,6 @@ public class MetaEntity {
 
     public RelationshipMetaAttribute getRelationshipAttribute(String name) {
         for (RelationshipMetaAttribute attribute : relationshipAttributes) {
-            log.debug("getRelationshipAttribute: attribute.getName()={}", attribute.getName());
             if (attribute.getName().equals(name)) {
                 return attribute;
             }
@@ -174,6 +174,10 @@ public class MetaEntity {
 
     public Optional<MetaEntity> getEmbeddable(String name) {
         return embeddables.stream().filter(e -> e.name.equals(name)).findFirst();
+    }
+
+    public Object buildInstance() throws Exception {
+        return getEntityClass().getDeclaredConstructor().newInstance();
     }
 
     public List<MetaAttribute> expandAllAttributes() {
@@ -343,6 +347,50 @@ public class MetaEntity {
 
         Object currentValue = versionMetaAttribute.getReadMethod().invoke(entityInstance);
         return versionMetaAttribute.nextValue(currentValue);
+    }
+
+    public void clearModificationAttributes(Object parent)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Method m = getModificationAttributeReadMethod();
+        List list = (List) m.invoke(parent);
+        list.clear();
+    }
+
+
+    public void removeModificationAttribute(
+            Object parent,
+            String attributeName)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Method m = getModificationAttributeReadMethod();
+        List list = (List) m.invoke(parent);
+        list.remove(attributeName);
+    }
+
+
+    public Object getValue(Object parentInstance)
+            throws IllegalAccessException, InvocationTargetException {
+        return getReadMethod().invoke(parentInstance);
+    }
+
+
+    public void clearLazyAttributeLoaded(Object entityInstance)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        if (getLazyLoadedAttributeReadMethod() == null)
+            return;
+
+        Method m = getLazyLoadedAttributeReadMethod();
+        List list = (List) m.invoke(entityInstance);
+        list.clear();
+    }
+
+
+    public Object buildInstance(Object idValue) throws Exception {
+        Object entityInstance = getEntityClass().getDeclaredConstructor().newInstance();
+        log.debug("Building Entity Instance {}", entityInstance);
+        log.debug("Building Entity Instance Id Value {}", idValue);
+        log.debug("Building Entity Instance Id Value Class() {}", idValue.getClass());
+        getId().writeValue(entityInstance, idValue);
+        return entityInstance;
     }
 
 

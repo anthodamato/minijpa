@@ -277,8 +277,8 @@ public class JdbcQRMRecordBuilder implements JdbcRecordBuilder {
                 MetaEntity entity,
                 LockType lockType) throws Exception {
             Object primaryKey = entity.getId().buildValue(modelValueArray);
-            log.debug("build: primaryKey={}", primaryKey);
-            log.debug("build: entity={}", entity);
+            log.debug("Build Entity Instance -> Primary Key = {}", primaryKey);
+            log.debug("Build Entity Instance -> Entity = {}", entity);
             Object entityInstance = entityContainer.find(entity.getEntityClass(), primaryKey);
             if (entityInstance != null)
                 return entityInstance;
