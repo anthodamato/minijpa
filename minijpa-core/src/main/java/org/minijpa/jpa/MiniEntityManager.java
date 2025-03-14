@@ -139,7 +139,7 @@ public class MiniEntityManager extends AbstractEntityManager {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey) {
-        log.debug("find: primaryKey={}", primaryKey);
+        log.debug("Find -> Primary Key = {}", primaryKey);
         try {
             Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
             if (entityObject == null)
@@ -155,8 +155,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
-        log.debug("find: this={}", this);
-        log.debug("find: primaryKey={}", primaryKey);
+        log.debug("Find -> Primary Key = {}", primaryKey);
         try {
             Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey, LockType.NONE);
             if (entityObject == null)
@@ -171,8 +170,7 @@ public class MiniEntityManager extends AbstractEntityManager {
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
-        log.debug("find: this={}", this);
-        log.debug("find: primaryKey={}", primaryKey);
+        log.debug("Find -> Primary Key = {}", primaryKey);
         try {
             Object entityObject = jdbcEntityManager.findById(entityClass, primaryKey,
                     LockTypeUtils.toLockType(lockMode));

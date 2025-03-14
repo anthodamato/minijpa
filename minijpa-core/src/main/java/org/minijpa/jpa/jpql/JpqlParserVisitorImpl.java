@@ -2,14 +2,11 @@ package org.minijpa.jpa.jpql;
 
 import org.minijpa.jdbc.BasicFetchParameter;
 import org.minijpa.jdbc.FetchParameter;
-import org.minijpa.jdbc.JdbcTypes;
 import org.minijpa.jdbc.QueryParameter;
-import org.minijpa.jdbc.db.SqlSelectData;
 import org.minijpa.jdbc.db.SqlSelectDataBuilder;
 import org.minijpa.jpa.MetaEntityHelper;
-import org.minijpa.jpa.ParameterUtils;
 import org.minijpa.jpa.criteria.CriteriaUtils;
-import org.minijpa.jpa.db.AttributeUtil;
+import org.minijpa.jpa.db.AttributeFetchParameter;
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.StatementParameters;
 import org.minijpa.jpa.db.StatementType;
@@ -29,9 +26,11 @@ import org.minijpa.sql.model.join.FromJoin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.persistence.Parameter;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class JpqlParserVisitorImpl implements JpqlParserVisitor {
@@ -182,7 +181,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                         singleValuedPathExpression.getFromTable());
                 jpqlVisitorParameters.values.addAll(values);
                 List<FetchParameter> fetchParameters = metaAttributes.stream()
-                        .map(MetaEntityHelper::toFetchParameter).collect(Collectors.toList());
+                        .map(AttributeFetchParameter::build).collect(Collectors.toList());
                 jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
             } else if (node0 instanceof ASTScalarExpression) {
                 LOG.debug("visit: ASTSelectExpression node0={}", node0);
@@ -223,10 +222,10 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
                     List<FetchParameter> fetchParameters = new ArrayList<>();
                     metaEntity.getId().getAttributes().forEach(v -> {
-                        fetchParameters.add(MetaEntityHelper.toFetchParameter(v));
+                        fetchParameters.add(AttributeFetchParameter.build(v));
                     });
                     metaEntity.getBasicAttributes().forEach(v -> {
-                        fetchParameters.add(MetaEntityHelper.toFetchParameter(v));
+                        fetchParameters.add(AttributeFetchParameter.build(v));
                     });
 
                     jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
@@ -1219,13 +1218,14 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
             ASTSingleValuedPathExpression singleValuedPathExpression = (ASTSingleValuedPathExpression) node
                     .jjtGetChild(0);
             List<MetaAttribute> metaAttributes = singleValuedPathExpression.getMetaAttributes();
-            TableColumn value = MetaEntityHelper.toValue(metaAttributes.get(0),
-                    singleValuedPathExpression.getFromTable());
-            Condition condition = null;
+            TableColumn tableColumn = new TableColumn(
+                    singleValuedPathExpression.getFromTable(),
+                    new Column(metaAttributes.get(0).getColumnName()));
+            Condition condition;
             if (node.isNot()) {
-                condition = new UnaryCondition(ConditionType.IS_NOT_NULL, value);
+                condition = new UnaryCondition(ConditionType.IS_NOT_NULL, tableColumn);
             } else {
-                condition = new UnaryCondition(ConditionType.IS_NULL, value);
+                condition = new UnaryCondition(ConditionType.IS_NULL, tableColumn);
             }
 
             node.setCondition(condition);
@@ -1412,7 +1412,7 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
 
                     List<FetchParameter> fetchParameters = new ArrayList<>();
                     metaEntity.getId().getAttributes().forEach(v -> {
-                        fetchParameters.add(MetaEntityHelper.toFetchParameter(v));
+                        fetchParameters.add(AttributeFetchParameter.build(v));
                     });
                     jpqlVisitorParameters.fetchParameters.addAll(fetchParameters);
                 } else {
@@ -1423,11 +1423,12 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                                         + "' entity not found");
                     }
 
-                    Value value = MetaEntityHelper.toValue(metaAttribute,
-                            FromTable.of(metaEntity.getTableName(), sqlTableAlias));
-                    jpqlVisitorParameters.values.addAll(Arrays.asList(value));
+                    TableColumn tableColumn = new TableColumn(
+                            FromTable.of(metaEntity.getTableName(), sqlTableAlias),
+                            new Column(metaAttribute.getColumnName()));
+                    jpqlVisitorParameters.values.addAll(Arrays.asList(tableColumn));
                     jpqlVisitorParameters.fetchParameters
-                            .addAll(List.of(MetaEntityHelper.toFetchParameter(metaAttribute)));
+                            .addAll(List.of(AttributeFetchParameter.build(metaAttribute)));
                 }
             }
         }
@@ -1517,9 +1518,11 @@ public class JpqlParserVisitorImpl implements JpqlParserVisitor {
                                         + metaEntity.getName() + "' entity not found");
                             }
 
-                            TableColumn value = MetaEntityHelper.toValue(metaAttribute,
-                                    FromTable.of(metaEntity.getTableName(), sqlTableAlias));
-                            OrderBy orderBy = new OrderBy(value, orderByItem.getOrderByType());
+                            TableColumn tableColumn = new TableColumn(
+                                    FromTable.of(metaEntity.getTableName(), sqlTableAlias),
+                                    new Column(metaAttribute.getColumnName()));
+
+                            OrderBy orderBy = new OrderBy(tableColumn, orderByItem.getOrderByType());
                             jpqlVisitorParameters.orderByList.add(orderBy);
                         }
                     }

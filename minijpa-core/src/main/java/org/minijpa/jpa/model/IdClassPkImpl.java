@@ -107,54 +107,48 @@ public class IdClassPkImpl implements IdClassPk {
 
     @Override
     public Object readValue(Object entityInstance) throws Exception {
-        log.debug("readValue: entityInstance={}", entityInstance);
+        log.debug("Id Class Pk -> Reading Value -> Entity Instance = {}", entityInstance);
         Object pkObject;
         try {
             pkObject = pkClass.getConstructor().newInstance();
         } catch (Exception e) {
-            log.debug("readValue: e={}", e.getMessage());
-            log.debug("readValue: e.getClass()={}", e.getClass());
-            log.debug("readValue: pkClass.getConstructor()={}", pkClass.getConstructor());
+            log.error("Id Class Pk -> Reading Value -> Exception = {}", e.getMessage());
             throw e;
         }
 
-        log.debug("readValue: 1 pkObject={}", pkObject);
-        log.debug("readValue: attributes.size()={}", attributes.size());
         for (AbstractMetaAttribute abstractMetaAttribute : attributes) {
-            log.debug("readValue: abstractMetaAttribute={}", abstractMetaAttribute);
             Object attributeValue = abstractMetaAttribute.getReadMethod().invoke(entityInstance);
-            log.debug("readValue: attributeValue={}", attributeValue);
             if (abstractMetaAttribute instanceof MetaAttribute) {
                 findAndSetPropertyValue(abstractMetaAttribute.name, pkObject, attributeValue, abstractMetaAttribute.getType());
             }
         }
 
+        log.debug("Id Class Pk -> Reading Value -> Relationship Attribute = {}", relationshipMetaAttribute);
         if (relationshipMetaAttribute != null) {
             Object attributeValue = relationshipMetaAttribute.getReadMethod().invoke(entityInstance);
-            log.debug("readValue: relationshipMetaAttribute attributeValue={}", attributeValue);
+            log.debug("Id Class Pk -> Reading Value -> Relationship Attribute Value = {}", attributeValue);
             if (attributeValue == null)
                 throw new IllegalStateException("Relationship attribute value, in composite primary key, is null");
 
             MetaEntity entity = relationshipMetaAttribute.getRelationship().getAttributeType();
+            log.debug("Id Class Pk -> Reading Value -> Relationship Attribute Type = {}", entity);
             Object idValue = entity.getId().readValue(attributeValue);
-            log.debug("readValue: idValue={}", idValue);
-            log.debug("readValue: relationshipMetaAttribute.name={}", relationshipMetaAttribute.name);
+            log.debug("Id Class Pk -> Reading Value -> Relationship Attribute Id Value = {}", idValue);
             findAndSetForeignKeyValue(relationshipMetaAttribute.name, pkObject, idValue, entity.getId());
         }
 
-        log.debug("readValue: 2 pkObject={}", pkObject);
+        log.debug("Id Class Pk -> Reading Value -> Pk Object = {}", pkObject);
         return pkObject;
     }
 
 
     @Override
     public void writeValue(Object entityInstance, Object pkValue) throws Exception {
-        log.info("writeValue: entityInstance={}", entityInstance);
-        log.info("writeValue: pkValue={}", pkValue);
+        log.debug("Id Class Pk -> Writing Value -> Entity Instance = {}", entityInstance);
+        log.debug("Id Class Pk -> Writing Value -> Pk value = {}", pkValue);
         for (AbstractMetaAttribute a : attributes) {
             if (a instanceof MetaAttribute) {
                 Method method = pkValue.getClass().getMethod(a.getReadMethod().getName());
-                log.debug("writeValue: method={}", method);
                 Object value = method.invoke(pkValue);
                 a.getWriteMethod().invoke(entityInstance, value);
             }
@@ -165,78 +159,52 @@ public class IdClassPkImpl implements IdClassPk {
     @Override
     public Object buildValue(ModelValueArray<FetchParameter> modelValueArray) throws Exception {
         Object pkObject = getType().getConstructor().newInstance();
-        buildPK(modelValueArray, pkObject);
+        buildPk(modelValueArray, pkObject);
         return pkObject;
     }
 
 
-    private void buildPK(
+    private void buildPk(
             ModelValueArray<FetchParameter> modelValueArray,
             Object pkObject) throws Exception {
-        log.debug("buildPK: modelValueArray={}", modelValueArray);
-        modelValueArray.getValues().forEach(v -> log.debug("buildPk: v={}", v));
-        modelValueArray.getModels().forEach(f -> log.debug("buildPk: f={}", f));
+        modelValueArray.getValues().forEach(v -> log.debug("Id Class Pk -> Build Pk -> Value = {}", v));
+        modelValueArray.getModels().forEach(f -> log.debug("Id Class Pk -> Build Pk -> Model = {}", f));
+        log.debug("Id Class Pk -> Build Pk -> Relationship Attribute = {}", relationshipMetaAttribute);
         if (relationshipMetaAttribute != null) {
-            log.debug("buildPk: relationshipMetaAttribute.getRelationship().getAttributeType().getId().getAttribute()={}",
-                    relationshipMetaAttribute.getRelationship().getAttributeType().getId().getAttribute());
-
             Pk foreignPk = relationshipMetaAttribute.getRelationship().getAttributeType().getId();
+            log.debug("Id Class Pk -> Build Pk -> Foreign Key = {}", foreignPk);
             if (foreignPk.isComposite()) {
                 Object foreignKeyValue = foreignPk.buildValue(modelValueArray);
-                log.debug("buildPK: foreignKeyValue={}", foreignKeyValue);
-                log.debug("buildPK: relationshipMetaAttribute.getWriteMethod().getName()={}", relationshipMetaAttribute.getWriteMethod().getName());
+                log.debug("Id Class Pk -> Build Pk -> Composite Foreign Key Value = {}", foreignKeyValue);
                 Method method = pkObject.getClass().getMethod(relationshipMetaAttribute.getWriteMethod().getName(), foreignKeyValue.getClass());
-                log.debug("buildPK: method={}", method);
                 method.invoke(pkObject, foreignKeyValue);
             } else {
                 AbstractMetaAttribute key = foreignPk.getAttribute();
                 int index = indexOfAttribute(modelValueArray, key);
-                log.debug("buildPK: r index={}", index);
                 if (index != -1) {
                     Class<?> type = relationshipMetaAttribute.getRelationship().getAttributeType().getId().getAttribute().getType();
                     Method method = pkObject.getClass().getMethod(relationshipMetaAttribute.getWriteMethod().getName(), type);
                     Object value = modelValueArray.getValue(index);
+                    log.debug("Id Class Pk -> Build Pk -> Basic Foreign Key Value = {}", value);
                     method.invoke(pkObject, value);
                 }
             }
         }
 
-        log.debug("buildPK: pkObject={}", pkObject);
+        log.debug("Id Class Pk -> Build Pk -> Pk Object = {}", pkObject);
         for (AbstractMetaAttribute a : attributes) {
             int index = indexOfAttribute(modelValueArray, a);
-            log.debug("buildPK: index={}", index);
             if (index == -1) {
                 throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
             }
 
             Object value = modelValueArray.getValue(index);
-            log.debug("buildPK: value={}", value);
-            log.debug("buildPK: value.getClass()={}", value.getClass());
-            log.debug("buildPK: a.getWriteMethod().getName()={}", a.getWriteMethod().getName());
-            log.debug("buildPK: a.getReadMethod().getReturnType()={}", a.getReadMethod().getReturnType());
-//            Method method;
+            log.debug("Id Class Pk -> Build Pk -> Attribute Value = {}", value);
             if (a instanceof MetaAttribute) {
                 Method method = pkObject.getClass().getMethod(a.getWriteMethod().getName(), a.getReadMethod().getReturnType());
-                log.debug("buildPK: method={}", method);
                 method.invoke(pkObject, value);
-                log.debug("buildPK: assigned");
             }
-//            else {
-//                RelationshipMetaAttribute relationshipMetaAttribute = (RelationshipMetaAttribute) a;
-//                Class<?> type = relationshipMetaAttribute.getRelationship().getAttributeType().getId().getAttribute().getType();
-//                method = pkObject.getClass().getMethod(a.getWriteMethod().getName(), type);
-//            }
-//
-//            log.debug("buildPK: method={}", method);
-//            method.invoke(pkObject, value);
-//            log.debug("buildPK: assigned");
         }
-
-//        if (relationshipMetaAttribute != null) {
-//            Class<?> type = relationshipMetaAttribute.getRelationship().getAttributeType().getId().getAttribute().getType();
-//            Method method = pkObject.getClass().getMethod(relationshipMetaAttribute.getWriteMethod().getName(), type);
-//            method.invoke(pkObject, value);
-//        }
     }
 
 
@@ -246,9 +214,6 @@ public class IdClassPkImpl implements IdClassPk {
             if (a instanceof RelationshipMetaAttribute)
                 continue;
 
-            log.debug("expand: a={}", a);
-            log.debug("expand: a.getReadMethod()={}", a.getReadMethod());
-            log.debug("expand: value={}", value);
             Object v = findAndGetPropertyValue(a.name, value);
             modelValueArray.add(a, v);
         }
@@ -259,9 +224,7 @@ public class IdClassPkImpl implements IdClassPk {
     public List<QueryParameter> queryParameters(Object value) throws Exception {
         ModelValueArray<AbstractMetaAttribute> modelValueArray = new ModelValueArray<>();
         expand(value, modelValueArray);
-        log.debug("queryParameters: modelValueArray={}", modelValueArray);
         List<QueryParameter> queryParameters = new ArrayList<>(MetaEntityHelper.convertAVToQP(modelValueArray));
-        log.debug("queryParameters: queryParameters={}", queryParameters);
         return queryParameters;
     }
 
@@ -269,10 +232,8 @@ public class IdClassPkImpl implements IdClassPk {
     private int indexOfAttribute(
             ModelValueArray<FetchParameter> modelValueArray,
             AbstractMetaAttribute attribute) {
-        log.debug("indexOfAttribute: attribute={}", attribute);
         for (int i = 0; i < modelValueArray.size(); ++i) {
             if (attribute instanceof MetaAttribute) {
-                log.debug("indexOfAttribute: {} ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute()={}", i, ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute());
                 if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute) {
                     return i;
                 }
@@ -294,12 +255,8 @@ public class IdClassPkImpl implements IdClassPk {
             Object pkInstance,
             Object value,
             Class<?> valueClass) throws Exception {
-        log.debug("findAndSetPropertyValue: propertyName={}", propertyName);
-        log.debug("findAndSetPropertyValue: valueClass={}", valueClass);
         Method method = pkClass.getDeclaredMethod(BeanUtil.getSetterMethodName(propertyName), valueClass);
-        log.debug("findAndSetPropertyValue: method={}", method);
         method.invoke(pkInstance, value);
-        log.debug("findAndSetPropertyValue: end");
     }
 
 
@@ -308,28 +265,24 @@ public class IdClassPkImpl implements IdClassPk {
             Object pkInstance,
             Object value,
             Pk foreignKey) throws Exception {
-        log.debug("findAndSetForeignKeyValue: propertyName={}", propertyName);
         if (foreignKey.isComposite()) {
-            Method[] methods = pkClass.getDeclaredMethods();
             try {
                 Method method = pkClass.getMethod(BeanUtil.getSetterMethodName(propertyName), value.getClass());
                 method.invoke(pkInstance, value);
             } catch (Exception e) {
-                log.debug("findAndSetForeignKeyValue: 1 e.getClass()={}", e.getClass());
+                log.error("Id Class Pk -> Setting Foreign Key Value -> Ex Class = {}", e.getClass());
                 throw e;
             }
 
             try {
                 Method method = pkClass.getDeclaredMethod(BeanUtil.getSetterMethodName(propertyName), value.getClass());
-                log.debug("findAndSetForeignKeyValue: method={}", method);
                 method.invoke(pkInstance, value);
             } catch (Exception e) {
-                log.debug("findAndSetForeignKeyValue: e.getClass()={}", e.getClass());
+                log.error("Id Class Pk -> Setting Foreign Key Value -> Ex Class = {}", e.getClass());
                 throw e;
             }
         } else {
             Method method = pkClass.getDeclaredMethod(BeanUtil.getSetterMethodName(propertyName), foreignKey.getAttribute().getType());
-            log.debug("findAndSetForeignKeyValue: method={}", method);
             method.invoke(pkInstance, value);
         }
     }
@@ -358,23 +311,14 @@ public class IdClassPkImpl implements IdClassPk {
             Object pkObject,
             Object oldPkValue,
             IdClassPropertyData idClassPropertyData) throws Exception {
-        log.debug("assignAttributes: oldPkValue.getClass().getName()={}", oldPkValue.getClass().getName());
-        Method[] methods = oldPkValue.getClass().getDeclaredMethods();
-        for (Method method : methods) {
-            log.debug("assignAttributes: method.getName()={}", method.getName());
-        }
-
         for (EnhAttribute enhAttribute : idClassPropertyData.getEnhAttributes()) {
             Method getMethod = oldPkValue.getClass().getDeclaredMethod(enhAttribute.getGetMethod());
             Object value = getMethod.invoke(oldPkValue);
-            log.debug("assignAttributes: value={}", value);
             if (value == null)
                 continue;
 
-            log.debug("assignAttributes: value.getClass().getName()={}", value.getClass().getName());
             IdClassPropertyData nested = idClassPropertyData.getNested();
             if (nested != null && nested.getClassName().equals(value.getClass().getName())) {
-                log.debug("assignAttributes: nested.getClassName()={}", nested.getClassName());
                 Object pkNestedObject = nested.getClassType().getConstructor().newInstance();
 
                 Method getNestedMethod = pkObject.getClass().getDeclaredMethod(enhAttribute.getGetMethod());

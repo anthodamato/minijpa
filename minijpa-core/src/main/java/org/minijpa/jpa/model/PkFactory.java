@@ -29,7 +29,7 @@ public class PkFactory {
             List<MetaEntity> embeddables,
             String tableName,
             Class<?> c) throws Exception {
-        metaAttributes.forEach(a -> log.debug("buildPk: a={}", a));
+        metaAttributes.forEach(a -> log.debug("Building Pk -> Attribute = {}", a));
         List<AbstractMetaAttribute> idAttrs = metaAttributes.stream()
                 .filter(a -> {
                     if (a instanceof MetaAttribute && ((MetaAttribute) a).isId())
@@ -93,8 +93,7 @@ public class PkFactory {
 
         PkGenerationType pkGenerationType = decodePkGenerationType(generatedValue.strategy());
         PkStrategy pkStrategy = dbConfiguration.getDbJdbc().findPkStrategy(pkGenerationType);
-        log.debug("buildPkGeneration: dbConfiguration.getDbJdbc()={}", dbConfiguration.getDbJdbc());
-        log.debug("buildPkGeneration: pkStrategy={}", pkStrategy);
+        log.trace("Pk Generation Strategy {}", pkStrategy);
         PkGeneration pkGeneration = new PkGeneration();
         pkGeneration.setPkStrategy(pkStrategy);
         pkGeneration.setGenerator(generatedValue.generator());

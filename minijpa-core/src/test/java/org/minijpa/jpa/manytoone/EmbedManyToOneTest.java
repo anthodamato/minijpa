@@ -270,17 +270,17 @@ public class EmbedManyToOneTest {
         Assertions.assertFalse(result.isEmpty());
         Assertions.assertEquals(3, result.size());
 
-        Object r0 = (Object) result.get(0);
+        Object r0 = result.get(0);
         Assertions.assertTrue(r0 instanceof JobEmployeeDetails);
         Assertions.assertEquals("Abraham", ((JobEmployeeDetails) r0).getEmployeeName());
         Assertions.assertEquals("Wells", ((JobEmployeeDetails) r0).getManagerName());
 
-        Object r1 = (Object) result.get(1);
+        Object r1 = result.get(1);
         Assertions.assertTrue(r1 instanceof JobEmployeeDetails);
         Assertions.assertEquals("Kate", ((JobEmployeeDetails) r1).getEmployeeName());
         Assertions.assertEquals("Hogan", ((JobEmployeeDetails) r1).getManagerName());
 
-        Object r2 = (Object) result.get(2);
+        Object r2 = result.get(2);
         Assertions.assertTrue(r2 instanceof JobEmployeeDetails);
         Assertions.assertEquals("Paul", ((JobEmployeeDetails) r2).getEmployeeName());
         Assertions.assertEquals("Wells", ((JobEmployeeDetails) r2).getManagerName());
@@ -388,7 +388,6 @@ public class EmbedManyToOneTest {
         Assertions.assertEquals(3, result.size());
 
         Object r0 = result.get(0);
-        LOG.debug("nativeQueryConstructorAndScalars: r0={}", r0);
         Assertions.assertNotNull(r0);
         Assertions.assertTrue(r0 instanceof Object[]);
         Object[] array = (Object[]) r0;
@@ -569,7 +568,6 @@ public class EmbedManyToOneTest {
         Assertions.assertEquals(3, result.size());
 
         Object r0 = result.get(0);
-        LOG.debug("nativeQueryConstructorAndScalars: r0={}", r0);
         Assertions.assertNotNull(r0);
         Assertions.assertTrue(r0 instanceof Object[]);
         Object[] array = (Object[]) r0;

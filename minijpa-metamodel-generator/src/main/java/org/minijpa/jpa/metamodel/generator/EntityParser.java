@@ -31,7 +31,7 @@ public class EntityParser {
 
         Class<?> c = Class.forName(className);
 
-        LOG.debug("parse: class '{}' loaded", className);
+        LOG.debug("Metamodel -> Parsing Entity: Class '{}' Loaded", className);
         Entity ec = c.getAnnotation(Entity.class);
         if (ec == null)
             throw new Exception("@Entity annotation not found: '" + c.getName() + "'");
@@ -66,7 +66,7 @@ public class EntityParser {
         Field[] fields = entityClass.getDeclaredFields();
 
         for (Field field : fields) {
-            LOG.debug("readAttributes: parsing '{}' attribute", field.getName());
+            LOG.debug("Metamodel -> Reading Attribute '{}'", field.getName());
             Transient tr = field.getAnnotation(Transient.class);
             if (tr != null)
                 continue;
@@ -99,7 +99,7 @@ public class EntityParser {
         Field[] fields = entityClass.getDeclaredFields();
 
         for (Field field : fields) {
-            LOG.debug("readAttributes: parsing '{}' attribute", field.getName());
+            LOG.debug("Metamodel -> Reading Embeddables -> Parsing '{}' Attribute", field.getName());
             Transient tr = field.getAnnotation(Transient.class);
             if (tr != null)
                 continue;
@@ -116,7 +116,7 @@ public class EntityParser {
     }
 
     private JpaEntity parseEmbeddable(Field field, String entityClassName, Collection<JpaEntity> parsedEntities,
-            Optional<String> parentPath) throws Exception {
+                                      Optional<String> parentPath) throws Exception {
         Optional<JpaEntity> optional = parsedEntities.stream().filter(e -> e.getClassName().equals(entityClassName))
                 .findFirst();
         if (optional.isPresent())
@@ -127,7 +127,7 @@ public class EntityParser {
         if (ec == null)
             throw new Exception("@Embeddable annotation not found: '" + c.getName() + "'");
 
-        LOG.debug("Reading '" + entityClassName + "' attributes...");
+        LOG.debug("Metamodel -> Reading '" + entityClassName + "' attributes...");
         List<JpaAttribute> attributes = parseAttributes(c);
         List<JpaEntity> embeddables = parseEmbeddables(field.getType(), parsedEntities);
 
@@ -147,7 +147,7 @@ public class EntityParser {
         if (ec == null)
             throw new Exception("@MappedSuperclass annotation not found: '" + c.getName() + "'");
 
-        LOG.debug("Reading mapped superclass '" + entityClassName + "' attributes...");
+        LOG.debug("Metamodel -> Reading mapped superclass '" + entityClassName + "' attributes...");
         List<JpaAttribute> attributes = parseAttributes(c);
         List<JpaEntity> embeddables = parseEmbeddables(c, parsedEntities);
 
@@ -211,7 +211,7 @@ public class EntityParser {
     }
 
     private void finalizeRelationship(OneToOneJpaRelationship oneToOneJpaRelationship, JpaEntity entity,
-            JpaEntity toEntity) {
+                                      JpaEntity toEntity) {
         if (!oneToOneJpaRelationship.isOwner()) {
             oneToOneJpaRelationship.setOwningEntity(toEntity);
         }
@@ -220,7 +220,7 @@ public class EntityParser {
     }
 
     private OneToManyJpaRelationship createOneToMany(OneToMany oneToMany, Class<?> collectionClass,
-            Class<?> targetEntity) {
+                                                     Class<?> targetEntity) {
         OneToManyJpaRelationship oneToManyJpaRelationship = new OneToManyJpaRelationship();
         oneToManyJpaRelationship.setMappedBy(getMappedBy(oneToMany));
 
@@ -230,7 +230,7 @@ public class EntityParser {
     }
 
     private void finalizeRelationship(OneToManyJpaRelationship oneToManyJpaRelationship, JpaEntity entity,
-            JpaEntity toEntity) {
+                                      JpaEntity toEntity) {
         oneToManyJpaRelationship.setAttributeType(toEntity);
         if (!oneToManyJpaRelationship.isOwner()) {
             oneToManyJpaRelationship.setOwningEntity(toEntity);
@@ -246,7 +246,7 @@ public class EntityParser {
     }
 
     private ManyToManyJpaRelationship createManyToMany(ManyToMany manyToMany, Class<?> collectionClass,
-            Class<?> targetEntity) {
+                                                       Class<?> targetEntity) {
         ManyToManyJpaRelationship manyToManyJpaRelationship = new ManyToManyJpaRelationship();
         manyToManyJpaRelationship.setMappedBy(getMappedBy(manyToMany));
 
@@ -263,7 +263,7 @@ public class EntityParser {
     }
 
     private void finalizeRelationships(JpaEntity entity, Map<String, JpaEntity> entities,
-            List<JpaAttribute> attributes) {
+                                       List<JpaAttribute> attributes) {
         entity.getEmbeddables().forEach(embeddable -> {
             finalizeRelationships(embeddable, entities, embeddable.getAttributes());
         });

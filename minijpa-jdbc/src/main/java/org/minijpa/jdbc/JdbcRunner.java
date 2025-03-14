@@ -60,47 +60,61 @@ public class JdbcRunner {
 
         if (value == null) {
             preparedStatement.setNull(index, sqlType);
+            log.debug("Query Parameter -> Setting null at index {}", index);
             return;
         }
 
         Class<?> type = value.getClass();
-        log.debug("Setting Value in PreparedStatement: value class={}", type);
+        log.debug("Query Parameter Type '{}'", type);
         if (type == String.class) {
             preparedStatement.setString(index, (String) value);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == Integer.class) {
             preparedStatement.setInt(index, (Integer) value);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == Long.class) {
             preparedStatement.setLong(index, (Long) value);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == Float.class) {
             preparedStatement.setFloat(index, (Float) value);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == Double.class) {
             preparedStatement.setDouble(index, (Double) value);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == BigDecimal.class) {
             preparedStatement.setBigDecimal(index, (BigDecimal) value);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == java.sql.Date.class) {
             preparedStatement.setDate(index,
                     (java.sql.Date) value,
                     Calendar.getInstance(TimeZone.getDefault()));
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == LocalDate.class) {
             preparedStatement.setDate(
                     index,
                     java.sql.Date.valueOf((LocalDate) value),
                     Calendar.getInstance(TimeZone.getDefault()));
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == Timestamp.class) {
             Timestamp timestamp = (Timestamp) value;
             preparedStatement.setTimestamp(index, timestamp, Calendar.getInstance(TimeZone.getDefault()));
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == Time.class) {
             Time time = (Time) value;
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeZone(TimeZone.getDefault());
             preparedStatement.setTime(index, time, calendar);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == Boolean.class) {
             preparedStatement.setBoolean(index, (Boolean) value);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else if (type == Character.class) {
             Character c = (Character) value;
             preparedStatement.setString(index, String.valueOf(c));
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         } else {
             preparedStatement.setObject(index, value);
+            log.debug("Query Parameter -> Setting '{}' at index {}", value, index);
         }
     }
 

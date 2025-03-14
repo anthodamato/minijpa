@@ -7,7 +7,6 @@ import org.minijpa.jpa.db.AttributeFetchParameter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Optional;
 
 public abstract class AbstractMetaAttribute extends AbstractAttribute implements AttributeFetchParameter {
 
@@ -70,6 +69,11 @@ public abstract class AbstractMetaAttribute extends AbstractAttribute implements
     @Override
     public AbstractMetaAttribute getAttribute() {
         return this;
+    }
+
+    public Object getValue(Object parentInstance)
+            throws Exception {
+        return getReadMethod().invoke(parentInstance);
     }
 
     @Override

@@ -25,14 +25,14 @@ public class EntityMetadataProviderImpl implements EntityMetadataProvider {
         Set<JpaEntity> parsedEntities = new HashSet<>();
         Map<String, JpaEntity> map = new HashMap<>();
         for (String className : classNames) {
-            LOG.debug("build: Parsing '{}'", className);
+            LOG.debug("Building Entity Metadata -> Parsing '{}'", className);
             JpaEntity jpaEntity = entityParser.parse(className, parsedEntities);
             parsedEntities.add(jpaEntity);
             map.put(jpaEntity.getClassName(), jpaEntity);
         }
 
         entityParser.finalizeRelationships(map);
-        LOG.debug("build: Parsing completed");
+        LOG.debug("Building Entity Metadata -> Parsing completed");
 
         Set<JpaEntity> allEntities = new HashSet<>();
         for (JpaEntity jpaEntity : map.values()) {
@@ -74,7 +74,6 @@ public class EntityMetadataProviderImpl implements EntityMetadataProvider {
             }
         }
 
-        LOG.debug("build: jpaEntity.getEmbeddables().size()={}", jpaEntity.getEmbeddables().size());
         for (JpaEntity entity : jpaEntity.getEmbeddables()) {
             entityMetadata.addAttribute(
                     new AttributeElement(entity.getName(), AttributeType.SINGULAR, entity.getType(), true));

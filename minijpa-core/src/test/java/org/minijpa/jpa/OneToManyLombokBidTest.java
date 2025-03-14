@@ -4,7 +4,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.minijpa.jpa.db.EntityHandlerImpl;
 import org.minijpa.jpa.model.Continent;
 import org.minijpa.jpa.model.Country;
 import org.slf4j.Logger;
@@ -70,7 +69,6 @@ public class OneToManyLombokBidTest {
 
         em.getTransaction().begin();
         Continent continentNew = em.find(Continent.class, continent.getId());
-        LOG.debug("persist: getCountries");
         Set<Country> continentCountries = continentNew.getCountries();
 
         Iterator<Country> it = continentCountries.iterator();

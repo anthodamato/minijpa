@@ -14,11 +14,10 @@ public interface EntityBuilder {
      *
      * @return
      */
-    public Object buildInstance(MetaEntity metaEntity, Object primaryKey) throws Exception;
+    Object buildInstance(MetaEntity metaEntity, Object primaryKey) throws Exception;
 
-    public Object buildInstance(MetaEntity metaEntity) throws Exception;
 
-    public void buildBasicAttribute(
+    void buildBasicAttribute(
             MetaAttribute attribute,
             Object parentInstance,
             MetaEntity metaEntity,
@@ -34,7 +33,7 @@ public interface EntityBuilder {
      * @param modelValueArray
      * @param lockType
      */
-    public void buildAttributes(
+    void buildAttributes(
             Object parentInstance,
             MetaEntity metaEntity,
             List<MetaAttribute> basicAttributes,
@@ -42,10 +41,10 @@ public interface EntityBuilder {
             ModelValueArray<FetchParameter> modelValueArray,
             LockType lockType) throws Exception;
 
-    public void buildCircularRelationships(MetaEntity entity, Object entityInstance)
+    void buildCircularRelationships(MetaEntity entity, Object entityInstance)
             throws Exception;
 
-    public Object build(
+    Object build(
             ModelValueArray<FetchParameter> modelValueArray,
             MetaEntity entity,
             LockType lockType) throws Exception;

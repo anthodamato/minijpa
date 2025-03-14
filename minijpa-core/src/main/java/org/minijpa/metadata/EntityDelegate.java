@@ -15,18 +15,17 @@
  */
 package org.minijpa.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.minijpa.jpa.MetaEntityHelper;
-import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.db.EntityHandler;
+import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public final class EntityDelegate implements EntityListener {
 
@@ -43,9 +42,6 @@ public final class EntityDelegate implements EntityListener {
 
     @Override
     public Object get(Object value, String attributeName, Object entityInstance) {
-//		LOG.debug("get: entityInstance={}; attributeName={}; value={}", entityInstance, attributeName, value);
-//	LOG.info("get: entityContainerContextManager.isEmpty()=" + entityContainerContextManager.isEmpty());
-//	LOG.info("get: entityContainerContextManager.isLoadedFromDb(entityInstance)=" + entityContainerContextManager.isLoadedFromDb(entityInstance));
         if (entityContainerContextManager.isEmpty()) {
             return value;
         }
@@ -57,25 +53,21 @@ public final class EntityDelegate implements EntityListener {
         }
 
         try {
-//      LOG.debug("get: entity={}", entity);
-//      LOG.debug("get: MetaEntityHelper.getEntityStatus(entity, entityInstance)={}", MetaEntityHelper.getEntityStatus(entity, entityInstance));
+            LOG.debug("Entity Delegate -> Entity = {}", entity);
+            LOG.debug("Entity Delegate -> Entity Status = {}", MetaEntityHelper.getEntityStatus(entity, entityInstance));
             if (MetaEntityHelper.getEntityStatus(entity, entityInstance)
                     != EntityStatus.FLUSHED_LOADED_FROM_DB) {
                 return value;
             }
 
-            LOG.debug("get: attributeName={}", attributeName);
+            LOG.debug("Entity Delegate -> Attribute Name = {}", attributeName);
             AbstractMetaAttribute a = entity.getAttribute(attributeName);
-//            LOG.debug("get: a={}", a);
-//            LOG.debug("get: a.isLazy()={}", a.isLazy());
-//            LOG.debug("get: MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)={}", MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance));
-            if (a.isLazy() && !MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)) {
+            if (a.isLazy() && !entity.isLazyAttributeLoaded(a, entityInstance)) {
                 EntityHandler entityHandler = entityContainerContextManager.findByEntityContainer(
                         entityInstance);
-//                LOG.debug("get: entityHandler={}", entityHandler);
                 Object loadedValue = entityHandler.loadAttribute(entityInstance, a, value);
-                MetaEntityHelper.lazyAttributeLoaded(entity, a, entityInstance, true);
-                LOG.debug("get: loadedValue={}", loadedValue);
+                entity.lazyAttributeLoaded(a, entityInstance, true);
+                LOG.debug("Entity Delegate -> Loaded Value = {}", loadedValue);
                 return loadedValue;
             }
         } catch (Exception e) {

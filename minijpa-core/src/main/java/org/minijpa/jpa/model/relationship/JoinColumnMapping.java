@@ -55,19 +55,12 @@ public interface JoinColumnMapping {
         for (int i = 0; i < size(); ++i) {
             JoinColumnAttribute joinColumnAttribute = get(i);
             MetaAttribute a = get(i).getForeignKeyAttribute();
-            log.debug("expand: value={}", value);
-
-            Method[] methods = value.getClass().getDeclaredMethods();
-            for (Method method : methods) {
-                log.debug("expand: method.getName()={}", method.getName());
-            }
+            log.debug("Expand Join Column -> Value = {}", value);
+            log.debug("Expand Join Column -> Attribute = {}", a);
 
             Method method = value.getClass().getMethod(a.getReadMethod().getName());
-            log.debug("expand: a={}", a);
-            log.debug("expand: a.getReadMethod()={}", a.getReadMethod());
-//            Object v = a.getReadMethod().invoke(value);
             Object v = method.invoke(value);
-            log.debug("expand: v={}", v);
+            log.debug("Expand Join Column -> Expanded Value = {}", v);
             modelValueArray.add(joinColumnAttribute, v);
         }
     }
@@ -75,15 +68,9 @@ public interface JoinColumnMapping {
     default List<QueryParameter> queryParameters(Object value) throws Exception {
         List<QueryParameter> list = new ArrayList<>();
         ModelValueArray<JoinColumnAttribute> modelValueArray = new ModelValueArray<>();
-//        expand(joinColumnMapping, value, modelValueArray);
         expand(value, modelValueArray);
         for (int i = 0; i < modelValueArray.size(); ++i) {
             JoinColumnAttribute joinColumnAttribute = modelValueArray.getModel(i);
-//            MetaAttribute attribute = joinColumnAttribute.getForeignKeyAttribute();
-//            LOG.debug("convertAVToQP: joinColumnAttribute.getColumnName()={}",
-//                    joinColumnAttribute.getColumnName());
-//            QueryParameter queryParameter = new QueryParameter(joinColumnAttribute.getColumnName(),
-//                    modelValueArray.getValue(i), attribute.getSqlType(), attribute.getAttributeMapper());
             QueryParameter queryParameter = joinColumnAttribute.queryParameter(modelValueArray.getValue(i));
             list.add(queryParameter);
         }

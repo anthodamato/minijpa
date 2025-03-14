@@ -5,26 +5,19 @@
  */
 package org.minijpa.metadata;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.minijpa.jpa.db.DbConfiguration;
 import org.minijpa.jpa.db.DbConfigurationList;
 import org.minijpa.jpa.db.namedquery.MiniNamedNativeQueryMapping;
 import org.minijpa.jpa.db.namedquery.MiniNamedQueryMapping;
 import org.minijpa.jpa.db.querymapping.QueryResultMapping;
-import org.minijpa.jpa.model.AbstractMetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
-import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.minijpa.metadata.enhancer.BytecodeEnhancer;
 import org.minijpa.metadata.enhancer.BytecodeEnhancerProvider;
 import org.minijpa.metadata.enhancer.EnhEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 /**
  * @author adamato
@@ -58,14 +51,10 @@ public class MetaEntityUtils {
             String persistenceUnitName, List<String> entities) throws Exception {
         DbConfiguration dbConfiguration = DbConfigurationList.getInstance().getDbConfiguration(persistenceUnitName);
         JpaParser jpaParser = new JpaParser(dbConfiguration);
-        LOG.debug("parsePersistenceUnitContext: parser={}", jpaParser);
         Map<String, MetaEntity> map = parse(entities, jpaParser);
-        LOG.debug("parsePersistenceUnitContext: map={}", map);
         Optional<Map<String, QueryResultMapping>> optional = jpaParser.parseSqlResultSetMappings(map);
         Optional<Map<String, MiniNamedQueryMapping>> optionalNamedQueries = jpaParser.parseNamedQueries(map);
-        LOG.debug("parsePersistenceUnitContext: namedQueries={}", optionalNamedQueries.orElse(null));
         Optional<Map<String, MiniNamedNativeQueryMapping>> optionalNamedNativeQueries = jpaParser.parseNamedNativeQueries(map);
-        LOG.debug("parsePersistenceUnitContext: namedNativeQueries={}", optionalNamedNativeQueries.orElse(null));
         return new PersistenceUnitContext(
                 persistenceUnitName,
                 map,
@@ -74,29 +63,4 @@ public class MetaEntityUtils {
                 optionalNamedNativeQueries.orElse(null));
     }
 
-    //    private static void printEmbeddedAttribute(MetaAttribute m) {
-//	LOG.info("printMetaEntity: Embedded " + m.toString());
-//	List<MetaAttribute> embeddeds = m.getEmbeddableMetaEntity().getAttributes();
-//	for (MetaAttribute a : embeddeds) {
-//	    LOG.info("printMetaEntity: Embedded child " + a.toString());
-//	}
-//    }
-    public static void printMetaEntity(MetaEntity metaEntity) {
-        List<AbstractMetaAttribute> attributes = metaEntity.getAttributes();
-        LOG.debug("printMetaEntity: Attributes");
-        attributes.forEach(m -> {
-            LOG.debug("printMetaEntity: {}", m.toString());
-        });
-
-        LOG.debug("printMetaEntity: Embeddables");
-        for (MetaEntity embeddable : metaEntity.getEmbeddables()) {
-            printMetaEntity(embeddable);
-        }
-
-        LOG.debug("printMetaEntity: Relationship Attributes");
-        List<RelationshipMetaAttribute> ras = metaEntity.getRelationshipAttributes();
-        ras.forEach(m -> {
-            LOG.debug("printMetaEntity: Relationship {}", m.toString());
-        });
-    }
 }

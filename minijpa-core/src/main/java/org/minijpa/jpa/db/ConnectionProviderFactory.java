@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ConnectionProviderFactory {
-	private static Logger LOG = LoggerFactory.getLogger(ConnectionProviderFactory.class);
+	private static Logger log = LoggerFactory.getLogger(ConnectionProviderFactory.class);
 
 	public static ConnectionProvider getConnectionProvider(PersistenceUnitInfo persistenceUnitInfo) throws Exception {
 		ConnectionProvider connectionProvider = build(persistenceUnitInfo);
@@ -33,7 +33,7 @@ public class ConnectionProviderFactory {
 		Properties properties = persistenceUnitInfo.getProperties();
 		dataSource = DataSourceFactory.getDataSource(properties);
 		if (dataSource != null) {
-			LOG.info("DataSource detected: " + dataSource);
+			log.info("DataSource detected: " + dataSource);
 			return new DataSourceConnectionProvider(dataSource);
 		}
 

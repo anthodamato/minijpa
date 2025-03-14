@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,15 +70,26 @@ public class RelationshipMetaAttribute extends AbstractMetaAttribute {
             return list;
 
         JoinColumnMapping joinColumnMapping = getRelationship().getJoinColumnMapping();
-        log.debug("queryParameters: value={}", value);
         Object v = joinColumnMapping.isComposite()
                 ? joinColumnMapping.getForeignKey().readValue(value)
                 : value;
-        log.debug("queryParameters: v={}", v);
         list.addAll(getRelationship().getJoinColumnMapping().queryParameters(v));
-        log.debug("queryParameters: 2 v={}", v);
         return list;
     }
+
+
+    public void setForeignKeyValue(
+            Object entityInstance,
+            Object value) throws IllegalAccessException, InvocationTargetException {
+        getJoinColumnWriteMethod().invoke(entityInstance, value);
+    }
+
+
+    public Object getForeignKeyValue(
+            Object entityInstance) throws IllegalAccessException, InvocationTargetException {
+        return getJoinColumnReadMethod().invoke(entityInstance);
+    }
+
 
     @Override
     public String toString() {

@@ -45,8 +45,6 @@ public class QueryLevelTest {
         MetaEntity metaEntityPM = persistenceUnitEnv.getPersistenceUnitContext().getEntities()
                 .get("org.minijpa.jpa.model.ProgramManager");
 
-        MetaEntityUtils.printMetaEntity(metaEntityJE);
-
         JdbcEntityManager jdbcEntityManager = persistenceUnitEnv.getJdbcEntityManager();
         EntityContainer entityContainer = persistenceUnitEnv.getEntityContainer();
         EntityHandler entityLoader = persistenceUnitEnv.getEntityLoader();
@@ -62,7 +60,6 @@ public class QueryLevelTest {
 
         JobEmployee e1 = new JobEmployee();
         e1.setId(1);
-        LOG.debug("embedManyToOne: e1.getId()=" + e1.getId());
         e1.setName("Abraham");
         e1.setJobInfo(jobInfo);
         jdbcEntityManager.persist(metaEntityJE, e1, null);

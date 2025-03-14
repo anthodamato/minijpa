@@ -124,10 +124,10 @@ public class ApacheDerbyDbTypeMapperTest {
 
     @Test
     public void databaseType() {
-        Class<?> cz = apacheDerbyDbTypeMapper.databaseType(int.class, Optional.empty());
+        Class<?> cz = apacheDerbyDbTypeMapper.databaseType(int.class, null);
         assertEquals(Integer.class, cz);
 
-        cz = apacheDerbyDbTypeMapper.databaseType(long.class, Optional.empty());
+        cz = apacheDerbyDbTypeMapper.databaseType(long.class, null);
         assertEquals(Long.class, cz);
     }
 

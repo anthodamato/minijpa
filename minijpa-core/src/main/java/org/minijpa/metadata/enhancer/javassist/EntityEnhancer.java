@@ -15,11 +15,8 @@
  */
 package org.minijpa.metadata.enhancer.javassist;
 
-import java.util.*;
-
-import javax.persistence.Entity;
-
 import javassist.*;
+import javassist.bytecode.Descriptor;
 import org.minijpa.jpa.db.CollectionUtils;
 import org.minijpa.metadata.BeanUtil;
 import org.minijpa.metadata.EntityDelegate;
@@ -31,7 +28,8 @@ import org.minijpa.metadata.enhancer.IdClassPropertyData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javassist.bytecode.Descriptor;
+import javax.persistence.Entity;
+import java.util.*;
 
 public class EntityEnhancer {
 
@@ -59,9 +57,10 @@ public class EntityEnhancer {
         enhEntity.setClassName(managedData.getClassName());
 
         CtClass ct = managedData.getCtClass();
-        log.debug("enhance: ct.getName()={}", ct.getName());
-        log.debug("enhance: ct.isFrozen()={}; isClassModified(ct)={}", ct.isFrozen(), isClassModified(ct));
-        log.debug("enhance: isClassWritable(ct)={}", isClassWritable(ct));
+        log.trace("Enhancing class '{}'", ct.getName());
+        log.trace("Enhancing class -> Is Frozen() {}", ct.isFrozen());
+        log.trace("Enhancing class -> Is Class Modified {}", isClassModified(ct));
+        log.trace("Enhancing class -> Is Class Writable {}", isClassWritable(ct));
         if (!enhancedDataEntities.contains(managedData))
             createEntityStatusFields(managedData, enhEntity);
 
@@ -69,9 +68,7 @@ public class EntityEnhancer {
 
         List<EnhAttribute> enhAttributes = enhanceAttributes(managedData, parsedEntities);
 
-//	LOG.debug("enhance: modified=" + modified + "; canModify(ct)=" + canModify(ct) + "; ct.isModified()="
-//		+ ct.isModified());
-        log.debug("enhance: managedData={}", managedData);
+        log.trace("Enhancing class -> Managed Data {}", managedData);
         enhancedDataEntities.add(managedData);
 
         enhEntity.setEnhAttributes(enhAttributes);
@@ -97,7 +94,7 @@ public class EntityEnhancer {
         idClassPropertyData.setClassName(managedData.getClassName());
 
         CtClass ct = managedData.getCtClass();
-        log.debug("enhancePrimaryKeyClass: managedData={}", managedData);
+        log.trace("Enhancing Primary Key Class -> Managed Data {}", managedData);
         enhancedDataEntities.add(managedData);
 
         idClassPropertyData.setIdClassManagedData(managedData);
@@ -110,11 +107,11 @@ public class EntityEnhancer {
     private void createEntityStatusFields(ManagedData managedData, EnhEntity enhEntity) throws Exception {
         CtClass ct = managedData.getCtClass();
         if (!toEnhance(managedData)) {
-            log.debug("Enhancement of '{}' not needed", ct.getName());
+            log.trace("Enhancement of '{}' not needed", ct.getName());
             return;
         }
 
-        log.debug("Enhancing {}", ct.getName());
+        log.trace("Enhancing {}", ct.getName());
         addEntityDelegateField(ct);
         // modification field
         addModificationField(ct, managedData.getModificationAttribute());
@@ -196,13 +193,13 @@ public class EntityEnhancer {
         CtClass ct = managedData.getCtClass();
         List<EnhAttribute> enhAttributes = new ArrayList<>();
         List<AttributeData> dataAttributes = managedData.getAttributeDataList();
-        log.debug("enhanceAttributes: dataAttributes.size()={}", dataAttributes.size());
+        log.trace("Enhancing Attributes {}", dataAttributes.size());
         for (AttributeData attributeData : dataAttributes) {
             Property property = attributeData.getProperty();
-            log.debug("Enhancing attribute property.getRelationshipProperties()={}", property.getRelationshipProperties());
-            log.debug("Enhancing attribute property.getGetPropertyMethod()={}", property.getGetPropertyMethod());
+            log.trace("Enhancing attribute property -> Relationship Properties {}", property.getRelationshipProperties());
+            log.trace("Enhancing attribute property -> Get Property Method {}", property.getGetPropertyMethod());
             boolean enhanceAttribute = toEnhance(attributeData);
-            log.debug("Enhancing attribute '{}' {}", property.getCtField().getName(), enhanceAttribute);
+            log.trace("Enhancing attribute '{}' {}", property.getCtField().getName(), enhanceAttribute);
             if (property.getSetPropertyMethod().add && !enhancedDataEntities.contains(managedData)) {
                 CtMethod ctMethod = createSetMethod(ct, property.getCtField(), enhanceAttribute, managedData);
                 property.getSetPropertyMethod().enhance = false;
@@ -243,10 +240,10 @@ public class EntityEnhancer {
             Map<String, CtClass> idCtClasses) throws Exception {
         List<EnhAttribute> enhAttributes = new ArrayList<>();
         List<AttributeData> dataAttributes = managedData.getAttributeDataList();
-        log.debug("enhanceAttributesGetSet: dataAttributes.size()={}", dataAttributes.size());
+        log.trace("Enhancing Id Class Attribute Getter Setter {}", dataAttributes.size());
         CtField[] fields = ct.getDeclaredFields();
         for (CtField ctField : fields) {
-            log.debug("enhanceAttributesGetSet: ctField.getName()={}", ctField.getName());
+            log.trace("Enhancing Attribute Getter Setter -> Field Name '{}'", ctField.getName());
         }
 
         for (AttributeData attributeData : dataAttributes) {
@@ -265,23 +262,22 @@ public class EntityEnhancer {
                     ct.setModifiers(ct.getModifiers() & ~Modifier.ABSTRACT);
                     property.getSetPropertyMethod().enhance = false;
                     property.getSetPropertyMethod().method = method;
-                    log.debug("enhanceAttributesGetSet: set method={}.{}", ct.getName(), method.getName());
-                    log.debug("enhanceAttributesGetSet: set idCtClasses.get(property.getCtField().getType().getName()).getName()={}", idCtClasses.get(property.getCtField().getType().getName()).getName());
+                    log.trace("Enhancing Attribute Setter -> Set Method '{}.{}'", ct.getName(), method.getName());
 
-                    log.debug("enhanceAttributesGetSet: set property.getCtField().getName()={}", property.getCtField().getName());
+                    log.trace("Enhancing Attribute Setter -> Set Property Name {}", property.getCtField().getName());
                     CtField ctField = ct.getDeclaredField(property.getCtField().getName());
-                    log.debug("enhanceAttributesGetSet: set ctField={}", ctField);
+                    log.trace("Enhancing Attribute Setter -> Set Field {}", ctField);
                     if (ctField != null)
                         ctField.setType(idCtClasses.get(property.getCtField().getType().getName()));
                 } else {
                     CtMethod ctMethod = createSetMethod(ct, property.getCtField().getName(), property.getCtField().getType().getName());
                     property.getSetPropertyMethod().enhance = false;
                     property.getSetPropertyMethod().method = ctMethod;
-                    log.debug("enhanceAttributesGetSet: enhanced method={}.{}", ct.getName(), ctMethod.getName());
+                    log.trace("Enhancing Attribute Setter -> Enhanced Method '{}.{}'", ct.getName(), ctMethod.getName());
                 }
             }
 
-            log.debug("enhanceAttributesGetSet: property.getGetPropertyMethod()={}", property.getGetPropertyMethod());
+            log.trace("Enhancing Attribute Getter -> Get Property Method {}", property.getGetPropertyMethod());
             if (property.getGetPropertyMethod().create) {
                 if (idCtClasses.containsKey(property.getCtField().getType().getName())) {
                     CtMethod method = new CtMethod(idCtClasses.get(property.getCtField().getType().getName()),
@@ -293,18 +289,15 @@ public class EntityEnhancer {
                     ct.setModifiers(ct.getModifiers() & ~Modifier.ABSTRACT);
                     property.getGetPropertyMethod().enhance = false;
                     property.getGetPropertyMethod().method = method;
-                    log.debug("enhanceAttributesGetSet: get method={}.{}", ct.getName(), method.getName());
-                    log.debug("enhanceAttributesGetSet: get idCtClasses.get(property.getCtField().getType().getName()).getName()={}", idCtClasses.get(property.getCtField().getType().getName()).getName());
+                    log.trace("Enhancing Attribute Getter -> Get Method '{}.{}'", ct.getName(), method.getName());
                 } else {
                     CtMethod ctMethod = createGetMethod(ct, property.getCtField().getName(), property.getCtField().getType().getName());
                     property.getGetPropertyMethod().enhance = false;
                     property.getGetPropertyMethod().method = ctMethod;
-                    log.debug("enhanceAttributesGetSet: enhanced method={}.{}", ct.getName(), ctMethod.getName());
+                    log.trace("Enhancing Attribute Getter -> Enhanced Method '{}.{}'", ct.getName(), ctMethod.getName());
                 }
             }
 
-            log.debug("enhanceAttributesGetSet: property.getGetPropertyMethod().method={}", property.getGetPropertyMethod().method);
-            log.debug("enhanceAttributesGetSet: property.getSetPropertyMethod().method={}", property.getSetPropertyMethod().method);
             EnhAttribute enhAttribute = new EnhAttribute(property.getCtField().getName(),
                     property.getCtField().getType().getName(), property.getCtField().getType().isPrimitive(),
                     property.getGetPropertyMethod().method.getName(),
@@ -394,11 +387,10 @@ public class EntityEnhancer {
         if (!canModify(ct))
             return;
 
-        log.debug("addEntityDelegateField: ct.getName()={}", ct.getName());
         ClassPool pool = ClassPool.getDefault();
         pool.importPackage(EntityDelegate.class.getPackage().getName());
         CtField f = CtField.make("private EntityDelegate entityDelegate = EntityDelegate.getInstance();", ct);
-        log.debug("Adding Entity Delegate");
+        log.trace("Enhancing Class -> Adding Entity Delegate at '{}'", ct.getName());
         ct.addField(f);
     }
 
@@ -409,7 +401,7 @@ public class EntityEnhancer {
         CtField f = CtField.make("private java.util.List " + modificationFieldName + " = new java.util.ArrayList();",
                 ct);
         ct.addField(f);
-        log.debug("Created '{}' Field", ct.getName());
+        log.trace("Enhancing Class -> Created '{}' Field", ct.getName());
     }
 
     private void addListField(CtClass ct, String fieldName) throws Exception {
@@ -418,7 +410,7 @@ public class EntityEnhancer {
 
         CtField f = CtField.make("private java.util.List " + fieldName + " = new java.util.ArrayList();", ct);
         ct.addField(f);
-        log.debug("Created '{}' Field", fieldName);
+        log.trace("Enhancing Class -> Created '{}' Field", fieldName);
     }
 
     private void addLockTypeField(CtClass ct, String fieldName) throws Exception {
@@ -428,7 +420,7 @@ public class EntityEnhancer {
         String f = "private org.minijpa.jpa.db.LockType " + fieldName + " = org.minijpa.jpa.db.LockType.NONE;";
         CtField ctField = CtField.make(f, ct);
         ct.addField(ctField);
-        log.debug("Created '{}' Field: {}", ct.getName(), f);
+        log.trace("Enhancing Class -> Created '{}' Field {}", ct.getName(), f);
     }
 
     private void addEntityStatusField(CtClass ct, String fieldName) throws Exception {
@@ -438,7 +430,7 @@ public class EntityEnhancer {
         String f = "private org.minijpa.jpa.db.EntityStatus " + fieldName + " = org.minijpa.jpa.db.EntityStatus.NEW;";
         CtField ctField = CtField.make(f, ct);
         ct.addField(ctField);
-        log.debug("Created '{}' Field: {}", ct.getName(), f);
+        log.trace("Enhancing Class -> Created '{}' Field {}", ct.getName(), f);
     }
 
     private void addJoinColumnField(CtClass ct, String fieldName) throws Exception {
@@ -448,7 +440,7 @@ public class EntityEnhancer {
         String f = "private Object " + fieldName + " = null;";
         CtField ctField = CtField.make(f, ct);
         ct.addField(ctField);
-        log.debug("Created '{}' Field: {}", ct.getName(), f);
+        log.trace("Enhancing Class -> Created '{}' Field {}", ct.getName(), f);
     }
 
     private void addEnhancedInterface(CtClass ct) throws Exception {
@@ -462,7 +454,7 @@ public class EntityEnhancer {
     private void modifyGetMethod(CtMethod ctMethod, CtField ctField) throws Exception {
         String mc = ctField.getName() + " = (" + ctMethod.getReturnType().getName() + ") entityDelegate.get("
                 + ctField.getName() + ",\"" + ctField.getName() + "\", this);";
-        log.debug("Modifying get method: mc={}", mc);
+        log.trace("Enhancing Class -> Modifying get method '{}'", mc);
         ctMethod.insertBefore(mc);
     }
 
@@ -478,7 +470,7 @@ public class EntityEnhancer {
         sb.append(ctField.getName());
         sb.append("\");");
         String mc = sb.toString();
-        log.debug("Modifying set method: mc={}", mc);
+        log.trace("Enhancing Class -> Modifying Set Method '{}'", mc);
         ctMethod.insertBefore(mc);
     }
 
@@ -488,7 +480,7 @@ public class EntityEnhancer {
             ManagedData managedData) throws Exception {
         String mc = "if(!" + ctField.getName() + ".isEmpty()) " + managedData.getModificationAttribute() + ".add(\""
                 + ctField.getName() + "\");";
-        log.debug("Modifying constructor: mc={}", mc);
+        log.trace("Enhancing Class -> Modifying constructor '{}'", mc);
         ctConstructor.insertAfter(mc);
     }
 
@@ -498,7 +490,7 @@ public class EntityEnhancer {
             ManagedData managedData)
             throws Exception {
         String mc = managedData.getModificationAttribute() + ".add(\"" + ctField.getName() + "\");";
-        log.debug("Modifying constructor: mc={}", mc);
+        log.trace("Enhancing Class -> Modifying constructor '{}'", mc);
         ctConstructor.insertAfter(mc);
     }
 
@@ -612,7 +604,7 @@ public class EntityEnhancer {
         String setMethodString = createSetMethodString(ctField, delegate, counter, managedData);
         ctMethod = CtNewMethod.make(setMethodString, ctClass);
         ctClass.addMethod(ctMethod);
-        log.debug("createSetMethod: Created new method: {}", setMethodString);
+        log.trace("Enhancing Class -> Created new method '{}'", setMethodString);
         return ctMethod;
     }
 
@@ -630,7 +622,7 @@ public class EntityEnhancer {
         String setMethodString = createSetMethodString(fieldName, fieldTypeName);
         CtMethod ctMethod = CtNewMethod.make(setMethodString, ctClass);
         ctClass.addMethod(ctMethod);
-        log.debug("Created '{}' method: {}", ctClass.getName(), setMethodString);
+        log.trace("Enhancing Class -> Created '{}' method '{}'", ctClass.getName(), setMethodString);
         return ctMethod;
     }
 
@@ -647,7 +639,7 @@ public class EntityEnhancer {
 
         CtMethod ctMethod = CtNewMethod.make(getMethodString, ctClass);
         ctClass.addMethod(ctMethod);
-        log.debug("Created '{}' method: {}", ctClass.getName(), getMethodString);
+        log.trace("Enhancing Class -> Created '{}' method '{}'", ctClass.getName(), getMethodString);
         return ctMethod;
     }
 

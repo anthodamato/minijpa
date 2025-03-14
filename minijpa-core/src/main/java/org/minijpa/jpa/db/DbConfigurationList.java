@@ -37,7 +37,7 @@ public class DbConfigurationList {
 	}
 
 	public void setDbConfiguration(String persistenceUnitName, DbConfiguration dbConfiguration) {
-		LOG.debug("setDbConfiguration: persistenceUnitName={}", persistenceUnitName);
+		LOG.debug("Db Configuration -> Persistence Unit Name = {}", persistenceUnitName);
 		map.put(persistenceUnitName, dbConfiguration);
 	}
 }

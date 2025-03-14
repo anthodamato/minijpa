@@ -16,31 +16,30 @@
 package org.minijpa.jpa.db;
 
 /**
- *
  * @author Antonio Damato <anto.damato@gmail.com>
  */
 public class PostponedUpdateInfo {
 
     private Object id;
-    private Class<?> c;
+    private Class<?> type;
     private String attributeName;
 
     public PostponedUpdateInfo(Object id, Class<?> c, String attributeName) {
-	this.id = id;
-	this.c = c;
-	this.attributeName = attributeName;
+        this.id = id;
+        this.type = c;
+        this.attributeName = attributeName;
     }
 
     public Object getId() {
-	return id;
+        return id;
     }
 
-    public Class<?> getC() {
-	return c;
+    public Class<?> getType() {
+        return type;
     }
 
     public String getAttributeName() {
-	return attributeName;
+        return attributeName;
     }
 
 }
