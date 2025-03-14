@@ -1,6 +1,5 @@
 package org.minijpa.jpa.db;
 
-import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.RelationshipMetaAttribute;
 import org.slf4j.Logger;
@@ -52,9 +51,8 @@ public abstract class AbstractEntityBuilder implements EntityBuilder {
                     Object v = attribute.getValue(value);
                     LOG.debug("Building Relationships -> Attribute Value = {}", v);
                     if (v == null) {
-                        MetaEntityHelper.writeMetaAttributeValue(value, value.getClass(), attribute,
-                                entityInstance,
-                                toEntity);
+                        entity.writeAttributeValue(value, value.getClass(), attribute,
+                                entityInstance);
                     }
                 }
             }

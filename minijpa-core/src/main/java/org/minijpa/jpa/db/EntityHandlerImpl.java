@@ -156,9 +156,8 @@ public class EntityHandlerImpl implements EntityHandler {
                     Object v = attribute.getValue(value);
                     log.debug("Building Relationships -> Target Entity Attribute Value {}", v);
                     if (v == null) {
-                        MetaEntityHelper.writeMetaAttributeValue(value, value.getClass(), attribute,
-                                entityInstance,
-                                toEntity);
+                        toEntity.writeAttributeValue(value, value.getClass(), attribute,
+                                entityInstance);
                     }
                 }
             }
@@ -210,9 +209,8 @@ public class EntityHandlerImpl implements EntityHandler {
             buildAttributeValuesLoadFK(parent, parentInstancePk, embeddable, embeddable.getBasicAttributes(),
                     embeddable.getRelationshipAttributes(), modelValueArray,
                     lockType);
-            MetaEntityHelper.writeEmbeddableValue(parentInstance, parentInstance.getClass(), embeddable,
-                    parent,
-                    metaEntity);
+            metaEntity.writeEmbeddableValue(parentInstance, parentInstance.getClass(), embeddable,
+                    parent);
         }
 
         // join columns
@@ -221,15 +219,15 @@ public class EntityHandlerImpl implements EntityHandler {
             log.debug("Building Relationships -> Join Column Mapping Foreign Key {}", joinColumnMapping.getForeignKey());
             Object fk = joinColumnMapping.getForeignKey().buildValue(modelValueArray);
             if (joinColumnMapping.isLazy()) {
-                MetaEntityHelper.setForeignKeyValue(joinColumnMapping.getAttribute(), parentInstance, fk);
+                joinColumnMapping.getAttribute().setForeignKeyValue(parentInstance, fk);
                 continue;
             }
 
             Object parent = loadRelationshipByForeignKey(parentInstance, metaEntity,
                     joinColumnMapping.getAttribute(),
                     fk, lockType);
-            MetaEntityHelper.writeMetaAttributeValue(parentInstance, parentInstance.getClass(),
-                    joinColumnMapping.getAttribute(), parent, metaEntity);
+            metaEntity.writeAttributeValue(parentInstance, parentInstance.getClass(),
+                    joinColumnMapping.getAttribute(), parent);
         }
     }
 
@@ -245,12 +243,11 @@ public class EntityHandlerImpl implements EntityHandler {
                     "Column '" + attribute.getColumnName() + "' not found");
         }
 
-        MetaEntityHelper.writeMetaAttributeValue(
+        metaEntity.writeAttributeValue(
                 parentInstance,
                 parentInstance.getClass(),
                 attribute,
-                modelValueArray.getValue(index),
-                metaEntity);
+                modelValueArray.getValue(index));
     }
 
 
@@ -271,9 +268,8 @@ public class EntityHandlerImpl implements EntityHandler {
             buildAttributeValuesNoRelationshipLoading(parent, embeddable, embeddable.getBasicAttributes(),
                     modelValueArray,
                     lockType);
-            MetaEntityHelper.writeEmbeddableValue(parentInstance, parentInstance.getClass(), embeddable,
-                    parent,
-                    metaEntity);
+            metaEntity.writeEmbeddableValue(parentInstance, parentInstance.getClass(), embeddable,
+                    parent);
         }
 
         // attributes with join columns
@@ -282,7 +278,7 @@ public class EntityHandlerImpl implements EntityHandler {
             log.debug("Building Relationships -> Join Column Mapping Foreign Key {}", joinColumnMapping.getForeignKey());
             Object fk = joinColumnMapping.getForeignKey().buildValue(modelValueArray);
             if (joinColumnMapping.isLazy()) {
-                MetaEntityHelper.setForeignKeyValue(joinColumnMapping.getAttribute(), parentInstance, fk);
+                joinColumnMapping.getAttribute().setForeignKeyValue(parentInstance, fk);
                 continue;
             }
 
@@ -291,8 +287,8 @@ public class EntityHandlerImpl implements EntityHandler {
                     modelValueArray,
                     toEntity,
                     lockType);
-            MetaEntityHelper.writeMetaAttributeValue(parentInstance, parentInstance.getClass(),
-                    joinColumnMapping.getAttribute(), parent, metaEntity);
+            metaEntity.writeAttributeValue(parentInstance, parentInstance.getClass(),
+                    joinColumnMapping.getAttribute(), parent);
         }
     }
 
@@ -345,9 +341,8 @@ public class EntityHandlerImpl implements EntityHandler {
             Object result = jdbcQueryRunner.selectByJoinTable(parentInstancePk, entity.getId(),
                     attribute.getRelationship(),
                     attribute, this);
-            MetaEntityHelper.writeMetaAttributeValue(parentInstance, parentInstance.getClass(), attribute,
-                    result,
-                    entity);
+            entity.writeAttributeValue(parentInstance, parentInstance.getClass(), attribute,
+                    result);
         }
     }
 
@@ -369,14 +364,14 @@ public class EntityHandlerImpl implements EntityHandler {
         Object foreignKeyInstance = findById(e, foreignKeyValue, lockType);
         log.debug("Building relationships -> Foreign Key Instance = {}", foreignKeyInstance);
         if (foreignKeyInstance != null) {
-            MetaEntityHelper.writeAttributeValue(entity, parentInstance, foreignKeyAttribute,
+            entity.writeAttributeValue(parentInstance, foreignKeyAttribute,
                     foreignKeyInstance);
             RelationshipMetaAttribute a = e.findAttributeByMappedBy(foreignKeyAttribute.getName());
             log.debug("Building relationships -> Relationship Attribute = {}", a);
             if (a != null && a.getRelationship().toOne()) {
-                MetaEntityHelper.writeMetaAttributeValue(foreignKeyInstance, foreignKeyInstance.getClass(),
+                e.writeAttributeValue(foreignKeyInstance, foreignKeyInstance.getClass(),
                         a,
-                        parentInstance, e);
+                        parentInstance);
             }
         }
 
@@ -404,7 +399,7 @@ public class EntityHandlerImpl implements EntityHandler {
         if (!relationship.toMany()) {
             MetaEntity entity = persistenceUnitContext.getEntities()
                     .get(parentInstance.getClass().getName());
-            Object foreignKey = MetaEntityHelper.getForeignKeyValue(relationshipMetaAttribute, parentInstance);
+            Object foreignKey = relationshipMetaAttribute.getForeignKeyValue(parentInstance);
             log.debug("Loading Attribute -> Foreign Key = {}", foreignKey);
             return loadRelationshipByForeignKey(parentInstance, entity, a, foreignKey,
                     LockType.NONE);
@@ -556,7 +551,7 @@ public class EntityHandlerImpl implements EntityHandler {
             throws Exception {
         log.debug("Updating Postponed Join Columns -> Entity Name = {}", entity.getName());
 
-        List list = MetaEntityHelper.getJoinColumnPostponedUpdateAttributeList(entity, entityInstance);
+        List list = entity.getJoinColumnPostponedUpdateAttributeList(entityInstance);
         log.debug("Updating Postponed Join Columns -> Attribute List IsEmpty = {}", list.isEmpty());
         if (list.isEmpty()) {
             return;

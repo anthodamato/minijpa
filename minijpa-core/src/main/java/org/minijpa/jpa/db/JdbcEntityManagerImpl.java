@@ -178,7 +178,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                     "Id must be manually assigned for '" + entity.getEntityClass().getName() + "'");
         }
 
-        ModelValueArray<AbstractMetaAttribute> modelValueArray = MetaEntityHelper.getModifications(entity,
+        ModelValueArray<AbstractMetaAttribute> modelValueArray = entity.getModifications(
                 entityInstance);
         checkNullableAttributes(entity, entityInstance, modelValueArray);
         if (idValue == null) {
@@ -243,7 +243,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 log.debug("Add Info For Postponed Update -> Instance {}", instance);
                 MetaEntity e = persistenceUnitContext.getEntities().get(instance.getClass().getName());
                 log.debug("Add Info For Postponed Update -> Entity {}", e);
-                List list = MetaEntityHelper.getJoinColumnPostponedUpdateAttributeList(e, instance);
+                List list = e.getJoinColumnPostponedUpdateAttributeList(instance);
                 list.add(new PostponedUpdateInfo(idValue, entity.getEntityClass(),
                         modelValueArray.getModel(index).getName()));
             }
@@ -315,7 +315,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                 case FLUSHED_LOADED_FROM_DB:
                     // makes updates
                     log.debug("Flushing -> FLUSHED_LOADED_FROM_DB Entity Instance {}", entityInstance);
-                    ModelValueArray<AbstractMetaAttribute> modelValueArray = MetaEntityHelper.getModifications(me,
+                    ModelValueArray<AbstractMetaAttribute> modelValueArray = me.getModifications(
                             entityInstance);
                     log.debug("Flushing -> FLUSHED_LOADED_FROM_DB Modification Count {}",
                             modelValueArray.size());
@@ -327,7 +327,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                     break;
                 case PERSIST_NOT_FLUSHED:
                     log.debug("Flushing -> PERSIST_NOT_FLUSHED Entity Instance {}", entityInstance);
-                    modelValueArray = MetaEntityHelper.getModifications(me, entityInstance);
+                    modelValueArray = me.getModifications(entityInstance);
                     log.debug("Flushing -> PERSIST_NOT_FLUSHED Modification Count {}", modelValueArray.size());
                     persistEarlyInsertEntityInstance(me, modelValueArray, managedEntityList);
                     entityHandler.persist(me, entityInstance, modelValueArray);
@@ -402,7 +402,7 @@ public class JdbcEntityManagerImpl implements JdbcEntityManager {
                     continue;
                 }
 
-                ModelValueArray<AbstractMetaAttribute> mva = MetaEntityHelper.getModifications(metaEntity,
+                ModelValueArray<AbstractMetaAttribute> mva = metaEntity.getModifications(
                         instance);
                 entityHandler.persist(metaEntity, instance, mva);
                 log.debug("Persist Early Insert -> Join Column Mapping Instance {}", instance);

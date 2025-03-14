@@ -25,12 +25,11 @@ public abstract class AbstractEntityBuilderByValues extends AbstractEntityBuilde
         if (index == -1)
             return;
 
-        MetaEntityHelper.writeMetaAttributeValue(
+        metaEntity.writeAttributeValue(
                 parentInstance,
                 parentInstance.getClass(),
                 attribute,
-                modelValueArray.getValue(index),
-                metaEntity);
+                modelValueArray.getValue(index));
     }
 
     @Override
@@ -51,9 +50,8 @@ public abstract class AbstractEntityBuilderByValues extends AbstractEntityBuilde
             buildAttributes(parent, embeddable, embeddable.getBasicAttributes(),
                     embeddable.getRelationshipAttributes(), modelValueArray,
                     lockType);
-            MetaEntityHelper.writeEmbeddableValue(parentInstance, parentInstance.getClass(), embeddable,
-                    parent,
-                    metaEntity);
+            metaEntity.writeEmbeddableValue(parentInstance, parentInstance.getClass(), embeddable,
+                    parent);
         }
 
         for (JoinColumnMapping joinColumnMapping : metaEntity.getJoinColumnMappings()) {
@@ -61,14 +59,14 @@ public abstract class AbstractEntityBuilderByValues extends AbstractEntityBuilde
             LOG.debug("Build Attributes -> Join Column Mapping Foreign Key = {}", joinColumnMapping.getForeignKey());
             Object fk = joinColumnMapping.getForeignKey().buildValue(modelValueArray);
             if (joinColumnMapping.isLazy()) {
-                MetaEntityHelper.setForeignKeyValue(joinColumnMapping.getAttribute(), parentInstance, fk);
+                joinColumnMapping.getAttribute().setForeignKeyValue(parentInstance, fk);
                 continue;
             }
 
             MetaEntity toEntity = joinColumnMapping.getAttribute().getRelationship().getAttributeType();
             Object parent = build(modelValueArray, toEntity, lockType);
-            MetaEntityHelper.writeMetaAttributeValue(parentInstance, parentInstance.getClass(),
-                    joinColumnMapping.getAttribute(), parent, metaEntity);
+            metaEntity.writeAttributeValue(parentInstance, parentInstance.getClass(),
+                    joinColumnMapping.getAttribute(), parent);
         }
     }
 

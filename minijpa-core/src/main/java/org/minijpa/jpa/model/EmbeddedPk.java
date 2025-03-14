@@ -100,7 +100,6 @@ public class EmbeddedPk implements Pk {
             Object pkObject) throws Exception {
         for (AbstractMetaAttribute a : attributes) {
             int index = indexOfAttribute(modelValueArray, a);
-            log.debug("buildPK: index={}", index);
             if (index == -1) {
                 throw new IllegalArgumentException("Column '" + a.getColumnName() + "' is missing");
             }

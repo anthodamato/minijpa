@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.minijpa.jdbc.ModelValueArray;
-import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.MiniEntityManager;
 import org.minijpa.jpa.PersistenceUnitProperties;
 import org.minijpa.jpa.model.*;
@@ -69,11 +68,11 @@ public class EntityDelegateInstanceBuilderTest {
         e1.setName("Abraham");
         e1.setJobInfo(jobInfo);
 
-        ModelValueArray<AbstractMetaAttribute> modelValueArray = MetaEntityHelper.getModifications(metaEntityPM,
+        ModelValueArray<AbstractMetaAttribute> modelValueArray = metaEntityPM.getModifications(
                 programManager);
         Assertions.assertTrue(modelValueArray.isEmpty());
 
-        modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
+        modelValueArray = metaEntityJE.getModifications(e1);
         Assertions.assertEquals(3, modelValueArray.size());
         AbstractMetaAttribute a0 = modelValueArray.getModel(0);
         AbstractMetaAttribute a1 = modelValueArray.getModel(1);
@@ -97,7 +96,7 @@ public class EntityDelegateInstanceBuilderTest {
         Assertions.assertEquals(programManager, modelValueArray.getValue(index));
 
         metaEntityJE.clearModificationAttributes(e1);
-        modelValueArray = MetaEntityHelper.getModifications(metaEntityJE, e1);
+        modelValueArray = metaEntityJE.getModifications(e1);
         Assertions.assertEquals(0, modelValueArray.size());
     }
 }

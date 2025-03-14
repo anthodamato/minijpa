@@ -62,12 +62,6 @@ public class EntityDelegateTest {
         cq.select(root);
         TypedQuery<Citizen> typedQuery = em.createQuery(cq);
         List<Citizen> citizens = typedQuery.getResultList();
-        for (Citizen c : citizens) {
-            System.out.println("modifications: c=" + c);
-            if (c != null)
-                System.out.println(
-                        "modifications: c.getName()=" + c.getName() + "; c.getLastName()=" + c.getLastName());
-        }
 
         Assertions.assertEquals(2, citizens.size());
 

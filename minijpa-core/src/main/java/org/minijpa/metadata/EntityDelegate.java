@@ -15,18 +15,17 @@
  */
 package org.minijpa.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.minijpa.jpa.MetaEntityHelper;
-import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.db.EntityHandler;
+import org.minijpa.jpa.db.EntityStatus;
 import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
 import org.minijpa.jpa.model.MetaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public final class EntityDelegate implements EntityListener {
 
@@ -63,11 +62,11 @@ public final class EntityDelegate implements EntityListener {
 
             LOG.debug("Entity Delegate -> Attribute Name = {}", attributeName);
             AbstractMetaAttribute a = entity.getAttribute(attributeName);
-            if (a.isLazy() && !MetaEntityHelper.isLazyAttributeLoaded(entity, a, entityInstance)) {
+            if (a.isLazy() && !entity.isLazyAttributeLoaded(a, entityInstance)) {
                 EntityHandler entityHandler = entityContainerContextManager.findByEntityContainer(
                         entityInstance);
                 Object loadedValue = entityHandler.loadAttribute(entityInstance, a, value);
-                MetaEntityHelper.lazyAttributeLoaded(entity, a, entityInstance, true);
+                entity.lazyAttributeLoaded(a, entityInstance, true);
                 LOG.debug("Entity Delegate -> Loaded Value = {}", loadedValue);
                 return loadedValue;
             }

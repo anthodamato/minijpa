@@ -46,13 +46,6 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
         ClassPool cp = ClassPool.getDefault();
         CtClass ctClass = cp.get(className);
 
-//        log.debug("toBytecode: className={}", className);
-//        if (className.equals("org.minijpa.jpa.model.Guest"))
-//            log.info("toBytecode: className={}", className);
-//
-//        if (className.equals("org.minijpa.jpa.model.GuestPk"))
-//            log.info("toBytecode: className={}", className);
-
         Object entity = ctClass.getAnnotation(Entity.class);
         Object mappedSuperclass = ctClass.getAnnotation(MappedSuperclass.class);
         Object embeddable = ctClass.getAnnotation(Embeddable.class);
@@ -62,16 +55,15 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
         Optional<ManagedData> optionalMD = enhancedClasses.stream()
                 .filter(e -> e.getCtClass().getName().equals(className)).findFirst();
         if (optionalMD.isPresent()) {
-            log.debug("toBytecode: className={} found in the registry", className);
+            log.trace("To Bytecode -> Class Name '{}' found in the registry", className);
             if (optionalMD.get().getCtClass().isFrozen())
                 throw new IllegalStateException("Class '" + className + "' is frozen");
 
             return optionalMD.get().getCtClass().toBytecode();
         }
 
-        log.debug("toBytecode: optionalMD={}", optionalMD);
+        log.trace("To Bytecode -> Class Name '{}' not found in the registry", className);
         ManagedData managedData = classInspector.inspect(className);
-        log.debug("toBytecode: managedData={}", managedData);
         EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
         parsedEntities.add(enhEntity);
         if (managedData.mappedSuperclass != null)
@@ -91,35 +83,29 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 
     @Override
     public EnhEntity enhance(String className) throws Exception {
-        if (className.equals("org.minijpa.jpa.model.Guest"))
-            log.info("enhance: className={}", className);
-
-        if (className.equals("org.minijpa.jpa.model.GuestPk"))
-            log.info("enhance: className={}", className);
-
         Optional<EnhEntity> optionalEnhEntity = parsedEntities.stream()
                 .filter(e -> e.getClassName().equals(className))
                 .findFirst();
+        log.trace("Enhancing -> Class Name '{}'", className);
         if (optionalEnhEntity.isPresent()) {
-            log.debug("enhance: className={} found in registry", className);
+            log.trace("Enhancing -> Class Name '{}' found in the registry", className);
             EnhEntity enhEntity = optionalEnhEntity.get();
             parsedEntities.add(enhEntity);
             return optionalEnhEntity.get();
         }
 
+        log.trace("Enhancing -> Class Name '{}' not found in the registry", className);
         ManagedData managedData;
         Optional<ManagedData> optionalMD = enhancedClasses.stream()
                 .filter(e -> e.getCtClass().getName().equals(className)).findFirst();
-        log.debug("enhance: className={}; optionalMD.isPresent()={}", className, optionalMD.isPresent());
+        log.trace("Enhancing -> Found Managed Data = {}", optionalMD.isPresent());
         if (optionalMD.isPresent())
             managedData = optionalMD.get();
         else
             managedData = classInspector.inspect(className);
 
-        log.debug("enhance: className={}; managedData={}", className, managedData);
+        log.trace("Enhancing -> Managed Data = {}", managedData);
         EnhEntity enhEntity = entityEnhancer.enhance(managedData, parsedEntities);
-        log.debug("enhance: className={}; enhEntity={}", className, enhEntity);
-        log.debug("enhance: enhEntity.getEnhAttributes().size()={}", enhEntity.getEnhAttributes().size());
         parsedEntities.add(enhEntity);
 
         enhancedClasses.add(managedData);
@@ -132,7 +118,7 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
         }
 
         enhEntity.getEnhAttributes().forEach(a ->
-                log.debug("enhance: enhAttribute={}", a)
+                log.trace("Enhancing -> Enhanced Attribute = {}", a)
         );
         return enhEntity;
     }
@@ -153,7 +139,6 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
         ClassPool pool = ClassPool.getDefault();
         Loader cl = new Loader(pool);
         String tmpdir = System.getProperty("java.io.tmpdir");
-//        log.info("finalizeEnhancement: tmpdir={}", tmpdir);
         pool.insertClassPath(tmpdir);
         for (EnhEntity enhEntity : parsedEntities) {
             if (enhEntity.getIdClassPropertyData() == null)
@@ -171,7 +156,6 @@ public class JavassistBytecodeEnhancer implements BytecodeEnhancer {
 
             idCtClass.writeFile(tmpdir);
             Class<?> c = cl.loadClass(idCtClass.getName());
-//            log.debug("finalizeEnhancement: c={}", c);
             idClassPropertyData.setClassType(c);
             idClassPropertyData.setEnhAttributes(enhAttributes);
         }

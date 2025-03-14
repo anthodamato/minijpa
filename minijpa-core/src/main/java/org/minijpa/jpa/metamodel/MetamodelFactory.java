@@ -15,30 +15,22 @@
  */
 package org.minijpa.jpa.metamodel;
 
+import org.minijpa.jpa.model.MetaAttribute;
+import org.minijpa.jpa.model.MetaEntity;
+import org.minijpa.jpa.model.Pk;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.metamodel.*;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
+import javax.persistence.metamodel.Bindable.BindableType;
+import javax.persistence.metamodel.Type.PersistenceType;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
-import javax.persistence.metamodel.Bindable.BindableType;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.Metamodel;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type.PersistenceType;
-
-import org.minijpa.jpa.model.AbstractMetaAttribute;
-import org.minijpa.jpa.model.MetaAttribute;
-import org.minijpa.jpa.model.MetaEntity;
-import org.minijpa.jpa.model.Pk;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MetamodelFactory {
 
@@ -54,7 +46,6 @@ public class MetamodelFactory {
     public Metamodel build() throws Exception {
         Set<MappedSuperclassType<?>> mappedSuperclassTypes = buildMappedSuperclassTypes(entities);
         Set<EntityType<?>> entityTypes = buildEntityTypes(entities);
-        LOG.debug("build: entityTypes={}", entityTypes);
         Set<EmbeddableType<?>> embeddableTypes = buildEmbeddableTypes(entities);
 
         Set<ManagedType<?>> managedTypes = new HashSet<>();
@@ -89,7 +80,7 @@ public class MetamodelFactory {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private EntityType<?> buildEntityType(MetaEntity entity) throws Exception {
         Pk id = entity.getId();
-        LOG.debug("buildEntityType: id={}", id);
+        LOG.debug("Building Entity Type -> Id = {}", id);
         SingularAttribute<?, ?> idSingularAttribute = null;
         if (!id.isIdClass() && !id.isComposite()) {
             Field fieldId = findField(entity.getEntityClass(), id.getName());
@@ -98,10 +89,9 @@ public class MetamodelFactory {
         }
 
         Set<SingularAttribute> singularAttributes = buildSingularAttributes(entity);
-        LOG.debug("buildEntityType: entity.getName()={}", entity.getName());
-        singularAttributes.forEach(a -> LOG.debug("buildEntityType: a.getName()={}", a.getName()));
-        entity.getBasicAttributes().forEach(a -> LOG.debug("buildEntityType: ba a.getName()={}", a.getName()));
-        LOG.debug("buildEntityType: singularAttributes={}", singularAttributes);
+        LOG.debug("Building Entity Type -> Entity = {}", entity);
+        singularAttributes.forEach(a -> LOG.debug("Building Entity Type -> Attribute Name = {}", a.getName()));
+        entity.getBasicAttributes().forEach(a -> LOG.debug("Building Entity Type -> Basic Attribute Name = {}", a.getName()));
         Set<Attribute> allAttributes = new HashSet<>();
         allAttributes.addAll(singularAttributes);
         if (!entity.getId().isComposite())
@@ -111,7 +101,6 @@ public class MetamodelFactory {
                 .collect(Collectors.toSet());
         allAttributes.addAll(esa);
         Set<Attribute> attributes = Collections.unmodifiableSet(allAttributes);
-        LOG.debug("buildEntityType: attributes={}", attributes);
 
         MetamodelEntityType.Builder builder = new MetamodelEntityType.Builder()
                 .withBindableType(BindableType.ENTITY_TYPE)
@@ -127,7 +116,6 @@ public class MetamodelFactory {
             Set<SingularAttribute> singularIdAttributes = id.getAttributes().stream()
                     .map(this::buildSingularAttribute)
                     .collect(Collectors.toSet());
-            LOG.debug("buildEntityType: singularIdAttributes={}", singularIdAttributes);
             builder.withIdClassAttributes(singularIdAttributes);
         }
 

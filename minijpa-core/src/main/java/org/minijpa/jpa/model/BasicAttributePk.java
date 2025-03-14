@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -114,9 +113,7 @@ public class BasicAttributePk implements Pk {
     private int indexOfAttribute(
             ModelValueArray<FetchParameter> modelValueArray,
             AbstractMetaAttribute attribute) {
-        LOG.debug("indexOfAttribute: attribute={}", attribute);
         for (int i = 0; i < modelValueArray.size(); ++i) {
-            LOG.debug("indexOfAttribute: ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute()={}", ((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute());
             if (((AttributeFetchParameter) modelValueArray.getModel(i)).getAttribute() == attribute) {
                 return i;
             }

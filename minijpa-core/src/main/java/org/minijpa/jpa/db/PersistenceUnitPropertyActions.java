@@ -36,10 +36,10 @@ import org.slf4j.LoggerFactory;
 
 public class PersistenceUnitPropertyActions {
 
-    private Logger LOG = LoggerFactory.getLogger(PersistenceUnitPropertyActions.class);
+    private final Logger log = LoggerFactory.getLogger(PersistenceUnitPropertyActions.class);
 
     private void runScript(String scriptPath, PersistenceUnitInfo persistenceUnitInfo,
-            ConnectionProvider connectionProvider) throws IOException, SQLException, URISyntaxException {
+                           ConnectionProvider connectionProvider) throws IOException, SQLException, URISyntaxException {
         String filePath = scriptPath;
         if (!scriptPath.startsWith("/"))
             filePath = "/" + filePath;
@@ -51,7 +51,7 @@ public class PersistenceUnitPropertyActions {
     }
 
     public void runScript(List<String> statements, PersistenceUnitInfo persistenceUnitInfo,
-            ConnectionProvider connectionProvider) throws SQLException {
+                          ConnectionProvider connectionProvider) throws SQLException {
         Connection connection = null;
         try {
             connection = connectionProvider.getConnection();
@@ -62,7 +62,7 @@ public class PersistenceUnitPropertyActions {
                 try {
                     connection.close();
                 } catch (Exception e2) {
-                    LOG.error(e2.getMessage());
+                    log.error(e2.getMessage());
                 }
         }
     }
@@ -86,13 +86,13 @@ public class PersistenceUnitPropertyActions {
             ConnectionProvider connectionProvider)
             throws IOException, SQLException, URISyntaxException {
         Properties properties = persistenceUnitInfo.getProperties();
-        LOG.debug("properties={}", properties);
+        log.debug("Analyze Create Scripts -> Properties = {}", properties);
         String action = (String) properties.get("javax.persistence.schema-generation.database.action");
         String createSource = (String) properties.get("javax.persistence.schema-generation.create-source");
         String createScriptSource = (String) properties.get("javax.persistence.schema-generation.create-script-source");
         String dropSource = (String) properties.get("javax.persistence.schema-generation.drop-source");
         String dropScriptSource = (String) properties.get("javax.persistence.schema-generation.drop-script-source");
-        LOG.debug("action={}", action);
+        log.debug("Analyze Create Scripts -> Action = {}", action);
         if (action == null || action.isEmpty())
             return;
 
@@ -103,7 +103,7 @@ public class PersistenceUnitPropertyActions {
                         runScript(createScriptSource, persistenceUnitInfo, connectionProvider);
                 } else if (createSource.equals("metadata")) {
                     List<String> script = generateScriptFromMetadata(persistenceUnitInfo);
-                    LOG.debug("script={}", script);
+                    log.debug("script={}", script);
                     runScript(script, persistenceUnitInfo, connectionProvider);
                 }
             }

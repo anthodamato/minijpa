@@ -15,6 +15,8 @@
  */
 package org.minijpa.jpa.model;
 
+import org.minijpa.jdbc.ModelValueArray;
+import org.minijpa.jpa.MetaEntityHelper;
 import org.minijpa.jpa.model.relationship.Cascade;
 import org.minijpa.jpa.model.relationship.JoinColumnAttribute;
 import org.minijpa.jpa.model.relationship.JoinColumnMapping;
@@ -154,12 +156,20 @@ public class MetaEntity {
 
     public AbstractMetaAttribute getAttribute(String name) {
         for (AbstractMetaAttribute attribute : attributes) {
-            if (attribute.getName().equals(name)) {
+            if (attribute.getName().equals(name))
                 return attribute;
-            }
         }
 
         return null;
+    }
+
+    public boolean isAttribute(AbstractMetaAttribute attribute) {
+        for (AbstractMetaAttribute a : attributes) {
+            if (a == attribute)
+                return true;
+        }
+
+        return false;
     }
 
     public RelationshipMetaAttribute getRelationshipAttribute(String name) {
@@ -384,6 +394,36 @@ public class MetaEntity {
     }
 
 
+    public boolean isLazyAttributeLoaded(
+            AbstractMetaAttribute a,
+            Object entityInstance)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        if (!a.isLazy())
+            return true;
+
+        Method m = getLazyLoadedAttributeReadMethod();
+        List list = (List) m.invoke(entityInstance);
+        return list.contains(a.getName());
+    }
+
+
+    public void lazyAttributeLoaded(
+            AbstractMetaAttribute a,
+            Object entityInstance,
+            boolean loaded)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Method m = getLazyLoadedAttributeReadMethod();
+        List list = (List) m.invoke(entityInstance);
+        if (loaded) {
+            if (!list.contains(a.getName())) {
+                list.add(a.getName());
+            }
+        } else {
+            list.remove(a.getName());
+        }
+    }
+
+
     public Object buildInstance(Object idValue) throws Exception {
         Object entityInstance = getEntityClass().getDeclaredConstructor().newInstance();
         log.debug("Building Entity Instance {}", entityInstance);
@@ -391,6 +431,133 @@ public class MetaEntity {
         log.debug("Building Entity Instance Id Value Class() {}", idValue.getClass());
         getId().writeValue(entityInstance, idValue);
         return entityInstance;
+    }
+
+
+    private Object buildInstance(Object parentInstance,
+                                 Class<?> parentClass) throws Exception {
+        if (parentInstance == null)
+            return parentClass.getDeclaredConstructor().newInstance();
+
+        return parentInstance;
+    }
+
+
+    public Object writeAttributeValue(
+            Object parentInstance,
+            Class<?> parentClass,
+            AbstractMetaAttribute attribute,
+            Object value) throws Exception {
+        Object parent = buildInstance(parentInstance, parentClass);
+
+        log.debug("Writing Attribute Value -> {}", value);
+        if (value != null)
+            log.debug("Writing Meta Attribute Value -> Value Class {}", value.getClass());
+
+        log.debug("Writing Attribute Value -> Parent Instance {}", parent);
+        log.debug("Writing Attribute Value -> Write Method {}", attribute.getWriteMethod());
+
+        attribute.getWriteMethod().invoke(parent, value);
+        removeModificationAttribute(parent, attribute.getName());
+        return parent;
+    }
+
+
+    public Object writeEmbeddableValue(
+            Object parentInstance,
+            Class<?> parentClass,
+            MetaEntity embeddable,
+            Object value) throws Exception {
+        Object parent = buildInstance(parentInstance, parentClass);
+
+        log.debug("Writing Embeddable Value -> {}", value);
+        log.debug("Writing Embeddable Value -> Parent Instance {}", parent);
+        log.debug("Writing Embeddable Value -> Write Method {}", embeddable.getWriteMethod());
+
+        embeddable.getWriteMethod().invoke(parent, value);
+        removeModificationAttribute(parent, embeddable.getName());
+        return parent;
+    }
+
+
+    public List getJoinColumnPostponedUpdateAttributeList(Object parentInstance)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        Method m = getJoinColumnPostponedUpdateAttributeReadMethod();
+        return (List) m.invoke(parentInstance);
+    }
+
+
+    public ModelValueArray<AbstractMetaAttribute> getModifications(
+            Object entityInstance)
+            throws IllegalAccessException, InvocationTargetException {
+        ModelValueArray<AbstractMetaAttribute> modelValueArray = new ModelValueArray<>();
+        Method m = getModificationAttributeReadMethod();
+        List list = (List) m.invoke(entityInstance);
+        log.debug("Entity Modifications -> Count {}", list.size());
+        if (list.isEmpty())
+            return modelValueArray;
+
+        for (Object p : list) {
+            String v = (String) p;
+            log.debug("Entity Modifications -> Attribute Name = '{}'", v);
+            AbstractMetaAttribute attribute = getAttribute(v);
+            log.debug("Entity Modifications -> Attribute = {}", attribute);
+            if (attribute == null) {
+                Optional<MetaEntity> embeddable = getEmbeddable(v);
+                if (embeddable.isPresent()) {
+                    Object embeddedInstance = embeddable.get().getValue(entityInstance);
+                    ModelValueArray<AbstractMetaAttribute> mva = embeddable.get().getModifications(
+                            embeddedInstance);
+                    modelValueArray.add(mva);
+                }
+            } else {
+                Object value = attribute.getReadMethod().invoke(entityInstance);
+                modelValueArray.add(attribute, value);
+            }
+        }
+
+        return modelValueArray;
+    }
+
+
+    public Object writeAttributeValue(
+            Object parentInstance,
+            AbstractMetaAttribute attribute,
+            Object value) throws Exception {
+        log.debug("Writing Attribute Value -> {}", value);
+        log.debug("Writing Attribute Value -> Parent Instance {}", parentInstance);
+        log.debug("Writing Attribute Value -> Attribute '{}'", attribute.getName());
+        return findAndSetAttributeValue(getEntityClass(), parentInstance, attribute, value);
+    }
+
+
+    private Object findAndSetAttributeValue(
+            Class<?> parentClass,
+            Object parentInstance,
+            AbstractMetaAttribute attribute,
+            Object value) throws Exception {
+        log.debug("Find And Set Attribute Value -> Value {}", value);
+        log.debug("Find And Set Attribute Value -> Attribute {}", attribute);
+        log.debug("Find And Set Attribute Value -> Parent Instance {}", parentInstance);
+        log.debug("Find And Set Attribute Value -> Parent Class={}", parentClass);
+        log.debug("Find And Set Attribute Value -> Entity {}", this);
+
+        // search over all attributes
+        if (isAttribute(attribute)) {
+            return writeAttributeValue(parentInstance, parentClass, attribute, value);
+        }
+
+        for (MetaEntity embeddable : getEmbeddables()) {
+            Object parent = embeddable.getValue(parentInstance);
+            Object aInstance = embeddable.findAndSetAttributeValue(embeddable.getEntityClass(), parent, attribute,
+                    value);
+            if (aInstance != null) {
+                return writeEmbeddableValue(parentInstance, parentClass, embeddable,
+                        aInstance);
+            }
+        }
+
+        return null;
     }
 
 

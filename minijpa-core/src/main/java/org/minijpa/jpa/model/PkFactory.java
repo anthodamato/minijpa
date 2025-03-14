@@ -29,7 +29,7 @@ public class PkFactory {
             List<MetaEntity> embeddables,
             String tableName,
             Class<?> c) throws Exception {
-        metaAttributes.forEach(a -> log.debug("buildPk: a={}", a));
+        metaAttributes.forEach(a -> log.debug("Building Pk -> Attribute = {}", a));
         List<AbstractMetaAttribute> idAttrs = metaAttributes.stream()
                 .filter(a -> {
                     if (a instanceof MetaAttribute && ((MetaAttribute) a).isId())

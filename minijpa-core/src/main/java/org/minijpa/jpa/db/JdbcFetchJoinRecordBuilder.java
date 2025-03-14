@@ -93,7 +93,7 @@ public class JdbcFetchJoinRecordBuilder implements JdbcRecordBuilder {
                     collectionResult.add(instance);
                     // set lazy loaded flag for those attributes
                     for (RelationshipMetaAttribute fetchJoinMetaAttribute : fetchJoinMetaAttributes) {
-                        MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttribute,
+                        metaEntity.lazyAttributeLoaded(fetchJoinMetaAttribute,
                                 instance, true);
                     }
                 }
@@ -101,7 +101,7 @@ public class JdbcFetchJoinRecordBuilder implements JdbcRecordBuilder {
                 collectionResult.add(instance);
                 // set lazy loaded flag for those attributes
                 for (RelationshipMetaAttribute fetchJoinMetaAttribute : fetchJoinMetaAttributes) {
-                    MetaEntityHelper.lazyAttributeLoaded(metaEntity, fetchJoinMetaAttribute,
+                    metaEntity.lazyAttributeLoaded(fetchJoinMetaAttribute,
                             instance, true);
                 }
             }
