@@ -124,6 +124,7 @@ Example:
 
 java -cp minijpa-metamodel-generator/target/minijpa-metamodel-generator-0.0.1-SNAPSHOT.jar:"/Users/myuser/workspace/minijpa/minijpa-core/target/test-classes" org.minijpa.jpa.metamodel.generator.MetamodelGenerator mapped_superclass /Users/myuser/workspace/minijpa/minijpa-core/src/test/resources/META-INF/persistence.xml /Users/myuser/workspace/minijpa/minijpa-core/src/test/java
 
+## Implementation Notes
 ##### Jpql  
 Obtained from official JPA documentation the Jpql grammar is here '/minijpa-core/jpql/BNF2.txt'.  
 The Jpql parser (not completed) is generated using [JavaCC v7.0.10](https://javacc.github.io/javacc/).  
