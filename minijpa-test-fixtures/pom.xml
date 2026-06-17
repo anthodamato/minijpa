@@ -7,7 +7,6 @@
 	</parent>
 
 	<artifactId>minijpa-test-fixtures</artifactId>
-<!--	<packaging>jar</packaging>-->
 
 	<name>minijpa Test Fixtures</name>
 
