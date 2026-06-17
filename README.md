@@ -54,28 +54,23 @@ Running Jacoco Report
 - mvn test jacoco:report  
 
 ## Running the unit tests  
-- **Apache Derby**:  
+- **H2**:  
      - mvn test  
-  
 
 - **MySQL**:  
     - mvn test -Dminijpa.test=mysql  
-  
 
 - **PostgreSQL**  
     - mvn test -Dminijpa.test=postgres  
-  
 
 - **MariaDB**  
     - mvn test -Dminijpa.test=mariadb  
-  
 
 - **Oracle**  
     - mvn test -Dminijpa.test=oracle  
-  
 
-- **H2**  
-    - mvn test -Dminijpa.test=h2  
+- **Apache Derby**  
+    - mvn test -Dminijpa.test=derby  
   
 
 ## Extra Configuration  
@@ -130,7 +125,7 @@ java -cp minijpa-metamodel-generator/target/minijpa-metamodel-generator-0.0.1-SN
 - **minijpa-sql-model**:  
   Converts the model generated in minijpa-core in Sql Statements
 - **minijpa-metamodel-generator**:  
-  Generated JPA Metamodel classes
+  Generates JPA Metamodel classes
 
 ##### JPQL  
 Obtained from official JPA documentation the Jpql grammar is here '/minijpa-core/jpql/BNF2.txt'.  
