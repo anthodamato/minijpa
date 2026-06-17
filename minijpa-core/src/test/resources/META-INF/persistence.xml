@@ -10,9 +10,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:citizens;create=true"/>
+                      value="jdbc:h2:mem:citizens;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -28,9 +28,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:citizens_only;create=true"/>
+                      value="jdbc:h2:mem:citizens_only;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
 
             <!-- <property name="javax.persistence.schema-generation.database.action"
                 value="drop-and-create" /> <property name="javax.persistence.schema-generation.create-source"
@@ -53,9 +53,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:genericlist;create=true"/>
+                      value="jdbc:h2:mem:generic_list;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
 
             <property
                     name="javax.persistence.schema-generation.database.action"
@@ -73,9 +73,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:books;create=true"/>
+                      value="jdbc:h2:mem:books;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -91,9 +91,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:emb_books;create=true"/>
+                      value="jdbc:h2:mem:emb_books;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -109,9 +109,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:emb_booking;create=true"/>
+                      value="jdbc:h2:mem:emb_booking;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -128,9 +128,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:cities_uni;create=true"/>
+                      value="jdbc:h2:mem:cities_uni;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -147,9 +147,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:onetoone_bid;create=true"/>
+                      value="jdbc:h2:mem:onetoone_bid;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -166,9 +166,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:onetoone_bid_lazy;create=true"/>
+                      value="jdbc:h2:mem:onetoone_bid_lazy;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -184,9 +184,9 @@
         <class>org.minijpa.jpa.model.Item</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:onetomany_uni;create=true"/>
+                      value="jdbc:h2:mem:onetomany_uni;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -202,9 +202,9 @@
         <class>org.minijpa.jpa.model.HotelCustomer</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:otm_emb_booking;create=true"/>
+                      value="jdbc:h2:mem:otm_emb_booking;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -221,9 +221,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:onetoone_bid_lazy;create=true"/>
+                      value="jdbc:h2:mem:onetoone_bid_lazy;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -240,9 +240,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:manytoone_bid;create=true"/>
+                      value="jdbc:h2:mem:manytoone_bid;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -258,9 +258,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:stoves;create=true"/>
+                      value="jdbc:h2:mem:stoves;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -276,9 +276,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:holidays;create=true"/>
+                      value="jdbc:h2:mem:holidays;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -293,9 +293,9 @@
         <class>org.minijpa.jpa.model.PurchaseStats</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:purchase_stats;create=true"/>
+                      value="jdbc:h2:mem:purchase_stats;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -312,9 +312,9 @@
         <class>org.minijpa.jpa.model.Product</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:orders;create=true"/>
+                      value="jdbc:h2:mem:orders;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -330,9 +330,9 @@
         <class>org.minijpa.jpa.model.PropertyOwner</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:property_many_to_many_uni;create=true"/>
+                      value="jdbc:h2:mem:property_many_to_many_uni;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -348,9 +348,9 @@
         <class>org.minijpa.jpa.model.ProgramManager</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:embed_many_to_one;create=true"/>
+                      value="jdbc:h2:mem:embed_many_to_one;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -366,9 +366,9 @@
         <class>org.minijpa.jpa.model.RandomGroup</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:longrunning;create=true"/>
+                      value="jdbc:h2:mem:longrunning;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -384,9 +384,9 @@
         <class>org.minijpa.jpa.model.RandomGroup</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:longrunning;create=true"/>
+                      value="jdbc:h2:mem:longrunning;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -415,9 +415,9 @@
         <class>org.minijpa.jpa.model.StoreItem</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:store_items;create=true"/>
+                      value="jdbc:h2:mem:store_items;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -433,9 +433,9 @@
         <class>org.minijpa.jpa.model.BookingSale</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:booking_sale;create=true"/>
+                      value="jdbc:h2:mem:booking_sale;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -452,9 +452,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:cascade_persist;create=true"/>
+                      value="jdbc:h2:mem:cascade_persist;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -470,9 +470,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:date_set;create=true"/>
+                      value="jdbc:h2:mem:date_set;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -489,9 +489,9 @@
         <properties>
             <!--<property name="hibernate.jdbc.time_zone" value="UTC" /> -->
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:temporal_dates;create=true"/>
+                      value="jdbc:h2:mem:temporal_dates;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -509,9 +509,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:simple_order;create=true"/>
+                      value="jdbc:h2:mem:simple_order;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -527,9 +527,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:item_sale_stats;create=true"/>
+                      value="jdbc:h2:mem:item_sale_stats;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -545,9 +545,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:numeric_set;create=true"/>
+                      value="jdbc:h2:mem:numeric_set;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -563,9 +563,9 @@
 
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:data_types;create=true"/>
+                      value="jdbc:h2:mem:data_types;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
 
             <property
                     name="javax.persistence.schema-generation.database.action"
@@ -584,9 +584,9 @@
         <class>org.minijpa.jpa.model.SearchData</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:search_data;create=true"/>
+                      value="jdbc:h2:mem:search_data;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -603,9 +603,9 @@
         <class>org.minijpa.jpa.model.Artist</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:search_data;create=true"/>
+                      value="jdbc:h2:mem:search_data;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -621,9 +621,9 @@
         <class>org.minijpa.jpa.model.Country</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:bid_lombok_onetomany;create=true"/>
+                      value="jdbc:h2:mem:bid_lombok_onetomany;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -640,9 +640,9 @@
         <class>org.minijpa.jpa.model.Patient</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:idclass;create=true"/>
+                      value="jdbc:h2:mem:idclass;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -658,9 +658,9 @@
         <class>org.minijpa.jpa.model.WrongDoctor</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:idclass;create=true"/>
+                      value="jdbc:h2:mem:idclass;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>
@@ -676,9 +676,9 @@
         <class>org.minijpa.jpa.model.GuestBooking</class>
         <properties>
             <property name="javax.persistence.jdbc.url"
-                      value="jdbc:derby:memory:guestidclass;create=true"/>
+                      value="jdbc:h2:mem:guestidclass;DB_CLOSE_DELAY=-1"/>
             <property name="javax.persistence.jdbc.driver"
-                      value="org.apache.derby.jdbc.EmbeddedDriver"/>
+                      value="org.h2.Driver"/>
             <property
                     name="javax.persistence.schema-generation.database.action"
                     value="create"/>

@@ -1,6 +1,4 @@
 /*
- * Copyright (C) 2021 Antonio Damato <anto.damato@gmail.com>.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -22,7 +20,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.minijpa.jdbc.ConnectionProperties;
+import org.minijpa.fixtures.ConnectionProperties;
+import org.minijpa.jdbc.Database;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,39 +31,39 @@ import org.slf4j.LoggerFactory;
  */
 public class PersistenceUnitProperties {
 
-	private static Logger LOG = LoggerFactory.getLogger(PersistenceUnitProperties.class);
-	private static ConnectionProperties connectionProperties = new ConnectionProperties();
+    private static final Logger log = LoggerFactory.getLogger(PersistenceUnitProperties.class);
+    private static final ConnectionProperties connectionProperties = new ConnectionProperties();
 
-	public static Map<String, String> getProperties() throws IOException {
-		String minijpaTest = System.getProperty("minijpa.test");
+    public static Map<String, String> getProperties() throws IOException {
+        String minijpaTest = System.getProperty("minijpa.test");
+        log.debug("Test Property 'minijpa.test': {}", minijpaTest);
+        String dbId = Database.getDatabaseById(minijpaTest).getDbId();
+        Map<String, String> properties = connectionProperties.load(dbId);
+        Map<String, String> map = new HashMap<>(properties);
+        return map;
+    }
 
-		LOG.debug("getProperties: minijpaTest=" + minijpaTest);
-		Map<String, String> properties = connectionProperties.load(minijpaTest);
-		Map<String, String> map = new HashMap<>(properties);
-		return map;
-	}
+    public static String getFalseCondition() {
+        String minijpaTest = System.getProperty("minijpa.test");
+        if (minijpaTest == null || minijpaTest.isBlank())
+            return "=false";
 
-	public static String getFalseCondition() {
-		String minijpaTest = System.getProperty("minijpa.test");
-		if (minijpaTest == null || minijpaTest.isBlank())
-			return "=false";
+        if (minijpaTest.equals("oracle")) {
+            return "=0";
+        }
 
-		if (minijpaTest.equals("oracle")) {
-			return "=0";
-		}
+        return "=false";
+    }
 
-		return "=false";
-	}
+    public static String getTrueCondition() {
+        String minijpaTest = System.getProperty("minijpa.test");
+        if (minijpaTest == null || minijpaTest.isBlank())
+            return "=true";
 
-	public static String getTrueCondition() {
-		String minijpaTest = System.getProperty("minijpa.test");
-		if (minijpaTest == null || minijpaTest.isBlank())
-			return "=true";
+        if (minijpaTest.equals("oracle")) {
+            return "=1";
+        }
 
-		if (minijpaTest.equals("oracle")) {
-			return "=1";
-		}
-
-		return "=true";
-	}
+        return "=true";
+    }
 }

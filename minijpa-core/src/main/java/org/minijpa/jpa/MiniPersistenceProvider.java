@@ -60,7 +60,7 @@ public class MiniPersistenceProvider implements PersistenceProvider {
 
     private EntityManagerFactory createEntityManagerFactory(String path, String emName,
             @SuppressWarnings("rawtypes") Map map) {
-        PersistenceUnitInfo persistenceUnitInfo = null;
+        PersistenceUnitInfo persistenceUnitInfo;
         LOG.debug("Create Entity Manager Factory -> name '{}', path '{}'", emName, path);
         try {
             persistenceUnitInfo = new PersistenceProviderHelper().parseXml(path, emName, map);
@@ -73,7 +73,8 @@ public class MiniPersistenceProvider implements PersistenceProvider {
             return null;
         }
 
-        ConnectionProvider connectionProvider = null;
+        LOG.debug("Create Entity Manager Factory -> Getting Connection Provider");
+        ConnectionProvider connectionProvider;
         try {
             connectionProvider = ConnectionProviderFactory.getConnectionProvider(persistenceUnitInfo);
         } catch (Exception ex) {

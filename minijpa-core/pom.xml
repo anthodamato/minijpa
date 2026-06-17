@@ -24,6 +24,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.minijpa</groupId>
+            <artifactId>minijpa-test-fixtures</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>javax.persistence-api</artifactId>
             <version>2.2</version>
@@ -87,7 +93,8 @@
                 <version>3.0.0-M7</version>
                 <configuration>
                     <argLine>
-                        @{argLine} -javaagent:"${settings.localRepository}"/org/minijpa/${project.version}/minijpa-core-${project.version}.jar
+                        @{argLine}
+                        -javaagent:"${settings.localRepository}"/org/minijpa/${project.version}/minijpa-core-${project.version}.jar
                     </argLine>
                     <argLine>@{argLine} -javaagent:${project.build.directory}/minijpa-core-0.0.1-SNAPSHOT.jar</argLine>
                 </configuration>

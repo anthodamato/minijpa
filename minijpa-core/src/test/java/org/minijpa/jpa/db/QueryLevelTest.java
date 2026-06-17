@@ -21,7 +21,6 @@ import org.minijpa.jpa.model.MetaEntity;
 import org.minijpa.jpa.model.Person;
 import org.minijpa.jpa.model.ProgramManager;
 import org.minijpa.jpa.model.State;
-import org.minijpa.metadata.MetaEntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
