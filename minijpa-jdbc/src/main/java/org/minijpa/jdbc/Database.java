@@ -25,10 +25,10 @@ public enum Database {
     H2("h2") // H2
     ;
 
-    private String dbId;
+    private final String dbId;
 
-    Database(String dbid) {
-        this.dbId = dbid;
+    Database(String dbId) {
+        this.dbId = dbId;
     }
 
     public String getDbId() {
@@ -36,8 +36,8 @@ public enum Database {
     }
 
     public static Database getDatabaseById(String db) {
-        if (db == null || db.trim().length() == 0)
-            return APACHE_DERBY;
+        if (db == null || db.trim().isEmpty())
+            return H2;
 
         for (Database database : values()) {
             if (database.dbId.equals(db))

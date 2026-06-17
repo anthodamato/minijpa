@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public class SimpleConnectionProvider implements ConnectionProvider {
 
-	private final Logger LOG = LoggerFactory.getLogger(SimpleConnectionProvider.class);
+	private final Logger log = LoggerFactory.getLogger(SimpleConnectionProvider.class);
 
 	private final Properties properties;
 	private Properties connectionProps = new Properties();

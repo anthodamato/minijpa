@@ -22,6 +22,7 @@
         <module>minijpa-jdbc</module>
         <module>minijpa-core</module>
         <module>minijpa-metamodel-generator</module>
+        <module>minijpa-test-fixtures</module>
     </modules>
 
     <dependencyManagement>
@@ -77,9 +78,27 @@
 
     <profiles>
         <profile>
-            <id>derby</id>
+            <id>h2</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>minijpa.test</name>
+                    <value>h2</value>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <version>2.1.210</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>derby</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <dependencies>
                 <dependency>
@@ -170,24 +189,6 @@
                     <groupId>com.oracle.database.jdbc</groupId>
                     <artifactId>ojdbc8</artifactId>
                     <version>21.1.0.0</version>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>h2</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-                <property>
-                    <name>minijpa.test</name>
-                    <value>h2</value>
-                </property>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.h2database</groupId>
-                    <artifactId>h2</artifactId>
-                    <version>2.1.210</version>
-                    <scope>test</scope>
                 </dependency>
             </dependencies>
         </profile>

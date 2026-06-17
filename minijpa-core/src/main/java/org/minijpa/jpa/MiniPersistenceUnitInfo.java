@@ -29,7 +29,7 @@ import javax.sql.DataSource;
 public class MiniPersistenceUnitInfo implements PersistenceUnitInfo {
 
     private String name;
-    private Properties properties = new Properties();
+    private final Properties properties = new Properties();
     private List<String> managedClassNames;
     private DataSource jtaDataSource;
     private DataSource nonJtaDataSource;

@@ -3,6 +3,7 @@ package org.minijpa.jdbc;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.minijpa.fixtures.ConnectionProperties;
 import org.minijpa.jdbc.mapper.ToLongObjectConverter;
 import org.minijpa.sql.model.*;
 import org.minijpa.sql.model.condition.BinaryCondition;
@@ -10,6 +11,7 @@ import org.minijpa.sql.model.condition.Condition;
 import org.minijpa.sql.model.condition.ConditionType;
 import org.minijpa.sql.model.function.Concat;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -27,24 +29,25 @@ public class JdbcRunnerTest {
 
     private static JdbcRunner jdbcRunner;
     private final ScriptRunner scriptRunner = new ScriptRunner();
-    private static final ConnectionProperties connectionProperties = new ConnectionProperties();
+    private static final org.minijpa.fixtures.ConnectionProperties connectionProperties = new ConnectionProperties();
     private static SqlStatementGenerator sqlStatementGenerator;
+    private static Map<String, String> properties;
     private final JdbcRunner.JdbcValueBuilderById jdbcValueBuilderById = new JdbcRunner.JdbcValueBuilderById();
     private final JdbcRunner.JdbcRecordBuilderValue jdbcRecordBuilderValue = new JdbcRunner.JdbcRecordBuilderValue();
     private final JdbcRunner.JdbcNativeRecordBuilder nativeRecordBuilder = new JdbcRunner.JdbcNativeRecordBuilder();
 
     @BeforeAll
-    public static void init() {
+    public static void init() throws IOException {
         sqlStatementGenerator = SqlStatementGeneratorFactory
                 .getSqlStatementGenerator(Database.getDatabaseById(System.getProperty("minijpa.test")));
         sqlStatementGenerator.init();
-        jdbcRunner = connectionProperties.getJdbcRunner(System.getProperty("minijpa.test"));
+        jdbcRunner = new JdbcRunnerFactory().getJdbcRunner(System.getProperty("minijpa.test"));
+        String dbId = Database.getDatabaseById(System.getProperty("minijpa.test")).getDbId();
+        properties = connectionProperties.load(dbId);
     }
 
     @Test
     public void insert() throws Exception {
-        Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
-
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
                 properties.get("driver"), properties.get("user"), properties.get("password"));
         connectionProvider.init();
@@ -99,8 +102,6 @@ public class JdbcRunnerTest {
 
     @Test
     public void insertReturnGeneratedKeys() throws Exception {
-        Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
-
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
                 properties.get("driver"), properties.get("user"), properties.get("password"));
         connectionProvider.init();
@@ -157,8 +158,6 @@ public class JdbcRunnerTest {
 
     @Test
     public void selectConcat() throws Exception {
-        Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
-
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
                 properties.get("driver"), properties.get("user"), properties.get("password"));
         connectionProvider.init();
@@ -231,8 +230,6 @@ public class JdbcRunnerTest {
 
     @Test
     public void update() throws Exception {
-        Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
-
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
                 properties.get("driver"), properties.get("user"), properties.get("password"));
         connectionProvider.init();
@@ -300,8 +297,6 @@ public class JdbcRunnerTest {
             return;
         }
 
-        Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
-
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
                 properties.get("driver"), properties.get("user"), properties.get("password"));
         connectionProvider.init();
@@ -332,8 +327,6 @@ public class JdbcRunnerTest {
 
     @Test
     public void runNativeQuery() throws Exception {
-        Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
-
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
                 properties.get("driver"), properties.get("user"), properties.get("password"));
         connectionProvider.init();
@@ -398,8 +391,6 @@ public class JdbcRunnerTest {
 
     @Test
     public void dataTypes() throws Exception {
-        Map<String, String> properties = connectionProperties.load(System.getProperty("minijpa.test"));
-
         ConnectionProvider connectionProvider = new LocalConnectionProvider(properties.get("url"),
                 properties.get("driver"), properties.get("user"), properties.get("password"));
         connectionProvider.init();
