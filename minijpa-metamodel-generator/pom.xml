@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.minijpa</groupId>
@@ -9,12 +9,8 @@
     <artifactId>minijpa-metamodel-generator</artifactId>
     <packaging>jar</packaging>
     <name>minijpa Metamodel Generator</name>
+
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>org.minijpa</groupId>-->
-<!--            <artifactId>minijpa-core</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>javax.persistence-api</artifactId>
@@ -57,7 +53,7 @@
                 <version>3.0.0-M7</version>
                 <configuration></configuration>
             </plugin>
-            
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
