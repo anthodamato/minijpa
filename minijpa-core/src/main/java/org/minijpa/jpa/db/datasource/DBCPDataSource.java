@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DBCPDataSource {
-	private Logger LOG = LoggerFactory.getLogger(DBCPDataSource.class);
+	private Logger log = LoggerFactory.getLogger(DBCPDataSource.class);
 
 	public DataSource getDataSource(Properties properties)
 			throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
