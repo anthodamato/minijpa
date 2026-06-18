@@ -29,7 +29,7 @@ import org.xml.sax.XMLReader;
 
 public class PersistenceProviderHelper {
 
-    private Logger LOG = LoggerFactory.getLogger(PersistenceProviderHelper.class);
+    private Logger log = LoggerFactory.getLogger(PersistenceProviderHelper.class);
 
     public PersistenceUnitInfo parseXml(String filePath, String persistenceUnitName, Map<String, String> properties)
             throws Exception {
@@ -39,7 +39,7 @@ public class PersistenceProviderHelper {
         if (file == null)
             throw new Exception("Persistence file '" + filePath + "' not found");
 
-        LOG.info("Parsing '{}'", file);
+        log.info("Parsing '{}'", file);
         SAXParserFactory spf = SAXParserFactory.newInstance();
 //		spf.setNamespaceAware(true);
         SAXParser saxParser = spf.newSAXParser();
@@ -50,7 +50,7 @@ public class PersistenceProviderHelper {
         xmlReader.parse(file.getAbsolutePath());
         PersistenceMetaData persistenceMetaData = persistenceParser.getPersistenceMetaData();
         if (persistenceMetaData == null) {
-            LOG.error("'persistence' element not found, file path: {}", filePath);
+            log.error("'persistence' element not found, file path: {}", filePath);
             throw new IllegalArgumentException("'persistence' element not found, file path: " + filePath);
         }
 

@@ -40,6 +40,10 @@ public class PersistenceUnitProperties {
         String dbId = Database.getDatabaseById(minijpaTest).getDbId();
         Map<String, String> properties = connectionProperties.load(dbId);
         Map<String, String> map = new HashMap<>(properties);
+        map.put("javax.persistence.jdbc.url", properties.get("url"));
+        map.put("javax.persistence.jdbc.driver", properties.get("driver"));
+        map.put("javax.persistence.jdbc.user", properties.get("user"));
+        map.put("javax.persistence.jdbc.password", properties.get("password"));
         return map;
     }
 

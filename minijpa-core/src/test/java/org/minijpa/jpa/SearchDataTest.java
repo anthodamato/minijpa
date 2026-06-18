@@ -2,6 +2,9 @@ package org.minijpa.jpa;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -946,7 +949,7 @@ public class SearchDataTest {
         TypedQuery<Number> typedQuery = em.createQuery(criteriaQuery);
         List<Number> resultList = typedQuery.getResultList();
         Assertions.assertEquals(1, resultList.size());
-        Assertions.assertEquals(7.0f, resultList.get(0));
+        Assertions.assertEquals(7.0f, resultList.get(0).floatValue());
     }
 
     private void testMod1(EntityManager em) {
@@ -1450,9 +1453,9 @@ public class SearchDataTest {
         Assertions.assertEquals(1, resultList.size());
         Object[] result = (Object[]) resultList.get(0);
         Assertions.assertEquals("SearchName3", result[0]);
-        Assertions.assertTrue(result[1] instanceof java.sql.Date);
-        Assertions.assertTrue(result[2] instanceof java.sql.Time);
-        Assertions.assertTrue(result[3] instanceof java.sql.Timestamp);
+        Assertions.assertInstanceOf(Date.class, result[1]);
+        Assertions.assertInstanceOf(Time.class, result[2]);
+        Assertions.assertInstanceOf(Timestamp.class, result[3]);
     }
 
     @Test
