@@ -3,12 +3,15 @@ package org.minijpa.jdbc;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.minijpa.fixtures.ConnectionProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.util.Map;
 
 public class DbMetaDataTest {
-    private final org.minijpa.fixtures.ConnectionProperties connectionProperties = new ConnectionProperties();
+    private final Logger log = LoggerFactory.getLogger(DbMetaDataTest.class);
+    private final ConnectionProperties connectionProperties = new ConnectionProperties();
 
     @Test
     public void metaData() throws Exception {

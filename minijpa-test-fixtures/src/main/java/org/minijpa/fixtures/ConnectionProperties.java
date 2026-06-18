@@ -8,7 +8,7 @@ import java.util.Properties;
 
 public class ConnectionProperties {
     private Properties getDbProperties(String db) throws IOException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(db + ".properties");
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("databases/" + db + ".properties");
         Properties properties = new Properties();
         properties.load(inputStream);
         return properties;

@@ -28,7 +28,7 @@ public class JpqlTest {
     private static String testDb;
 
     @BeforeAll
-    private static void beforeAll() {
+    public static void beforeAll() {
         testDb = System.getProperty("minijpa.test");
     }
 

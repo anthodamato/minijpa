@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OneToManyUniTest {
 
-    private Logger LOG = LoggerFactory.getLogger(OneToManyUniTest.class);
+    private final Logger log = LoggerFactory.getLogger(OneToManyUniTest.class);
     private static EntityManagerFactory emf;
 
     @BeforeAll
@@ -146,7 +146,7 @@ public class OneToManyUniTest {
         removeStore(store.getId(), em);
         tx.commit();
 
-        LOG.info("persistCollection: s=" + s);
+        log.info("persistCollection: s=" + s);
         em.close();
     }
 
@@ -630,6 +630,7 @@ public class OneToManyUniTest {
         Root<Store> root = cq.from(Store.class);
         Join<Store, Item> item = root.join("items", JoinType.LEFT);
 
+        cq.orderBy(cb.asc(root.get("name")));
         cq.distinct(true);
         TypedQuery<Store> q = em.createQuery(cq);
         List<Store> stores = q.getResultList();
@@ -639,7 +640,7 @@ public class OneToManyUniTest {
         Assertions.assertEquals(3, stores.size());
         Store s = stores.get(0);
         Assertions.assertEquals("Upton Store", s.getName());
-        Assertions.assertFalse(s == store);
+        Assertions.assertNotSame(s, store);
         Assertions.assertEquals("Upton Store 2nd", stores.get(1).getName());
         Assertions.assertEquals("Upton Store 3rd", stores.get(2).getName());
 
@@ -802,7 +803,7 @@ public class OneToManyUniTest {
         em.detach(store3);
 
         tx.begin();
-        Query q = em.createQuery("select distinct s from Store s left outer join s.items i");
+        Query q = em.createQuery("select distinct s from Store s left outer join s.items i order by s.name");
         List<Store> stores = q.getResultList();
         tx.commit();
 

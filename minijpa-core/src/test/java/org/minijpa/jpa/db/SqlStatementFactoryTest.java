@@ -159,7 +159,7 @@ public class SqlStatementFactoryTest {
 
         String sql = sqlStatementGenerator.export(sqlSelectData);
         Assertions.assertEquals(
-                "select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
+                "select item0.id, item0.model, item0.name from item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
                 sql);
 
         tx.begin();
@@ -209,7 +209,7 @@ public class SqlStatementFactoryTest {
 
         String sql = sqlStatementGenerator.export(sqlSelectData);
         Assertions.assertEquals(
-                "select item0.id, item0.model, item0.name from Item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
+                "select item0.id, item0.model, item0.name from item AS item0 INNER JOIN store_items AS store_items0 ON item0.id = store_items0.items_id where store_items0.Store_id = ?",
                 sql);
 
         em.close();
